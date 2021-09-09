@@ -35,6 +35,12 @@ public class HdfsReadableAvroTest extends BaseFeature {
     private static final String avroInSequenceArraysSchemaFile = "PXFCustomAvro.avsc";
     private static final String avroInSequenceArraysSchemaFileWithSpaces = "PXF Custom Avro1.avsc";
     private static final String complexAvroFile = "complex.avro";
+    private static final String avroLogicalTypeFileName = "logical_type";
+    private static final String avroLogicalDecimalTypeFileName = "logical_decimal_type";
+    private static final String arrayOfLogicalTypesFileName = "array_of_logical_types";
+    private static final String logicalIncorrectSchemaFile = "logical_incorrect_schema.avsc";
+    private static final String logicalCorrectSchemaFile = "logical_correct_schema";
+
     private String remotePublicStage;
 
 
@@ -215,6 +221,70 @@ public class HdfsReadableAvroTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.complex_types_csv.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void avroLogicalTypes() throws Exception {
+        prepareReadableTable("avro_logical_types", new String[]{
+                "uid                    uuid",
+                "decNum                 decimal",
+                "dob                    date",
+                "timeMillis             time without time zone",
+                "timeMicros             time without time zone",
+                "timeStampMillis        timestamp with time zone",
+                "timeStampMicros        timestamp with time zone",
+                "localTimeStampMicros   timestamp without time zone",
+                "localTimeStampMillis   timestamp without time zone"},
+                hdfsPath + avroLogicalTypeFileName + SUFFIX_AVRO);
+        gpdb.createTableAndVerify(exTable);
+        // Verify results
+        runTincTest("pxf.features.hdfs.readable.avro.logical_types.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void avroLogicalDecimalTypes() throws Exception {
+        prepareReadableTable("avro_logical_decimal_types", new String[]{
+              "decNum1   decimal",
+              "decNum2   decimal",
+              "decNum3   decimal",
+              "decNum4   numeric(5,2)",
+              "decNum5   numeric(1,1)",
+              "decNum6   numeric(7,1)"},
+            hdfsPath + avroLogicalDecimalTypeFileName + SUFFIX_AVRO);
+        gpdb.createTableAndVerify(exTable);
+        // Verify results
+        runTincTest("pxf.features.hdfs.readable.avro.logical_decimal_types.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void arrayOfLogicalTypes() throws Exception {
+        prepareReadableTable("array_of_logical_types", new String[]{
+            "type_uid                    uuid[]",
+            "type_decNum                 decimal[]",
+            "type_dob                    date[]",
+            "type_timeMillis             time without time zone[]",
+            "type_timeMicros             time without time zone[]",
+            "type_timeStampMillis        timestamp with time zone[]",
+            "type_timeStampMicros        timestamp with time zone[]",
+            "type_localTimeStampMicros   timestamp without time zone[]",
+            "type_localTimeStampMillis   timestamp without time zone[]"},
+                hdfsPath + arrayOfLogicalTypesFileName + SUFFIX_AVRO);
+        gpdb.createTableAndVerify(exTable);
+        // Verify results
+        runTincTest("pxf.features.hdfs.readable.avro.array_of_logical_types.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void logicalIncorrectSchemaTest() throws Exception {
+        prepareReadableTable("logical_incorrect_schema_test", new String[]{
+            "dob    date " },
+            hdfsPath + logicalCorrectSchemaFile + SUFFIX_AVRO);
+        hdfs.copyFromLocal(resourcePath + logicalIncorrectSchemaFile, hdfsPath + "schema/" + logicalIncorrectSchemaFile);
+        String schemaPath = "/" + hdfsPath + "schema/" + logicalIncorrectSchemaFile;
+        exTable.setExternalDataSchema(schemaPath);
+        gpdb.createTableAndVerify(exTable);
+        // Verify results
+        runTincTest("pxf.features.hdfs.readable.avro.errors.logical_incorrect_schema_test.runTest");
     }
 
     /**
@@ -485,6 +555,22 @@ public class HdfsReadableAvroTest extends BaseFeature {
         hdfs.writeAvroFileFromJson(hdfsPath + avroComplexNullFileName + SUFFIX_AVRO,
                 FILE_SCHEME + resourcePath + avroComplexNullFileName + SUFFIX_AVSC,
                 FILE_SCHEME + resourcePath + avroComplexNullFileName + SUFFIX_JSON, null);
+
+        hdfs.writeAvroFileFromJson(hdfsPath + avroLogicalTypeFileName + SUFFIX_AVRO,
+                FILE_SCHEME + resourcePath + avroLogicalTypeFileName + SUFFIX_AVSC,
+                FILE_SCHEME + resourcePath + avroLogicalTypeFileName + SUFFIX_JSON, null);
+
+        hdfs.writeAvroFileFromJson(hdfsPath + avroLogicalDecimalTypeFileName + SUFFIX_AVRO,
+                FILE_SCHEME + resourcePath + avroLogicalDecimalTypeFileName + SUFFIX_AVSC,
+                FILE_SCHEME + resourcePath + avroLogicalDecimalTypeFileName + SUFFIX_JSON, null);
+
+        hdfs.writeAvroFileFromJson(hdfsPath + arrayOfLogicalTypesFileName + SUFFIX_AVRO,
+                FILE_SCHEME + resourcePath + arrayOfLogicalTypesFileName + SUFFIX_AVSC,
+                FILE_SCHEME + resourcePath + arrayOfLogicalTypesFileName + SUFFIX_JSON, null);
+
+        hdfs.writeAvroFileFromJson(hdfsPath + logicalCorrectSchemaFile + SUFFIX_AVRO,
+                FILE_SCHEME + resourcePath + logicalCorrectSchemaFile + SUFFIX_AVSC,
+                FILE_SCHEME + resourcePath + logicalCorrectSchemaFile + SUFFIX_JSON, null);
 
         String schemaName1 = resourcePath + avroInSequenceArraysSchemaFile;
         Table dataTable1 = new Table("dataTable1", null);

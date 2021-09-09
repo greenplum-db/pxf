@@ -1,0 +1,15 @@
+{
+"namespace": "avro.uuid",
+ "type": "record",
+ "name": "User",
+ "fields": [
+     {
+     "name": "date_1", 
+         "type": 
+         {
+            "type": "int",
+            "logicalType": "date"
+         }
+    }    
+ ]
+}

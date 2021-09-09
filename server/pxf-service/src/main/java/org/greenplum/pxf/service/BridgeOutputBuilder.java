@@ -76,6 +76,7 @@ public class BridgeOutputBuilder {
     private final OutputFormat outputFormat;
     private final List<ColumnDescriptor> columnDescriptors;
     private final String gpdbTableformat;
+
     /**
      * Constructs a BridgeOutputBuilder.
      *
@@ -278,8 +279,8 @@ public class BridgeOutputBuilder {
      * @param type data type
      * @return whether data type is compatible string array type
      */
-    boolean isStringArrayType (DataType type) {
-        return  Arrays.asList(
+    boolean isStringArrayType(DataType type) {
+        return Arrays.asList(
                 DataType.BPCHARARRAY,
                 DataType.VARCHARARRAY,
                 DataType.TEXTARRAY)
@@ -445,8 +446,11 @@ public class BridgeOutputBuilder {
                 case VARCHAR:
                 case BPCHAR:
                 case TEXT:
+                case UUID:
                 case NUMERIC:
                 case TIMESTAMP:
+                case TIMESTAMP_WITH_TIME_ZONE:
+                case TIME:
                 case DATE:
                 case BOOLARRAY:
                 case BYTEAARRAY:
@@ -458,6 +462,12 @@ public class BridgeOutputBuilder {
                 case TEXTARRAY:
                 case BPCHARARRAY:
                 case VARCHARARRAY:
+                case DATEARRAY:
+                case UUIDARRAY:
+                case NUMERICARRAY:
+                case TIMEARRAY:
+                case TIMESTAMPARRAY:
+                case TIMESTAMP_WITH_TIMEZONE_ARRAY:
                     /*
                      * If resolvers support sending arrays to GPDB, they are expected to serialize arrays into Postgres
                      * array external text representation.
@@ -490,14 +500,12 @@ public class BridgeOutputBuilder {
                     // Check first if the field.val is null then using .toString() is safe in else branches.
                     if (field.val == null)
                         return greenplumCSV.getValueOfNull();
-                    else if (field.type == DataType.BYTEA.getOID())
-                    {
+                    else if (field.type == DataType.BYTEA.getOID()) {
                         // check for Format Type here. if the Format Type is CSV, we should escape using single \
                         // for Text or Custom Format types, it should \\
-                        String hexPrepend = gpdbTableformat.equalsIgnoreCase("csv") ? "\\x"  : "\\\\x" ;
+                        String hexPrepend = gpdbTableformat.equalsIgnoreCase("csv") ? "\\x" : "\\\\x";
                         return hexPrepend + Hex.encodeHexString((byte[]) field.val);
-                    }
-                    else if (field.type == DataType.NUMERIC.getOID() || !DataType.isTextForm(field.type))
+                    } else if (field.type == DataType.NUMERIC.getOID() || !DataType.isTextForm(field.type))
                         return field.val.toString();
                     else if (field.type == DataType.TIMESTAMP.getOID())
                         return ((Timestamp) field.val).toLocalDateTime().format(GreenplumDateTime.DATETIME_FORMATTER);

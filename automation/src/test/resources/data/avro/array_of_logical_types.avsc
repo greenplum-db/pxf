@@ -1,0 +1,123 @@
+{
+"type" : "record",
+  "name" : "pxf",
+  "namespace" : "pxf",
+  "fields" : 
+  [ {
+    "name" : "uid_array",
+    "type" : 
+    {
+    "type": "array",
+    "items":
+      {
+       "type" :"string",
+       "logicalType": "uuid" 
+      }
+    }
+  },
+    {
+    "name": "decNum_array",
+    "type": 
+    {
+      "type": "array",
+      "items":
+      {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 4,
+        "scale": 2
+      } 
+    }
+  }
+  ,{
+    "name" : "int_array",
+    "type":
+    {
+      "type" : "array",
+      "items":
+      {
+        "type": "int",
+        "logicalType": "date" 
+      }
+    }
+    
+  }
+  ,{
+    "name" : "timeMillis_array",
+    "type":
+    {
+      "type": "array",
+      "items":
+      {
+        "type" : "int",
+        "logicalType": "time-millis"    
+      }
+    }
+  },
+  {
+    "name" : "timeMicros_array",
+    "type":
+    {
+      "type": "array",
+      "items":
+      {
+        "type" : "long",
+        "logicalType": "time-micros" 
+      }
+    }
+  }
+  ,{
+    "name" : "timeStampMillis_array",
+    "type": 
+    {
+       "type" : "array",
+       "items":
+        {
+        "type" : "long",
+        "logicalType": "timestamp-millis"
+       }
+    }
+  },
+  {
+    "name" : "timeStampMicros_array",
+    "type":
+    {
+     "type" :"array",
+     "items":
+      {
+        "type" : "long",
+        "logicalType": "timestamp-micros"
+       }
+    }
+   
+  },
+  {
+    "name" : "localTimeStampMicros_array",
+    "type":
+    {
+      "type": "array",
+      "items":
+      {
+        "type" : "long",
+        "logicalType": "local-timestamp-micros",
+        "doc" : "localTimeStamp type"
+      }
+    }
+    
+  } ,
+  {
+    "name" : "localTimeStampMillis_array",
+    "type":
+    {
+       "type": "array",
+       "items":
+      {
+        "type" : "long",
+        "logicalType": "local-timestamp-millis",
+        "doc" : "localTimeStamp type"
+      }
+    }
+   
+  } ],
+  "doc:" : "PXF Avro Record"
+}

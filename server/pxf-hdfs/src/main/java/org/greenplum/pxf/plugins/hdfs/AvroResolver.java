@@ -20,6 +20,8 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -36,6 +38,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.SpringContext;
+import org.greenplum.pxf.plugins.hdfs.avro.AvroTypeConverter;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
@@ -69,6 +72,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
     private final AvroUtilities avroUtilities;
     private final PgUtilities pgUtilities;
     private boolean hasUserProvidedSchema;
+    private final AvroTypeConverter avroTypeConverter;
 
     /**
      * Constructs a new instance of the AvroFileAccessor
@@ -80,6 +84,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
     AvroResolver(AvroUtilities avroUtilities, PgUtilities pgUtilities) {
         this.avroUtilities = avroUtilities;
         this.pgUtilities = pgUtilities;
+        this.avroTypeConverter = AvroTypeConverter.getInstance();
     }
 
     /*
@@ -212,7 +217,9 @@ public class AvroResolver extends BasePlugin implements Resolver {
                        Schema fieldSchema, DataType gpdbColType) {
 
         Schema.Type fieldType = fieldSchema.getType();
+
         int ret = 0;
+        LogicalType logicalType = fieldSchema.getLogicalType();
 
         switch (fieldType) {
             case ARRAY:
@@ -274,7 +281,14 @@ public class AvroResolver extends BasePlugin implements Resolver {
                 ret = addOneFieldToRecord(record, DataType.TEXT, fieldValue);
                 break;
             case INT:
-                ret = addOneFieldToRecord(record, DataType.INTEGER, fieldValue);
+                if (logicalType == LogicalTypes.date()) {
+                    fieldValue = avroTypeConverter.dateFromInt((int) fieldValue, fieldSchema, logicalType);
+                } else if (logicalType == LogicalTypes.timeMillis()) {
+                    fieldValue = avroTypeConverter.timeMillis((int) fieldValue, fieldSchema, logicalType);
+                }
+
+                DataType gpdbWritableDataType = (logicalType != null) ? gpdbColType : DataType.INTEGER;
+                ret = addOneFieldToRecord(record, gpdbWritableDataType, fieldValue);
                 break;
             case DOUBLE:
                 ret = addOneFieldToRecord(record, DataType.FLOAT8, fieldValue);
@@ -282,16 +296,35 @@ public class AvroResolver extends BasePlugin implements Resolver {
             case STRING:
                 String str = (fieldValue != null) ? fieldValue.toString() : null;
                 fieldValue = (gpdbColType.isArrayType()) ? pgUtilities.escapeArrayElement(str) : str;
-                ret = addOneFieldToRecord(record, DataType.TEXT, fieldValue);
+                if(logicalType == LogicalTypes.uuid()){
+                    ret = addOneFieldToRecord(record, DataType.UUID, fieldValue);
+                } else {
+                    ret = addOneFieldToRecord(record, DataType.TEXT, fieldValue);
+                }
                 break;
             case FLOAT:
                 ret = addOneFieldToRecord(record, DataType.REAL, fieldValue);
                 break;
             case LONG:
-                ret = addOneFieldToRecord(record, DataType.BIGINT, fieldValue);
+                gpdbWritableDataType = (logicalType != null) ? gpdbColType : DataType.BIGINT;
+                if (logicalType == LogicalTypes.timeMicros()) {
+                    fieldValue = avroTypeConverter.timeMicros((long) fieldValue, fieldSchema, logicalType);
+                } else if (logicalType == LogicalTypes.timestampMillis()) {
+                    fieldValue = avroTypeConverter.timestampMillis((long) fieldValue, fieldSchema, logicalType);
+                } else if (logicalType == LogicalTypes.timestampMicros()) {
+                    fieldValue = avroTypeConverter.timestampMicros((long) fieldValue,fieldSchema, logicalType);
+                } else if (logicalType == LogicalTypes.localTimestampMillis()) {
+                    fieldValue = avroTypeConverter.localTimestampMillis((long) fieldValue, fieldSchema, logicalType);
+                } else if (logicalType == LogicalTypes.localTimestampMicros()) {
+                    fieldValue = avroTypeConverter.localTimestampMicros((long) fieldValue, fieldSchema, logicalType);
+                }
+                ret = addOneFieldToRecord(record, gpdbWritableDataType, fieldValue);
                 break;
             case BYTES:
             case FIXED:
+                if (logicalType != null && logicalType.getName().equalsIgnoreCase("decimal")) {
+                    fieldValue = avroTypeConverter.convertToDecimal(fieldValue, fieldSchema, logicalType);
+                }
                 DataType gpdbWritableType = (gpdbColType == DataType.TEXT) ? DataType.BYTEA : gpdbColType;
                 ret = addOneFieldToRecord(record, gpdbWritableType, fieldValue);
                 break;
@@ -425,4 +458,5 @@ public class AvroResolver extends BasePlugin implements Resolver {
         record.add(oneField);
         return 1;
     }
+
 }

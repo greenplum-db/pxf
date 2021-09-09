@@ -7,7 +7,7 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public enum AvroTypeConverter {
+public enum EnumAvroTypeConverter {
     BOOLEAN {
         @Override
         public DataType getDataType() {
@@ -88,7 +88,7 @@ public enum AvroTypeConverter {
         }
     };
 
-    public static AvroTypeConverter from(Schema schema) {
+    public static EnumAvroTypeConverter from(Schema schema) {
         Schema.Type type = schema.getType();
 
         if (type == Schema.Type.UNION) {

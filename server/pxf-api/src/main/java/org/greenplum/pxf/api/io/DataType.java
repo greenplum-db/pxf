@@ -46,6 +46,7 @@ public enum DataType {
     TIMESTAMP(1114),
     TIMESTAMP_WITH_TIME_ZONE(1184),
     NUMERIC(1700),
+    UUID(2950),
 
     INT2ARRAY(1005),
     INT4ARRAY(1007),
@@ -57,6 +58,12 @@ public enum DataType {
     BYTEAARRAY(1001),
     BPCHARARRAY(1014),
     VARCHARARRAY(1015),
+    DATEARRAY(1182),
+    UUIDARRAY(2951),
+    NUMERICARRAY(1231),
+    TIMEARRAY(1183),
+    TIMESTAMPARRAY(1115),
+    TIMESTAMP_WITH_TIMEZONE_ARRAY(1185),
 
     UNSUPPORTED_TYPE(-1);
 
@@ -76,6 +83,12 @@ public enum DataType {
         BYTEAARRAY.typeElem = BYTEA;
         BPCHARARRAY.typeElem = BPCHAR;
         VARCHARARRAY.typeElem = VARCHAR;
+        DATEARRAY.typeElem = DATE;
+        UUIDARRAY.typeElem = UUID;
+        NUMERICARRAY.typeElem = NUMERIC;
+        TIMEARRAY.typeElem = TIME;
+        TIMESTAMPARRAY.typeElem = TIMESTAMP;
+        TIMESTAMP_WITH_TIMEZONE_ARRAY.typeElem = TIMESTAMP_WITH_TIME_ZONE;
 
         DataType[] allTypes = DataType.values();
         OID_ARRAY = new int[allTypes.length];

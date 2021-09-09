@@ -1,0 +1,74 @@
+{
+"type" : "record",
+  "name" : "pxf",
+  "namespace" : "pxf",
+  "fields" : 
+  [
+    {
+    "name": "decNum1",
+    "type":
+    {
+      "type": "fixed",
+      "logicalType": "decimal",
+      "precision": 4,
+      "scale": 2,
+      "size": 4,
+      "name": "decNum1"
+    } 
+  },
+   {
+    "name": "decNum2",
+    "type":
+    {
+      "type": "fixed",
+      "logicalType": "decimal",
+      "precision": 5,
+      "scale": 5,
+      "size": 6,
+      "name": "decNum2"
+    } 
+  },
+   {
+    "name": "decNum3",
+    "type":
+    {
+      "type": "fixed",
+      "logicalType": "decimal",
+      "precision": 6,
+      "scale": 3,
+      "size" : 3,
+      "name" : "decNum3"
+    } 
+  },
+   {
+    "name": "decNum4",
+    "type":
+    {
+      "type": "bytes",
+      "logicalType": "decimal",
+      "precision": 5,
+      "scale": 3
+    } 
+  },
+   {
+    "name": "decNum5",
+    "type":
+    {
+      "type": "bytes",
+      "logicalType": "decimal",
+      "precision": 1,
+      "scale": 1
+    } 
+  },
+   {
+    "name": "decNum6",
+    "type":
+    {
+      "type": "bytes",
+      "logicalType": "decimal",
+      "precision": 7,
+      "scale": 3
+    } 
+  }
+]
+}

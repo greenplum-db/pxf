@@ -234,7 +234,7 @@ public class AvroUtilitiesTest {
 
     @Test
     public void testObtainSchema_OnWrite() {
-        context.setTupleDescription(AvroTypeConverter.getColumnDescriptorsFromSchema(testSchema));
+        context.setTupleDescription(EnumAvroTypeConverter.getColumnDescriptorsFromSchema(testSchema));
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
 
         schema = avroUtilities.obtainSchema(context, hcfsType);
