@@ -57,6 +57,7 @@ public enum DataType {
     BYTEAARRAY(1001),
     BPCHARARRAY(1014),
     VARCHARARRAY(1015),
+    DATEARRAY(1182),
 
     UNSUPPORTED_TYPE(-1);
 
@@ -76,6 +77,7 @@ public enum DataType {
         BYTEAARRAY.typeElem = BYTEA;
         BPCHARARRAY.typeElem = BPCHAR;
         VARCHARARRAY.typeElem = VARCHAR;
+        DATEARRAY.typeElem = DATE;
 
         DataType[] allTypes = DataType.values();
         OID_ARRAY = new int[allTypes.length];

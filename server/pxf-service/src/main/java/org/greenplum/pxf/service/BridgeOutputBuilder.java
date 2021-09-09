@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -447,6 +448,8 @@ public class BridgeOutputBuilder {
                 case TEXT:
                 case NUMERIC:
                 case TIMESTAMP:
+                case TIMESTAMP_WITH_TIME_ZONE:
+                case TIME:
                 case DATE:
                 case BOOLARRAY:
                 case BYTEAARRAY:
@@ -458,6 +461,7 @@ public class BridgeOutputBuilder {
                 case TEXTARRAY:
                 case BPCHARARRAY:
                 case VARCHARARRAY:
+                case DATEARRAY:
                     /*
                      * If resolvers support sending arrays to GPDB, they are expected to serialize arrays into Postgres
                      * array external text representation.

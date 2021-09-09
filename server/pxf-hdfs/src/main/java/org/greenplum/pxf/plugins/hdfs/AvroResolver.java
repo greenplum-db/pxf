@@ -20,6 +20,8 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -36,6 +38,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.SpringContext;
+import org.greenplum.pxf.plugins.hdfs.avro.AvroTypeConverter;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
@@ -43,9 +46,13 @@ import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Class AvroResolver handles deserialization of records that were serialized
@@ -212,7 +219,9 @@ public class AvroResolver extends BasePlugin implements Resolver {
                        Schema fieldSchema, DataType gpdbColType) {
 
         Schema.Type fieldType = fieldSchema.getType();
+
         int ret = 0;
+        LogicalType logicalType = fieldSchema.getLogicalType();
 
         switch (fieldType) {
             case ARRAY:
@@ -274,7 +283,14 @@ public class AvroResolver extends BasePlugin implements Resolver {
                 ret = addOneFieldToRecord(record, DataType.TEXT, fieldValue);
                 break;
             case INT:
-                ret = addOneFieldToRecord(record, DataType.INTEGER, fieldValue);
+                if (logicalType == LogicalTypes.date()) {
+                    fieldValue = AvroTypeConverter.dateFromInt((int) fieldValue);
+                } else if (logicalType == LogicalTypes.timeMillis()) {
+                    fieldValue = AvroTypeConverter.timeMillis((int) fieldValue);
+                }
+
+                DataType gpdbWritableDataType = (logicalType != null) ? gpdbColType : DataType.INTEGER;
+                ret = addOneFieldToRecord(record, gpdbWritableDataType, fieldValue);
                 break;
             case DOUBLE:
                 ret = addOneFieldToRecord(record, DataType.FLOAT8, fieldValue);
@@ -288,10 +304,25 @@ public class AvroResolver extends BasePlugin implements Resolver {
                 ret = addOneFieldToRecord(record, DataType.REAL, fieldValue);
                 break;
             case LONG:
-                ret = addOneFieldToRecord(record, DataType.BIGINT, fieldValue);
+                gpdbWritableDataType = (logicalType != null) ? gpdbColType : DataType.BIGINT;
+                if (logicalType == LogicalTypes.timeMicros()) {
+                    fieldValue = AvroTypeConverter.timeMicros((long) fieldValue);
+                } else if (logicalType == LogicalTypes.timestampMillis()) {
+                    fieldValue = AvroTypeConverter.timestampMillis((long) fieldValue);
+                } else if (logicalType == LogicalTypes.timestampMicros()) {
+                    fieldValue = AvroTypeConverter.timestampMicros((long) fieldValue);
+                } else if (logicalType == LogicalTypes.localTimestampMillis()) {
+                    fieldValue = AvroTypeConverter.localTimestampMillis((long) fieldValue);
+                } else if (logicalType == LogicalTypes.localTimestampMicros()) {
+                    fieldValue = AvroTypeConverter.localTimestampMicros((long) fieldValue);
+                }
+                ret = addOneFieldToRecord(record, gpdbWritableDataType, fieldValue);
                 break;
             case BYTES:
             case FIXED:
+                if (logicalType != null && logicalType.getName().equalsIgnoreCase("decimal")) {
+                    fieldValue = AvroTypeConverter.convertToDecimal(fieldValue, fieldSchema);
+                }
                 DataType gpdbWritableType = (gpdbColType == DataType.TEXT) ? DataType.BYTEA : gpdbColType;
                 ret = addOneFieldToRecord(record, gpdbWritableType, fieldValue);
                 break;
@@ -303,6 +334,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
         }
         return ret;
     }
+
 
     /**
      * When an Avro field is actually a record, we iterate through each field
@@ -425,4 +457,5 @@ public class AvroResolver extends BasePlugin implements Resolver {
         record.add(oneField);
         return 1;
     }
+
 }

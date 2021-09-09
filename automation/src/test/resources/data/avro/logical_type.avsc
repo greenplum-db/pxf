@@ -1,0 +1,85 @@
+{
+"type" : "record",
+  "name" : "pxf",
+  "namespace" : "pxf",
+  "fields" :
+  [ {
+    "name" : "uid",
+    "type" :
+    {
+    "type": "string",
+    "logicalType": "uuid"
+    }
+  },
+    {
+    "name": "decNum",
+    "type":
+    {
+      "type": "bytes",
+      "logicalType": "decimal",
+      "precision": 4,
+      "scale": 2
+    }
+  }
+  ,{
+    "name" : "dob",
+    "type" :
+    {
+    "type": "int",
+    "logicalType": "date"
+    }
+  }
+  ,{
+    "name" : "timeMillis",
+    "type":
+    {
+    "type" : "int",
+    "logicalType": "time-millis"    }
+  },
+  {
+    "name" : "timeMicros",
+    "type":
+    {
+      "type" : "long",
+      "logicalType": "time-micros"
+    }
+
+  }
+  ,{
+    "name" : "timeStampMillis",
+    "type" :
+    {
+      "type" : "long",
+      "logicalType": "timestamp-millis",
+      "doc" : "uuid type"
+    }
+  },
+  {
+    "name" : "timeStampMicros",
+    "type" :
+    {
+      "type" : "long",
+      "logicalType": "timestamp-micros",
+      "doc" : "uuid type"
+    }
+  },
+  {
+    "name" : "localTimeStampMicros",
+    "type":
+    {
+      "type" : "long",
+      "logicalType": "local-timestamp-micros",
+      "doc" : "localTimeStamp type"
+    }
+  } ,
+  {
+    "name" : "localTimeStampMillis",
+    "type":
+    {
+      "type" : "long",
+      "logicalType": "local-timestamp-millis",
+      "doc" : "localTimeStamp type"
+    }
+  } ],
+  "doc:" : "PXF Avro Record"
+}

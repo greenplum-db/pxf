@@ -1,0 +1,8 @@
+-- @description query01 for PXF HDFS Readable Avro test case for Avro Decimal logical types.
+
+select * from avro_logical_decimal_types;
+  decnum1   |    decnum2     | decnum3 | decnum4 |  decnum5  | decnum6
+------------+----------------+---------+---------+-----------+---------
+ 1852730.99 | 20662149.36852 | 789.516 |  90.045 |    0.9901 |   991.2
+  284472.50 | 20712481.01952 |  55.555 |   9.456 | 9999.3456 |    88.1
+(2 rows)
