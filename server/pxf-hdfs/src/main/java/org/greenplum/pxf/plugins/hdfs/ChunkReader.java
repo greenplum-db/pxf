@@ -85,8 +85,7 @@ public class ChunkReader implements Closeable {
      *         other than the end of the file, if the input stream has been closed,
      *         or if some other I/O error occurs.
      */
-    public int readChunk(Writable str, int maxBytesToConsume) throws IOException
-    {
+    public int readChunk(Writable str, int maxBytesToConsume) throws IOException {
         ChunkWritable cw = (ChunkWritable) str;
         List<Node> list = new LinkedList<Node>();
 
@@ -127,17 +126,17 @@ public class ChunkReader implements Closeable {
      * @param nodeList
      * @param bytesConsumed
      */
-    private void copyListToCW(ChunkWritable cw,List<Node> nodeList, long bytesConsumed)
-    {
-        if (nodeList.size() > 0) {
-            cw.box = new byte[(int) bytesConsumed];
-            int pos = 0;
-            for (int i = 0; i < nodeList.size(); i++) {
-                Node n = nodeList.get(i);
-                System.arraycopy(n.slice, 0, cw.box, pos, n.len);
-                pos += n.len;
-            }
+    private void copyListToCW(ChunkWritable cw,List<Node> nodeList, long bytesConsumed) {
+
+        if (nodeList.size() == 0) {
+            return;
         }
+        cw.box = new byte[(int) bytesConsumed];
+        final int[] pos = {0};
+        nodeList.forEach(node -> {
+            System.arraycopy(node.slice, 0, cw.box, pos[0], node.len);
+            pos[0] += node.len;
+        });
     }
 
     /**
