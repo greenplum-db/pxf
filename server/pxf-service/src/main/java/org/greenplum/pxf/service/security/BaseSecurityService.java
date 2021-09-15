@@ -90,7 +90,6 @@ public class BaseSecurityService implements SecurityService {
                 String realm = (new HadoopKerberosName(loginUser.getUserName())).getRealm();
                 // store in the configuration for any future reference within this request
                 configuration.set(SecureLogin.CONFIG_KEY_SERVICE_REALM, realm);
-
                 // include realm in the principal name, if required
                 remoteUser = expandRemoteUserName(remoteUser, realm, isUserImpersonationEnabled, isConstrainedDelegationEnabled);
             }
@@ -132,7 +131,8 @@ public class BaseSecurityService implements SecurityService {
      * that support this feature for the request that holds this configuration.
      * PXF profiles will get this enhanced configuration from the RequestContext and will pass
      * it to Hadoop FileSystem operations making it available downstream in Hadoop SASL layers.
-     *  @param configuration configuration for the current request
+     *
+     * @param configuration configuration for the current request
      * @param isSecurityEnabled whether Kerberos security is enabled
      * @param isUserImpersonationEnabled whether user impersonation is enabled
      * @param isConstrainedDelegationEnabled whether constrained delegation is enabled
