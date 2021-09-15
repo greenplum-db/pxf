@@ -439,6 +439,31 @@ public class SecureLoginTest {
         assertTrue(secureLogin.isUserImpersonationEnabled(configuration));
     }
 
+    /* ---------- methods to test constrained delegation property ---------- */
+
+    @Test
+    public void testGlobalConstrainedDelegationPropertyAbsent() {
+        assertFalse(secureLogin.isConstrainedDelegationEnabled(configuration));
+    }
+
+    @Test
+    public void testServerConfigurationConstrainedDelegationPropertyFalse() {
+        configuration.set("pxf.service.kerberos.constrained-delegation", "foo");
+        assertFalse(secureLogin.isConstrainedDelegationEnabled(configuration));
+    }
+
+    @Test
+    public void testServerConfigurationConstrainedDelegationPropertyTrue() {
+        configuration.set("pxf.service.kerberos.constrained-delegation", "true");
+        assertTrue(secureLogin.isUserImpersonationEnabled(configuration));
+    }
+
+    @Test
+    public void testServerConfigurationConstrainedDelegationPropertyTRUE() {
+        configuration.set("pxf.service.kerberos.constrained-delegation", "TRUE");
+        assertTrue(secureLogin.isUserImpersonationEnabled(configuration));
+    }
+
     private static void resetProperty(String key, String val) {
         if (val != null) {
             System.setProperty(key, val);

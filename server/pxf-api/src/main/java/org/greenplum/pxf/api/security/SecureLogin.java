@@ -61,6 +61,8 @@ public class SecureLogin {
 
     public static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
     public static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
+    public static final String CONFIG_KEY_SERVICE_REALM = "pxf.service.kerberos.realm";
+    public static final String CONFIG_KEY_SERVICE_CONSTRAINED_DELEGATION = "pxf.service.kerberos.constrained-delegation";
     public static final String CONFIG_KEY_SERVICE_USER_IMPERSONATION = "pxf.service.user.impersonation";
     public static final String CONFIG_KEY_SERVICE_USER_NAME = "pxf.service.user.name";
 
@@ -190,6 +192,16 @@ public class SecureLogin {
     public boolean isUserImpersonationEnabled(Configuration configuration) {
         String valueFromUserImpersonationOnServer = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION, "true");
         return StringUtils.equalsIgnoreCase(valueFromUserImpersonationOnServer, "true");
+    }
+
+    /**
+     * Returns whether Kerberos constrained delegation has been configured as enabled.
+     *
+     * @return true if Kerberos constrained delegation is enabled, false otherwise
+     */
+    public boolean isConstrainedDelegationEnabled(Configuration configuration) {
+        String valueFromConstrainedDelegationOnServer = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_CONSTRAINED_DELEGATION, "false");
+        return StringUtils.equalsIgnoreCase(valueFromConstrainedDelegationOnServer, "true");
     }
 
     /**

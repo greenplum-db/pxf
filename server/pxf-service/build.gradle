@@ -40,6 +40,7 @@ dependencies {
     implementation('io.micrometer:micrometer-registry-prometheus')
 
     implementation("org.apache.hadoop:hadoop-hdfs-client")           { transitive = false }
+    implementation("org.apache.hadoop:hadoop-auth")                  { transitive = false }
 
     /*******************************
      * These JARs below (and its transitive dependencies, other than txw2 [for writing XML docs]) are needed for Java 11
