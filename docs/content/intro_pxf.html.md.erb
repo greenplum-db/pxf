@@ -23,13 +23,13 @@ PXF bundles all of the Hadoop JAR files on which it depends, and supports the fo
 
 | PXF Version | Hadoop Version | Hive Server Version | HBase Server Version |
 |-------------|----------------|---------------------|-------------|
-| 6.2, 6.1, 6.0 | 2.x, 3.1+ | 1.x, 2.x, 3.1+ | 1.3.2 |
+| 6.x | 2.x, 3.1+ | 1.x, 2.x, 3.1+ | 1.3.2 |
 | 5.9+ | 2.x, 3.1+ | 1.x, 2.x, 3.1+ | 1.3.2 |
 | 5.8 | 2.x | 1.x | 1.3.2 |
 
 ## <a id="arch"></a> Architectural Overview
 
-Your Greenplum Database deployment consists of a master node, a standby master, and multiple segment hosts. A single PXF Service process runs on each Greenplum Database host. The PXF Service process running on a segment host allocates a worker thread for each segment instance on the host that participates in a query against an external table. The PXF Services on multiple segment hosts communicate with the external data store in parallel. The PXF Service process running on the master and standby master hosts are not currently involved in data transfer; these processes may be used for other purposes in the future.
+Your Greenplum Database deployment consists of a master host, a standby master host, and multiple segment hosts. A single PXF Service process runs on each Greenplum Database host. The PXF Service process running on a segment host allocates a worker thread for each segment instance on the host that participates in a query against an external table. The PXF Services on multiple segment hosts communicate with the external data store in parallel. The PXF Service process running on the master and standby master hosts are not currently involved in data transfer; these processes may be used for other purposes in the future.
 
 
 ## <a id="more"></a> About Connectors, Servers, and Profiles
