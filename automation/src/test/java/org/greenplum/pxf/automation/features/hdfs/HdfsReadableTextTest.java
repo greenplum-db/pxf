@@ -302,6 +302,62 @@ public class HdfsReadableTextTest extends BaseFeature {
     }
 
     /**
+     * Read CSV file with headers from HDFS using *:text:multi profile and
+     * CSV format and SKIP_HEADER_COUNT.
+     *
+     * @throws Exception when the test fails
+     */
+    @Test(groups = {"features", "gpdb", "hdfs", "security"})
+    public void readCsvFilesWithSkipHeaderCount() throws Exception {
+        // set profile and format
+        exTable.setProfile(protocol.value() + ":text:multi");
+        exTable.setFormat("CSV");
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // create a new table with the SKIP_HEADER_COUNT parameter
+        exTable.setName("pxf_hdfs_data_multi_profile_with_skip");
+        exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=10"});
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // run the query skipping the first 10 lines of the text
+        runTincTest("pxf.features.hdfs.readable.text.multiprofile_with_skip.runTest");
+
+    }
+
+    /**
+     * Read the multi-line CSV file with headers from HDFS using *:text:multi profile and
+     * CSV format and SKIP_HEADER_COUNT.
+     *
+     * @throws Exception when the test fails
+     */
+    @Test(groups = {"features", "gpdb", "hdfs", "security"})
+    public void readMultiLineCsvFilesWithSkipHeaderCount() throws Exception {
+        String hdfs_dir = hdfs.getWorkingDirectory() + "/csv_files_with_header/multi_line_csv_with_header.csv";
+        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/multi_line_csv_with_header.csv", hdfs_dir);
+
+        // define and create external table
+        exTable = new ReadableExternalTable("pxf_multi_csv_with_header", new String[]{
+                "num1 int",
+                "word text",
+                "num2 int"},
+                protocol.getExternalTablePath(hdfs.getBasePath(), hdfs_dir), "CSV");
+
+        exTable.setProfile(protocol.value() + ":text:multi");
+
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=1"});
+        gpdb.createTableAndVerify(exTable);
+        // Verify results
+        runTincTest("pxf.features.hdfs.readable.text.multiline_csv_data_with_header.runTest");
+    }
+
+    /**
      * Create 2 files located under the same HDFS directory and read it using
      * wildcard
      */

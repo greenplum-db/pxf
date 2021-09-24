@@ -166,6 +166,238 @@ public class QuotedLineBreakAccessorTest {
         assertNull(oneRow);
     }
 
+    @Test
+    public void testReadFromSimpleCsvFileWithSkipHeaderOption() throws Exception {
+        context.addOption("SKIP_HEADER_COUNT", "1");
+        prepareTest("csv/quoted.csv", false);
+
+        OneRow oneRow = accessor.readNextObject();
+
+        assertNotNull(oneRow);
+        assertEquals("and 3\",\"4\"", oneRow.getData());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+    }
+
+    @Test
+    public void testSkipHeaderCountIsNotANumber() {
+        context.setDataSource("/foo");
+        context.addOption("SKIP_HEADER_COUNT", "foo");
+        accessor.setRequestContext(context);
+        Exception e = assertThrows(IllegalArgumentException.class, accessor::afterPropertiesSet);
+        assertEquals("Property SKIP_HEADER_COUNT has incorrect value foo : must be a non-negative integer", e.getMessage());
+    }
+
+    @Test
+    public void testSkipHeaderCountIsNotANaturalNumber() {
+        context.setDataSource("/foo");
+        context.addOption("SKIP_HEADER_COUNT", "-5");
+        accessor.setRequestContext(context);
+        Exception e = assertThrows(IllegalArgumentException.class, accessor::afterPropertiesSet);
+        assertEquals("Property SKIP_HEADER_COUNT has incorrect value -5 : must be a non-negative integer", e.getMessage());
+    }
+
+    @Test
+    public void testDontSkipHeaders() throws Exception {
+        prepareTest("csv/csv_with_header.csv",false);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line1,header1,header2,header3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line2,header1,header2,header3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line3,value1,value2,value3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+    @Test
+    public void testCarriageReturnForNewLineCharacter() throws Exception {
+        prepareTest("csv/csv_with_carriage_return.csv",false);
+        context.getGreenplumCSV().withNewline("\r");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("this,file", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("has,line feeds", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("as,new line delimiter", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("CR,0x0D", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+    @Test
+    public void testCarriageReturnLineFeedForNewLineCharacter() throws Exception {
+        prepareTest("csv/csv_with_carriage_return_line_feed.csv",false);
+        context.getGreenplumCSV().withNewline("\r\n");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("this,file", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("has,line feeds", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("as,new line delimiter", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("CRLF,0x0D 0x0A", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+    @Test
+    public void testLineFeedForNewLineCharacter() throws Exception {
+        prepareTest("csv/csv_with_line_feed.csv", false);
+        context.getGreenplumCSV().withNewline("\n");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("this,file", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("has,line feeds", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("as,new line delimiter", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("LF,0x0A", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+
+    @Test
+    public void testSkipHeaderCountOne() throws Exception {
+        prepareTest("csv/csv_with_header.csv", false);
+        context.addOption("SKIP_HEADER_COUNT", "1");
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line2,header1,header2,header3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line3,value1,value2,value3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+    @Test
+    public void testSkipHeaderCountWhenNonZeroFragmentIndex() throws Exception {
+        prepareTest("csv/csv_with_header.csv", false);
+        context.addOption("SKIP_HEADER_COUNT", "1");
+        context.setFragmentIndex(2);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line1,header1,header2,header3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line2,header1,header2,header3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line3,value1,value2,value3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+    @Test
+    public void testSkipHeaderCountTwo() throws Exception {
+        prepareTest("csv/csv_with_header.csv", false);
+        context.addOption("SKIP_HEADER_COUNT", "2");
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertEquals("line3,value1,value2,value3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+    @Test
+    public void testSkipHeaderCountTen() throws Exception {
+        prepareTest("csv/csv_with_header.csv", false);
+        context.addOption("SKIP_HEADER_COUNT", "10");
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+
     private void prepareTest(String resourceName, boolean fileAsRow) throws Exception {
         if (fileAsRow) {
             context.addOption("FILE_AS_ROW", "true");

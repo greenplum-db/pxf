@@ -37,7 +37,7 @@ import java.util.Queue;
 public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
     private boolean fileAsRow;
     private boolean firstLine, lastLine;
-
+    private int skipHeaderCount;
     BufferedReader reader;
     Queue<String> lineQueue;
 
@@ -53,6 +53,9 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
                             "the table definition. %d columns were provided",
                     context.getTupleDescription().size()));
         }
+        skipHeaderCount = context.getFragmentIndex() == 0
+                ? context.getOption("SKIP_HEADER_COUNT", 0, true)
+                : 0;
     }
 
     @Override
@@ -70,11 +73,27 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      */
     @Override
     public OneRow readNextObject() throws IOException {
+
         if (super.readNextObject() == null) /* check if working segment */ {
             return null;
         }
 
-        String nextLine = readLine();
+        //SKIP_HEADER_COUNT is set, this will skip the rows based on the
+        // count provided.
+        while (skipHeaderCount > 0) {
+            if (reader.readLine() == null)
+                return null;
+            skipHeaderCount--;
+        }
+
+        String nextLine = null;
+        if(!fileAsRow){
+            nextLine=  reader.readLine();
+        }
+        else{
+            nextLine = readLine();
+        }
+
         if (nextLine == null) /* EOF */ {
             return null;
         }
@@ -94,11 +113,6 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      * @return the next line
      */
     String readLine() throws IOException {
-        if (!fileAsRow) {
-            // simply readLine when fileAsRow feature is not enabled
-            return reader.readLine();
-        }
-
         String line;
         if (lineQueue == null) {
             line = reader.readLine();
