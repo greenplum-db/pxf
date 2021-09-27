@@ -25,15 +25,16 @@ import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_SERVER
 public class BaseSecurityService implements SecurityService {
 
     private static final Logger LOG = LoggerFactory.getLogger(BaseSecurityService.class);
+    private static final String EXPAND_PRINCIPAL_PROPERTY = "pxf.features.kerberos.expand-user-principal";
 
     private final SecureLogin secureLogin;
     private final UGIProvider ugiProvider;
 
     /* feature flag to expand Kerberos User Principal name when impersonating */
-    private boolean isExpandUserPrincipal = true;
+    private boolean isExpandUserPrincipal;
 
     public BaseSecurityService(SecureLogin secureLogin, UGIProvider ugiProvider,
-                               @Value("${pxf.features.kerberos.expand-user-principal}") boolean isExpandUserPrincipal) {
+                               @Value("${" + EXPAND_PRINCIPAL_PROPERTY + "}") boolean isExpandUserPrincipal) {
         this.secureLogin = secureLogin;
         this.ugiProvider = ugiProvider;
         this.isExpandUserPrincipal = isExpandUserPrincipal;
@@ -88,8 +89,6 @@ public class BaseSecurityService implements SecurityService {
             if (isSecurityEnabled) {
                 // derive realm from the logged in user, rather than parsing principal info ourselves
                 String realm = (new HadoopKerberosName(loginUser.getUserName())).getRealm();
-                // store in the configuration for any future reference within this request
-                configuration.set(SecureLogin.CONFIG_KEY_SERVICE_REALM, realm);
                 // include realm in the principal name, if required
                 remoteUser = expandRemoteUserName(remoteUser, realm, isUserImpersonationEnabled, isConstrainedDelegationEnabled);
             }
@@ -130,7 +129,7 @@ public class BaseSecurityService implements SecurityService {
      * Validates consistency of property values for Kerberos constrained delegation and sets configuration properties
      * that support this feature for the request that holds this configuration.
      * PXF profiles will get this enhanced configuration from the RequestContext and will pass
-     * it to Hadoop FileSystem operations making it available downstream in Hadoop SASL layers.
+     * it to Hadoop FileSystem operations, making it available downstream in Hadoop SASL layers.
      *
      * @param configuration configuration for the current request
      * @param isSecurityEnabled whether Kerberos security is enabled
@@ -139,22 +138,23 @@ public class BaseSecurityService implements SecurityService {
      */
     private void processConstrainedDelegation(Configuration configuration, boolean isSecurityEnabled,
                                               boolean isUserImpersonationEnabled, boolean isConstrainedDelegationEnabled) {
-        if (isConstrainedDelegationEnabled) {
-            if (!isSecurityEnabled) {
-                throw new PxfRuntimeException("Kerberos constrained delegation should not be enabled for non-secure cluster.",
-                        String.format("Set the value of %s property to false in %s/pxf-site.xml file.",
-                                SecureLogin.CONFIG_KEY_SERVICE_CONSTRAINED_DELEGATION,
-                                configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
-            }
-            if (!isUserImpersonationEnabled) {
-                throw new PxfRuntimeException("User impersonation is not enabled for Kerberos constrained delegation.",
-                        String.format("Set the value of %s property to true in %s/pxf-site.xml file.",
-                                SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION,
-                                configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
-            }
-            configuration.set(HADOOP_SECURITY_SASL_PROPS_RESOLVER_CLASS, PxfSaslPropertiesResolver.class.getName());
-            LOG.debug("Kerberos constrained delegation and user impersonation are enabled, setting up PxfSaslPropertiesResolver");
+        if (!isConstrainedDelegationEnabled) {
+            return;
         }
+        if (!isSecurityEnabled) {
+            throw new PxfRuntimeException("Kerberos constrained delegation should not be enabled for non-secure clusters.",
+                    String.format("Set the value of %s property to false in %s/pxf-site.xml file.",
+                            SecureLogin.CONFIG_KEY_SERVICE_CONSTRAINED_DELEGATION,
+                            configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
+        }
+        if (!isUserImpersonationEnabled) {
+            throw new PxfRuntimeException("User impersonation is not enabled for Kerberos constrained delegation.",
+                    String.format("Set the value of %s property to true in %s/pxf-site.xml file.",
+                            SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION,
+                            configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
+        }
+        configuration.set(HADOOP_SECURITY_SASL_PROPS_RESOLVER_CLASS, PxfSaslPropertiesResolver.class.getName());
+        LOG.debug("Kerberos constrained delegation and user impersonation are enabled, setting up PxfSaslPropertiesResolver");
     }
 
     /**

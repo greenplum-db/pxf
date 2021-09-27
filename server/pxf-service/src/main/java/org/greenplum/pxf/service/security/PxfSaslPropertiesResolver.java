@@ -1,12 +1,12 @@
 package org.greenplum.pxf.service.security;
 
-import com.sun.security.jgss.ExtendedGSSCredential;
+import com.google.common.base.Preconditions;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SaslPropertiesResolver;
-import org.greenplum.pxf.api.security.SecureLogin;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
+import org.greenplum.pxf.api.security.GSSCredentialProvider;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSException;
-import org.ietf.jgss.GSSManager;
-import org.ietf.jgss.GSSName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,34 +14,34 @@ import javax.security.sasl.Sasl;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
-import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_SESSION_USER_PROPERTY;
 
 /**
  * Customized resolver that is called by Hadoop SASL mechanism when a SASL connection needs to be established.
- * It obtains and stores an S4U2 proxy credential under "javax.security.sasl.credentials" property name so that
- * the downstream machinery can perform the Kerberos Constrained Delegation logic. This resolver must be set
- * on the Hadoop configuration object under "hadoop.security.saslproperties.resolver.class" property name.
+ * It obtains an S4U2self credential from the provider and stores it under "javax.security.sasl.credentials"
+ * property name so that the downstream machinery can perform the Kerberos Constrained Delegation logic.
+ * This resolver must be set on the Hadoop configuration object under "hadoop.security.saslproperties.resolver.class"
+ * property name.
  */
 public class PxfSaslPropertiesResolver extends SaslPropertiesResolver {
 
     private static final Logger LOG = LoggerFactory.getLogger(PxfSaslPropertiesResolver.class);
-    private final Supplier<GSSManager> gssManagerProvider; // break dependency on static method of GSSManager
+    private final GSSCredentialProvider credentialProvider;
 
     /**
-     * Default constructor, uses built-in GSSManager provider. It is used by the Hadoop security framework.
+     * Default constructor, uses Spring-managed singleton of GSSCredentialProvider class.
+     * It is used by the Hadoop security framework.
      */
     public PxfSaslPropertiesResolver() {
-        gssManagerProvider = GSSManager::getInstance;
+        this.credentialProvider = SpringContext.getBean(GSSCredentialProvider.class);
     }
 
     /**
-     * Constructor used for testing that takes a GSSManager provider as a parameter.
-     * @param gssManagerProvider a provider of GSSManager
+     * Constructor used for testing that takes a GSSCredentialProvider provider as a parameter.
+     * @param credentialProvider a provider of GSS credentials
      */
-    PxfSaslPropertiesResolver(Supplier<GSSManager> gssManagerProvider) {
-        this.gssManagerProvider = gssManagerProvider;
+    PxfSaslPropertiesResolver(GSSCredentialProvider credentialProvider) {
+        this.credentialProvider = credentialProvider;
     }
 
     @Override
@@ -53,35 +53,25 @@ public class PxfSaslPropertiesResolver extends SaslPropertiesResolver {
     @Override
     public Map<String, String> getClientProperties(InetAddress serverAddress) {
         Map<String, String> props = super.getClientProperties(serverAddress);
-        // return a wrapper that will delegate all requests to the map obtained from the parent
-        // but will execute a special logic when the key "javax.security.sasl.credentials" is requested.
+        // return a enhanced map initialized with properties obtained from the parent class and having
+        // an extra property "javax.security.sasl.credentials" added with the value of the GSS credential
+        // obtained from the credential provider.
         return new MapWrapper(props);
     }
 
     /**
-     * Obtains an S4U2 proxy credential for the user and realm specified by the configuration.
+     * Obtains an S4U2self credential for the GP user and PXF server specified by the configuration.
      * It must be run under from a "doAs" block from a Subject having a service Kerberos ticket.
      *
      * @return the proxy credential
      */
     private GSSCredential getKerberosProxyCredential() {
-        // TODO: cache credential per user/server and check if credential is near expiration ?
-        // find the name of the Greenplum user
-        String userName = getConf().get(PXF_SESSION_USER_PROPERTY);
-        String realm = getConf().get(SecureLogin.CONFIG_KEY_SERVICE_REALM);
-        String realmSuffix = "@" + realm;
-        String userPrincipal = userName.endsWith(realmSuffix) ? userName : userName + realmSuffix;
-        LOG.debug("Created principal name={} for user={} and realm={}", userPrincipal, userName, realm);
-        GSSManager manager = gssManagerProvider.get();
-        try {
-            GSSCredential serviceCredentials = manager.createCredential(GSSCredential.INITIATE_ONLY);
-            GSSName other = manager.createName(userPrincipal, GSSName.NT_USER_NAME);
-            GSSCredential result = ((ExtendedGSSCredential) serviceCredentials).impersonate(other);
-            LOG.debug("Obtained S4U2 credential {}", result);
-            return result;
-        } catch (GSSException e) {
-            throw new RuntimeException(e);
-        }
+        String userName = getConf().get(ConfigurationFactory.PXF_SESSION_USER_PROPERTY);
+        String server = getConf().get(ConfigurationFactory.PXF_SERVER_NAME_PROPERTY);
+        Preconditions.checkState(StringUtils.isNotBlank(userName), "User name is missing from the configuration.");
+        Preconditions.checkState(StringUtils.isNotBlank(server), "Server name is missing from the configuration.");
+        LOG.debug("Requesting GSS credential for user {} and server {}", userName, server);
+        return credentialProvider.getGSSCredential(userName, server);
     }
 
     /**

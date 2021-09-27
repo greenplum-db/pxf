@@ -1,12 +1,8 @@
 package org.greenplum.pxf.service.security;
 
-import com.sun.security.jgss.ExtendedGSSCredential;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.SaslPropertiesResolver;
+import org.greenplum.pxf.api.security.GSSCredentialProvider;
 import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSException;
-import org.ietf.jgss.GSSManager;
-import org.ietf.jgss.GSSName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +16,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,95 +23,82 @@ public class PxfSaslPropertiesResolverTest {
 
     private PxfSaslPropertiesResolver resolver;
     private Configuration configuration;
+    private InetAddress address;
 
-    @Mock private GSSManager mockGSSManager;
-    @Mock private ExtendedGSSCredential mockCredential;
-    @Mock private GSSName mockGSSName;
-    @Mock private GSSCredential mockProxyCredential;
+    @Mock
+    private GSSCredentialProvider mockCredentialProvider;
+    @Mock
+    private GSSCredential mockCredential;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws UnknownHostException {
+        address = InetAddress.getLocalHost();
         configuration = new Configuration();
+        resolver = new PxfSaslPropertiesResolver(mockCredentialProvider);
+        resolver.setConf(configuration);
     }
 
     @Test
-    public void testCanBeInstantiated() {
-        configuration.set("hadoop.security.saslproperties.resolver.class", PxfSaslPropertiesResolver.class.getName());
-        SaslPropertiesResolver saslResolver = SaslPropertiesResolver.getInstance(configuration);
-        assertTrue(saslResolver instanceof PxfSaslPropertiesResolver);
-        assertSame(configuration, saslResolver.getConf());
+    public void testGetClientPropertiesFailsOnMissingUser() {
+        configuration.set("pxf.config.server.name", "server");
+        Exception e = assertThrows(IllegalStateException.class, () -> resolver.getClientProperties(address));
+        assertEquals("User name is missing from the configuration.", e.getMessage());
     }
 
     @Test
-    public void testReturnsDefaultPropertiesAndCredential_UserNameWithoutRealmSuffix() throws UnknownHostException, GSSException {
-        expectSuccessfulInteractions("testUser", "EXAMPLE.FOO","testUser@EXAMPLE.FOO");
-        assertReturnedDefaultProperties();
+    public void testGetClientPropertiesFailsOnMissingServer() {
+        configuration.set("pxf.session.user", "user");
+        Exception e = assertThrows(IllegalStateException.class, () -> resolver.getClientProperties(address));
+        assertEquals("Server name is missing from the configuration.", e.getMessage());
     }
 
     @Test
-    public void testReturnsDefaultPropertiesAndCredential_UserNameWithRealmSuffix() throws UnknownHostException, GSSException {
-        expectSuccessfulInteractions("testUser@EXAMPLE.FOO", "EXAMPLE.FOO", "testUser@EXAMPLE.FOO");
-        assertReturnedDefaultProperties();
+    public void testGetClientPropertiesNoPortContainsGSSCredential() {
+        configuration.set("pxf.session.user", "user");
+        configuration.set("pxf.config.server.name", "server");
+        when(mockCredentialProvider.getGSSCredential("user", "server")).thenReturn(mockCredential);
+
+        Map<String, String> props = resolver.getClientProperties(address);
+        assertReturnedQopProperties("auth", props);
     }
 
     @Test
-    public void testReturnsDefaultPropertiesAndCredential_UserNameWithSimilarSuffix() throws UnknownHostException, GSSException {
-        // in reality this composite principal name will not happen as realms will match,
-        // but the code does not validate realms and the below is what will happen for the given input
-        expectSuccessfulInteractions("testUser@BAR.EXAMPLE.FOO", "EXAMPLE.FOO", "testUser@BAR.EXAMPLE.FOO@EXAMPLE.FOO");
-        assertReturnedDefaultProperties();
+    public void testGetClientPropertiesWithPortContainsGSSCredential() {
+        configuration.set("pxf.session.user", "user");
+        configuration.set("pxf.config.server.name", "server");
+        when(mockCredentialProvider.getGSSCredential("user", "server")).thenReturn(mockCredential);
+
+        Map<String, String> props = resolver.getClientProperties(address, 1010);
+        assertReturnedQopProperties("auth", props);
     }
 
     @Test
-    public void testReturnsQopPropertiesAndCredential() throws UnknownHostException, GSSException {
+    public void testGetClientPropertiesReturnsQopPropertiesAndCredential() {
+        configuration.set("pxf.session.user", "user");
+        configuration.set("pxf.config.server.name", "server");
         configuration.set("hadoop.rpc.protection", " integrity ,privacy "); // use extra white spaces to test trimming
-        expectSuccessfulInteractions("testUser", "EXAMPLE.FOO","testUser@EXAMPLE.FOO");
-        assertReturnedQopProperties("auth-int,auth-conf"); // parent class parses QOP levels
+        resolver.setConf(configuration); // reset conf to re-parse specified QOP
+        when(mockCredentialProvider.getGSSCredential("user", "server")).thenReturn(mockCredential);
+        Map<String, String> props = resolver.getClientProperties(address);
+        assertReturnedQopProperties("auth-int,auth-conf", props); // parent class parses QOP levels
     }
 
     @Test
-    public void testFailureDuringImpersonation() throws GSSException {
-        configuration.set("pxf.session.user", "testUser");
-        configuration.set("pxf.service.kerberos.realm", "EXAMPLE.FOO");
-
-        // create the resolver using provided configuration
-        resolver = new PxfSaslPropertiesResolver(() -> mockGSSManager);
-        resolver.setConf(configuration);
-
-        when(mockGSSManager.createCredential(GSSCredential.INITIATE_ONLY)).thenReturn(mockCredential);
-        when(mockGSSManager.createName("testUser@EXAMPLE.FOO", GSSName.NT_USER_NAME)).thenReturn(mockGSSName);
-        Exception expectedException = new GSSException(GSSException.FAILURE);
-        when(mockCredential.impersonate(mockGSSName)).thenThrow(expectedException);
-
-        Exception e = assertThrows(RuntimeException.class, () -> resolver.getClientProperties(InetAddress.getLocalHost()));
-        assertSame(expectedException, e.getCause());
+    public void testFailureDuringGettingCredential() {
+        configuration.set("pxf.session.user", "user");
+        configuration.set("pxf.config.server.name", "server");
+        Exception expectedException = new RuntimeException("foo");
+        when(mockCredentialProvider.getGSSCredential("user", "server")).thenThrow(expectedException);
+        Exception e = assertThrows(RuntimeException.class, () -> resolver.getClientProperties(address));
+        assertSame(expectedException, e);
     }
 
-    private void expectSuccessfulInteractions(String userName, String realmName, String compositeName) throws GSSException {
-        configuration.set("pxf.session.user", userName); // missing @EXAMPLE sequence
-        configuration.set("pxf.service.kerberos.realm", realmName);
-
-        // create the resolver using provided configuration
-        resolver = new PxfSaslPropertiesResolver(() -> mockGSSManager);
-        resolver.setConf(configuration);
-
-        when(mockGSSManager.createCredential(GSSCredential.INITIATE_ONLY)).thenReturn(mockCredential);
-        when(mockGSSManager.createName(compositeName, GSSName.NT_USER_NAME)).thenReturn(mockGSSName);
-        when(mockCredential.impersonate(mockGSSName)).thenReturn(mockProxyCredential);
-    }
-
-    private void assertReturnedDefaultProperties() throws UnknownHostException {
-        assertReturnedQopProperties("auth");
-    }
-
-    private void assertReturnedQopProperties(String expectedQop) throws UnknownHostException {
-        Map<String, ?> props = resolver.getClientProperties(InetAddress.getLocalHost());
+    private void assertReturnedQopProperties(String expectedQop, Map<String, ?> props) {
         assertEquals(3, props.size());
         // default props from parent class
         assertEquals(expectedQop, props.get("javax.security.sasl.qop"));
         assertEquals("true", props.get("javax.security.sasl.server.authentication"));
         // special property with the credential
-        assertSame(mockProxyCredential, props.get("javax.security.sasl.credentials"));
+        assertSame(mockCredential, props.get("javax.security.sasl.credentials"));
     }
-
 }

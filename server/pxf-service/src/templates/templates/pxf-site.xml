@@ -21,8 +21,9 @@
         <description>
             Makes user impersonation work via Kerberos constrained delegation based on S4U2Self/Proxy Kerberos extension.
             This method does not require the PXF principal to be a Hadoop proxy user, but requires the S4U2 feature
-            to be enabled in an LDAP/IPA server. Additional configuration is needed in the LDAP/IPA to enable
-            the PXF principal to impersonate end users. Set to true to enable, false to disable.
+            to be enabled in an Active Directory / IPA Server. Additional configuration is needed in the
+            Active Directory / IPA Server to enable the PXF principal to impersonate end users.
+            Set to true to enable, false to disable.
             If set to true, the property 'pxf.service.user.impersonation' has to be set to true as well.
         </description>
     </property>

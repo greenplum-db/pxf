@@ -83,6 +83,7 @@ public class PxfUserGroupInformation {
             // set the configuration on the HadoopKerberosName
             HadoopKerberosName.setConfiguration(configuration);
 
+            long now = Time.now();
             // create login context with the given subject, using Kerberos principal and keytab filename; then login
             LoginContext login = loginContextProvider.newLoginContext(HadoopConfiguration.KEYTAB_KERBEROS_CONFIG_NAME,
                     subject, new HadoopConfiguration(principal, keytabFilename));
@@ -92,6 +93,7 @@ public class PxfUserGroupInformation {
             UserGroupInformation loginUser = new UserGroupInformation(subject);
             User user = subject.getPrincipals(User.class).iterator().next();
             user.setLogin(login);
+            user.setLastLogin(now);
             loginUser.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);
 
             LOG.info("Login successful for principal {} using keytab file {}", principal, keytabFilename);
@@ -260,7 +262,7 @@ public class PxfUserGroupInformation {
      *
      * @return the user's TGT or null if none was found
      */
-    private synchronized KerberosTicket getTGT(Subject subject) {
+    public synchronized KerberosTicket getTGT(Subject subject) {
         Set<KerberosTicket> tickets = subject.getPrivateCredentials(KerberosTicket.class);
         for (KerberosTicket ticket : tickets) {
             if (SecurityUtil.isOriginalTGT(ticket)) {

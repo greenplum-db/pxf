@@ -101,7 +101,7 @@ public class BaseSecurityServiceTest {
     public void determineRemoteUser_IsLoginUser_NoKerberos_NoImpersonation_ConstrainedDelegation() throws Exception {
         // setting constrained delegation in non-secure environment will cause in a validation error
         expectErrorScenario(false, false,
-                "Kerberos constrained delegation should not be enabled for non-secure cluster.",
+                "Kerberos constrained delegation should not be enabled for non-secure clusters.",
                 "Set the value of pxf.service.kerberos.constrained-delegation property to false in foo-dir/pxf-site.xml file.");
     }
 
@@ -134,7 +134,7 @@ public class BaseSecurityServiceTest {
     public void determineRemoteUser_IsGpdbUser_NoKerberos_Impersonation_ConstrainedDelegation() throws Exception {
         // setting constrained delegation in non-secure environment will cause in a validation error
         expectErrorScenario(false, true,
-                "Kerberos constrained delegation should not be enabled for non-secure cluster.",
+                "Kerberos constrained delegation should not be enabled for non-secure clusters.",
                 "Set the value of pxf.service.kerberos.constrained-delegation property to false in foo-dir/pxf-site.xml file.");
     }
 

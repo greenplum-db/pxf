@@ -422,8 +422,15 @@ public class SecureLoginTest {
     }
 
     @Test
+    public void testServerConfigurationImpersonationPropertyJunk() {
+        // true if missing or non-parsable boolean
+        configuration.set("pxf.service.user.impersonation", "junk");
+        assertTrue(secureLogin.isUserImpersonationEnabled(configuration));
+    }
+
+    @Test
     public void testServerConfigurationImpersonationPropertyFalse() {
-        configuration.set("pxf.service.user.impersonation", "foo");
+        configuration.set("pxf.service.user.impersonation", "false");
         assertFalse(secureLogin.isUserImpersonationEnabled(configuration));
     }
 
@@ -447,8 +454,15 @@ public class SecureLoginTest {
     }
 
     @Test
+    public void testServerConfigurationConstrainedDelegationPropertyJunk() {
+        // false if missing or non-parsable boolean
+        configuration.set("pxf.service.kerberos.constrained-delegation", "junk");
+        assertFalse(secureLogin.isConstrainedDelegationEnabled(configuration));
+    }
+
+    @Test
     public void testServerConfigurationConstrainedDelegationPropertyFalse() {
-        configuration.set("pxf.service.kerberos.constrained-delegation", "foo");
+        configuration.set("pxf.service.kerberos.constrained-delegation", "false");
         assertFalse(secureLogin.isConstrainedDelegationEnabled(configuration));
     }
 
