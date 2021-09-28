@@ -397,6 +397,29 @@ public class QuotedLineBreakAccessorTest {
         accessor.closeForRead();
     }
 
+    @Test
+    public void testSkipHeaderWithFileAsRow() throws Exception {
+
+        prepareTest("csv/csv_with_header.csv", true);
+        context.addOption("SKIP_HEADER_COUNT", "1");
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+        OneRow oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("\"line2,header1,header2,header3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line3,value1,value2,value3\"", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+
+    }
+
 
     private void prepareTest(String resourceName, boolean fileAsRow) throws Exception {
         if (fileAsRow) {

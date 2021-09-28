@@ -357,6 +357,35 @@ public class HdfsReadableTextTest extends BaseFeature {
         runTincTest("pxf.features.hdfs.readable.text.multiline_csv_data_with_header.runTest");
     }
 
+
+    /**
+     * Read the multi-line CSV file with headers from HDFS using *:text:multi profile and
+     * CSV format and SKIP_HEADER_COUNT=1 and FILE_AS_ROW flag set to True.
+     *
+     * @throws Exception when the test fails
+     */
+    @Test(groups = {"features", "gpdb", "hdfs", "security"})
+    public void readMultiLineCsvFileAsRowSkipHeaderCount() throws Exception {
+        String hdfs_dir = hdfs.getWorkingDirectory() + "/csv_files_with_header/multi_line_csv_with_header.csv";
+        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/multi_line_csv_with_header.csv", hdfs_dir);
+
+        // define and create external table
+        exTable = new ReadableExternalTable("pxf_file_as_row_with_header", new String[]{
+                "data text"},
+                protocol.getExternalTablePath(hdfs.getBasePath(), hdfs_dir), "CSV");
+
+        exTable.setProfile(protocol.value() + ":text:multi");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=1","FILE_AS_ROW=true"});
+        gpdb.createTableAndVerify(exTable);
+        // Verify results
+        runTincTest("pxf.features.hdfs.readable.text.multiline_file_as_row_with_header.runTest");
+    }
+
+
+
+
     /**
      * Create 2 files located under the same HDFS directory and read it using
      * wildcard

@@ -78,8 +78,22 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
             return null;
         }
 
-        //SKIP_HEADER_COUNT is set, this will skip the rows based on the
-        // count provided.
+        /**
+         * SKIP_HEADER_COUNT is set, this will skip the Physical rows in a file based on the
+         * count provided. For eg. For a file with the following data:
+         *
+         *   Address-Month-Year
+         *   "4627 Star Rd.
+         *   San Francisco, CA  94107":Sept:2017
+         *   "113 Moon St.
+         *   San Diego, CA  92093":Jan:2018
+         *
+         * In the above example, if the skipHeaderCount = 3, it will skip the first 3 lines
+         * and read the following remaining lines
+         *
+         *   "113 Moon St.
+         *   San Diego, CA  92093":Jan:2018
+         */
         while (skipHeaderCount > 0) {
             if (reader.readLine() == null)
                 return null;
@@ -87,10 +101,10 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
         }
 
         String nextLine = null;
-        if(!fileAsRow){
-            nextLine=  reader.readLine();
+        if (!fileAsRow) {
+            nextLine = reader.readLine();
         }
-        else{
+        else {
             nextLine = readLine();
         }
 
