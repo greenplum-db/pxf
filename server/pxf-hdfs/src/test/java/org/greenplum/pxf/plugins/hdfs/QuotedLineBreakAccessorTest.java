@@ -417,9 +417,7 @@ public class QuotedLineBreakAccessorTest {
         assertNull(oneRow);
 
         accessor.closeForRead();
-
     }
-
 
     private void prepareTest(String resourceName, boolean fileAsRow) throws Exception {
         if (fileAsRow) {

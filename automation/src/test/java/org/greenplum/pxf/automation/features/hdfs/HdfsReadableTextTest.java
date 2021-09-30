@@ -357,7 +357,6 @@ public class HdfsReadableTextTest extends BaseFeature {
         runTincTest("pxf.features.hdfs.readable.text.multiline_csv_data_with_header.runTest");
     }
 
-
     /**
      * Read the multi-line CSV file with headers from HDFS using *:text:multi profile and
      * CSV format and SKIP_HEADER_COUNT=1 and FILE_AS_ROW flag set to True.
@@ -382,9 +381,6 @@ public class HdfsReadableTextTest extends BaseFeature {
         // Verify results
         runTincTest("pxf.features.hdfs.readable.text.multiline_file_as_row_with_header.runTest");
     }
-
-
-
 
     /**
      * Create 2 files located under the same HDFS directory and read it using

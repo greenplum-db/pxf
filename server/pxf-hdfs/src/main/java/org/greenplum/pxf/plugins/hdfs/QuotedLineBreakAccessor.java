@@ -79,7 +79,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
         }
 
         /**
-         * SKIP_HEADER_COUNT is set, this will skip the Physical rows in a file based on the
+         * When SKIP_HEADER_COUNT is set, this will skip the physical lines in a file based on the
          * count provided. For eg. For a file with the following data:
          *
          *   Address-Month-Year
@@ -100,14 +100,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
             skipHeaderCount--;
         }
 
-        String nextLine = null;
-        if (!fileAsRow) {
-            nextLine = reader.readLine();
-        }
-        else {
-            nextLine = readLine();
-        }
-
+        String nextLine = readLine();
         if (nextLine == null) /* EOF */ {
             return null;
         }
@@ -127,6 +120,10 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      * @return the next line
      */
     String readLine() throws IOException {
+        if (!fileAsRow) {
+            // simply readLine when fileAsRow feature is not enabled
+            return reader.readLine();
+        }
         String line;
         if (lineQueue == null) {
             line = reader.readLine();
