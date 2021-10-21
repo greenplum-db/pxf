@@ -72,6 +72,14 @@ resource_types:
     password: ((pxf-cloudbuild-service-account-key))
 {% endif %}
 
+{% if multinode %}
+- name: terraform-0.14.10
+  type: registry-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: 0.14.10
+{% endif %}
+
 - name: gcs
   type: registry-image
   source:
@@ -302,6 +310,21 @@ resources:
       region_name: ((aws-region))
       bucket: ((tf-bucket-name))
       bucket_path: ((tf-bucket-path))
+{% endif %}
+
+{% if multinode %}
+- name: terraform_hadoop
+  type: terraform-0.14.10
+  source:
+    env:
+      GOOGLE_CREDENTIALS: ((data-gpdb-ud-ipa-google-service-account-key))
+    delete_on_failure: true
+    storage:
+      bucket: ((tf-bucket-name))
+      bucket_path: ((pxf-tf-bucket-path-hadoop))
+      region_name: ((aws-region))
+      access_key_id: ((tf-machine-access-key-id))
+      secret_access_key: ((tf-machine-secret-access-key))
 {% endif %}
 
 ## ======================================================================
@@ -1015,6 +1038,21 @@ jobs:
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
+    - do: # Generate IPA Hadoop cluster
+      - put: terraform_hadoop
+        params:
+          action: create
+          generate_random_name: true
+          terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
+          vars:
+            gcp_project: ((data-gpdb-ud-ipa-google-project-id))
+      - task: Generate Multinode Hadoop Cluster
+        file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
+        image: ccp-7-image
+        params:
+          ANSIBLE_VAR_gcp_storage_bucket: data-gpdb-ud-pxf-build-resources
+          ANSIBLE_VAR_ipa_password: ((ipa-password))
+          ANSIBLE_VAR_ssl_store_password: ((ssl-store-password))
   - task: Setup PXF 5 Latest
     input_mapping:
       terraform: terraform_gpdb
