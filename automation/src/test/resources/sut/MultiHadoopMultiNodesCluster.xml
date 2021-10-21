@@ -75,6 +75,13 @@
         <workingDirectory>tmp/pxf_automation_data</workingDirectory>
         <haNameservice></haNameservice>
     </hdfsNonSecure>
+    <hdfsIpa>
+        <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
+        <host>ipa-hadoop</host>
+        <port>8020</port>
+        <workingDirectory>tmp/pxf_automation_data</workingDirectory>
+        <haNameservice></haNameservice>
+    </hdfsIpa>
     <hbase>
         <class>org.greenplum.pxf.automation.components.hbase.HBase</class>
         <host>hadoop</host>
