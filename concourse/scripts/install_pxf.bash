@@ -115,6 +115,7 @@ function create_pxf_installer_scripts() {
 			if [[ -d ~/ipa_env_files ]]; then
 				REALM_3="\$(< ipa_env_files/REALM)"
 				sed -i \
+					-e '/^\[libdefaul.*/a  \\tforwardable=true' \
 					-e '/^\[realms/ r ipa_env_files/krb5_realm' \
 					-e '/^\[domain_realm/ r ipa_env_files/krb5_domain_realm' /tmp/krb5.conf
 			fi
