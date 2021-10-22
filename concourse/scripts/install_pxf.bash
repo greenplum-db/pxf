@@ -112,6 +112,13 @@ function create_pxf_installer_scripts() {
 		      sed -i "s/\${REALM_2} =/}\n\t\${REALM_2} =/g" /tmp/krb5.conf
 		    fi
 
+			if [[ -d ~/ipa_env_files ]]; then
+				REALM_3="\$(< ipa_env_files/REALM)"
+				sed -i \
+					-e '/^\[realms/ r ipa_env_files/krb5_realm' \
+					-e '/^\[domain_realm/ r ipa_env_files/krb5_domain_realm' /tmp/krb5.conf
+			fi
+
 		    if [[ ${PXF_VERSION} == 5 ]]; then
 		      echo 'export PXF_KEYTAB="\${PXF_CONF}/keytabs/pxf.service.keytab"' >> "\${PXF_CONF}/conf/pxf-env.sh"
 		      echo 'export PXF_PRINCIPAL="gpadmin@${REALM}"' >> "\${PXF_CONF}/conf/pxf-env.sh"
@@ -294,6 +301,10 @@ EOF
 
 	if [[ -d dataproc_2_env_files ]]; then
 		SCP_FILES+=(dataproc_2_env_files)
+	fi
+
+	if [[ -d ipa_env_files ]]; then
+		SCP_FILES+=(ipa_env_files)
 	fi
 
 	scp -r "${SCP_FILES[@]}" "${MASTER_HOSTNAME}:~gpadmin"

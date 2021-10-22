@@ -1,0 +1,19 @@
+---
+- name: waiting for ssh
+  ansible.builtin.wait_for_connection:
+    timeout: 900
+
+- name: disabling firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    enabled: false
+    state: stopped
+
+- name: disabling SELinux
+  ansible.builtin.selinux:
+    state: disabled
+
+- name: update installed packages
+  ansible.builtin.yum:
+    name: "*"
+    state: latest

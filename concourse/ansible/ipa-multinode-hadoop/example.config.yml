@@ -1,0 +1,12 @@
+---
+# Cluster environment name
+cluster_name: ""
+gcp_storage_service_account_email: ""
+gcp_storage_bucket: ""
+ipa_password: ""
+ssl_store_password: ""
+
+# if you change the default Hadoop username here, you will need to change the
+# the value of HADOOP_3_USER in text_pxf_multinode.bash
+hadoop_user: stout
+hadoop_user_password: guiness

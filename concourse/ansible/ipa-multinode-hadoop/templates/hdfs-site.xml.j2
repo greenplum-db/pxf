@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+    <property>
+        <name>dfs.permissions</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.support.append</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.block.local-path-access.user</name>
+        <value>${user.name}</value>
+    </property>
+    <property>
+        <name>dfs.replication</name>
+        <value>3</value>
+    </property>
+    <property>
+        <name>dfs.datanode.socket.write.timeout</name>
+        <value>0</value>
+    </property>
+    <property>
+        <name>dfs.webhdfs.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.namenode.https-address</name>
+        <value>ccp-{{ cluster_name }}-nn01.{{ ansible_domain }}:50470</value>
+    </property>
+    <property>
+        <name>dfs.permissions.supergroup</name>
+        <value>hadoop</value>
+        <description>The name of the group of super-users.</description>
+  </property>
+    <property>
+        <name>dfs.webhdfs.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.https.enable</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.http.policy</name>
+        <value>HTTPS_ONLY</value>
+    </property>
+    <property>
+        <name>dfs.encrypt.data.transfer</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.datanode.https.address</name>
+        <value>{{ ansible_hostname }}:50475</value>
+    </property>
+    <property>
+        <name>dfs.webhdfs.enabled</name>
+        <value>false</value>
+    </property>
+    <!-- kerberos settings for NameNode -->
+    <property>
+        <name>dfs.block.access.token.enable</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.namenode.kerberos.principal</name>
+        <value>hdfs/_HOST@{{ ansible_domain | upper }}</value>
+    </property>
+    <property>
+        <name>dfs.namenode.keytab.file</name>
+        <value>/opt/security/keytab/hdfs.service.keytab</value>
+    </property>
+    <!-- kerberos settings for DataNode -->
+    <property>
+        <name>dfs.datanode.kerberos.principal</name>
+        <value>hdfs/_HOST@{{ ansible_domain | upper }}</value>
+    </property>
+    <property>
+        <name>dfs.datanode.keytab.file</name>
+        <value>/opt/security/keytab/hdfs.service.keytab</value>
+    </property>
+    <property>
+        <name>dfs.data.transfer.protection</name>
+        <value>authentication</value>
+    </property>
+</configuration>

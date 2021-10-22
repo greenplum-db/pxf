@@ -1,0 +1,55 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+  - example.config.yml
+  - config.yml
+  tasks:
+  - ansible.builtin.import_tasks: tasks/common.yml
+
+- hosts: ipa
+  become: true
+  vars_files:
+  - example.config.yml
+  - config.yml
+  tasks:
+  - ansible.builtin.import_tasks: tasks/ipa-server.yml
+
+- hosts: hdfs
+  become: true
+  vars_files:
+  - example.config.yml
+  - config.yml
+  tasks:
+  - ansible.builtin.import_tasks: tasks/ipa-client.yml
+
+- hosts: hdfs
+  vars_files:
+  - example.config.yml
+  - config.yml
+  tasks:
+  - ansible.builtin.import_tasks: tasks/hdfs.yml
+
+- hosts: namenode
+  vars_files:
+  - example.config.yml
+  - config.yml
+  tasks:
+  - name: Initialize HDFS NameNode
+    ansible.builtin.command: $HADOOP_PREFIX/bin/hdfs namenode -format {{ cluster_name }}
+
+  - name: Start HDFS NameNode
+    ansible.builtin.command: $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
+
+  - name: Create tmp directory for automation tests
+    ansible.builtin.shell:
+      cmd: |
+        kinit -kt /opt/security/keytab/hdfs.service.keytab hdfs/{{ ansible_fqdn }} &&
+        $HADOOP_PREFIX/bin/hdfs dfs -mkdir /tmp &&
+        $HADOOP_PREFIX/bin/hdfs dfs -chown gpadmin:gpadmin /tmp &&
+        kdestroy
+
+- hosts: datanode
+  tasks:
+  - name: Start HDFS DataNode
+    ansible.builtin.command: $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start datanode

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+    <property>
+        <name>ssl.client.truststore.location</name>
+        <value>/opt/security/jks/truststore.p12</value>
+        <description> Truststore to be used by clients like distcp. Must be specified.</description>
+    </property>
+    <property>
+        <name>ssl.client.truststore.password</name>
+        <value>{{ ssl_store_password }}</value>
+        <description>Optional. Default value is "".</description>
+    </property>
+    <property>
+        <name>ssl.client.truststore.type</name>
+        <value>jks</value>
+        <description>Optional. The keystore file format, default value is "jks".</description>
+    </property>
+</configuration>

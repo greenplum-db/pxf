@@ -18,6 +18,8 @@ inputs:
   optional: true
 - name: dataproc_2_env_files
   optional: true
+- name: ipa_env_files
+  optional: true
 
 params:
   GP_VER:

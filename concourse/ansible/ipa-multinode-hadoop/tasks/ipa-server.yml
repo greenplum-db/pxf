@@ -1,0 +1,86 @@
+---
+- name: installing ipa-server
+  ansible.builtin.yum:
+    name: ['ipa-server', 'ipa-server-dns', 'bind-dyndb-ldap', 'wget']
+    state: present
+    update_cache: true
+- name: configuring ipa-server
+  ansible.builtin.shell:
+    cmd: "ipa-server-install --unattended --ds-password {{ ipa_password }} --admin-password {{ ipa_password }} --domain {{ ansible_domain }} --realm {{ ansible_domain | upper }} --hostname={{ ansible_fqdn }} --no-host-dns --setup-kra --mkhomedir"
+    creates: /var/log/ipaserver-install.log
+
+- name: create gpadmin user
+  community.general.ipa_user:
+    name: gpadmin
+    state: present
+    krbpasswordexpiration: "20301231235959"
+    givenname: gpadmin
+    sn: gpadmin
+    password: pxf
+    update_password: on_create
+    ipa_host: ccp-{{ cluster_name }}-ipa.{{ ansible_domain }}
+    ipa_user: admin
+    ipa_pass: "{{ ipa_password }}"
+
+- name: create hadoop user
+  community.general.ipa_user:
+    name: "{{ hadoop_user }}"
+    state: present
+    krbpasswordexpiration: "20301231235959"
+    givenname: "{{ hadoop_user }}"
+    sn: "{{ hadoop_user }}"
+    password: "{{ hadoop_user_password }}"
+    update_password: on_create
+    ipa_host: ccp-{{ cluster_name }}-ipa.{{ ansible_domain }}
+    ipa_user: admin
+    ipa_pass: "{{ ipa_password }}"
+
+- name: create hadoop superuser group
+  community.general.ipa_group:
+    name: hadoop
+    user:
+    - "{{ hadoop_user }}"
+    ipa_host: ccp-{{ cluster_name }}-ipa.{{ ansible_domain }}
+    ipa_user: admin
+    ipa_pass: "{{ ipa_password }}"
+
+# This LDAP group represents users/principals that a service can impersonate
+- name: create delegation targets group
+  community.general.ldap_entry:
+    dn: cn=test-pxf-delegation-targets,cn=s4u2proxy,cn=etc,dc=c,dc=data-gpdb-ud-ipa,dc=internal
+    objectClass:
+    - groupOfPrincipals
+    - top
+    attributes:
+      memberPrincipal: gpadmin@{{ ansible_domain | upper }}
+    server_uri: ldaps://{{ ansible_fqdn }}
+    bind_dn: uid=admin,cn=users,cn=accounts,dc=c,dc=data-gpdb-ud-ipa,dc=internal
+    bind_pw: "{{ ipa_password }}"
+
+# This LDAP group represents which services can obtain a Kerberos service
+# ticket on behalf of which users
+# This will allow hadoop_user to obtain service tickets for any of the users
+# that are members of the group test-pxf-delegation-targets.
+- name: create delegation group
+  community.general.ldap_entry:
+    dn: cn=test-pxf-delegation,cn=s4u2proxy,cn=etc,dc=c,dc=data-gpdb-ud-ipa,dc=internal
+    objectClass:
+    - ipaKrb5DelegationACL
+    - groupOfPrincipals
+    - top
+    attributes:
+      memberPrincipal: "{{ hadoop_user }}@{{ ansible_domain | upper }}"
+      ipaAllowedTarget: cn=test-pxf-delegation-targets,cn=s4u2proxy,cn=etc,dc=c,dc=data-gpdb-ud-ipa,dc=internal
+    server_uri: ldaps://{{ ansible_fqdn }}
+    bind_dn: uid=admin,cn=users,cn=accounts,dc=c,dc=data-gpdb-ud-ipa,dc=internal
+    bind_pw: "{{ ipa_password }}"
+
+- name: export pxf service keytab
+  become: false
+  ansible.builtin.shell:
+    cmd: |
+      set -o errexit
+      echo {{ ipa_password }} | kinit admin
+      /usr/sbin/ipa-getkeytab --principal={{ hadoop_user }} --keytab=pxf.service.keytab
+      kdestroy
+    creates: pxf.service.keytab

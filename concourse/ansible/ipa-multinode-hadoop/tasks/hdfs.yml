@@ -1,0 +1,64 @@
+---
+- name: Install Hadoop dependencies
+  become: true
+  ansible.builtin.yum:
+    name: [gcc, java-1.8.0-openjdk, python3-devel, python3-setuptools, redhat-rpm-config]
+    state: present
+    update_cache: true
+
+- name: Create PXF shell config
+  ansible.builtin.copy:
+    dest: "~/.pxfrc"
+    content: |
+      export JAVA_HOME="/usr/lib/jvm/jre-1.8.0"
+      export KRB5CCNAME="FILE:/tmp/krb5cc_${UID}"
+      export HADOOP_PREFIX="${HOME}/singlecluster-HDP/hadoop"
+      export HADOOP_CONF_DIR="${HADOOP_PREFIX}/etc/hadoop"
+
+- name: Setup bash config to source PXF shell config
+  ansible.builtin.lineinfile:
+    path: "~/.bashrc"
+    line: ". ${HOME}/.pxfrc"
+
+- name: Download Hadoop (singlecluster)
+  ansible.builtin.unarchive:
+    src: https://storage.googleapis.com/pxf-public/singlecluster-HDP.tar.gz
+    dest: "~"
+    remote_src: true
+    creates: "~/singlecluster-HDP"
+
+- name: Copy Hadoop configuration to cluster
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: ~/singlecluster-HDP/hadoop/etc/hadoop/{{ item }}
+  loop: [core-site.xml, hdfs-site.xml, yarn-site.xml, ssl-server.xml, ssl-client.xml]
+
+- name: Create security directory for keys, certificates, and keytabs
+  become: true
+  ansible.builtin.file:
+    path: "/opt/security/{{item}}"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  with_items: [CAcerts, jks, keytab]
+
+- name: Copy keystore to host
+  ansible.builtin.copy:
+    src: "{{ ansible_hostname }}.p12"
+    dest: /opt/security/CAcerts/host-keystore.p12
+
+- name: Copy truststore to host
+  ansible.builtin.copy:
+    src: truststore.p12
+    dest: /opt/security/jks/truststore.p12
+
+# providing the absolute path for ipa-getkeytab since due to some reason it was not recognizing the
+# ipa-getkeytab and without && it is not reporting error in case the principal already exists.
+- name: Create HDFS service principle and export keytab
+  ansible.builtin.shell:
+    cmd: |
+      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }}  &&
+      ipa service-add hdfs/{{ ansible_fqdn }}@{{ ansible_domain | upper }} &&
+      /usr/sbin/ipa-getkeytab -p hdfs/{{ ansible_fqdn }}@{{ ansible_domain | upper }}  -k /opt/security/keytab/hdfs.service.keytab &&
+      kdestroy
+    creates: /opt/security/keytab/hdfs.service.keytab

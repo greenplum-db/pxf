@@ -1,0 +1,72 @@
+resource_types:
+- name: slack-notification
+  type: registry-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+
+resources:
+- name: timer
+  type: time
+  source:
+    interval: 10m
+
+- name: ccp_src
+  type: git
+  source:
+    branch: ((ccp-git-branch))
+    private_key: ((ccp-git-key))
+    uri: ((ccp-git-remote))
+
+- name: pxf_src
+  type: git
+  source:
+    branch: ((pxf-git-branch))
+    uri: ((pxf-git-remote))
+
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: ((ud-dev-slack-integration-webhook))
+
+jobs:
+- name: hadoop-cluster-cleaner
+  build_logs_to_retain: 50
+  max_in_flight: 1
+  on_failure:
+    put: slack-alert
+    params:
+      text: |
+        [$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME/$BUILD_NAME] failed:
+        $ATC_EXTERNAL_URL/builds/$BUILD_ID
+  plan:
+  - in_parallel:
+      steps:
+      - get: timer
+        trigger: true
+      - get: ccp_src
+      - get: pxf_src
+  - task: run-cleaner
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: ruby
+          tag: "2.3"
+      inputs:
+      - name: ccp_src
+      - name: pxf_src
+      params:
+        AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
+        AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+        AWS_DEFAULT_REGION: ((tf-machine-region))
+        BUCKET_NAME: ((tf-bucket-name))
+        GOOGLE_CREDENTIALS: ((data-gpdb-ud-ipa-google-service-account-key))
+        GOOGLE_APPLICATION_CREDENTIALS: /tmp/key.json
+        LIFETIME_MINS: 240
+        CLOUD: google
+        GOOGLE_CLUSTER_PREFIX: ((pxf-tf-bucket-path-hadoop))
+        TERRAFORM_INIT_PATH: /tmp/build/*/pxf_src/concourse/terraform/ipa-multinode-hadoop
+      run:
+        path: ccp_src/utilities/ClusterReaper/run_ccp_reaper.sh

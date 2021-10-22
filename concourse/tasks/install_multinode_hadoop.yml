@@ -1,0 +1,20 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+
+inputs:
+- name: terraform_hadoop
+- name: pxf_src
+
+outputs:
+- name: ipa_env_files
+
+params:
+  ANSIBLE_VAR_gcp_storage_bucket:
+  ANSIBLE_VAR_ipa_password:
+  ANSIBLE_VAR_ssl_store_password:
+
+run:
+  path: pxf_src/concourse/scripts/install_multinode_hadoop.bash

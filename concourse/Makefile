@@ -136,6 +136,22 @@ set-dev-build-pipeline:
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${DEV_BUILD_PIPELINE_NAME}"
 
+.PHONY: set-hadoop-cluster-cleaner
+set-hadoop-cluster-cleaner:
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		set-pipeline \
+		--check-creds \
+		--pipeline=hadoop-cluster-cleaner \
+		--config=pipelines/hadoop-cluster-cleaner.yml \
+		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
+		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
+		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
+		--var=pxf-git-branch=$(BRANCH) \
+		${FLY_OPTIONS_NON-INTERACTIVE} || echo "pipelines/hadoop-cluster-cleaner.yml has errors"
+
+	@echo "using the following command to unpause the pipeline"
+	@echo -e "\t$(FLY_CMD) -t $(CONCOURSE) unpause-pipeline --pipeline hadoop-cluster-cleaner"
+
 .PHONY: set-pr-build-pipeline
 set-pr-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
