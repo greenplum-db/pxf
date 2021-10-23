@@ -52,18 +52,27 @@
     ipa_user: admin
     ipa_pass: "{{ ipa_password }}"
 
-# This LDAP group represents users/principals that a service can impersonate
+# This LDAP group represents users/principals that a service can delegate to
 - name: create delegation targets group
   community.general.ldap_entry:
     dn: cn=test-pxf-delegation-targets,cn=s4u2proxy,cn=etc,dc=c,dc=data-gpdb-ud-ipa,dc=internal
     objectClass:
     - groupOfPrincipals
     - top
-    attributes:
-      memberPrincipal: gpadmin@{{ ansible_domain | upper }}
     server_uri: ldaps://{{ ansible_fqdn }}
     bind_dn: uid=admin,cn=users,cn=accounts,dc=c,dc=data-gpdb-ud-ipa,dc=internal
     bind_pw: "{{ ipa_password }}"
+
+- name: add service Hadoop service principals to delegation targets group
+  community.general.ldap_attrs:
+    dn: cn=test-pxf-delegation-targets,cn=s4u2proxy,cn=etc,dc=c,dc=data-gpdb-ud-ipa,dc=internal
+    attributes:
+      memberPrincipal: hdfs/{{ item }}.{{ ansible_domain }}@{{ ansible_domain | upper }}
+    server_uri: ldaps://{{ ansible_fqdn }}
+    bind_dn: uid=admin,cn=users,cn=accounts,dc=c,dc=data-gpdb-ud-ipa,dc=internal
+    bind_pw: "{{ ipa_password }}"
+  loop: "{{ groups['hdfs'] }}"
+
 
 # This LDAP group represents which services can obtain a Kerberos service
 # ticket on behalf of which users
