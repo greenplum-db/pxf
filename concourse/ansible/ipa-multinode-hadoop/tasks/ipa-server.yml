@@ -35,6 +35,14 @@
     ipa_user: admin
     ipa_pass: "{{ ipa_password }}"
 
+- name: allow hadoop user to acquire forwardable tickets to itself from arbitrary users
+  ansible.builtin.shell:
+    cmd: |
+      set -o errexit
+      echo {{ ipa_password }} | kinit admin
+      kadmin.local -q "modify_principal +ok_to_auth_as_delegate +ok_as_delegate {{ hadoop_user }}"
+      kdestroy
+
 - name: create hadoop superuser group
   community.general.ipa_group:
     name: hadoop
