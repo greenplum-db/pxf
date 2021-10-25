@@ -40,8 +40,7 @@ public class MultiServerTest extends BaseFeature {
     // and another kerberized hadoop environment
     private Hdfs hdfs2;
 
-    // Hadoop cluster with IPA-based Kerberos KDC
-    // This cluster is for testing constrained delegation
+    // Hadoop cluster with IPA-based Kerberos KDC, used for testing constrained delegation
     private Hdfs hdfsIpa;
 
     /**
@@ -94,15 +93,16 @@ public class MultiServerTest extends BaseFeature {
     @Override
     protected void afterMethod() throws Exception {
         super.afterMethod();
-
         s3Server.removeDirectory(PROTOCOL_S3 + s3Path);
     }
 
     @Override
     protected void afterClass() throws Exception {
         super.afterClass();
-
         removeWorkingDirectory(hdfs2);
+        if (hdfsIpa != null) {
+            removeWorkingDirectory(hdfsIpa);
+        }
     }
 
     protected void prepareData() throws Exception {
@@ -131,8 +131,8 @@ public class MultiServerTest extends BaseFeature {
 
         // IPA Hadoop cluster
         if (hdfsIpa != null) {
-            Table dataTableIpaHdfs = getSmallData("ipa_hdfs");
-            hdfsIpa.writeTableToFile(defaultPath, dataTableIpaHdfs, ",");
+            Table dataTableHdfsIpa = getSmallData("ipa_hdfs");
+            hdfsIpa.writeTableToFile(defaultPath, dataTableHdfsIpa, ",");
         }
 
         // Create Data for s3Server
