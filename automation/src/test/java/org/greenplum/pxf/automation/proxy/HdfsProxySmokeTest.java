@@ -60,13 +60,16 @@ public class HdfsProxySmokeTest extends BaseSmoke {
 
     @Override
     protected void createTables() throws Exception {
+        String serverName = getServerName();
         // Create GPDB external table directed to the HDFS file
         ReadableExternalTable exTableProhibited =
                 TableFactory.getPxfReadableTextTable("pxf_proxy" + getTableSuffix() + "_small_data_prohibited",
                         FIELDS, locationProhibited, ",");
         exTableProhibited.setHost(pxfHost);
         exTableProhibited.setPort(pxfPort);
-        exTableProhibited.setServer("SERVER=" + getServerName());
+        if (!serverName.equalsIgnoreCase("default")) {
+            exTableProhibited.setServer("SERVER=" + serverName);
+        }
         gpdb.createTableAndVerify(exTableProhibited);
 
         ReadableExternalTable exTableProhibitedNoImpersonationServer =
@@ -82,7 +85,9 @@ public class HdfsProxySmokeTest extends BaseSmoke {
                         FIELDS, locationAllowed, ",");
         exTableAllowed.setHost(pxfHost);
         exTableAllowed.setPort(pxfPort);
-        exTableProhibited.setServer("SERVER=" + getServerName());
+        if (!serverName.equalsIgnoreCase("default")) {
+            exTableProhibited.setServer("SERVER=" + serverName);
+        }
         gpdb.createTableAndVerify(exTableAllowed);
 
         // Configure a server with the same configuration as the default

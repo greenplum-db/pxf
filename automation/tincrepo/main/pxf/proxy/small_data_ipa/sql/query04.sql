@@ -22,17 +22,17 @@
 --
 -- end_matchsubs
 
-GRANT ALL ON TABLE pxf_proxy_small_data_allowed_no_impersonation TO PUBLIC;
+GRANT ALL ON TABLE pxf_proxy_ipa_small_data_allowed_no_impersonation TO PUBLIC;
 
 -- both :USER and testuser use the same service user to access the data
-SELECT * FROM pxf_proxy_small_data_allowed_no_impersonation ORDER BY name;
+SELECT * FROM pxf_proxy_ipa_small_data_allowed_no_impersonation ORDER BY name;
 
 \set OLD_GP_USER :USER
 DROP ROLE IF EXISTS testuser;
 CREATE ROLE testuser LOGIN RESOURCE QUEUE pg_default;
 
 \connect - testuser
-SELECT * FROM pxf_proxy_small_data_allowed_no_impersonation ORDER BY name;
+SELECT * FROM pxf_proxy_ipa_small_data_allowed_no_impersonation ORDER BY name;
 
 \connect - :OLD_GP_USER
 DROP ROLE IF EXISTS testuser;
