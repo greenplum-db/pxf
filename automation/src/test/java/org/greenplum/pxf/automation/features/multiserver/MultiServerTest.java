@@ -100,9 +100,7 @@ public class MultiServerTest extends BaseFeature {
     protected void afterClass() throws Exception {
         super.afterClass();
         removeWorkingDirectory(hdfs2);
-        if (hdfsIpa != null) {
-            removeWorkingDirectory(hdfsIpa);
-        }
+        removeWorkingDirectory(hdfsIpa);
     }
 
     protected void prepareData() throws Exception {

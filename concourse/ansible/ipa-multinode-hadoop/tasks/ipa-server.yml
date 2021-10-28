@@ -22,6 +22,32 @@
     ipa_user: admin
     ipa_pass: "{{ ipa_password }}"
 
+- name: create testuser user
+  community.general.ipa_user:
+    name: testuser
+    state: present
+    krbpasswordexpiration: "20301231235959"
+    givenname: testuser
+    sn: testuser
+    password: pxf
+    update_password: on_create
+    ipa_host: ccp-{{ cluster_name }}-ipa.{{ ansible_domain }}
+    ipa_user: admin
+    ipa_pass: "{{ ipa_password }}"
+
+- name: create foobar user
+  community.general.ipa_user:
+    name: foobar
+    state: present
+    krbpasswordexpiration: "20301231235959"
+    givenname: foobar
+    sn: foobar
+    password: pxf
+    update_password: on_create
+    ipa_host: ccp-{{ cluster_name }}-ipa.{{ ansible_domain }}
+    ipa_user: admin
+    ipa_pass: "{{ ipa_password }}"
+
 - name: create hadoop user
   community.general.ipa_user:
     name: "{{ hadoop_user }}"
