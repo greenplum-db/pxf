@@ -86,7 +86,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         exTableAllowed.setHost(pxfHost);
         exTableAllowed.setPort(pxfPort);
         if (!serverName.equalsIgnoreCase("default")) {
-            exTableProhibited.setServer("SERVER=" + serverName);
+            exTableAllowed.setServer("SERVER=" + serverName);
         }
         gpdb.createTableAndVerify(exTableAllowed);
 
