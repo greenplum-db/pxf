@@ -95,8 +95,9 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
          *   San Diego, CA  92093":Jan:2018
          */
         while (skipHeaderCount > 0) {
-            if (reader.readLine() == null)
+            if (reader.readLine() == null) {
                 return null;
+            }
             skipHeaderCount--;
         }
 
@@ -124,6 +125,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
             // simply readLine when fileAsRow feature is not enabled
             return reader.readLine();
         }
+
         String line;
         if (lineQueue == null) {
             line = reader.readLine();
