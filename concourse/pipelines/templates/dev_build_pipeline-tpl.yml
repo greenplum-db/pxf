@@ -3,45 +3,56 @@
 ## ANCHORS
 ## ======================================================================
 anchors:
-- &destroy_clusters
-  do:
-  - in_parallel:
-    - task: Cleanup Dataproc 1
-      config:
-        run:
-          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
-        inputs:
-          - name: pxf_src
-          - name: dataproc_env_files
-        platform: linux
-      image: ccp-7-image
-      params:
-        GOOGLE_CREDENTIALS: ((google-service-account-key))
-        GOOGLE_PROJECT_ID: ((google-project-id))
-        GOOGLE_ZONE: ((google-zone))
-    - task: Cleanup Dataproc 2
-      input_mapping:
-        dataproc_env_files: dataproc_2_env_files
-      config:
-        run:
-          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
-        inputs:
-          - name: pxf_src
-          - name: dataproc_env_files
-        platform: linux
-      image: ccp-7-image
-      params:
-        GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
-        GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
-        GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
-    - put: terraform_gpdb
-      resource: terraform
-      params:
-        action: destroy
-        env_name_file: terraform_gpdb/name
-        terraform_source: ccp_src/google/
-      get_params:
-        action: destroy
+- &destroy_dataproc_1
+  task: Cleanup Dataproc 1
+  config:
+    run:
+      path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
+    inputs:
+      - name: pxf_src
+      - name: dataproc_env_files
+    platform: linux
+  image: ccp-7-image
+  params:
+    GOOGLE_CREDENTIALS: ((google-service-account-key))
+    GOOGLE_PROJECT_ID: ((google-project-id))
+    GOOGLE_ZONE: ((google-zone))
+
+- &destroy_dataproc_2
+  task: Cleanup Dataproc 2
+  input_mapping:
+    dataproc_env_files: dataproc_2_env_files
+  config:
+    run:
+      path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
+    inputs:
+      - name: pxf_src
+      - name: dataproc_env_files
+    platform: linux
+  image: ccp-7-image
+  params:
+    GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
+    GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
+    GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
+
+- &destroy_gpdb_cluster
+  put: terraform_gpdb
+  resource: terraform
+  params:
+    action: destroy
+    env_name_file: terraform_gpdb/name
+    terraform_source: ccp_src/google/
+  get_params:
+    action: destroy
+
+- &destroy_hadoop_cluster
+  put: terraform_hadoop
+  params:
+    action: destroy
+    env_name_file: terraform_hadoop/name
+    terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
+  get_params:
+    action: destroy
 
 {% if slack_notification %}
 - &slack_alert
@@ -1093,7 +1104,12 @@ jobs:
       TARGET_OS: centos
   - task: Test PXF CLI
     on_success:
-      <<: *destroy_clusters
+      in_parallel:
+        steps:
+        - *destroy_dataproc_1
+        - *destroy_dataproc_2
+        - *destroy_gpdb_cluster
+        - *destroy_hadoop_cluster
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
     params:
@@ -1225,7 +1241,11 @@ jobs:
       TARGET_OS: centos
   - task: Test PXF CLI
     on_success:
-      <<: *destroy_clusters
+      in_parallel:
+        steps:
+        - *destroy_dataproc_1
+        - *destroy_dataproc_2
+        - *destroy_gpdb_cluster
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
     params:
