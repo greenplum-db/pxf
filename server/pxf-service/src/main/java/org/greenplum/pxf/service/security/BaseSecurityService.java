@@ -147,12 +147,14 @@ public class BaseSecurityService implements SecurityService {
                             SecureLogin.CONFIG_KEY_SERVICE_CONSTRAINED_DELEGATION,
                             configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
         }
+        /*
         if (!isUserImpersonationEnabled) {
             throw new PxfRuntimeException("User impersonation is not enabled for Kerberos constrained delegation.",
                     String.format("Set the value of %s property to true in %s/pxf-site.xml file.",
                             SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION,
                             configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
         }
+        */
         configuration.set(HADOOP_SECURITY_SASL_PROPS_RESOLVER_CLASS, PxfSaslPropertiesResolver.class.getName());
         LOG.debug("Kerberos constrained delegation and user impersonation are enabled, setting up PxfSaslPropertiesResolver");
     }

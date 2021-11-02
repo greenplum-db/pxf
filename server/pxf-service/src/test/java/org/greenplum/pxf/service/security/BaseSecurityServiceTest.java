@@ -165,6 +165,13 @@ public class BaseSecurityServiceTest {
     }
 
     @Test
+    public void determineRemoteUser_IsServiceUser_Kerberos_NoImpersonation_ServiceUser_ConstrainedDelegation() throws Exception {
+        expectScenario("service-user", true, false, true, true);
+        service.doAs(context, EMPTY_ACTION);
+        verifyScenario("service-user", true, false, true);
+    }
+
+    @Test
     public void determineRemoteUser_IsServiceUser_Kerberos_NoImpersonation_ServiceUser_NoExpansion() throws Exception {
         // no impersonation should not attempt expansion and just take the service name which will is not expanded
         service = new BaseSecurityService(mockSecureLogin, mockUGIProvider, false);
@@ -173,6 +180,7 @@ public class BaseSecurityServiceTest {
         verifyScenario("service-user", true, false, false);
     }
 
+    /*
     @Test
     public void determineRemoteUser_IsGpdbUser_Kerberos_NoImpersonation_ConstrainedDelegation() throws Exception {
         // setting constrained delegation while setting no impersonation with Kerberos will cause a validation error
@@ -180,6 +188,7 @@ public class BaseSecurityServiceTest {
                 "User impersonation is not enabled for Kerberos constrained delegation.",
                 "Set the value of pxf.service.user.impersonation property to true in foo-dir/pxf-site.xml file.");
     }
+    */
 
     /* --- KERBEROS / IMPERSONATION -- */
 
