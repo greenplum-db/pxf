@@ -62,10 +62,10 @@ _**src/main/java**_ - contains related classes and utilities for the test
 **_src/main/java/org/greenplum/pxf/automation/components_** - contains all the supported services/components with simple API abstractions. 
 
 ### General Automation Architecture
-TestNG is a powerful Java testing framework very similar to junit which supports several features like grouping, parallel run and test events listeners.
+TestNG is a powerful Java testing framework very similar to junit which supports several features like grouping, parallel run and test events listeners.
 You can read more about TestNG here http://testng.org/doc/index.md
 
-## Guidelines for creating a new test for PXF automation
+## Guidelines for creating a new test for PXF automation
 
 1.  Decide which category of run cycle (smoke/feature/load)
 2.  Extend the right java class (according to the above test class hierarchy diagram)
@@ -76,7 +76,7 @@ You can read more about TestNG here http://testng.org/doc/index.md
 
 <img src="images/68747283.png" class="confluence-embedded-image confluence-content-image-border" width="381" height="603" />
 
-**_tincrepo/main/pxf_**  - root for PXF TINC cases, the cases inside ordered in TestNg folders hierarchy
+**_tincrepo/main/pxf_**  - root for PXF TINC cases, the cases inside ordered in TestNg folders hierarchy
 
 **_sql_** - sql files
 
@@ -219,5 +219,5 @@ Automation logs will generated into "automation-logs" directory and will be divi
 In every "class" directory will be files according to the following format: <time-stamp>_<ran method name>.log
 <img src="images/72680961.png" class="confluence-embedded-image confluence-content-image-border" width="454" height="598" />
 
-TestNg report will generated into target/surefire-reports 
+TestNg report will generated into target/surefire-reports
 <img src="images/68125531.png" class="confluence-embedded-image confluence-content-image-border" width="1084" height="612" />

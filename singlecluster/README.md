@@ -1,7 +1,26 @@
 SingleCluster
 =============
 
-Single cluster is a self contained, easy to deploy distribution of HDP or CDH
+Singlecluster is a self contained, easy to deploy distribution of HDP or CDH.
+
+Singlecluster-HDP contains the following versions:
+
+- Hadoop 2.7.3
+- Hive 1.2.1000
+- Zookeeper 3.4.6
+- HBase 1.1.2
+- Tez 0.7.0
+- Tomcat 7.0.62
+
+Singlecluster-CDH contains the following versions:
+
+- CDH 5.12.2
+- Hadoop 2.6.0-CDH5.12.2
+- Hive 1.1.0-CDH5-12.2
+- Zookeeper 3.4.5-CDH5.12.2
+- HBase 1.2.0-CDH5.12.2
+
+For HDP3, please use the HDP3 related README.
 
 Prerequisites
 -------------
@@ -70,5 +89,5 @@ Concourse Pipeline Deployment
 
 To deploy the concourse pipeline that will build the single cluster tarballs and upload them to S3, use the following command:
 ```
-fly -t toolsmiths sp -p singlecluster -c singlecluster-pipeline.yml -l ~/workspace/continuous-integration/secrets/gpdb_common-ci-secrets.yml
+make -C ~/workspace/pxf/concourse singlecluster
 ```
