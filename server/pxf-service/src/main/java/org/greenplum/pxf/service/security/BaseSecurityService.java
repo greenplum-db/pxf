@@ -106,7 +106,7 @@ public class BaseSecurityService implements SecurityService {
                 LOG.debug("Creating remote user = {}", remoteUser);
                 // TODO refactor this
                 if (isConstrainedDelegationEnabled) {
-                    userGroupInformation = loginUser; // TODO: use login user UGI for now
+                    userGroupInformation = UserGroupInformation.createRemoteUser(remoteUser); // TODO: use login user UGI for now
                 } else {
                     userGroupInformation = ugiProvider.createRemoteUser(remoteUser, loginUser, isSecurityEnabled);
                 }
