@@ -2,4 +2,6 @@
 
 SELECT COUNT(*) from pxf_file_as_row_with_header;
 
+\x on
+\pset format unaligned
 SELECT * from pxf_file_as_row_with_header;

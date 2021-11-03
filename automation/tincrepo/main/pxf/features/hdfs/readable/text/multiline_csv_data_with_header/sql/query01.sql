@@ -2,4 +2,6 @@
 
 SELECT COUNT(*) from pxf_multi_csv_with_header;
 
+\x on
+\pset format unaligned
 SELECT * from pxf_multi_csv_with_header;
