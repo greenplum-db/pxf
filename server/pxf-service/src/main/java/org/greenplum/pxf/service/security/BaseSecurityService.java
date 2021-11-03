@@ -99,17 +99,12 @@ public class BaseSecurityService implements SecurityService {
             processConstrainedDelegation(configuration, isSecurityEnabled, isUserImpersonationEnabled, isConstrainedDelegationEnabled);
 
             // Retrieve proxy user UGI from the UGI of the logged in user
-            if (isUserImpersonationEnabled) {
+            if (isUserImpersonationEnabled || isConstrainedDelegationEnabled) {
                 LOG.debug("Creating proxy user = {}", remoteUser);
                 userGroupInformation = ugiProvider.createProxyUser(remoteUser, loginUser);
             } else {
                 LOG.debug("Creating remote user = {}", remoteUser);
-                // TODO refactor this
-                if (isConstrainedDelegationEnabled) {
-                    userGroupInformation = UserGroupInformation.createRemoteUser(remoteUser); // TODO: use login user UGI for now
-                } else {
-                    userGroupInformation = ugiProvider.createRemoteUser(remoteUser, loginUser, isSecurityEnabled);
-                }
+                userGroupInformation = ugiProvider.createRemoteUser(remoteUser, loginUser, isSecurityEnabled);
             }
 
             LOG.debug("Retrieved proxy user {} for server {}", userGroupInformation, serverName);
