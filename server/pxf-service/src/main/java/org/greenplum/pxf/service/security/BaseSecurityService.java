@@ -104,7 +104,12 @@ public class BaseSecurityService implements SecurityService {
                 userGroupInformation = ugiProvider.createProxyUser(remoteUser, loginUser);
             } else {
                 LOG.debug("Creating remote user = {}", remoteUser);
-                userGroupInformation = ugiProvider.createRemoteUser(remoteUser, loginUser, isSecurityEnabled);
+                // TODO refactor this
+                if (isConstrainedDelegationEnabled) {
+                    userGroupInformation = loginUser; // TODO: use login user UGI for now
+                } else {
+                    userGroupInformation = ugiProvider.createRemoteUser(remoteUser, loginUser, isSecurityEnabled);
+                }
             }
 
             LOG.debug("Retrieved proxy user {} for server {}", userGroupInformation, serverName);
