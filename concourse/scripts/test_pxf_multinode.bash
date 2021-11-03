@@ -314,7 +314,7 @@ function setup_pxf_kerberos_on_cluster() {
 
 		scp ipa_env_files/conf/*-site.xml "gpadmin@mdw:${BASE_DIR}/servers/hdfs-ipa"
 
-		# optionally create a non-impersonation configuration server for the IPA cluster for the proxy test
+		# optionally create a non-impersonation configuration servers with/without a service user for the IPA cluster for the proxy test
 		ssh gpadmin@mdw "
 			if [[ ${IMPERSONATION} == true ]]; then
 				cp -r ${BASE_DIR}/servers/hdfs-ipa ${BASE_DIR}/servers/hdfs-ipa-no-impersonation
@@ -323,6 +323,11 @@ function setup_pxf_kerberos_on_cluster() {
 				-e 's|</configuration>|<property><name>pxf.service.user.name</name><value>foobar</value></property></configuration>|g' \
 				-e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>true</value>|}' \
 				${BASE_DIR}/servers/hdfs-ipa-no-impersonation/pxf-site.xml
+				cp -r ${BASE_DIR}/servers/hdfs-ipa ${BASE_DIR}/servers/hdfs-ipa-no-impersonation-no-serviceuser
+				sed -i \
+				-e '/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}' \
+				-e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>true</value>|}' \
+				${BASE_DIR}/servers/hdfs-ipa-no-impersonation-no-serviceuser/pxf-site.xml
 			fi
 		"
 

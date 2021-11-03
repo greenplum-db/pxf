@@ -5,6 +5,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -93,6 +94,7 @@ public class BaseSecurityService implements SecurityService {
                 remoteUser = expandRemoteUserName(remoteUser, realm, isUserImpersonationEnabled, isConstrainedDelegationEnabled);
             }
 
+            configuration.set(ConfigurationFactory.PXF_SESSION_REMOTE_USER_PROPERTY, remoteUser);
             // validate and set properties required for enabling Kerberos constrained delegation, if necessary
             processConstrainedDelegation(configuration, isSecurityEnabled, isUserImpersonationEnabled, isConstrainedDelegationEnabled);
 
