@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.security.PrivilegedAction;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_SASL_PROPS_RESOLVER_CLASS;
-import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY;
 
 /**
  * Security Service
@@ -69,24 +68,32 @@ public class BaseSecurityService implements SecurityService {
         boolean exceptionDetected = false;
         UserGroupInformation userGroupInformation = null;
         try {
+            /*
+               get a login user that is either of:
+               - (non-secured cluster) - a user running the PXF process
+               - (non-secured cluster) - a user specified by pxf.service.user.name
+               - (secured cluster)     - a Kerberos principal
+             */
             UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
 
+            // start with assuming identity of the PXF service to be the same as the login user
             String serviceUser = loginUser.getUserName();
 
+            // for security without impersonation, allow the service user to be configurable
             if (!isUserImpersonationEnabled && isSecurityEnabled) {
-                // When impersonation is disabled and security is enabled
-                // we check whether the pxf.service.user.name property was provided
-                // and if provided we use the value as the remote user instead of
-                // the principal defined in pxf.service.kerberos.principal. However,
-                // the principal will need to have proxy privileges on hadoop.
+                // if pxf.service.user.name property was provided we use the value as the remote user instead of
+                // the principal defined in pxf.service.kerberos.principal. However, either the principal will need
+                // to have proxy privileges on hadoop or Kerberos constrained delegation needs to be enabled.
                 String pxfServiceUserName = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_NAME);
                 if (StringUtils.isNotBlank(pxfServiceUserName)) {
                     serviceUser = pxfServiceUserName;
                 }
             }
 
+            // establish the identity of the remote user that will be presented to the backend system
             String remoteUser = (isUserImpersonationEnabled ? gpdbUser : serviceUser);
 
+            // ensure the remote user name is a fully qualified Kerberos principal, if applicable
             if (isSecurityEnabled) {
                 // derive realm from the logged in user, rather than parsing principal info ourselves
                 String realm = (new HadoopKerberosName(loginUser.getUserName())).getRealm();
@@ -94,9 +101,10 @@ public class BaseSecurityService implements SecurityService {
                 remoteUser = expandRemoteUserName(remoteUser, realm, isUserImpersonationEnabled, isConstrainedDelegationEnabled);
             }
 
+            // set remote user so that it can be retrieved in the downstream logic, e.g. by PxfSaslPropertiesResolver
             configuration.set(ConfigurationFactory.PXF_SESSION_REMOTE_USER_PROPERTY, remoteUser);
             // validate and set properties required for enabling Kerberos constrained delegation, if necessary
-            processConstrainedDelegation(configuration, isSecurityEnabled, isUserImpersonationEnabled, isConstrainedDelegationEnabled);
+            processConstrainedDelegation(configuration, isSecurityEnabled, isConstrainedDelegationEnabled);
 
             // Retrieve proxy user UGI from the UGI of the logged in user
             if (isUserImpersonationEnabled || isConstrainedDelegationEnabled) {
@@ -135,11 +143,9 @@ public class BaseSecurityService implements SecurityService {
      *
      * @param configuration configuration for the current request
      * @param isSecurityEnabled whether Kerberos security is enabled
-     * @param isUserImpersonationEnabled whether user impersonation is enabled
      * @param isConstrainedDelegationEnabled whether constrained delegation is enabled
      */
-    private void processConstrainedDelegation(Configuration configuration, boolean isSecurityEnabled,
-                                              boolean isUserImpersonationEnabled, boolean isConstrainedDelegationEnabled) {
+    private void processConstrainedDelegation(Configuration configuration, boolean isSecurityEnabled, boolean isConstrainedDelegationEnabled) {
         if (!isConstrainedDelegationEnabled) {
             return;
         }
@@ -147,16 +153,8 @@ public class BaseSecurityService implements SecurityService {
             throw new PxfRuntimeException("Kerberos constrained delegation should not be enabled for non-secure clusters.",
                     String.format("Set the value of %s property to false in %s/pxf-site.xml file.",
                             SecureLogin.CONFIG_KEY_SERVICE_CONSTRAINED_DELEGATION,
-                            configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
+                            configuration.get(ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
         }
-        /*
-        if (!isUserImpersonationEnabled) {
-            throw new PxfRuntimeException("User impersonation is not enabled for Kerberos constrained delegation.",
-                    String.format("Set the value of %s property to true in %s/pxf-site.xml file.",
-                            SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION,
-                            configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
-        }
-        */
         configuration.set(HADOOP_SECURITY_SASL_PROPS_RESOLVER_CLASS, PxfSaslPropertiesResolver.class.getName());
         LOG.debug("Kerberos constrained delegation and user impersonation are enabled, setting up PxfSaslPropertiesResolver");
     }
@@ -174,8 +172,7 @@ public class BaseSecurityService implements SecurityService {
      */
     private String expandRemoteUserName(String remoteUser, String realm, boolean isUserImpersonation, boolean isConstrainedDelegationEnabled) {
         String result = remoteUser;
-        if (isUserImpersonation &&
-                (isConstrainedDelegationEnabled || isExpandUserPrincipal) &&
+        if ((isConstrainedDelegationEnabled || isExpandUserPrincipal) &&
                 !remoteUser.endsWith(realm)) {
             result += "@" + realm;
             LOG.debug("Expanded user principal name from {} to {}", remoteUser, result);
