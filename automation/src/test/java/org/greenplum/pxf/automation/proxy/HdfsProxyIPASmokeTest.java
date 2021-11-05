@@ -28,7 +28,7 @@ public class HdfsProxyIPASmokeTest extends HdfsProxySmokeTest {
     }
 
     @Override
-    protected String getTableSuffix() {
+    protected String getTableInfix() {
         return "_ipa";
     }
 
