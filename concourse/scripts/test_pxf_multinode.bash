@@ -323,11 +323,11 @@ function setup_pxf_kerberos_on_cluster() {
 				-e 's|</configuration>|<property><name>pxf.service.user.name</name><value>foobar</value></property></configuration>|g' \
 				-e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>true</value>|}' \
 				${BASE_DIR}/servers/hdfs-ipa-no-impersonation/pxf-site.xml
-				cp -r ${BASE_DIR}/servers/hdfs-ipa ${BASE_DIR}/servers/hdfs-ipa-no-impersonation-no-serviceuser
+				cp -r ${BASE_DIR}/servers/hdfs-ipa ${BASE_DIR}/servers/hdfs-ipa-no-impersonation-no-svcuser
 				sed -i \
 				-e '/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}' \
 				-e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>true</value>|}' \
-				${BASE_DIR}/servers/hdfs-ipa-no-impersonation-no-serviceuser/pxf-site.xml
+				${BASE_DIR}/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml
 			fi
 		"
 
