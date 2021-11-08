@@ -68,7 +68,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         // server without impersonation but with a service user
         createPxfTable(serverName + "-no-impersonation", "_small_data_prohibited_no_impersonation", locationProhibited);
         // server without impersonation and without a service user
-        createPxfTable(serverName + "-no-imper-no-svcuser", "_small_data_prohibited_no_imper_no_svcuser", locationProhibited);
+        createPxfTable(serverName + "-no-impersonation-no-serviceuser", "_small_data_prohibited_no_impersonation_no_serviceuser", locationProhibited);
 
         // --- PXF tables pointing to the location prohibited to be read by TEST_USER (allowed for ADMIN_USER only) ---
         // server with impersonation
@@ -76,7 +76,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         // server without impersonation but with a service user
         createPxfTable(serverName + "-no-impersonation", "_small_data_allowed_no_impersonation", locationAllowed);
         // server without impersonation and without a service user
-        createPxfTable(serverName + "-no-imper-no-svcuser", "_small_data_allowed_no_imper_no_svcuser", locationAllowed);
+        createPxfTable(serverName + "-no-impersonation-no-serviceuser", "_small_data_allowed_no_impersonation_no_serviceuser", locationAllowed);
 
     }
 
