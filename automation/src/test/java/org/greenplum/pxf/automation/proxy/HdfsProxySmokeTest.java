@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
  */
 public class HdfsProxySmokeTest extends BaseSmoke {
 
-    public static final String ADMIN_USER = System.getProperty("user.name");
+    public static final String SYSTEM_USER = System.getProperty("user.name");
     public static final String TEST_USER = "testuser";
     public static final String[] FIELDS = {
             "name text",
@@ -38,6 +38,10 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         return "default";
     }
 
+    protected String getAdminUser() {
+        return SYSTEM_USER;
+    }
+
     @Override
     protected void prepareData() throws Exception {
         // get HDFS to work against, it is "hdfs" defined in SUT file by default, but subclasses can choose
@@ -47,12 +51,15 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         // create small data table and write it to HDFS twice to be owned by gpadmin and test user
         Table dataTable = getSmallData();
 
-        locationProhibited = String.format("%s/proxy/%s/%s", hdfsTarget.getWorkingDirectory(), ADMIN_USER, fileName);
+        locationProhibited = String.format("%s/proxy/%s/%s", hdfsTarget.getWorkingDirectory(), getAdminUser(), fileName);
         locationAllowed = String.format("%s/proxy/%s/%s", hdfsTarget.getWorkingDirectory(), TEST_USER, fileName);
 
+        // "prohibited" location is readable only by the admin user (pxf runtime user or Kerberos principal)
         hdfsTarget.writeTableToFile(locationProhibited, dataTable, ",");
+        hdfsTarget.setOwner("/" + locationProhibited, getAdminUser(), getAdminUser());
         hdfsTarget.setMode("/" + locationProhibited, "700");
 
+        // "allowed" location is readable only by the test user
         hdfsTarget.writeTableToFile(locationAllowed, dataTable, ",");
         hdfsTarget.setOwner("/" + locationAllowed, TEST_USER, TEST_USER);
         hdfsTarget.setMode("/" + locationAllowed, "700");

@@ -13,6 +13,9 @@ import org.testng.annotations.Test;
  */
 public class HdfsProxyIPASmokeTest extends HdfsProxySmokeTest {
 
+    // PXF service principal (short name) for the IPA cluster
+    public static final String PXF_IPA_USER = "porter";
+
     @Override
     protected Hdfs getHdfsTarget() throws Exception {
         Hdfs hdfsIpa = (Hdfs) systemManager.
@@ -35,6 +38,11 @@ public class HdfsProxyIPASmokeTest extends HdfsProxySmokeTest {
     @Override
     protected String getServerName() {
         return "hdfs-ipa";
+    }
+
+    @Override
+    protected String getAdminUser() {
+        return PXF_IPA_USER;
     }
 
     @Override
