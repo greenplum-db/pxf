@@ -48,6 +48,19 @@
     ipa_user: admin
     ipa_pass: "{{ ipa_password }}"
 
+- name: create pxf service user
+  community.general.ipa_user:
+    name: "{{ pxf_user }}"
+    state: present
+    krbpasswordexpiration: "20301231235959"
+    givenname: "{{ pxf_user }}"
+    sn: "{{ pxf_user }}"
+    password: "{{ pxf_user_password }}"
+    update_password: on_create
+    ipa_host: ccp-{{ cluster_name }}-ipa.{{ ansible_domain }}
+    ipa_user: admin
+    ipa_pass: "{{ ipa_password }}"
+
 - name: create hadoop user
   community.general.ipa_user:
     name: "{{ hadoop_user }}"
@@ -112,11 +125,21 @@
     - groupOfPrincipals
     - top
     attributes:
-      memberPrincipal: "{{ hadoop_user }}@{{ ansible_domain | upper }}"
+      memberPrincipal: "{{ pxf_user }}@{{ ansible_domain | upper }}"
       ipaAllowedTarget: cn=test-pxf-delegation-targets,cn=s4u2proxy,cn=etc,dc=c,dc=data-gpdb-ud-ipa,dc=internal
     server_uri: ldaps://{{ ansible_fqdn }}
     bind_dn: uid=admin,cn=users,cn=accounts,dc=c,dc=data-gpdb-ud-ipa,dc=internal
     bind_pw: "{{ ipa_password }}"
+
+- name: export hadoop user keytab
+  become: false
+  ansible.builtin.shell:
+    cmd: |
+      set -o errexit
+      echo {{ ipa_password }} | kinit admin
+      /usr/sbin/ipa-getkeytab --principal={{ hadoop_user }} --keytab=hadoop.user.keytab
+      kdestroy
+    creates: hadoop.user.keytab
 
 - name: export pxf service keytab
   become: false
@@ -124,6 +147,6 @@
     cmd: |
       set -o errexit
       echo {{ ipa_password }} | kinit admin
-      /usr/sbin/ipa-getkeytab --principal={{ hadoop_user }} --keytab=pxf.service.keytab
+      /usr/sbin/ipa-getkeytab --principal={{ pxf_user }} --keytab=pxf.service.keytab
       kdestroy
     creates: pxf.service.keytab
