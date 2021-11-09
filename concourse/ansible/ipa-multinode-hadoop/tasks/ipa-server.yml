@@ -61,6 +61,14 @@
     ipa_user: admin
     ipa_pass: "{{ ipa_password }}"
 
+- name: allow pxf service user to acquire forwardable tickets to itself from arbitrary users
+  ansible.builtin.shell:
+    cmd: |
+      set -o errexit
+      echo {{ ipa_password }} | kinit admin
+      kadmin.local -q "modify_principal +ok_to_auth_as_delegate +ok_as_delegate {{ pxf_user }}"
+      kdestroy
+
 - name: create hadoop user
   community.general.ipa_user:
     name: "{{ hadoop_user }}"
@@ -73,14 +81,6 @@
     ipa_host: ccp-{{ cluster_name }}-ipa.{{ ansible_domain }}
     ipa_user: admin
     ipa_pass: "{{ ipa_password }}"
-
-- name: allow hadoop user to acquire forwardable tickets to itself from arbitrary users
-  ansible.builtin.shell:
-    cmd: |
-      set -o errexit
-      echo {{ ipa_password }} | kinit admin
-      kadmin.local -q "modify_principal +ok_to_auth_as_delegate +ok_as_delegate {{ hadoop_user }}"
-      kdestroy
 
 - name: create hadoop superuser group
   community.general.ipa_group:
