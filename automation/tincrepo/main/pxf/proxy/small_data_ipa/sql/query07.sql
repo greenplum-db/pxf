@@ -1,7 +1,7 @@
 -- @description query07 for PXF proxy test on small data in IPA-based cluster, testuser is
 -- prohibited to access the data, but because we are accessing data using a
--- server with no impersonation, the query fails. The service user is the kerberos principal which does not
--- have permissions to access the files
+-- server with no impersonation and the service user is the kerberos principal which has access to data
+-- the query succeeds
 
 -- start_matchsubs
 --
