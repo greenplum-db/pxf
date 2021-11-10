@@ -37,6 +37,7 @@ public class AvroResolverTest {
     private AvroResolver resolver;
     private RequestContext context;
     private Schema schema;
+    private AvroTypeConverter avroTypeConverter;
 
     List<DataType> primitiveDataTypes = Arrays.asList(DataType.BOOLEAN, DataType.BYTEA, DataType.BIGINT, DataType.INTEGER, DataType.REAL, DataType.FLOAT8, DataType.TEXT);
     // complex datatypes order is: union of nulls and bytea, record, string array, enum, fixed length bytes, map of string to long
@@ -61,6 +62,7 @@ public class AvroResolverTest {
         // initialize checks that accessor is some kind of avro accessor
         context.setAccessor("avro");
         context.setConfiguration(configuration);
+        avroTypeConverter = AvroTypeConverter.getInstance();
     }
 
     @Test
@@ -391,14 +393,14 @@ public class AvroResolverTest {
 
         List<OneField> fields = resolver.getFields(new OneRow(null, genericRecord));
 
-        String date = AvroTypeConverter.dateFromInt(12345);
+        String date = avroTypeConverter.dateFromInt(12345);
 
-        String timeMillis = AvroTypeConverter.timeMillis(14540334);
-        String timeMicros = AvroTypeConverter.timeMicros(14540334343l);
-        String timeStampMillis = AvroTypeConverter.timestampMillis(1634068100402l);
-        String timeStampMicros = AvroTypeConverter.timestampMicros(1634242418614345l);
-        String localTimeStampMillis = AvroTypeConverter.localTimestampMillis(1634068100402l);
-        String localTimeStampMicros = AvroTypeConverter.localTimestampMicros(1634242418614345l);
+        String timeMillis = avroTypeConverter.timeMillis(14540334);
+        String timeMicros = avroTypeConverter.timeMicros(14540334343l);
+        String timeStampMillis = avroTypeConverter.timestampMillis(1634068100402l);
+        String timeStampMicros = avroTypeConverter.timestampMicros(1634242418614345l);
+        String localTimeStampMillis = avroTypeConverter.localTimestampMillis(1634068100402l);
+        String localTimeStampMicros = avroTypeConverter.localTimestampMicros(1634242418614345l);
 
         assertField(fields, 0, "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", DataType.TEXT);
         assertField(fields, 1, new BigDecimal("130.50"), DataType.NUMERIC);
@@ -457,10 +459,10 @@ public class AvroResolverTest {
         List<OneField> oneFields = resolver.getFields(new OneRow(null, genericRecord));
 
         // Default System TimeZone
-        String timeStampMillis = AvroTypeConverter.timestampMillis(1634845704629l);
-        String timeStampMicros = AvroTypeConverter.timestampMicros(1634845704629556l);
-        String localTimeStampMillis = AvroTypeConverter.localTimestampMillis(1634845704629l);
-        String localTimeStampMicros = AvroTypeConverter.localTimestampMicros(1634845704629556l);
+        String timeStampMillis = avroTypeConverter.timestampMillis(1634845704629l);
+        String timeStampMicros = avroTypeConverter.timestampMicros(1634845704629556l);
+        String localTimeStampMillis = avroTypeConverter.localTimestampMillis(1634845704629l);
+        String localTimeStampMicros = avroTypeConverter.localTimestampMicros(1634845704629556l);
 
         assertField(oneFields, 0, timeStampMillis, DataType.TIMESTAMP_WITH_TIME_ZONE);
         assertField(oneFields, 1, timeStampMicros, DataType.TIMESTAMP_WITH_TIME_ZONE);
@@ -471,10 +473,10 @@ public class AvroResolverTest {
 
         oneFields = resolver.getFields(new OneRow(null, genericRecord));
 
-        timeStampMillis = AvroTypeConverter.timestampMillis(1634845704629l);
-        timeStampMicros = AvroTypeConverter.timestampMicros(1634845704629556l);
-        localTimeStampMillis = AvroTypeConverter.localTimestampMillis(1634845704629l);
-        localTimeStampMicros = AvroTypeConverter.localTimestampMicros(1634845704629556l);
+        timeStampMillis = avroTypeConverter.timestampMillis(1634845704629l);
+        timeStampMicros = avroTypeConverter.timestampMicros(1634845704629556l);
+        localTimeStampMillis = avroTypeConverter.localTimestampMillis(1634845704629l);
+        localTimeStampMicros = avroTypeConverter.localTimestampMicros(1634845704629556l);
 
         assertField(oneFields, 0, timeStampMillis, DataType.TIMESTAMP_WITH_TIME_ZONE);
         assertField(oneFields, 1, timeStampMicros, DataType.TIMESTAMP_WITH_TIME_ZONE);
@@ -485,10 +487,10 @@ public class AvroResolverTest {
 
         oneFields = resolver.getFields(new OneRow(null, genericRecord));
 
-        timeStampMillis = AvroTypeConverter.timestampMillis(1634845704629l);
-        timeStampMicros = AvroTypeConverter.timestampMicros(1634845704629556l);
-        localTimeStampMillis = AvroTypeConverter.localTimestampMillis(1634845704629l);
-        localTimeStampMicros = AvroTypeConverter.localTimestampMicros(1634845704629556l);
+        timeStampMillis = avroTypeConverter.timestampMillis(1634845704629l);
+        timeStampMicros = avroTypeConverter.timestampMicros(1634845704629556l);
+        localTimeStampMillis = avroTypeConverter.localTimestampMillis(1634845704629l);
+        localTimeStampMicros = avroTypeConverter.localTimestampMicros(1634845704629556l);
 
         assertField(oneFields, 0, timeStampMillis, DataType.TIMESTAMP_WITH_TIME_ZONE);
         assertField(oneFields, 1, timeStampMicros, DataType.TIMESTAMP_WITH_TIME_ZONE);

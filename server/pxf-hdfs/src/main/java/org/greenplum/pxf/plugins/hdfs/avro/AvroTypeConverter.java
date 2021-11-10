@@ -2,6 +2,7 @@ package org.greenplum.pxf.plugins.hdfs.avro;
 
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericData;
 import org.greenplum.pxf.api.GreenplumDateTime;
 
@@ -13,20 +14,44 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.concurrent.TimeUnit;
 
 public class AvroTypeConverter {
+    private final TimeConversions.DateConversion dateConversion;
+    private final TimeConversions.LocalTimestampMicrosConversion localTimestampMicrosConversion;
+    private final TimeConversions.LocalTimestampMillisConversion localTimestampMillisConversion;
+    private final TimeConversions.TimeMicrosConversion timeMicrosConversion;
+    private final TimeConversions.TimeMillisConversion timeMillisConversion;
+    private final TimeConversions.TimestampMicrosConversion timestampMicrosConversion;
+    private final TimeConversions.TimestampMillisConversion timestampMillisConversion;
+
+    private AvroTypeConverter() {
+        // private constructor
+        dateConversion = new TimeConversions.DateConversion();
+        localTimestampMicrosConversion = new TimeConversions.LocalTimestampMicrosConversion();
+        localTimestampMillisConversion = new TimeConversions.LocalTimestampMillisConversion();
+        timeMicrosConversion = new TimeConversions.TimeMicrosConversion();
+        timeMillisConversion = new TimeConversions.TimeMillisConversion();
+        timestampMicrosConversion = new TimeConversions.TimestampMicrosConversion();
+        timestampMillisConversion = new TimeConversions.TimestampMillisConversion();
+    }
+
+    private static class AvroTypeConverterHolder {
+        private static final AvroTypeConverter INSTANCE = new AvroTypeConverter();
+    }
+
+    public static AvroTypeConverter getInstance() {
+        return AvroTypeConverterHolder.INSTANCE;
+    }
+
     /**
      * Convert an Avro timestamp-millis to GPDB timestamp with time zone value
      *
      * @param epochMillis the number of milliseconds from the unix epoch
      * @return GPDB timestamp with time zone formatted value
      */
-    public static String timestampMillis(Long epochMillis) {
-        return Instant.ofEpochMilli(epochMillis)
-                .atZone(ZoneId.systemDefault())
-                .format(GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
+    public String timestampMillis(Long epochMillis) {
+        Instant instant = timestampMillisConversion.fromLong(epochMillis, null, null);
+        return instant.atZone(ZoneId.systemDefault()).format(GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
     }
 
     /**
@@ -35,12 +60,9 @@ public class AvroTypeConverter {
      * @param epochMicros the number of microseconds from the unix epoch
      * @return GPDB timestamp with time zone formatted value
      */
-    public static String timestampMicros(Long epochMicros) {
-        long epochSeconds = epochMicros / 1_000_000L;
-        long epochNanos = (epochMicros % 1_000_000L) * 1_000L;
-        return Instant.ofEpochSecond(epochSeconds, epochNanos)
-                .atZone(ZoneId.systemDefault())
-                .format(GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
+    public String timestampMicros(Long epochMicros) {
+        Instant instant = timestampMicrosConversion.fromLong(epochMicros, null, null);
+        return instant.atZone(ZoneId.systemDefault()).format(GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
     }
 
     /**
@@ -49,11 +71,9 @@ public class AvroTypeConverter {
      * @param epochMillis the number of milliseconds from the unix epoch
      * @return GPDB timestamp without time zone formatted value
      */
-    public static String localTimestampMillis(Long epochMillis) {
-        Instant instant = Instant.ofEpochMilli(epochMillis);
-        return LocalDateTime
-                .ofInstant(instant, ZoneOffset.UTC)
-                .format(GreenplumDateTime.DATETIME_FORMATTER);
+    public String localTimestampMillis(Long epochMillis) {
+        LocalDateTime localDateTime = localTimestampMillisConversion.fromLong(epochMillis, null, null);
+        return localDateTime.format(GreenplumDateTime.DATETIME_FORMATTER);
     }
 
     /**
@@ -62,13 +82,9 @@ public class AvroTypeConverter {
      * @param epochMicros the number of microseconds from the unix epoch
      * @return GPDB timestamp without time zone formatted value
      */
-    public static String localTimestampMicros(Long epochMicros) {
-        long epochSeconds = epochMicros / 1_000_000L;
-        long epochNanos = (epochMicros % 1_000_000L) * 1_000L;
-        Instant instant = Instant.ofEpochSecond(epochSeconds, epochNanos);
-        return LocalDateTime
-                .ofInstant(instant, ZoneOffset.UTC)
-                .format(GreenplumDateTime.DATETIME_FORMATTER);
+    public String localTimestampMicros(Long epochMicros) {
+        LocalDateTime localDateTime = localTimestampMicrosConversion.fromLong(epochMicros, null, null);
+        return localDateTime.format(GreenplumDateTime.DATETIME_FORMATTER);
     }
 
     /**
@@ -77,8 +93,8 @@ public class AvroTypeConverter {
      * @param microsFromMidnight stores the number of microseconds after midnight, 00:00:00.000000
      * @return String representation of the time
      */
-    public static String timeMicros(Long microsFromMidnight) {
-        return LocalTime.ofNanoOfDay(TimeUnit.MICROSECONDS.toNanos(microsFromMidnight)).toString();
+    public String timeMicros(Long microsFromMidnight) {
+        return timeMicrosConversion.fromLong(microsFromMidnight, null, null).toString();
     }
 
 
@@ -88,8 +104,9 @@ public class AvroTypeConverter {
      * @param millisFromMidnight stores the number of milliseconds after midnight, 00:00:00.000
      * @return String representation of the time
      */
-    public static String timeMillis(Integer millisFromMidnight) {
-        return LocalTime.ofNanoOfDay(TimeUnit.MILLISECONDS.toNanos(millisFromMidnight)).toString();
+    public String timeMillis(Integer millisFromMidnight) {
+        LocalTime localTime = timeMillisConversion.fromInt(millisFromMidnight, null, null);
+        return localTime.toString();
     }
 
     /**
@@ -98,8 +115,9 @@ public class AvroTypeConverter {
      * @param daysFromEpoch the number of days from the unix epoch, 1 January 1970 (ISO calendar).
      * @return String representation of the date
      */
-    public static String dateFromInt(Integer daysFromEpoch) {
-        return LocalDate.ofEpochDay(daysFromEpoch).toString();
+    public String dateFromInt(Integer daysFromEpoch) {
+        LocalDate localDate = dateConversion.fromInt(daysFromEpoch, null, null);
+        return localDate.toString();
     }
 
 
@@ -110,7 +128,7 @@ public class AvroTypeConverter {
      * @param schema Schema of the Record
      * @return BigDecimal value
      */
-    public static BigDecimal convertToDecimal(Object val, Schema schema) {
+    public BigDecimal convertToDecimal(Object val, Schema schema) {
         int scale = ((LogicalTypes.Decimal) schema.getLogicalType()).getScale();
         if (schema.getType() == Schema.Type.BYTES) {
             ByteBuffer value = (ByteBuffer) val;

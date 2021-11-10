@@ -46,13 +46,9 @@ import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 /**
  * Class AvroResolver handles deserialization of records that were serialized
@@ -76,6 +72,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
     private final AvroUtilities avroUtilities;
     private final PgUtilities pgUtilities;
     private boolean hasUserProvidedSchema;
+    private final AvroTypeConverter avroTypeConverter;
 
     /**
      * Constructs a new instance of the AvroFileAccessor
@@ -87,6 +84,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
     AvroResolver(AvroUtilities avroUtilities, PgUtilities pgUtilities) {
         this.avroUtilities = avroUtilities;
         this.pgUtilities = pgUtilities;
+        this.avroTypeConverter = AvroTypeConverter.getInstance();
     }
 
     /*
@@ -284,9 +282,9 @@ public class AvroResolver extends BasePlugin implements Resolver {
                 break;
             case INT:
                 if (logicalType == LogicalTypes.date()) {
-                    fieldValue = AvroTypeConverter.dateFromInt((int) fieldValue);
+                    fieldValue = avroTypeConverter.dateFromInt((int) fieldValue);
                 } else if (logicalType == LogicalTypes.timeMillis()) {
-                    fieldValue = AvroTypeConverter.timeMillis((int) fieldValue);
+                    fieldValue = avroTypeConverter.timeMillis((int) fieldValue);
                 }
 
                 DataType gpdbWritableDataType = (logicalType != null) ? gpdbColType : DataType.INTEGER;
@@ -306,22 +304,22 @@ public class AvroResolver extends BasePlugin implements Resolver {
             case LONG:
                 gpdbWritableDataType = (logicalType != null) ? gpdbColType : DataType.BIGINT;
                 if (logicalType == LogicalTypes.timeMicros()) {
-                    fieldValue = AvroTypeConverter.timeMicros((long) fieldValue);
+                    fieldValue = avroTypeConverter.timeMicros((long) fieldValue);
                 } else if (logicalType == LogicalTypes.timestampMillis()) {
-                    fieldValue = AvroTypeConverter.timestampMillis((long) fieldValue);
+                    fieldValue = avroTypeConverter.timestampMillis((long) fieldValue);
                 } else if (logicalType == LogicalTypes.timestampMicros()) {
-                    fieldValue = AvroTypeConverter.timestampMicros((long) fieldValue);
+                    fieldValue = avroTypeConverter.timestampMicros((long) fieldValue);
                 } else if (logicalType == LogicalTypes.localTimestampMillis()) {
-                    fieldValue = AvroTypeConverter.localTimestampMillis((long) fieldValue);
+                    fieldValue = avroTypeConverter.localTimestampMillis((long) fieldValue);
                 } else if (logicalType == LogicalTypes.localTimestampMicros()) {
-                    fieldValue = AvroTypeConverter.localTimestampMicros((long) fieldValue);
+                    fieldValue = avroTypeConverter.localTimestampMicros((long) fieldValue);
                 }
                 ret = addOneFieldToRecord(record, gpdbWritableDataType, fieldValue);
                 break;
             case BYTES:
             case FIXED:
                 if (logicalType != null && logicalType.getName().equalsIgnoreCase("decimal")) {
-                    fieldValue = AvroTypeConverter.convertToDecimal(fieldValue, fieldSchema);
+                    fieldValue = avroTypeConverter.convertToDecimal(fieldValue, fieldSchema);
                 }
                 DataType gpdbWritableType = (gpdbColType == DataType.TEXT) ? DataType.BYTEA : gpdbColType;
                 ret = addOneFieldToRecord(record, gpdbWritableType, fieldValue);
