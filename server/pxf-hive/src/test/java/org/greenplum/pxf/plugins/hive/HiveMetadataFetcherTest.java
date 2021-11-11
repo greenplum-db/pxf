@@ -25,6 +25,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -53,13 +54,16 @@ public class HiveMetadataFetcherTest {
     private List<Metadata> metadataList;
     private HiveClientWrapper fakeHiveClientWrapper;
     private HiveClientWrapper.HiveClientFactory mockClientFactory;
+    private Map<String, String> mockParameters;
     private final HiveUtilities hiveUtilities = new HiveUtilities();
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     public void setupCompressionFactory() throws MetaException {
 
-        @SuppressWarnings("unchecked")
         Map<String, String> mockProfileMap = mock(Map.class);
+
+        mockParameters = mock(Map.class);
         PluginConf mockPluginConf = mock(PluginConf.class);
 
         Configuration configuration = new Configuration();
@@ -119,7 +123,27 @@ public class HiveMetadataFetcherTest {
 
         Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> fetcher.getMetadata(tableName));
-        assertEquals("Hive views are not supported by PXF", e.getMessage());
+        assertEquals("PXF does not support Hive views", e.getMessage());
+    }
+
+    @Test
+    public void getTableMetadataTransactional() throws Exception {
+
+        String tableName = "cause";
+        fetcher = new HiveMetadataFetcher(hiveUtilities, fakeHiveClientWrapper);
+        fetcher.setRequestContext(context);
+        fetcher.afterPropertiesSet();
+
+        // mock hive table returned from hive client
+        Table hiveTable = new Table();
+        hiveTable.setTableType("MANAGED_TABLE");
+        hiveTable.setParameters(mockParameters);
+        when(mockParameters.get(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL)).thenReturn("true");
+        when(mockHiveClient.getTable("default", tableName)).thenReturn(hiveTable);
+
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> fetcher.getMetadata(tableName));
+        assertEquals("PXF does not support Hive transactional tables", e.getMessage());
     }
 
     @Test
@@ -141,6 +165,7 @@ public class HiveMetadataFetcherTest {
         hiveTable.setTableType("MANAGED_TABLE");
         hiveTable.setSd(sd);
         hiveTable.setPartitionKeys(new ArrayList<>());
+        hiveTable.setParameters(mockParameters);
         when(mockHiveClient.getTable("default", tableName)).thenReturn(hiveTable);
 
         // Get metadata
@@ -192,6 +217,7 @@ public class HiveMetadataFetcherTest {
             hiveTable.setTableType("MANAGED_TABLE");
             hiveTable.setSd(sd);
             hiveTable.setPartitionKeys(new ArrayList<>());
+            hiveTable.setParameters(mockParameters);
             when(mockHiveClient.getTable(dbName, tableName)).thenReturn(hiveTable);
         }
 
@@ -248,6 +274,7 @@ public class HiveMetadataFetcherTest {
         hiveTable2.setTableType("MANAGED_TABLE");
         hiveTable2.setSd(sd);
         hiveTable2.setPartitionKeys(new ArrayList<>());
+        hiveTable2.setParameters(mockParameters);
         when(mockHiveClient.getTable(dbName, tableName2)).thenReturn(hiveTable2);
 
         // Mock get databases and tables return from hive client

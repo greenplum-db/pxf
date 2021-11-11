@@ -431,6 +431,7 @@ function start_hadoop_services() {
 	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/start-zookeeper.sh"
 	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/start-yarn.sh" &
 	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/start-hbase.sh" &
+	init_hive_metastore "${GPHD_ROOT}"
 	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/start-hive.sh" &
 	wait
 	export PATH=$PATH:${GPHD_ROOT}/bin
@@ -443,6 +444,15 @@ function start_hadoop_services() {
 		echo 'Granting gpadmin user admin privileges for HBase'
 		echo "grant 'gpadmin', 'RWXCA'" | hbase shell
 	fi
+}
+
+# explicitly init the hive metastore to ensure necessary system tables have been created
+function init_hive_metastore() {
+	local GPHD_ROOT=${1}
+	mkdir -p "${GPHD_ROOT}/storage/hive"
+	pushd "${GPHD_ROOT}/storage/hive"
+	JAVA_HOME=${HADOOP_JAVA_HOME}  ${GPHD_ROOT}/hive/bin/schematool -dbType derby -initSchema
+	popd
 }
 
 function init_pxf() {
