@@ -98,13 +98,13 @@ public class BaseSecurityService implements SecurityService {
                 // derive realm from the logged in user, rather than parsing principal info ourselves
                 String realm = (new HadoopKerberosName(loginUser.getUserName())).getRealm();
                 // include realm in the principal name, if required
-                remoteUser = expandRemoteUserName(remoteUser, realm, isUserImpersonationEnabled, isConstrainedDelegationEnabled);
+                remoteUser = expandRemoteUserName(configuration, remoteUser, realm, isConstrainedDelegationEnabled);
             }
 
             // set remote user so that it can be retrieved in the downstream logic, e.g. by PxfSaslPropertiesResolver
             configuration.set(ConfigurationFactory.PXF_SESSION_REMOTE_USER_PROPERTY, remoteUser);
             // validate and set properties required for enabling Kerberos constrained delegation, if necessary
-            processConstrainedDelegation(configuration, isSecurityEnabled, isConstrainedDelegationEnabled);
+            processConstrainedDelegation(configuration, isSecurityEnabled, isConstrainedDelegationEnabled, remoteUser, loginUser.getUserName());
 
             // Retrieve proxy user UGI from the UGI of the logged in user
             if (isUserImpersonationEnabled || isConstrainedDelegationEnabled) {
@@ -140,12 +140,17 @@ public class BaseSecurityService implements SecurityService {
      * that support this feature for the request that holds this configuration.
      * PXF profiles will get this enhanced configuration from the RequestContext and will pass
      * it to Hadoop FileSystem operations, making it available downstream in Hadoop SASL layers.
-     *
      * @param configuration configuration for the current request
      * @param isSecurityEnabled whether Kerberos security is enabled
      * @param isConstrainedDelegationEnabled whether constrained delegation is enabled
+     * @param remoteUserName full name of the remote user (user whose identity will be presented to Hadoop)
+     * @param loginUserName full name of the login user
      */
-    private void processConstrainedDelegation(Configuration configuration, boolean isSecurityEnabled, boolean isConstrainedDelegationEnabled) {
+    private void processConstrainedDelegation(Configuration configuration,
+                                              boolean isSecurityEnabled,
+                                              boolean isConstrainedDelegationEnabled,
+                                              String remoteUserName,
+                                              String loginUserName) {
         if (!isConstrainedDelegationEnabled) {
             return;
         }
@@ -155,25 +160,40 @@ public class BaseSecurityService implements SecurityService {
                             SecureLogin.CONFIG_KEY_SERVICE_CONSTRAINED_DELEGATION,
                             configuration.get(ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
         }
+        // make constrained delegation effective only when the remote user is NOT the same as the PXF service principal
+        if (remoteUserName.equalsIgnoreCase(loginUserName)) {
+            LOG.debug("Kerberos constrained delegation is not effective as the remote user {} and the login user {} are the same",
+                    remoteUserName, loginUserName);
+            return;
+        }
         configuration.set(HADOOP_SECURITY_SASL_PROPS_RESOLVER_CLASS, PxfSaslPropertiesResolver.class.getName());
-        LOG.debug("Kerberos constrained delegation and user impersonation are enabled, setting up PxfSaslPropertiesResolver");
+        LOG.debug("Enabled PxfSaslPropertiesResolver for Kerberos constrained delegation for the remote user {} and the login user {}",
+                remoteUserName, loginUserName);
     }
 
     /**
      * Expands Kerberos user principal name by adding the Kerberos realm at the end, if needed.
-     * Kerberos constrained delegation requires realm in the principal name, we will ensure that for any
-     * secure impersonation, for now guarded by a feature flag.
-     *
+     * Kerberos constrained delegation requires realm in the principal name, so the name should always be
+     * expanded if the constrained delegation is configured. The expansion for a regular secure cluster
+     * can be disabled by overwriting a feature flag.
+     * @param configuration configuration for the current request
      * @param remoteUser remote user name
      * @param realm Kerberos realm
-     * @param isUserImpersonation whether user impersonation is enabled
      * @param isConstrainedDelegationEnabled whether constrained delegation is enabled
      * @return expanded user principal name or the original name if expansion was not required
      */
-    private String expandRemoteUserName(String remoteUser, String realm, boolean isUserImpersonation, boolean isConstrainedDelegationEnabled) {
+    private String expandRemoteUserName(Configuration configuration, String remoteUser,
+                                        String realm, boolean isConstrainedDelegationEnabled) {
         String result = remoteUser;
-        if ((isConstrainedDelegationEnabled || isExpandUserPrincipal) &&
-                !remoteUser.endsWith(realm)) {
+        if ((isConstrainedDelegationEnabled || isExpandUserPrincipal) && !remoteUser.endsWith(realm)) {
+            if (StringUtils.contains(remoteUser, "@")) {
+                throw new PxfRuntimeException(
+                        String.format("Remote principal name %s contains @ symbol but does not end with %s",
+                                remoteUser, realm),
+                        String.format("Check the value of %s property in %s/pxf-site.xml file.",
+                                SecureLogin.CONFIG_KEY_SERVICE_USER_NAME,
+                                configuration.get(ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY)));
+            }
             result += "@" + realm;
             LOG.debug("Expanded user principal name from {} to {}", remoteUser, result);
         }
