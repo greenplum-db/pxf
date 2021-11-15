@@ -299,6 +299,7 @@ function setup_pxf_kerberos_on_cluster() {
 		HADOOP_3_HOSTNAME="$(< ipa_env_files/name)"
 		# see ansible/ipa-multinode-hadoop/tasks/ipa-server.yml
 		HADOOP_3_USER=stout
+		PXF_3_USER=porter
 		HADOOP_3_SSH_OPTS=(-o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i ipa_env_files/google_compute_engine)
 		HADOOP_3_DIR=$(find /tmp/build/ -name ipa_env_files)
 		REALM3="$(< "${HADOOP_3_DIR}/REALM")"
@@ -307,23 +308,27 @@ function setup_pxf_kerberos_on_cluster() {
 			mkdir -p ${BASE_DIR}/servers/hdfs-ipa &&
 			cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/hdfs-ipa &&
 			sed -i \
-				-e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>${HADOOP_3_USER}@${REALM3}<|g\" \
+				-e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>${PXF_3_USER}@${REALM3}<|g\" \
 				-e 's|/pxf.service.keytab<|/pxf.service.3.keytab<|g' \
 				-e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>true</value>|}' ${BASE_DIR}/servers/hdfs-ipa/pxf-site.xml
 		"
 
 		scp ipa_env_files/conf/*-site.xml "gpadmin@mdw:${BASE_DIR}/servers/hdfs-ipa"
 
-		# optionally create a non-impersonation configuration server for the IPA cluster for the proxy test
-		# need to set constrained delegation to false if impersonation is turned off
+		# optionally create a non-impersonation configuration servers with/without a service user for the IPA cluster for the proxy test
 		ssh gpadmin@mdw "
 			if [[ ${IMPERSONATION} == true ]]; then
 				cp -r ${BASE_DIR}/servers/hdfs-ipa ${BASE_DIR}/servers/hdfs-ipa-no-impersonation
 				sed -i \
 				-e '/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}' \
 				-e 's|</configuration>|<property><name>pxf.service.user.name</name><value>foobar</value></property></configuration>|g' \
-				-e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>false</value>|}' \
+				-e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>true</value>|}' \
 				${BASE_DIR}/servers/hdfs-ipa-no-impersonation/pxf-site.xml
+				cp -r ${BASE_DIR}/servers/hdfs-ipa ${BASE_DIR}/servers/hdfs-ipa-no-impersonation-no-svcuser
+				sed -i \
+				-e '/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}' \
+				-e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>true</value>|}' \
+				${BASE_DIR}/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml
 			fi
 		"
 
@@ -341,9 +346,10 @@ function setup_pxf_kerberos_on_cluster() {
 			gpscp -f ~gpadmin/hostfile_all -v -r -u centos ~/ipa_env_files/etc_hostfile =:/tmp/etc_hostfile &&
 			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
 			gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/ipa_env_files/pxf.service.keytab =:${BASE_DIR}/keytabs/pxf.service.3.keytab
+			gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/ipa_env_files/hadoop.user.keytab =:${BASE_DIR}/keytabs/hadoop.user.3.keytab
 		"
 
-		sudo cp "${HADOOP_3_DIR}/pxf.service.keytab" "/etc/security/keytabs/${HADOOP_3_USER}.headless.keytab"
+		sudo cp "${HADOOP_3_DIR}/hadoop.user.keytab" "/etc/security/keytabs/${HADOOP_3_USER}.headless.keytab"
 		sudo chown gpadmin:gpadmin "/etc/security/keytabs/${HADOOP_3_USER}.headless.keytab"
 		sed -i "s/>ipa-hadoop</>${HADOOP_3_HOSTNAME}</g" "$multiNodesCluster"
 

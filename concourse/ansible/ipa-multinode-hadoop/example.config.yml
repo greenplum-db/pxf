@@ -10,3 +10,5 @@ ssl_store_password: ""
 # the value of HADOOP_3_USER in text_pxf_multinode.bash
 hadoop_user: stout
 hadoop_user_password: guiness
+pxf_user: porter
+pxf_user_password: porter

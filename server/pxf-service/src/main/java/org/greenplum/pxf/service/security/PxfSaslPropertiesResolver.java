@@ -60,13 +60,13 @@ public class PxfSaslPropertiesResolver extends SaslPropertiesResolver {
     }
 
     /**
-     * Obtains an S4U2self credential for the GP user and PXF server specified by the configuration.
+     * Obtains an S4U2self credential for the GP user (or service user) and PXF server specified by the configuration.
      * It must be run under from a "doAs" block from a Subject having a service Kerberos ticket.
      *
      * @return the proxy credential
      */
     private GSSCredential getKerberosProxyCredential() {
-        String userName = getConf().get(ConfigurationFactory.PXF_SESSION_USER_PROPERTY);
+        String userName = getConf().get(ConfigurationFactory.PXF_SESSION_REMOTE_USER_PROPERTY);
         String server = getConf().get(ConfigurationFactory.PXF_SERVER_NAME_PROPERTY);
         Preconditions.checkState(StringUtils.isNotBlank(userName), "User name is missing from the configuration.");
         Preconditions.checkState(StringUtils.isNotBlank(server), "Server name is missing from the configuration.");

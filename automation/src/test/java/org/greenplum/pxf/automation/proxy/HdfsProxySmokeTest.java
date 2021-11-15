@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
  */
 public class HdfsProxySmokeTest extends BaseSmoke {
 
-    public static final String ADMIN_USER = System.getProperty("user.name");
+    public static final String SYSTEM_USER = System.getProperty("user.name");
     public static final String TEST_USER = "testuser";
     public static final String[] FIELDS = {
             "name text",
@@ -30,12 +30,16 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         return hdfs;
     }
 
-    protected String getTableSuffix() {
+    protected String getTableInfix() {
         return "";
     }
 
     protected String getServerName() {
         return "default";
+    }
+
+    protected String getAdminUser() {
+        return SYSTEM_USER;
     }
 
     @Override
@@ -47,12 +51,15 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         // create small data table and write it to HDFS twice to be owned by gpadmin and test user
         Table dataTable = getSmallData();
 
-        locationProhibited = String.format("%s/proxy/%s/%s", hdfsTarget.getWorkingDirectory(), ADMIN_USER, fileName);
+        locationProhibited = String.format("%s/proxy/%s/%s", hdfsTarget.getWorkingDirectory(), getAdminUser(), fileName);
         locationAllowed = String.format("%s/proxy/%s/%s", hdfsTarget.getWorkingDirectory(), TEST_USER, fileName);
 
+        // "prohibited" location is readable only by the admin user (pxf runtime user or Kerberos principal)
         hdfsTarget.writeTableToFile(locationProhibited, dataTable, ",");
+        hdfsTarget.setOwner("/" + locationProhibited, getAdminUser(), getAdminUser());
         hdfsTarget.setMode("/" + locationProhibited, "700");
 
+        // "allowed" location is readable only by the test user
         hdfsTarget.writeTableToFile(locationAllowed, dataTable, ",");
         hdfsTarget.setOwner("/" + locationAllowed, TEST_USER, TEST_USER);
         hdfsTarget.setMode("/" + locationAllowed, "700");
@@ -61,45 +68,35 @@ public class HdfsProxySmokeTest extends BaseSmoke {
     @Override
     protected void createTables() throws Exception {
         String serverName = getServerName();
-        // Create GPDB external table directed to the HDFS file
-        ReadableExternalTable exTableProhibited =
-                TableFactory.getPxfReadableTextTable("pxf_proxy" + getTableSuffix() + "_small_data_prohibited",
-                        FIELDS, locationProhibited, ",");
-        exTableProhibited.setHost(pxfHost);
-        exTableProhibited.setPort(pxfPort);
+
+        // --- PXF tables pointing to the location allowed to be read by the TEST_USER only ---
+        // server with impersonation
+        createReadablePxfTable(serverName, "_small_data_prohibited", locationProhibited);
+        // server without impersonation but with a service user
+        createReadablePxfTable(serverName + "-no-impersonation", "_small_data_prohibited_no_impersonation", locationProhibited);
+        // server without impersonation and without a service user
+        createReadablePxfTable(serverName + "-no-impersonation-no-svcuser", "_small_data_prohibited_no_impersonation_no_svcuser", locationProhibited);
+
+        // --- PXF tables pointing to the location prohibited to be read by TEST_USER (allowed for ADMIN_USER only) ---
+        // server with impersonation
+        createReadablePxfTable(serverName, "_small_data_allowed", locationAllowed);
+        // server without impersonation but with a service user
+        createReadablePxfTable(serverName + "-no-impersonation", "_small_data_allowed_no_impersonation", locationAllowed);
+        // server without impersonation and without a service user
+        createReadablePxfTable(serverName + "-no-impersonation-no-svcuser", "_small_data_allowed_no_impersonation_no_svcuser", locationAllowed);
+
+    }
+
+    private void createReadablePxfTable(String serverName, String tableSuffix, String location) throws Exception {
+        ReadableExternalTable exTable =
+                TableFactory.getPxfReadableTextTable("pxf_proxy" + getTableInfix() + tableSuffix,
+                        FIELDS, location, ",");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
         if (!serverName.equalsIgnoreCase("default")) {
-            exTableProhibited.setServer("SERVER=" + serverName);
+            exTable.setServer("SERVER=" + serverName);
         }
-        gpdb.createTableAndVerify(exTableProhibited);
-
-        ReadableExternalTable exTableProhibitedNoImpersonationServer =
-                TableFactory.getPxfReadableTextTable("pxf_proxy" + getTableSuffix() + "_small_data_prohibited_no_impersonation",
-                        FIELDS, locationProhibited, ",");
-        exTableProhibitedNoImpersonationServer.setHost(pxfHost);
-        exTableProhibitedNoImpersonationServer.setPort(pxfPort);
-        exTableProhibitedNoImpersonationServer.setServer("SERVER=" + getServerName() + "-no-impersonation");
-        gpdb.createTableAndVerify(exTableProhibitedNoImpersonationServer);
-
-        ReadableExternalTable exTableAllowed =
-                TableFactory.getPxfReadableTextTable("pxf_proxy" + getTableSuffix() + "_small_data_allowed",
-                        FIELDS, locationAllowed, ",");
-        exTableAllowed.setHost(pxfHost);
-        exTableAllowed.setPort(pxfPort);
-        if (!serverName.equalsIgnoreCase("default")) {
-            exTableAllowed.setServer("SERVER=" + serverName);
-        }
-        gpdb.createTableAndVerify(exTableAllowed);
-
-        // Configure a server with the same configuration as the default
-        // server, but disable impersonation
-        ReadableExternalTable exTableAllowedNoImpersonationServer =
-                TableFactory.getPxfReadableTextTable("pxf_proxy" + getTableSuffix() + "_small_data_allowed_no_impersonation",
-                        FIELDS, locationAllowed, ",");
-        exTableAllowedNoImpersonationServer.setHost(pxfHost);
-        exTableAllowedNoImpersonationServer.setPort(pxfPort);
-        exTableAllowedNoImpersonationServer.setServer("SERVER=" + getServerName() + "-no-impersonation");
-        gpdb.createTableAndVerify(exTableAllowedNoImpersonationServer);
-
+        gpdb.createTableAndVerify(exTable);
     }
 
     @Override

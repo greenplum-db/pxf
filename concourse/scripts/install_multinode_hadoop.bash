@@ -90,6 +90,7 @@ cat <<EOF >ipa_env_files/krb5_domain_realm
 	.${domain_name} = ${domain_name^^}
 EOF
 
+scp "${ipa_server}":~/hadoop.user.keytab ipa_env_files/
 scp "${ipa_server}":~/pxf.service.keytab ipa_env_files/
 
 # list environment files

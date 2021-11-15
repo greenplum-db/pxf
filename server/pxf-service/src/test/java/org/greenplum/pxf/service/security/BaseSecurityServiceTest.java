@@ -148,6 +148,14 @@ public class BaseSecurityServiceTest {
     }
 
     @Test
+    public void determineRemoteUser_IsLoginUser_Kerberos_NoImpersonation_NoServiceUser_ConstrainedDelegation() throws Exception {
+        // this is a useless case as constrained delegation is enabled for no reason, but it is a possible config combo
+        expectScenario("login-user@REALM", true, false, false, true);
+        service.doAs(context, EMPTY_ACTION);
+        verifyScenario("login-user@REALM", true, false, true, false);
+    }
+
+    @Test
     public void determineRemoteUser_IsLoginUser_Kerberos_NoImpersonation_NoServiceUser_NoExpansion() throws Exception {
         // no impersonation should not attempt expansion and just take the login name which is already expanded
         // since this is kerberos use case and the login user (unlike gpdb user) should always have realm part
@@ -158,10 +166,26 @@ public class BaseSecurityServiceTest {
     }
 
     @Test
-    public void determineRemoteUser_IsServiceUser_Kerberos_NoImpersonation_ServiceUser() throws Exception {
-        expectScenario("service-user", true, false, true, false);
+    public void determineRemoteUser_IsLoginUser_Kerberos_NoImpersonation_NoServiceUser_NoExpansion_ConstrainedDelegation() throws Exception {
+        // this is a useless case as constrained delegation is enabled for no reason, but it is a possible config combo
+        service = new BaseSecurityService(mockSecureLogin, mockUGIProvider, false);
+        expectScenario("login-user@REALM", true, false, false, true);
         service.doAs(context, EMPTY_ACTION);
-        verifyScenario("service-user", true, false, false);
+        verifyScenario("login-user@REALM", true, false, true, false);
+    }
+
+    @Test
+    public void determineRemoteUser_IsServiceUser_Kerberos_NoImpersonation_ServiceUser() throws Exception {
+        expectScenario("service-user@REALM", true, false, true, false);
+        service.doAs(context, EMPTY_ACTION);
+        verifyScenario("service-user@REALM", true, false, false);
+    }
+
+    @Test
+    public void determineRemoteUser_IsServiceUser_Kerberos_NoImpersonation_ServiceUser_ConstrainedDelegation() throws Exception {
+        expectScenario("service-user@REALM", true, false, true, true);
+        service.doAs(context, EMPTY_ACTION);
+        verifyScenario("service-user@REALM", true, false, true);
     }
 
     @Test
@@ -174,12 +198,23 @@ public class BaseSecurityServiceTest {
     }
 
     @Test
-    public void determineRemoteUser_IsGpdbUser_Kerberos_NoImpersonation_ConstrainedDelegation() throws Exception {
-        // setting constrained delegation while setting no impersonation with Kerberos will cause a validation error
-        expectErrorScenario(true, false,
-                "User impersonation is not enabled for Kerberos constrained delegation.",
-                "Set the value of pxf.service.user.impersonation property to true in foo-dir/pxf-site.xml file.");
+    public void determineRemoteUser_IsServiceUser_Kerberos_NoImpersonation_ServiceUser_NoExpansion_ConstrainedDelegation() throws Exception {
+        // constrained delegation will overrule and perform expansion
+        service = new BaseSecurityService(mockSecureLogin, mockUGIProvider, false);
+        expectScenario("service-user@REALM", true, false, true, true);
+        service.doAs(context, EMPTY_ACTION);
+        verifyScenario("service-user@REALM", true, false, true);
     }
+
+    @Test
+    public void determineRemoteUser_IsServiceUser_Kerberos_NoImpersonation_ServiceUser_ConstrainedDelegation_RealmMismatch() throws Exception {
+        // having remote user with @ in the name but not ending in realm will cause an error
+        expectErrorScenario(true, false,
+                "Remote principal name serice@user contains @ symbol but does not end with REALM",
+                "Check the value of pxf.service.user.name property in foo-dir/pxf-site.xml file.",
+                "serice@user");
+    }
+
 
     /* --- KERBEROS / IMPERSONATION -- */
 
@@ -222,6 +257,23 @@ public class BaseSecurityServiceTest {
         verifyScenario("gpdb-user@REALM", true, true, true);
     }
 
+    @Test
+    public void determineRemoteUser_IsGpdbUser_Kerberos_Impersonation_ServiceUser_ConstrainedDelegation() throws Exception {
+        // service user is irrelevant for kerberos with impersonation
+        expectScenario("gpdb-user@REALM", true, true, true, true);
+        service.doAs(context, EMPTY_ACTION);
+        verifyScenario("gpdb-user@REALM", true, true, true);
+    }
+
+    @Test
+    public void determineRemoteUser_IsGpdbUser_Kerberos_Impersonation_ServiceUser_NoExpansion_ConstrainedDelegation() throws Exception {
+        service = new BaseSecurityService(mockSecureLogin, mockUGIProvider, false);
+        // service user is irrelevant for kerberos with impersonation
+        expectScenario("gpdb-user@REALM", true, true, true, true);
+        service.doAs(context, EMPTY_ACTION);
+        verifyScenario("gpdb-user@REALM", true, true, true);
+    }
+
     /* ----------- methods that test destroying UGI ----------- */
 
     @Test
@@ -244,12 +296,12 @@ public class BaseSecurityServiceTest {
 
     /* ----------- helper methods ----------- */
 
-    private void expectScenario(String user, boolean kerberos, boolean impersonation, boolean serviceUser, boolean constrainedDelegation) throws Exception {
+    private void expectScenario(String remoteUser, boolean kerberos, boolean impersonation, boolean serviceUser, boolean constrainedDelegation) throws Exception {
         if (kerberos) {
             configuration.set("hadoop.security.authentication", "kerberos");
         }
         if (constrainedDelegation) {
-            configuration.set("pxf.service.kerberos.constrained-delegation","true");
+            configuration.set("pxf.service.kerberos.constrained-delegation", "true");
         }
 
         when(mockSecureLogin.isUserImpersonationEnabled(configuration)).thenReturn(impersonation);
@@ -261,20 +313,24 @@ public class BaseSecurityServiceTest {
             when(mockLoginUGI.getUserName()).thenReturn("login-user");
         }
 
-        if (!impersonation && serviceUser && kerberos) {
+        if (serviceUser) {
             configuration.set("pxf.service.user.name", "service-user");
         }
 
         when(mockSecureLogin.getLoginUser("server", "config", configuration)).thenReturn(mockLoginUGI);
 
-        if (impersonation) {
-            when(mockUGIProvider.createProxyUser(user, mockLoginUGI)).thenReturn(mockProxyUGI);
+        if (impersonation || constrainedDelegation) {
+            when(mockUGIProvider.createProxyUser(remoteUser, mockLoginUGI)).thenReturn(mockProxyUGI);
         } else {
-            when(mockUGIProvider.createRemoteUser(user, mockLoginUGI, kerberos)).thenReturn(mockProxyUGI);
+            when(mockUGIProvider.createRemoteUser(remoteUser, mockLoginUGI, kerberos)).thenReturn(mockProxyUGI);
         }
     }
 
     private void expectErrorScenario(boolean kerberos, boolean impersonation, String errorMessage, String errorHint) throws IOException {
+        expectErrorScenario(kerberos, impersonation, errorMessage, errorHint, null);
+    }
+
+    private void expectErrorScenario(boolean kerberos, boolean impersonation, String errorMessage, String errorHint, String serviceUser) throws IOException {
         if (kerberos) {
             configuration.set("hadoop.security.authentication", "kerberos");
         }
@@ -285,6 +341,9 @@ public class BaseSecurityServiceTest {
         when(mockSecureLogin.isConstrainedDelegationEnabled(configuration)).thenReturn(true);
         when(mockLoginUGI.getUserName()).thenReturn("login-user@REALM");
         when(mockSecureLogin.getLoginUser("server", "config", configuration)).thenReturn(mockLoginUGI);
+        if (serviceUser != null) {
+            configuration.set("pxf.service.user.name", serviceUser);
+        }
 
         PxfRuntimeException e = assertThrows(PxfRuntimeException.class, () -> service.doAs(context, EMPTY_ACTION));
         assertEquals(errorMessage, e.getMessage());
@@ -295,7 +354,12 @@ public class BaseSecurityServiceTest {
     }
 
     private void verifyScenario(String user, boolean kerberos, boolean impersonation, boolean constrainedDelegation) {
-        if (impersonation) {
+        verifyScenario(user, kerberos, impersonation, constrainedDelegation, true);
+    }
+
+    private void verifyScenario(String user, boolean kerberos, boolean impersonation,
+                                boolean constrainedDelegation, boolean expectPropertiesResolver) {
+        if (impersonation || constrainedDelegation) {
             verify(mockUGIProvider).createProxyUser(user, mockLoginUGI);
         } else {
             verify(mockUGIProvider).createRemoteUser(user, mockLoginUGI, kerberos);
@@ -303,7 +367,7 @@ public class BaseSecurityServiceTest {
         verify(mockProxyUGI).doAs(ArgumentMatchers.<PrivilegedAction<Object>>any());
 
         String saslProviderName = configuration.get("hadoop.security.saslproperties.resolver.class");
-        if (constrainedDelegation) {
+        if (constrainedDelegation && expectPropertiesResolver) {
             assertEquals(PxfSaslPropertiesResolver.class.getName(), saslProviderName);
         } else {
             assertNull(saslProviderName);

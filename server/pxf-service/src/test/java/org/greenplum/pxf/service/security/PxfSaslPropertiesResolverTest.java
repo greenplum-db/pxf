@@ -47,14 +47,14 @@ public class PxfSaslPropertiesResolverTest {
 
     @Test
     public void testGetClientPropertiesFailsOnMissingServer() {
-        configuration.set("pxf.session.user", "user");
+        configuration.set("pxf.session.remote-user", "user");
         Exception e = assertThrows(IllegalStateException.class, () -> resolver.getClientProperties(address));
         assertEquals("Server name is missing from the configuration.", e.getMessage());
     }
 
     @Test
     public void testGetClientPropertiesNoPortContainsGSSCredential() {
-        configuration.set("pxf.session.user", "user");
+        configuration.set("pxf.session.remote-user", "user");
         configuration.set("pxf.config.server.name", "server");
         when(mockCredentialProvider.getGSSCredential("user", "server")).thenReturn(mockCredential);
 
@@ -64,7 +64,7 @@ public class PxfSaslPropertiesResolverTest {
 
     @Test
     public void testGetClientPropertiesWithPortContainsGSSCredential() {
-        configuration.set("pxf.session.user", "user");
+        configuration.set("pxf.session.remote-user", "user");
         configuration.set("pxf.config.server.name", "server");
         when(mockCredentialProvider.getGSSCredential("user", "server")).thenReturn(mockCredential);
 
@@ -74,7 +74,7 @@ public class PxfSaslPropertiesResolverTest {
 
     @Test
     public void testGetClientPropertiesReturnsQopPropertiesAndCredential() {
-        configuration.set("pxf.session.user", "user");
+        configuration.set("pxf.session.remote-user", "user");
         configuration.set("pxf.config.server.name", "server");
         configuration.set("hadoop.rpc.protection", " integrity ,privacy "); // use extra white spaces to test trimming
         resolver.setConf(configuration); // reset conf to re-parse specified QOP
@@ -85,7 +85,7 @@ public class PxfSaslPropertiesResolverTest {
 
     @Test
     public void testFailureDuringGettingCredential() {
-        configuration.set("pxf.session.user", "user");
+        configuration.set("pxf.session.remote-user", "user");
         configuration.set("pxf.config.server.name", "server");
         Exception expectedException = new RuntimeException("foo");
         when(mockCredentialProvider.getGSSCredential("user", "server")).thenThrow(expectedException);

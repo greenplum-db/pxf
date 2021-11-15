@@ -28,6 +28,15 @@ public interface ConfigurationFactory {
     String PXF_SESSION_USER_PROPERTY = "pxf.session.user";
 
     /**
+     * Synthetic configuration property that stores the identity that will be presented to the backend system.
+     * It can be a GPDB user name when impersonation is enabled, a GPDB user name extended with Kerberos realm name
+     * when impersonation is enabled in secure clusters, a service user if it is specified in PXF service configuration
+     * or the PXF service Kerberos principal name. There will be different mechanisms by which this identity is presented
+     * to the backend system (UGI remote user, UGI proxy user, regular TGS, TGS obtained via Constrained delegation).
+     */
+    String PXF_SESSION_REMOTE_USER_PROPERTY = "pxf.session.remote-user";
+
+    /**
      * Initializes a configuration object that applies server-specific configurations and
      * adds additional properties on top of it, if specified.
      *
