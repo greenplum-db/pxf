@@ -1213,7 +1213,7 @@ jobs:
             gcp_project: ((data-gpdb-ud-ipa-google-project-id))
       - task: Generate Multinode Hadoop Cluster
         file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
-        image: ccp-7-image
+        image: gpdb[[gp_ver]]-pxf-dev-centos7-image
         params:
           ANSIBLE_VAR_gcp_storage_bucket: data-gpdb-ud-pxf-build-resources
           ANSIBLE_VAR_ipa_password: ((ipa-password))

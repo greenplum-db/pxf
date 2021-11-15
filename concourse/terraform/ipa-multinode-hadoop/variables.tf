@@ -15,12 +15,6 @@ variable "gcp_zone" {
   default     = "us-central1-a"
 }
 
-variable "hdfs_namenode_count" {
-  type        = number
-  description = "number of HDFS NameNode VMs to create"
-  default     = 1
-}
-
 variable "hdfs_datanode_count" {
   type        = number
   description = "number of HDFS DataNode VMs to create"
@@ -43,6 +37,12 @@ variable "gce_vm_os_family" {
   type        = string
   description = "family name of the image from which to initialize the boot disk"
   default     = "centos-7"
+}
+
+variable "network" {
+  type        = string
+  description = "name of VPC network to provision VMs in"
+  default     = "bosh-network"
 }
 
 variable "subnet" {

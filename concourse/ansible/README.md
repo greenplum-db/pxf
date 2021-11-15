@@ -24,7 +24,7 @@ In addition to installing and setting up IPA and Hadoop, the play also creates t
     The username needs to be unique across all Hadoop clusters used by the automation framework since the principal name is used to identify to corresponding keytab to use (c.f. `BaseTestParent.trySecureLogin()`).
     The default username is `stout` but this can changed by either:
 
-    - updating the default in `example.config.yml`
+    - updating the default in `default.config.yml`
     - setting `ANSIBLE_VAR_hadoop_user` as a CI task parameter
 
 In addition to the two users that are created, the play also creates one (1) group `hadoop` and adds `stout` to this group to make the user an HDFS super user (c.f. `dfs.permissions.supergroup`).
