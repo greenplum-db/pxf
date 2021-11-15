@@ -1098,8 +1098,7 @@ jobs:
       KERBEROS: ((kerberos-enabled))
       GOOGLE_PROJECT_ID: ((google-project-id))
       GP_VER: [[gp_ver]]
-#TODO      GROUP: security,proxySecurity,multiClusterSecurity
-      GROUP: proxySecurityIpa
+      GROUP: security,proxySecurity,proxySecurityIpa,multiClusterSecurity
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
       TARGET_OS: centos
   - task: Test PXF CLI
