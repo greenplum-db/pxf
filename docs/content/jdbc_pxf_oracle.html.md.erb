@@ -82,9 +82,17 @@ This procedure will typically be performed by the Greenplum Database administrat
 
 1. Download the Oracle JDBC driver and place it under `$PXF_BASE/lib` of your Greenplum Database master host. If you [relocated $PXF_BASE](about_pxf_dir.html#movebase), make sure you use the updated location. You can download a Oracle JDBC driver from your preferred download location. The following example places a driver downloaded from Oracle webiste under `$PXF_BASE/lib` of the Greenplum Database master:
 
-    ```shell
-    $ scp ojdbc10.jar gpadmin@gpmaster:/usr/local/pxf-gp<version>/lib/
-    ```
+    1. If you did not relocate `$PXF_BASE`, run the following:
+
+        ```shell
+        $ scp ojdbc10.jar gpadmin@gpmaster:/usr/local/pxf-gp<version>/lib/
+        ```
+
+    2. If you relocated `$PXF_BASE`, run the following:
+
+        ```shell
+        $ scp ojdbc10.jar gpadmin@gpmaster:$PXF_BASE/lib/
+        ```
 
 1. Synchronize the PXF configuration, and then restart PXF: 
 
