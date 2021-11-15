@@ -71,23 +71,23 @@ public class HdfsProxySmokeTest extends BaseSmoke {
 
         // --- PXF tables pointing to the location allowed to be read by the TEST_USER only ---
         // server with impersonation
-        createPxfTable(serverName, "_small_data_prohibited", locationProhibited);
+        createReadablePxfTable(serverName, "_small_data_prohibited", locationProhibited);
         // server without impersonation but with a service user
-        createPxfTable(serverName + "-no-impersonation", "_small_data_prohibited_no_impersonation", locationProhibited);
+        createReadablePxfTable(serverName + "-no-impersonation", "_small_data_prohibited_no_impersonation", locationProhibited);
         // server without impersonation and without a service user
-        createPxfTable(serverName + "-no-impersonation-no-svcuser", "_small_data_prohibited_no_impersonation_no_svcuser", locationProhibited);
+        createReadablePxfTable(serverName + "-no-impersonation-no-svcuser", "_small_data_prohibited_no_impersonation_no_svcuser", locationProhibited);
 
         // --- PXF tables pointing to the location prohibited to be read by TEST_USER (allowed for ADMIN_USER only) ---
         // server with impersonation
-        createPxfTable(serverName, "_small_data_allowed", locationAllowed);
+        createReadablePxfTable(serverName, "_small_data_allowed", locationAllowed);
         // server without impersonation but with a service user
-        createPxfTable(serverName + "-no-impersonation", "_small_data_allowed_no_impersonation", locationAllowed);
+        createReadablePxfTable(serverName + "-no-impersonation", "_small_data_allowed_no_impersonation", locationAllowed);
         // server without impersonation and without a service user
-        createPxfTable(serverName + "-no-impersonation-no-svcuser", "_small_data_allowed_no_impersonation_no_svcuser", locationAllowed);
+        createReadablePxfTable(serverName + "-no-impersonation-no-svcuser", "_small_data_allowed_no_impersonation_no_svcuser", locationAllowed);
 
     }
 
-    private void createPxfTable(String serverName, String tableSuffix, String location) throws Exception {
+    private void createReadablePxfTable(String serverName, String tableSuffix, String location) throws Exception {
         ReadableExternalTable exTable =
                 TableFactory.getPxfReadableTextTable("pxf_proxy" + getTableInfix() + tableSuffix,
                         FIELDS, location, ",");
