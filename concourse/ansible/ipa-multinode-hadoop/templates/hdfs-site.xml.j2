@@ -3,6 +3,38 @@
 
 <configuration>
     <property>
+        <name>dfs.nameservices</name>
+        <value>{{ cluster_name }}</value>
+    </property>
+    <!--
+        a maximum of two NameNodes may be configured per nameservice
+        https://hadoop.apache.org/docs/r2.10.1/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithNFS.html
+    -->
+    <property>
+        <name>dfs.ha.namenodes.{{ cluster_name }}</name>
+        <value>nn01,nn02</value>
+    </property>
+    <property>
+        <name>dfs.namenode.rpc-address.{{ cluster_name }}.nn01</name>
+        <value>ccp-{{ cluster_name }}-nn01.{{ ansible_domain }}:8020</value>
+    </property>
+    <property>
+        <name>dfs.namenode.rpc-address.{{ cluster_name }}.nn02</name>
+        <value>ccp-{{ cluster_name }}-nn02.{{ ansible_domain }}:8020</value>
+    </property>
+    <property>
+        <name>dfs.namenode.shared.edits.dir</name>
+        <value>file:///mnt/share1/dfs/ha-name-dir-shared</value>
+    </property>
+    <property>
+        <name>dfs.client.failover.proxy.provider.{{ cluster_name }}</name>
+        <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+    </property>
+    <property>
+        <name>dfs.ha.fencing.methods</name>
+        <value>sshfence</value>
+    </property>
+    <property>
         <name>dfs.permissions</name>
         <value>true</value>
     </property>
@@ -27,8 +59,12 @@
         <value>true</value>
     </property>
     <property>
-        <name>dfs.namenode.https-address</name>
+        <name>dfs.namenode.https-address.{{ cluster_name }}.nn01</name>
         <value>ccp-{{ cluster_name }}-nn01.{{ ansible_domain }}:50470</value>
+    </property>
+    <property>
+        <name>dfs.namenode.https-address.{{ cluster_name }}.nn02</name>
+        <value>ccp-{{ cluster_name }}-nn02.{{ ansible_domain }}:50470</value>
     </property>
     <property>
         <name>dfs.permissions.supergroup</name>
@@ -71,6 +107,14 @@
     <property>
         <name>dfs.namenode.keytab.file</name>
         <value>/opt/security/keytab/hdfs.service.keytab</value>
+    </property>
+    <property>
+        <name>dfs.namenode.kerberos.internal.spnego.principal</name>
+        <value>HTTP/_HOST@{{ ansible_domain | upper }}</value>
+    </property>
+    <property>
+        <name>dfs.web.authentication.kerberos.keytab</name>
+        <value>/opt/security/keytab/spnego.service.keytab</value>
     </property>
     <!-- kerberos settings for DataNode -->
     <property>

@@ -1,10 +1,15 @@
 [ipa]
 ${ipa.name}
 
-[namenode]
-%{ for node in namenode ~}
-${node.name}
-%{ endfor ~}
+[active_namenode]
+${namenode.0.name}
+
+[standby_namenode]
+${namenode.1.name}
+
+[namenode:children]
+active_namenode
+standby_namenode
 
 [datanode]
 %{ for node in datanode ~}

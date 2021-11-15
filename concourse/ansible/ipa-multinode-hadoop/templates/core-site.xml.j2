@@ -4,7 +4,7 @@
 <configuration>
     <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://ccp-{{ cluster_name }}-nn01.{{ ansible_domain }}:8020</value>
+        <value>hdfs://{{ cluster_name }}</value>
     </property>
     <property>
         <name>ipc.ping.interval</name>
