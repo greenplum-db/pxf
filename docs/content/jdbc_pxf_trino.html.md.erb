@@ -41,18 +41,18 @@ This procedure will typically be performed by the Greenplum Database administrat
    See [Trino Documentation - JDBC Driver](https://trino.io/docs/current/installation/jdbc.html) for instructions on downloading the Trino JDBC driver.
    The following example downloads the driver and places it under `$PXF_BASE/lib`:
 
-    1. If you did not relocate `$PXF_BASE`, run the following:
+    1. If you did not relocate `$PXF_BASE`, run the following from the Greenplum master:
 
         ```shell
-        $ cd /usr/local/pxf-gp<version>/lib
-        $ wget <url-to-trino-jdbc-driver>
+        gpadmin@gpmaster$ cd /usr/local/pxf-gp<version>/lib
+        gpadmin@gpmaster$ wget <url-to-trino-jdbc-driver>
         ```
 
-    2. If you relocated `$PXF_BASE`, run the following:
+    2. If you relocated `$PXF_BASE`, run the following from the Greenplum master:
 
         ```shell
-        $ cd $PXF_BASE/lib
-        $ wget <url-to-trino-jdbc-driver>
+        gpadmin@gpmaster$ cd $PXF_BASE/lib
+        gpadmin@gpmaster$ wget <url-to-trino-jdbc-driver>
         ```
 
 1. Synchronize the PXF configuration, and then restart PXF:

@@ -86,18 +86,18 @@ This procedure will typically be performed by the Greenplum Database administrat
     ```
 1. Download the MySQL JDBC driver and place it under `$PXF_BASE/lib`. If you [relocated $PXF_BASE](about_pxf_dir.html#movebase), make sure you use the updated location. You can download a MySQL JDBC driver from your preferred download location. The following example downloads the driver from Maven Central and places it under `$PXF_BASE/lib`:
 
-    1. If you did not relocate `$PXF_BASE`, run the following:
+    1. If you did not relocate `$PXF_BASE`, run the following from the Greenplum master:
 
         ```shell
-        $ cd /usr/local/pxf-gp<version>/lib
-        $ wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.21/mysql-connector-java-8.0.21.jar
+        gpadmin@gpmaster$ cd /usr/local/pxf-gp<version>/lib
+        gpadmin@gpmaster$ wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.21/mysql-connector-java-8.0.21.jar
         ```
 
-    2. If you relocated `$PXF_BASE`, run the following:
+    2. If you relocated `$PXF_BASE`, run the following from the Greenplum master:
 
         ```shell
-        $ cd $PXF_BASE/lib
-        $ wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.21/mysql-connector-java-8.0.21.jar
+        gpadmin@gpmaster$ cd $PXF_BASE/lib
+        gpadmin@gpmaster$ wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.21/mysql-connector-java-8.0.21.jar
         ```
 
 1. Synchronize the PXF configuration, and then restart PXF:
