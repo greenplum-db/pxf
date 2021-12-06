@@ -7,6 +7,7 @@ import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
+import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,12 @@ public class HiveMetaStoreClientCompatibility1xx extends HiveMetaStoreClient imp
             } catch (MetaException | NoSuchObjectException ex) {
                 LOG.debug("Original exception not re-thrown", e);
                 throw ex;
+            } catch (TTransportException transportException) {
+                /*
+                RetryingMetaStoreClient.java already contains logic to retry connecting to the metastore.
+                The number of retries can be set in the hive-site.xml using hive.metastore.failure.retries.
+                 */
+                throw transportException;
             } catch (Throwable t) {
                 LOG.warn("Unable to run compatibility for metastore client method get_table_req. Will rethrow original exception: ", t);
             }
