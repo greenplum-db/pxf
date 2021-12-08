@@ -78,7 +78,11 @@
     <property>
         <name>jdbc.statement.fetchSize</name>
         <value>1000</value>
-        <description>Number of rows that should be fetched at a time during read. Default is 1000</description>
+        <description>
+            Number of rows that should be fetched at a time during read. Default is 1000 for all drivers other than MySQL.
+            For the MySQL JDBC driver, the default value is set to -2147483648 (Integer.MIN_VALUE) to enable streaming
+            read and avoid bringing the complete ResultSet into PXF memory.
+        </description>
     </property>
     -->
 

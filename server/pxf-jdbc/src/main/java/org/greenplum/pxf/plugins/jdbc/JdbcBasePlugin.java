@@ -59,6 +59,9 @@ public class JdbcBasePlugin extends BasePlugin {
     // '100' is a recommended value: https://docs.oracle.com/cd/E11882_01/java.112/e16548/oraperf.htm#JJDBC28754
     private static final int DEFAULT_BATCH_SIZE = 100;
     private static final int DEFAULT_FETCH_SIZE = 1000;
+    // MySQL fetches all data in memory first unless streaming is enabled by setting fetchSize to Integer.MIN_VALUE
+    // see https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html
+    private static final int DEFAULT_MYSQL_FETCH_SIZE = Integer.MIN_VALUE;
     private static final int DEFAULT_POOL_SIZE = 1;
 
     // configuration parameter names
@@ -92,6 +95,7 @@ public class JdbcBasePlugin extends BasePlugin {
 
     private static final String HIVE_URL_PREFIX = "jdbc:hive2://";
     private static final String HIVE_DEFAULT_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
+    private static final String MYSQL_DRIVER_PREFIX = "com.mysql.";
 
     private enum TransactionIsolation {
         READ_UNCOMMITTED(1),
@@ -235,7 +239,10 @@ public class JdbcBasePlugin extends BasePlugin {
             }
         }
 
-        fetchSize = configuration.getInt(JDBC_STATEMENT_FETCH_SIZE_PROPERTY_NAME, DEFAULT_FETCH_SIZE);
+        // determine fetchSize for read operations, with different default values for MySQL driver and all others
+        int defaultFetchSize = jdbcDriver.startsWith(MYSQL_DRIVER_PREFIX) ? DEFAULT_MYSQL_FETCH_SIZE : DEFAULT_FETCH_SIZE;
+        fetchSize = configuration.getInt(JDBC_STATEMENT_FETCH_SIZE_PROPERTY_NAME, defaultFetchSize);
+        LOG.debug("Will be using fetchSize {}", fetchSize);
 
         poolSize = context.getOption("POOL_SIZE", DEFAULT_POOL_SIZE);
 
