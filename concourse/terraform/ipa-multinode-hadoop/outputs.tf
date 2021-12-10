@@ -1,5 +1,5 @@
 output "ssh_config" {
-  value = templatefile("${path.module}/templates/ssh_config.tpl", {
+  value = templatefile("${path.module}/templates/${var.env_type}/ssh_config.tpl", {
     cluster_name = var.env_name
     ipa = google_compute_instance.ipa
     namenode = google_compute_instance.namenode
@@ -16,7 +16,7 @@ output "ansible_inventory" {
 }
 
 output "etc_hosts" {
-  value = templatefile("${path.module}/templates/etc_hosts.tpl", {
+  value = templatefile("${path.module}/templates/${var.env_type}/etc_hosts.tpl", {
     project_id = var.gcp_project
     ipa = google_compute_instance.ipa
     namenode = google_compute_instance.namenode
