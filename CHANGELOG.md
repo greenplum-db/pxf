@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.2.1 (12/17/2021)
+
+### Bug Fixes:
+
+- [#710](https://github.com/greenplum-db/pxf/pull/710) Allow skipping the header for *:text:multi profiles
+- [#719](https://github.com/greenplum-db/pxf/pull/719) Add explicit UnsupportedException for Hive transactional tables
+- [#723](https://github.com/greenplum-db/pxf/pull/723) bump log4j2 version to 2.15.0
+
 ## 6.2.0 (09/08/2021)
 
 ### Enhancements:
