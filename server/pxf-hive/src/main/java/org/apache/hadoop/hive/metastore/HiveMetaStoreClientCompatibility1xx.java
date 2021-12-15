@@ -63,7 +63,7 @@ public class HiveMetaStoreClientCompatibility1xx extends HiveMetaStoreClient imp
                 throw ex;
             } catch (TTransportException transportException) {
                 /*
-                RetryingMetaStoreClient.java already contains logic to retry connecting to the metastore.
+                Propagate a TTransportException to allow RetryingMetaStoreClient (which proxies this class) to retry connecting to the metastore.
                 The number of retries can be set in the hive-site.xml using hive.metastore.failure.retries.
                  */
                 throw transportException;

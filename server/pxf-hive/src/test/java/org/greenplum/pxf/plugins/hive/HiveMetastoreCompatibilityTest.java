@@ -230,7 +230,7 @@ public class HiveMetastoreCompatibilityTest {
                          }
                          return null;
                      },
-                     // second run through
+                     // second run through (retry 1 = success)
                      invocation ->  {
                          if (invocation.getMethod().getName().equals("get_table_req")) {
                              GetTableResult tempRes = new GetTableResult(hiveTable);
@@ -267,7 +267,7 @@ public class HiveMetastoreCompatibilityTest {
                 when(mockSocket.isOpen()).thenReturn(true));
              MockedConstruction<ThriftHiveMetastore.Client> thriftHiveMetastoreClientMockedConstruction = mockConstructionWithAnswer(ThriftHiveMetastore.Client.class,
                      // first run through
-                     invocation ->  {
+                     invocation -> {
                          if (invocation.getMethod().getName().equals("get_table_req")) {
                              throw new TApplicationException("fallback 1");
                          } else if (invocation.getMethod().getName().equals("get_table")) {
@@ -275,8 +275,8 @@ public class HiveMetastoreCompatibilityTest {
                          }
                          return null;
                      },
-                     // second run through
-                     invocation ->  {
+                     // second run through (retry 1)
+                     invocation -> {
                          if (invocation.getMethod().getName().equals("get_table_req")) {
                              throw new TApplicationException("fallback 2");
                          } else if (invocation.getMethod().getName().equals("get_table")) {
@@ -284,8 +284,8 @@ public class HiveMetastoreCompatibilityTest {
                          }
                          return null;
                      },
-                     // third run through
-                     invocation ->  {
+                     // third run through (retry 2)
+                     invocation -> {
                          if (invocation.getMethod().getName().equals("get_table_req")) {
                              throw new TApplicationException("fallback 3");
                          } else if (invocation.getMethod().getName().equals("get_table")) {
@@ -293,17 +293,18 @@ public class HiveMetastoreCompatibilityTest {
                          }
                          return null;
                      },
-                     // ??? run through (this seems to be skipped when running the test?
-                     invocation ->  {
+                     // placebo run through
+                     // the second to last invocation keeps getting skipped so place this here as a placebo
+                     invocation -> {
                          if (invocation.getMethod().getName().equals("get_table_req")) {
-                             throw new TApplicationException("fallback ?????");
+                             throw new TApplicationException("fallback ???");
                          } else if (invocation.getMethod().getName().equals("get_table")) {
-                             throw new TTransportException("oops. where's the metastore? ?????");
+                             throw new TTransportException("oops. where's the metastore? ???");
                          }
                          return null;
                      },
-                     // final run through
-                     invocation ->  {
+                     // final run through (retry 3 = success)
+                     invocation -> {
                          if (invocation.getMethod().getName().equals("get_table_req")) {
                              throw new TApplicationException("fallback");
                          } else if (invocation.getMethod().getName().equals("get_table")) {
@@ -311,7 +312,6 @@ public class HiveMetastoreCompatibilityTest {
                          }
                          return null;
                      }
-
              )) {
             Configuration configuration = new Configuration();
             HiveConf hiveConf = new HiveConf(configuration, HiveConf.class);
