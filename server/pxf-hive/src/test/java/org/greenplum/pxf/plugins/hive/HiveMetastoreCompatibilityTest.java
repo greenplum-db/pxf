@@ -5,6 +5,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStore;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClientCompatibility1xx;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.GetTableResult;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -18,11 +19,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.mockConstructionWithAnswer;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +37,7 @@ public class HiveMetastoreCompatibilityTest {
     private HiveClientWrapper hiveClientWrapper;
     private HiveClientWrapper.HiveClientFactory hiveClientFactory;
     private ThriftHiveMetastore.Client mockThriftClient;
+    private Map<String, String> hiveTableParameters;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -40,6 +46,7 @@ public class HiveMetastoreCompatibilityTest {
         hiveClientFactory = new HiveClientWrapper.HiveClientFactory();
         hiveClientWrapper = new HiveClientWrapper();
         hiveClientWrapper.setHiveClientFactory(hiveClientFactory);
+        hiveTableParameters = new HashMap<>();
     }
 
     @Test
@@ -201,6 +208,122 @@ public class HiveMetastoreCompatibilityTest {
             assertEquals("oops. where's the metastore?", e.getMessage());
             assertEquals(6, thriftHiveMetastoreClientMockedConstruction.constructed().size());
             assertEquals(6, tSocketMockedConstruction.constructed().size());
+        }
+    }
+
+    @Test
+    public void getTableFailedToConnectToMetastoreNoFallback1Retry2ndSuccess() throws Exception {
+
+        String name = "orphan";
+        Table hiveTable = new Table();
+        hiveTable.setTableName(name);
+        hiveTable.setTableType("MANAGED_TABLE");
+        hiveTable.setParameters(hiveTableParameters);
+
+        try (MockedConstruction<TSocket> tSocketMockedConstruction = mockConstruction(TSocket.class, (mockSocket, context) ->
+                when(mockSocket.isOpen()).thenReturn(true));
+             MockedConstruction<ThriftHiveMetastore.Client> thriftHiveMetastoreClientMockedConstruction = mockConstructionWithAnswer(ThriftHiveMetastore.Client.class,
+                     // first run through
+                     invocation ->  {
+                         if (invocation.getMethod().getName().equals("get_table_req")) {
+                             throw new TTransportException("oops. where's the metastore? 1");
+                         }
+                         return null;
+                     },
+                     // second run through
+                     invocation ->  {
+                         if (invocation.getMethod().getName().equals("get_table_req")) {
+                             GetTableResult tempRes = new GetTableResult(hiveTable);
+                             return tempRes;
+                         }
+                         return null;
+                     }
+
+             )) {
+            Configuration configuration = new Configuration();
+            HiveConf hiveConf = new HiveConf(configuration, HiveConf.class);
+            hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTFAILURERETRIES, 1);
+            hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "test://test:1234");
+
+            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf);
+
+            Table resultTable = hiveClientWrapper.getHiveTable(client, new Metadata.Item("default", name));
+            assertEquals(hiveTable.getTableName(), resultTable.getTableName());
+            assertEquals(2, thriftHiveMetastoreClientMockedConstruction.constructed().size());
+            assertEquals(2, tSocketMockedConstruction.constructed().size());
+        }
+    }
+
+    @Test
+    public void getTableFailedToConnectToMetastoreFiveRetries3rdSuccess() throws Exception {
+
+        String name = "orphan";
+        Table hiveTable = new Table();
+        hiveTable.setTableName(name);
+        hiveTable.setTableType("MANAGED_TABLE");
+        hiveTable.setParameters(hiveTableParameters);
+
+        try (MockedConstruction<TSocket> tSocketMockedConstruction = mockConstruction(TSocket.class, (mockSocket, context) ->
+                when(mockSocket.isOpen()).thenReturn(true));
+             MockedConstruction<ThriftHiveMetastore.Client> thriftHiveMetastoreClientMockedConstruction = mockConstructionWithAnswer(ThriftHiveMetastore.Client.class,
+                     // first run through
+                     invocation ->  {
+                         if (invocation.getMethod().getName().equals("get_table_req")) {
+                             throw new TApplicationException("fallback 1");
+                         } else if (invocation.getMethod().getName().equals("get_table")) {
+                             throw new TTransportException("oops. where's the metastore? 1");
+                         }
+                         return null;
+                     },
+                     // second run through
+                     invocation ->  {
+                         if (invocation.getMethod().getName().equals("get_table_req")) {
+                             throw new TApplicationException("fallback 2");
+                         } else if (invocation.getMethod().getName().equals("get_table")) {
+                             throw new TTransportException("oops. where's the metastore? 2");
+                         }
+                         return null;
+                     },
+                     // third run through
+                     invocation ->  {
+                         if (invocation.getMethod().getName().equals("get_table_req")) {
+                             throw new TApplicationException("fallback 3");
+                         } else if (invocation.getMethod().getName().equals("get_table")) {
+                             throw new TTransportException("oops. where's the metastore? 3");
+                         }
+                         return null;
+                     },
+                     // ??? run through (this seems to be skipped when running the test?
+                     invocation ->  {
+                         if (invocation.getMethod().getName().equals("get_table_req")) {
+                             throw new TApplicationException("fallback ?????");
+                         } else if (invocation.getMethod().getName().equals("get_table")) {
+                             throw new TTransportException("oops. where's the metastore? ?????");
+                         }
+                         return null;
+                     },
+                     // final run through
+                     invocation ->  {
+                         if (invocation.getMethod().getName().equals("get_table_req")) {
+                             throw new TApplicationException("fallback");
+                         } else if (invocation.getMethod().getName().equals("get_table")) {
+                             return hiveTable;
+                         }
+                         return null;
+                     }
+
+             )) {
+            Configuration configuration = new Configuration();
+            HiveConf hiveConf = new HiveConf(configuration, HiveConf.class);
+            hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTFAILURERETRIES, 5);
+            hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "test://test:1234");
+
+            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf);
+
+            Table resultTable = hiveClientWrapper.getHiveTable(client, new Metadata.Item("default", name));
+            assertEquals(hiveTable.getTableName(), resultTable.getTableName());
+            assertEquals(4, thriftHiveMetastoreClientMockedConstruction.constructed().size());
+            assertEquals(4, tSocketMockedConstruction.constructed().size());
         }
     }
 }
