@@ -93,8 +93,10 @@ The PXF JDBC Connector executes a query or insert command on an external SQL dat
 | Property       | Description                                | Value |
 |----------------|--------------------------------------------|-------|
 | jdbc.statement.batchSize | The number of rows to write to the external database table in a batch. | The number of rows. The default write batch size is 100. |
-| jdbc.statement.fetchSize | The number of rows to fetch/buffer when reading from the external database table. | The number of rows. The default read fetch size is 1000. |
+| jdbc.statement.fetchSize<sup>1</sup> | The number of rows to fetch/buffer when reading from the external database table. | The number of rows. The default read fetch size is 1000. |
 | jdbc.statement.queryTimeout | The amount of time (in seconds) the JDBC driver waits for a statement to execute. This timeout applies to statements created for both read and write operations. | The timeout duration in seconds. The default wait time is unlimited. |
+
+</br><sup>1</sup>&nbsp;If you will be accessing large datasets on MySQL, consider setting `jdbc.statement.fetchSize` to `-2147483648` (`Integer.MIN_VALUE`) to use streaming mode for the data retrieval.
 
 PXF uses the default value for any statement-level property that you do not explicitly configure.
 

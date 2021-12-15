@@ -135,6 +135,15 @@ This procedure will typically be performed by the Greenplum Database administrat
     </configuration> 
     ```
 
+1. If you will be accessing large datasets on MySQL, consider setting the `jdbc-site.xml` `jdbc.statement.fetchSize` property value to `-2147483648` (`Integer.MIN_VALUE`) to use streaming mode for the data retrieval:
+
+    ``` xml
+        <property>
+            <name>jdbc.statement.fetchSize</name>
+            <value>-2147483648</value>
+        </property>
+    ```
+
 3. Synchronize the PXF server configuration to the Greenplum Database cluster:
 
     ``` shell
