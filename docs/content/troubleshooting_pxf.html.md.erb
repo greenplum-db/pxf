@@ -86,7 +86,7 @@ The `IGNORE_MISSING_PATH` custom option applies only to file-based profiles, inc
 
 ## <a id="hive-metastore"></a>Addressing Hive MetaStore Connection Errors
 
-The PXF Hive connector uses the Hive MetaStore to determine the HDFS locations of Hive tables. By default, PXF retries a failed connection to the Hive MetaStore a single time. If you encounter one of the following error messages or exceptions when accessing Hive via a PXF external table, consider increasing the retry count:
+The PXF Hive connector uses the Hive MetaStore to determine the HDFS locations of Hive tables. Starting in PXF version 6.2.1, PXF retries a failed connection to the Hive MetaStore a single time. If you encounter one of the following error messages or exceptions when accessing Hive via a PXF external table, consider increasing the retry count:
 
 - `Failed to connect to the MetaStore Server.`
 - `Could not connect to meta store ...`
