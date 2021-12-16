@@ -22,7 +22,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: PXF Version ${{ github.ref }}
           body: |
-            ## 6.2.1 (12/17/2021)
+            ## 6.2.1 (12/16/2021)
 
             ### Bug Fixes:
 
