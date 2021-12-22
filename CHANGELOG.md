@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.2.2 (12/22/2021)
+
+### Bug Fixes:
+
+- [#732](https://github.com/greenplum-db/pxf/pull/732) Downgrade to Spring Boot 2.4.3
+- [#733](https://github.com/greenplum-db/pxf/pull/733) Bump log4j2 version to 2.17.0
+
 ## 6.2.1 (12/16/2021)
 
 ### Bug Fixes:
