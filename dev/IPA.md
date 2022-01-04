@@ -9,7 +9,7 @@ spin up GCP instances for an IPA server, hadoop namenodes and datanodes.
 * uses the [`ipa-multinode-hadoop` Ansible play](../concourse/ansible/ipa-multinode-hadoop) 
 to configure and start the Hadoop cluster.
 * generates TLS private keys, self-signed certificates and pkcs12 keystores for the Hadoop nodes.
-* creates PXF configuration server under `$PXF_BASE` and deployes `*-site.xml` files and keytabs there
+* creates PXF configuration server under `$PXF_BASE` and deploys `*-site.xml` files and keytabs there
 
 ## Prerequisites
 
@@ -41,20 +41,11 @@ The script will:
  * create a PXF configuration server `$PXF_BASE/servers/hdfs-ipa`
  * print out messages instructing the user to:
    * enable constrained delegation property in their `$PXF_BASE/servers/hdfs-ipa/pxf-site.xml`
-   * add an extra property to `$PXF_BASE/servers/hdfs-ipa/hdfs-site.xml`
    * update their `/etc/hosts` file
    * create or update their `/etc/krb5.conf` file
-
-One manual step for now is to go and add the following property to the `$PXF_BASE/servers/hdfs-ipa/hdfs-site.conf`:
-```
-    <property>
-        <name>dfs.client.use.datanode.hostname</name>
-        <value>true</value>
-    </property>
-```
    
 ## Outcome
-If the script executes successfully, and you follow the post-execution steps, you will have:
+If the script executes successfully and you follow the post-execution steps, you will have:
 
 1. a configured and started multi-node HA Hadoop cluster in GCP secured by an IPA server:
     * IPA server will run in `ccp-[your-user-id]-ipa` GCP VM, the realm is the same as your GCP project's DNS name suffix
@@ -105,4 +96,5 @@ and any modifications you have done to:
 - `/etc/hosts` file
 - `/etc/krb5.conf` file
 - `~/.ssh/config` file
-- remove `~/.ssh/[username]` and `~/.ssh/[username].pub` files which has a private key to now destroyed GCP VM instances 
+- remove `~/.ssh/[username]` and `~/.ssh/[username].pub` files which has a private key to the GCP VM instances
+that were just destroyed

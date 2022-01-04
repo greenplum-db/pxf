@@ -63,6 +63,11 @@ function check_pre_requisites() {
     if ! type ansible-playbook &>/dev/null; then
       fail 'ansible-playbook is not found, did you install it ?'
     fi
+
+    if ! type xmlstarlet &>/dev/null; then
+      fail 'xmlstarlet is not found, did you install it ?'
+    fi
+
     : "${PXF_BASE?"PXF_BASE is required. export PXF_BASE=[YOUR_PXF_CONFIG_LOCATION]"}"
     : "${TF_VAR_gcp_project?"TF_VAR_gcp_project is required. export TF_VAR_gcp_project=[YOUR_GCP_PROJECT_NAME]"}"
     : "${ANSIBLE_VAR_ipa_password?"ANSIBLE_VAR_ipa_password is required. export ANSIBLE_VAR_ipa_password=[YOUR_IPA_PASSWORD]"}"
@@ -165,9 +170,9 @@ function generate_keystores() {
 function setup_ssh_config() {
     mkdir -p ~/.ssh
     jq <"${metadata_path}" -r '.ssh_config.value' >>~/.ssh/config
-    jq <"${metadata_path}" -r '.private_key.value' >~/.ssh/"${cluster_name}"
-    chmod 0600 ~/.ssh/"${cluster_name}"
-    ssh-keygen -y -f ~/.ssh/"${cluster_name}" >~/.ssh/"${cluster_name}".pub
+    jq <"${metadata_path}" -r '.private_key.value' >~/.ssh/ipa_"${cluster_name}"_rsa
+    chmod 0600 ~/.ssh/ipa_"${cluster_name}"_rsa
+    ssh-keygen -y -f ~/.ssh/ipa_"${cluster_name}"_rsa >~/.ssh/ipa_"${cluster_name}"_rsa.pub
 }
 
 # run ansible playbook to configure Hadoop on the cluster
@@ -196,8 +201,8 @@ function create_environment_files() {
     mkdir -p ipa_env_files/conf
     scp "${hadoop_namenode}:\$HADOOP_PREFIX/etc/hadoop/*-site.xml" ipa_env_files/conf/
 
-    cp ~/.ssh/"${cluster_name}" ipa_env_files/google_compute_engine
-    cp ~/.ssh/"${cluster_name}".pub ipa_env_files/google_compute_engine.pub
+    cp ~/.ssh/ipa_"${cluster_name}"_rsa ipa_env_files/google_compute_engine
+    cp ~/.ssh/ipa_"${cluster_name}"_rsa.pub ipa_env_files/google_compute_engine.pub
 
     gcp_project="$(jq <"${metadata_path}" -r ".project.value")"
     domain_name_lower="c.${gcp_project}.internal"
@@ -231,24 +236,20 @@ function setup_pxf_server() {
     cp "${parent_script_dir}"/server/pxf-service/src/templates/templates/pxf-site.xml "${PXF_BASE}"/servers/hdfs-ipa/
     sed -i '' -e "s|>gpadmin/_HOST@EXAMPLE.COM<|>porter@${domain_name_upper}<|g" "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
     sed -i '' -e 's|/keytabs/|/servers/hdfs-ipa/|g' "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
-    # the line below does not work on MacOS, will instruct the user to do it manually
-    #sed -i '' -e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>true</value>|}' "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
+    # set Hadoop client to use hostnames for datanodes instead of IP addresses (which are internal in GCP network)
+    xmlstarlet ed --inplace --pf --append '/configuration/property[last()]' --type elem -n property -v "" \
+     --subnode '/configuration/property[last()]' --type elem -n name -v "dfs.client.use.datanode.hostname" \
+     --subnode '/configuration/property[last()]' --type elem -n value -v "true" "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
+    # set contrained delegation property to true for the PXF server
+    xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.kerberos.constrained-delegation']/value" -v true "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
 }
 
 # print instructions for the manual steps the user must perform
 function print_user_instructions() {
     echo "Cluster $USER has been created, now do the following:"
-    echo "1. --- enable pxf.service.kerberos.constrained-delegation in "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml"
-    echo "2. --- add the following property to "${PXF_BASE}"/servers/hdfs-ipa/hdfs-site.xml :"
-    cat << EOF
-    <property>
-        <name>dfs.client.use.datanode.hostname</name>
-        <value>true</value>
-    </property>
-EOF
-    echo "3. --- copy the following to your /etc/hosts :"
+    echo "1. --- copy the following to your /etc/hosts :"
     cat ipa_env_files/etc_hostfile
-    echo "4. --- add the following to your /etc/krb5.conf :"
+    echo "2. --- add the following to your /etc/krb5.conf :"
     cat << EOF
 [libdefaults]
  default_realm = C.DATA-GPDB-UD-IPA.INTERNAL
@@ -295,7 +296,3 @@ case ${script_command} in
 esac
 
 exit $?
-
-
-#popd >/dev/null 2>&1
-
