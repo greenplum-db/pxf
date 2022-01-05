@@ -97,5 +97,5 @@ and any modifications you have done to:
 - `/etc/hosts` file
 - `/etc/krb5.conf` file
 - `~/.ssh/config` file
-- remove `~/.ssh/[username]` and `~/.ssh/[username].pub` files which has a private key to the GCP VM instances
+- remove `~/.ssh/ipa_[username]_rsa` and `~/.ssh/ipa_[username]_rsa.pub` files which contain keys to the GCP VM instances
 that were just destroyed
