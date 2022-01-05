@@ -53,11 +53,11 @@ function fail()
 
 function check_pre_requisites() {
     if ! type terraform &>/dev/null; then
-      fail 'terraform is not found, did you install it ?'
+      fail 'terraform is not found, did you install it (e.g. "brew install terraform") ?'
     fi
 
     if ! type jq &>/dev/null; then
-      fail 'jq is not found, did you install it ?'
+      fail 'jq is not found, did you install it (e.g. "brew install jq") ?'
     fi
 
     if ! type ansible-playbook &>/dev/null; then
@@ -65,7 +65,7 @@ function check_pre_requisites() {
     fi
 
     if ! type xmlstarlet &>/dev/null; then
-      fail 'xmlstarlet is not found, did you install it ?'
+      fail 'xmlstarlet is not found, did you install it (e.g. "brew install xmlstarlet") ?'
     fi
 
     : "${PXF_BASE?"PXF_BASE is required. export PXF_BASE=[YOUR_PXF_CONFIG_LOCATION]"}"

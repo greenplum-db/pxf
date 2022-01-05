@@ -33,6 +33,8 @@ build_pipeline_name = "local"
 build_team_name = "local"
 atc_external_url = "none"
 
-# TODO: ccp reaper integration will require tfstate to be pushed to an AWS bucket
+# CCP reaper integration would require tfstate to be pushed to an AWS bucket, it is not used for now.
+# Developers will need to destroy their GCP clusters and infrastructure manually or by using a development script,
+# refer to the "Cleanup" section of the dev/IPA.md file.
 #ccp_reap_mins = 480
 #ccp_fail_status_behavior = "run"
