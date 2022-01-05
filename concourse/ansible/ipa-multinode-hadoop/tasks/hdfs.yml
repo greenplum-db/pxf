@@ -54,7 +54,7 @@
 
 # providing the absolute path for ipa-getkeytab since due to some reason it was not recognizing the
 # ipa-getkeytab and without && it is not reporting error in case the principal already exists.
-- name: Create HDFS service principle and export keytab
+- name: Create HDFS service principal and export keytab
   ansible.builtin.shell:
     cmd: |
       echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }}  &&

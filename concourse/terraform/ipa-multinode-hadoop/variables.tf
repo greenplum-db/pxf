@@ -51,6 +51,12 @@ variable "subnet" {
   default     = "dynamic"
 }
 
+variable "env_type" {
+  type        = string
+  description = "type of execution environment, can be ci or local only, used in the path for the output templates"
+  default     = "ci"
+}
+
 # Populated with var_files specified in the put of the terraform resource
 variable "env_name" {
   type        = string
