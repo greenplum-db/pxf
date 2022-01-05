@@ -16,7 +16,8 @@ to configure and start the Hadoop cluster.
 You must install the following software on your local development workstation:
 * `terraform`
 * `ansible-playbook`
-* `jq`  
+* `jq`
+* `xmlstarlet`
 
 Setup the following environment variables:
 ```
