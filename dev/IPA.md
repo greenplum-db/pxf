@@ -74,7 +74,7 @@ To list HDFS directories of the new cluster accessible by PXF service user, run:
 kinit -kt ${PXF_BASE}/servers/hdfs-ipa/pxf.service.keytab porter@[YOUR REALM]
 hdfs --config ${PXF_BASE}/servers/hdfs-ipa dfs -ls /
 ```
-To list HDFS directories of the new cluster accessible by Haddop admin user, run:
+To list HDFS directories of the new cluster accessible by Hadoop admin user, run:
 ```
 kinit -kt ${PXF_BASE}/servers/hdfs-ipa/hadoop.user.keytab stout@[YOUR REALM]
 hdfs --config ${PXF_BASE}/servers/hdfs-ipa dfs -ls /
