@@ -1,0 +1,83 @@
+<!--
+This file can be used when running Automation Suite from the local dev environment with GPDB and PXF
+against a Multinode Hadoop cluster in Google Cloud Project with Kerberos implemented by IPA.
+Such a cluster is created by /dev/ipa-cluster.bash script that also sets up configuration for the PXF servers:
+- ${PXF_BASE}/servers/hdfs-ipa
+- ${PXF_BASE}/servers/hdfs-ipa-no-impersonation-no-svcuser
+
+This file mimics a setup produced in CI by /concourse/scripts/test_pxf_multinode.bash, but only for hdfsIpa
+configuration (see logic for ipa_env_files and HADOOP_3 in the script mentioned above).
+
+To use this file for running automation test, set the following line in your jsystem.properties file:
+sutFile=LocalToIPAMultiNodeHadoopHA.xml
+and then run:
+make TEST=HdfsHAFailoverTest
+-->
+<sut>
+    <cluster>
+        <class>org.greenplum.pxf.automation.components.cluster.SingleCluster</class>
+        <host>localhost</host>
+    </cluster>
+
+    <gpdb>
+        <class>org.greenplum.pxf.automation.components.gpdb.Gpdb</class>
+        <host>localhost</host>
+        <masterHost>localhost</masterHost>
+        <db>pxfautomation</db>
+    </gpdb>
+
+    <gpdb2>
+        <class>org.greenplum.pxf.automation.components.gpdb.Gpdb</class>
+        <host>localhost</host>
+        <masterHost>localhost</masterHost>
+        <db>pxfautomation_encoding</db>
+        <encoding>WIN1251</encoding>
+        <localeCollate>ru_RU.CP1251</localeCollate>
+        <localeCollateType>ru_RU.CP1251</localeCollateType>
+    </gpdb2>
+
+    <hdfs>
+        <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
+        <host>localhost</host>
+        <port>8020</port>
+        <workingDirectory>tmp/pxf_automation_data/__UUID__</workingDirectory>
+        <haNameservice></haNameservice>
+    </hdfs>
+    <hdfsIpa>
+        <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
+        <host>ccp-${user}-nn01</host>
+        <port>8020</port>
+        <workingDirectory>tmp/pxf_automation_data/__UUID__</workingDirectory>
+        <haNameservice></haNameservice>
+        <hadoopRoot>${HOME}/workspace/pxf/concourse/terraform/ipa-multinode-hadoop/ipa_env_files</hadoopRoot>
+        <testKerberosPrincipal>stout@C.DATA-GPDB-UD-IPA.INTERNAL</testKerberosPrincipal>
+        <testKerberosKeytab>${pxf.base}/servers/hdfs-ipa/hadoop.user.keytab</testKerberosKeytab>
+        <sshUserName>hdfs</sshUserName>
+        <sshPrivateKey>${HOME}/workspace/pxf/concourse/terraform/ipa-multinode-hadoop/ipa_env_files/google_compute_engine</sshPrivateKey>
+        <useDatanodeHostname>true</useDatanodeHostname>
+    </hdfsIpa>
+    <tinc>
+        <class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
+        <host>localhost</host>
+        <gphome>$GPHOME</gphome>
+        <tincFolder>tinc/main</tincFolder>
+        <tincTestsFolder>tincrepo/main</tincTestsFolder>
+    </tinc>
+
+    <pxf>
+        <class>org.greenplum.pxf.automation.components.pxf.Pxf</class>
+        <host>localhost</host>
+        <port>5888</port>
+    </pxf>
+
+    <shellsystemobject>
+        <JAVA_HOME></JAVA_HOME>
+        <GPHOME></GPHOME>
+        <GPHD_ROOT></GPHD_ROOT>
+        <GPDATA></GPDATA>
+        <MASTER_DATA_DIRECTORY></MASTER_DATA_DIRECTORY>
+        <PGPORT></PGPORT>
+        <PGHOST></PGHOST>
+        <PGDATABASE></PGDATABASE>
+    </shellsystemobject>
+</sut>

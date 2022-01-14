@@ -5,8 +5,8 @@ provider "google" {
 }
 
 resource "tls_private_key" "keypair_gen" {
-  algorithm   = "ECDSA"
-  ecdsa_curve = "P384"
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
 
 # The GCE metadata ssh key has strict format requirements of

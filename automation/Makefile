@@ -74,8 +74,10 @@ endif
 
 ifeq "$(PXF_TEST_DEBUG)" "true"
 	MAVEN_DEBUG_OPTS+= -DPXF_TEST_DEBUG=$(PXF_TEST_DEBUG)
-	# Uncomment below line to remote debug pxf automation test
-	# MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
+	# set PXF_TEST_DEBUG_ATTACH to true to remotely debug pxf automation test
+	ifeq "$(PXF_TEST_DEBUG_ATTACH)" "true"
+		MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
+	endif
 endif
 
 MVN=mvn

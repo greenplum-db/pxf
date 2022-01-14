@@ -227,7 +227,7 @@ EOF
     find ipa_env_files -type f
 }
 
-# setup PXF server 'hdfs-ipa' in PXF_BASE
+# setup PXF servers 'hdfs-ipa' and 'hdfs-ipa-no-impersonation-no-svcuser' in PXF_BASE
 function setup_pxf_server() {
     rm -rf "${PXF_BASE}"/servers/hdfs-ipa
     mkdir -p "${PXF_BASE}"/servers/hdfs-ipa
@@ -239,9 +239,15 @@ function setup_pxf_server() {
     # set Hadoop client to use hostnames for datanodes instead of IP addresses (which are internal in GCP network)
     xmlstarlet ed --inplace --pf --append '/configuration/property[last()]' --type elem -n property -v "" \
      --subnode '/configuration/property[last()]' --type elem -n name -v "dfs.client.use.datanode.hostname" \
-     --subnode '/configuration/property[last()]' --type elem -n value -v "true" "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
-    # set contrained delegation property to true for the PXF server
+     --subnode '/configuration/property[last()]' --type elem -n value -v "true" "${PXF_BASE}"/servers/hdfs-ipa/hdfs-site.xml
+    # set constrained delegation property to true for the PXF server
     xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.kerberos.constrained-delegation']/value" -v true "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
+
+    rm -rf "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser
+    cp -R "${PXF_BASE}"/servers/hdfs-ipa "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser
+    sed -i '' -e 's|hdfs-ipa|hdfs-ipa-no-impersonation-no-svcuser|g' "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml
+    # set constrained delegation property to true for the PXF server
+    xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.user.impersonation']/value" -v false "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml
 }
 
 # print instructions for the manual steps the user must perform

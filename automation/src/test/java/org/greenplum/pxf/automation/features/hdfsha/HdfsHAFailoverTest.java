@@ -1,12 +1,20 @@
 package org.greenplum.pxf.automation.features.hdfsha;
 
 import jsystem.framework.sut.SutFactory;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.automation.BaseFunctionality;
+import org.greenplum.pxf.automation.components.common.ShellSystemObject;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
+import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.testng.annotations.Test;
+
+import java.util.List;
+
+import static org.testng.Assert.assertEquals;
 
 /**
  * Tests for making sure PXF continues to work when HDFS namenode failover occurs. While the failover is mostly
@@ -28,28 +36,37 @@ public class HdfsHAFailoverTest extends BaseFunctionality {
             "bool boolean"
     };
 
-    private String locationAdminUser;
+    //private String location;
 
     @Test(groups = {"ipa"})
-    public void test() throws Exception {
+    public void testAdminUserNoImpersonation() throws Exception {
         // prepare small data file in HDFS
-        prepareData();
+        String locationAdminUser = prepareData(ADMIN_USER);
+        String locationTestUser = prepareData(TEST_USER);
 
         // create PXF external table for no impersonation, no service user case (normal Kerberos)
         createReadablePxfTable("hdfs-ipa-no-impersonation-no-svcuser", locationAdminUser);
 
-        // run tinc to read PXF data, it will issue 2 queries to cache the token / use it
-        runTincTest("pxf.features.hdfsha.admin.step_1_pre_failover.runTest");
+        // create PXF external table for impersonation based on Constrained Delegation
+        createReadablePxfTable("hdfs-ipa", locationTestUser);
 
-        // failover the namenode to standby, wait a little
-        // run tinc to read PXF data, it will issue 2 queries to cache the token / use it
+        // run tinc to read PXF data, it will issue 2 queries per PXF server to cache the tokens / use them
+        runTincTest("pxf.features.hdfsha.step_1_pre_failover.runTest");
 
-        // failover the namenode back, wait a little
-        // run tinc to read PXF data, it will issue 2 queries to cache the token / use it
+        // failover the namenode to standby
+        hdfs.failover("nn01", "nn02");
 
+        // run tinc to read PXF data, it will issue 2 queries per PXF server to cache the tokens / use them
+        runTincTest("pxf.features.hdfsha.step_2_after_failover.runTest");
+
+        // failover the namenode back
+        hdfs.failover("nn02", "nn01");
+
+        // run tinc to read PXF data, it will issue 2 queries per PXF server to cache the tokens / use them
+        runTincTest("pxf.features.hdfsha.step_3_after_failover_back.runTest");
     }
 
-    private void prepareData() throws Exception {
+    private String prepareData(String hdpUser) throws Exception {
         // obtain HDFS object for the IPA cluster from the SUT file
         hdfs = (Hdfs) systemManager.
                 getSystemObject("/sut", "hdfsIpa", -1, null, false,
@@ -57,11 +74,21 @@ public class HdfsHAFailoverTest extends BaseFunctionality {
         trySecureLogin(hdfs, hdfs.getTestKerberosPrincipal());
         initializeWorkingDirectory(hdfs, gpdb.getUserName());
 
-        locationAdminUser = String.format("%s/hdfsha/%s/%s", hdfs.getWorkingDirectory(), ADMIN_USER, fileName);
+        String location = String.format("%s/hdfsha/%s/%s", hdfs.getWorkingDirectory(), hdpUser, fileName);
 
         // Create Data and write it to HDFS
         Table dataTable = getSmallData();
-        hdfs.writeTableToFile(locationAdminUser, dataTable, ",");
+        // update name column value with the name of the user to make sure the proper data sets are read in the tests
+        for (List<String> row : dataTable.getData()) {
+            row.set(0, hdpUser + "-" + row.get(0));
+        }
+        hdfs.writeTableToFile(location, dataTable, ",");
+
+        // operation below require absolute path
+        String locationAbsolute = "/" + StringUtils.removeStart(location, "/");
+        hdfs.setOwner(locationAbsolute, hdpUser, "gpadmin");
+        hdfs.setMode(locationAbsolute, "400"); // read only by specified Hadoop user
+        return location;
     }
 
     private void createReadablePxfTable(String serverName, String location) throws Exception {
@@ -73,4 +100,5 @@ public class HdfsHAFailoverTest extends BaseFunctionality {
         exTable.setServer("SERVER=" + serverName);
         gpdb.createTableAndVerify(exTable);
     }
+
 }
