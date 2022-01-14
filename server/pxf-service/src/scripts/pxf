@@ -410,7 +410,7 @@ function do_start()
     echoGreen "   PXF_JVM_OPTS=${PXF_JVM_OPTS}"
     [[ $PXF_DEBUG == true ]] && echoGreen "   LOADER_PATH=${LOADER_PATH}"
 
-    "$javaexe" "${arguments[@]}" >> /dev/null 2>&1 &
+    "$javaexe" "${arguments[@]}" 1>>"${PXF_LOGDIR}/${identity}.out" 2>&1 &
     pid=$!
     disown $pid
     echo "$pid" > "$pid_file"

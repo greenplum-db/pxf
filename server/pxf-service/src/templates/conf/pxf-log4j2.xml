@@ -6,7 +6,6 @@
     <Property name="LOG_DATEFORMAT_PATTERN">yyyy-MM-dd HH:mm:ss.SSS zzz</Property>
     <Property name="CONSOLE_LOG_PATTERN">%clr{%d{${LOG_DATEFORMAT_PATTERN}}}{faint} %clr{${LOG_LEVEL_PATTERN}} %clr{%pid}{magenta} %clr{---}{faint} %clr{[%15.15t]}{faint} %clr{%-40.40c{1.}}{cyan} %clr{:}{faint} %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
     <Property name="FILE_LOG_PATTERN">%d{${LOG_DATEFORMAT_PATTERN}} ${LOG_LEVEL_PATTERN} %pid --- [%-9.10t] %-40.40c{1.} : %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
-    <Property name="PXF_LOG_LEVEL">${bundle:pxf-application:pxf.log.level}</Property>
 </Properties>
 <Appenders>
     <Console name="Console" target="SYSTEM_OUT" follow="true">
@@ -25,7 +24,7 @@
         <AppenderRef ref="RollingFile"/>
     </Root>
 
-    <Logger name="org.greenplum.pxf" level="${env:PXF_LOG_LEVEL:-${sys:PXF_LOG_LEVEL:-info}}"/>
+    <Logger name="org.greenplum.pxf" level="${env:PXF_LOG_LEVEL:-${spring:pxf.log.level}}"/>
 
     <!-- The levels below are tuned to provide minimal output, change to INFO or DEBUG to troubleshoot -->
     <Logger name="com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase" level="warn"/>

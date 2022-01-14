@@ -101,6 +101,7 @@ configure(javaProjects) {
                 entry("log4j-jul")
                 entry("log4j-api")
                 entry("log4j-core")
+                entry("log4j-spring-boot")
             }
             dependency("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
             // --- end of CVE patch
