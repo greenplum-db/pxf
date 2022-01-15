@@ -175,7 +175,11 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         if (getSshUserName() != null) {
             ReportUtils.report(report, getClass(), "Opening connection to namenode " + getHost());
             namenodeSso = new ShellSystemObject(report.isSilent());
-            namenodeSso.setHost(getHost());
+            String namenodeHost = getHost();
+            if (namenodeHost != null && namenodeHost.equals("ipa-hadoop")) {
+                namenodeHost = getHostForConfiguredNameNode1HA();
+            }
+            namenodeSso.setHost(namenodeHost);
             namenodeSso.setUserName(getSshUserName());
             namenodeSso.setPrivateKey(getSshPrivateKey());
             namenodeSso.init();
