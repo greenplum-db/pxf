@@ -39,7 +39,7 @@ steps:
       - |
         mkdir -p ./.go-mod-cached-sources
         cp -r ./.go-mod-cached-sources ./cli/go/pkg/mod
-        go get github.com/onsi/ginkgo/ginkgo
+        go install github.com/onsi/ginkgo/ginkgo@v1.16.5
         make -C ./cli/go/src/pxf-cli build
         rm -rf ./.go-mod-cached-sources
         mv ./cli/go/pkg/mod ./.go-mod-cached-sources

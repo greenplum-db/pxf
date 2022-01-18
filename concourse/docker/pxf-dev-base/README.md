@@ -16,12 +16,12 @@ You can run the entire cloudbuild using Google Cloud Build by doing the followin
 cd ~/workspace/pxf
 
 gcloud builds submit . --config=concourse/docker/pxf-dev-base/cloudbuild.yaml \
-  --substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,COMMIT_SHA=dev-build-<name>
+  --substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,_PRIVATE_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-private-images,COMMIT_SHA=dev-build-<name>
 
 -- or if you would like to modify the go and ginkgo versions, you can do so by doing the following --
 
 gcloud builds submit . --config=concourse/docker/pxf-dev-base/cloudbuild.yaml \
---substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,_GO_VERSION=<test-version>,_GINKGO_VERSION=<test-version>,COMMIT_SHA=dev-build-<test-name>
+--substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,_PRIVATE_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-private-images,_GO_VERSION=<test-version>,_GINKGO_VERSION=<test-version>,COMMIT_SHA=dev-build-<test-name>
 ```
 
 This guide assumes the PXF repository lives under the `~/workspace/pxf`
@@ -65,6 +65,20 @@ command to build the image:
       --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb6-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/centos7/Dockerfile \
+      .
+    popd
+
+### Docker gpdb6-rhel8-test-pxf-image image
+
+Build this image for Greenplum 6 running on Rhel 8. Run the following
+command to build the image:
+
+    pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
+    docker build \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-private-images/gpdb6-rhel8-test:latest \
+      --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
+      --tag=gpdb6-rhel8-test-pxf \
+      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/rhel8/Dockerfile \
       .
     popd
 

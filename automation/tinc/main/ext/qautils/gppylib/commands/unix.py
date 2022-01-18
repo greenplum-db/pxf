@@ -12,7 +12,7 @@ import platform
 import socket
 import sys
 import signal
-import psi.process
+import psutil
 
 from qautils.gppylib.gplog import *
 from qautils.gppylib.commands.base import *
@@ -909,9 +909,9 @@ def getDescendentProcesses(pid):
     children = list()
     grandchildren = list()
 
-    for p in psi.process.ProcessTable().values():
+    for p in psutil.process_iter():
 
-        if int(p.ppid) == int(pid):
+        if int(p.ppid()) == int(pid):
             children.append(int(p.pid))
 
     # recursion

@@ -165,6 +165,17 @@ resources:
     password: ((pxf-cloudbuild-service-account-key))
 {% endfor %} {# gp5, gp6, and gp7 #}
 
+{% set gp_ver = 6 %}
+- name: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rhel8-test-pxf
+    tag: latest
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
+{% set gp_ver = None %}
+
 {% if oel7 %}
 - name: gpdb6-pxf-dev-oel7-image
   type: registry-image
@@ -241,6 +252,14 @@ resources:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((pxf-storage-service-account-key))
     regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
+
+- name: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: pivotal-gpdb-concourse-resources-prod
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: server/published/gpdb6/greenplum-db-(6.*)-rhel8-x86_64.rpm
 {% set gp_ver = None %}
 
 ## ---------- Greenplum 7 Alpha Builds ----------
@@ -284,6 +303,16 @@ resources:
     json_key: ((pxf-storage-service-account-key))
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
 {% set gp_ver = None %}
+
+{% for gp_ver in range(6, 7) %}
+- name: pxf_gp[[gp_ver]]_tarball_rhel8
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build
+    json_key: ((pxf-storage-service-account-key))
+    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].el8.tar.gz
+{% endfor %}
 
 ## ---------- Auxiliary Resources ----------
 {% if multinode or multinode_no_impersonation or file %}
@@ -446,6 +475,55 @@ jobs:
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
+{% set gp_ver = None %}
+
+## ---------- RHEL 8 Swimlane ----------
+{% set gp_ver = 6 %}
+- name: Build PXF-GP[[gp_ver]] on RHEL8
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      trigger: true
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+    - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    - get: pxf-build-dependencies
+  - task: Build PXF-GP[[gp_ver]] on RHEL8
+    image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    file: pxf_src/concourse/tasks/build.yml
+    params:
+      LICENSE: ((pxf-rpm-license))
+      TARGET_OS: rhel8
+      VENDOR: ((pxf-rpm-vendor))
+  - put: pxf_gp[[gp_ver]]_tarball_rhel8
+    params:
+      file: dist/pxf-gp[[gp_ver]]-*.el8.tar.gz
+
+- name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
+  plan:
+  - in_parallel:
+      - get: pxf_src
+        passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+        trigger: true
+      - get: pxf_tarball
+        resource: pxf_gp[[gp_ver]]_tarball_rhel8
+        passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+      - get: gpdb_package
+        resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+        passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+      - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+        passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+      - get: pxf-automation-dependencies
+      - get: singlecluster
+        resource: singlecluster-hdp2
+  - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GP_VER: [[gp_ver]]
+      GROUP: gpdb,proxy,profile
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
 {% set gp_ver = None %}
 
 ## ---------- Extended Tests ----------

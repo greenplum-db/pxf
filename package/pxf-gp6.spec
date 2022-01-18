@@ -1,6 +1,9 @@
 # Disable repacking of jars, since it takes forever
 %define __jar_repack %{nil}
 
+# Disable build_id links for ELF files on RHEL 8
+%define _build_id_links none
+
 # Disable automatic dependency processing both for requirements and provides
 AutoReqProv: no
 

@@ -42,6 +42,7 @@ echo "Ship directive for PXF-${version} from : $(<pxf_shipit_file/*.txt)"
 artifacts=(
   "${GCS_RELEASES_PATH}/gp5/pxf-gp5-${version}-1.el7.x86_64.rpm"
   "${GCS_RELEASES_PATH}/gp6/pxf-gp6-${version}-1.el7.x86_64.rpm"
+  "${GCS_RELEASES_PATH}/gp6/pxf-gp6-${version}-1.el8.x86_64.rpm"
   "${GCS_RELEASES_PATH}/gp6/pxf-gp6-${version}-1-ubuntu18.04-amd64.deb"
   "${GCS_OSL_PATH}/open_source_license_VMware_Tanzu_Greenplum_Platform_Extension_Framework_${version}_GA.txt"
   "${GCS_ODP_PATH}/VMware-greenplum-pxf-${version}-ODP.tar.gz"

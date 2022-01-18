@@ -126,7 +126,7 @@ function install_gpdb_binary() {
 	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH'
 	# CentOS releases contain a /etc/redhat-release which is symlinked to /etc/centos-release
 	if [[ -f /etc/redhat-release ]]; then
-		# We can't use service sshd restart as service is not installed on CentOS 7.
+		# We can't use service sshd restart as service is not installed on CentOS 7 or RHEL 8.
 		/usr/sbin/sshd &
 		python_dir=python${python_version}/site-packages
 		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/$python_dir
@@ -153,7 +153,7 @@ function install_gpdb_package() {
 		echo "Installing ${pkg_file}..."
 		rpm --quiet -ivh "${pkg_file}" >/dev/null
 
-		# We can't use service sshd restart as service is not installed on CentOS 7.
+		# We can't use service sshd restart as service is not installed on CentOS 7 or RHEL 8.
 		/usr/sbin/sshd &
 		python_dir=python${python_version}/site-packages
 		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/${python_dir}
