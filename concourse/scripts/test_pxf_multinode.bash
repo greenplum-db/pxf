@@ -359,6 +359,7 @@ function setup_pxf_kerberos_on_cluster() {
 		sudo cp "${HADOOP_3_DIR}/hadoop.user.keytab" "/etc/security/keytabs/${HADOOP_3_USER}.headless.keytab"
 		sudo chown gpadmin:gpadmin "/etc/security/keytabs/${HADOOP_3_USER}.headless.keytab"
 		sudo chown gpadmin:gpadmin "${HADOOP_3_DIR}/google_compute_engine"
+		sudo chown gpadmin:gpadmin "${HADOOP_3_DIR}/hadoop.user.keytab"
 		sed -i "s/>ipa-hadoop</>${HADOOP_3_HOSTNAME}</g" "$multiNodesCluster"
 
 	fi
