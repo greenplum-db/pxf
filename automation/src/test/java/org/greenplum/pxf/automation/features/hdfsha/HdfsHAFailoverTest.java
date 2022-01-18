@@ -2,19 +2,14 @@ package org.greenplum.pxf.automation.features.hdfsha;
 
 import jsystem.framework.sut.SutFactory;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.automation.BaseFunctionality;
-import org.greenplum.pxf.automation.components.common.ShellSystemObject;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
-import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.testng.annotations.Test;
 
 import java.util.List;
-
-import static org.testng.Assert.assertEquals;
 
 /**
  * Tests for making sure PXF continues to work when HDFS namenode failover occurs. While the failover is mostly
@@ -24,9 +19,7 @@ import static org.testng.Assert.assertEquals;
  */
 public class HdfsHAFailoverTest extends BaseFunctionality {
 
-    public static final String SYSTEM_USER = System.getProperty("user.name");
     public static final String ADMIN_USER = "porter"; // PXF service principal for the IPA cluster
-
     public static final String TEST_USER = "testuser";
     public static final String[] FIELDS = {
             "name text",
@@ -36,10 +29,8 @@ public class HdfsHAFailoverTest extends BaseFunctionality {
             "bool boolean"
     };
 
-    //private String location;
-
     @Test(groups = {"ipa"})
-    public void testAdminUserNoImpersonation() throws Exception {
+    public void testFailoverScenario() throws Exception {
         // prepare small data file in HDFS
         String locationAdminUser = prepareData(ADMIN_USER);
         String locationTestUser = prepareData(TEST_USER);
