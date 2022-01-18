@@ -29,7 +29,7 @@ public class HdfsHAFailoverTest extends BaseFunctionality {
             "bool boolean"
     };
 
-    @Test(groups = {"ipa"})
+    @Test(groups = {"proxySecurityIpa"})
     public void testFailoverScenario() throws Exception {
         // prepare small data file in HDFS
         String locationAdminUser = prepareData(ADMIN_USER);
