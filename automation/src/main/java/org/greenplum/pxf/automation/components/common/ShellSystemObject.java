@@ -27,6 +27,7 @@ public class ShellSystemObject extends BaseSystemObject {
     private String hostName = "";
     private String userName;
     private String password;
+    private String privateKey;
     private String lastCmdResult = "";
     private int lastCommandExitCode = 0;
     // ignore passing local env vars to ssh connection
@@ -107,15 +108,18 @@ public class ShellSystemObject extends BaseSystemObject {
         /**
          * Direct to Private Key instead of Password based connection.
          */
-        File privateKey = new File(System.getProperty("user.home")
-                + "/.ssh/id_rsa");
-        connection.setPrivateKey(privateKey);
+        String privateKeyFileName = privateKey;
+        if (privateKeyFileName == null) {
+            privateKeyFileName = System.getProperty("user.home") + "/.ssh/id_rsa";
+        }
+        File privateKeyFile = new File(privateKeyFileName);
+        connection.setPrivateKey(privateKeyFile);
         ReportUtils.report(
                 report,
                 getClass(),
                 "Attempt to create SSH-RSA connection (User: "
-                        + System.getProperty("user.name") + " Public-Key File:"
-                        + privateKey.getAbsolutePath() + ")");
+                        + getUserName() + " Public-Key File:"
+                        + privateKeyFile.getAbsolutePath() + ")");
 
         /**
          * PivotalCliConnectionImpl is setting the prompt to be '#'.Add the
@@ -549,6 +553,14 @@ public class ShellSystemObject extends BaseSystemObject {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
     }
 
     public int getLastCommandExitCode() {

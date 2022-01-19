@@ -46,3 +46,7 @@ This can be done in one of several different ways:
     ```bash
     export TF_VAR_gcp_project="<gcp-project-id>"
     ```
+There is an [`ipa-cluster.bash` script](../../dev/ipa-cluster.bash) that automates provisioning of the IPA Hadoop
+cluster via `terraform` and setting it up using `ansible` when running from a local development workstation.
+It is used by developers to quickly setup a testing environment.
+Please refer to the [`IPA.md` document](../../dev/IPA.md) for the instructions on how to run it.

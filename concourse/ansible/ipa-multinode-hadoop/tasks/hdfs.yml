@@ -54,7 +54,7 @@
 
 # providing the absolute path for ipa-getkeytab since due to some reason it was not recognizing the
 # ipa-getkeytab and without && it is not reporting error in case the principal already exists.
-- name: Create HDFS service principle and export keytab
+- name: Create HDFS service principal and export keytab
   ansible.builtin.shell:
     cmd: |
       echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }}  &&
@@ -62,3 +62,17 @@
       /usr/sbin/ipa-getkeytab -p hdfs/{{ ansible_fqdn }}@{{ ansible_domain | upper }}  -k /opt/security/keytab/hdfs.service.keytab &&
       kdestroy
     creates: /opt/security/keytab/hdfs.service.keytab
+
+# This Kerberos principal and keytab is used for
+# `dfs.namenode.kerberos.internal.spnego.principal`; attempts to re-use the
+# Kerberos principal and keytab used for `dfs.namenode.kerberos.principal`
+# result in the following error:
+# KrbException: Identifier doesn't match expected value (906)
+- name: Create HTTP service principal
+  ansible.builtin.shell:
+    cmd: |
+      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }}  &&
+      ipa service-add HTTP/{{ ansible_fqdn }}@{{ ansible_domain | upper }} &&
+      /usr/sbin/ipa-getkeytab -p HTTP/{{ ansible_fqdn }}@{{ ansible_domain | upper }} -k /opt/security/keytab/spnego.service.keytab &&
+      kdestroy
+    creates: /opt/security/keytab/spnego.service.keytab

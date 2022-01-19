@@ -5,8 +5,8 @@ provider "google" {
 }
 
 resource "tls_private_key" "keypair_gen" {
-  algorithm   = "ECDSA"
-  ecdsa_curve = "P384"
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
 
 # The GCE metadata ssh key has strict format requirements of
@@ -51,11 +51,31 @@ resource "google_compute_instance" "ipa" {
   }
 }
 
+resource "google_filestore_instance" "hadoop_shared_storage" {
+  name = "ccp-${var.env_name}-shared-storage"
+  zone = var.gcp_zone
+  tier = "BASIC_HDD"
+
+  file_shares {
+    # minimum capacity for Basic HDD is 1 TiB
+    # https://cloud.google.com/filestore/docs/service-tiers
+    capacity_gb = 1024
+    name        = "share1"
+  }
+
+  networks {
+    network = var.network
+    modes   = ["MODE_IPV4"]
+  }
+}
+
 data "google_compute_default_service_account" "default" {
 }
 
 resource "google_compute_instance" "namenode" {
-  count         = var.hdfs_namenode_count
+  # a maximum of two NameNodes may be configured per nameservice
+  # https://hadoop.apache.org/docs/r2.10.1/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithNFS.html
+  count         = 2
   name          = "ccp-${var.env_name}-nn${format("%02d", count.index+1)}"
   machine_type  = var.gce_vm_instance_type
 
@@ -96,18 +116,18 @@ resource "google_compute_instance" "namenode" {
 }
 
 resource "tls_private_key" "namenode" {
-  count       = var.hdfs_namenode_count
+  count       = 2
   algorithm   = "ECDSA"
   ecdsa_curve = "P256"
 }
 
 resource "tls_self_signed_cert" "namenode" {
-  count           = var.hdfs_namenode_count
+  count           = 2
   key_algorithm   = "ECDSA"
   private_key_pem = tls_private_key.namenode[count.index].private_key_pem
 
   subject {
-      common_name  = google_compute_instance.namenode[count.index].name
+      common_name  = "${google_compute_instance.namenode[count.index].name}.c.${var.gcp_project}.internal"
       organization = "GPDB UD"
   }
 
@@ -173,7 +193,7 @@ resource "tls_self_signed_cert" "datanode" {
   private_key_pem = tls_private_key.datanode[count.index].private_key_pem
 
   subject {
-      common_name  = google_compute_instance.datanode[count.index].name
+      common_name  = "${google_compute_instance.datanode[count.index].name}.c.${var.gcp_project}.internal"
       organization = "GPDB UD"
   }
 

@@ -1,0 +1,24 @@
+---
+- name: Install NFS utils and libs
+  become: true
+  ansible.builtin.yum:
+    name: nfs-utils
+    state: present
+    update_cache: true
+
+- name: Mount shared edits directory
+  become: true
+  ansible.posix.mount:
+    src: "{{ nfs_server_hostname }}:/share1"
+    path: /mnt/share1
+    opts: rw,sync,hard,intr
+    state: mounted
+    fstype: nfs
+
+- name: Change ownership of shared edits directory
+  become: true
+  ansible.builtin.file:
+    path: /mnt/share1
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    state: directory

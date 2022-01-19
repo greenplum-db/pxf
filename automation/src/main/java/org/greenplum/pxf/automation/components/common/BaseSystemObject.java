@@ -23,4 +23,20 @@ public abstract class BaseSystemObject extends SystemObjectImpl {
 			report.setSilent(silentReport);
 		}
 	}
+
+	protected String replaceHome(String value) {
+		if (value == null) {
+			return null;
+		}
+		String home = System.getenv("HOME");
+		return value.replace("${home}", home).replace("${HOME}", home);
+	}
+
+	protected String replaceUser(String value) {
+		if (value == null) {
+			return null;
+		}
+		String user = System.getenv("USER");
+		return value.replace("${user}", user).replace("${USER}", user);
+	}
 }

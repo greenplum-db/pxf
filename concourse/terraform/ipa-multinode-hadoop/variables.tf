@@ -15,12 +15,6 @@ variable "gcp_zone" {
   default     = "us-central1-a"
 }
 
-variable "hdfs_namenode_count" {
-  type        = number
-  description = "number of HDFS NameNode VMs to create"
-  default     = 1
-}
-
 variable "hdfs_datanode_count" {
   type        = number
   description = "number of HDFS DataNode VMs to create"
@@ -45,10 +39,22 @@ variable "gce_vm_os_family" {
   default     = "centos-7"
 }
 
+variable "network" {
+  type        = string
+  description = "name of VPC network to provision VMs in"
+  default     = "bosh-network"
+}
+
 variable "subnet" {
   type        = string
   description = "name of subnet to provision VMs in"
   default     = "dynamic"
+}
+
+variable "env_type" {
+  type        = string
+  description = "type of execution environment, can be ci or local only, used in the path for the output templates"
+  default     = "ci"
 }
 
 # Populated with var_files specified in the put of the terraform resource

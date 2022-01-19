@@ -332,9 +332,16 @@ function setup_pxf_kerberos_on_cluster() {
 			fi
 		"
 
+		# sync up PXF server configuration
 		ssh gpadmin@mdw "PXF_BASE=${BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync"
+
+		# add configuration information to the SUT file for the automation suite
 		sed -i \
-			-e "s|</hdfsIpa>|<hadoopRoot>${HADOOP_3_DIR}</hadoopRoot><testKerberosPrincipal>${HADOOP_3_USER}@${REALM3}</testKerberosPrincipal></hdfsIpa>|g" \
+			-e "s|</hdfsIpa>|<hadoopRoot>${HADOOP_3_DIR}</hadoopRoot></hdfsIpa>|g" \
+			-e "s|</hdfsIpa>|<testKerberosPrincipal>${HADOOP_3_USER}@${REALM3}</testKerberosPrincipal></hdfsIpa>|g" \
+			-e "s|</hdfsIpa>|<testKerberosKeytab>${HADOOP_3_DIR}/hadoop.user.keytab</testKerberosKeytab></hdfsIpa>|g" \
+			-e "s|</hdfsIpa>|<sshUserName>hdfs</sshUserName></hdfsIpa>|g" \
+			-e "s|</hdfsIpa>|<sshPrivateKey>${HADOOP_3_DIR}/google_compute_engine</sshPrivateKey></hdfsIpa>|g" \
 			"$multiNodesCluster"
 
 		# add foreign Hadoop and IPA KDC hostfile to /etc/hosts
@@ -351,6 +358,8 @@ function setup_pxf_kerberos_on_cluster() {
 
 		sudo cp "${HADOOP_3_DIR}/hadoop.user.keytab" "/etc/security/keytabs/${HADOOP_3_USER}.headless.keytab"
 		sudo chown gpadmin:gpadmin "/etc/security/keytabs/${HADOOP_3_USER}.headless.keytab"
+		sudo chown gpadmin:gpadmin "${HADOOP_3_DIR}/google_compute_engine"
+		sudo chown gpadmin:gpadmin "${HADOOP_3_DIR}/hadoop.user.keytab"
 		sed -i "s/>ipa-hadoop</>${HADOOP_3_HOSTNAME}</g" "$multiNodesCluster"
 
 	fi

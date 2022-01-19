@@ -2,15 +2,22 @@
 - hosts: all
   become: true
   vars_files:
-  - example.config.yml
+  - default.config.yml
   - config.yml
   tasks:
   - ansible.builtin.import_tasks: tasks/common.yml
 
+- hosts: namenode
+  vars_files:
+  - default.config.yml
+  - config.yml
+  tasks:
+  - ansible.builtin.import_tasks: tasks/nfs-client.yml
+
 - hosts: ipa
   become: true
   vars_files:
-  - example.config.yml
+  - default.config.yml
   - config.yml
   tasks:
   - ansible.builtin.import_tasks: tasks/ipa-server.yml
@@ -18,28 +25,51 @@
 - hosts: hdfs
   become: true
   vars_files:
-  - example.config.yml
+  - default.config.yml
   - config.yml
   tasks:
   - ansible.builtin.import_tasks: tasks/ipa-client.yml
 
 - hosts: hdfs
   vars_files:
-  - example.config.yml
+  - default.config.yml
   - config.yml
   tasks:
   - ansible.builtin.import_tasks: tasks/hdfs.yml
 
-- hosts: namenode
+- hosts: active_namenode
   vars_files:
-  - example.config.yml
+  - default.config.yml
   - config.yml
   tasks:
-  - name: Initialize HDFS NameNode
-    ansible.builtin.command: $HADOOP_PREFIX/bin/hdfs namenode -format {{ cluster_name }}
+  - name: Start NameNode nn01
+    ansible.builtin.shell:
+      cmd: |
+        $HADOOP_PREFIX/bin/hdfs namenode -format {{ cluster_name }} &&
+        $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
 
-  - name: Start HDFS NameNode
-    ansible.builtin.command: $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
+- hosts: standby_namenode
+  vars_files:
+  - default.config.yml
+  - config.yml
+  tasks:
+  - name: Start NameNode nn02
+    ansible.builtin.shell:
+      cmd: |
+        $HADOOP_PREFIX/bin/hdfs namenode -bootstrapStandby
+        $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
+
+- hosts: active_namenode
+  vars_files:
+  - default.config.yml
+  - config.yml
+  tasks:
+  - name: Transition NameNode nn01 to Active
+    ansible.builtin.shell:
+      cmd: |
+        kinit -kt /opt/security/keytab/hdfs.service.keytab hdfs/{{ ansible_fqdn }} &&
+        $HADOOP_PREFIX/bin/hdfs haadmin -transitionToActive nn01
+        kdestroy
 
   - name: Create tmp directory for automation tests
     ansible.builtin.shell:

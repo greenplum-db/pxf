@@ -312,7 +312,12 @@ public abstract class BaseTestParent {
         if (StringUtils.isEmpty(kerberosPrincipal)) return;
 
         String testUser = kerberosPrincipal.split("@")[0];
-        String testUserKeytabPath = String.format(testUserkeyTabPathFormat, testUser);
+        String testUserKeytabPath = hdfs.getTestKerberosKeytab();
+        if (StringUtils.isBlank(testUserKeytabPath)) {
+            testUserKeytabPath = String.format(testUserkeyTabPathFormat, testUser);
+        } else {
+            testUserKeytabPath = testUserKeytabPath.replace("${pxf.base}", System.getenv("PXF_BASE"));
+        }
         if (!new File(testUserKeytabPath).exists()) {
             throw new Exception(String.format("Keytab file %s not found", testUserKeytabPath));
         }

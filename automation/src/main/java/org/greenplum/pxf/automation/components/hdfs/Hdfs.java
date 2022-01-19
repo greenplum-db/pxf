@@ -25,6 +25,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.greenplum.pxf.automation.components.common.BaseSystemObject;
+import org.greenplum.pxf.automation.components.common.ShellSystemObject;
 import org.greenplum.pxf.automation.fileformats.IAvroSchema;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
@@ -50,6 +51,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static org.testng.Assert.assertEquals;
+
 /**
  * Represents HDFS, holds HdfsFunctionality interface as a member, the
  * implementation needs to be mentioned in the SUT file.
@@ -70,9 +73,17 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     private final int ROW_BUFFER = 10000;
     private String workingDirectory;
     private String haNameservice;
+    private String sshUserName;
+    private String sshPrivateKey;
     private String testKerberosPrincipal;
+    private String testKerberosKeytab;
+    private String useDatanodeHostname;
 
     private String scheme;
+
+    private ShellSystemObject namenodeSso;
+    private String namenodePrincipal;
+    private String namenodeKeytab;
 
     public Hdfs() {
 
@@ -105,6 +116,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         // if hadoop root exists in the SUT file, load configuration from it
         if (StringUtils.isNotEmpty(hadoopRoot)) {
 
+            hadoopRoot = hadoopRoot.replace("${user}", System.getenv("USER"));
             ReportUtils.startLevel(report, getClass(), "Using root directory: " + hadoopRoot);
 
             ProtocolEnum protocol = ProtocolUtils.getProtocol();
@@ -145,6 +157,11 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             }
         }
 
+        // for Hadoop clusters provisioned in the cloud when running from local workstation
+        if (useDatanodeHostname != null && Boolean.parseBoolean(useDatanodeHostname)) {
+            config.set("dfs.client.use.datanode.hostname", "true");
+        }
+
         config.set("ipc.client.fallback-to-simple-auth-allowed", "true");
 
         fs = FileSystem.get(config);
@@ -154,6 +171,26 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         ReportUtils.report(report, getClass(), "Block Size: " + getBlockSize());
         ReportUtils.report(report, getClass(), "Replications: "
                 + getReplicationSize());
+
+        if (getSshUserName() != null) {
+            ReportUtils.report(report, getClass(), "Opening connection to namenode " + getHost());
+            namenodeSso = new ShellSystemObject(report.isSilent());
+            String namenodeHost = getHost();
+            if (namenodeHost != null && namenodeHost.equals("ipa-hadoop")) {
+                namenodeHost = getHostForConfiguredNameNode1HA();
+            }
+            namenodeSso.setHost(namenodeHost);
+            namenodeSso.setUserName(getSshUserName());
+            namenodeSso.setPrivateKey(getSshPrivateKey());
+            namenodeSso.init();
+
+            namenodePrincipal = config.get("dfs.namenode.kerberos.principal");
+            namenodeKeytab = config.get("dfs.namenode.keytab.file");
+            if (namenodePrincipal != null) {
+                // substitute _HOST portion of the principal with the namenode FQDN
+                namenodePrincipal = namenodePrincipal.replace("_HOST", getHostForConfiguredNameNode1HA());
+            }
+        }
         ReportUtils.stopLevel(report);
     }
 
@@ -499,6 +536,42 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         bufferedWriter.close();
     }
 
+    public String getNamenodeStatus(String name) throws Exception {
+        // source ~/.bash_profile && kinit -kt /opt/security/keytab/hdfs.service.keytab hdfs/ccp-user-nn01.c.gcp-project.internal && ./singlecluster-HDP/bin/hdfs haadmin -getServiceState nn01
+        StringBuilder statusCommand = new StringBuilder("source ~/.bash_profile && ")
+                .append("kinit -kt ").append(namenodeKeytab).append(" ")
+                .append(namenodePrincipal).append(" && ")
+                .append("./singlecluster-HDP/bin/hdfs haadmin -getServiceState ").append(name);
+        namenodeSso.runCommand(statusCommand.toString());
+        String fullResponse = namenodeSso.getLastCmdResult();
+        if (fullResponse.contains(String.format("haadmin -getServiceState %s\r\nactive\r\n", name))) {
+            return "active";
+        } else if (fullResponse.contains(String.format("haadmin -getServiceState %s\r\nstandby\r\n", name))) {
+            return "standby";
+        }
+        throw new IllegalStateException("Unknown status: " + fullResponse);
+    }
+
+    public void failover(String from, String to) throws Exception {
+        assertEquals("active", getNamenodeStatus(from));
+        assertEquals("standby", getNamenodeStatus(to));
+
+        // source ~/.bash_profile && kinit -kt /opt/security/keytab/hdfs.service.keytab hdfs/ccp-user-nn01.c.gcp-project.internal && ./singlecluster-HDP/bin/hdfs haadmin -failover nn01 nn02"
+        StringBuilder failoverCommand = new StringBuilder("source ~/.bash_profile && ")
+                .append("kinit -kt ").append(namenodeKeytab).append(" ")
+                .append(namenodePrincipal).append(" && ")
+                .append("./singlecluster-HDP/bin/hdfs haadmin -failover ")
+                .append(from).append(" ").append(to);
+
+        namenodeSso.runCommand(failoverCommand.toString());
+        String fullResponse = namenodeSso.getLastCmdResult();
+        if (!fullResponse.contains(String.format("Failover from %s to %s successful", from, to))) {
+            throw new IllegalStateException("Failed to failover: " + fullResponse);
+        }
+
+        assertEquals("active", getNamenodeStatus(to));
+        assertEquals("standby", getNamenodeStatus(from));
+    }
     /**
      * @return the hadoop configuration
      */
@@ -513,12 +586,18 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         return config.get("fs.defaultFS");
     }
 
+    public String getHostForConfiguredNameNode1HA() {
+        String nameservice = config.get("dfs.nameservices");
+        String nn01 = config.get(String.format("dfs.namenode.rpc-address.%s.nn01", nameservice));
+        return nn01 == null ? null : nn01.substring(0, nn01.indexOf(":"));
+    }
+
     public String getHost() {
         return host;
     }
 
     public void setHost(String host) {
-        this.host = host;
+        this.host = replaceUser(host);
     }
 
     public String getHostStandby() {
@@ -563,7 +642,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         if (this.hadoopRoot != null) {
             String pxfHome = System.getenv("PXF_HOME");
             String pxfBase = StringUtils.defaultIfBlank(System.getenv("PXF_BASE"), pxfHome);
-            this.hadoopRoot = this.hadoopRoot.replace("${pxf.base}", pxfBase);
+            this.hadoopRoot = replaceHome(this.hadoopRoot.replace("${pxf.base}", pxfBase));
         }
     }
 
@@ -577,6 +656,14 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
     public void setTestKerberosPrincipal(String testKerberosPrincipal) {
         this.testKerberosPrincipal = testKerberosPrincipal;
+    }
+
+    public String getTestKerberosKeytab() {
+        return testKerberosKeytab;
+    }
+
+    public void setTestKerberosKeytab(String testKerberosKeytab) {
+        this.testKerberosKeytab = testKerberosKeytab;
     }
 
     public String getHaNameservice() {
@@ -593,5 +680,29 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
     public void setScheme(String scheme) {
         this.scheme = scheme;
+    }
+
+    public String getSshUserName() {
+        return sshUserName;
+    }
+
+    public void setSshUserName(String sshUserName) {
+        this.sshUserName = sshUserName;
+    }
+
+    public String getSshPrivateKey() {
+        return sshPrivateKey;
+    }
+
+    public void setSshPrivateKey(String sshPrivateKey) {
+        this.sshPrivateKey = replaceHome(sshPrivateKey);
+    }
+
+    public String getUseDatanodeHostname() {
+        return useDatanodeHostname;
+    }
+
+    public void setUseDatanodeHostname(String useDatanodeHostname) {
+        this.useDatanodeHostname = useDatanodeHostname;
     }
 }
