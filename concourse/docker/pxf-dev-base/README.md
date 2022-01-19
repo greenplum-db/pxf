@@ -11,6 +11,16 @@ use the following command:
 
 For a list of images built by `cloudbuild` take a look [here](../README.md).
 
+You can run the entire cloudbuild using Google Cloud Build by doing the following:
+
+cd ~/workspace/pxf
+
+echo $(git rev-parse HEAD)
+
+gcloud builds submit . --config=concourse/docker/pxf-dev-base/cloudbuild.yaml \
+  --substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,COMMIT_SHA=<commit_sha>
+```
+
 This guide assumes the PXF repository lives under the `~/workspace/pxf`
 directory. The `cloudbuild.yaml` file produces the following docker images:
 
