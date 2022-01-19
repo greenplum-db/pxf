@@ -6,7 +6,7 @@ FROM ${BASE_IMAGE}
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go1.17.6.linux-amd64.tar.gz \
     && tar -C /usr/local -xzf go.tgz && rm go.tgz \
-    && GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo
+    && GOPATH=/opt/go /usr/local/go/bin/go install github.com/onsi/ginkgo/ginkgo@v1.16.5
 
 # add Java 11
 RUN wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz \
