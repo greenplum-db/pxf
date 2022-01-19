@@ -76,5 +76,4 @@ public class PartitionedJsonParserNoSeekTest {
     public String trimWhitespaces(String s) {
         return s.replaceAll("[\\n\\t\\r \\t]+", " ").trim();
     }
-
 }

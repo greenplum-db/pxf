@@ -19,9 +19,6 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -36,6 +33,10 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.greenplum.pxf.plugins.json.parser.PartitionedJsonParser;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Multi-line json object reader. JsonRecordReader uses a member name (set by the <b>IDENTIFIER</b> PXF parameter) to
  * determine the encapsulating object to extract and read.
@@ -46,11 +47,11 @@ import org.greenplum.pxf.plugins.json.parser.PartitionedJsonParser;
  */
 public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
-    private static final Log LOG = LogFactory.getLog(JsonRecordReader.class);
-
     public static final String RECORD_MEMBER_IDENTIFIER = "json.input.format.record.identifier";
     public static final String RECORD_MAX_LENGTH = "multilinejsonrecordreader.maxlength";
-
+    private static final Log LOG = LogFactory.getLog(JsonRecordReader.class);
+    private final String jsonMemberName;
+    private final FSDataInputStream fileIn;
     private CompressionCodecFactory compressionCodecs = null;
     private long start;
     private long pos;
@@ -58,7 +59,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private int maxObjectLength;
     private InputStream is;
     private PartitionedJsonParser parser;
-    private final String jsonMemberName;
 
     /**
      * Create new multi-line json object reader.
@@ -80,7 +80,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
         // openForWrite the file and seek to the start of the split
         FileSystem fs = file.getFileSystem(conf);
-        FSDataInputStream fileIn = fs.open(split.getPath());
+        fileIn = fs.open(split.getPath());
         if (codec != null) {
             is = codec.createInputStream(fileIn);
             start = 0;
@@ -105,12 +105,11 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
             String json = parser.nextObjectContainingMember(jsonMemberName);
             pos = start + parser.getBytesRead();
-
             if (json == null) {
                 return false;
             }
 
-            long jsonStart = pos - json.length();
+            long jsonStart = pos - json.getBytes(StandardCharsets.UTF_8).length;
 
             // if the "begin-object" position is after the end of our split, we should ignore it
             if (jsonStart >= end) {

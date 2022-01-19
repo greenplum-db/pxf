@@ -61,9 +61,13 @@ public class PartitionedJsonParser {
 		int i;
 		while ((i = inputStreamReader.read()) != EOF) {
 			char c = (char) i;
-			bytesRead++;
+			bytesRead += Character.toString(c).getBytes(StandardCharsets.UTF_8).length;
 			if (c == START_BRACE && prev != BACKSLASH) {
 				lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
+				//in case of START_BRACE "{" , subtract one byte as we will be counting this
+				// when we read the bytes from the currentObject string.
+				bytesRead--;
+
 				return true;
 			}
 			prev = c;
@@ -112,7 +116,6 @@ public class PartitionedJsonParser {
 
 		while ((i = inputStreamReader.read()) != EOF) {
 			char c = (char) i;
-			bytesRead++;
 
 			lexer.lex(c);
 
@@ -174,6 +177,7 @@ public class PartitionedJsonParser {
 					objectCount--;
 					if (objectCount < 0) {
 						// we're done! we reached an "}" which is at the same level as the member we found
+						bytesRead += currentObject.toString().getBytes(StandardCharsets.UTF_8).length;
 						return currentObject.toString();
 					}
 				}
