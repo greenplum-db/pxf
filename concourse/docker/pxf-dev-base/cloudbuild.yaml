@@ -30,6 +30,7 @@ steps:
   args:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb5-centos7-build-test:latest'
+  - '--build-arg=GINKGO_VERSION=${_GINKGO_VERSION}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest'
@@ -59,6 +60,8 @@ steps:
   args:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-centos7-test:latest'
+  - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GINKGO_VERSION=${_GINKGO_VERSION}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest'
@@ -84,6 +87,8 @@ steps:
   args:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-ubuntu18.04-test:latest'
+  - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GINKGO_VERSION=${_GINKGO_VERSION}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:latest'
@@ -109,6 +114,8 @@ steps:
   args:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-oel7-test:latest'
+  - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GINKGO_VERSION=${_GINKGO_VERSION}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-oel7-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-oel7-test-pxf:latest'
@@ -138,6 +145,8 @@ steps:
   args:
     - 'build'
     - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-centos7-test:latest'
+    - '--build-arg=GO_VERSION=${_GO_VERSION}'
+    - '--build-arg=GINKGO_VERSION=${_GINKGO_VERSION}'
     - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-centos7-test-pxf:$COMMIT_SHA'
     - '--cache-from'
     - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-centos7-test-pxf:latest'
@@ -163,6 +172,8 @@ steps:
   args:
     - 'build'
     - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-ubuntu18.04-test:latest'
+    - '--build-arg=GO_VERSION=${_GO_VERSION}'
+    - '--build-arg=GINKGO_VERSION=${_GINKGO_VERSION}'
     - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-ubuntu18.04-test-pxf:$COMMIT_SHA'
     - '--cache-from'
     - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-ubuntu18.04-test-pxf:latest'
@@ -171,6 +182,10 @@ steps:
     - '/workspace/build/'
   waitFor:
     - gpdb7-ubuntu18.04-test-pxf-image-cache
+
+substitutions:
+  _GO_VERSION: 1.17.6 # default values
+  _GINKGO_VERSION: 1.16.5 # default values
 
 # Push images to Cloud Build to Container Registry
 images:

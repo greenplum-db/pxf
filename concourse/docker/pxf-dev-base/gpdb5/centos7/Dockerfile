@@ -2,12 +2,10 @@ ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb5-centos7-build-test:latest
 
 FROM ${BASE_IMAGE}
 
+ARG GINKGO_VERSION
+
 # install Go utilities
-# FIXME: the GO version from the base image is 1.13.4. There is a plan to update to the latest go 1.17.5+, until then, we need to export GO111MODULE
-# the export GO111MODULE can be removed once go has been updated as the default in 1.16+ is auto (module aware)
-# we may also be able to use go install instead of the deprecated go get
-RUN export GO111MODULE=on \
-    && GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo@v1.16.5
+RUN GOPATH=/opt/go /usr/local/go/bin/go install github.com/onsi/ginkgo/ginkgo@v${GINKGO_VERSION}
 
 # add Java 8, Java 11 and rpm-build
 RUN yum install -y rpm-build java-1.8.0-openjdk-devel && yum clean all \

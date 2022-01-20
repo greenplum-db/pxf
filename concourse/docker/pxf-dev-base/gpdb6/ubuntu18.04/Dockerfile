@@ -2,11 +2,14 @@ ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-ubuntu18.04-test:latest
 
 FROM ${BASE_IMAGE}
 
+ARG GO_VERSION
+ARG GINKGO_VERSION
+
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
-    && wget -O go.tgz -q https://go.dev/dl/go1.17.6.linux-amd64.tar.gz \
+    && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
     && tar -C /usr/local -xzf go.tgz && rm go.tgz \
-    && GOPATH=/opt/go /usr/local/go/bin/go install github.com/onsi/ginkgo/ginkgo@v1.16.5
+    && GOPATH=/opt/go /usr/local/go/bin/go install github.com/onsi/ginkgo/ginkgo@v${GINKGO_VERSION}
 
 # install dependencies that are missing on the base images
 # install a specific version of perl for tinc
