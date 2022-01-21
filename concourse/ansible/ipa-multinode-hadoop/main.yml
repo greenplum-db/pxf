@@ -71,11 +71,12 @@
         $HADOOP_PREFIX/bin/hdfs haadmin -transitionToActive nn01
         kdestroy
 
-  - name: Create tmp directory for automation tests
+  - name: Create tmp directory for automation tests and Hive scratch dir
     ansible.builtin.shell:
       cmd: |
         kinit -kt /opt/security/keytab/hdfs.service.keytab hdfs/{{ ansible_fqdn }} &&
         $HADOOP_PREFIX/bin/hdfs dfs -mkdir /tmp &&
+        $HADOOP_PREFIX/bin/hdfs dfs -chmod 777 /tmp &&
         $HADOOP_PREFIX/bin/hdfs dfs -chown gpadmin:gpadmin /tmp &&
         kdestroy
 
@@ -83,3 +84,8 @@
   tasks:
   - name: Start HDFS DataNode
     ansible.builtin.command: $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start datanode
+
+- hosts: hive
+  tasks:
+  - name: Start Hive
+    ansible.builtin.command: ~/singlecluster-HDP/bin/ipa-start-hive.sh

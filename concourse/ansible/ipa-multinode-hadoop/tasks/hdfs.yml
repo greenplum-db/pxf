@@ -14,6 +14,7 @@
       export KRB5CCNAME="FILE:/tmp/krb5cc_${UID}"
       export HADOOP_PREFIX="${HOME}/singlecluster-HDP/hadoop"
       export HADOOP_CONF_DIR="${HADOOP_PREFIX}/etc/hadoop"
+      export HIVE_HOME="${HOME}/singlecluster-HDP/hive"
 
 - name: Setup bash config to source PXF shell config
   ansible.builtin.lineinfile:
@@ -32,6 +33,24 @@
     src: "{{ item }}.j2"
     dest: ~/singlecluster-HDP/hadoop/etc/hadoop/{{ item }}
   loop: [core-site.xml, hdfs-site.xml, yarn-site.xml, ssl-server.xml, ssl-client.xml]
+
+- name: Copy Hive configuration to cluster
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: ~/singlecluster-HDP/hive/conf/{{ item }}
+  loop: [hive-site.xml]
+
+- name: Create Hive startup script that does not check for HDFS
+  ansible.builtin.copy:
+    dest: ~/singlecluster-HDP/bin/ipa-start-hive.sh
+    mode: 0755
+    content: |
+      #!/usr/bin/env bash
+      root=`cd \`dirname $0\`/..;pwd`
+      bin=${root}/bin
+      source ${bin}/gphd-env.sh
+      ${bin}/hive-service.sh metastore start
+      ${bin}/hive-service.sh hiveserver2 start
 
 - name: Create security directory for keys, certificates, and keytabs
   become: true
@@ -76,3 +95,12 @@
       /usr/sbin/ipa-getkeytab -p HTTP/{{ ansible_fqdn }}@{{ ansible_domain | upper }} -k /opt/security/keytab/spnego.service.keytab &&
       kdestroy
     creates: /opt/security/keytab/spnego.service.keytab
+
+- name: Create Hive service principal and export keytab
+  ansible.builtin.shell:
+    cmd: |
+      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }}  &&
+      ipa service-add hive/{{ ansible_fqdn }}@{{ ansible_domain | upper }} &&
+      /usr/sbin/ipa-getkeytab -p hive/{{ ansible_fqdn }}@{{ ansible_domain | upper }}  -k /opt/security/keytab/hive.service.keytab &&
+      kdestroy
+    creates: /opt/security/keytab/hive.service.keytab

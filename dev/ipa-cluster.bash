@@ -194,12 +194,14 @@ function run_ansible_playbook() {
 function create_environment_files() {
     hadoop_namenode="ccp-${cluster_name}-nn01"
     ipa_server="ccp-${cluster_name}-ipa"
+    hive_node="ccp-${cluster_name}-nn02"
     rm -rf ipa_env_files
     mkdir -p ipa_env_files
     jq <"${metadata_path}" -r ".etc_hosts.value" >ipa_env_files/etc_hostfile
     echo "${hadoop_namenode}" >ipa_env_files/name
     mkdir -p ipa_env_files/conf
     scp "${hadoop_namenode}:\$HADOOP_PREFIX/etc/hadoop/*-site.xml" ipa_env_files/conf/
+    scp "${hive_node}:\$HIVE_HOME/conf/hive-site.xml" ipa_env_files/conf/
 
     cp ~/.ssh/ipa_"${cluster_name}"_rsa ipa_env_files/google_compute_engine
     cp ~/.ssh/ipa_"${cluster_name}"_rsa.pub ipa_env_files/google_compute_engine.pub
