@@ -42,6 +42,8 @@ public class Hive extends DbSystemObject {
         address = "jdbc:hive2://" + host + ":" + port + "/default";
         if (!StringUtils.isEmpty(kerberosPrincipal)) {
             address += ";principal=" + kerberosPrincipal.replace("HOSTNAME", host);
+            //TODO: use config parameter
+            address += ";saslQop=auth-conf";
         }
 
         connect();
@@ -128,7 +130,8 @@ public class Hive extends DbSystemObject {
 
     @Override
     public void setHost(String host) {
-        this.host = host;
+
+        this.host = replaceUser(host);
     }
 
     @Override

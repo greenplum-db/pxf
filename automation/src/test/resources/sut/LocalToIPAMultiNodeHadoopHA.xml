@@ -56,6 +56,19 @@ make TEST=HdfsHAFailoverTest
         <sshPrivateKey>${HOME}/workspace/pxf/concourse/terraform/ipa-multinode-hadoop/ipa_env_files/google_compute_engine</sshPrivateKey>
         <useDatanodeHostname>true</useDatanodeHostname>
     </hdfsIpa>
+
+    <hive>
+        <class>org.greenplum.pxf.automation.components.hive.Hive</class>
+        <host>localhost</host>
+        <port>10000</port>
+    </hive>
+    <hiveIpa>
+        <class>org.greenplum.pxf.automation.components.hive.Hive</class>
+        <host>ccp-${user}-nn02.c.data-gpdb-ud-ipa.internal</host>
+        <port>10000</port>
+        <kerberosPrincipal>hive/HOSTNAME@C.DATA-GPDB-UD-IPA.INTERNAL</kerberosPrincipal>
+    </hiveIpa>
+
     <tinc>
         <class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
         <host>localhost</host>

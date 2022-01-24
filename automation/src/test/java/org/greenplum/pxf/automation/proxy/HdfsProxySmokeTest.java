@@ -69,7 +69,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
     protected void createTables() throws Exception {
         String serverName = getServerName();
 
-        // --- PXF tables pointing to the location allowed to be read by the TEST_USER only ---
+        // --- PXF tables pointing to the location prohibited to be read by TEST_USER (allowed for ADMIN_USER only) ---
         // server with impersonation
         createReadablePxfTable(serverName, "_small_data_prohibited", locationProhibited);
         // server without impersonation but with a service user
@@ -77,7 +77,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         // server without impersonation and without a service user
         createReadablePxfTable(serverName + "-no-impersonation-no-svcuser", "_small_data_prohibited_no_impersonation_no_svcuser", locationProhibited);
 
-        // --- PXF tables pointing to the location prohibited to be read by TEST_USER (allowed for ADMIN_USER only) ---
+        // --- PXF tables pointing to the location allowed to be read by the TEST_USER only ---
         // server with impersonation
         createReadablePxfTable(serverName, "_small_data_allowed", locationAllowed);
         // server without impersonation but with a service user
