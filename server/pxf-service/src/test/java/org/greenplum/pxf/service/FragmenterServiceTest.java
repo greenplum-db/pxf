@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,6 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -430,5 +432,43 @@ class FragmenterServiceTest {
         inOrder.verify(fragmenter3).getFragments(); // third  attempt on fragmenter #3
         inOrder.verifyNoMoreInteractions();
         verifyNoMoreInteractions(mockPluginFactory);
+    }
+
+    // ----- TESTS for performance of list traversal -----
+    @Test
+    public void testListTraversalPerformance() throws Throwable {
+
+        // This test makes sure we iterate properly (using an iterator, not the index-based for loop) over a LinkedList
+        // that is returned by a fragmenter when building a list of fragment for a segment.
+        // Tested on MacBookPro, the timings are as follows:
+        // 10M fragments - from  15 mins to 1.3 secs
+        //  1M fragments - from 8.2 secs to 1.3 secs
+        // so we will run the large dataset that would've taken 15 minutes and make sure it computes within 10 seconds
+        // allowing 8x margin for test slowness when running on slower machines on in the cloud under a heavy workload
+
+        Fragment fragment = new Fragment("foo.bar", new DemoFragmentMetadata());
+        List<Fragment> fragmentList = new LinkedList<>();
+        for (int i=0; i<10000000; i++) {
+            fragmentList.add(fragment); // add the same fragment, save on memory, we only care about testing timings
+        }
+
+        context1.setTransactionId("XID-XYZ-123456");
+        context1.setSegmentId(0);
+        context1.setTotalSegments(100);
+
+        when(mockPluginFactory.getPlugin(context1, context1.getFragmenter())).thenReturn(fragmenter1);
+        when(fragmenter1.getFragments()).thenReturn(fragmentList);
+
+        long start = System.currentTimeMillis();
+        List<Fragment> response = fragmenterService.getFragmentsForSegment(context1);
+        long end = System.currentTimeMillis();
+
+        verify(fragmenter1, times(1)).getFragments();
+
+        assertTrue(response instanceof ArrayList);
+        assertEquals(100000, response.size());
+        assertEquals("foo.bar", response.get(0).getSourceName());
+        assertTrue(end-start < 10000L); // should be less than 10 secs (8x margin), not minutes
+
     }
 }
