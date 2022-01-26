@@ -16,7 +16,7 @@ if [[ -f /etc/centos-release ]]; then
     fi
 
     echo "Installing GPDB from ${LATEST_RPM} ..."
-    sudo rpm --quiet -ivh "${LATEST_RPM}"
+    sudo yum -y -d1 install "${LATEST_RPM}"
 
 else
     ARTIFACT_OS="ubuntu"

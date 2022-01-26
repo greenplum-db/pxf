@@ -16,7 +16,7 @@ function install_gpdb() {
     if command -v rpm; then
         pkg_file=$(find "${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-rhel*-x86_64.rpm")
         echo "Installing RPM ${pkg_file}..."
-        rpm --quiet -ivh "${pkg_file}" >/dev/null
+        yum -y -d1 "${pkg_file}"
     elif command -v apt-get; then
         # apt-get wants a full path
         pkg_file=$(find "${PWD}/${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-ubuntu18.04-amd64.deb")

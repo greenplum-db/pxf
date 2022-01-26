@@ -154,7 +154,7 @@ function install_gpdb_package() {
 			return 1
 		fi
 		echo "Installing ${pkg_file}..."
-		rpm --quiet -ivh "${pkg_file}" >/dev/null
+		yum -y -d1 install "${pkg_file}"
 
 		# We can't use service sshd restart as service is not installed on CentOS 7.
 		/usr/sbin/sshd &
@@ -315,7 +315,7 @@ function install_pxf_package() {
 			return 1
 		fi
 		echo "Installing ${pkg_file}..."
-		rpm --quiet -ivh "${pkg_file}" >/dev/null
+		yum -y -d1 install "${pkg_file}"
 	elif [[ ${TARGET_OS} == ubuntu ]]; then
 		# install PXF DEB
 		pkg_file=$(find pxf_package -name 'pxf-gp*amd64.deb')
