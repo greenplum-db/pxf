@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.2.3 (01/27/2022)
+
+### Bug Fixes:
+
+- [#720](https://github.com/greenplum-db/pxf/pull/720) Redirect PXF stdout and stderr to files in PXF_LOGDIR
+- [#735](https://github.com/greenplum-db/pxf/pull/735) Bumped Log4j2 version to 2.17.1
+- [#740](https://github.com/greenplum-db/pxf/pull/740) Bump go version to 1.17.6
+- [#741](https://github.com/greenplum-db/pxf/pull/741) Improved performance of iterating over a list of fragments
+
 ## 6.2.2 (12/22/2021)
 
 ### Bug Fixes:
