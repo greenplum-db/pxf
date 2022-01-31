@@ -13,7 +13,12 @@ PXF manages its service-level logging, and supports the following log levels (mo
 - debug
 - trace
 
-The default configuration for the PXF Service logs at the `info` and more severe levels. For some third-party libraries, the PXF Service logs at the `warn` or `error` and more severe levels to reduce verbosity. Log messages are written to the `$PXF_LOGDIR/pxf-service.log` file. You can change the PXF log directory if you choose.
+The default configuration for the PXF Service logs at the `info` and more severe levels. For some third-party libraries, the PXF Service logs at the `warn` or `error` and more severe levels to reduce verbosity.
+
+- PXF captures messages written to `stdout` and `stderr` and writes them to the `$PXF_LOGDIR/pxf-app.out` file. This file may contain service start-up messages that PXF logs before logging is fully configured. The file may also contain debug output.
+- Messages that PXF logs after start-up are written to the `$PXF_LOGDIR/pxf-service.log` file.
+
+You can change the PXF log directory if you choose.
 
 Client-level logging is managed by the Greenplum Database client; this topic details configuring logging for a `psql` client.
 
@@ -21,7 +26,7 @@ Enabling more verbose service- or client-level logging for PXF may aid troublesh
 
 ## <a id="cfglogdir"></a>Configuring the Log Directory
 
-The default PXF logging configuration writes log messages to `$PXF_LOGDIR/pxf-service.log`, where the default log directory is `PXF_LOGDIR=$PXF_BASE/logs`.
+The default PXF logging configuration writes log messages to `$PXF_LOGDIR`, where the default log directory is `PXF_LOGDIR=$PXF_BASE/logs`.
 
 To change the PXF log directory, you must update the `$PXF_LOGDIR` property in the `pxf-env.sh` configuration file, synchronize the configuration change to the Greenplum Database cluster, and then restart PXF:
 
@@ -48,7 +53,7 @@ To change the PXF log directory, you must update the `$PXF_LOGDIR` property in t
 
 ## <a id="pxfsvclogmsg"></a>Configuring Service-Level Logging
 
-PXF utilizes Apache Log4j 2 for service-level logging. PXF Service-related log messages are captured in `$PXF_LOGDIR/pxf-service.log`. The default configuration for the PXF Service logs at the `info` and more severe levels.
+PXF utilizes Apache Log4j 2 for service-level logging. PXF Service-related log messages are captured in `$PXF_LOGDIR/pxf-app.out` and `$PXF_LOGDIR/pxf-service.log`. The default configuration for the PXF Service logs at the `info` and more severe levels.
 
 You can change the log level for the PXF Service on a single Greenplum Database host, or on all hosts in the Greenplum cluster.
 

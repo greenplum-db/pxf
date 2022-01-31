@@ -94,6 +94,26 @@ After you install the new version of PXF, perform the following procedure:
         </property>
         ```
 
+1. (Recommended) **If you are upgrading <i>from</i> PXF version 6.2.2 or earlier <i>to</i> PXF version 6.2.3 or later**, update your `$PXF_BASE/conf/pxf-log4j2.xml` file to fully configure the logging changes introduced in version 6.2.3:
+
+    1. Remove the following line from the initial `<Properties>` block:
+    
+        ``` pre
+        <Property name="PXF_LOG_LEVEL">${bundle:pxf-application:pxf.log.level}</Property>
+        ```
+
+    1. Change the following line:
+
+        ``` pre
+        <Logger name="org.greenplum.pxf" level="${env:PXF_LOG_LEVEL:-${sys:PXF_LOG_LEVEL:-info}}"/>
+        ```
+
+        to:
+
+        ``` pre
+        <Logger name="org.greenplum.pxf" level="${env:PXF_LOG_LEVEL:-${spring:pxf.log.level}}"/>
+        ```
+
 1. Synchronize the PXF configuration from the master host to the standby master and each Greenplum Database segment host. For example:
 
     ``` shell
