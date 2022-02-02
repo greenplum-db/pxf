@@ -176,8 +176,6 @@ jobs:
   - task: compile_pxf
     image: gpdb6-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
-    params:
-      TARGET_OS: rhel7
   - put: pxf_tarball
     params:
       file: dist/pxf-gp6-*.el7.tar.gz
@@ -240,7 +238,6 @@ jobs:
             ACCESS_KEY_ID: {{tf-machine-access-key-id}}
             SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
             IMPERSONATION: {{enable-impersonation-multinode}}
-            TARGET_OS: centos
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7
@@ -384,4 +381,3 @@ jobs:
       GP_VER: 6
       GROUP: multiClusterSecurity
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-      TARGET_OS: centos

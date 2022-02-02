@@ -194,8 +194,6 @@ jobs:
   - task: Build PXF-GP6 on RHEL7
     image: gpdb6-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
-    params:
-      TARGET_OS: rhel7
   - put: pxf_tarball
     params:
       file: dist/pxf-gp6-*.el7.tar.gz
@@ -340,5 +338,4 @@ jobs:
       WASB_ACCOUNT_NAME: {{wasb-account-name}}
       WASB_ACCOUNT_KEY: {{wasb-account-key}}
       SLEEP_BEFORE_DESTROY_IN_SEC: {{perf-sleep-before-destroy}}
-      TARGET_OS: centos
       GP_VER: 6

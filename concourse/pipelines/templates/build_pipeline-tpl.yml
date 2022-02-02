@@ -518,7 +518,6 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((pxf-rpm-license))
-      TARGET_OS: rhel7
       VENDOR: ((pxf-rpm-vendor))
   - put: pxf_gp[[gp_ver]]_tarball_rhel7
     params:
@@ -555,8 +554,6 @@ jobs:
       GROUP: gpdb,proxy,profile
 {% endif %}
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% endfor %} {# gp_ver 5, 6, and 7 #}
 
 - name: Test PXF-GP6-HDP2 on OEL7
@@ -583,8 +580,6 @@ jobs:
       GP_VER: 6
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 ## ---------- Ubuntu 18 Swimlane ----------
 {% set gp_ver = 6 %}
@@ -602,7 +597,6 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((pxf-rpm-license))
-      TARGET_OS: ubuntu18.04
       VENDOR: ((pxf-deb-maintainer))
   - put: pxf_gp[[gp_ver]]_tarball_ubuntu18
     params:
@@ -634,8 +628,6 @@ jobs:
       GROUP: gpdb,proxy,profile
       PXF_BASE_DIR: /home/gpadmin/pxf
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: ubuntu
-      TARGET_OS_VERSION: 18
 {% set gp_ver = None %}
 
 ## ---------- Testing Gate ----------
@@ -696,8 +688,6 @@ jobs:
     params:
       GP_VER: [[gp_ver]]
       IMPERSONATION: false
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 - name: Test PXF-GP[[gp_ver]]-MAPR on RHEL7
   plan:
@@ -721,8 +711,6 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: hcfs,jdbc
       HADOOP_CLIENT: MAPR
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 - name: Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
   plan:
@@ -748,8 +736,6 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 - name: Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
   plan:
@@ -783,7 +769,6 @@ jobs:
       GROUP: security
       HADOOP_CLIENT: HDP_KERBEROS
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
 
 - name: Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
   plan:
@@ -810,8 +795,6 @@ jobs:
       GROUP: gpdb,proxy,profile
       RUN_JDK_VERSION: 11
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 - name: Test PXF-GP[[gp_ver]]-CDH on RHEL7
   plan:
@@ -840,8 +823,6 @@ jobs:
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: CDH
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 ## ---------- FILE tests -----------------
 
@@ -932,8 +913,6 @@ jobs:
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: file
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 ## ---------- HCFS Cloud tests ----------
 
@@ -962,8 +941,6 @@ jobs:
       GROUP: hcfs,s3
       PROTOCOL: s3
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 - name: Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
   plan:
@@ -991,8 +968,6 @@ jobs:
       IMPERSONATION: false
       PROTOCOL: s3
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 - name: Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
   plan:
@@ -1022,7 +997,6 @@ jobs:
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: adl
-      TARGET_OS: centos
 
 - name: Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
   plan:
@@ -1049,7 +1023,6 @@ jobs:
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: gs
-      TARGET_OS: centos
 
 - name: Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
   plan:
@@ -1075,7 +1048,6 @@ jobs:
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: minio
-      TARGET_OS: centos
 
 ## ---------- Multi-node tests ----------
 
@@ -1142,7 +1114,6 @@ jobs:
             ACCESS_KEY_ID: ((tf-machine-access-key-id))
             SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
             IMPERSONATION: ((enable-impersonation-multinode))
-            TARGET_OS: centos
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7-image
@@ -1210,15 +1181,11 @@ jobs:
       GROUP: security,proxySecurity,multiClusterSecurity
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-      TARGET_OS: centos
   - task: Test PXF CLI
     on_success:
       <<: *destroy_clusters
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
-    params:
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 - name: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
   max_in_flight: 2
@@ -1281,7 +1248,6 @@ jobs:
             ACCESS_KEY_ID: ((tf-machine-access-key-id))
             SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
             IMPERSONATION: ((enable-impersonation-multinode))
-            TARGET_OS: centos
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7-image
@@ -1337,15 +1303,11 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: security,multiClusterSecurity
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-      TARGET_OS: centos
   - task: Test PXF CLI
     on_success:
       <<: *destroy_clusters
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
-    params:
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 ## ---------- Compatibility Gate ----------
 - name: Compatibility Gate for PXF-GP
@@ -1555,21 +1517,19 @@ jobs:
     file: pxf_src/concourse/tasks/add_osl_rpm.yml
     params:
       GP_VER: [[gp_ver]]
-      TARGET_OS_VERSION: 7
+      REDHAT_MAJOR_VERSION: 7
 {% endfor %}
   - task: Add OSL file to PXF-GP6 DEB on Ubuntu 18.04
     file: pxf_src/concourse/tasks/add_osl_deb.yml
     image: gpdb6-pxf-dev-ubuntu18-image
     params:
       GP_VER: 6
-      TARGET_OS_VERSION: ubuntu18.04
 {% for gp_ver in range(5, 7) %}
   - task: Generate PXF binary tarball from PXF-GP[[gp_ver]] on RHEL7 RPM
     file: pxf_src/concourse/tasks/generate_tarball_from_rpm.yml
     image: rpmrebuild-centos7-image
     params:
       GP_VER: [[gp_ver]]
-      TARGET_OS_VERSION: 7
 {% endfor %}
   - task: Generate Releng Email
     image: google-cloud-sdk-slim-image

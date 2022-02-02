@@ -9,7 +9,5 @@ params:
   ACCEPTANCE:
   PGPORT: 5432
   PXF_JVM_OPTS:
-  TARGET_OS: centos
-  TARGET_OS_VERSION: 6
 run:
   path: pxf_src/concourse/scripts/test_pxf_cli.bash

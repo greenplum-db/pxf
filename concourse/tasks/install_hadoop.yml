@@ -11,6 +11,5 @@ params:
   SECRET_ACCESS_KEY:
   ACCESS_KEY_ID:
   IMPERSONATION: true
-  TARGET_OS: centos
 run:
   path: pxf_src/concourse/scripts/install_hadoop.bash

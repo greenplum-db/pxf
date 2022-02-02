@@ -2,8 +2,6 @@
 
 set -eox pipefail
 
-: "${TARGET_OS:?TARGET_OS must be set}"
-
 CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "${CWDIR}/pxf_common.bash"
 
@@ -23,7 +21,7 @@ function install_gpdb() {
         echo "Installing DEB ${pkg_file}..."
         apt-get install -qq "${pkg_file}" >/dev/null
     else
-        echo "Unsupported operating system ${TARGET_OS}. Exiting..."
+        echo "Unsupported operating system '$(source /etc/os-release && echo "${PRETTY_NAME}")'. Exiting..."
         exit 1
     fi
 }
@@ -31,14 +29,15 @@ function install_gpdb() {
 function compile_pxf() {
     source "${GPHOME}/greenplum_path.sh"
 
-    case "${TARGET_OS}" in
-    rhel*) MAKE_TARGET="rpm-tar" ;;
-    ubuntu*) MAKE_TARGET="deb-tar" ;;
-    *)
-        echo "Unsupported operating system ${TARGET_OS}. Exiting..."
+    # CentOS releases contain a /etc/redhat-release which is symlinked to /etc/centos-release
+    if [[ -f /etc/redhat-release ]]; then
+        MAKE_TARGET="rpm-tar"
+    elif [[ -f /etc/debian_version ]]; then
+        MAKE_TARGET="deb-tar"
+    else
+        echo "Unsupported operating system '$(source /etc/os-release && echo "${PRETTY_NAME}")'. Exiting..."
         exit 1
-        ;;
-    esac
+    fi
 
     bash -c "
         source ~/.pxfrc
@@ -48,14 +47,14 @@ function compile_pxf() {
 
 function package_pxf() {
     # verify contents
-    case "${TARGET_OS}" in
-    rhel*) DIST_DIR=distrpm ;;
-    ubuntu*) DIST_DIR=distdeb ;;
-    *)
-        echo "Unsupported operating system ${TARGET_OS}. Exiting..."
+    if [[ -f /etc/redhat-release ]]; then
+        DIST_DIR=distrpm
+    elif [[ -f /etc/debian_version ]]; then
+        DIST_DIR=distdeb
+    else
+        echo "Unsupported operating system '$(source /etc/os-release && echo "${PRETTY_NAME}")'. Exiting..."
         exit 1
-        ;;
-    esac
+    fi
 
     ls -al pxf_src/build/${DIST_DIR}
     tar -tvzf pxf_src/build/${DIST_DIR}/pxf-*.tar.gz

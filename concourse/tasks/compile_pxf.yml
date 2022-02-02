@@ -8,5 +8,4 @@ outputs:
 run:
   path: pxf_src/concourse/scripts/compile_pxf.bash
 params:
-  TARGET_OS: centos
   OUTPUT_ARTIFACT_DIR: pxf_artifacts

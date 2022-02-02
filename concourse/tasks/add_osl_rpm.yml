@@ -12,7 +12,7 @@ outputs:
 
 params:
   GP_VER:
-  TARGET_OS_VERSION:
+  REDHAT_MAJOR_VERSION:
 
 run:
   path: pxf_src/concourse/scripts/add_osl_rpm.bash

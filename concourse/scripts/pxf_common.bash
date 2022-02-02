@@ -124,16 +124,13 @@ function install_gpdb_binary() {
 	fi
 
 	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH'
-	if [[ ${TARGET_OS} == centos ]]; then
+	# CentOS releases contain a /etc/redhat-release which is symlinked to /etc/centos-release
+	if [[ -f /etc/redhat-release ]]; then
 		# We can't use service sshd restart as service is not installed on CentOS 7.
 		/usr/sbin/sshd &
-		# CentOS 6 uses python 2.6
-		if grep 'CentOS release 6' /etc/centos-release; then
-			python_version=2.6
-		fi
 		python_dir=python${python_version}/site-packages
 		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/$python_dir
-	elif [[ ${TARGET_OS} == ubuntu ]]; then
+	elif [[ -f /etc/debian_version ]]; then
 		service ssh start
 		python_dir=python${python_version}/dist-packages
 		export_pythonpath+=:/usr/local/lib/$python_dir
@@ -158,10 +155,6 @@ function install_gpdb_package() {
 
 		# We can't use service sshd restart as service is not installed on CentOS 7.
 		/usr/sbin/sshd &
-		# CentOS 6 uses python 2.6
-		if grep 'CentOS release 6' /etc/centos-release; then
-			python_version=2.6
-		fi
 		python_dir=python${python_version}/site-packages
 		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/${python_dir}
 	elif command -v apt-get; then
@@ -178,7 +171,7 @@ function install_gpdb_package() {
 		python_dir=python${python_version}/dist-packages
 		export_pythonpath+=:/usr/local/lib/$python_dir
 	else
-		printf "Unsupported operating system '%s'. Exiting...\n" "$(cat /etc/*os-release | head -1)"
+		echo "Unsupported operating system '$(source /etc/os-release && echo "${PRETTY_NAME}")'. Exiting..."
 		exit 1
 	fi
 
@@ -291,7 +284,7 @@ function install_pxf_server() {
 		else
 			# requires login shell so that Go's dep is on PATH
 			bash --login -c "
-				export BUILD_NUMBER=${TARGET_OS} JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
+				export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 				make -C '${PWD}/pxf_src' install
 			"
 		fi
@@ -307,7 +300,7 @@ function install_pxf_tarball() {
 }
 
 function install_pxf_package() {
-	if [[ ${TARGET_OS} == centos ]]; then
+	if command -v rpm; then
 		# install PXF RPM
 		pkg_file=$(find pxf_package -name 'pxf-gp*.x86_64.rpm')
 		if [[ -z ${pkg_file} ]]; then
@@ -316,7 +309,7 @@ function install_pxf_package() {
 		fi
 		echo "Installing ${pkg_file}..."
 		rpm --quiet -ivh "${pkg_file}" >/dev/null
-	elif [[ ${TARGET_OS} == ubuntu ]]; then
+	elif command -v dpkg; then
 		# install PXF DEB
 		pkg_file=$(find pxf_package -name 'pxf-gp*amd64.deb')
 		if [[ -z ${pkg_file} ]]; then

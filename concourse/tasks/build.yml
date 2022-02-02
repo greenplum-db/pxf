@@ -15,7 +15,6 @@ outputs:
 
 params:
   LICENSE:
-  TARGET_OS:
   VENDOR:
 
 run:

@@ -325,7 +325,6 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((pxf-rpm-license))
-      TARGET_OS: rhel7
       VENDOR: ((pxf-rpm-vendor))
   - put: pxf_gp[[gp_ver]]_tarball_rhel7
     params:
@@ -362,8 +361,6 @@ jobs:
       GROUP: gpdb,proxy,profile
 {% endif %}
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -394,8 +391,6 @@ jobs:
       GP_VER: 6
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -417,7 +412,6 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((pxf-rpm-license))
-      TARGET_OS: ubuntu18.04
       VENDOR: ((pxf-rpm-vendor))
   - put: pxf_gp[[gp_ver]]_tarball_ubuntu18
     params:
@@ -449,8 +443,6 @@ jobs:
       GROUP: gpdb,proxy,profile
       PXF_BASE_DIR: /home/gpadmin/pxf
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: ubuntu
-      TARGET_OS_VERSION: 18
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -481,8 +473,6 @@ jobs:
     params:
       GP_VER: [[gp_ver]]
       IMPERSONATION: false
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -511,8 +501,6 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: hcfs,jdbc
       HADOOP_CLIENT: MAPR
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -543,8 +531,6 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -583,7 +569,6 @@ jobs:
       GROUP: security
       HADOOP_CLIENT: HDP_KERBEROS
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -615,8 +600,6 @@ jobs:
       GROUP: gpdb,proxy,profile
       RUN_JDK_VERSION: 11
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -650,8 +633,6 @@ jobs:
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: CDH
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -747,8 +728,6 @@ jobs:
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: file
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -782,8 +761,6 @@ jobs:
       GROUP: hcfs,s3
       PROTOCOL: s3
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -814,8 +791,6 @@ jobs:
       IMPERSONATION: false
       PROTOCOL: s3
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -850,7 +825,6 @@ jobs:
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: adl
-      TARGET_OS: centos
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -882,7 +856,6 @@ jobs:
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: gs
-      TARGET_OS: centos
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -913,7 +886,6 @@ jobs:
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: minio
-      TARGET_OS: centos
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -984,7 +956,6 @@ jobs:
             ACCESS_KEY_ID: ((tf-machine-access-key-id))
             SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
             IMPERSONATION: ((enable-impersonation-multinode))
-            TARGET_OS: centos
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7-image
@@ -1051,15 +1022,11 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: security,proxySecurity,multiClusterSecurity
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
-      TARGET_OS: centos
   - task: Test PXF CLI
     on_success:
       <<: *destroy_clusters
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
-    params:
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -1127,7 +1094,6 @@ jobs:
             ACCESS_KEY_ID: ((tf-machine-access-key-id))
             SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
             IMPERSONATION: ((enable-impersonation-multinode))
-            TARGET_OS: centos
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7-image
@@ -1183,15 +1149,11 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: security,multiClusterSecurity
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-      TARGET_OS: centos
   - task: Test PXF CLI
     on_success:
       <<: *destroy_clusters
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
-    params:
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
 
 {% if slack_notification %}
     <<: *slack_alert

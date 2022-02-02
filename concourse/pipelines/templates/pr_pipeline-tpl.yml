@@ -147,7 +147,6 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((pxf-rpm-license))
-      TARGET_OS: rhel7
       VENDOR: ((pxf-rpm-vendor))
   - task: Test Against Greenplum Latest RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
@@ -206,7 +205,6 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((pxf-rpm-license))
-      TARGET_OS: ubuntu18.04
       VENDOR: ((pxf-rpm-vendor))
   - task: Test Against Greenplum Latest Ubuntu18
     image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image

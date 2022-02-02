@@ -385,7 +385,6 @@ docker run --rm -it \
   -e CLUSTER_NAME=hdp \
   -e NODE=c6401.ambari.apache.org \
   -e REALM=AMBARI.APACHE.ORG \
-  -e TARGET_OS=centos \
   pivotaldata/gpdb-pxf-dev:centos6-hdp-secure /bin/bash
 
 # Inside the container run the following command:

@@ -12,7 +12,6 @@ outputs:
 
 params:
   GP_VER:
-  TARGET_OS_VERSION:
 
 run:
   path: pxf_src/concourse/scripts/generate_tarball_from_rpm.bash

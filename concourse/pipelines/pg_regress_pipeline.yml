@@ -175,8 +175,6 @@ jobs:
         IMPERSONATION: true
         PGPORT: {{pgport}}
         PG_REGRESS: true
-        TARGET_OS: centos
-        TARGET_OS_VERSION: 7
       run:
         path: pxf_src/concourse/scripts/test_pxf.bash
 
@@ -220,8 +218,6 @@ jobs:
         PG_REGRESS: true
         PROTOCOL: s3
         SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
-        TARGET_OS: centos
-        TARGET_OS_VERSION: 7
       run:
         path: pxf_src/concourse/scripts/test_pxf.bash
 
@@ -265,8 +261,6 @@ jobs:
         PGPORT: {{pgport}}
         PG_REGRESS: true
         PROTOCOL: gs
-        TARGET_OS: centos
-        TARGET_OS_VERSION: 7
       run:
         path: pxf_src/concourse/scripts/test_pxf.bash
 
@@ -309,8 +303,6 @@ jobs:
         PGPORT: {{pgport}}
         PG_REGRESS: true
         PROTOCOL: wasbs
-        TARGET_OS: centos
-        TARGET_OS_VERSION: 7
         WASBS_ACCOUNT_KEY: {{wasb-account-key}}
         WASBS_ACCOUNT_NAME: {{wasb-account-name}}
       run:
@@ -358,8 +350,6 @@ jobs:
         PGPORT: {{pgport}}
         PG_REGRESS: true
         PROTOCOL: adl
-        TARGET_OS: centos
-        TARGET_OS_VERSION: 7
       run:
         path: pxf_src/concourse/scripts/test_pxf.bash
 
@@ -393,5 +383,3 @@ jobs:
       PGPORT: {{pgport}}
       PG_REGRESS: true
       PROTOCOL: minio
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7

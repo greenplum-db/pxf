@@ -144,7 +144,7 @@ deb-tar: deb
 	set -e ;\
 	GP_MAJOR_VERSION=$$(cat $(SOURCE_EXTENSION_DIR)/build/metadata/gp_major_version) ;\
 	PXF_DEB_FILE=$$(find build/ -name pxf-gp$${GP_MAJOR_VERSION}*.deb) ;\
-	PXF_PACKAGE_NAME=$$(dpkg-deb --field $${PXF_DEB_FILE} Package)-$$(dpkg-deb --field $${PXF_DEB_FILE} Version)-$${TARGET_OS} ;\
+	PXF_PACKAGE_NAME=$$(dpkg-deb --field $${PXF_DEB_FILE} Package)-$$(dpkg-deb --field $${PXF_DEB_FILE} Version)-ubuntu18.04 ;\
 	mkdir -p build/stagedeb/$${PXF_PACKAGE_NAME} ;\
 	cp $${PXF_DEB_FILE} build/stagedeb/$${PXF_PACKAGE_NAME} ;\
 	cp package/install_deb build/stagedeb/$${PXF_PACKAGE_NAME}/install_component ;\
