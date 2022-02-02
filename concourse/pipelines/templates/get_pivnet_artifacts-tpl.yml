@@ -55,6 +55,14 @@ resources:
     json_key: ((pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
 
+- name: gpdb6_rhel8_rpm_latest-[[i]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pivnet-artifacts
+    json_key: ((pxf-storage-service-account-key))
+    regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-rhel8-x86_64.rpm
+
 - name: gpdb6_ubuntu18_deb_latest-[[i]]
   type: gcs
   icon: google-drive
@@ -62,8 +70,8 @@ resources:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
-
 {% endfor %}
+
 jobs:
 - name: Download Latest PivNet CLI
   plan:
@@ -146,6 +154,7 @@ jobs:
       trigger: true
 {% for i in range(num_gpdb6_versions) %}
     - get: gpdb6_rhel7_rpm_latest-[[i]]
+    - get: gpdb6_rhel8_rpm_latest-[[i]]
     - get: gpdb6_ubuntu18_deb_latest-[[i]]
 {% endfor %}
 {% for i in range(num_gpdb6_versions - 1, -1, -1) %}
@@ -159,19 +168,22 @@ jobs:
         - name: pxf_src
         - name: pivnet_cli
         - name: gpdb6_rhel7_rpm_latest-[[i]]
+        - name: gpdb6_rhel8_rpm_latest-[[i]]
         - name: gpdb6_ubuntu18_deb_latest-[[i]]
         {% if i > 0 %}
         # save a download from pivnet if not fetching latest
         - name: gpdb6_rhel7_rpm_latest-[[i - 1]]
+        - name: gpdb6_rhel8_rpm_latest-[[i - 1]]
         - name: gpdb6_ubuntu18_deb_latest-[[i - 1]]
         {% endif %}
       outputs:
         - name: gpdb6_rhel7_rpm_latest-[[i]]
+        - name: gpdb6_rhel8_rpm_latest-[[i]]
         - name: gpdb6_ubuntu18_deb_latest-[[i]]
       params:
         GPDB_VERSION: 6
-        LIST_OF_DIRS: gpdb6_rhel7_rpm_latest-[[i]],gpdb6_ubuntu18_deb_latest-[[i]]
-        LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm,greenplum-db-GPDB_VERSION-ubuntu18.04-amd64.deb
+        LIST_OF_DIRS: gpdb6_rhel7_rpm_latest-[[i]],gpdb6_rhel8_rpm_latest-[[i]],gpdb6_ubuntu18_deb_latest-[[i]]
+        LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm,greenplum-db-GPDB_VERSION-rhel8-x86_64.rpm,greenplum-db-GPDB_VERSION-ubuntu18.04-amd64.deb
         PIVNET_API_TOKEN: ((pxf-pivnet-uaa-refresh-token))
         PIVNET_CLI_DIR: pivnet_cli
         PRODUCT_SLUG: pivotal-gpdb
@@ -181,6 +193,9 @@ jobs:
   - put: gpdb6_rhel7_rpm_latest-[[i]]
     params:
       file: gpdb6_rhel7_rpm_latest-[[i]]/greenplum-db-6.*-rhel7-x86_64.rpm
+  - put: gpdb6_rhel8_rpm_latest-[[i]]
+    params:
+      file: gpdb6_rhel8_rpm_latest-[[i]]/greenplum-db-6.*-rhel8-x86_64.rpm
   - put: gpdb6_ubuntu18_deb_latest-[[i]]
     params:
       file: gpdb6_ubuntu18_deb_latest-[[i]]/greenplum-db-6.*-ubuntu18.04-amd64.deb

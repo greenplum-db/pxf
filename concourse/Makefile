@@ -219,6 +219,7 @@ set-pivnet-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
+		--pipeline=${PIVNET_PIPELINE_NAME} \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
@@ -226,7 +227,6 @@ set-pivnet-pipeline:
 		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--var pxf-git-remote=https://github.com/greenplum-db/pxf \
-		--pipeline pivnet_artifacts \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
