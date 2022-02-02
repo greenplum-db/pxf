@@ -89,6 +89,15 @@ resources:
     username: _json_key
     password: {{pxf-cloudbuild-service-account-key}}
 
+- name: gpdb6-pxf-dev-rhel8-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-rhel8-test-pxf
+    tag: latest
+    username: _json_key
+    password: {{pxf-cloudbuild-service-account-key}}
+
 - name: gpdb6-pxf-dev-ubuntu18-image
   type: registry-image
   icon: docker
@@ -124,6 +133,14 @@ resources:
     json_key: {{concourse-gcs-resources-service-account-key}}
     regexp: server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.tar.gz
 
+- name: gpdb6_tarball_rhel8
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: pivotal-gpdb-concourse-resources-prod
+    json_key: {{concourse-gcs-resources-service-account-key}}
+    regexp: server/published/gpdb6/server-rc-(.*)-rhel8_x86_64.tar.gz
+
 - name: gpdb6_ubuntu18_tarball
   type: gcs
   icon: google-drive
@@ -148,6 +165,14 @@ resources:
     bucket: data-gpdb-ud-pxf-releases
     json_key: {{pxf-storage-service-account-key}}
     regexp: prod/releases/gp6/pxf-gp6-(.*)-1.el7.x86_64.rpm
+
+- name: pxf_gp6_rpm_rhel8
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-releases
+    json_key: {{pxf-storage-service-account-key}}
+    regexp: prod/releases/gp6/pxf-gp6-(.*)-1.el8.x86_64.rpm
 
 - name: pxf_gp6_deb_ubuntu18
   type: gcs
@@ -230,6 +255,38 @@ jobs:
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
+## ---------- RHEL 8 Swimlane ----------
+- name: Certify GPDB-6 with PXF-GP6 on RHEL8
+  plan:
+    - in_parallel:
+        - get: pxf_src
+        - get: bin_gpdb
+          resource: gpdb6_tarball_rhel8
+          trigger: true
+        - get: pxf_package
+          resource: pxf_gp6_rpm_rhel8
+          trigger: true
+        - get: gpdb6-pxf-dev-rhel8-image
+        - get: ccp-7-image
+        - get: pxf-automation-dependencies
+        - get: singlecluster
+          resource: singlecluster-hdp2
+    - task: Test GPDB-6 with PXF-GP6-HDP2 on RHEL8
+      file: pxf_src/concourse/tasks/test_certification.yml
+      image: gpdb6-pxf-dev-rhel8-image
+      params:
+        ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+        GP_VER: 6
+        GROUP: gpdb,proxy,profile
+        SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+    - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on RHEL8
+      file: pxf_src/concourse/tasks/certification_upload.yml
+      image: ccp-7-image
+      params:
+        GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+        GP_VER: 6
+        PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+
 ## ---------- Ubuntu 18 Swimlane ----------
 - name: Certify GPDB-6 with PXF-GP6 on Ubuntu 18.04
   plan:
@@ -299,6 +356,9 @@ jobs:
       passed:
       - Certify GPDB-6 with PXF-GP6 on RHEL7
       trigger: true
+    - get: pxf_gp6_rpm_rhel8
+      passed:
+      - Certify GPDB-6 with PXF-GP6 on RHEL8
     - get: pxf_gp6_deb_ubuntu18
       passed:
       - Certify GPDB-6 with PXF-GP6 on Ubuntu 18.04
