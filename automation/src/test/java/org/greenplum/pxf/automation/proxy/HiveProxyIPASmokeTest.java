@@ -57,8 +57,7 @@ public class HiveProxyIPASmokeTest extends HiveProxySmokeTest {
         runTincTest("pxf.proxy.hive_small_data_ipa.runTest");
     }
 
-//TODO:    @Test(groups = {"proxySecurityIpa"})
-    @Test(groups = {"ipa"})
+    @Test(groups = {"proxySecurityIpa"})
     public void test() throws Exception {
         runTest();
     }
