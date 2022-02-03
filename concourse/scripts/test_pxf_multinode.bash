@@ -297,11 +297,13 @@ function setup_pxf_kerberos_on_cluster() {
 	if [[ -d ipa_env_files ]]; then
 		# create the third hdfs-ipa cluster configuration
 		HADOOP_3_HOSTNAME="$(< ipa_env_files/name)"
+		HIVE_3_HOSTNAME="$(< ipa_env_files/nn02)"
 		# see ansible/ipa-multinode-hadoop/tasks/ipa-server.yml
 		HADOOP_3_USER=stout
 		PXF_3_USER=porter
 		HADOOP_3_SSH_OPTS=(-o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i ipa_env_files/google_compute_engine)
 		HADOOP_3_DIR=$(find /tmp/build/ -name ipa_env_files)
+		DOMAIN3="$(< "${HADOOP_3_DIR}/DOMAIN")"
 		REALM3="$(< "${HADOOP_3_DIR}/REALM")"
 		REALM3="${REALM3^^}" # make sure REALM3 is upper-case
 		ssh gpadmin@mdw "
@@ -342,6 +344,8 @@ function setup_pxf_kerberos_on_cluster() {
 			-e "s|</hdfsIpa>|<testKerberosKeytab>${HADOOP_3_DIR}/hadoop.user.keytab</testKerberosKeytab></hdfsIpa>|g" \
 			-e "s|</hdfsIpa>|<sshUserName>hdfs</sshUserName></hdfsIpa>|g" \
 			-e "s|</hdfsIpa>|<sshPrivateKey>${HADOOP_3_DIR}/google_compute_engine</sshPrivateKey></hdfsIpa>|g" \
+			-e "s|hive-ipa-host|${HIVE_3_HOSTNAME}.${DOMAIN3}|g" \
+			-e "s|IPA-REALM|${REALM3}|g" \
 			"$multiNodesCluster"
 
 		# add foreign Hadoop and IPA KDC hostfile to /etc/hosts

@@ -67,6 +67,7 @@ make TEST=HdfsHAFailoverTest
         <host>ccp-${user}-nn02.c.data-gpdb-ud-ipa.internal</host>
         <port>10000</port>
         <kerberosPrincipal>hive/HOSTNAME@C.DATA-GPDB-UD-IPA.INTERNAL</kerberosPrincipal>
+        <saslQop>auth-conf</saslQop>
     </hiveIpa>
 
     <tinc>

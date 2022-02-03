@@ -15,15 +15,16 @@ import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
  */
 public class Hive extends DbSystemObject {
 
-    String host;
-    String port = "10000";
+    private static final String DEFAULT_PORT = "10000";
+    String saslQop;
 
     public Hive() {
-
+        this.port = DEFAULT_PORT;
     }
 
     public Hive(boolean silenceReport) {
         super(silenceReport);
+        this.port = DEFAULT_PORT;
     }
 
     @Override
@@ -42,8 +43,9 @@ public class Hive extends DbSystemObject {
         address = "jdbc:hive2://" + host + ":" + port + "/default";
         if (!StringUtils.isEmpty(kerberosPrincipal)) {
             address += ";principal=" + kerberosPrincipal.replace("HOSTNAME", host);
-            //TODO: use config parameter
-            address += ";saslQop=auth-conf";
+            if (StringUtils.isNotBlank(getSaslQop())) {
+                address += String.format(";saslQop=%s", getSaslQop());
+            }
         }
 
         connect();
@@ -124,24 +126,9 @@ public class Hive extends DbSystemObject {
     }
 
     @Override
-    public String getHost() {
-        return host;
-    }
-
-    @Override
     public void setHost(String host) {
 
         this.host = replaceUser(host);
-    }
-
-    @Override
-    public String getPort() {
-        return port;
-    }
-
-    @Override
-    public void setPort(String port) {
-        this.port = port;
     }
 
     @Override
@@ -202,5 +189,13 @@ public class Hive extends DbSystemObject {
     @Override
     public void createDataBase(String schemaName, boolean ignoreFail, String encoding, String localeCollate, String localeCollateType) {
         throw new UnsupportedOperationException();
+    }
+
+    public String getSaslQop() {
+        return saslQop;
+    }
+
+    public void setSaslQop(String saslQop) {
+        this.saslQop = saslQop;
     }
 }
