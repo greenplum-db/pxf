@@ -17,6 +17,7 @@ make TEST=HdfsHAFailoverTest
     <cluster>
         <class>org.greenplum.pxf.automation.components.cluster.SingleCluster</class>
         <host>localhost</host>
+        <hiveBaseHdfsDirectory>/user/hive/warehouse</hiveBaseHdfsDirectory>
     </cluster>
 
     <gpdb>
