@@ -74,6 +74,7 @@ echo "${hadoop_namenode_1}" >ipa_env_files/name
 echo "${hadoop_namenode_2}" >ipa_env_files/nn02
 mkdir -p ipa_env_files/conf
 scp "${hadoop_namenode_1}:\$HADOOP_PREFIX/etc/hadoop/*-site.xml" ipa_env_files/conf/
+scp "${hadoop_namenode_2}:\$HIVE_HOME/conf/hive-site.xml" ipa_env_files/conf/
 
 cp ~/.ssh/"${cluster_name}" ipa_env_files/google_compute_engine
 cp ~/.ssh/"${cluster_name}".pub ipa_env_files/google_compute_engine.pub
