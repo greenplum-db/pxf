@@ -46,6 +46,7 @@ public class PartitionedJsonParser {
 	private final JsonLexer lexer;
 	private long bytesRead = 0;
 	private boolean endOfStream = false;
+	private StringBuilder charObject;
 
 	public PartitionedJsonParser(InputStream is) {
 		this.lexer = new JsonLexer();
@@ -56,17 +57,15 @@ public class PartitionedJsonParser {
 	}
 
 	private boolean scanToFirstBeginObject() throws IOException {
+		charObject = new StringBuilder();
 		// seek until we hit the first begin-object
 		char prev = ' ';
 		int i;
 		while ((i = inputStreamReader.read()) != EOF) {
 			char c = (char) i;
-			bytesRead += Character.toString(c).getBytes(StandardCharsets.UTF_8).length;
+			charObject.append(c);
 			if (c == START_BRACE && prev != BACKSLASH) {
 				lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
-				//in case of START_BRACE "{" , subtract one byte as we will be counting this
-				// when we read the bytes from the currentObject string.
-				bytesRead--;
 
 				return true;
 			}
@@ -120,6 +119,7 @@ public class PartitionedJsonParser {
 			lexer.lex(c);
 
 			currentObject.append(c);
+			charObject.append(c);
 
 			switch (memberState) {
 			case SEARCHING:
@@ -177,7 +177,6 @@ public class PartitionedJsonParser {
 					objectCount--;
 					if (objectCount < 0) {
 						// we're done! we reached an "}" which is at the same level as the member we found
-						bytesRead += currentObject.toString().getBytes(StandardCharsets.UTF_8).length;
 						return currentObject.toString();
 					}
 				}
@@ -192,6 +191,8 @@ public class PartitionedJsonParser {
 	 * @return Returns the number of bytes read from the stream.
 	 */
 	public long getBytesRead() {
+		bytesRead += charObject.toString().getBytes(StandardCharsets.UTF_8).length;
+		charObject.setLength(0);
 		return bytesRead;
 	}
 
