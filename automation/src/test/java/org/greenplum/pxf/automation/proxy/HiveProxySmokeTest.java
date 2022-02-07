@@ -113,16 +113,12 @@ public class HiveProxySmokeTest extends BaseSmoke {
         createReadablePxfTable(serverName, "_small_data_prohibited", hiveTableProhibited);
         // server without impersonation but with a service user
         createReadablePxfTable(serverName + "-no-impersonation", "_small_data_prohibited_no_impersonation", hiveTableProhibited);
-        // server without impersonation and without a service user
-//        createReadablePxfTable(serverName + "-no-impersonation-no-svcuser", "_small_data_prohibited_no_impersonation_no_svcuser", locationProhibited);
 
         // --- PXF tables pointing to the location allowed to be read by the TEST_USER only ---
         // server with impersonation
         createReadablePxfTable(serverName, "_small_data_allowed", hiveTableAllowed);
         // server without impersonation but with a service user
         createReadablePxfTable(serverName + "-no-impersonation", "_small_data_allowed_no_impersonation", hiveTableAllowed);
-        // server without impersonation and without a service user
-//        createReadablePxfTable(serverName + "-no-impersonation-no-svcuser", "_small_data_allowed_no_impersonation_no_svcuser", locationAllowed);
     }
 
     private void createReadablePxfTable(String serverName, String tableSuffix, HiveTable location) throws Exception {
