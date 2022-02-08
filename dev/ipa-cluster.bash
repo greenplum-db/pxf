@@ -198,7 +198,8 @@ function create_environment_files() {
     rm -rf ipa_env_files
     mkdir -p ipa_env_files
     jq <"${metadata_path}" -r ".etc_hosts.value" >ipa_env_files/etc_hostfile
-    echo "${hadoop_namenode}" >ipa_env_files/name
+    echo "${hadoop_namenode}" >ipa_env_files/nn01
+    echo "${hive_node}" >ipa_env_files/nn02
     mkdir -p ipa_env_files/conf
     scp "${hadoop_namenode}:\$HADOOP_PREFIX/etc/hadoop/*-site.xml" ipa_env_files/conf/
     scp "${hive_node}:\$HIVE_HOME/conf/hive-site.xml" ipa_env_files/conf/

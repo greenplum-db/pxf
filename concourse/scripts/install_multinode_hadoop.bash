@@ -70,7 +70,7 @@ hadoop_namenode_2="ccp-${cluster_name}-nn02"
 ipa_server="ccp-${cluster_name}-ipa"
 mkdir -p ipa_env_files
 jq <"${metadata_path}" -r ".etc_hosts" >ipa_env_files/etc_hostfile
-echo "${hadoop_namenode_1}" >ipa_env_files/name
+echo "${hadoop_namenode_1}" >ipa_env_files/nn01
 echo "${hadoop_namenode_2}" >ipa_env_files/nn02
 mkdir -p ipa_env_files/conf
 scp "${hadoop_namenode_1}:\$HADOOP_PREFIX/etc/hadoop/*-site.xml" ipa_env_files/conf/
@@ -81,7 +81,7 @@ cp ~/.ssh/"${cluster_name}".pub ipa_env_files/google_compute_engine.pub
 
 gcp_project="$(jq <"${metadata_path}" -r ".project")"
 domain_name="c.${gcp_project}.internal"
-echo "${domain_name}" >ipa_env_files/DOMAIN
+echo "${domain_name}" >ipa_env_files/domain
 echo "${domain_name^^}" >ipa_env_files/REALM
 
 cat <<EOF >ipa_env_files/krb5_realm
