@@ -64,18 +64,18 @@ for ((i = 0; i < ${#product_files[@]}; i++)); do
 		fi
 	fi
 	# if the version doesn't exist in either i-1, i-th bucket or the SHAs don't match, download it from pivnet.
-	rm -f "${product_dirs[$i]}"/*.{rpm,deb}
 	id=$(jq <<<"${product_files_json}" -r --arg object_key "${file}" '.[] | select(.aws_object_key == $object_key).id')
 
 	if [[ -z "${id}" ]]; then
 		echo "Did not find '${file}' in product files for GPDB '${gpdb_version}'"
 		if [[ $file =~ ^.*rhel8.*$ ]]; then
-			echo "RHEL 8 artifact unavailable for the given GPDB version."
+			echo "RHEL 8 artifact unavailable for the given GPDB version. Keeping existing rpm: $(find ${product_dirs[$i]}/ -name *rhel8*.rpm)"
 			continue
 		fi
 		exit 1
 	fi
-	echo "Downloading ${file} with id ${id} to ${product_dirs[$i]}..."
+	echo "Cleaning ${product_dirs[$i]} and downloading ${file} with id ${id} to ${product_dirs[$i]}..."
+	rm -f "${product_dirs[$i]}"/*.{rpm,deb}
 	pivnet download-product-files \
 		"--download-dir=${product_dirs[$i]}" \
 		"--product-slug=${PRODUCT_SLUG}" \
