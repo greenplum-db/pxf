@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://ccp-{{ cluster_name }}-nn02.{{ ansible_domain }}:9083</value>
+        <description>URI for client to contact metastore server</description>
+    </property>
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>/user/hive/warehouse</value>
+    </property>
+    <property>
+        <name>hive.metastore.integral.jdo.pushdown</name>
+        <value>true</value>
+        <description> Allow query pushdown for integral partition columns in metastore.  This improves metastore perf for integral columns, especially if there's a large number of partitions</description>
+    </property>
+    <property>
+        <name>hive.execution.engine</name>
+        <value>mr</value>
+        <description>Chooses execution engine. Options are: mr(default), tez, or spark</description>
+    </property>
+    <property>
+        <name>hive.metastore.schema.verification</name>
+        <value>false</value>
+        <description>Modify schema instead of reporting error</description>
+    </property>
+    <property>
+        <name>datanucleus.autoCreateTables</name>
+        <value>true</value>
+    </property>
+    <property>
+      <name>hive.server2.authentication</name>
+      <value>KERBEROS</value>
+    </property>
+    <property>
+      <name>hive.server2.authentication.kerberos.principal</name>
+      <value>hive/_HOST@{{ ansible_domain | upper }}</value>
+    </property>
+    <property>
+      <name>hive.server2.authentication.kerberos.keytab</name>
+      <value>/opt/security/keytab/hive.service.keytab</value>
+    </property>
+    <property>
+      <name>hive.server2.thrift.sasl.qop</name>
+      <value>auth-conf</value>
+    </property>
+    <property>
+      <name>hive.metastore.sasl.enabled</name>
+      <value>true</value>
+    </property>
+    <property>
+      <name>hive.metastore.kerberos.principal</name>
+      <value>hive/_HOST@{{ ansible_domain | upper }}</value>
+    </property>
+    <property>
+      <name>hive.metastore.kerberos.keytab.file</name>
+      <value>/opt/security/keytab/hive.service.keytab</value>
+    </property>
+
+</configuration>

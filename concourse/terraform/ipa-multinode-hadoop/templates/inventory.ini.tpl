@@ -19,3 +19,6 @@ ${node.name}
 [hdfs:children]
 namenode
 datanode
+
+[hive]
+${namenode.1.name}

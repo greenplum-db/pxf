@@ -194,12 +194,15 @@ function run_ansible_playbook() {
 function create_environment_files() {
     hadoop_namenode="ccp-${cluster_name}-nn01"
     ipa_server="ccp-${cluster_name}-ipa"
+    hive_node="ccp-${cluster_name}-nn02"
     rm -rf ipa_env_files
     mkdir -p ipa_env_files
     jq <"${metadata_path}" -r ".etc_hosts.value" >ipa_env_files/etc_hostfile
-    echo "${hadoop_namenode}" >ipa_env_files/name
+    echo "${hadoop_namenode}" >ipa_env_files/nn01
+    echo "${hive_node}" >ipa_env_files/nn02
     mkdir -p ipa_env_files/conf
     scp "${hadoop_namenode}:\$HADOOP_PREFIX/etc/hadoop/*-site.xml" ipa_env_files/conf/
+    scp "${hive_node}:\$HIVE_HOME/conf/hive-site.xml" ipa_env_files/conf/
 
     cp ~/.ssh/ipa_"${cluster_name}"_rsa ipa_env_files/google_compute_engine
     cp ~/.ssh/ipa_"${cluster_name}"_rsa.pub ipa_env_files/google_compute_engine.pub
@@ -243,10 +246,20 @@ function setup_pxf_server() {
     # set constrained delegation property to true for the PXF server
     xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.kerberos.constrained-delegation']/value" -v true "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
 
+    rm -rf "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation
+    cp -R "${PXF_BASE}"/servers/hdfs-ipa "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation
+    sed -i '' -e 's|hdfs-ipa|hdfs-ipa-no-impersonation|g' "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation/pxf-site.xml
+    # set impersonation property to false for the PXF server
+    xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.user.impersonation']/value" -v false "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation/pxf-site.xml
+    # set service user to foobar
+    xmlstarlet ed --inplace --pf --append '/configuration/property[last()]' --type elem -n property -v "" \
+     --subnode '/configuration/property[last()]' --type elem -n name -v "pxf.service.user.name" \
+     --subnode '/configuration/property[last()]' --type elem -n value -v "foobar" "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation/pxf-site.xml
+
     rm -rf "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser
     cp -R "${PXF_BASE}"/servers/hdfs-ipa "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser
     sed -i '' -e 's|hdfs-ipa|hdfs-ipa-no-impersonation-no-svcuser|g' "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml
-    # set constrained delegation property to true for the PXF server
+    # set impersonation property to false for the PXF server
     xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.user.impersonation']/value" -v false "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml
 }
 

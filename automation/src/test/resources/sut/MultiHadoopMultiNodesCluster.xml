@@ -105,6 +105,13 @@
         <host>non-secure-hadoop</host>
         <port>10000</port>
     </hiveNonSecure>
+    <hiveIpa>
+        <class>org.greenplum.pxf.automation.components.hive.Hive</class>
+        <host>hive-ipa-host</host>
+        <port>10000</port>
+        <kerberosPrincipal>hive/hive-ipa-host@IPA-REALM</kerberosPrincipal>
+        <saslQop>auth-conf</saslQop>
+    </hiveIpa>
     <tinc>
         <class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
         <host>localhost</host>
