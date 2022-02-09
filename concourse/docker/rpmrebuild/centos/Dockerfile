@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=centos:6
+ARG BASE_IMAGE=centos:7
 
 FROM ${BASE_IMAGE}
 

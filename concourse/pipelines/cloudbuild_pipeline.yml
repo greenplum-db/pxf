@@ -55,8 +55,11 @@ resources:
       branch: {{gp-image-baking-repo-branch}}
       private_key: {{gp-image-baking-repo-key}}
       paths:
+        - images/docker/gpdb5/gpdb5-centos7-build-test
         - images/docker/gpdb6/gpdb6-centos7-test
         - images/docker/gpdb6/gpdb6-ubuntu18.04-test
+        - images/docker/gpdb6/gpdb6-oel7-test
+        - images/docker/gpdb6/gpdb6-rhel8-test
 
 ## ======================================================================
 ## JOBS
@@ -77,7 +80,7 @@ jobs:
         GOOGLE_CREDENTIALS: {{pxf-cloudbuild-service-account-key}}
         GOOGLE_PROJECT_ID: {{google-project-id}}
         GOOGLE_ZONE: {{google-zone}}
-        TRIGGER_LIST: "pxf-dev-base"
+        TRIGGER_LIST: "pxf-dev-base rpmrebuild"
       config:
         platform: linux
         inputs:
