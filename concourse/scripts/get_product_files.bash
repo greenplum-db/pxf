@@ -68,7 +68,8 @@ for ((i = 0; i < ${#product_files[@]}; i++)); do
 
 	if [[ -z "${id}" ]]; then
 		echo "Did not find '${file}' in product files for GPDB '${gpdb_version}'"
-		if [[ $file =~ ^.*rhel8.*$ ]]; then
+		os_regex='^.*rhel8.*$'
+		if [[ $file =~ ${os_regex} ]]; then
 			echo "RHEL 8 artifact unavailable for the given GPDB version. Keeping existing rpm: $(find ${product_dirs[$i]}/ -name *rhel8*.rpm)"
 			continue
 		fi
