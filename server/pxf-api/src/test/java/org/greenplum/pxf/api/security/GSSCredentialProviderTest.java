@@ -63,13 +63,13 @@ public class GSSCredentialProviderTest {
     }
 
     @Test
-    public void testGetCredentialFailsTGTIsNull() throws GSSException {
+    public void testGetCredentialFailsTGTIsNull() {
         Exception e = assertThrows(NullPointerException.class, () -> provider.getGSSCredential("user", "server"));
         assertEquals("No TGT found in the Subject.", e.getMessage());
     }
 
     @Test
-    public void testGetCredentialFailsTGTIsDestroyed() throws GSSException {
+    public void testGetCredentialFailsTGTIsDestroyed() {
         when(mockPxfUgi.getTGT(any())).thenReturn(mockTGT);
         when(mockTGT.isDestroyed()).thenReturn(true);
         Exception e = assertThrows(IllegalStateException.class, () -> provider.getGSSCredential("user", "server"));
@@ -77,7 +77,7 @@ public class GSSCredentialProviderTest {
     }
 
     @Test
-    public void testGetCredentialFailsTGTIsNotCurrent() throws GSSException {
+    public void testGetCredentialFailsTGTIsNotCurrent() {
         when(mockPxfUgi.getTGT(any())).thenReturn(mockTGT);
         when(mockTGT.isDestroyed()).thenReturn(false);
         when(mockTGT.isCurrent()).thenReturn(false);
@@ -94,7 +94,7 @@ public class GSSCredentialProviderTest {
         when(mockKerberosPrincipal.getRealm()).thenReturn("REALM");
         when(mockGSSManager.createCredential(GSSCredential.INITIATE_ONLY)).thenReturn(mockCredential);
         when(mockGSSManager.createName("user@REALM", GSSName.NT_USER_NAME)).thenReturn(mockGSSName);
-        GSSException gssException = new GSSException(1);
+        GSSException gssException = new GSSException(GSSException.BAD_BINDINGS); // use an arbitrary error code
         when(mockCredential.impersonate(mockGSSName)).thenThrow(gssException);
 
         Exception e = assertThrows(RuntimeException.class, () -> provider.getGSSCredential("user", "server"));

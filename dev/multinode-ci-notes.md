@@ -32,7 +32,7 @@ Based on the CI job [Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7](https://ud.
             - `groups=*`
 4. IPA Hadoop Cluster
     - `ipa_env_files` in CI tasks
-    - Multnode cluster provisioned with [Terraform](../concourse/terraform/ipa-multinode-hadoop) and [Ansible](../concourse/ansible/ipa-multinode-hadoop)
+    - Multinode cluster provisioned with [Terraform](../concourse/terraform/ipa-multinode-hadoop) and [Ansible](../concourse/ansible/ipa-multinode-hadoop)
     - Hadoop Proxy Users
         - **None**
 

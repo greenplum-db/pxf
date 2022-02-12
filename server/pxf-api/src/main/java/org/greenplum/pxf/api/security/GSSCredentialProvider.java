@@ -26,9 +26,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Provider of S4U2self credentials for Kerberos Constrained Delegation SASL/GSS connection.
- * This provider obtains a Kerberos TGS from the KDC for the end-user to the PXF service thus impersonating the end user.
- * Having this credential, SASL/GSS layer then obtains S4U2proxy credential which is a TGS from the end user
- * to the target Hadoop service.
+ * This provider obtains a Kerberos service ticket from the KDC for the end-user to the PXF service
+ * thus impersonating the end user. Having this credential, SASL/GSS layer then obtains S4U2proxy credential
+ * which is a TGS from the end user to the target Hadoop service.
  *
  * The provider uses a cache where it stores obtained credentials per user/pxf-server combo, since LoginContext and
  * the corresponding TGT is per PXF server. When the credential is cached, a PXF service TGT (for a given PXF server)
