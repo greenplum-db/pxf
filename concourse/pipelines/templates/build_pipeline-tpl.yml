@@ -1719,6 +1719,8 @@ jobs:
       BUILD_NAME: ${BUILD_NAME}
       PXF_OSL_FILE_PREFIX: ((pxf-osl-file-prefix))
       PXF_ODP_FILE_PREFIX: ((pxf-odp-file-prefix))
+      PXF_SLACK_CHANNEL_NAME: ((pxf-slack-channel-name))
+      PXF_SLACK_CHANNEL_LINK: ((pxf-slack-channel-link))
       RELENG_DROP_URL: gs://((pxf-releng-drop-bucket))/((pxf-releng-drop-path))
       RELENG_OSL_DROP_URL: gs://((pxf-releng-drop-bucket))/((pxf-releng-osl-drop-path))
       RELENG_ODP_DROP_URL: gs://((pxf-releng-drop-bucket))/((pxf-releng-odp-drop-path))

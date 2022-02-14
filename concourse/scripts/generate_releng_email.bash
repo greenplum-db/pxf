@@ -7,6 +7,8 @@ set -e
 : "${RELENG_DROP_URL:?RELENG_DROP_URL must be set}"
 : "${RELENG_OSL_DROP_URL:?RELENG_OSL_DROP_URL must be set}"
 : "${RELENG_ODP_DROP_URL:?RELENG_ODP_DROP_URL must be set}"
+: "${PXF_SLACK_CHANNEL_NAME:?PXF_SLACK_CHANNEL_NAME must be set}"
+: "${PXF_SLACK_CHANNEL_LINK:?PXF_SLACK_CHANNEL_LINK must be set}"
 
 function fail() {
   echo "Error: $1"
@@ -64,6 +66,9 @@ The OSL file is also attached to this email.
 
 Can you please upload the artifacts and the OSL / ODP files to the Greenplum Tanzu Network Release for our product, PXF?
 The OSL file should appear as "Open Source Licenses for PXF ${version}".
+
+Once the artifacts are published to the Tanzu Network site, please post a message in the #${PXF_SLACK_CHANNEL_NAME} slack channel:
+${PXF_SLACK_CHANNEL_LINK}
 
 Thank you,
 PXF Team (pvtl-gp-ud@vmware.com)
