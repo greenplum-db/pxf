@@ -20,46 +20,89 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class HiveDataFragmenterTest {
 
     private RequestContext context;
     private Configuration configuration;
+    @Mock
     private HiveClientWrapper hiveClientWrapper;
+    @Mock
     private HiveUtilities hiveUtilities;
+    @Mock
+    private Metadata.Item mockItem;
+    @Mock
+    private IMetaStoreClient mockHiveClient;
 
     @BeforeEach
     public void setup() {
-
-        hiveClientWrapper = mock(HiveClientWrapper.class);
-        hiveUtilities = mock(HiveUtilities.class);
-
         configuration = new Configuration();
         configuration.set("fs.defaultFS", "hdfs:///");
 
         context = new RequestContext();
         context.setConfig("default");
+        context.setDataSource("sometable");
         context.setServerName("default");
         context.setUser("dummy");
         context.setConfiguration(configuration);
     }
 
     @Test
-    public void constructorCantAccessMetaStore() {
-        when(hiveClientWrapper.initHiveClient(context, configuration)).thenThrow(new RuntimeException("Failed connecting to Hive MetaStore service: which way to albuquerque"));
+    public void failsToInitHiveClient() {
+        when(hiveClientWrapper.initHiveClient(context, configuration)).thenThrow(new RuntimeException("test"));
 
         HiveDataFragmenter fragmenter = new HiveDataFragmenter(hiveUtilities, hiveClientWrapper);
         fragmenter.setRequestContext(context);
-        Exception e = assertThrows(RuntimeException.class, fragmenter::afterPropertiesSet);
-        assertEquals("Failed connecting to Hive MetaStore service: which way to albuquerque", e.getMessage());
+        fragmenter.afterPropertiesSet();
+        Exception e = assertThrows(RuntimeException.class, fragmenter::getFragments);
+        assertEquals("test", e.getMessage());
     }
+
+    @Test
+    public void failsToGetTableInfo_ClosesHiveClient() throws Exception {
+        when(hiveClientWrapper.extractTableFromName(context.getDataSource())).thenReturn(mockItem);
+        when(hiveClientWrapper.initHiveClient(context, configuration)).thenReturn(mockHiveClient);
+        when(hiveClientWrapper.getHiveTable(mockHiveClient, mockItem)).thenThrow(new RuntimeException("test"));
+
+        HiveDataFragmenter fragmenter = new HiveDataFragmenter(hiveUtilities, hiveClientWrapper);
+        fragmenter.setRequestContext(context);
+        fragmenter.afterPropertiesSet();
+        Exception e = assertThrows(RuntimeException.class, fragmenter::getFragments);
+        assertEquals("test", e.getMessage());
+
+        verify(mockHiveClient).close();
+    }
+
+    @Test
+    public void failsToGetTableInfo_FailsToCloseHiveClient() throws Exception {
+        when(hiveClientWrapper.extractTableFromName(context.getDataSource())).thenReturn(mockItem);
+        when(hiveClientWrapper.initHiveClient(context, configuration)).thenReturn(mockHiveClient);
+        when(hiveClientWrapper.getHiveTable(mockHiveClient, mockItem)).thenThrow(new RuntimeException("test"));
+        doThrow(new RuntimeException("ignored")).when(mockHiveClient).close();
+
+        HiveDataFragmenter fragmenter = new HiveDataFragmenter(hiveUtilities, hiveClientWrapper);
+        fragmenter.setRequestContext(context);
+        fragmenter.afterPropertiesSet();
+        Exception e = assertThrows(RuntimeException.class, fragmenter::getFragments);
+        assertEquals("test", e.getMessage());
+
+        verify(mockHiveClient).close();
+    }
+
 }

@@ -24,17 +24,11 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 /**
  * Specialized Hive fragmenter for RC and Text files tables. Unlike the
@@ -54,7 +48,6 @@ import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
  * </ol>
  */
 public class HiveInputFormatFragmenter extends HiveDataFragmenter {
-    private static final Logger LOG = LoggerFactory.getLogger(HiveInputFormatFragmenter.class);
 
     /**
      * Defines the Hive input formats currently supported in pxf
