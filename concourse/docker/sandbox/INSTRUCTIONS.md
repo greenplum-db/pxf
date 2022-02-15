@@ -4,7 +4,7 @@
 This PXF Sandbox (docker image) is available in docker hub (only accessible by gpdb-ud group).
  
 ```
-docker pull pivotaldata/pxf-dev
+docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb<gp_ver>-centos7-test-pxf:latest
 ```
 
 ## Prerequisites
@@ -19,9 +19,9 @@ The above artifacts can also be downloaded from existing PXF pipelines on Concou
 
 **TODO: Automate these instructions**
 
-Use pivotaldata/gpdb-dev:centos7 as base for creating the sandbox:
+Use `gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb<gp_ver>-centos7-test-pxf:latest` as base for creating the sandbox:
 ```
-docker run -v ~/workspace/stage:/stage -v ~/worspace/singlecluster-HDP:/singlecluster -v ~/workspace/pxf:/pxf -h pxf-dev -it pivotaldata/gpdb-dev:centos7 /bin/bash
+docker run -v ~/workspace/stage:/stage -v ~/worspace/singlecluster-HDP:/singlecluster -v ~/workspace/pxf:/pxf -h pxf-dev -it gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb<gp_ver>-centos7-test-pxf:latest /bin/bash
 ```
 
 ## Setup gpadmin user
@@ -213,10 +213,10 @@ gpstop -a
 ## Commit to a docker image
 Read container-id from `docker ps -a`
 ```
-docker commit <container-id> pivotaldata/pxf-dev
+docker commit <container-id> gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb<gp_ver>-centos7-test-pxf-dev
 ```
 
 ## Using the pxf sandbox:
 ```
-docker run --rm -p 5432:5432 -p 5888:5888 -h pxf-dev -it pivotaldata/pxf-dev bin/bash -c "/root/run.sh && /bin/bash"
+docker run --rm -p 5432:5432 -p 5888:5888 -h pxf-dev -it gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb<gp_ver>-centos7-test-pxf-dev bin/bash -c "/root/run.sh && /bin/bash"
 ```

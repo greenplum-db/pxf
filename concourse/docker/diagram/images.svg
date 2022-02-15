@@ -15,9 +15,9 @@
 <text text-anchor="middle" x="529.5" y="-721.8" font-family="Times,serif" font-size="14.00">Official DockerHub</text>
 </g>
 <g id="clust2" class="cluster">
-<title>cluster_pivotaldata</title>
+<title>cluster_gcr_images</title>
 <polygon fill="none" stroke="black" stroke-dasharray="5,2" points="600,-662 600,-737 1727,-737 1727,-662 600,-662"/>
-<text text-anchor="middle" x="1163.5" y="-721.8" font-family="Times,serif" font-size="14.00">GP RelEng Images (registry.hub.docker.com/pivotaldata)</text>
+<text text-anchor="middle" x="1163.5" y="-721.8" font-family="Times,serif" font-size="14.00">GP RelEng Images (gcr.io/data&#45;gpdb&#45;public&#45;images)</text>
 </g>
 <g id="clust3" class="cluster">
 <title>cluster_pxf_dev_base</title>

@@ -7,9 +7,9 @@ digraph pxf_container_image_flow {
         centos6[label="centos:6"]
     }
 
-    # DockerHub pivotaldata images
-    subgraph cluster_pivotaldata {
-        label="GP RelEng Images (registry.hub.docker.com/pivotaldata)"
+    # gcr.io/data-gpdb-public-images
+    subgraph cluster_gcr_images {
+        label="GP RelEng Images (gcr.io/data-gpdb-public-images)"
         style=dashed
         node [shape=box3d fillcolor="#2aa198" style=filled fontcolor=white]
         gp5_centos7_latest[label="centos-gpdb-dev:7-gcc6.2-llvm3.7"]

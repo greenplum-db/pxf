@@ -185,8 +185,8 @@ The quick and easy is to download the GPDB 6.6 RPM from Github and move it into 
 If you would like more control over the GPDB installation, you can use the steps below.
 
 ```bash
-# Get the latest centos7 image, works for GPDB5 and GPDB6
-docker pull pivotaldata/gpdb-pxf-dev:centos7
+# Get the latest centos7 image for GPDB6
+docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest
 
 # If you want to use gdb to debug gpdb you need the --privileged flag in the command below
 docker run --rm -it \
@@ -202,7 +202,7 @@ docker run --rm -it \
   -v ~/workspace/gpdb:/home/gpadmin/workspace/gpdb \
   -v ~/workspace/pxf:/home/gpadmin/workspace/pxf \
   -v ~/workspace/singlecluster-HDP:/home/gpadmin/workspace/singlecluster \
-  pivotaldata/gpdb-pxf-dev:centos7 /bin/bash -c \
+  gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest /bin/bash -c \
   "/home/gpadmin/workspace/pxf/dev/set_up_gpadmin_user.bash && /usr/sbin/sshd && su - gpadmin"
 ```
 
@@ -385,7 +385,7 @@ docker run --rm -it \
   -e CLUSTER_NAME=hdp \
   -e NODE=c6401.ambari.apache.org \
   -e REALM=AMBARI.APACHE.ORG \
-  pivotaldata/gpdb-pxf-dev:centos6-hdp-secure /bin/bash
+  gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2 /bin/bash
 
 # Inside the container run the following command:
 pxf_src/concourse/scripts/test_pxf_secure.bash
