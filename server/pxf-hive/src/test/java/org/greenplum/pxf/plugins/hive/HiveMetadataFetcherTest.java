@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class HiveMetadataFetcherTest {
@@ -54,6 +55,7 @@ public class HiveMetadataFetcherTest {
     private List<Metadata> metadataList;
     private HiveClientWrapper fakeHiveClientWrapper;
     private HiveClientWrapper.HiveClientFactory mockClientFactory;
+    private HiveClientWrapper.MetaStoreClientHolder holder;
     private Map<String, String> mockParameters;
     private final HiveUtilities hiveUtilities = new HiveUtilities();
 
@@ -87,7 +89,8 @@ public class HiveMetadataFetcherTest {
         fakeHiveClientWrapper.setHiveClientFactory(mockClientFactory);
         fakeHiveClientWrapper.setHiveUtilities(hiveUtilities);
 
-        when(mockClientFactory.initHiveClient(any())).thenReturn(mockHiveClient);
+        holder = new HiveClientWrapper.MetaStoreClientHolder(mockHiveClient);
+        when(mockClientFactory.initHiveClient(any())).thenReturn(holder);
     }
 
     @Test
@@ -99,12 +102,12 @@ public class HiveMetadataFetcherTest {
     }
 
     @Test
-    public void constructorCantAccessMetaStore() throws MetaException {
+    public void getMetadataCantAccessMetaStore() throws MetaException {
         when(mockClientFactory.initHiveClient(any())).thenThrow(new MetaException("which way to albuquerque"));
 
         fetcher = new HiveMetadataFetcher(hiveUtilities, fakeHiveClientWrapper);
         fetcher.setRequestContext(context);
-        Exception e = assertThrows(RuntimeException.class, fetcher::afterPropertiesSet);
+        Exception e = assertThrows(RuntimeException.class, () -> fetcher.getMetadata("any"));
         assertEquals("Failed connecting to Hive MetaStore service: which way to albuquerque", e.getMessage());
     }
 
@@ -124,6 +127,7 @@ public class HiveMetadataFetcherTest {
         Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> fetcher.getMetadata(tableName));
         assertEquals("PXF does not support Hive views", e.getMessage());
+        verify(mockHiveClient).close();
     }
 
     @Test
@@ -144,6 +148,7 @@ public class HiveMetadataFetcherTest {
         Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> fetcher.getMetadata(tableName));
         assertEquals("PXF does not support Hive transactional tables", e.getMessage());
+        verify(mockHiveClient).close();
     }
 
     @Test
@@ -183,6 +188,8 @@ public class HiveMetadataFetcherTest {
         field = resultFields.get(1);
         assertEquals("field2", field.getName());
         assertEquals("int4", field.getType().getTypeName());
+
+        verify(mockHiveClient).close();
     }
 
     @Test
@@ -242,6 +249,7 @@ public class HiveMetadataFetcherTest {
             assertEquals("field2", field.getName());
             assertEquals("int4", field.getType().getTypeName());
         }
+        verify(mockHiveClient).close();
     }
 
     @Test
@@ -298,5 +306,7 @@ public class HiveMetadataFetcherTest {
         field = resultFields.get(1);
         assertEquals("field2", field.getName());
         assertEquals("int4", field.getType().getTypeName());
+
+        verify(mockHiveClient).close();
     }
 }

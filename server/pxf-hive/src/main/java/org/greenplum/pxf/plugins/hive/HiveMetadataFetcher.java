@@ -49,9 +49,8 @@ import java.util.Set;
 public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
 
     private static final String DELIM_FIELD = "DELIMITER";
-
     private static final Log LOG = LogFactory.getLog(HiveMetadataFetcher.class);
-    private IMetaStoreClient client;
+
     private JobConf jobConf;
     private final HiveClientWrapper hiveClientWrapper;
     protected final HiveUtilities hiveUtilities;
@@ -68,9 +67,6 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
-
-        // init hive metastore client connection.
-        client = hiveClientWrapper.initHiveClient(context, configuration);
         jobConf = new JobConf(configuration);
     }
 
@@ -87,7 +83,12 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
      */
     @Override
     public List<Metadata> getMetadata(String pattern) throws Exception {
+        try (HiveClientWrapper.MetaStoreClientHolder holder = hiveClientWrapper.initHiveClient(context, configuration)) {
+            return getMetadata(pattern, holder.getClient());
+        }
+    }
 
+    private List<Metadata> getMetadata(String pattern, IMetaStoreClient client) throws Exception {
         boolean ignoreErrors = false;
         List<Metadata.Item> tblsDesc = hiveClientWrapper.extractTablesFromPattern(client, pattern);
 

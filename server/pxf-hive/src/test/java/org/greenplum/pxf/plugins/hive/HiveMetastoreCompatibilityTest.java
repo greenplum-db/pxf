@@ -171,7 +171,7 @@ public class HiveMetastoreCompatibilityTest {
             HiveConf hiveConf = new HiveConf(configuration, HiveConf.class);
             hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTFAILURERETRIES, 0);
 
-            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf);
+            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf).getClient();
 
             Exception e = assertThrows(TTransportException.class,
                     () -> hiveClientWrapper.getHiveTable(client, new Metadata.Item("default", name)));
@@ -201,7 +201,7 @@ public class HiveMetastoreCompatibilityTest {
             hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTFAILURERETRIES, 5);
             hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "test://test:1234");
 
-            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf);
+            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf).getClient();
 
             Exception e = assertThrows(TTransportException.class,
                     () -> hiveClientWrapper.getHiveTable(client, new Metadata.Item("default", name)));
@@ -245,7 +245,7 @@ public class HiveMetastoreCompatibilityTest {
             hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTFAILURERETRIES, 1);
             hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "test://test:1234");
 
-            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf);
+            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf).getClient();
 
             Table resultTable = hiveClientWrapper.getHiveTable(client, new Metadata.Item("default", name));
             assertEquals(hiveTable.getTableName(), resultTable.getTableName());
@@ -318,7 +318,7 @@ public class HiveMetastoreCompatibilityTest {
             hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTFAILURERETRIES, 5);
             hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "test://test:1234");
 
-            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf);
+            IMetaStoreClient client = hiveClientFactory.initHiveClient(hiveConf).getClient();
 
             Table resultTable = hiveClientWrapper.getHiveTable(client, new Metadata.Item("default", name));
             assertEquals(hiveTable.getTableName(), resultTable.getTableName());

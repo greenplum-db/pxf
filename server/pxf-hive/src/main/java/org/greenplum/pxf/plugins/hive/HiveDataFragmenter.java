@@ -126,27 +126,11 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     @Override
     public List<Fragment> getFragments() throws Exception {
         Metadata.Item tblDesc = hiveClientWrapper.extractTableFromName(context.getDataSource());
-        IMetaStoreClient client = hiveClientWrapper.initHiveClient(this.context, configuration);
-        try {
-            fetchTableMetaData(tblDesc, client);
-        } finally {
-            closeClientSafely(client);
+
+        try (HiveClientWrapper.MetaStoreClientHolder clientHolder = hiveClientWrapper.initHiveClient(context, configuration)) {
+            fetchTableMetaData(tblDesc, clientHolder.getClient());
         }
         return fragments;
-    }
-
-    /**
-     * Closes the Hive Metastore client and ignores any exception that it might encounter, logging it to a log file.
-     * @param client Hive Metastore client
-     */
-    private void closeClientSafely(IMetaStoreClient client) {
-        if (client != null) {
-            try {
-                client.close();
-            } catch (Exception e) {
-                LOG.warn("Ignoring error while closing Hive Metastore Client: ", e);
-            }
-        }
     }
 
     /*
@@ -356,12 +340,9 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     @Override
     public FragmentStats getFragmentStats() throws Exception {
         Metadata.Item tblDesc = hiveClientWrapper.extractTableFromName(context.getDataSource());
-        IMetaStoreClient client = hiveClientWrapper.initHiveClient(this.context, configuration);
         Table tbl;
-        try {
-            tbl = hiveClientWrapper.getHiveTable(client, tblDesc);
-        } finally {
-            closeClientSafely(client);
+        try (HiveClientWrapper.MetaStoreClientHolder holder = hiveClientWrapper.initHiveClient(context, configuration)) {
+            tbl = hiveClientWrapper.getHiveTable(holder.getClient(), tblDesc);
         }
         Metadata metadata = new Metadata(tblDesc);
         hiveClientWrapper.getSchema(tbl, metadata);

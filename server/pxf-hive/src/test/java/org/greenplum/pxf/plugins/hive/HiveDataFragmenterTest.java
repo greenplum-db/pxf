@@ -41,6 +41,8 @@ public class HiveDataFragmenterTest {
 
     private RequestContext context;
     private Configuration configuration;
+    private HiveClientWrapper.MetaStoreClientHolder holder;
+
     @Mock
     private HiveClientWrapper hiveClientWrapper;
     @Mock
@@ -61,6 +63,8 @@ public class HiveDataFragmenterTest {
         context.setServerName("default");
         context.setUser("dummy");
         context.setConfiguration(configuration);
+
+        holder = new HiveClientWrapper.MetaStoreClientHolder(mockHiveClient);
     }
 
     @Test
@@ -77,7 +81,7 @@ public class HiveDataFragmenterTest {
     @Test
     public void failsToGetTableInfo_ClosesHiveClient() throws Exception {
         when(hiveClientWrapper.extractTableFromName(context.getDataSource())).thenReturn(mockItem);
-        when(hiveClientWrapper.initHiveClient(context, configuration)).thenReturn(mockHiveClient);
+        when(hiveClientWrapper.initHiveClient(context, configuration)).thenReturn(holder);
         when(hiveClientWrapper.getHiveTable(mockHiveClient, mockItem)).thenThrow(new RuntimeException("test"));
 
         HiveDataFragmenter fragmenter = new HiveDataFragmenter(hiveUtilities, hiveClientWrapper);
@@ -92,7 +96,7 @@ public class HiveDataFragmenterTest {
     @Test
     public void failsToGetTableInfo_FailsToCloseHiveClient() throws Exception {
         when(hiveClientWrapper.extractTableFromName(context.getDataSource())).thenReturn(mockItem);
-        when(hiveClientWrapper.initHiveClient(context, configuration)).thenReturn(mockHiveClient);
+        when(hiveClientWrapper.initHiveClient(context, configuration)).thenReturn(holder);
         when(hiveClientWrapper.getHiveTable(mockHiveClient, mockItem)).thenThrow(new RuntimeException("test"));
         doThrow(new RuntimeException("ignored")).when(mockHiveClient).close();
 

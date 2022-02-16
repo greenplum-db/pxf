@@ -93,7 +93,7 @@ public class HiveClientWrapper {
      *
      * @return initialized client
      */
-    public IMetaStoreClient initHiveClient(RequestContext context, Configuration configuration) {
+    public MetaStoreClientHolder initHiveClient(RequestContext context, Configuration configuration) {
         HiveConf hiveConf = getHiveConf(configuration);
         try {
             if (Utilities.isSecurityEnabled(configuration)) {
@@ -101,7 +101,7 @@ public class HiveClientWrapper {
                 LOG.debug("initialize HiveMetaStoreClient as login user '{}'", loginUser.getUserName());
                 // wrap in doAs for Kerberos to propagate kerberos tokens from login Subject
                 return loginUser.
-                        doAs((PrivilegedExceptionAction<IMetaStoreClient>) () -> hiveClientFactory.initHiveClient(hiveConf));
+                        doAs((PrivilegedExceptionAction<MetaStoreClientHolder>) () -> hiveClientFactory.initHiveClient(hiveConf));
             } else {
                 return hiveClientFactory.initHiveClient(hiveConf);
             }
@@ -365,10 +365,16 @@ public class HiveClientWrapper {
 
     @Component
     public static class HiveClientFactory {
-        IMetaStoreClient initHiveClient(HiveConf hiveConf) throws MetaException {
+        MetaStoreClientHolder initHiveClient(HiveConf hiveConf) throws MetaException {
             try {
-                return RetryingMetaStoreClient.getProxy(hiveConf, new Class[]{HiveConf.class, HiveMetaHookLoader.class, Boolean.class},
-                        new Object[]{hiveConf, null, true}, null, HiveMetaStoreClientCompatibility1xx.class.getName()
+                return new MetaStoreClientHolder(
+                        RetryingMetaStoreClient.getProxy(
+                                hiveConf,
+                                new Class[]{HiveConf.class, HiveMetaHookLoader.class, Boolean.class},
+                                new Object[]{hiveConf, null, true},
+                                null,
+                                HiveMetaStoreClientCompatibility1xx.class.getName()
+                        )
                 );
             } catch (RuntimeException ex) {
                 // Report MetaException if found in the stack. A RuntimeException
@@ -387,6 +393,37 @@ public class HiveClientWrapper {
                 }
                 throw ex;
             }
+        }
+    }
+
+    /**
+     * Holder of a MetaStoreClient that implements AutoCloseable interface that allows it to be used in
+     * try-with-resources block and be automatically closed when no longer required.
+     * The class just wraps the real client, it does not delegate any methods to the real client as there would be
+     * too many methods to override.
+     */
+    public static class MetaStoreClientHolder implements AutoCloseable {
+        private final IMetaStoreClient client;
+
+        /**
+         * Creates a new holder of the provided Metastore client.
+         * @param client a client to hold
+         */
+        MetaStoreClientHolder(IMetaStoreClient client) {
+            this.client = client;
+        }
+
+        /**
+         * Returns a Metastore client contained by the holder.
+         * @return
+         */
+        public IMetaStoreClient getClient() {
+            return client;
+        }
+
+        @Override
+        public void close() {
+            client.close();
         }
     }
 }
