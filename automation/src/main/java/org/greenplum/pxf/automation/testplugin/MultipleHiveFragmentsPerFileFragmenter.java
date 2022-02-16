@@ -3,7 +3,6 @@ package org.greenplum.pxf.automation.testplugin;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -35,7 +34,6 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
     private static final long SPLIT_SIZE = 1024;
     private JobConf jobConf;
-    private IMetaStoreClient client;
     private HiveClientWrapper hiveClientWrapper;
     private HiveUtilities hiveUtilities;
 
@@ -63,7 +61,6 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         jobConf = new JobConf(configuration, MultipleHiveFragmentsPerFileFragmenter.class);
-        client = hiveClientWrapper.initHiveClient(context, configuration);
     }
 
     @Override
@@ -71,7 +68,10 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
         // TODO whitelist property
         int fragmentsNum = Integer.parseInt(context.getOption("TEST-FRAGMENTS-NUM"));
         Metadata.Item tblDesc = hiveClientWrapper.extractTableFromName(context.getDataSource());
-        Table tbl = hiveClientWrapper.getHiveTable(client, tblDesc);
+        Table tbl;
+        try (HiveClientWrapper.MetaStoreClientHolder holder = hiveClientWrapper.initHiveClient(context, configuration)) {
+            tbl = hiveClientWrapper.getHiveTable(holder.getClient(), tblDesc);
+        }
         Properties properties = getSchema(tbl);
 
         for (int i = 0; i < fragmentsNum; i++) {
