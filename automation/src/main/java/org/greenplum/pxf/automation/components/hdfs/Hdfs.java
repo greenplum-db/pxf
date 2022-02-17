@@ -81,6 +81,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
     private String scheme;
 
+    // for SSH connection to the namenode and performing HA failover operations
     private ShellSystemObject namenodeSso;
     private String namenodePrincipal;
     private String namenodeKeytab;
@@ -186,12 +187,20 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             namenodeSso.setPrivateKey(getSshPrivateKey());
             namenodeSso.init();
 
+
+            // source environment file
+            namenodeSso.runCommand("source ~/.bash_profile");
             namenodePrincipal = config.get("dfs.namenode.kerberos.principal");
             namenodeKeytab = config.get("dfs.namenode.keytab.file");
             if (namenodePrincipal != null) {
                 // substitute _HOST portion of the principal with the namenode FQDN, need to get it from the
                 // configuration, since namenodeHost might contain a short hostname
                 namenodePrincipal = namenodePrincipal.replace("_HOST", getHostForConfiguredNameNode1HA());
+                // kinit as the principal to be ready to perform HDFS commands later
+                // e.g. "kinit -kt /opt/security/keytab/hdfs.service.keytab hdfs/ccp-user-nn01.c.gcp-project.internal"
+                StringBuilder kinitCommand = new StringBuilder("kinit -kt ")
+                        .append(namenodeKeytab).append(" ").append(namenodePrincipal);
+                namenodeSso.runCommand(kinitCommand.toString());
             }
         }
         ReportUtils.stopLevel(report);
@@ -540,12 +549,10 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     }
 
     public String getNamenodeStatus(String name) throws Exception {
+        // to run manually:
         // source ~/.bash_profile && kinit -kt /opt/security/keytab/hdfs.service.keytab hdfs/ccp-user-nn01.c.gcp-project.internal && ./singlecluster-HDP/bin/hdfs haadmin -getServiceState nn01
-        StringBuilder statusCommand = new StringBuilder("source ~/.bash_profile && ")
-                .append("kinit -kt ").append(namenodeKeytab).append(" ")
-                .append(namenodePrincipal).append(" && ")
-                .append("./singlecluster-HDP/bin/hdfs haadmin -getServiceState ").append(name);
-        namenodeSso.runCommand(statusCommand.toString());
+        String statusCommand = "./singlecluster-HDP/bin/hdfs haadmin -getServiceState " + name;
+        namenodeSso.runCommand(statusCommand);
         String fullResponse = namenodeSso.getLastCmdResult();
         if (fullResponse.contains(String.format("haadmin -getServiceState %s\r\nactive\r\n", name))) {
             return "active";
@@ -559,14 +566,11 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         assertEquals("active", getNamenodeStatus(from));
         assertEquals("standby", getNamenodeStatus(to));
 
+        // to run manually:
         // source ~/.bash_profile && kinit -kt /opt/security/keytab/hdfs.service.keytab hdfs/ccp-user-nn01.c.gcp-project.internal && ./singlecluster-HDP/bin/hdfs haadmin -failover nn01 nn02"
-        StringBuilder failoverCommand = new StringBuilder("source ~/.bash_profile && ")
-                .append("kinit -kt ").append(namenodeKeytab).append(" ")
-                .append(namenodePrincipal).append(" && ")
-                .append("./singlecluster-HDP/bin/hdfs haadmin -failover ")
-                .append(from).append(" ").append(to);
+        String failoverCommand = "./singlecluster-HDP/bin/hdfs haadmin -failover " + from + " " + to;
 
-        namenodeSso.runCommand(failoverCommand.toString());
+        namenodeSso.runCommand(failoverCommand);
         String fullResponse = namenodeSso.getLastCmdResult();
         if (!fullResponse.contains(String.format("Failover from %s to %s successful", from, to))) {
             throw new IllegalStateException("Failed to failover: " + fullResponse);
