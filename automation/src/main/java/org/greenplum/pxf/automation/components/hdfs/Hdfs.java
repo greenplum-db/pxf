@@ -177,6 +177,8 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             namenodeSso = new ShellSystemObject(report.isSilent());
             String namenodeHost = getHost();
             if (namenodeHost != null && namenodeHost.equals("ipa-hadoop")) {
+                // this is for local testing, where hostname in SUT will be "ipa-hadoop", tests is CI substitute
+                // it with a short hostname
                 namenodeHost = getHostForConfiguredNameNode1HA();
             }
             namenodeSso.setHost(namenodeHost);
@@ -187,8 +189,9 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             namenodePrincipal = config.get("dfs.namenode.kerberos.principal");
             namenodeKeytab = config.get("dfs.namenode.keytab.file");
             if (namenodePrincipal != null) {
-                // substitute _HOST portion of the principal with the namenode FQDN
-                namenodePrincipal = namenodePrincipal.replace("_HOST", namenodeHost);
+                // substitute _HOST portion of the principal with the namenode FQDN, need to get it from the
+                // configuration, since namenodeHost might contain a short hostname
+                namenodePrincipal = namenodePrincipal.replace("_HOST", getHostForConfiguredNameNode1HA());
             }
         }
         ReportUtils.stopLevel(report);
