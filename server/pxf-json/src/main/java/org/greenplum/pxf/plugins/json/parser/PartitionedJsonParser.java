@@ -54,16 +54,16 @@ public class PartitionedJsonParser {
 		// You need to wrap the InputStream with an InputStreamReader, so that it can encode the incoming byte stream as
 		// UTF-8 characters
 		this.inputStreamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
+
+		this.uncountedCharsReadFromStream = new StringBuilder(8096);
 	}
 
 	private boolean scanToFirstBeginObject() throws IOException {
-		uncountedCharsReadFromStream = new StringBuilder();
 		// seek until we hit the first begin-object
 		char prev = ' ';
 		int i;
-		while ((i = inputStreamReader.read()) != EOF) {
+		while ((i = readNextChar()) != EOF) {
 			char c = (char) i;
-			uncountedCharsReadFromStream.append(c);
 			if (c == START_BRACE && prev != BACKSLASH) {
 				lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
 
@@ -113,9 +113,8 @@ public class PartitionedJsonParser {
 		currentObject.append(START_BRACE);
 		objectStack.add(0);
 
-		while ((i = inputStreamReader.read()) != EOF) {
+		while ((i = readNextChar()) != EOF) {
 			char c = (char) i;
-			uncountedCharsReadFromStream.append(c);
 
 			lexer.lex(c);
 
@@ -191,8 +190,7 @@ public class PartitionedJsonParser {
 	 * @return Returns the number of bytes read from the stream.
 	 */
 	public long getBytesRead() {
-		bytesRead += uncountedCharsReadFromStream.toString().getBytes(StandardCharsets.UTF_8).length;
-		uncountedCharsReadFromStream.setLength(0);
+		bytesRead += countBytesInReadChars();
 		return bytesRead;
 	}
 
@@ -201,5 +199,22 @@ public class PartitionedJsonParser {
 	 */
 	public boolean isEndOfStream() {
 		return endOfStream;
+	}
+
+	private int readNextChar() throws IOException {
+		int i = inputStreamReader.read();
+		uncountedCharsReadFromStream.append((char) i);
+		if (uncountedCharsReadFromStream.length() > 8096) {
+			bytesRead += countBytesInReadChars();
+		}
+
+		return i;
+	}
+
+	private int countBytesInReadChars() {
+		int length = uncountedCharsReadFromStream.toString().getBytes(StandardCharsets.UTF_8).length;
+		uncountedCharsReadFromStream.setLength(0);
+
+		return length;
 	}
 }
