@@ -116,7 +116,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         // if hadoop root exists in the SUT file, load configuration from it
         if (StringUtils.isNotEmpty(hadoopRoot)) {
 
-            hadoopRoot = hadoopRoot.replace("${user}", System.getenv("USER"));
+            hadoopRoot = replaceUser(hadoopRoot);
             ReportUtils.startLevel(report, getClass(), "Using root directory: " + hadoopRoot);
 
             ProtocolEnum protocol = ProtocolUtils.getProtocol();
@@ -188,7 +188,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             namenodeKeytab = config.get("dfs.namenode.keytab.file");
             if (namenodePrincipal != null) {
                 // substitute _HOST portion of the principal with the namenode FQDN
-                namenodePrincipal = namenodePrincipal.replace("_HOST", getHostForConfiguredNameNode1HA());
+                namenodePrincipal = namenodePrincipal.replace("_HOST", namenodeHost);
             }
         }
         ReportUtils.stopLevel(report);

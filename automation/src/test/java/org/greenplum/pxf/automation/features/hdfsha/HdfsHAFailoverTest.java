@@ -15,7 +15,7 @@ import java.util.List;
  * Tests for making sure PXF continues to work when HDFS namenode failover occurs. While the failover is mostly
  * handled by HDFS client library, we are interested whether Kerberos tokens cached by PXF can be re-used
  * or can be re-obtained when connecting to another namenode. This is mostly relevant to Kerberos Constrained
- * Delegation use case, where a TGS on behalf of an end-user is cached by PXF.
+ * Delegation use case, where a ticket granting ticket (TGT) on behalf of an end-user is cached by PXF.
  */
 public class HdfsHAFailoverTest extends BaseFunctionality {
 

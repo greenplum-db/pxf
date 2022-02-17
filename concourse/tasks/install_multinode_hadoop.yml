@@ -5,7 +5,7 @@ image_resource:
   type: registry-image
 
 inputs:
-- name: terraform_hadoop
+- name: terraform_ipa_hadoop
 - name: pxf_src
 
 outputs:

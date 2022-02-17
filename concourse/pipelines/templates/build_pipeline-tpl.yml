@@ -139,10 +139,10 @@ anchors:
     action: destroy
 
 - &destroy_hadoop_cluster
-  put: terraform_hadoop
+  put: terraform_ipa_hadoop
   params:
     action: destroy
-    env_name_file: terraform_hadoop/name
+    env_name_file: terraform_ipa_hadoop/name
     terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
   get_params:
     action: destroy
@@ -515,7 +515,7 @@ resources:
       bucket: ((tf-bucket-name))
       bucket_path: ((tf-bucket-path))
 
-- name: terraform_hadoop
+- name: terraform_ipa_hadoop
   type: terraform-0.14.10
   source:
     env:
@@ -1204,7 +1204,7 @@ jobs:
         PROXY_USER: gpuser
         SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
     - do: # Generate IPA Hadoop cluster
-      - put: terraform_hadoop
+      - put: terraform_ipa_hadoop
         params:
           action: create
           generate_random_name: true

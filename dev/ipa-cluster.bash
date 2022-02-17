@@ -29,8 +29,7 @@ echoRed() { echo $'\e[0;31m'"$1"$'\e[0m'; }
 echoGreen() { echo $'\e[0;32m'"$1"$'\e[0m'; }
 echoYellow() { echo $'\e[0;33m'"$1"$'\e[0m'; }
 
-function printUsage()
-{
+function printUsage() {
     local normal bold
     normal=$(tput sgr0)
     bold=$(tput bold)
@@ -44,8 +43,7 @@ function printUsage()
 	EOF
 }
 
-function fail()
-{
+function fail() {
     cd "$WORKING_DIR"
     echoRed "ERROR: $1"
     exit 1

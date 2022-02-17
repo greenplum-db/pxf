@@ -31,32 +31,32 @@
         <value>true</value>
     </property>
     <property>
-      <name>hive.server2.authentication</name>
-      <value>KERBEROS</value>
+        <name>hive.server2.authentication</name>
+        <value>KERBEROS</value>
     </property>
     <property>
-      <name>hive.server2.authentication.kerberos.principal</name>
-      <value>hive/_HOST@{{ ansible_domain | upper }}</value>
+        <name>hive.server2.authentication.kerberos.principal</name>
+        <value>hive/_HOST@{{ ansible_domain | upper }}</value>
     </property>
     <property>
-      <name>hive.server2.authentication.kerberos.keytab</name>
-      <value>/opt/security/keytab/hive.service.keytab</value>
+        <name>hive.server2.authentication.kerberos.keytab</name>
+        <value>/opt/security/keytab/hive.service.keytab</value>
     </property>
     <property>
-      <name>hive.server2.thrift.sasl.qop</name>
-      <value>auth-conf</value>
+        <name>hive.server2.thrift.sasl.qop</name>
+        <value>auth-conf</value>
     </property>
     <property>
-      <name>hive.metastore.sasl.enabled</name>
-      <value>true</value>
+        <name>hive.metastore.sasl.enabled</name>
+        <value>true</value>
     </property>
     <property>
-      <name>hive.metastore.kerberos.principal</name>
-      <value>hive/_HOST@{{ ansible_domain | upper }}</value>
+        <name>hive.metastore.kerberos.principal</name>
+        <value>hive/_HOST@{{ ansible_domain | upper }}</value>
     </property>
     <property>
-      <name>hive.metastore.kerberos.keytab.file</name>
-      <value>/opt/security/keytab/hive.service.keytab</value>
+        <name>hive.metastore.kerberos.keytab.file</name>
+        <value>/opt/security/keytab/hive.service.keytab</value>
     </property>
 
 </configuration>

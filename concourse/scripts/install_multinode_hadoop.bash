@@ -13,8 +13,8 @@ if ! type jq &>/dev/null; then
 	yum install -y jq
 fi
 
-cluster_name="$(cat terraform_hadoop/name)"
-metadata_path="terraform_hadoop/metadata"
+cluster_name="$(cat terraform_ipa_hadoop/name)"
+metadata_path="terraform_ipa_hadoop/metadata"
 ansible_play_path="pxf_src/concourse/ansible/ipa-multinode-hadoop"
 store_password="$(env | awk -F= '/ANSIBLE_VAR_ssl_store_password/{print $2}')"
 
