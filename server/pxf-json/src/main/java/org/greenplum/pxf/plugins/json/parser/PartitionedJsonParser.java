@@ -55,7 +55,7 @@ public class PartitionedJsonParser {
 		// UTF-8 characters
 		this.inputStreamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
 
-		this.uncountedCharsReadFromStream = new StringBuilder(8096);
+		this.uncountedCharsReadFromStream = new StringBuilder(8192);
 	}
 
 	private boolean scanToFirstBeginObject() throws IOException {
