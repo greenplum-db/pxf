@@ -58,6 +58,15 @@ resources:
 {% endfor %} {# gp5, gp6, and gp7 #}
 
 {% set gp_ver = 6 %}
+- name: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rhel8-test-pxf
+    tag: latest
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
+
 - name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
   type: registry-image
   icon: docker
@@ -90,6 +99,14 @@ resources:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
+
+- name: gpdb[[gp_ver]]_rhel8_rpm_latest-[[i]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pivnet-artifacts
+    json_key: ((pxf-storage-service-account-key))
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel8-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
   type: gcs
@@ -173,6 +190,60 @@ jobs:
       run:
         path: pxf_src/concourse/scripts/test.bash
 {% endfor %} {# gp_ver 5, 6, and 7 #}
+
+## ---------- RHEL 8 Swimlane ----------
+{% set gp_ver = 6 %}
+- name: Build and Test PXF-GP[[gp_ver]] on RHEL8
+  public: true
+  on_failure:
+    put: pxf_src
+    params:
+      path: pxf_src
+      status: failure
+      context: Build and Test PXF-GP[[gp_ver]] on RHEL8
+  on_success:
+    put: pxf_src
+    params:
+      path: pxf_src
+      status: success
+      context: Build and Test PXF-GP[[gp_ver]] on RHEL8
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      trigger: true
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+    - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    - get: pxf-build-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: Build PXF-GP[[gp_ver]] on RHEL8
+    image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    file: pxf_src/concourse/tasks/build.yml
+    params:
+      LICENSE: ((pxf-rpm-license))
+      VENDOR: ((pxf-rpm-vendor))
+  - task: Test Against Greenplum Latest RHEL8
+    image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    config:
+      platform: linux
+      inputs:
+      - name: gpdb_package
+      - name: pxf_src
+      - name: dist
+      - name: singlecluster
+      params:
+        GPDB_PKG_DIR: gpdb_package
+        GP_VER: [[gp_ver]]
+        GROUP: HdfsSmokeTest,WritableSmokeTest
+        HADOOP_CLIENT: hdp
+        IMPERSONATION: true
+        PGPORT: 5432
+        PG_REGRESS: true
+        PXF_PKG_DIR: dist
+      run:
+        path: pxf_src/concourse/scripts/test.bash
+{% set gp_ver = None %}
 
 ## ---------- Ubuntu 18 Swimlane ----------
 {% set gp_ver = 6 %}
