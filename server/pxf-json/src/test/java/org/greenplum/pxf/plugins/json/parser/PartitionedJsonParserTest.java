@@ -27,29 +27,39 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import static org.junit.jupiter.api.Assertions.assertNull;
 public class PartitionedJsonParserTest {
 
     @Test
     public void testOffset() throws IOException, URISyntaxException {
-       File file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/input.json").toURI());
+        File file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/input.json").toURI());
 
         InputStream jsonInputStream = new FileInputStream(file);
 
         PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream);
-        String result = parser.nextObjectContainingMember("cüsötmerstätüs");
+        String result = parser.nextObjectContainingMember("cüstömerstätüs");
         assertNotNull(result);
+        // The total number of bytes read here are 107 = 2 bytes for "[" & "\n"
+        // and 105 bytes for the first record i.e: {"cüsötmerstätüs":"välid","name": "äää", "year": "2022", "address": "söme city", "zip": "95051"}
         assertEquals(107, parser.getBytesRead());
-        assertEquals(11, parser.getBytesRead() - result.length());
+        assertEquals("{\"cüstömerstätüs\":\"välid\",\"name\": \"äää\", \"year\": \"2022\", \"address\": \"söme city\", \"zip\": \"95051\"}", result);
+        assertEquals(105, result.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(2, parser.getBytesRead() - result.getBytes(StandardCharsets.UTF_8).length);
 
-        result = parser.nextObjectContainingMember("cüsötmerstätüs");
+        result = parser.nextObjectContainingMember("cüstömerstätüs");
         assertNotNull(result);
+
+        // The total number of bytes read here are
+        // 216 = 107 bytes from the earlier record + 2 bytes for "," and "\n" and 107 bytes from current record
         assertEquals(216, parser.getBytesRead());
-        assertEquals(116, parser.getBytesRead() - result.length());
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"yī\", \"year\": \"2020\", \"address\": \"anöther city\", \"zip\": \"12345\"}", result);
+        assertEquals(107,  result.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(109, parser.getBytesRead() - result.getBytes(StandardCharsets.UTF_8).length);
+
         jsonInputStream.close();
     }
-
 }

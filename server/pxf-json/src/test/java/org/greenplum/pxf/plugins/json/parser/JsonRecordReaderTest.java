@@ -42,7 +42,7 @@ public class JsonRecordReaderTest {
         context.setConfiguration(new Configuration());
 
         jobConf = new JobConf(context.getConfiguration(), PartitionedJsonParserNoSeekTest.class);
-        jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüsötmerstätüs");
+        jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüstömerstätüs");
         file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/input.json").toURI());
         context.setDataSource(file.getPath());
         path = new Path(file.getPath());
@@ -95,6 +95,8 @@ public class JsonRecordReaderTest {
         // it discards the previous read data but keeps track of the bytes read.
 
         assertEquals(184, jsonRecordReader.getPos() - start);
+
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"yī\", \"year\": \"2020\", \"address\": \"anöther city\", \"zip\": \"12345\"}", data.toString());
     }
 
     @Test
@@ -112,6 +114,8 @@ public class JsonRecordReaderTest {
         jsonRecordReader.next(key, data);
         // reads the full 1 record here
         assertEquals(105, data.toString().getBytes(StandardCharsets.UTF_8).length);
+
+        assertEquals("{\"cüstömerstätüs\":\"välid\",\"name\": \"äää\", \"year\": \"2022\", \"address\": \"söme city\", \"zip\": \"95051\"}", data.toString());
     }
 
     @Test
@@ -124,10 +128,142 @@ public class JsonRecordReaderTest {
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
         key = createKey();
         data = createValue();
+        int recordCount = 0;
         while(jsonRecordReader.next(key, data))
         {
             assertNotNull(data);
+            recordCount++;
         }
+
+        assertEquals(5,recordCount);
+
+        // assert the last record json
+        assertEquals("{\"cüstömerstätüs\":\"välid\",\"name\": \"你好\", \"year\": \"2033\", \"address\": \"0\uD804\uDC13a\", \"zip\": \"19348\"}", data.toString());
+    }
+
+    @Test
+    public void testEmptyFile() throws URISyntaxException, IOException {
+
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/empty_input.json").toURI());
+        path = new Path(file.getPath());
+        fileSplit = new FileSplit(path, 0, 10, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+        if(jsonRecordReader.next(key, data))
+        {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(0,recordCount);
+        assertEquals(0, jsonRecordReader.getPos());
+        assertEquals("", data.toString());
+    }
+
+    @Test
+    public void testEmptyJsonObject() throws URISyntaxException, IOException {
+
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/empty_json_object.json").toURI());
+        path = new Path(file.getPath());
+        fileSplit = new FileSplit(path, 0, 10, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+        if(jsonRecordReader.next(key, data))
+        {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(0,recordCount);
+        assertEquals(12, jsonRecordReader.getPos());
+        assertEquals("", data.toString());
+    }
+
+    @Test
+    public void testNonMatchingMember() throws URISyntaxException, IOException {
+
+        // search for a non mathing member in the file
+        jobConf.set(RECORD_MEMBER_IDENTIFIER, "abc");
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/input.json").toURI());
+        path = new Path(file.getPath());
+        fileSplit = new FileSplit(path, 0, 10, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+        if(jsonRecordReader.next(key, data))
+        {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(0,recordCount);
+        // This will return count of all the bytes in the file
+        assertEquals(553, jsonRecordReader.getPos());
+        assertEquals("", data.toString());
+    }
+
+    @Test
+    public void testMixedJsonRecords() throws URISyntaxException, IOException {
+
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/mixed_input.json").toURI());
+        path = new Path(file.getPath());
+        fileSplit = new FileSplit(path, 0, 1000, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+        while(jsonRecordReader.next(key, data))
+        {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        //cüstömerstätüs member will retrieve 4 records
+        assertEquals(4,recordCount);
+
+        // Test another member company-name
+        jobConf.set(RECORD_MEMBER_IDENTIFIER, "company-name");
+
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        key = createKey();
+        data = createValue();
+        recordCount = 0;
+        while(jsonRecordReader.next(key, data))
+        {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(1,recordCount);
+
+        // assert the last record json
+        assertEquals("{\"company-name\":\"VMware\",\"name\": \"äää\", \"year\": \"2022\", \"address\": \"söme city\", \"zip\": \"95051\"}", data.toString());
+    }
+
+    @Test
+    public void testMemberNotAtTopLevel() throws URISyntaxException, IOException {
+
+        jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüstömerstätüs");
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/complex_input.json").toURI());
+        path = new Path(file.getPath());
+        fileSplit = new FileSplit(path, 0, 1000, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+        while(jsonRecordReader.next(key, data))
+        {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        //cüstömerstätüs member will retrieve 4 records
+        assertEquals(2,recordCount);
     }
 
     private LongWritable createKey() {
