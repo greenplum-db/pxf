@@ -22,6 +22,7 @@ package org.greenplum.pxf.service.utilities;
 
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class AnalyzeUtilsTest {
     }
 
     @Test
+    @Disabled("flakey test due to java heap space (memory err)")
     public void generateSamplingBitSetBig() throws Exception {
         BitSet result = AnalyzeUtils.generateSamplingBitSet(1000000, 990000);
         assertEquals(result.cardinality(), 990000);
