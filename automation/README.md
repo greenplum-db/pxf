@@ -53,11 +53,11 @@ a) installed the PXF server, and
 b) only have 1 jar file inside `/usr/local/pxf/application/`
 
 ### Project structure
-_**src/main/java**_ - contains related classes and utilities for the test
+_**src/main/java**_ - contains related classes and utilities for the test
 
-**_src/test/java_** - contains the TestNG cases.
+**_src/test/java_** - contains the TestNG cases.
 
-**_tincrepo_** - contains tinc test cases.
+**_tincrepo_** - contains tinc test cases.
 
 **_src/main/java/org/greenplum/pxf/automation/components_** - contains all the supported services/components with simple API abstractions. 
 
@@ -69,20 +69,20 @@ You can read more about TestNG here http://testng.org/doc/index.md
 
 1.  Decide which category of run cycle (smoke/feature/load)
 2.  Extend the right java class (according to the above test class hierarchy diagram)
-3.  While implementing "smoke" test you can override three methods: "<span><span>prepareData", "</span></span><span><span>createTables" and "</span></span><span><span>queryResults" and than just call "</span></span><span>runTest" method from your test case for running the three mentioned methods in that order. (see *Example 1*)</span>
+3.  While implementing "smoke" test you can override three methods: "<span><span>prepareData", "</span></span><span><span>createTables" and "</span></span><span><span>queryResults" and than just call "</span></span><span>runTest" method from your test case for running the three mentioned methods in that order. (see *Example 1*)</span>
 4.  Use TINC framework to test GPDB query results (see below "*Add TINC Cases*" section)
 
 ## Add TINC Cases
 
 <img src="images/68747283.png" class="confluence-embedded-image confluence-content-image-border" width="381" height="603" />
 
-**_tincrepo/main/pxf_**  - root for PXF TINC cases, the cases inside ordered in TestNg folders hierarchy
+**_tincrepo/main/pxf_**  - root for PXF TINC cases, the cases inside ordered in TestNg folders hierarchy
 
-**_sql_** - sql files
+**_sql_** - sql files
 
-**_expected_** - expected results matched to the sql files
+**_expected_** - expected results matched to the sql files
 
-**_output_** - output of run including diff files for each sql file
+**_output_** - output of run including diff files for each sql file
 
 ## Test Examples
 1.  **Example 1 (Smoke case)**
