@@ -11,7 +11,7 @@ Each PXF Service running on a Greenplum Database host is configured with a defau
 
 Perform the following procedure to increase the heap size for the PXF Service running on each host in your Greenplum Database cluster.
 
-1. Log in to your Greenplum Database master node:
+1. Log in to your Greenplum Database master host:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -96,7 +96,7 @@ Refer to the configuration [procedure](#pxf-cfgoom_proc) below for the instructi
 
 Auto-kill of the PXF Service on OOM is enabled by default. Heap dump generation on OOM is disabled by default. To configure one or both of these properties, perform the following procedure:
 
-1. Log in to your Greenplum Database master node:
+1. Log in to your Greenplum Database master host:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -141,7 +141,7 @@ Auto-kill of the PXF Service on OOM is enabled by default. Heap dump generation 
 
 ## <a id="pxf-threadcfg"></a>Another Option for Resource-Constrained PXF Segment Hosts
 
-If increasing the maximum heap size is not suitable for your Greenplum Database deployment, try decreasing the number of concurrent working threads configured for PXF's embedded Tomcat web server. A decrease in the number of running threads will prevent any PXF node from exhausting its memory, while ensuring that current queries run to completion (albeit a bit slower). Tomcat's default behavior is to queue requests until a thread is free, or the queue is exhausted.
+If increasing the maximum heap size is not suitable for your Greenplum Database deployment, try decreasing the number of concurrent working threads configured for PXF's embedded Tomcat web server. A decrease in the number of running threads will prevent any PXF server from exhausting its memory, while ensuring that current queries run to completion (albeit a bit slower). Tomcat's default behavior is to queue requests until a thread is free, or the queue is exhausted.
 
 The default maximum number of Tomcat threads for PXF is 200. The `pxf.max.threads` property in the `pxf-application.properties` configuration file controls this setting.
 
@@ -151,7 +151,7 @@ If you plan to run large workloads on a large number of files in an external Hiv
 
 Perform the following procedure to set the maximum number of Tomcat threads for the PXF Service running on each host in your Greenplum Database deployment.
 
-1. Log in to your Greenplum Database master node:
+1. Log in to your Greenplum Database master host:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>

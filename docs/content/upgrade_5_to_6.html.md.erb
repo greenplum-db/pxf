@@ -17,7 +17,7 @@ The PXF upgrade procedure has three steps. You perform one pre-install procedure
 
 Perform this procedure before you upgrade to a new version of PXF:
 
-1. Log in to the Greenplum Database master node. For example:
+1. Log in to the Greenplum Database master host. For example:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -44,7 +44,7 @@ Perform this procedure before you upgrade to a new version of PXF:
 
 After you install the new version of PXF, perform the following procedure:
 
-1. Log in to the Greenplum Database master node. For example:
+1. Log in to the Greenplum Database master host. For example:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -138,7 +138,7 @@ After you install the new version of PXF, perform the following procedure:
     gpadmin@gpmaster$ pxf cluster register
     ```
 
-    The `register` command copies only the `pxf.control` extension file to the Greenplum cluster. In PXF 6.x, the PXF extension `.sql` file and library `pxf.so` reside in `$PXF_HOME/gpextable`. You may choose to remove these now-unused files from the Greenplum Database installation *on the Greenplum Database master, standby master, and all segment hosts*. For example, to remove the files on the master host:
+    The `register` command copies only the `pxf.control` extension file to the Greenplum cluster. In PXF 6.x, the PXF extension `.sql` file and library `pxf.so` reside in `$PXF_HOME/gpextable`. You may choose to remove these now-unused files from the Greenplum Database installation *on the Greenplum Database master host, the standby master host, and all segment hosts*. For example, to remove the files on the master host:
 
     ``` shell
     gpadmin@gpmaster$ rm $GPHOME/share/postgresql/extension/pxf--1.0.sql
@@ -169,7 +169,7 @@ After you install the new version of PXF, perform the following procedure:
 
 1. In PXF 6.x, the PXF Service runs on all Greenplum Database hosts. If you used PXF 5.x to access Kerberos-secured HDFS, you must now generate principals and keytabs for the Greenplum master and standby master hosts, and distribute these to the hosts as described in [Configuring PXF for Secure HDFS](pxf_kerbhdfs.html#procedure).
 
-4. Synchronize the PXF 6.x configuration from the master host to the standby master and each Greenplum Database segment host. For example:
+4. Synchronize the PXF 6.x configuration from the master host to the standby master host and each Greenplum Database segment host. For example:
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster sync

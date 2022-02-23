@@ -1,14 +1,14 @@
 ---
 title: Configuring PXF
 ---
-Your Greenplum Database deployment consists of a master node, standby master, and multiple segment hosts. After you configure the Greenplum Platform Extension Framework (PXF), you start a single PXF JVM process (PXF Service) on each Greenplum Database host.
+Your Greenplum Database deployment consists of a master host, a standby master host, and multiple segment hosts. After you configure the Greenplum Platform Extension Framework (PXF), you start a single PXF JVM process (PXF Service) on each Greenplum Database host.
 
 PXF provides connectors to Hadoop, Hive, HBase, object stores, network file systems, and external SQL data stores. You must configure PXF to support the connectors that you plan to use.
 
 To configure PXF, you must:
 
 1. Install Java 8 or 11 on each Greenplum Database host as described in [Installing Java for PXF](install_java.html). If your `JAVA_HOME` is different to `/usr/java/default`, you must inform PXF of the $JAVA_HOME setting by specifying its value in the `pxf-env.sh` [configuration file](config_files.html). 
-    - Edit the `$PXF_BASE/conf/pxf-env.sh` file on the Greenplum master node.
+    - Edit the `$PXF_BASE/conf/pxf-env.sh` file on the Greenplum master host.
 
         ``` shell        
         gpadmin@gpmaster$ vi /usr/local/pxf-gp6/conf/pxf-env.sh
@@ -16,7 +16,7 @@ To configure PXF, you must:
     - Locate the `JAVA_HOME` setting in the `pxf-env.sh` file, uncomment if necessary, and set it to your `$JAVA_HOME` value. For example:
 
         ```
-        export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk/jre/
+        export JAVA_HOME=/usr/lib/jvm/jre
         ```
 
 1. Register the PXF extension with Greenplum Database (see [pxf cluster register](ref/pxf-cluster.html)). Run this command after your first installation of a PXF version 6.x, and/or after you upgrade your Greenplum Database installation:

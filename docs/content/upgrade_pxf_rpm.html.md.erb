@@ -15,7 +15,7 @@ The PXF upgrade procedure has two parts. You perform one procedure before, and o
 
 Perform this procedure before you upgrade to a new version of PXF:
 
-1. Log in to the Greenplum Database master node. For example:
+1. Log in to the Greenplum Database master host. For example:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -45,7 +45,7 @@ Perform this procedure before you upgrade to a new version of PXF:
 
 After you install the new version of PXF, perform the following procedure:
 
-1. Log in to the Greenplum Database master node. For example:
+1. Log in to the Greenplum Database master host. For example:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -107,7 +107,7 @@ After you install the new version of PXF, perform the following procedure:
 
             You may need to add this property block to the `pxf-site.xml` file.
 
-4. Synchronize the PXF configuration from the master host to the standby master and each Greenplum Database segment host. For example:
+4. Synchronize the PXF configuration from the master host to the standby master host and each Greenplum Database segment host. For example:
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster sync

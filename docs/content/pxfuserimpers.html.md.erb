@@ -86,7 +86,7 @@ By default, PXF accesses Hadoop using the identity of the Greenplum Database use
 
 Perform the following procedure to configure the Hadoop user:
 
-1. Log in to your Greenplum Database master node as the administrative user:
+1. Log in to your Greenplum Database master host as the administrative user:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -195,7 +195,7 @@ When PXF user impersonation is enabled for a Hadoop server configuration, you mu
 
 4. You must restart Hadoop for your `core-site.xml` changes to take effect.
 
-5. Copy the updated `core-site.xml` file to the PXF Hadoop server configuration directory `$PXF_BASE/servers/<server_name>` on the Greenplum Database master and synchronize the configuration to the standby master and each Greenplum Database segment host.
+5. Copy the updated `core-site.xml` file to the PXF Hadoop server configuration directory `$PXF_BASE/servers/<server_name>` on the Greenplum Database master host and synchronize the configuration to the standby master host and each Greenplum Database segment host.
 
 ## <a id="hive"></a>Hive User Impersonation
 

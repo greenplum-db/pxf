@@ -34,7 +34,7 @@ Only the `gpadmin` user can request the status of the PXF Service.
 
 Perform the following procedure to request the PXF status of your Greenplum Database cluster.
 
-1. Log in to the Greenplum Database master node:
+1. Log in to the Greenplum Database master host:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -123,5 +123,5 @@ You can use the tags to filter the information returned for PXF-specific metrics
 http://localhost:5888/actuator/metrics/pxf.records.received?tag=segment:1&tag=server:hadoop1
 ```
 
-Certain metrics, such as `pxf.fragments.sent`, include an aditional tag named `outcome`; you can examine its value (`success` or `error`) to determine if all data for the fragment was sent. You can also use this tag to filter the aggregated data.
+Certain metrics, such as `pxf.fragments.sent`, include an additional tag named `outcome`; you can examine its value (`success` or `error`) to determine if all data for the fragment was sent. You can also use this tag to filter the aggregated data.
 

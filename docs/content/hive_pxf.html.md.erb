@@ -45,6 +45,7 @@ The PXF Hive connector supports several data formats, and has defined the follow
 | RCFile | Record columnar data consisting of binary key/value pairs; high row compression rate. | hive, hive:rc |
 | ORC | Optimized row columnar data with stripe, footer, and postscript sections; reduces data size. | hive, hive:orc |
 | Parquet | Compressed columnar data representation. | hive |
+| Avro | Serialization system with a binary data format. | hive |
 
 **Note**: The `hive` profile supports all file storage formats. It will use the optimal `hive[:*]` profile for the underlying file format type.
 

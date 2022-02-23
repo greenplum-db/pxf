@@ -15,7 +15,7 @@ The PXF upgrade procedure has three steps. You perform one pre-install procedure
 
 Perform this procedure before you upgrade to a new version of PXF 6.x:
 
-1. Log in to the Greenplum Database master node. For example:
+1. Log in to the Greenplum Database master host. For example:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -49,7 +49,7 @@ Install PXF 6.x and identify and note the new PXF version number.
 
 After you install the new version of PXF, perform the following procedure:
 
-1. Log in to the Greenplum Database master node. For example:
+1. Log in to the Greenplum Database master host. For example:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -114,7 +114,7 @@ After you install the new version of PXF, perform the following procedure:
         <Logger name="org.greenplum.pxf" level="${env:PXF_LOG_LEVEL:-${spring:pxf.log.level}}"/>
         ```
 
-1. Synchronize the PXF configuration from the master host to the standby master and each Greenplum Database segment host. For example:
+1. Synchronize the PXF configuration from the master host to the standby master host and each Greenplum Database segment host. For example:
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster sync

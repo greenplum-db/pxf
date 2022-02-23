@@ -38,7 +38,7 @@ Use the server template configuration file `$PXF_HOME/templates/pxf-site.xml` wh
 
 PXF does not support user impersonation when you access a network file system; you must explicitly turn off user impersonation in a network file system server configuration.
 
-1. Log in to the Greenplum Database master node:
+1. Log in to the Greenplum Database master host:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -114,7 +114,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 
 ## <a id="example_nfscsv"></a>Example: Reading From and Writing to a CSV File on a Network File System
 
-This example assumes that you have configured and mounted a network file system with the share point `/mnt/extdata/pxffs` on the Greenplum Database master, standby master, and on each segment host.
+This example assumes that you have configured and mounted a network file system with the share point `/mnt/extdata/pxffs` on the Greenplum Database master host, the standby master host, and on each segment host.
 
 In this example, you:
 
@@ -164,7 +164,7 @@ Perform the following procedure to create a PXF external table that references t
 2. Display all rows of the `pxf_read_nfs` table:
 
     ``` sql
-    gpadmin=# SELECT * FROM pxf_read_nfs ORDER_BY num_orders DESC;
+    gpadmin=# SELECT * FROM pxf_read_nfs ORDER BY num_orders DESC;
      location  | month | num_orders | total_sales 
     -----------+-------+------------+-------------
      Beijing   | Jul   |        411 |    11600.67

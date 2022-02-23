@@ -196,7 +196,7 @@ The `pxf.service.user.impersonation` property in the `jdbc-site.xml` configurati
 
 By default, PXF JDBC user impersonation is disabled.  Perform the following procedure to turn PXF user impersonation on or off for a JDBC server configuration.
 
-1. Log in to your Greenplum Database master node as the administrative user:
+1. Log in to your Greenplum Database master host as the administrative user:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>
@@ -336,7 +336,7 @@ You can use the JDBC Connector to access Hive. Refer to [Configuring the JDBC Co
 
 In this procedure, you name and add a PXF JDBC server configuration for a PostgreSQL database and synchronize the server configuration(s) to the Greenplum Database cluster.
 
-1. Log in to your Greenplum Database master node:
+1. Log in to your Greenplum Database master host:
 
     ``` shell
     $ ssh gpadmin@<gpmaster>

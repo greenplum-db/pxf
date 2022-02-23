@@ -9,6 +9,28 @@ title: About the PXF Configuration Files
 - `pxf-log4j2.xml` - PXF logging configuration properties
 - `pxf-profiles.xml` - Custom PXF profile definitions
 
+
+## <a id="chg_config"></a>Modifying the PXF Configuration
+
+When you update a PXF configuration file, you must sychronize the changes to all hosts in the Greenplum Database cluster and then restart PXF for the changes to take effect.
+
+Procedure:
+
+1. Update the configuration file(s) of interest.
+
+1. Synchronize the PXF configuration to all hosts in the Greenplum Database cluster:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster sync
+    ```
+
+1. (Re)start PXF on all Greenplum hosts:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster restart
+    ```
+
+
 ## <a id="pxfappprops"></a>pxf-application.properties
 
 The `pxf-application.properties` file exposes these PXF Service application configuration properties:
@@ -55,25 +77,4 @@ The [Logging](cfg_logging.html) advanced configuration topic describes how to en
 ## <a id="pxfprofiledef"></a>pxf-profiles.xml
 
 PXF defines its default profiles in the [`pxf-profiles-default.xml`](https://github.com/greenplum-db/pxf/blob/master/server/pxf-service/src/main/resources/pxf-profiles-default.xml) file. If you choose to add a custom profile, you configure the profile in `pxf-profiles.xml`.
-
-
-## <a id="chg_config"></a>Modifying the PXF Configuration
-
-When you update a PXF configuration file, you must sychronize the changes to all hosts in the Greenplum Database cluster and then restart PXF for the changes to take effect.
-
-Procedure:
-
-1. Update the configuration file(s) of interest.
-
-1. Synchronize the PXF configuration to all hosts in the Greenplum Database cluster:
-
-    ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
-    ```
-
-1. (Re)start PXF on all Greenplum hosts:
-
-    ``` shell
-    gpadmin@gpmaster$ pxf cluster restart
-    ```
 
