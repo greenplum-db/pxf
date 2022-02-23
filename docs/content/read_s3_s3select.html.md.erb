@@ -2,14 +2,14 @@
 title: Reading CSV and Parquet Data from S3 Using S3 Select
 ---
 
-The PXF S3 connector supports reading certain CSV- and Parquet-format data from S3 using the Amazon S3 Select service. S3 Select provides direct query-in-place features on data stored in Amazon S3.
+The PXF S3 connector supports reading certain CSV-format and Parquet-format data from S3 using the Amazon S3 Select service. S3 Select provides direct query-in-place features on data stored in Amazon S3.
 
 When you enable it, PXF uses S3 Select to filter the contents of S3 objects to retrieve the subset of data that you request. This typically reduces both the amount of data transferred to Greenplum Database and the query time.
 
 You can use the PXF S3 Connector with S3 Select to read:
 
-- `gzip`- or `bzip2`-compressed `CSV` files
-- `Parquet` files with `gzip`- or `snappy`-compressed columns
+- `gzip`-compressed or `bzip2`-compressed `CSV` files
+- `Parquet` files with `gzip`-compressed or `snappy`-compressed columns
 
 The data must be `UTF-8`-encoded, and may be server-side encrypted.
 
@@ -38,7 +38,7 @@ PXF supports reading Parquet data from S3 as described in [Reading and Writing P
 
 ### <a id="parquet_compress"></a>Specifying the Parquet Column Compression Type
 
-If columns in the Parquet file are `gzip`- or `snappy`-compressed, use the `COMPRESSION_CODEC` custom option in the `LOCATION` URI to identify the compression codec alias. For example:
+If columns in the Parquet file are `gzip`-compressed or `snappy`-compressed, use the `COMPRESSION_CODEC` custom option in the `LOCATION` URI to identify the compression codec alias. For example:
 
 ``` pre
 &COMPRESSION_CODEC=gzip
