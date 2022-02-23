@@ -62,4 +62,24 @@ public class PartitionedJsonParserTest {
 
         jsonInputStream.close();
     }
+
+    @Test
+    public void testSimple() throws URISyntaxException, IOException {
+
+        File file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/simple.json").toURI());
+
+        InputStream jsonInputStream = new FileInputStream(file);
+
+        PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream);
+        String result = parser.nextObjectContainingMember("cüstömerstätüs");
+        assertNotNull(result);
+        assertEquals(105, parser.getBytesRead());
+        assertEquals("{\"name\": \"äää\", \"year\": \"2022\", \"cüstömerstätüs\":\"välid\",\"address\": \"söme city\", \"zip\": \"95051\"}", result);
+
+        result = parser.nextObjectContainingMember("cüstömerstätüs");
+        assertNull(result);
+        assertEquals(105, parser.getBytesRead());
+
+        jsonInputStream.close();
+    }
 }
