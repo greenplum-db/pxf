@@ -9,10 +9,11 @@ BUILD_PIPELINE_NAME         ?= pxf-build
 DEV_BUILD_PIPELINE_NAME     ?= dev:$(USER)-$(BRANCH)
 PR_BUILD_PIPELINE_NAME      ?= pxf_pr_pipeline
 CERTIFICATION_PIPELINE_NAME ?= pxf-certification
-PERF_PIPELINE_NAME          ?= pxf_perf-$(SCALE)g
+PERF_PIPELINE_NAME          ?= pxf_perf-$(SCALE)g-RHEL$(REDHAT_MAJOR_VERSION)
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS          ?= 10
 NUM_GPDB6_VERSIONS          ?=  9
+REDHAT_MAJOR_VERSION        ?= 7
 FLY_CMD                      = /usr/local/bin/fly
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
@@ -248,10 +249,13 @@ perf:
 		echo 'Specify the SCALE for the test (i.e make SCALE=10 perf). Allowed SCALE values are 10, 50, 500'; \
 		exit 1; \
 	fi
+	@PIPELINE_FILE=$$(mktemp) && \
+	$(TEMPLATE_CMD) --template perf_pipeline-tpl.yml --vars \
+		redhat_major_version=$(REDHAT_MAJOR_VERSION) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
-		--config $(HOME)/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
+		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/perf-settings-$(SCALE)g.yml \
 		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \

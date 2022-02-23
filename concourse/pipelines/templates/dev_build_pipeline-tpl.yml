@@ -527,7 +527,6 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((pxf-rpm-license))
-      TARGET_OS: rhel8
       VENDOR: ((pxf-rpm-vendor))
   - put: pxf_gp[[gp_ver]]_tarball_rhel8
     params:

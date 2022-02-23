@@ -105,15 +105,16 @@ resources:
     branch: {{pxf-git-branch}}
     uri: {{pxf-git-remote}}
 
-- name: gpdb6_rhel7
+- name: gpdb6_rhel[[redhat_major_version]]
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((pxf-storage-service-account-key))
-    regexp: latest-0_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
+    regexp: latest-0_gpdb6/greenplum-db-(.*)-rhel[[redhat_major_version]]-x86_64.rpm
 
-- name: gpdb6-pxf-dev-centos7-image
+{% if redhat_major_version == 7 %}
+- name: gpdb6-pxf-dev-rhel7-image
   type: registry-image
   icon: docker
   source:
@@ -121,6 +122,16 @@ resources:
     tag: latest
     username: _json_key
     password: ((pxf-cloudbuild-service-account-key))
+{%  elif redhat_major_version == 8 %}
+- name: gpdb6-pxf-dev-rhel8-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-rhel8-test-pxf
+    tag: latest
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
+{% endif %}
 
 - name: ccp-7
   type: registry-image
@@ -135,7 +146,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: perf/snapshots/pxf-gp6.el7.tar.gz
+    versioned_file: perf/snapshots/pxf-gp6.el[[redhat_major_version]].tar.gz
 
 - name: singlecluster
   type: gcs
@@ -181,22 +192,25 @@ resources:
 
 jobs:
 
-- name: Build PXF-GP6 on RHEL7
+- name: Build PXF-GP6 on RHEL[[redhat_major_version]]
   plan:
   - get: timed-trigger
     trigger: true
   - in_parallel:
     - get: pxf_src
-    - get: gpdb6-pxf-dev-centos7-image
+    - get: gpdb6-pxf-dev-rhel[[redhat_major_version]]-image
     - get: gpdb_package
-      resource: gpdb6_rhel7
+      resource: gpdb6_rhel[[redhat_major_version]]
     - get: pxf-build-dependencies
-  - task: Build PXF-GP6 on RHEL7
-    image: gpdb6-pxf-dev-centos7-image
+  - task: Build PXF-GP6 on RHEL[[redhat_major_version]]
+    image: gpdb6-pxf-dev-rhel[[redhat_major_version]]-image
     file: pxf_src/concourse/tasks/build.yml
+    params:
+      LICENSE: ((pxf-rpm-license))
+      VENDOR: ((pxf-rpm-vendor))
   - put: pxf_tarball
     params:
-      file: dist/pxf-gp6-*.el7.tar.gz
+      file: dist/pxf-gp6-*.el[[redhat_major_version]].tar.gz
 
 - name: PXF Performance {{perf-scale}}G
   ensure:
@@ -207,15 +221,15 @@ jobs:
   - in_parallel:
     - get: ccp_src
     - get: gpdb_package
-      resource: gpdb6_rhel7
+      resource: gpdb6_rhel[[redhat_major_version]]
     - get: pxf_src
-      passed: [Build PXF-GP6 on RHEL7]
+      passed: [Build PXF-GP6 on RHEL[[redhat_major_version]]]
       trigger: true
     - get: pxf_tarball
-      passed: [Build PXF-GP6 on RHEL7]
+      passed: [Build PXF-GP6 on RHEL[[redhat_major_version]]]
       trigger: true
     - get: ccp-7
-    - get: gpdb6-pxf-dev-centos7-image
+    - get: gpdb6-pxf-dev-rhel[[redhat_major_version]]-image
     - get: singlecluster
 
   - in_parallel:
@@ -227,7 +241,11 @@ jobs:
         generate_random_name: true
         terraform_source: ccp_src/google/
         vars:
+{% if redhat_major_version == 7 %}
           PLATFORM: centos7
+{% elif redhat_major_version == 8 %}
+          PLATFORM: rhel8
+{% endif %}
           number_of_nodes: {{perf-gpdb-number-of-nodes}}
           segments_per_host: {{perf-gpdb-segments-per-host}}
           instance_type: {{perf-gpdb-instance-type}}
@@ -243,7 +261,11 @@ jobs:
         generate_random_name: true
         terraform_source: ccp_src/google-dataproc/
         vars:
+{% if redhat_major_version == 7 %}
           PLATFORM: centos7
+{% elif redhat_major_version == 8 %}
+          PLATFORM: rhel8
+{% endif %}
           number_of_nodes: {{perf-hadoop-number-of-nodes}}
           instance_type: {{perf-hadoop-instance-type}}
           project: {{google-project-id}}
@@ -267,7 +289,11 @@ jobs:
             AWS_DEFAULT_REGION: {{aws-region}}
             BUCKET_PATH: {{tf-bucket-path}}
             BUCKET_NAME: {{tf-bucket-name}}
+{% if redhat_major_version == 7 %}
             PLATFORM: centos7
+{% elif redhat_major_version == 8 %}
+            PLATFORM: rhel8
+{% endif %}
             CLOUD_PROVIDER: google
             GPDB_RPM: true
         - task: Initialize Greenplum
@@ -290,7 +316,6 @@ jobs:
             CLOUD_PROVIDER: google
             IMPERSONATION: {{enable-impersonation-multinode}}
             INSTALL_GPHDFS: {{perf-benchmark-gphdfs}}
-            PLATFORM: centos7
             PROXY_USER: gpadmin
             PXF_JVM_OPTS: {{pxf-jvm-opts}}
           on_failure:
@@ -309,13 +334,12 @@ jobs:
             GOOGLE_PROJECT_ID: {{google-project-id}}
             GOOGLE_ZONE: {{google-zone}}
             GOOGLE_SERVICE_ACCOUNT: {{google-service-account}}
-            PLATFORM: centos7
             CLOUD_PROVIDER: google
             SCALE: {{perf-scale}}
         image: ccp-7
 
   - task: run-perf-multinode
-    image: gpdb6-pxf-dev-centos7-image
+    image: gpdb6-pxf-dev-rhel[[redhat_major_version]]-image
     file: pxf_src/concourse/tasks/pxf-perf-multi-node.yml
     params:
       SCALE: {{perf-scale}}

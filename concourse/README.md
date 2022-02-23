@@ -71,6 +71,10 @@ make SCALE=50 -C "${HOME}/workspace/pxf/concourse" perf
 make SCALE=500 -C "${HOME}/workspace/pxf/concourse" perf
 ```
 
+By default, these pipelines run perf on RHEL7.
+If you would like to run pipelines using RHEL8, please include `REDHAT_MAJOR_VERSION=8` to the command.
+Ex: `make SCALE=10 REDHAT_MAJOR_VERSION=8 -C "${HOME}/workspace/pxf/concourse" perf`
+
 # Deploy development PXF pipelines
 
 The dev pipeline is an abbreviated version of the `pxf-build` pipeline.

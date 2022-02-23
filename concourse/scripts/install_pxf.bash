@@ -13,6 +13,9 @@ else
 	PXF_HOME=${GPHOME}/pxf
 fi
 PXF_VERSION=${PXF_VERSION:=6}
+# read default user from terraform metadata file
+DEFAULT_OS_USER=$(jq --raw-output ".ami_default_user" terraform/metadata)
+
 
 # we need word boundary in case of standby master (smdw)
 MASTER_HOSTNAME=$(grep < cluster_env_files/etc_hostfile '\bmdw' | awk '{print $2}')
@@ -132,8 +135,8 @@ function create_pxf_installer_scripts() {
 		      sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g" ${BASE_DIR}/servers/default/pxf-site.xml
 		      gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_env_files/pxf.service.keytab =:${BASE_DIR}/keytabs/
 		    fi
-		    gpscp -f ~gpadmin/hostfile_all -v -r -u centos /tmp/krb5.conf =:/tmp/krb5.conf
-		    gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo mv /tmp/krb5.conf /etc/krb5.conf'
+		    gpscp -f ~gpadmin/hostfile_all -v -r -u ${DEFAULT_OS_USER} /tmp/krb5.conf =:/tmp/krb5.conf
+		    gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e 'sudo mv /tmp/krb5.conf /etc/krb5.conf'
 		  fi
 		}
 
@@ -190,9 +193,10 @@ function create_pxf_installer_scripts() {
 		function install_java() {
 		  yum install -y -q -e 0 java-1.8.0-openjdk
 		  echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bashrc
-		  echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bashrc
+		  echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~${DEFAULT_OS_USER}/.bashrc
 		}
 
+		# this function is only used for GPHDFS, which we only test with centos.
 		function install_hadoop_client() {
 		  cat > /etc/yum.repos.d/hdp.repo <<EOF
 		[HDP-2.6.5.0]
@@ -206,7 +210,7 @@ function create_pxf_installer_scripts() {
 		  yum install -y -d 1 hadoop-client
 		  echo "export HADOOP_VERSION=\${HADOOP_VER}" | sudo tee -a ~gpadmin/.bash_profile
 		  echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~gpadmin/.bash_profile
-		  echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~centos/.bash_profile
+		  echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~${DEFAULT_OS_USER}/.bash_profile
 		}
 
 		function main() {
@@ -235,10 +239,10 @@ function run_pxf_installer_scripts() {
 			gpstop -u
 		fi &&
 		sed -i '/edw/d' hostfile_all &&
-		gpscp -f ~gpadmin/hostfile_all -v -u centos -r ~/pxf_installer ~gpadmin/install_pxf_dependencies.sh centos@=: &&
-		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo ~centos/install_pxf_dependencies.sh' &&
-		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo GPHOME=${GPHOME} ~centos/pxf_installer/install_component'
-		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo chown -R gpadmin:gpadmin ${PXF_HOME}'
+		gpscp -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -r ~/pxf_installer ~gpadmin/install_pxf_dependencies.sh ${DEFAULT_OS_USER}@=: &&
+		gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e 'sudo ~${DEFAULT_OS_USER}/install_pxf_dependencies.sh' &&
+		gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e 'sudo GPHOME=${GPHOME} ~${DEFAULT_OS_USER}/pxf_installer/install_component'
+		gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e 'sudo chown -R gpadmin:gpadmin ${PXF_HOME}'
 		if [[ ${PXF_VERSION} == 5 ]]; then
 			GPHOME=${GPHOME} PXF_CONF=${BASE_DIR} ${PXF_HOME}/bin/pxf cluster init
 		else
@@ -249,12 +253,12 @@ function run_pxf_installer_scripts() {
 		fi &&
 		~gpadmin/configure_pxf.sh &&
 		source ~gpadmin/.bashrc &&
-		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e \"sudo sed -i -e 's/edw0/edw0 hadoop/' /etc/hosts\" &&
+		gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e \"sudo sed -i -e 's/edw0/edw0 hadoop/' /etc/hosts\" &&
 		echo \"PXF_BASE=\${PXF_BASE}\" &&
 		${PXF_HOME}/bin/pxf cluster sync &&
 		${PXF_HOME}/bin/pxf cluster start &&
 		if [[ $INSTALL_GPHDFS == true ]]; then
-			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e '
+			gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e '
 				sudo cp ${BASE_DIR}/servers/default/{core,hdfs}-site.xml /etc/hadoop/conf
 			'
 		fi

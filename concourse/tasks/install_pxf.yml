@@ -28,7 +28,6 @@ params:
   INSTALL_GPHDFS: true
   SKIP_HADOOP_SETUP:
   KERBEROS: false
-  PLATFORM:
   PXF_COMPONENT: true
   PXF_JVM_OPTS:
 

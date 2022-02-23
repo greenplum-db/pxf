@@ -733,7 +733,6 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((pxf-rpm-license))
-      TARGET_OS: rhel8
       VENDOR: ((pxf-rpm-vendor))
   - put: pxf_gp[[gp_ver]]_tarball_rhel8
     params:
@@ -1758,7 +1757,7 @@ jobs:
     file: pxf_src/concourse/tasks/add_osl_rpm.yml
     params:
       GP_VER: [[gp_ver]]
-      TARGET_OS_VERSION: 8
+      REDHAT_MAJOR_VERSION: 8
   - task: Add OSL file to PXF-GP6 DEB on Ubuntu 18.04
     file: pxf_src/concourse/tasks/add_osl_deb.yml
     image: gpdb6-pxf-dev-ubuntu18-image
