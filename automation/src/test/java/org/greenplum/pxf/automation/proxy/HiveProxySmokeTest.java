@@ -81,7 +81,6 @@ public class HiveProxySmokeTest extends BaseSmoke {
         hiveTableAllowed = TableFactory.getHiveByRowCommaTable("hive_table_allowed", HIVE_FIELDS);
         hiveTableProhibited = TableFactory.getHiveByRowCommaTable("hive_table_prohibited", HIVE_FIELDS);
 
-        // hive.dropTable(hiveTable, false);
         hiveTarget.createTableAndVerify(hiveTableAllowed);
         hiveTarget.createTableAndVerify(hiveTableProhibited);
 
