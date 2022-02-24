@@ -4,7 +4,7 @@ digraph pxf_container_image_flow {
         style=dashed
         node [shape=box3d fillcolor="#268bd2" style=filled fontcolor=white]
 
-        centos6[label="centos:6"]
+        centos7[label="centos:7"]
     }
 
     # gcr.io/data-gpdb-public-images
@@ -20,6 +20,13 @@ digraph pxf_container_image_flow {
         gp7_ubuntu18_latest[label="gpdb7-ubuntu18.04-test:latest"]
     }
 
+    subgraph cluster_gcr_images_private {
+        label="GP RelEng Images (gcr.io/data-gpdb-private-images)"
+        style=dashed
+        node [shape=box3d fillcolor="#2aa198" style=filled fontcolor=white]
+        gp6_rhel8_latest[label="gpdb6-rhel8-test:latest"]
+    }
+
     # PXF Cloudbuild & Dockerfiles
     subgraph cluster_pxf_dev_base {
         label = "pxf-dev-base/cloudbuild.yaml"
@@ -28,6 +35,7 @@ digraph pxf_container_image_flow {
 
         gp5_centos7_dockerfile[label="gpdb5/centos7"]
         gp6_centos7_dockerfile[label="gpdb6/centos7"]
+        gp6_rhel8_dockerfile[label="gpdb6/rhel8"]
         gp6_ubuntu18_dockerfile[label="gpdb6/ubuntu18.04"]
         gp6_oel7_dockerfile[label="gpdb6/oel7"]
         gp7_centos7_dockerfile[label="gpdb7/centos7"]
@@ -36,11 +44,12 @@ digraph pxf_container_image_flow {
     }
 
     subgraph cluster_rpmrebuild {
-        label = "rpmrebuild/centos/cloudbuild.yaml"
+        label = "rpmrebuild/cloudbuild.yaml"
         style=dashed
         node [shape=note fillcolor="#fdf6e3" style=filled]
 
-        rpm_docker[label="Dockerfile"]
+        rpm_docker_centos7[label="centos/Dockerfile"]
+        rpm_docker_rhel8[label="rhel/Dockerfile"]
     }
 
     # UD GCR images
@@ -56,6 +65,7 @@ digraph pxf_container_image_flow {
 
             gp5_centos7_pxf_sha[label="gpdb5-centos7-test-pxf:$COMMIT_SHA"]
             gp6_centos7_pxf_sha[label="gpdb6-centos7-test-pxf:$COMMIT_SHA"]
+            gp6_rhel8_pxf_sha[label="gpdb6-rhel8-test-pxf:$COMMIT_SHA"]
             gp6_ubuntu18_pxf_sha[label="gpdb6-ubuntu18.04-test-pxf:$COMMIT_SHA"]
             gp6_oel7_pxf_sha[label="gpdb6-oel7-test-pxf:$COMMIT_SHA"]
             gp7_centos7_pxf_sha[label="gpdb7-centos7-test-pxf:$COMMIT_SHA"]
@@ -63,6 +73,7 @@ digraph pxf_container_image_flow {
 
             gp5_centos7_pxf_latest[label="gpdb5-centos7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp6_centos7_pxf_latest[label="gpdb6-centos7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
+            gp6_rhel8_pxf_latest[label="gpdb6-rhel8-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp6_ubuntu18_pxf_latest[label="gpdb6-ubuntu18.04-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp6_oel7_pxf_latest[label="gpdb6-oel7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp7_centos7_pxf_latest[label="gpdb7-centos7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
@@ -70,6 +81,7 @@ digraph pxf_container_image_flow {
         }
 
         rpm_centos7_latest[label="rpmrebuild-centos7:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
+        rpm_rhel8_latest[label="rpmrebuild-rhel8:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
     }
 
     subgraph cluster_pipelines {
@@ -131,6 +143,10 @@ digraph pxf_container_image_flow {
     gp6_centos7_dockerfile -> gp6_centos7_pxf_sha[label="CloudBuild"]
     gp6_centos7_pxf_sha -> gp6_centos7_pxf_latest[label="tag (concourse pipeline)"]
 
+    gp6_rhel8_latest -> gp6_rhel8_dockerfile
+    gp6_rhel8_dockerfile -> gp6_rhel8_pxf_sha[label="CloudBuild"]
+    gp6_rhel8_pxf_sha -> gp6_rhel8_pxf_latest[label="tag (concourse pipeline)"]
+
     gp6_ubuntu18_latest -> gp6_ubuntu18_dockerfile
     gp6_ubuntu18_dockerfile -> gp6_ubuntu18_pxf_sha[label="CloudBuild"]
     gp6_ubuntu18_pxf_sha -> gp6_ubuntu18_pxf_latest[label="tag (concourse pipeline)"]
@@ -147,8 +163,11 @@ digraph pxf_container_image_flow {
     gp7_ubuntu18_dockerfile -> gp7_ubuntu18_pxf_sha[label="CloudBuild"]
     gp7_ubuntu18_pxf_sha -> gp7_ubuntu18_pxf_latest[label="tag (concourse pipeline)"]
 
-    centos6 -> rpm_docker
-    rpm_docker -> rpm_centos7_latest
+    centos7 -> rpm_docker_centos7
+    rpm_docker_centos7 -> rpm_centos7_latest
+
+    gp6_rhel8_latest -> rpm_docker_rhel8
+    rpm_docker_rhel8 -> rpm_rhel8_latest
 
     gp5_centos7_pxf_latest -> mapr_dockerfile
     gp6_centos7_pxf_latest -> mapr_dockerfile
@@ -169,6 +188,11 @@ digraph pxf_container_image_flow {
     gp6_centos7_pxf_latest -> build
     gp6_centos7_pxf_latest -> pr
 
+    gp6_rhel8_pxf_latest -> certification
+    gp6_rhel8_pxf_latest -> perf
+    gp6_rhel8_pxf_latest -> build
+    gp6_rhel8_pxf_latest -> pr
+
     gp6_ubuntu18_pxf_latest -> certification
     gp6_ubuntu18_pxf_latest -> build
     gp6_ubuntu18_pxf_latest -> pr
@@ -183,6 +207,7 @@ digraph pxf_container_image_flow {
     gp7_ubuntu18_pxf_latest -> pr
 
     rpm_centos7_latest -> build
+    rpm_rhel8_latest -> build
 
     gp6_centos7_pxf_mapr_latest -> build[label="Conditionally added based off mapr variable"]
 
