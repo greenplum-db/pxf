@@ -1,11 +1,15 @@
-[{
-  "name": "äää",
-  "customerdata": [{
-    "cüstömerstätüs": "välid",
-    "year": "2022",
-    "address": "söme city",
-    "zip": "95051"
-  }],
+[
+  {
+    "name": "äää",
+    "customerdata": [
+      {
+        "cüstömerstätüs": "välid",
+        "year": "2022",
+        "address": "söme city",
+        "zip": "95051"
+      }
+    ]
+  },
   {
     "cüstömerstätüs": "välid",
     "name": "你好",
@@ -13,4 +17,4 @@
     "address": "0𑀓a",
     "zip": "19348"
   }
-}]
+]

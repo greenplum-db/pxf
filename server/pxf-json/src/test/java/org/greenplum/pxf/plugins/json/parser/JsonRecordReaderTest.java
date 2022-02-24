@@ -1,5 +1,7 @@
 package org.greenplum.pxf.plugins.json.parser;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -18,6 +20,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class JsonRecordReaderTest {
@@ -165,9 +168,8 @@ public class JsonRecordReaderTest {
             recordCount++;
         }
 
-        assertEquals(0, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
         assertEquals(0, jsonRecordReader.getPos());
-        assertEquals("", data.toString());
     }
 
     @Test
@@ -188,9 +190,8 @@ public class JsonRecordReaderTest {
             recordCount++;
         }
 
-        assertEquals(0, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
         assertEquals(12, jsonRecordReader.getPos());
-        assertEquals("", data.toString());
     }
 
     @Test
@@ -213,10 +214,9 @@ public class JsonRecordReaderTest {
             recordCount++;
         }
 
-        assertEquals(0, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
         // This will return count of all the bytes in the file
         assertEquals(553, jsonRecordReader.getPos());
-        assertEquals("", data.toString());
     }
 
     @Test
@@ -240,6 +240,9 @@ public class JsonRecordReaderTest {
         //cüstömerstätüs identifier will retrieve 4 records
         assertEquals(4, recordCount);
 
+        // The reader will count all the bytes from the file
+        assertEquals(727, jsonRecordReader.getPos());
+
         // Test another identifier company-name
         jobConf.set(RECORD_MEMBER_IDENTIFIER, "company-name");
 
@@ -253,6 +256,9 @@ public class JsonRecordReaderTest {
         }
 
         assertEquals(1, recordCount);
+
+        // The reader will count all the bytes from the file
+        assertEquals(727, jsonRecordReader.getPos());
 
         // assert the last record json
         assertEquals("{\"company-name\":\"VMware\",\"name\": \"äää\", \"year\": \"2022\", \"address\": \"söme city\", \"zip\": \"95051\"}", data.toString());
@@ -276,13 +282,13 @@ public class JsonRecordReaderTest {
             recordCount++;
         }
 
-        //cüstömerstätüs identifier will retrieve 4 records
+        //cüstömerstätüs identifier will retrieve 2 records
         assertEquals(2, recordCount);
     }
 
     @Test
     public void testSplitBeforeMemberName() throws URISyntaxException, IOException {
-        // Split After { before MEMBER_NAME or After RECORD_MEMBER_IDENTIFIER will cause the record to skip
+        // If the Split After the BEGIN_OBJECT ( i.e. { ), we expect the record reader to skip over this object entirely.
         //Here the split start after the <SEEK> keyword in the file ( Line # 3 ) and right before the identifier.
         jobConf.set(RECORD_MEMBER_IDENTIFIER, "name");
         file = new File(this.getClass().getClassLoader().getResource("parser-tests/seek/seek-into-mid-object-1/input.json").toURI());
@@ -301,6 +307,21 @@ public class JsonRecordReaderTest {
         }
 
         assertEquals(1, recordCount);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode node = mapper.readTree(String.valueOf(data));
+        String color = node.get("color").asText();
+
+        assertEquals("red", color);
+
+        String name = node.get("name").asText();
+
+        assertEquals("123.45", name);
+
+        String nodeVal = node.get("v").asText();
+
+        assertEquals("vv", nodeVal);
+
     }
 
     @Test
