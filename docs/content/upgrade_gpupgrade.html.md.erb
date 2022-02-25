@@ -100,7 +100,7 @@ Perform the following steps after running `gpupgrade`:
 
 1. Update the `$PATH` in `.bashrc` or `.bash_profile` shell initialization scripts, replacing any occurrences of `/usr/local/pxf-gp5` with `/usr/local/pxf-gp6`.
 
-1. Verify that PXF can access each external data source by querying external tables that specify each configured PXF server.
+1. Verify that PXF can access each external data source by querying external tables that specify each PXF server configuration.
 
 1. (_Optional_) Uninstall the PXF for Greenplum Database 5 package on every segment host in the GPDB cluster; this operation requires `sudo` privileges. For example:
 
