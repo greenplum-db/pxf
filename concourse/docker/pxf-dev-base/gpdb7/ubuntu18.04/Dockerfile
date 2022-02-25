@@ -13,7 +13,7 @@ RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
 
 # install java 11 and dependencies that are missing on the base images
 RUN apt-get update -y \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y curl sudo openjdk-11-jdk \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y curl sudo openjdk-11-jdk jq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

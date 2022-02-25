@@ -24,7 +24,7 @@ RUN curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERS
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
     # explicitly reinstall glibc-common to add back deleted charmaps
     && yum reinstall -y glibc-common \
-    && yum install -y rpm-build python-devel sudo && yum clean all \
+    && yum install -y rpm-build python-devel jq sudo && yum clean all \
     && cd /tmp && /usr/bin/pip install --upgrade pip==20.2.4 \
     && /usr/bin/pip install psi paramiko --no-cache-dir
 

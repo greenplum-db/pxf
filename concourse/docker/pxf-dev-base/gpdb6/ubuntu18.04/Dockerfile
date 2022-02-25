@@ -19,7 +19,7 @@ ARG USER_HOME_DIR="/root"
 ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
 
 RUN apt-get update -y \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev curl sudo \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev curl sudo jq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && mkdir -p /usr/share/maven /usr/share/maven/ref \
