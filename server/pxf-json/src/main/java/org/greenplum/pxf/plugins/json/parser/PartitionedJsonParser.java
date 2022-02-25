@@ -67,7 +67,6 @@ public class PartitionedJsonParser {
 			char c = (char) i;
 			if (c == START_BRACE && prev != BACKSLASH) {
 				lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
-
 				return true;
 			}
 			prev = c;

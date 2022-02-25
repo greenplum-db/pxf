@@ -9,7 +9,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
 import org.greenplum.pxf.plugins.json.JsonRecordReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ public class JsonRecordReaderTest {
     private JsonRecordReader jsonRecordReader;
 
     @BeforeEach
-    public void setup() throws IOException, URISyntaxException {
+    public void setup() throws URISyntaxException {
         context = new RequestContext();
         context.setConfiguration(new Configuration());
 
@@ -46,8 +45,6 @@ public class JsonRecordReaderTest {
         file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/input.json").toURI());
         context.setDataSource(file.getPath());
         path = new Path(file.getPath());
-        jobConf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec");
-        PxfInputFormat.setInputPaths(jobConf, path);
     }
 
     @Test
@@ -87,7 +84,7 @@ public class JsonRecordReaderTest {
 
         key = createKey();
         data = createValue();
-        jsonRecordReader.next(key, data); // why it's reading beyond split boundaries?? Have more clarification around the boundary
+        jsonRecordReader.next(key, data);
 
         assertEquals(107, data.toString().getBytes(StandardCharsets.UTF_8).length);
 
@@ -127,7 +124,7 @@ public class JsonRecordReaderTest {
 
     @Test
     /**
-     * The Split size is large only single spilt will be able to read all the records.
+     * The Split size is large so a single split will be able to read all the records.
      */
     public void testRecordSizeSmallerThanSplit() throws IOException {
 
@@ -162,10 +159,8 @@ public class JsonRecordReaderTest {
 
         key = createKey();
         data = createValue();
-        int recordCount = 0;
         if (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
-            recordCount++;
         }
 
         assertFalse(jsonRecordReader.next(key, data));
@@ -184,10 +179,8 @@ public class JsonRecordReaderTest {
 
         key = createKey();
         data = createValue();
-        int recordCount = 0;
         if (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
-            recordCount++;
         }
 
         assertFalse(jsonRecordReader.next(key, data));
@@ -208,10 +201,8 @@ public class JsonRecordReaderTest {
 
         key = createKey();
         data = createValue();
-        int recordCount = 0;
         if (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
-            recordCount++;
         }
 
         assertFalse(jsonRecordReader.next(key, data));
