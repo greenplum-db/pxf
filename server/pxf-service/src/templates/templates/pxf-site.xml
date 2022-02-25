@@ -24,7 +24,6 @@
             to be enabled in an Active Directory / IPA Server. Additional configuration is needed in the
             Active Directory / IPA Server to enable the PXF principal to impersonate end users.
             Set to true to enable, false to disable.
-            If set to true, the property 'pxf.service.user.impersonation' has to be set to true as well.
         </description>
     </property>
 
