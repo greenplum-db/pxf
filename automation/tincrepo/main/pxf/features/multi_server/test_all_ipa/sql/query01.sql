@@ -1,4 +1,4 @@
--- @description query01 for PXF test for two secured clusters, a non-secure cluster, and a cloud server
+-- @description query01 for PXF test for two secured clusters, a non-secure cluster, a cloud server, and an IPA server
 
 SELECT * FROM pxf_multiserver_default ORDER BY name;
 
