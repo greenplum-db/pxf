@@ -195,6 +195,10 @@ public class MultiServerTest extends BaseFeature {
 
     @Test(groups = {"features", "multiClusterSecurity"})
     public void testTwoSecuredServersNonSecureServerAndCloudServer() throws Exception {
-        runTincTest("pxf.features.multi_server.test_all.runTest");
+        if (hdfsIpa != null) {
+            runTincTest("pxf.features.multi_server.test_all_ipa.runTest");
+        } else {
+            runTincTest("pxf.features.multi_server.test_all.runTest");
+        }
     }
 }

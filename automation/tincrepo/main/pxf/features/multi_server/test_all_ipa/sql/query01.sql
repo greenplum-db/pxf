@@ -4,12 +4,15 @@ SELECT * FROM pxf_multiserver_default ORDER BY name;
 
 SELECT * FROM pxf_multiserver_secure_2 ORDER BY name;
 
+SELECT * FROM pxf_multiserver_ipa ORDER BY name;
+
 SELECT * FROM pxf_multiserver_non_secure ORDER BY name;
 
 SELECT * FROM pxf_multiserver_s3 ORDER BY name;
 
 SELECT * FROM pxf_multiserver_default UNION ALL
 SELECT * FROM pxf_multiserver_secure_2 UNION ALL
+SELECT * FROM pxf_multiserver_ipa UNION ALL
 SELECT * FROM pxf_multiserver_non_secure UNION ALL
 SELECT * FROM pxf_multiserver_s3
 ORDER BY name;
