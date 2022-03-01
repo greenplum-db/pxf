@@ -440,7 +440,12 @@ function run_pxf_automation() {
 	local multiNodesCluster=pxf_src/automation/src/test/resources/sut/MultiNodesCluster.xml
 
 	if [[ $KERBEROS == true ]]; then
-		multiNodesCluster=pxf_src/automation/src/test/resources/sut/MultiHadoopMultiNodesCluster.xml
+		if [[ -d ipa_env_files ]]; then
+			# use SUT file with configuration that includes IPA hadoop cluster
+			multiNodesCluster=pxf_src/automation/src/test/resources/sut/MultiHadoopIPAMultiNodesCluster.xml
+		else
+			multiNodesCluster=pxf_src/automation/src/test/resources/sut/MultiHadoopMultiNodesCluster.xml
+		fi
 	fi
 
 	if (( HIVE_VERSION == 2 )); then
@@ -461,10 +466,9 @@ function run_pxf_automation() {
 
 	if [[ $KERBEROS == true ]]; then
 		setup_pxf_kerberos_on_cluster
-		sed -i 's/sutFile=default.xml/sutFile=MultiHadoopMultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
-	else
-		sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
 	fi
+	sed -i "s/sutFile=default.xml/sutFile=$(basename $multiNodesCluster)/g" pxf_src/automation/jsystem.properties
+
 	chown -R gpadmin:gpadmin ~gpadmin/.ssh pxf_src/automation
 
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF

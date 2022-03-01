@@ -75,6 +75,14 @@
         <workingDirectory>tmp/pxf_automation_data</workingDirectory>
         <haNameservice></haNameservice>
     </hdfsNonSecure>
+    <hdfsIpa>
+        <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
+        <host>ipa-hadoop</host>
+        <port>8020</port>
+        <workingDirectory>tmp/pxf_automation_data/__UUID__</workingDirectory>
+        <haNameservice></haNameservice>
+        <useDatanodeHostname>true</useDatanodeHostname>
+    </hdfsIpa>
     <hbase>
         <class>org.greenplum.pxf.automation.components.hbase.HBase</class>
         <host>hadoop</host>
@@ -97,6 +105,13 @@
         <host>non-secure-hadoop</host>
         <port>10000</port>
     </hiveNonSecure>
+    <hiveIpa>
+        <class>org.greenplum.pxf.automation.components.hive.Hive</class>
+        <host>hive-ipa-host</host>
+        <port>10000</port>
+        <kerberosPrincipal>hive/hive-ipa-host@IPA-REALM</kerberosPrincipal>
+        <saslQop>auth-conf</saslQop>
+    </hiveIpa>
     <tinc>
         <class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
         <host>localhost</host>
