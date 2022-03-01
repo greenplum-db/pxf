@@ -42,7 +42,7 @@ public class PartitionedJsonParser {
 	private static final char BACKSLASH = '\\';
 	private static final char START_BRACE = '{';
 	private static final int EOF = -1;
-	private static final long CHARS_READ_LIMIT = 8192L;
+	private static final int CHARS_READ_LIMIT = 8192;
 	private final InputStreamReader inputStreamReader;
 	private final JsonLexer lexer;
 	private long bytesRead = 0;
@@ -56,7 +56,7 @@ public class PartitionedJsonParser {
 		// UTF-8 characters
 		this.inputStreamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
 
-		this.uncountedCharsReadFromStream = new StringBuilder();
+		this.uncountedCharsReadFromStream = new StringBuilder(CHARS_READ_LIMIT);
 	}
 
 	private boolean scanToFirstBeginObject() throws IOException {
@@ -204,7 +204,7 @@ public class PartitionedJsonParser {
 	private int readNextChar() throws IOException {
 		int i = inputStreamReader.read();
 
-		if (i != -1) {
+		if (i != EOF) {
 			uncountedCharsReadFromStream.append((char) i);
 			if (uncountedCharsReadFromStream.length() == CHARS_READ_LIMIT) {
 				bytesRead += countBytesInReadChars();
