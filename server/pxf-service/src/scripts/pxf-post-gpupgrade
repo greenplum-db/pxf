@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+set -o errexit
+
+# Follow symlinks to find the real script
+cd "$(dirname "$0")" || exit 1
+script_file=$(pwd)/$(basename "$0")
+while [[ -L "$script_file" ]]; do
+	script_file=$(readlink "$script_file")
+	cd "$(dirname "$script_file")" || exit 1
+	script_file=$(pwd)/$(basename "$script_file")
+done
+parent_script_dir="$( (cd "$(dirname "${script_file}")/.." && pwd -P))"
+
+# establish PXF_HOME and global vars used by all commands
+export PXF_HOME=${parent_script_dir}
+
+# Path to PXF_BASE directories, defaults to PXF_HOME
+export PXF_BASE=${PXF_BASE:=$PXF_HOME}
+
+# Path to Log directory
+export PXF_LOGDIR=${PXF_LOGDIR:=${PXF_BASE}/logs}
+
+: "${GPHOME:?GPHOME must be set before running this script}"
+# shellcheck source=/dev/null
+. "${GPHOME}/greenplum_path.sh"
+
+# create a log file with a timestamp in the name
+# example: $PXF_LOGDIR/pxf-post-gpupgrade.20220302135812.log
+log_file="${PXF_LOGDIR}/$(basename "${0}").$(date +%Y%m%d%H%M%S).log"
+touch "${log_file}"
+
+export PGHOST="${PGHOST:-localhost}"
+export PGPORT=${PGPORT:-5432}
+export PGDATABASE="${PGDATABASE:-gpadmin}"
+export PGUSER=${PGUSER:-gpadmin}
+export PGPASSWORD=${PGPASSWORD:-}
+
+cat <<EOF >>"${log_file}"
+Postgres Connection Parameters
+    \$PGHOST='${PGHOST}'
+    \$PGPORT='${PGPORT}'
+    \$PGDATABASE='${PGDATABASE}'
+    \$PGUSER='${PGUSER}'
+    \$PGPASSWORD='${PGPASSWORD//?/*}'
+EOF
+
+pxf_gpdb_major_version="$(awk 'BEGIN { FS = "=" } /gpdb.major-version/{ print $2 }' "${PXF_HOME}/gpextable/metadata")"
+gp_version="$(psql --no-align --tuples-only --command 'SELECT substring(version(), $$.*Greenplum Database (.*) build.*$$)')"
+
+echo "PXF compiled against GPDB major version '${pxf_gpdb_major_version}'" >>"${log_file}"
+echo "Running GPDB cluster is version '${gp_version}'" >>"${log_file}"
+
+if [[ "${pxf_gpdb_major_version}" != "${gp_version%%.*}" ]]; then
+	echo "ERROR: This version of PXF only works with GPDB ${pxf_gpdb_major_version}+ but the targeted GPDB cluster is ${gp_version}" | tee -a "${log_file}"
+	exit 1
+fi
+
+if [[ "${gp_version}" = 5* ]]; then
+	master_data_dir_query="SELECT fselocation FROM pg_catalog.pg_filespace_entry WHERE fsedbid = 1 AND fsefsoid = (SELECT oid FROM pg_catalog.pg_filespace WHERE fsname = 'pg_system')"
+else
+	master_data_dir_query="SELECT datadir FROM pg_catalog.gp_segment_configuration WHERE dbid = 1"
+fi
+export MASTER_DATA_DIRECTORY="${MASTER_DATA_DIRECTORY:-$(psql --no-align --tuples-only --command "${master_data_dir_query}")}"
+echo "GPDB master data directory is '${MASTER_DATA_DIRECTORY}'" >>"${log_file}"
+
+PXF_HOME_REGEX="(.*:)*\/gpextable.*"
+dynamic_library_path="$(gpconfig --show dynamic_library_path | grep 'Master.*value:' | sed -e 's/Master.*value: \(.*\)/\1/')"
+
+if [[ ! "${dynamic_library_path}" =~ $PXF_HOME_REGEX ]]; then
+	echo "GUC 'dynamic_library_path=${dynamic_library_path}' does not contain \$PXF_HOME/gpextable" >>"${log_file}"
+	echo "Skipping removing it from 'dynamic_library_path'" >>"${log_file}"
+else
+	echo "Removing '${PXF_HOME}/gpextable' from 'dynamic_library_path=${dynamic_library_path}'" >>"${log_file}"
+	new_dynamic_library_path="$(echo -n "${dynamic_library_path}" | perl -n -e 'print join(":", grep(!/.*gpextable.*/, split(":", $_)))')"
+	# for GPDB 5, must `\`-escape dollar-sign ($) in the value passed to gpconfig
+	if [[ "${gp_version}" = 5* ]]; then
+		new_dynamic_library_path="${new_dynamic_library_path//$/\\$}"
+	fi
+	{
+		echo "New value for 'dynamic_library_path' is '${new_dynamic_library_path}'"
+		gpconfig --change dynamic_library_path --value "${new_dynamic_library_path}"
+		gpstop -u
+	} &>>"${log_file}"
+fi
+
+echo "Updating PXF function definitions" >>"${log_file}"
+psql --no-align --tuples-only --command "SELECT datname FROM pg_catalog.pg_database WHERE datname != 'template0';" | while read -r dbname; do
+	echo -n "checking if database '${dbname}' has PXF extension installed... " >>"${log_file}"
+	if ! psql --dbname="${dbname}" --no-align --tuples-only --command "SELECT extname FROM pg_catalog.pg_extension WHERE extname = 'pxf'" | grep . &>/dev/null; then
+		echo "skipping database '${dbname}'" >>"${log_file}"
+		continue
+	fi
+	echo "updating PXF extension UDFs in database '${dbname}'" >>"${log_file}"
+	psql --dbname="${dbname}" --set ON_ERROR_STOP=on &>>"${log_file}" <<-END_OF_SQL
+		CREATE OR REPLACE FUNCTION pg_catalog.pxf_write() RETURNS integer
+		AS '${PXF_HOME}/gpextable/pxf', 'pxfprotocol_export'
+		LANGUAGE C STABLE;
+
+		CREATE OR REPLACE FUNCTION pg_catalog.pxf_read() RETURNS integer
+		AS '${PXF_HOME}/gpextable/pxf', 'pxfprotocol_import'
+		LANGUAGE C STABLE;
+
+		CREATE OR REPLACE FUNCTION pg_catalog.pxf_validate() RETURNS void
+		AS '${PXF_HOME}/gpextable/pxf', 'pxfprotocol_validate_urls'
+		LANGUAGE C STABLE;
+
+		CREATE OR REPLACE FUNCTION pg_catalog.pxfwritable_import() RETURNS record
+		AS '${PXF_HOME}/gpextable/pxf', 'gpdbwritableformatter_import'
+		LANGUAGE C STABLE;
+
+		CREATE OR REPLACE FUNCTION pg_catalog.pxfwritable_export(record) RETURNS bytea
+		AS '${PXF_HOME}/gpextable/pxf', 'gpdbwritableformatter_export'
+		LANGUAGE C STABLE;
+	END_OF_SQL
+done
+
+echo "Success" | tee -a "${log_file}"

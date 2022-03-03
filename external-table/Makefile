@@ -27,6 +27,8 @@ stage: pxf.so
 	install -c -m 644 pxf--1.0.sql build/stage/
 	install -c -m 644 pxf--2.0.sql build/stage/
 	install -c -m 644 pxf--1.0--2.0.sql build/stage/
+	@echo "gpdb.version=$(GP_VERSION)" > build/stage/metadata
+	@echo "gpdb.major-version=$(GP_MAJORVERSION)" > build/stage/metadata
 	@echo $(GP_MAJORVERSION) > build/metadata/gp_major_version
 	@echo $(BLD_ARCH) | sed 's/_/-/' > build/metadata/build_arch
 

@@ -263,6 +263,8 @@ task stage(type: Copy) {
         include 'pxf'
         include 'kill-pxf.sh'
         include 'merge-pxf-config.sh'
+        include 'pxf-pre-gpupgrade'
+        include 'pxf-post-gpupgrade'
         into 'bin'
         filter { line -> line.replaceAll('_PXF_VERSION_', "${version}") }
     }
