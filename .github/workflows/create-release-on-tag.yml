@@ -26,14 +26,15 @@ jobs:
 
             ### Enhancements:
 
-            - [#749](https://github.com/greenplum-db/pxf/pull/749) Tests for Hive with Kerberos Constrained delegation
+            - [#707](https://github.com/greenplum-db/pxf/pull/707) Enabled Kerberos Constrained Delegation impersonation for secure clusters
             - [#752](https://github.com/greenplum-db/pxf/pull/752) Add support for GPDB6 on RHEL 8
             - [#754](https://github.com/greenplum-db/pxf/pull/754) Add scripts for modifying PXF extension to support gpupgrade
-            - [703](https://github.com/greenplum-db/pxf/pull/703)  Added Support for Avro Logical Types for Readable External Tables
+            - [#703](https://github.com/greenplum-db/pxf/pull/703)  Added Support for Avro Logical Types for Readable External Tables
 
             ### Bug Fixes:
 
             - [#738](https://github.com/greenplum-db/pxf/pull/738) Fix: For reading the records correctly from a MultiLine JSON file
             - [#756](https://github.com/greenplum-db/pxf/pull/756) Fixed HiveDataFragmenter not closing connections to Hive Metastore
+            - [#760](https://github.com/greenplum-db/pxf/pull/760) Update bundled postgresql to 42.3.3
           draft: false
           prerelease: false
