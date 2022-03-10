@@ -190,16 +190,16 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | FORMAT 'CUSTOM' | Use `FORMAT` `'CUSTOM'` with  the `hdfs:json` profile. The `CUSTOM` `FORMAT` requires that you specify `(FORMATTER='pxfwritable_import')`. |
 
 <a id="customopts"></a>
-PXF supports single- and multi- line JSON records. When you want to read multi-line JSON records, you must provide an `IDENTIFIER` \<custom-option\> and value. Use this \<custom-option\> to identify the name of the JSON field whose objects you want to be returned as individual tuples.
+PXF supports single- and multi- line JSON records. When you want to read multi-line JSON records, you must provide an `IDENTIFIER` \<custom-option\> and value. Use this \<custom-option\> to identify the name of a field whose parent JSON object you want to be returned as individual tuples.
 
 The `hdfs:json` profile supports the following \<custom-option\>s:
 
 | Option Keyword  | &nbsp;&nbsp;Syntax,&nbsp;&nbsp;Example(s)&nbsp;&nbsp; | Description |
 |-------|--------------|-----------------------|
-| IDENTIFIER  | `&IDENTIFIER=<value>`<br>`&IDENTIFIER=created_at`| You must include the `IDENTIFIER` keyword and \<value\> in the `LOCATION` string only when you are accessing JSON data comprised of multi-line records. Use the \<value\> to identify the name of the JSON field whose objects you want to be returned as individual tuples. | 
+| IDENTIFIER  | `&IDENTIFIER=<value>`<br>`&IDENTIFIER=created_at`| You must include the `IDENTIFIER` keyword and \<value\> in the `LOCATION` string only when you are accessing JSON data comprised of multi-line records. Use the \<value\> to identify the name of the field whose parent JSON object you want to be returned as individual tuples. | 
 | IGNORE_MISSING_PATH | `&IGNORE_MISSING_PATH=<boolean>` | Specify the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 
-<div class="note">When a nested object in a multi-line record JSON file includes a field with the same name as that of a parent object field <i>and</i> the field name is also specified as the <code>IDENTIFIER</code>, there is a possibility that PXF could return incorrect results if a file split occurs in the middle of a record. Should you need to, you can work around this edge case by compressing the JSON file, and having PXF read the compressed file.</div>
+<div class="note">When a nested object in a multi-line record JSON file includes a field with the same name as that of a parent object field <i>and</i> the field name is also specified as the <code>IDENTIFIER</code>, there is a possibility that PXF could return incorrect results. Should you need to, you can work around this edge case by compressing the JSON file, and having PXF read the compressed file.</div>
 
 
 ## <a id="jsonexample1"></a>Example: Reading a JSON File with Single Line Records
