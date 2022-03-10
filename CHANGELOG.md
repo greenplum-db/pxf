@@ -1,5 +1,19 @@
 # Changelog
 
+## 6.3.0 (03/17/2022)
+
+### Enhancements:
+
+- [#749](https://github.com/greenplum-db/pxf/pull/749) Tests for Hive with Kerberos Constrained delegation
+- [#752](https://github.com/greenplum-db/pxf/pull/752) Add support for GPDB6 on RHEL 8
+- [#754](https://github.com/greenplum-db/pxf/pull/754) Add scripts for modifying PXF extension to support gpupgrade
+- [703](https://github.com/greenplum-db/pxf/pull/703)  Added Support for Avro Logical Types for Readable External Tables
+
+### Bug Fixes:
+
+- [#738](https://github.com/greenplum-db/pxf/pull/738) Fix: For reading the records correctly from a MultiLine JSON file
+- [#756](https://github.com/greenplum-db/pxf/pull/756) Fixed HiveDataFragmenter not closing connections to Hive Metastore
+
 ## 6.2.3 (01/31/2022)
 
 ### Bug Fixes:
