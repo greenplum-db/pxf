@@ -4,10 +4,10 @@
 
 ### Enhancements:
 
+- [#703](https://github.com/greenplum-db/pxf/pull/703) Added Support for Avro Logical Types for Readable External Tables
 - [#707](https://github.com/greenplum-db/pxf/pull/707) Enabled Kerberos Constrained Delegation impersonation for secure clusters
 - [#752](https://github.com/greenplum-db/pxf/pull/752) Add support for GPDB6 on RHEL 8
 - [#754](https://github.com/greenplum-db/pxf/pull/754) Add scripts for modifying PXF extension to support gpupgrade
-- [#703](https://github.com/greenplum-db/pxf/pull/703) Added Support for Avro Logical Types for Readable External Tables
 
 ### Bug Fixes:
 
