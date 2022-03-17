@@ -16,7 +16,7 @@ digraph pxf_container_image_flow {
         gp6_centos7_latest[label="gpdb6-centos7-test:latest"]
         gp6_ubuntu18_latest[label="gpdb6-ubuntu18.04-test:latest"]
         gp6_oel7_latest[label="gpdb6-oel7-test:latest"]
-        gp7_centos7_latest[label="gpdb7-centos7-test:net-tools"]
+        gp7_centos7_latest[label="gpdb7-centos7-test:latest"]
         gp7_ubuntu18_latest[label="gpdb7-ubuntu18.04-test:latest"]
     }
 

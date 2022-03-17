@@ -16,13 +16,13 @@
 </g>
 <g id="clust2" class="cluster">
 <title>cluster_gcr_images</title>
-<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="282,-662 282,-737 1409,-737 1409,-662 282,-662"/>
-<text text-anchor="middle" x="845.5" y="-721.8" font-family="Times,serif" font-size="14.00">GP RelEng Images (gcr.io/data&#45;gpdb&#45;public&#45;images)</text>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="282,-662 282,-737 1391,-737 1391,-662 282,-662"/>
+<text text-anchor="middle" x="836.5" y="-721.8" font-family="Times,serif" font-size="14.00">GP RelEng Images (gcr.io/data&#45;gpdb&#45;public&#45;images)</text>
 </g>
 <g id="clust3" class="cluster">
 <title>cluster_gcr_images_private</title>
-<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="1593,-662 1593,-737 1901,-737 1901,-662 1593,-662"/>
-<text text-anchor="middle" x="1747" y="-721.8" font-family="Times,serif" font-size="14.00">GP RelEng Images (gcr.io/data&#45;gpdb&#45;private&#45;images)</text>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="1584,-662 1584,-737 1892,-737 1892,-662 1584,-662"/>
+<text text-anchor="middle" x="1738" y="-721.8" font-family="Times,serif" font-size="14.00">GP RelEng Images (gcr.io/data&#45;gpdb&#45;private&#45;images)</text>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_pxf_dev_base</title>
@@ -192,11 +192,11 @@
 <!-- gp7_centos7_latest -->
 <g id="node6" class="node">
 <title>gp7_centos7_latest</title>
-<polygon fill="#2aa198" stroke="black" points="1203,-706 1037,-706 1033,-702 1033,-670 1199,-670 1203,-674 1203,-706"/>
-<polyline fill="none" stroke="black" points="1199,-702 1033,-702 "/>
-<polyline fill="none" stroke="black" points="1199,-702 1199,-670 "/>
-<polyline fill="none" stroke="black" points="1199,-702 1203,-706 "/>
-<text text-anchor="middle" x="1118" y="-684.3" font-family="Times,serif" font-size="14.00" fill="white">gpdb7&#45;centos7&#45;test:net&#45;tools</text>
+<polygon fill="#2aa198" stroke="black" points="1185,-706 1037,-706 1033,-702 1033,-670 1181,-670 1185,-674 1185,-706"/>
+<polyline fill="none" stroke="black" points="1181,-702 1033,-702 "/>
+<polyline fill="none" stroke="black" points="1181,-702 1181,-670 "/>
+<polyline fill="none" stroke="black" points="1181,-702 1185,-706 "/>
+<text text-anchor="middle" x="1109" y="-684.3" font-family="Times,serif" font-size="14.00" fill="white">gpdb7&#45;centos7&#45;test:latest</text>
 </g>
 <!-- gp7_centos7_dockerfile -->
 <g id="node14" class="node">
@@ -209,17 +209,17 @@
 <!-- gp7_centos7_latest&#45;&gt;gp7_centos7_dockerfile -->
 <g id="edge16" class="edge">
 <title>gp7_centos7_latest&#45;&gt;gp7_centos7_dockerfile</title>
-<path fill="none" stroke="black" d="M1099.38,-669.7C1084.03,-655.43 1062.09,-635.04 1045,-619.16"/>
-<polygon fill="black" stroke="black" points="1047.25,-616.47 1037.54,-612.23 1042.48,-621.6 1047.25,-616.47"/>
+<path fill="none" stroke="black" d="M1092.07,-669.7C1078.24,-655.56 1058.53,-635.41 1043.06,-619.59"/>
+<polygon fill="black" stroke="black" points="1045.35,-616.93 1035.85,-612.23 1040.34,-621.82 1045.35,-616.93"/>
 </g>
 <!-- gp7_ubuntu18_latest -->
 <g id="node7" class="node">
 <title>gp7_ubuntu18_latest</title>
-<polygon fill="#2aa198" stroke="black" points="1400.5,-706 1225.5,-706 1221.5,-702 1221.5,-670 1396.5,-670 1400.5,-674 1400.5,-706"/>
-<polyline fill="none" stroke="black" points="1396.5,-702 1221.5,-702 "/>
-<polyline fill="none" stroke="black" points="1396.5,-702 1396.5,-670 "/>
-<polyline fill="none" stroke="black" points="1396.5,-702 1400.5,-706 "/>
-<text text-anchor="middle" x="1311" y="-684.3" font-family="Times,serif" font-size="14.00" fill="white">gpdb7&#45;ubuntu18.04&#45;test:latest</text>
+<polygon fill="#2aa198" stroke="black" points="1382.5,-706 1207.5,-706 1203.5,-702 1203.5,-670 1378.5,-670 1382.5,-674 1382.5,-706"/>
+<polyline fill="none" stroke="black" points="1378.5,-702 1203.5,-702 "/>
+<polyline fill="none" stroke="black" points="1378.5,-702 1378.5,-670 "/>
+<polyline fill="none" stroke="black" points="1378.5,-702 1382.5,-706 "/>
+<text text-anchor="middle" x="1293" y="-684.3" font-family="Times,serif" font-size="14.00" fill="white">gpdb7&#45;ubuntu18.04&#45;test:latest</text>
 </g>
 <!-- gp7_ubuntu18_dockerfile -->
 <g id="node15" class="node">
@@ -232,17 +232,17 @@
 <!-- gp7_ubuntu18_latest&#45;&gt;gp7_ubuntu18_dockerfile -->
 <g id="edge19" class="edge">
 <title>gp7_ubuntu18_latest&#45;&gt;gp7_ubuntu18_dockerfile</title>
-<path fill="none" stroke="black" d="M1270.03,-669.83C1253,-662.23 1233.22,-652.8 1216,-643 1202.81,-635.49 1188.9,-626.26 1176.99,-617.9"/>
-<polygon fill="black" stroke="black" points="1178.88,-614.95 1168.71,-612 1174.82,-620.65 1178.88,-614.95"/>
+<path fill="none" stroke="black" d="M1261.56,-669.8C1247.47,-661.9 1230.74,-652.24 1216,-643 1203.44,-635.13 1189.95,-626.03 1178.19,-617.89"/>
+<polygon fill="black" stroke="black" points="1180.18,-615.01 1169.97,-612.16 1176.17,-620.75 1180.18,-615.01"/>
 </g>
 <!-- gp6_rhel8_latest -->
 <g id="node8" class="node">
 <title>gp6_rhel8_latest</title>
-<polygon fill="#2aa198" stroke="black" points="1816,-706 1682,-706 1678,-702 1678,-670 1812,-670 1816,-674 1816,-706"/>
-<polyline fill="none" stroke="black" points="1812,-702 1678,-702 "/>
-<polyline fill="none" stroke="black" points="1812,-702 1812,-670 "/>
-<polyline fill="none" stroke="black" points="1812,-702 1816,-706 "/>
-<text text-anchor="middle" x="1747" y="-684.3" font-family="Times,serif" font-size="14.00" fill="white">gpdb6&#45;rhel8&#45;test:latest</text>
+<polygon fill="#2aa198" stroke="black" points="1807,-706 1673,-706 1669,-702 1669,-670 1803,-670 1807,-674 1807,-706"/>
+<polyline fill="none" stroke="black" points="1803,-702 1669,-702 "/>
+<polyline fill="none" stroke="black" points="1803,-702 1803,-670 "/>
+<polyline fill="none" stroke="black" points="1803,-702 1807,-706 "/>
+<text text-anchor="middle" x="1738" y="-684.3" font-family="Times,serif" font-size="14.00" fill="white">gpdb6&#45;rhel8&#45;test:latest</text>
 </g>
 <!-- gp6_rhel8_dockerfile -->
 <g id="node11" class="node">
@@ -255,8 +255,8 @@
 <!-- gp6_rhel8_latest&#45;&gt;gp6_rhel8_dockerfile -->
 <g id="edge7" class="edge">
 <title>gp6_rhel8_latest&#45;&gt;gp6_rhel8_dockerfile</title>
-<path fill="none" stroke="black" d="M1677.83,-673.77C1580.05,-655.07 1403.7,-621.34 1316.97,-604.75"/>
-<polygon fill="black" stroke="black" points="1317.58,-601.3 1307.1,-602.86 1316.26,-608.18 1317.58,-601.3"/>
+<path fill="none" stroke="black" d="M1668.86,-673.52C1573.02,-654.84 1402.02,-621.51 1316.96,-604.93"/>
+<polygon fill="black" stroke="black" points="1317.51,-601.47 1307.02,-603 1316.17,-608.34 1317.51,-601.47"/>
 </g>
 <!-- rpm_docker_rhel8 -->
 <g id="node17" class="node">
@@ -269,8 +269,8 @@
 <!-- gp6_rhel8_latest&#45;&gt;rpm_docker_rhel8 -->
 <g id="edge24" class="edge">
 <title>gp6_rhel8_latest&#45;&gt;rpm_docker_rhel8</title>
-<path fill="none" stroke="black" d="M1788.61,-669.91C1825.74,-654.66 1880.23,-632.28 1919.98,-615.96"/>
-<polygon fill="black" stroke="black" points="1921.32,-619.19 1929.24,-612.15 1918.66,-612.71 1921.32,-619.19"/>
+<path fill="none" stroke="black" d="M1781.28,-669.91C1819.98,-654.63 1876.82,-632.19 1918.19,-615.85"/>
+<polygon fill="black" stroke="black" points="1919.54,-619.08 1927.56,-612.15 1916.97,-612.57 1919.54,-619.08"/>
 </g>
 <!-- gp5_centos7_pxf_sha -->
 <g id="node18" class="node">

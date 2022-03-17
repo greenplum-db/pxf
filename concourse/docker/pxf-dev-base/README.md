@@ -121,7 +121,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-centos7-test:net-tools \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-centos7-test:latest \
       --build-arg=GO_VERSION=${GO_VERSION} \
       --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb7-centos7-test-pxf \
