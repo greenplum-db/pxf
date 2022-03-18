@@ -106,7 +106,7 @@ Perform the following procedure to configure the Hadoop user:
     gpadmin@gpmaster$ cp $PXF_HOME/templates/pxf-site.xml .
     ```
 
-5. Open the `pxf-site.xml` file in the editor of your choice, and configure the Hadoop user name. For example, if you want to access Hadoop as the user `hdfsuser1`, uncomment the property and set it as follows:
+5. Open the `pxf-site.xml` file in the editor of your choice, and configure the Hadoop user name. When impersonation is disabled, this name identifies the Hadoop user identity that PXF will use to access the Hadoop system. When user impersonation is enabled for a non-secure Hadoop cluster, this name identifies the PXF proxy Hadoop user. For example, if you want to access Hadoop as the user `hdfsuser1`, uncomment the property and set it as follows:
 
     ``` xml
     <property>
@@ -169,11 +169,11 @@ PXF user impersonation is enabled by default for Hadoop servers. You can configu
 
 ## <a id="hadoop"></a>Configure Hadoop Proxying
 
-When PXF user impersonation is enabled in the PXF server configuration of a non-secured Hadoop server configuration, you must configure Hadoop to permit PXF to proxy Greenplum users. This configuration involves setting certain `hadoop.proxyuser.*` properties. Follow these steps to set up PXF Hadoop proxy users:
+When PXF user impersonation is enabled for a Hadoop server configuration and Kerberos constrained delegation is disabled (the default), you must configure Hadoop to permit PXF to proxy Greenplum users. This configuration involves setting certain `hadoop.proxyuser.*` properties. Follow these steps to set up PXF Hadoop proxy users:
 
 1. Log in to your Hadoop cluster and open the `core-site.xml` configuration file using a text editor, or use Ambari or another Hadoop cluster manager to add or edit the Hadoop property values described in this procedure.
 
-2. Set the property `hadoop.proxyuser.<name>.hosts` to specify the list of PXF host names from which proxy requests are permitted. Substitute the PXF proxy Hadoop user for `<name>`. The PXF proxy Hadoop user is the `pxf.service.user.name` that you configured in the procedure above, or, if you are using Kerberos authentication to Hadoop without constrained delegation, the proxy user identity is the *primary* component of the Kerberos principal. If you have not explicitly configured `pxf.service.user.name`, the proxy user is the operating system user that started PXF. Provide multiple PXF host names in a comma-separated list. For example, if the PXF proxy user is named `hdfsuser2`:
+2. Set the property `hadoop.proxyuser.<name>.hosts` to specify the list of PXF host names from which proxy requests are permitted. Substitute the PXF proxy Hadoop user for `<name>`. The PXF proxy Hadoop user is the `pxf.service.user.name` that you configured in the procedure above, or, if you are using Kerberos authentication to Hadoop, the proxy user identity is the *primary* component of the Kerberos principal. If you have not explicitly configured `pxf.service.user.name`, the proxy user is the operating system user that started PXF. Provide multiple PXF host names in a comma-separated list. For example, if the PXF proxy user is named `hdfsuser2`:
 
     ``` xml
     <property>
