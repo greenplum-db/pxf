@@ -1,6 +1,6 @@
 package org.greenplum.pxf.service.bridge;
 
-import org.greenplum.pxf.api.ReadVectorizedResolver;
+import org.greenplum.pxf.api.model.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;

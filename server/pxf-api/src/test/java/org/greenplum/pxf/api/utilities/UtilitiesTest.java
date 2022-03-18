@@ -22,7 +22,7 @@ package org.greenplum.pxf.api.utilities;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadVectorizedResolver;
+import org.greenplum.pxf.api.model.ReadVectorizedResolver;
 import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
