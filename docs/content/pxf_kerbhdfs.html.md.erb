@@ -138,7 +138,7 @@ The following table identifies the impersonation and service user settings, and 
 
 | Impersonation  | Service&nbsp;User |  PXF Configuration | AD/IPA&nbsp;Config&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
 |----------------|-------------------|--------------------|-----------|
-|  false          | \<custom\> | Set up the PXF Kerberos principal, keytab files, and related settings in `pxf-site.xml` as described in the [Configuration Procedure](#procedure) in this topic, disable impersonation as described in [Configure PXF User Impersonation](pxfuserimpers.html#pxf_cfg_impers), [Enable Kerberos Constrained Delegation](#enable_kcd), and [Configure the Hadoop User](pxfuserimpers.html#pxf_cfg_user) to the \<custom> user name.  | Configure `gpadmin` delegation rights for the custom user. |
+|  false          | \<custom\> | Set up the PXF Kerberos principal, keytab files, and related settings in `pxf-site.xml` as described in the [Configuration Procedure](#procedure) in this topic, disable impersonation as described in [Configure PXF User Impersonation](pxfuserimpers.html#pxf_cfg_impers), [Enable Kerberos Constrained Delegation](#enable_kcd), and [Configure the Hadoop User](pxfuserimpers.html#pxf_cfg_user) to the \<custom> user name.  | Configure AD or IPA to provide the PXF Kerberos principal with the delegation rights for the \<custom> user name. |
 
 
 
@@ -320,7 +320,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 
 ### <a id="proc_complete"></a>Completing the PXF Configuration
 
-On the Greenplum Database master host, complete the configuration of the PXF server based on your chosen Hadoop access scenario:
+On the Greenplum Database master host, complete the configuration of the PXF server based on your chosen Hadoop access scenario. Choose one, as *these are mutually exclusive*:
 
 1. If you want to access Hadoop as the Greenplum Database user:
 
