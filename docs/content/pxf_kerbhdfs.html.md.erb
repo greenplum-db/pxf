@@ -10,8 +10,8 @@ The identity with which PXF accesses a Kerberos-secured Hadoop depends on the se
 |----------------|--------------|---------------|
 | pxf.service.kerberos.principal | The PXF Kerberos principal name. | gpadmin/\_HOST@EXAMPLE.COM |
 | pxf.service.user.impersonation | Enables/disables Greenplum Database user impersonation on the remote system. | `true` |
-| pxf.service.kerberos.constrained-delegation | Enables/disables user impersation via Kerberos constrained delegation based on S4U. | `false` |
-| pxf.service.user.name | The user name with which PXF accesses the remote system. | Depends on the `pxf.service.user.impersonation` and `pxf.service.kerberos.constrained-delegation` property settings. |
+| pxf.service.kerberos.constrained-delegation | Enables/disables usage of Kerberos constrained delegation based on S4U Kerberos extensions. This option allows Hadoop administrators to avoid creating a proxy user configuration in Hadoop, instead requiring them to perform delegation configuration in and LDAP server. | `false` |
+| pxf.service.user.name | (Optional) The user name with which PXF connects to a remote Kerberos-secured cluster if user impersonation is disabled and using the `pxf.service.kerberos.principal` is not desired. |  |
 
 You configure these setting for a Hadoop PXF server via the `pxf-site.xml` configuration file. Refer to [About the pxf-site.xml Configuration File](cfg_server.html#pxf-site) for more information about the configuration properties in this file.
 
@@ -96,7 +96,7 @@ impersonate Greenplum users using the Kerberos principal.
 
 ### <a id="kcd"></a>Accessing Hadoop Using Kerberos Constrained Delegation
 
-Kerberos constrained delegation is a Windows Server feature that allows an administrator to specify trust boundaries that restrict the scope of where an application can act on behalf of a user. You may choose to configure PXF to use Kerberos constrained delegation when you want to manage HDFS access privileges in a directory service without the need to specify a proxy Hadoop user. Refer to the Microsoft [Service for User](https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-sfu/bde93b0e-f3c9-4ddf-9f44-e1453be7af5a) (S4U) Kerberos protocol extension documentation for more information about Kerberos constrained delegation.
+Kerberos constrained delegation is a feature that allows an administrator to specify trust boundaries that restrict the scope of where an application can act on behalf of a user. You may choose to configure PXF to use Kerberos constrained delegation when you want to manage user impersonation privileges in a directory service without the need to specify a proxy Hadoop user. Refer to the Microsoft [Service for User](https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-sfu/bde93b0e-f3c9-4ddf-9f44-e1453be7af5a) (S4U) Kerberos protocol extension documentation for more information about Kerberos constrained delegation.
 
 When your Active Directory or Identity Policy Audit (IPA) Server is configured appropriately and you enable Kerberos constrained delegation for PXF, the PXF service requests and obtains a Kerberos ticket on behalf of the user, and uses the ticket to access the HDFS file system. PXF caches the ticket for one day.
 
@@ -112,7 +112,7 @@ Before you configure PXF for access to a secure HDFS filesystem using Kerberos c
 
 - S4U is enabled in the Active Directory or IPA Server.
 
-- The Active Directory or IPA Server is configured to allow PXF to impersonate end users.
+- The Active Directory or IPA Server is configured to allow the PXF Kerberos principal to impersonate end users.
 
 #### <a id="enable_kcd"></a>Enabling Kerberos Constrained Delegation
 
@@ -165,7 +165,7 @@ The following table identifies the impersonation and service user settings, and 
 
 | Impersonation  | Service&nbsp;User |  PXF Configuration | AD/IPA&nbsp;Config&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
 |----------------|-------------------|--------------------|-----------|
-|  true          | Greenplum user | Set up the PXF Kerberos principal, keytab files, and related settings in `pxf-site.xml` as described in the [Configuration Procedure](#procedure) in this topic, and [Enable Kerberos Constrained Delegation](#enable_kcd). | Configure `gpadmin` delegation rights for the Greenplum user. |
+|  true          | Greenplum user | Set up the PXF Kerberos principal, keytab files, and related settings in `pxf-site.xml` as described in the [Configuration Procedure](#procedure) in this topic, and [Enable Kerberos Constrained Delegation](#enable_kcd). | Configure LDAP to provide the PXF Kerberos principal with the delegation rights for the Greenplum end users. |
 
 #### <a id="kcd_custom"></a>Accessing Hadoop On Behalf of a \<custom> User
 
@@ -240,7 +240,7 @@ When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will
 
 4. Save the file and exit the editor.
 
-6. Synchronize the keytabs in `$PXF_BASE`. You must distribute the keytab file to `$PXF_BASE/keytabs/`. Locate the keytab file, copy the file to the `$PXF_BASE` runtime configuration directory, and set required permissions. For example:
+5. Synchronize the keytabs in `$PXF_BASE`. You must distribute the keytab file to `$PXF_BASE/keytabs/`. Locate the keytab file, copy the file to the `$PXF_BASE` runtime configuration directory, and set required permissions. For example:
 	
     ``` shell
     gpadmin@gpmaster$ gpscp -f hostfile_all pxf.service.keytab =:$PXF_BASE/keytabs/
@@ -354,7 +354,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 
 6. [Complete the PXF Configuration](#proc_complete) based on your chosen Hadoop access scenario.
 
-### <a id="proc_scenario"></a>Completing the PXF Configuration
+### <a id="proc_complete"></a>Completing the PXF Configuration
 
 On the Greenplum Database master host, complete the configuration of the PXF server based on your chosen Hadoop access scenario:
 
