@@ -158,6 +158,8 @@ PXF user impersonation is enabled by default for Hadoop servers. You can configu
     </property>
     ```
 
+3. If you enabled user impersonation and Kerberos constrained delegation is disabled (the default), you must configure Hadoop proxying as described in [Configure Hadoop Proxying](#hadoop). You must also configure [Hive User Impersonation](#hive) and [HBase User Impersonation](#hbase) if you plan to use those services.
+
 4. Save the `pxf-site.xml` file and exit the editor.
 
 5. Use the `pxf cluster sync` command to synchronize the PXF Hadoop server configuration to your Greenplum Database cluster:
