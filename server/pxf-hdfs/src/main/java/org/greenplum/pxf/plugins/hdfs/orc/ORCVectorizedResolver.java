@@ -12,6 +12,7 @@ import org.greenplum.pxf.api.function.TriFunction;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.model.WriteVectorizedResolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
 import java.util.ArrayList;
@@ -90,12 +91,12 @@ import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.MAP_BY_PO
  * ------------------------------------------------------
  *
  */
-public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedResolver, Resolver {
+public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedResolver, WriteVectorizedResolver, Resolver {
 
     /**
-     * The schema used to read the ORC file.
+     * The schema used to read or write the ORC file.
      */
-    private TypeDescription readSchema;
+    private TypeDescription orcSchema;
 
     /**
      * An array of functions that resolve ColumnVectors into Lists of OneFields
@@ -166,7 +167,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                         .getNullResultSet(columnDescriptor.columnTypeCode(), batchSize);
             } else {
                 TypeDescription orcColumn = positionalAccess
-                        ? columnIndex < readSchema.getChildren().size() ? readSchema.getChildren().get(columnIndex) : null
+                        ? columnIndex < orcSchema.getChildren().size() ? orcSchema.getChildren().get(columnIndex) : null
                         : readFields.get(columnDescriptor.columnName());
                 if (orcColumn == null) {
                     // this column is missing in the underlying ORC file, but
@@ -185,7 +186,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                 } else {
                     throw new UnsupportedTypeException(
                             String.format("Unable to resolve column '%s' with category '%s'. Only primitive and lists of primitive types are supported.",
-                                    readSchema.getFieldNames().get(columnIndex), orcColumn.getCategory()));
+                                    orcSchema.getFieldNames().get(columnIndex), orcColumn.getCategory()));
                 }
             }
 
@@ -196,6 +197,29 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
             }
         }
         return resolvedBatch;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OneRow setFieldsForBatch(List<List<OneField>> records) throws Exception {
+        // TODO: vectorized bridge needs to accumulate many records (upto batchSize), how does it know ?
+        orcSchema = (TypeDescription) context.getMetadata();
+        VectorizedRowBatch batch = orcSchema.createRowBatch(records.size()); // TODO: should we make batch size configurable ?
+        // iterate over incoming rows
+        int rowIndex = 0;
+        for (List<OneField> record : records) {
+            int columnIndex = 0;
+            for (OneField field : record) {
+                // TODO: fill up column vectors for each row using mapping functions
+                // someFunction.apply(batch, rowIndex, columnIndex, field.getData());
+                columnIndex++;
+            }
+            rowIndex++;
+            batch.size = rowIndex;
+        }
+        return null;
     }
 
     /**
@@ -226,21 +250,21 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         if (!(context.getMetadata() instanceof TypeDescription))
             throw new PxfRuntimeException("No schema detected in request context");
 
-        readSchema = (TypeDescription) context.getMetadata();
-        int schemaSize = readSchema.getChildren().size();
+        orcSchema = (TypeDescription) context.getMetadata();
+        int schemaSize = orcSchema.getChildren().size();
 
         functions = new TriFunction[schemaSize];
         typeOidMappings = new int[schemaSize];
 
         readFields = new HashMap<>(schemaSize);
         IntStream.range(0, schemaSize).forEach(idx -> {
-            String columnName = readSchema.getFieldNames().get(idx);
-            TypeDescription t = readSchema.getChildren().get(idx);
+            String columnName = orcSchema.getFieldNames().get(idx);
+            TypeDescription t = orcSchema.getChildren().get(idx);
             readFields.put(columnName, t);
             readFields.put(columnName.toLowerCase(), t);
         });
 
-        List<TypeDescription> children = readSchema.getChildren();
+        List<TypeDescription> children = orcSchema.getChildren();
         for (int i = 0; i < children.size(); i++) {
             TypeDescription t = children.get(i);
             switch (t.getCategory()) {

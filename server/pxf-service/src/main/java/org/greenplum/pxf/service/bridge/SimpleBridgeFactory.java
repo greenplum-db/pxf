@@ -2,6 +2,7 @@ package org.greenplum.pxf.service.bridge;
 
 import org.greenplum.pxf.api.model.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.WriteVectorizedResolver;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.greenplum.pxf.service.utilities.GSSFailureHandler;
@@ -48,7 +49,9 @@ public class SimpleBridgeFactory implements BridgeFactory {
      * @return true if vectorization is applicable in a current context
      */
     private boolean useVectorization(RequestContext requestContext) {
-        return Utilities.implementsInterface(requestContext.getResolver(), ReadVectorizedResolver.class);
+        String resolverName = requestContext.getResolver();
+        return Utilities.implementsInterface(resolverName, ReadVectorizedResolver.class) ||
+               Utilities.implementsInterface(resolverName, WriteVectorizedResolver.class);
     }
 
 }
