@@ -4,8 +4,12 @@ dir=$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )
 [[ -e ${dir}/common.sh ]] || exit 1
 source "${dir}/common.sh"
 
+cluster_description="$(get_cluster_description)"
+cluster_sync_description="$(get_cluster_sync_description)"
+num_hosts="${#all_cluster_hosts[@]}"
+
 list_cluster_configs() {
-	for host in {s,}mdw sdw{1,2}; do
+	for host in "${all_cluster_hosts[@]}"; do
 		echo ${host}:
 		list_remote_configs "${host}"
 	done
@@ -14,15 +18,11 @@ list_cluster_configs() {
 
 # === Test "pxf cluster sync " ===============================================================================
 expected_sync_message=\
-"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
-PXF configs synced successfully on 3 out of 3 hosts"
+"Syncing PXF configuration files from ${cluster_sync_description}
+PXF configs synced successfully on $((num_hosts-1)) out of $((num_hosts-1)) hosts"
+
 expected_cluster_configs=\
-"smdw:
-1
-2
-3
-${PXF_BASE_DIR}/conf/foo.jar
-mdw:
+"mdw:
 1
 2
 3
@@ -37,9 +37,15 @@ sdw2:
 2
 3
 ${PXF_BASE_DIR}/conf/foo.jar"
+
+if has_standby_master; then
+  printf -v expected_cluster_configs "%s\nsmdw:\n1\n2\n3\n${PXF_BASE_DIR}/conf/foo.jar" "${expected_cluster_configs}"
+fi
+
 test_sync_succeeds() {
   # given:
-  for host in smdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == mdw ]] && continue
     #    : files do not exist on remote hosts
     remove_remote_configs "${host}"
     assert_empty "$(list_remote_configs ${host})" "config files should not exist on host ${host}"
@@ -61,15 +67,11 @@ run_test test_sync_succeeds "pxf cluster sync should succeed"
 
 # === Test "pxf cluster sync (no delete)" ====================================================================
 expected_sync_message=\
-"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
-PXF configs synced successfully on 3 out of 3 hosts"
+"Syncing PXF configuration files from ${cluster_sync_description}
+PXF configs synced successfully on $((num_hosts-1)) out of $((num_hosts-1)) hosts"
+
 expected_cluster_configs=\
-"smdw:
-1
-2
-3
-${PXF_BASE_DIR}/conf/foo.jar
-mdw:
+"mdw:
 1
 2
 3
@@ -83,9 +85,15 @@ sdw2:
 2
 3
 ${PXF_BASE_DIR}/conf/foo.jar"
+
+if has_standby_master; then
+  printf -v expected_cluster_configs "%s\nsmdw:\n1\n2\n3\n${PXF_BASE_DIR}/conf/foo.jar" "${expected_cluster_configs}"
+fi
+
 test_sync_succeeds_no_delete() {
   # given:
-  for host in smdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == mdw ]] && continue
     #    : files exist on remote hosts
     assert_equals "${PXF_BASE_DIR}/conf/foo.jar" "$(list_remote_file ${host} "${PXF_BASE_DIR}/conf/foo.jar")" "foo.jar should exist on host ${host}"
   done
@@ -103,12 +111,7 @@ run_test test_sync_succeeds_no_delete "pxf cluster sync (no delete) should succe
 
 # === Test "pxf cluster sync (delete one host)" ==============================================================
 expected_cluster_configs=\
-"smdw:
-1
-2
-3
-${PXF_BASE_DIR}/conf/foo.jar
-mdw:
+"mdw:
 1
 2
 3
@@ -121,9 +124,15 @@ sdw2:
 2
 3
 ${PXF_BASE_DIR}/conf/foo.jar"
+
+if has_standby_master; then
+  printf -v expected_cluster_configs "%s\nsmdw:\n1\n2\n3\n${PXF_BASE_DIR}/conf/foo.jar" "${expected_cluster_configs}"
+fi
+
 test_sync_succeeds_delete_one_host() {
   # given:
-  for host in smdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == mdw ]] && continue
     #    : files exist on remote hosts
     assert_equals "${PXF_BASE_DIR}/conf/foo.jar" "$(list_remote_file ${host} "${PXF_BASE_DIR}/conf/foo.jar")" "foo.jar should exist on host ${host}"
   done
@@ -144,15 +153,10 @@ run_test test_sync_succeeds_delete_one_host "pxf cluster sync (delete one host) 
 
 # === Test "pxf cluster sync (no delete server conf)" ========================================================
 expected_sync_message=\
-"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
-PXF configs synced successfully on 3 out of 3 hosts"
+"Syncing PXF configuration files from ${cluster_sync_description}
+PXF configs synced successfully on $((num_hosts-1)) out of $((num_hosts-1)) hosts"
 expected_cluster_configs=\
-"smdw:
-1
-2
-3
-${PXF_BASE_DIR}/conf/foo.jar
-mdw:
+"mdw:
 2
 3
 sdw1:
@@ -164,9 +168,15 @@ sdw2:
 2
 3
 ${PXF_BASE_DIR}/conf/foo.jar"
+
+if has_standby_master; then
+  printf -v expected_cluster_configs "%s\nsmdw:\n1\n2\n3\n${PXF_BASE_DIR}/conf/foo.jar" "${expected_cluster_configs}"
+fi
+
 test_sync_succeeds_no_delete_server_conf() {
   # given:
-  for host in smdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == mdw ]] && continue
     #    : files exist on remote hosts
     assert_equals "${PXF_BASE_DIR}/servers/foo/1" "$(list_remote_file ${host} "${PXF_BASE_DIR}/servers/foo/1")" "servers/foo/1 should exist on host ${host}"
   done
@@ -184,13 +194,10 @@ run_test test_sync_succeeds_no_delete_server_conf "pxf cluster sync (no delete s
 
 # === Test "pxf cluster sync (delete server conf)" ===========================================================
 expected_sync_message=\
-"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
-PXF configs synced successfully on 3 out of 3 hosts"
+"Syncing PXF configuration files from ${cluster_sync_description}
+PXF configs synced successfully on $((num_hosts-1)) out of $((num_hosts-1)) hosts"
 expected_cluster_configs=\
-"smdw:
-2
-3
-mdw:
+"mdw:
 2
 3
 sdw1:
@@ -199,9 +206,15 @@ sdw1:
 sdw2:
 2
 3"
+
+if has_standby_master; then
+  printf -v expected_cluster_configs "%s\nsmdw:\n2\n3" "${expected_cluster_configs}"
+fi
+
 test_sync_succeeds_delete_server_conf() {
   # given:
-  for host in smdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == mdw ]] && continue
     #    : files exist on remote hosts
     assert_equals "${PXF_BASE_DIR}/servers/foo/1" "$(list_remote_file ${host} "${PXF_BASE_DIR}/servers/foo/1")" "servers/foo/1 should exist on host ${host}"
   done
@@ -219,16 +232,21 @@ run_test test_sync_succeeds_delete_server_conf "pxf cluster sync (delete server 
 
 # === Test "pxf cluster sync (delete server)" ================================================================
 expected_sync_message=\
-"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
-PXF configs synced successfully on 3 out of 3 hosts"
+"Syncing PXF configuration files from ${cluster_sync_description}
+PXF configs synced successfully on $((num_hosts-1)) out of $((num_hosts-1)) hosts"
 expected_cluster_configs=\
-"smdw:
-mdw:
+"mdw:
 sdw1:
 sdw2:"
+
+if has_standby_master; then
+  printf -v expected_cluster_configs "%s\nsmdw:" "${expected_cluster_configs}"
+fi
+
 test_sync_succeeds_delete_server() {
   # given:
-  for host in smdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == mdw ]] && continue
     #    : server directory exists on remote hosts
     assert_equals "${PXF_BASE_DIR}/servers/foo" "$(echo_remote_dir ${host} "${PXF_BASE_DIR}/servers/foo")" "servers/foo should exist on host ${host}"
   done
@@ -249,16 +267,21 @@ expected_sync_message=\
 "Syncing PXF configuration files from master host to 2 segment hosts...
 PXF configs synced successfully on 2 out of 2 hosts"
 expected_cluster_configs=\
-"smdw:
-mdw:
+"mdw:
 ${PXF_BASE_DIR}/conf/foo.jar
 sdw1:
 ${PXF_BASE_DIR}/conf/foo.jar
 sdw2:
 ${PXF_BASE_DIR}/conf/foo.jar"
+
+if has_standby_master; then
+  printf -v expected_cluster_configs "%s\nsmdw:" "${expected_cluster_configs}"
+fi
+
 test_sync_succeeds_no_standby() {
   # given:
-  for host in smdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == mdw ]] && continue
     #    : files do not exist on remote hosts
     remove_remote_configs "${host}"
     assert_empty "$(list_remote_configs ${host})" "config files should not exist on host ${host}"
@@ -267,7 +290,9 @@ test_sync_succeeds_no_standby() {
   touch "${PXF_BASE_DIR}/conf/foo.jar"
   #      : AND the standby master is no longer on smdw
   source "${GPHOME}/greenplum_path.sh"
-  gpinitstandby -ar >/dev/null
+  if has_standby_master; then
+    gpinitstandby -ar >/dev/null
+  fi
   # when : "pxf cluster sync" command is run
   local result="$(pxf cluster sync)"
   # then : it succeeds and prints the expected message
@@ -279,6 +304,8 @@ run_test test_sync_succeeds_no_standby "pxf cluster sync (no standby) should suc
 # ============================================================================================================
 
 # put standby master back on smdw
-gpinitstandby -as smdw >/dev/null
+if has_standby_master; then
+  gpinitstandby -as smdw >/dev/null
+fi
 
 exit_with_err "${BASH_SOURCE[0]}"

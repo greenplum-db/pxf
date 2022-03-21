@@ -30,6 +30,9 @@ err_cnt=0
 test_cnt=0
 failed_tests_cnt=0
 
+declare -a all_cluster_hosts
+mapfile -t all_cluster_hosts <hostfile_all
+
 run_test() {
 	local usage='test <func> <message>'
 	local func=${1:?${usage}} message="$((++test_cnt))) ${2:?${usage}}"
@@ -135,3 +138,30 @@ list_remote_pxf_running_pid() {
   ssh "${1}" "ps -aef | grep pxf | grep -v grep | tr -s ' ' | cut -d ' ' -f 2"
 }
 
+has_standby_master() {
+  grep -q smdw hostfile_all
+}
+
+get_cluster_description() {
+  local cluster_description="master host"
+  if has_standby_master; then
+    cluster_description+=", standby master host,"
+  fi
+  local num_segment_hosts
+  num_segment_hosts="$(grep -c -P 'sdw\d+' hostfile_all)"
+  cluster_description+=" and ${num_segment_hosts} segment hosts..."
+
+  echo "${cluster_description}"
+}
+
+get_cluster_sync_description() {
+  local cluster_sync_description="master host to "
+  if has_standby_master; then
+    cluster_sync_description+="standby master host and "
+  fi
+  local num_segment_hosts
+  num_segment_hosts="$(grep -c -P 'sdw\d+' hostfile_all)"
+  cluster_sync_description+="${num_segment_hosts} segment hosts..."
+
+  echo "${cluster_sync_description}"
+}

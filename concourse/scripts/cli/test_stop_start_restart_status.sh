@@ -4,17 +4,20 @@ dir=$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )
 [[ -e ${dir}/common.sh ]] || exit 1
 source "${dir}/common.sh"
 
+cluster_description="$(get_cluster_description)"
+num_hosts="${#all_cluster_hosts[@]}"
+
 # ************************************************************************************************************
 # ***** TEST Suite starts with PXF running on all nodes ******************************************************
 # ************************************************************************************************************
 
 # === Test "pxf cluster status (all running)" ================================================================
 expected_status_message=\
-"Checking status of PXF servers on master host, standby master host, and 2 segment hosts...
-PXF is running on 4 out of 4 hosts"
+"Checking status of PXF servers on ${cluster_description}
+PXF is running on ${num_hosts} out of ${num_hosts} hosts"
 test_status_succeeds_all_running() {
   # given:
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -36,11 +39,11 @@ run_test test_status_succeeds_all_running "pxf cluster status (all running) shou
 
 # === Test "pxf cluster stop (all running)" ==================================================================
 expected_stop_message=\
-"Stopping PXF on master host, standby master host, and 2 segment hosts...
-PXF stopped successfully on 4 out of 4 hosts"
+"Stopping PXF on ${cluster_description}
+PXF stopped successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_stop_succeeds_all_running() {
   # given:
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -56,7 +59,7 @@ test_stop_succeeds_all_running() {
   local result="$(pxf cluster stop)"
   # then : it succeeds and prints the expected message
   assert_equals "${expected_stop_message}" "${result}" "pxf cluster stop should succeed"
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : AND there are no PXF processes left running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     assert_empty "${running_pid}" "PXF should not be running on host ${host}"
@@ -70,11 +73,11 @@ run_test test_stop_succeeds_all_running "pxf cluster stop (all running) should s
 
 # === Test "pxf cluster stop (none running)" =================================================================
 expected_stop_message=\
-"Stopping PXF on master host, standby master host, and 2 segment hosts...
-PXF stopped successfully on 4 out of 4 hosts"
+"Stopping PXF on ${cluster_description}
+PXF stopped successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_stop_succeeds_none_running() {
   # given:
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : PXF is not running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -88,7 +91,7 @@ test_stop_succeeds_none_running() {
   local result="$(pxf cluster stop)"
   # then : it succeeds and prints the expected message
   assert_equals "${expected_stop_message}" "${result}" "pxf cluster stop should succeed"
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : AND there are no PXF processes left running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     assert_empty "${running_pid}" "PXF should not be running on host ${host}"
@@ -102,18 +105,22 @@ run_test test_stop_succeeds_none_running "pxf cluster stop (none running) should
 
 # === Test "pxf cluster status (none running)" ===============================================================
 expected_status_message=\
-"Checking status of PXF servers on master host, standby master host, and 2 segment hosts...\n\
-ERROR: PXF is not running on 4 out of 4 hosts\n\
+"Checking status of PXF servers on ${cluster_description}\n\
+ERROR: PXF is not running on ${num_hosts} out of ${num_hosts} hosts\n\
 mdw ==> ${yellow}Checking if PXF is up and running...${reset}\n\
-${red}ERROR: PXF is down - the application is not running${reset}...\n\
-smdw ==> ${yellow}Checking if PXF is up and running...${reset}\n\
-${red}ERROR: PXF is down - the application is not running${reset}...\n\
-sdw1 ==> ${yellow}Checking if PXF is up and running...${reset}\n\
+${red}ERROR: PXF is down - the application is not running${reset}...\n"
+
+if has_standby_master; then
+  expected_status_message+="smdw ==> ${yellow}Checking if PXF is up and running...${reset}\n${red}ERROR: PXF is down - the application is not running${reset}...\n"
+fi
+
+expected_status_message+=\
+"sdw1 ==> ${yellow}Checking if PXF is up and running...${reset}\n\
 ${red}ERROR: PXF is down - the application is not running${reset}...\n\
 sdw2 ==> ${yellow}Checking if PXF is up and running...${reset}\n\
 ${red}ERROR: PXF is down - the application is not running${reset}..."
 test_status_succeeds_none_running() {
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : PXF is not running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -133,11 +140,11 @@ run_test test_status_succeeds_none_running "pxf cluster status (none running) sh
 
 # === Test "pxf cluster start (none running)" ================================================================
 expected_start_message=\
-"Starting PXF on master host, standby master host, and 2 segment hosts...
-PXF started successfully on 4 out of 4 hosts"
+"Starting PXF on ${cluster_description}
+PXF started successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_start_succeeds_none_running() {
   # given:
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : PXF is not running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -151,7 +158,7 @@ test_start_succeeds_none_running() {
   local result="$(pxf cluster start)"
   # then : it succeeds and prints the expected message
   assert_equals "${expected_start_message}" "${result}" "pxf cluster start should succeed"
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : AND PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -169,13 +176,13 @@ run_test test_start_succeeds_none_running "pxf cluster start (none running) shou
 
 # === Test "pxf cluster start (all running)" =================================================================
 expected_start_message=\
-"Starting PXF on master host, standby master host, and 2 segment hosts...
-PXF started successfully on 4 out of 4 hosts"
+"Starting PXF on ${cluster_description}
+PXF started successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_start_succeeds_all_running() {
   local index=0
   declare -a old_pids
   # given:
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -194,7 +201,7 @@ test_start_succeeds_all_running() {
   # then : it succeeds and prints the expected message
   assert_equals "${expected_start_message}" "${result}" "pxf cluster start should succeed"
   index=0
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : AND PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -215,13 +222,13 @@ run_test test_start_succeeds_all_running "pxf cluster start (all running) should
 
 # === Test "pxf cluster restart (all running)" ===============================================================
 expected_restart_message=\
-"Restarting PXF on master host, standby master host, and 2 segment hosts...
-PXF restarted successfully on 4 out of 4 hosts"
+"Restarting PXF on ${cluster_description}
+PXF restarted successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_restart_succeeds_all_running() {
   local index=0
   declare -a old_pids
   # given:
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -240,7 +247,7 @@ test_restart_succeeds_all_running() {
   # then : it succeeds and prints the expected message
   assert_equals "${expected_restart_message}" "${result}" "pxf cluster restart should succeed"
   index=0
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : AND PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -261,11 +268,11 @@ run_test test_restart_succeeds_all_running "pxf cluster restart (all running) sh
 
 # === Test "pxf cluster restart (none running)" ==============================================================
 expected_restart_message=\
-"Restarting PXF on master host, standby master host, and 2 segment hosts...
-PXF restarted successfully on 4 out of 4 hosts"
+"Restarting PXF on ${cluster_description}
+PXF restarted successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_restart_succeeds_none_running() {
   # given:
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : PXF is not running
     ssh "${host}" "${PXF_BASE_OPTION}${PXF_HOME}/bin/pxf stop"
     assert_empty "$(list_remote_pxf_running_pid ${host})" "PXF should not be running on host ${host}"
@@ -277,7 +284,7 @@ test_restart_succeeds_none_running() {
   local result="$(pxf cluster restart)"
   # then : it succeeds and prints the expected message
   assert_equals "${expected_restart_message}" "${result}" "pxf cluster restart should succeed"
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : AND PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -295,22 +302,24 @@ run_test test_restart_succeeds_none_running "pxf cluster restart (none running) 
 
 # === Test "pxf cluster restart (one running)" ===============================================================
 expected_restart_message=\
-"Restarting PXF on master host, standby master host, and 2 segment hosts...
-PXF restarted successfully on 4 out of 4 hosts"
+"Restarting PXF on ${cluster_description}
+PXF restarted successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_restart_succeeds_one_running() {
-  # given: PXF is running on segment host 1
-  local sdw1_pid="$(list_remote_pxf_running_pid sdw1)"
-  assert_not_empty "${sdw1_pid}" "PXF should be running on host sdw1"
-  #      : AND PXF is not running on master, standby master or segment host 2
-  for host in {s,}mdw sdw2; do
+  # given: PXF is not running on master, standby master or segment host 2
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == sdw1 ]] && continue
+
     ssh ${host} "${PXF_BASE_OPTION}${PXF_HOME}/bin/pxf stop"
     assert_empty "$(list_remote_pxf_running_pid ${host})" "PXF should not be running on host ${host}"
   done
+  #      : AND PXF is running on segment host 1
+  local sdw1_pid="$(list_remote_pxf_running_pid sdw1)"
+  assert_not_empty "${sdw1_pid}" "PXF should be running on host sdw1"
   # when : "pxf cluster restart" command is run
   local result="$(pxf cluster restart)"
   # then : it succeeds and prints the expected message
   assert_equals "${expected_restart_message}" "${result}" "pxf cluster restart should succeed"
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : AND PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -322,7 +331,7 @@ test_restart_succeeds_one_running() {
     #    : AND the pids match
     assert_equals "${running_pid}" "${file_pid}" "pid files should match on host ${host}"
     #    : AND the pid on sdw1 should not be the same (since restart is doing stop first)
-    [[ "${host}" == "sdw1" ]] && assert_not_equals "${sdw1_pid}" "${running_pid}" "pid should change on host sdw1"
+    [[ $host == sdw1 ]] && assert_not_equals "${sdw1_pid}" "${running_pid}" "pid should change on host sdw1"
   done
 }
 run_test test_restart_succeeds_one_running "pxf cluster restart (one running) should succeed"
@@ -330,14 +339,16 @@ run_test test_restart_succeeds_one_running "pxf cluster restart (one running) sh
 
 # === Test "pxf cluster start (one running)" =================================================================
 expected_start_message=\
-"Starting PXF on master host, standby master host, and 2 segment hosts...
-PXF started successfully on 4 out of 4 hosts"
+"Starting PXF on ${cluster_description}
+PXF started successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_start_succeeds_one_running() {
   # given: PXF is running on segment host 1
   local sdw1_pid="$(list_remote_pxf_running_pid sdw1)"
   assert_not_empty "${sdw1_pid}" "PXF should be running on host sdw1"
   #      : AND PXF is not running on master, standby master or segment host 2
-  for host in {s,}mdw sdw2; do
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == sdw1 ]] && continue
+
     ssh ${host} "${PXF_BASE_OPTION}${PXF_HOME}/bin/pxf stop"
     assert_empty "$(list_remote_pxf_running_pid ${host})" "PXF should not be running on host ${host}"
   done
@@ -345,7 +356,7 @@ test_start_succeeds_one_running() {
   local result="$(pxf cluster start)"
   # then : it succeeds and prints the expected message
   assert_equals "${expected_start_message}" "${result}" "pxf cluster start should succeed"
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : AND PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
@@ -357,7 +368,7 @@ test_start_succeeds_one_running() {
     #    : AND the pids match
     assert_equals "${running_pid}" "${file_pid}" "pid files should match on host ${host}"
     #    : AND the pid on sdw1 should still be the same
-    [[ "${host}" == "sdw1" ]] && assert_equals "${sdw1_pid}" "${running_pid}" "pid should not change on host sdw1"
+    [[ $host == sdw1 ]] && assert_equals "${sdw1_pid}" "${running_pid}" "pid should not change on host sdw1"
   done
 }
 run_test test_start_succeeds_one_running "pxf cluster start (one running) should succeed"
@@ -365,20 +376,26 @@ run_test test_start_succeeds_one_running "pxf cluster start (one running) should
 
 # === Test "pxf cluster status (one running)" ================================================================
 expected_status_message=\
-"Checking status of PXF servers on master host, standby master host, and 2 segment hosts...\n\
-ERROR: PXF is not running on 3 out of 4 hosts\n\
+"Checking status of PXF servers on ${cluster_description}\n\
+ERROR: PXF is not running on $((num_hosts-1)) out of ${num_hosts} hosts\n\
 mdw ==> ${yellow}Checking if PXF is up and running...${reset}\n\
-${red}ERROR: PXF is down - the application is not running${reset}...
-smdw ==> ${yellow}Checking if PXF is up and running...${reset}\n\
-${red}ERROR: PXF is down - the application is not running${reset}...
-sdw2 ==> ${yellow}Checking if PXF is up and running...${reset}\n\
+${red}ERROR: PXF is down - the application is not running${reset}...\n"
+
+if has_standby_master; then
+  expected_status_message+="smdw ==> ${yellow}Checking if PXF is up and running...${reset}\n${red}ERROR: PXF is down - the application is not running${reset}...\n"
+fi
+
+expected_status_message+=\
+"sdw2 ==> ${yellow}Checking if PXF is up and running...${reset}\n\
 ${red}ERROR: PXF is down - the application is not running${reset}..."
 test_status_succeeds_one_running() {
   # given: PXF is running on segment host 1
   local sdw1_pid="$(list_remote_pxf_running_pid sdw1)"
   assert_not_empty "${sdw1_pid}" "PXF should be running on host sdw1"
-  #      : AND PXF is not running on master, standby master or segment host 2
-  for host in {s,}mdw sdw2; do
+  #      : AND PXF is not running on other cluster hosts
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ $host == sdw1 ]] && continue
+
     ssh ${host} "${PXF_BASE_OPTION}${PXF_HOME}/bin/pxf stop"
     assert_empty "$(list_remote_pxf_running_pid ${host})" "PXF should not be running on host ${host}"
   done
@@ -392,22 +409,24 @@ run_test test_status_succeeds_one_running "pxf cluster status (one running) shou
 
 # === Test "pxf cluster stop (one running)" =================================================================
 expected_stop_message=\
-"Stopping PXF on master host, standby master host, and 2 segment hosts...
-PXF stopped successfully on 4 out of 4 hosts"
+"Stopping PXF on ${cluster_description}
+PXF stopped successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_stop_succeeds_one_running() {
-  # given: PXF is running on segment host 1
-  local sdw1_pid="$(list_remote_pxf_running_pid sdw1)"
-  assert_not_empty "${sdw1_pid}" "PXF should be running on host sdw1"
-  #      : AND PXF is not running on master, standby master or segment host 2
-  for host in {s,}mdw sdw2; do
+  # given: PXF is not running on master, standby master or segment host 2
+  for host in "${all_cluster_hosts[@]}"; do
+    [[ ${host} == sdw1 ]] && continue
+
     ssh ${host} "${PXF_BASE_OPTION}${PXF_HOME}/bin/pxf stop"
     assert_empty "$(list_remote_pxf_running_pid ${host})" "PXF should not be running on host ${host}"
   done
+  #      : AND PXF is running on segment host 1
+  local sdw1_pid="$(list_remote_pxf_running_pid sdw1)"
+  assert_not_empty "${sdw1_pid}" "PXF should be running on host sdw1"
   # when : "pxf cluster stop" command is run
   local result="$(pxf cluster stop)"
   # then : it succeeds and prints the expected message
   assert_equals "${expected_stop_message}" "${result}" "pxf cluster stop should succeed"
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     #    : AND there are no PXF processes left running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     assert_empty "${running_pid}" "PXF should not be running on host ${host}"

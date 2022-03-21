@@ -6,6 +6,9 @@ source "${dir}/common.sh"
 
 expected_extension_file="${GPHOME}/share/postgresql/extension/pxf.control"
 
+cluster_description="$(get_cluster_description)"
+num_hosts="${#all_cluster_hosts[@]}"
+
 list_extension_files() {
 	local usage='list_extension_files <host>' host=${1:?${usage}}
 	ssh "${host}" "
@@ -32,8 +35,8 @@ successful_reset_message=\
 * in a future release of PXF.
 *****************************************************************************
 
-Resetting PXF on master host, standby master host, and 2 segment hosts...
-PXF has been reset on 4 out of 4 hosts"
+Resetting PXF on ${cluster_description}
+PXF has been reset on ${num_hosts} out of ${num_hosts} hosts"
 test_reset_succeeds() {
   # given: <nothing>
   # when : "pxf cluster reset" command is run
@@ -55,11 +58,11 @@ successful_init_message=\
 *
 *****************************************************************************
 
-Initializing PXF on master host, standby master host, and 2 segment hosts...
-PXF initialized successfully on 4 out of 4 hosts"
+Initializing PXF on ${cluster_description}
+PXF initialized successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_init_no_extension_succeeds() {
   # given: extension files do not exist under GPHOME
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     remove_extension_files "${host}"
     assert_empty "$(list_extension_files ${host})" "extension files should NOT exist on host ${host}"
   done
@@ -68,7 +71,9 @@ test_init_no_extension_succeeds() {
   # then : it succeeds and prints the expected message
   assert_equals "${successful_init_message}" "${result}" "pxf cluster init (no extension) should succeed"
   #      : AND the extension file is copied to GPHOME
-  assert_equals "${expected_extension_file}" "$(list_extension_files ${host})" "extension file should exist on host ${host}"
+  for host in "${all_cluster_hosts[@]}"; do
+    assert_equals "${expected_extension_file}" "$(list_extension_files ${host})" "extension file should exist on host ${host}"
+  done
 }
 run_test test_init_no_extension_succeeds "pxf cluster init (no extension) should succeed"
 # ============================================================================================================
@@ -84,8 +89,8 @@ successful_init_message=\
 *
 *****************************************************************************
 
-Initializing PXF on master host, standby master host, and 2 segment hosts...
-PXF initialized successfully on 4 out of 4 hosts"
+Initializing PXF on ${cluster_description}
+PXF initialized successfully on ${num_hosts} out of ${num_hosts} hosts"
 
 control_file_content=\
 "directory = '/usr/local/pxf-gp6/gpextable/'
@@ -98,7 +103,7 @@ schema = public"
 
 test_init_extension_exists_succeeds() {
   # given: extension file exist under GPHOME
-  for host in {s,}mdw sdw{1,2}; do
+  for host in "${all_cluster_hosts[@]}"; do
     ssh "${host}" "echo 'placeholder' > ${GPHOME}/share/postgresql/extension/pxf.control"
     assert_equals "placeholder" "$(ssh ${host} cat ${GPHOME}/share/postgresql/extension/pxf.control)" "extension file should have placeholder content on host ${host}"
   done
@@ -107,7 +112,9 @@ test_init_extension_exists_succeeds() {
   # then : it succeeds and prints the expected message
   assert_equals "${successful_init_message}" "${result}" "pxf cluster init (extension exists) should succeed"
   #      : AND the extension file overrides existing one in GPHOME
-  assert_equals "${control_file_content}" "$(ssh ${host} cat ${GPHOME}/share/postgresql/extension/pxf.control)" "extension file should have valid content on host ${host}"
+  for host in "${all_cluster_hosts[@]}"; do
+    assert_equals "${control_file_content}" "$(ssh ${host} cat ${GPHOME}/share/postgresql/extension/pxf.control)" "extension file should have valid content on host ${host}"
+  done
 }
 run_test test_init_extension_exists_succeeds "pxf cluster init (extension exists) should succeed"
 # ============================================================================================================
