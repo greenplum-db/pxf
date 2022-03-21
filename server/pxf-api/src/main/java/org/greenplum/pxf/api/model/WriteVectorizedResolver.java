@@ -13,6 +13,12 @@ import java.util.List;
 public interface WriteVectorizedResolver {
 
     /**
+     * Returns the size of the batch that resolver recommends
+     * @return size of the batch
+     */
+    int getBatchSize();
+
+    /**
      * Constructs and sets the fields of a batch of records represented by {@link OneRow}.
      *
      * @param records list of records, each record is a list of {@link OneField} objects

@@ -123,15 +123,8 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
     }
 
     @Test
-    public void testOrcWriteIsNotSupported() {
-        Exception e = assertThrows(UnsupportedOperationException.class, () -> accessor.openForWrite());
-        assertEquals("Write operation is not supported", e.getMessage());
-
-        e = assertThrows(UnsupportedOperationException.class, () -> accessor.writeNextObject(new OneRow()));
-        assertEquals("Write operation is not supported", e.getMessage());
-
-        e = assertThrows(UnsupportedOperationException.class, () -> accessor.closeForWrite());
-        assertEquals("Write operation is not supported", e.getMessage());
+    public void testOrcWrite() {
+        // TODO: implement tests
     }
 
     private void runTestScenarioReadOrcTypesFile(int expectedNumCols) throws IOException {

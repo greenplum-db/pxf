@@ -2,6 +2,7 @@ package org.greenplum.pxf.plugins.hdfs.orc;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
@@ -197,6 +198,12 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
             }
         }
         return resolvedBatch;
+    }
+
+    @Override
+    public int getBatchSize() {
+        // TODO: should we make batch size configurable ?
+        return VectorizedRowBatch.DEFAULT_SIZE;
     }
 
     /**
