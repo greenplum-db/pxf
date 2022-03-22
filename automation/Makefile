@@ -79,6 +79,9 @@ ifeq "$(PXF_TEST_DEBUG)" "true"
 	# MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
 endif
 
+# disables credentials check by artifactregistry-maven-wagon plugin when run inside GCE VM.
+export NO_GCE_CHECK := true
+
 MVN=mvn
 
 .PHONY: all test
