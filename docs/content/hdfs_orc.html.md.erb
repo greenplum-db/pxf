@@ -125,7 +125,7 @@ Procedure:
 1. Create a JSON file named `sampledata.json` in the `/tmp` directory:
 
     ``` shell
-    hdfsclient$ echo '{"location": "Prague", "month": "Jan","num_orders": 101, "total_sales": 4875.33, "items_sold": ["boots", "hats"]}
+    $ echo '{"location": "Prague", "month": "Jan","num_orders": 101, "total_sales": 4875.33, "items_sold": ["boots", "hats"]}
   {"location": "Rome", "month": "Mar","num_orders": 87, "total_sales": 1557.39, "items_sold": ["coats"]}
   {"location": "Bangalore", "month": "May","num_orders": 317, "total_sales": 8936.99, "items_sold": ["winter socks", "long-sleeved shirts", "boots"]}
   {"location": "Beijing", "month": "Jul","num_orders": 411, "total_sales": 11600.67, "items_sold": ["hoodies/sweaters", "pants"]}
@@ -138,7 +138,7 @@ Procedure:
 1. Run the `orc-tools` `convert` command to convert `sampledata.json` to the ORC file `/tmp/sampledata.orc`; provide the schema to the command:
 
     ``` shell
-    hdfsclient$ java -jar orc-tools-1.7.3-uber.jar convert /tmp/sampledata.json \
+    $ java -jar orc-tools-1.7.3-uber.jar convert /tmp/sampledata.json \
       --schema 'struct<location:string,month:string,num_orders:int,total_sales:decimal(10,2),items_sold:array<string>>' \
       -o /tmp/sampledata.orc
     ```
@@ -146,7 +146,7 @@ Procedure:
 1. Copy the ORC file to HDFS. The following command copies the file to the `/data/pxf_examples` directory:
 
     ``` shell
-    hdfsclient$ hdfs dfs -put /tmp/sampledata.orc /data/pxf_examples/
+    $ hdfs dfs -put /tmp/sampledata.orc /data/pxf_examples/
     ```
 
 1. Log in to the Greenplum Database master host and connect to a database. This command connects to the database named `testdb` as the `gpadmin` user:
