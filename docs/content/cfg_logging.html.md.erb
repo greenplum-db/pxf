@@ -28,7 +28,9 @@ Enabling more verbose service-level or client-level logging for PXF may aid trou
 
 The default PXF logging configuration writes log messages to `$PXF_LOGDIR`, where the default log directory is `PXF_LOGDIR=$PXF_BASE/logs`.
 
-To change the PXF log directory, you must update the `$PXF_LOGDIR` property in the `pxf-env.sh` configuration file, synchronize the configuration change to the Greenplum Database cluster, and then restart PXF:
+To change the PXF log directory, you must update the `$PXF_LOGDIR` property in the `pxf-env.sh` configuration file, synchronize the configuration change to the Greenplum Database cluster, and then restart PXF.
+
+**Note:** The new log directory must exist on all Greenplum Database hosts, and must be accessible by the `gpadmin` user.
 
 1. Log in to your Greenplum Database master host:
 
@@ -143,7 +145,7 @@ To change the log level for the PXF service running on every host in the Greenpl
 
 1. Perform operations that exercise the PXF Service, and then collect and examine the information in `$PXF_LOGDIR/pxf-service.log`.
 
-1. Reinstate `info`-level logging - comment out the line or set the property value back to `info`, and then sync the update to and restart PXF on the cluster.
+1. Reinstate `info`-level logging by repeating the steps above with `pxf.log.level=info`.
 
 
 ## <a id="pxfdblogmsg"></a>Configuring Client-Level Logging

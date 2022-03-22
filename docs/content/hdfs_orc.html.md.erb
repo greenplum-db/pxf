@@ -133,12 +133,12 @@ Procedure:
 ' > /tmp/sampledata.json
     ```
 
-1. [Download](https://repo1.maven.org/maven2/org/apache/orc/orc-tools/1.6.2/orc-tools-1.6.2-uber.jar) the `orc-tools` JAR.
+1. [Download](https://repo1.maven.org/maven2/org/apache/orc/orc-tools) the most recent version of the `orc-tools` JAR to the current working directory.
 
 1. Run the `orc-tools` `convert` command to convert `sampledata.json` to the ORC file `/tmp/sampledata.orc`; provide the schema to the command:
 
     ``` shell
-    hdfsclient$ java -jar orc-tools-1.6.2-uber.jar convert /tmp/sampledata.json \
+    hdfsclient$ java -jar orc-tools-1.7.3-uber.jar convert /tmp/sampledata.json \
       --schema 'struct<location:string,month:string,num_orders:int,total_sales:decimal(10,2),items_sold:array<string>>' \
       -o /tmp/sampledata.orc
     ```

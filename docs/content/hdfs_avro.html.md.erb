@@ -262,13 +262,17 @@ Perform the following steps to create a sample Avro data file conforming to the 
 
     The sample data uses a comma `,` to separate top level records and a colon `:` to separate map/key values and record field name/values.
 
-3. Convert the text file to Avro format. There are various ways to perform the conversion, both programmatically and via the command line. In this example, we use the [Java Avro tools](http://avro.apache.org/releases.html); the jar `avro-tools-1.9.1.jar` file resides in the current directory:
+3. Convert the text file to Avro format. There are various ways to perform the conversion, both programmatically and via the command line. In this example, we use the Java Avro tools.
 
-    ``` shell
-    $ java -jar ./avro-tools-1.9.1.jar fromjson --schema-file /tmp/avro_schema.avsc /tmp/pxf_avro.txt > /tmp/pxf_avro.avro
-    ```
+    1. Download the most recent version of the Avro tools jar from http://avro.apache.org/releases.html to the current working directory.
 
-    The generated Avro binary data file is written to `/tmp/pxf_avro.avro`. 
+    1. Convert the file:
+
+        ``` shell
+        $ java -jar ./avro-tools-1.11.0.jar fromjson --schema-file /tmp/avro_schema.avsc /tmp/pxf_avro.txt > /tmp/pxf_avro.avro
+        ```
+
+        The generated Avro binary data file is written to `/tmp/pxf_avro.avro`. 
     
 4. Copy the generated Avro file to HDFS:
 

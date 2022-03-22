@@ -2,7 +2,7 @@
 title: Memory and Threading
 ---
 
-Because a single PXF Service (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This becomes more evident under concurrent workloads or with queries against large files. You may run into situations where a query hangs or fails due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to perform specific actions when it detects an out of memory condition.
+Because a single PXF Service (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This becomes more evident under concurrent workloads or with queries against large files. You may run into situations where a query hangs or fails due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to [auto-kill the server](#pxf-cfgoom-autokill) (enabled by default) or [dump the Java heap](#pxf-cfgoom-heapdump) when it detects an out of memory condition.
 
 
 ## <a id="pxf-heapcfg"></a>Increasing the JVM Memory for PXF
