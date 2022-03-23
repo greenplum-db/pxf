@@ -353,13 +353,15 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      */
     @SuppressWarnings("unchecked")
     private void ensureWriteFunctionsAreInitialized() {
-        if (readFunctions != null) return;
+        if (writeFunctions != null) return;
         if (!(context.getMetadata() instanceof TypeDescription))
             throw new PxfRuntimeException("No schema detected in request context");
 
         orcSchema = (TypeDescription) context.getMetadata();
         List<TypeDescription> columnTypeDescriptions = orcSchema.getChildren();
         int schemaSize = columnTypeDescriptions.size();
+        writeFunctions = new TriConsumer[schemaSize];
+
         for (int i=0; i < schemaSize; i++) {
             writeFunctions[i] = ORCVectorizedMappingFunctions.getColumnWriter(columnTypeDescriptions.get(i));
         }

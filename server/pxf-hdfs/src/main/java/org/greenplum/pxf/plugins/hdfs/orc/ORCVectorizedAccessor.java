@@ -58,6 +58,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
+    private static final String ORC_FILE_SUFFIX = ".orc";
     static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
 
     /**
@@ -152,8 +153,16 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     public boolean openForWrite() throws IOException {
         HcfsType hcfsType = HcfsType.getHcfsType(context);
         // ORC does not use codec suffix in filenames
-        String fileName = hcfsType.getUriForWrite(context);
+        String fileName = hcfsType.getUriForWrite(context) + ORC_FILE_SUFFIX;
         //TODO: figure out compression settings
+        /*
+        check Spark OrcUtils.extensionsForCompressionCodecNames(..)
+        val extensionsForCompressionCodecNames = Map(
+                "NONE" -> "",
+                "SNAPPY" -> ".snappy",
+                "ZLIB" -> ".zlib",
+                "LZO" -> ".lzo")
+         */
         //String compressCodec = context.getOption("COMPRESSION_CODEC");
 
         // TODO: process any PXF options for ORC write
@@ -162,7 +171,6 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         schemaBuilder = new ORCSchemaBuilder();
         TypeDescription writeSchema = schemaBuilder.buildSchema(context.getTupleDescription());
         fileWriter = OrcFile.createWriter(file, OrcFile.writerOptions(configuration).setSchema(writeSchema));
-        // do this in resolver : batch = writeSchema.createRowBatch();
 
         context.setMetadata(writeSchema);
         return true;
@@ -171,9 +179,10 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     @Override
     public boolean writeNextObject(OneRow onerow) throws IOException {
         // get a row batch produced by the resolver
+        // TODO: do we want to create just once and re-use it ?
         VectorizedRowBatch rowBatch = (VectorizedRowBatch) onerow.getData();
         fileWriter.addRowBatch(rowBatch);
-        batch.reset();
+        rowBatch.reset(); // TODO: need to reset only if the batch will be reused
         return true;
     }
 
