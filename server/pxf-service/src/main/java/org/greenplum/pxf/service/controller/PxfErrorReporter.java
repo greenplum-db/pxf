@@ -41,8 +41,10 @@ public abstract class PxfErrorReporter<T> {
             log.error(e.getMessage(), e);
             throw e;
         } catch (UnsupportedOperationException e) {
-            log.error(e.getStackTrace()[0].getMethodName()+" is not implemented" , e);
-            throw new PxfRuntimeException(e.getStackTrace()[0].getMethodName()+" is not implemented", e );
+            String errorMessage = e.getStackTrace()[0] != null ? e.getStackTrace()[0].getMethodName() : "Current Operation";
+            errorMessage = errorMessage + " is not implemented";
+            log.error(errorMessage, e);
+            throw new PxfRuntimeException(errorMessage, e );
         } catch (Exception e) {
             log.error(StringUtils.defaultIfBlank(e.getMessage(), e.getClass().getName()), e);
             // wrap into PxfRuntimeException so that it can be handled by the PxfExceptionHandler
