@@ -1,7 +1,9 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
+import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
@@ -9,22 +11,31 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.orc.TypeDescription;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.function.TriConsumer;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * Maps vectors of ORC types to a list of OneFields.
@@ -54,9 +65,15 @@ class ORCVectorizedMappingFunctions {
 
     // we intentionally create a new instance of PgUtilities here due to unnecessary complexity
     // required for dependency injection
-    private static PgUtilities pgUtilities = new PgUtilities();
+    private static final PgUtilities pgUtilities = new PgUtilities();
 
-    public static OneField[] booleanMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
+    private static final Map<TypeDescription.Category, TriConsumer<ColumnVector, Integer, Object>> writeFunctionsMap;
+    static {
+        writeFunctionsMap = new EnumMap<>(TypeDescription.Category.class);
+        initWriteFunctionsMap();
+    }
+
+    public static OneField[] booleanReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
         LongColumnVector lcv = (LongColumnVector) columnVector;
         if (lcv == null)
             return getNullResultSet(oid, batch.size);
@@ -82,7 +99,7 @@ class ORCVectorizedMappingFunctions {
      * @param oid the destination GPDB column OID
      * @return returns an array of OneFields, where each element in the array contains data from an entire row as a String
      */
-    public static OneField[] listMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
+    public static OneField[] listReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
         ListColumnVector listColumnVector = (ListColumnVector) columnVector;
         if (listColumnVector == null) {
             return getNullResultSet(oid, batch.size);
@@ -160,7 +177,7 @@ class ORCVectorizedMappingFunctions {
         }
     }
 
-    public static OneField[] shortMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
+    public static OneField[] shortReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
         LongColumnVector lcv = (LongColumnVector) columnVector;
         if (lcv == null)
             return getNullResultSet(oid, batch.size);
@@ -179,7 +196,7 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static OneField[] integerMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
+    public static OneField[] integerReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
         LongColumnVector lcv = (LongColumnVector) columnVector;
         if (lcv == null)
             return getNullResultSet(oid, batch.size);
@@ -198,7 +215,7 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static OneField[] longMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
+    public static OneField[] longReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
         LongColumnVector lcv = (LongColumnVector) columnVector;
         if (lcv == null)
             return getNullResultSet(oid, batch.size);
@@ -217,7 +234,7 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static OneField[] floatMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
+    public static OneField[] floatReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
         DoubleColumnVector dcv = (DoubleColumnVector) columnVector;
         if (dcv == null)
             return getNullResultSet(oid, batch.size);
@@ -236,7 +253,7 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static OneField[] doubleMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
+    public static OneField[] doubleReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
         DoubleColumnVector dcv = (DoubleColumnVector) columnVector;
         if (dcv == null)
             return getNullResultSet(oid, batch.size);
@@ -255,7 +272,7 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static OneField[] textMapper(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
+    public static OneField[] textReader(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
         BytesColumnVector bcv = (BytesColumnVector) columnVector;
         if (bcv == null)
             return getNullResultSet(oid, batch.size);
@@ -275,7 +292,7 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static OneField[] decimalMapper(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
+    public static OneField[] decimalReader(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
         DecimalColumnVector dcv = (DecimalColumnVector) columnVector;
         if (dcv == null)
             return getNullResultSet(oid, batch.size);
@@ -294,7 +311,7 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static OneField[] binaryMapper(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
+    public static OneField[] binaryReader(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
         BytesColumnVector bcv = (BytesColumnVector) columnVector;
         if (bcv == null)
             return getNullResultSet(oid, batch.size);
@@ -318,7 +335,7 @@ class ORCVectorizedMappingFunctions {
 
     // DateWritable is no longer deprecated in newer versions of storage api ¯\_(ツ)_/¯
     @SuppressWarnings("deprecation")
-    public static OneField[] dateMapper(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
+    public static OneField[] dateReader(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
         LongColumnVector lcv = (LongColumnVector) columnVector;
         if (lcv == null)
             return getNullResultSet(oid, batch.size);
@@ -337,7 +354,7 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static OneField[] timestampMapper(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
+    public static OneField[] timestampReader(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
         TimestampColumnVector tcv = (TimestampColumnVector) columnVector;
         if (tcv == null)
             return getNullResultSet(oid, batch.size);
@@ -360,6 +377,89 @@ class ORCVectorizedMappingFunctions {
         OneField[] result = new OneField[size];
         Arrays.fill(result, new OneField(oid, null));
         return result;
+    }
+
+    public static TriConsumer<ColumnVector, Integer, Object> getColumnWriter(TypeDescription typeDescription) {
+        TypeDescription.Category columnTypeCategory = typeDescription.getCategory();
+        TriConsumer<ColumnVector, Integer, Object> writeFunction = writeFunctionsMap.get(columnTypeCategory);
+        if (writeFunction == null) {
+            throw new PxfRuntimeException("Unsupported ORC type " + columnTypeCategory);
+        }
+        return writeFunction;
+    }
+
+    /**
+     * Initializes functions that update column vector of specific types, registers them into an enum map
+     * keyed of from the type description category for lookup by consumers later.
+     */
+    private static void initWriteFunctionsMap() {
+        // TODO: what about nulls ? Can we set null value or do we need to update flags on VectorizedRowBatch ?
+        // TODO: the logic below assumes values are not nulls and does not do any null checking
+        // TODO: what will we do with repeating ?
+
+        // see TypeUtils.createColumn for backing storage of different Category types
+        // go in the order TypeDescription.Category enum is defined
+        writeFunctionsMap.put(TypeDescription.Category.BOOLEAN, (columnVector, row, val) -> {
+            ((LongColumnVector) columnVector).vector[row] = (Boolean) val ? 1 : 0;
+        });
+        // BYTE("tinyint", true) - for now ORCSchemaBuilder does not support this type, so we do not expect it
+        writeFunctionsMap.put(TypeDescription.Category.SHORT, (columnVector, row, val) -> {
+            ((LongColumnVector) columnVector).vector[row] = ((Number) val).longValue();
+        });
+        writeFunctionsMap.put(TypeDescription.Category.INT, (columnVector, row, val) -> {
+            ((LongColumnVector) columnVector).vector[row] = ((Number) val).longValue();
+        });
+        writeFunctionsMap.put(TypeDescription.Category.LONG, (columnVector, row, val) -> {
+            ((LongColumnVector) columnVector).vector[row] = ((Number) val).longValue();
+        });
+        writeFunctionsMap.put(TypeDescription.Category.FLOAT, (columnVector, row, val) -> {
+            ((DoubleColumnVector) columnVector).vector[row] = ((Number) val).floatValue();
+        });
+        writeFunctionsMap.put(TypeDescription.Category.DOUBLE, (columnVector, row, val) -> {
+            ((DoubleColumnVector) columnVector).vector[row] = ((Number) val).doubleValue();
+        });
+        writeFunctionsMap.put(TypeDescription.Category.STRING, (columnVector, row, val) -> {
+            byte[] buffer = val.toString().getBytes(StandardCharsets.UTF_8);
+            ((BytesColumnVector) columnVector).setRef(row, buffer, 0, buffer.length);
+        });
+        writeFunctionsMap.put(TypeDescription.Category.DATE, (columnVector, row, val) -> {
+            // parse Greenplum date given as a string to a local date (no timezone info)
+            LocalDate date = LocalDate.parse((String) val, GreenplumDateTime.DATE_FORMATTER);
+            // convert local date to days since epoch and store in DateColumnVector
+            ((DateColumnVector) columnVector).vector[row] = date.toEpochDay();
+        });
+        writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP, (columnVector, row, val) -> {
+            // parse Greenplum timestamp given as a string to a local dateTime (no timezone info)
+            LocalDateTime dateTime = LocalDateTime.parse((String) val, GreenplumDateTime.DATETIME_FORMATTER);
+            // convert local dateTime to a Timestamp and store in TimestampColumnVector
+            ((TimestampColumnVector) columnVector).set(row, Timestamp.valueOf(dateTime));
+        });
+        writeFunctionsMap.put(TypeDescription.Category.BINARY, (columnVector, row, val) -> {
+            // do not copy the contents of the byte array, just set as a reference
+            ((BytesColumnVector) columnVector).setRef(row, (byte[]) val, 0, ((byte[]) val).length);
+        });
+        writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val) -> {
+            // TODO: review, this implementation makes some assumptions (null check, etc)
+            // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
+            ((DecimalColumnVector) columnVector).vector[row].set(HiveDecimal.create((BigDecimal) val));
+        });
+
+        writeFunctionsMap.put(TypeDescription.Category.VARCHAR, writeFunctionsMap.get(TypeDescription.Category.STRING));
+
+        //TODO: do we need to right-trim CHAR values like we do in Parquet ?
+        writeFunctionsMap.put(TypeDescription.Category.CHAR,  writeFunctionsMap.get(TypeDescription.Category.STRING));
+
+        // TODO: LIST collection types
+        // MAP("map", false) - for now ORCSchemaBuilder does not support this type, so we do not expect it
+        // STRUCT("struct", false) - for now ORCSchemaBuilder does not support this type, so we do not expect it
+        // UNION("uniontype", false) - for now ORCSchemaBuilder does not support this type, so we do not expect it
+
+        writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP_INSTANT, (columnVector, row, val) -> {
+            // parse Greenplum timestamp given as a string with timezone to a zoned dateTime
+            ZonedDateTime zonedDateTime = ZonedDateTime.parse((String) val, GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
+            // convert zoned dateTime to a Timestamp and store in TimestampColumnVector
+            ((TimestampColumnVector) columnVector).set(row, Timestamp.from(zonedDateTime.toInstant()));
+        });
     }
 
     /**

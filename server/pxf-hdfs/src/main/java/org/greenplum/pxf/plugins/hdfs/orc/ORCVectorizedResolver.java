@@ -2,10 +2,10 @@ package org.greenplum.pxf.plugins.hdfs.orc;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.function.TriConsumer;
 import org.greenplum.pxf.api.model.ReadVectorizedResolver;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
@@ -15,6 +15,7 @@ import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.model.WriteVectorizedResolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,11 +101,16 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     private TypeDescription orcSchema;
 
     /**
-     * An array of functions that resolve ColumnVectors into Lists of OneFields
-     * The array has the same size as the readSchema, and the functions depend
-     * on the type of the elements in the schema.
+     * An array of functions that resolve ColumnVectors into Lists of OneFields for READ use case.
+     * The array has the same size as the readSchema, and the functions depend on the type of the elements in the schema.
      */
-    private TriFunction<VectorizedRowBatch, ColumnVector, Integer, OneField[]>[] functions;
+    private TriFunction<VectorizedRowBatch, ColumnVector, Integer, OneField[]>[] readFunctions;
+
+    /**
+     * An array of functions that resolve Lists of OneFields into ColumnVectors for WRITE use case.
+     * The array has the same size as the writeSchema, and the functions depend on the type of the elements in the schema.
+     */
+    private TriConsumer<ColumnVector, Integer, Object>[] writeFunctions;
 
     /**
      * An array of types that map from the readSchema types to Greenplum OIDs.
@@ -150,7 +156,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      */
     @Override
     public List<List<OneField>> getFieldsForBatch(OneRow batch) {
-        ensureFunctionsAreInitialized();
+        ensureReadFunctionsAreInitialized();
         VectorizedRowBatch vectorizedBatch = (VectorizedRowBatch) batch.getData();
         int batchSize = vectorizedBatch.size;
 
@@ -181,7 +187,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     oneFields = ORCVectorizedMappingFunctions
                             .getNullResultSet(columnDescriptor.columnTypeCode(), batchSize);
                 } else if (orcColumn.getCategory().isPrimitive() || orcColumn.getCategory() == TypeDescription.Category.LIST) {
-                    oneFields = functions[columnIndex]
+                    oneFields = readFunctions[columnIndex]
                             .apply(vectorizedBatch, vectorizedBatch.cols[columnIndex], typeOidMappings[columnIndex]);
                     columnIndex++;
                 } else {
@@ -211,22 +217,25 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      */
     @Override
     public OneRow setFieldsForBatch(List<List<OneField>> records) throws Exception {
-        // TODO: vectorized bridge needs to accumulate many records (upto batchSize), how does it know ?
-        orcSchema = (TypeDescription) context.getMetadata();
-        VectorizedRowBatch batch = orcSchema.createRowBatch(records.size()); // TODO: should we make batch size configurable ?
+        if (CollectionUtils.isEmpty(records)) {
+            return null; // this will end bridge iterations
+        }
+        ensureWriteFunctionsAreInitialized();
+        // TODO: should we reuse the batch object between iterations ? what if sizes are different ?
+        VectorizedRowBatch batch = orcSchema.createRowBatch(records.size());
         // iterate over incoming rows
         int rowIndex = 0;
         for (List<OneField> record : records) {
             int columnIndex = 0;
             for (OneField field : record) {
-                // TODO: fill up column vectors for each row using mapping functions
-                // someFunction.apply(batch, rowIndex, columnIndex, field.getData());
+                // fill up column vectors for each column of the given row with record values using mapping functions
+                writeFunctions[columnIndex].accept(batch.cols[columnIndex], rowIndex, field.val);
                 columnIndex++;
             }
             rowIndex++;
             batch.size = rowIndex;
         }
-        return null;
+        return new OneRow(batch);
     }
 
     /**
@@ -252,15 +261,15 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      * types.
      */
     @SuppressWarnings("unchecked")
-    private void ensureFunctionsAreInitialized() {
-        if (functions != null) return;
+    private void ensureReadFunctionsAreInitialized() {
+        if (readFunctions != null) return;
         if (!(context.getMetadata() instanceof TypeDescription))
             throw new PxfRuntimeException("No schema detected in request context");
 
         orcSchema = (TypeDescription) context.getMetadata();
         int schemaSize = orcSchema.getChildren().size();
 
-        functions = new TriFunction[schemaSize];
+        readFunctions = new TriFunction[schemaSize];
         typeOidMappings = new int[schemaSize];
 
         readFields = new HashMap<>(schemaSize);
@@ -276,63 +285,83 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
             TypeDescription t = children.get(i);
             switch (t.getCategory()) {
                 case BOOLEAN:
-                    functions[i] = ORCVectorizedMappingFunctions::booleanMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::booleanReader;
                     typeOidMappings[i] = BOOLEAN.getOID();
                     break;
                 case BYTE:
                 case SHORT:
-                    functions[i] = ORCVectorizedMappingFunctions::shortMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::shortReader;
                     typeOidMappings[i] = SMALLINT.getOID();
                     break;
                 case INT:
-                    functions[i] = ORCVectorizedMappingFunctions::integerMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::integerReader;
                     typeOidMappings[i] = INTEGER.getOID();
                     break;
                 case LONG:
-                    functions[i] = ORCVectorizedMappingFunctions::longMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::longReader;
                     typeOidMappings[i] = BIGINT.getOID();
                     break;
                 case FLOAT:
-                    functions[i] = ORCVectorizedMappingFunctions::floatMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::floatReader;
                     typeOidMappings[i] = REAL.getOID();
                     break;
                 case DOUBLE:
-                    functions[i] = ORCVectorizedMappingFunctions::doubleMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::doubleReader;
                     typeOidMappings[i] = FLOAT8.getOID();
                     break;
                 case STRING:
-                    functions[i] = ORCVectorizedMappingFunctions::textMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::textReader;
                     typeOidMappings[i] = TEXT.getOID();
                     break;
                 case DATE:
-                    functions[i] = ORCVectorizedMappingFunctions::dateMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::dateReader;
                     typeOidMappings[i] = DATE.getOID();
                     break;
                 case TIMESTAMP:
-                    functions[i] = ORCVectorizedMappingFunctions::timestampMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::timestampReader;
                     typeOidMappings[i] = TIMESTAMP.getOID();
                     break;
                 case BINARY:
-                    functions[i] = ORCVectorizedMappingFunctions::binaryMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::binaryReader;
                     typeOidMappings[i] = BYTEA.getOID();
                     break;
                 case DECIMAL:
-                    functions[i] = ORCVectorizedMappingFunctions::decimalMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::decimalReader;
                     typeOidMappings[i] = NUMERIC.getOID();
                     break;
                 case VARCHAR:
-                    functions[i] = ORCVectorizedMappingFunctions::textMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::textReader;
                     typeOidMappings[i] = VARCHAR.getOID();
                     break;
                 case CHAR:
-                    functions[i] = ORCVectorizedMappingFunctions::textMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::textReader;
                     typeOidMappings[i] = BPCHAR.getOID();
                     break;
                 case LIST:
-                    functions[i] = ORCVectorizedMappingFunctions::listMapper;
+                    readFunctions[i] = ORCVectorizedMappingFunctions::listReader;
                     typeOidMappings[i] = getArrayDataType(t.getChildren().get(0)).getOID();
                     break;
             }
+        }
+    }
+
+    /**
+     * Ensures that functions is initialized. If not initialized, it will
+     * initialize the functions and typeOidMappings by iterating over the
+     * readSchema, and building the mapping between ORC types to Greenplum
+     * types.
+     */
+    @SuppressWarnings("unchecked")
+    private void ensureWriteFunctionsAreInitialized() {
+        if (readFunctions != null) return;
+        if (!(context.getMetadata() instanceof TypeDescription))
+            throw new PxfRuntimeException("No schema detected in request context");
+
+        orcSchema = (TypeDescription) context.getMetadata();
+        List<TypeDescription> columnTypeDescriptions = orcSchema.getChildren();
+        int schemaSize = columnTypeDescriptions.size();
+        for (int i=0; i < schemaSize; i++) {
+            writeFunctions[i] = ORCVectorizedMappingFunctions.getColumnWriter(columnTypeDescriptions.get(i));
         }
     }
 
