@@ -150,7 +150,7 @@ public class HiveResolver extends BasePlugin implements Resolver {
      */
     @Override
     public OneRow setFields(List<OneField> record) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Current operation is not supported");
     }
 
     public int getNumberOfPartitions() {

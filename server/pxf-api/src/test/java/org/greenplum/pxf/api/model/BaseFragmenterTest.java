@@ -14,7 +14,7 @@ public class BaseFragmenterTest {
     public void testGetFragmentStatsIsUnsupported() {
         Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> new BaseFragmenter().getFragmentStats());
-        assertEquals("Operation getFragmentStats is not supported", e.getMessage());
+        assertEquals("Current operation is not supported", e.getMessage());
     }
 
     @Test

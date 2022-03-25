@@ -34,6 +34,7 @@ public class DemoAccessor extends BasePlugin implements Accessor {
     private int rowNumber;
     private int fragmentNumber;
     private static final int NUM_ROWS = 2;
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported";
 
     @Override
     public boolean openForRead() {
@@ -91,7 +92,7 @@ public class DemoAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public boolean openForWrite() throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     /**
@@ -103,7 +104,7 @@ public class DemoAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public boolean writeNextObject(OneRow onerow) throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     /**
@@ -113,6 +114,6 @@ public class DemoAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public void closeForWrite() throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 }

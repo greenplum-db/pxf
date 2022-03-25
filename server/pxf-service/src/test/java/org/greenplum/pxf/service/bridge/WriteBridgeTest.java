@@ -140,4 +140,11 @@ public class WriteBridgeTest {
         verifyNoMoreInteractions(mockPluginFactory);
     }
 
+    @Test
+    public void testGetNextIsNotSupported() {
+        bridge = new WriteBridge(mockPluginFactory, context, handler);
+
+        Exception e = assertThrows(UnsupportedOperationException.class, () -> bridge.getNext());
+        assertEquals("Current operation is not supported", e.getMessage());
+    }
 }

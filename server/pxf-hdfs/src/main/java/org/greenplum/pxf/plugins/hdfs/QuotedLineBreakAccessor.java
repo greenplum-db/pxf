@@ -35,11 +35,15 @@ import java.util.Queue;
  * multi-line records, that are read from a single source (non-parallel).
  */
 public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
+
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported";
+
     private boolean fileAsRow;
     private boolean firstLine, lastLine;
     private int skipHeaderCount;
     BufferedReader reader;
     Queue<String> lineQueue;
+
 
     @Override
     public void afterPropertiesSet() {
@@ -155,7 +159,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      */
     @Override
     public boolean openForWrite() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     /**
@@ -166,7 +170,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      */
     @Override
     public boolean writeNextObject(OneRow onerow) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     /**
@@ -174,6 +178,6 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      */
     @Override
     public void closeForWrite() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 }

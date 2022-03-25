@@ -408,7 +408,8 @@ public class JsonResolverTest {
         context.setMetadata(null);
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
-        assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(null));
+        Exception e = assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(null));
+        assertEquals("Current operation is not supported", e.getMessage());
     }
 
     // helper functions for testing

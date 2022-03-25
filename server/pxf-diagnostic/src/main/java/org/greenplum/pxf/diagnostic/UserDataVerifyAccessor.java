@@ -18,6 +18,7 @@ public class UserDataVerifyAccessor extends BasePlugin implements Accessor {
 
     private int counter = 0;
     private char firstColumn = 'A';
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported";
 
     @Override
     public boolean openForRead() {
@@ -51,16 +52,16 @@ public class UserDataVerifyAccessor extends BasePlugin implements Accessor {
 
     @Override
     public boolean openForWrite() {
-        throw new UnsupportedOperationException("openForWrite method is not implemented");
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     @Override
     public boolean writeNextObject(OneRow onerow) {
-        throw new UnsupportedOperationException("writeNextObject method is not implemented");
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     @Override
     public void closeForWrite() {
-        throw new UnsupportedOperationException("closeForWrite method is not implemented");
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 }

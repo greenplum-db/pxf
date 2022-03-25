@@ -110,6 +110,8 @@ public enum PartitionType {
         }
     },
     ENUM {
+        private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
+
         @Override
         protected List<? extends BasePartition> generate(String column, String range, String interval) {
             // Parse RANGE
@@ -135,32 +137,32 @@ public enum PartitionType {
 
         @Override
         BasePartition createPartition(String column, Object start, Object end) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
         }
 
         @Override
         Object parseRange(String value) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
         }
 
         @Override
         Interval parseInterval(String interval) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
         }
 
         @Override
         boolean isLessThan(Object rangeStart, Object rangeEnd) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
         }
 
         @Override
         Object next(Object start, Object end, Interval interval) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
         }
 
         @Override
         String getValidIntervalFormat() {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
         }
     };
 

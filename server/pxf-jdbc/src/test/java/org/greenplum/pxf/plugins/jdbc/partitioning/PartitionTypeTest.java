@@ -56,38 +56,44 @@ public class PartitionTypeTest {
 
     @Test
     public void unsupportedCreatePartitionForEnum() {
-        assertThrows(UnsupportedOperationException.class,
+        Exception e = assertThrows(UnsupportedOperationException.class,
             () -> PartitionType.ENUM.createPartition(null, null, null));
+        assertEquals("Current operation is not supported", e.getMessage());
     }
 
     @Test
     public void unsupportedParseRangeForEnum() {
-        assertThrows(UnsupportedOperationException.class,
+        Exception e = assertThrows(UnsupportedOperationException.class,
             () -> PartitionType.ENUM.parseRange(null));
+        assertEquals("Current operation is not supported", e.getMessage());
     }
 
     @Test
     public void unsupportedParseInterval() {
-        assertThrows(UnsupportedOperationException.class,
+        Exception e = assertThrows(UnsupportedOperationException.class,
             () -> PartitionType.ENUM.parseInterval(null));
+        assertEquals("Current operation is not supported", e.getMessage());
 
     }
 
     @Test
     public void unsupportedIsLessThan() {
-        assertThrows(UnsupportedOperationException.class,
+        Exception e = assertThrows(UnsupportedOperationException.class,
             () -> PartitionType.ENUM.isLessThan(null, null));
+        assertEquals("Current operation is not supported", e.getMessage());
     }
 
     @Test
     public void unsupportedNext() {
-        assertThrows(UnsupportedOperationException.class,
+        Exception e = assertThrows(UnsupportedOperationException.class,
             () -> PartitionType.ENUM.next(null, null, null));
+        assertEquals("Current operation is not supported", e.getMessage());
     }
 
     @Test
     public void unsupportedGetValidIntervalFormat() {
-        assertThrows(UnsupportedOperationException.class, PartitionType.ENUM::getValidIntervalFormat);
+        Exception e = assertThrows(UnsupportedOperationException.class, PartitionType.ENUM::getValidIntervalFormat);
+        assertEquals("Current operation is not supported", e.getMessage());
     }
 
     @Test

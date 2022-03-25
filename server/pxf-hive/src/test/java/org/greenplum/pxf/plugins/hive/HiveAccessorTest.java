@@ -27,6 +27,7 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -285,6 +286,20 @@ class HiveAccessorTest {
         assertEquals(COLUMN_NAMES, jobConf.get("columns"));
         assertEquals(COLUMN_TYPES, jobConf.get("columns.types"));
         assertNull(jobConf.get("sarg.pushdown"));
+    }
+
+    @Test
+    public void testWriteIsNotSupported() {
+        accessor = new HiveAccessor(null, new HiveUtilities(), serializationService);
+
+        Exception e = assertThrows(UnsupportedOperationException.class, () -> accessor.openForWrite());
+        assertEquals("Write operation is not supported", e.getMessage());
+
+        e = assertThrows(UnsupportedOperationException.class, () -> accessor.writeNextObject(null));
+        assertEquals("Write operation is not supported", e.getMessage());
+
+        e = assertThrows(UnsupportedOperationException.class, () -> accessor.closeForWrite());
+        assertEquals("Write operation is not supported", e.getMessage());
     }
 
     @SuppressWarnings("unchecked")

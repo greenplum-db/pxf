@@ -140,4 +140,11 @@ public class ReadBridgeTest {
         verifyNoMoreInteractions(mockPluginFactory);
     }
 
+    @Test
+    public void testSetNextIsNotSupported() {
+        bridge = new ReadBridge(mockPluginFactory, context, handler);
+
+        Exception e = assertThrows(UnsupportedOperationException.class, () -> bridge.setNext(null));
+        assertEquals("Current operation is not supported", e.getMessage());
+    }
 }

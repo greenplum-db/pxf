@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 public class HiveResolverTest {
@@ -167,5 +169,13 @@ public class HiveResolverTest {
         List<OneField> output = resolver.getFields(row);
 
         assertThat(output.get(0).toString()).isEqualTo("{\"line1\":{\"number\":1000,\"street_name\":\"a really \\\"fancy\\\" string\"},\"line2\":{\"city\":\"plain string\",\"zipcode\":1001}}");
+    }
+
+    @Test
+    public void testSetFieldsIsNotSupported() {
+        resolver = new HiveResolver(mockHiveUtilities);
+
+        Exception e = assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(null));
+        assertEquals("Current operation is not supported", e.getMessage());
     }
 }

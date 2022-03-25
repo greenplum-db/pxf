@@ -99,7 +99,7 @@ public class WriteBridge extends BaseBridge {
      */
     @Override
     public Writable getNext() {
-        throw new UnsupportedOperationException("getNext is not implemented");
+        throw new UnsupportedOperationException("Current operation is not supported");
     }
 
 }

@@ -57,6 +57,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported";
 
     /**
      * True if the accessor accesses the columns defined in the
@@ -144,17 +145,17 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
 
     @Override
     public boolean openForWrite() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     @Override
     public boolean writeNextObject(OneRow onerow) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     @Override
     public void closeForWrite() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     /**

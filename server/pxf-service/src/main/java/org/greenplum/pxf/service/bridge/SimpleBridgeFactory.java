@@ -28,7 +28,7 @@ public class SimpleBridgeFactory implements BridgeFactory {
         if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
             bridge = new WriteBridge(pluginFactory, context, failureHandler);
         } else if (context.getRequestType() != RequestContext.RequestType.READ_BRIDGE) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("Current Operation is not supported");
         } else if (context.getStatsSampleRatio() > 0) {
             bridge = new ReadSamplingBridge(pluginFactory, context, failureHandler);
         } else if (Utilities.aggregateOptimizationsSupported(context)) {

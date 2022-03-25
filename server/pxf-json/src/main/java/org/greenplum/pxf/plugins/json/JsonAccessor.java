@@ -43,6 +43,7 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
 
     public static final String IDENTIFIER_PARAM = "IDENTIFIER";
     public static final String RECORD_MAX_LENGTH_PARAM = "MAXLENGTH";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Write for JSON is not supported";
 
     /**
      * If provided indicates the member name which will be used to determine the encapsulating json object to return.
@@ -94,8 +95,8 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
      * @throws Exception if opening the resource failed
      */
     @Override
-    public boolean openForWrite() throws Exception {
-        throw new UnsupportedOperationException();
+    public boolean openForWrite() {
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     /**
@@ -106,8 +107,8 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
      * @throws Exception writing to the resource failed
      */
     @Override
-    public boolean writeNextObject(OneRow onerow) throws Exception {
-        throw new UnsupportedOperationException();
+    public boolean writeNextObject(OneRow onerow) {
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     /**
@@ -116,7 +117,7 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
      * @throws Exception if closing the resource failed
      */
     @Override
-    public void closeForWrite() throws Exception {
-        throw new UnsupportedOperationException();
+    public void closeForWrite() {
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 }

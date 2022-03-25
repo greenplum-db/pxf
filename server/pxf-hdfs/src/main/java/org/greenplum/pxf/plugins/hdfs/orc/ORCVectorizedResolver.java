@@ -127,6 +127,8 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
 
     private List<List<OneField>> cachedBatch;
 
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
+
     /**
      * {@inheritDoc}
      */
@@ -201,7 +203,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      */
     @Override
     public List<OneField> getFields(OneRow row) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     /**
@@ -209,7 +211,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      */
     @Override
     public OneRow setFields(List<OneField> record) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
     }
 
     /**

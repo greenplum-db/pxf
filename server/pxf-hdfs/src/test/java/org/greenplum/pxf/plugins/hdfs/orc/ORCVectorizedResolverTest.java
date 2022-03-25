@@ -326,8 +326,11 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
 
     @Test
     public void testUnsupportedFunctionality() {
-        assertThrows(UnsupportedOperationException.class, () -> resolver.getFields(new OneRow()));
-        assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(Collections.singletonList(new OneField())));
+        Exception e = assertThrows(UnsupportedOperationException.class, () -> resolver.getFields(new OneRow()));
+        assertEquals("Current operation is not supported", e.getMessage());
+
+        e = assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(Collections.singletonList(new OneField())));
+        assertEquals("Current operation is not supported", e.getMessage());
     }
 
     private void assertDataReturned(Object[][] expected, List<List<OneField>> fieldsForBatch) {

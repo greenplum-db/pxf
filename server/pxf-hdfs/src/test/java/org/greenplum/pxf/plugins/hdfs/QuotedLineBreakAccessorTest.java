@@ -419,6 +419,20 @@ public class QuotedLineBreakAccessorTest {
         accessor.closeForRead();
     }
 
+    @Test
+    public void testWriteIsNotSupported() throws Exception {
+        prepareTest("csv/simple.csv", false);
+
+        Exception e = assertThrows(UnsupportedOperationException.class, () -> accessor.openForWrite());
+        assertEquals("Write operation is not supported", e.getMessage());
+
+        e = assertThrows(UnsupportedOperationException.class, () -> accessor.writeNextObject(new OneRow()));
+        assertEquals("Write operation is not supported", e.getMessage());
+
+        e = assertThrows(UnsupportedOperationException.class, () -> accessor.closeForWrite());
+        assertEquals("Write operation is not supported", e.getMessage());
+    }
+
     private void prepareTest(String resourceName, boolean fileAsRow) throws Exception {
         if (fileAsRow) {
             context.addOption("FILE_AS_ROW", "true");

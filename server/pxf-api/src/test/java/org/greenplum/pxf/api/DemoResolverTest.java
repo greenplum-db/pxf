@@ -102,4 +102,11 @@ public class DemoResolverTest {
                 () -> textResolver.setFields(Arrays.asList(field, field)));
     }
 
+    @Test
+    public void testSetFieldsIsUnsupported() {
+      Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> customResolver.setFields(null));
+
+      assertEquals("Current operation is not supported", e.getMessage());
+    }
 }

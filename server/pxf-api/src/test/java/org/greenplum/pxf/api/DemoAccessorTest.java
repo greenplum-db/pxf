@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DemoAccessorTest {
 
@@ -70,5 +71,17 @@ public class DemoAccessorTest {
             assertEquals(String.format("OneRow:0.%d->fragment1 row%d,value1,value2", i, i + 1), row.toString());
         }
         assertNull(accessor.readNextObject());
+    }
+
+    @Test
+    public void testWriteIsNotSupported() {
+        Exception e = assertThrows(UnsupportedOperationException.class, () -> accessor.openForWrite());
+        assertEquals("Write operation is not supported", e.getMessage());
+
+        e = assertThrows(UnsupportedOperationException.class, () -> accessor.writeNextObject(new OneRow()));
+        assertEquals("Write operation is not supported", e.getMessage());
+
+        e = assertThrows(UnsupportedOperationException.class, () -> accessor.closeForWrite());
+        assertEquals("Write operation is not supported", e.getMessage());
     }
 }
