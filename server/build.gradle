@@ -94,18 +94,6 @@ configure(javaProjects) {
             dependency("org.apache.htrace:htrace-core:3.1.0-incubating")
             dependency("org.apache.htrace:htrace-core4:4.0.1-incubating")
 
-            // --- bump log4j2 to 2.17.1 for CVE-2021-44228, CVE-2021-45046, and CVE-2021-45105 fixes,
-            // more details: https://logging.apache.org/log4j/2.x/security.html
-            // revert once org.springframework.boot:spring-boot-starter-log4j2 is upgraded to bundle log4j2:2.17.1+
-            dependencySet(group:"org.apache.logging.log4j", version:"2.17.1") {
-                entry("log4j-jul")
-                entry("log4j-api")
-                entry("log4j-core")
-                entry("log4j-spring-boot")
-            }
-            dependency("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
-            // --- end of CVE patch
-
             dependency("org.apache.zookeeper:zookeeper:3.4.6")
             dependency("org.codehaus.woodstox:stax2-api:3.1.4")
             dependency("org.datanucleus:datanucleus-api-jdo:4.2.4")
