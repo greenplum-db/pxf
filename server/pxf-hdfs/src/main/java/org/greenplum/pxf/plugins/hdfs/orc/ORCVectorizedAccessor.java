@@ -6,6 +6,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.FileSplit;
+import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
@@ -78,6 +79,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     // -- write properties
     private ORCSchemaBuilder schemaBuilder;
     private Writer fileWriter;
+    private CompressionKind codecName;
 
     @Override
     public void afterPropertiesSet() {
@@ -166,11 +168,15 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         //String compressCodec = context.getOption("COMPRESSION_CODEC");
 
         // TODO: process any PXF options for ORC write
-
+        String compressCodec = context.getOption("COMPRESSION_CODEC");
+        codecName = resolveCompression(compressCodec);
+        // Do we need to set it in conf?
+        //configuration.set("compression", codecName.name());
+        
         Path file = new Path(fileName);
         schemaBuilder = new ORCSchemaBuilder();
         TypeDescription writeSchema = schemaBuilder.buildSchema(context.getTupleDescription());
-        fileWriter = OrcFile.createWriter(file, OrcFile.writerOptions(configuration).setSchema(writeSchema));
+        fileWriter = OrcFile.createWriter(file, OrcFile.writerOptions(configuration).compress(codecName).setSchema(writeSchema));
 
         context.setMetadata(writeSchema);
         return true;
@@ -286,5 +292,38 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
             }
         }
         return readSchema;
+    }
+
+    /**
+     * Returns the {@link CompressionKind} for the given name
+     * or CompressionKind.NONE if CompressionKind is null
+     *
+     * @param compressionCode the name of the compression codec
+     * @return the {@link CompressionKind} for the given name, or default if name is null
+     */
+
+    /**
+     *
+     * @param compressionCode
+     * @return
+     */
+    private CompressionKind resolveCompression(String compressionCode) {
+        if (compressionCode == null) return  CompressionKind.NONE;
+
+        // NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD
+        switch(compressionCode) {
+            case "LZ4":
+                return CompressionKind.LZ4;
+            case "SNAPPY":
+                return CompressionKind.SNAPPY;
+            case "LZO":
+                return CompressionKind.LZO;
+            case "ZSTD":
+                return CompressionKind.ZSTD;
+            case "ZLIB":
+                return CompressionKind.ZLIB;
+            default:
+                return CompressionKind.NONE;
+        }
     }
 }

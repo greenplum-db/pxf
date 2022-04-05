@@ -1,5 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.orc.TypeDescription;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.io.DataType;
@@ -26,11 +27,15 @@ public class ORCSchemaBuilder {
         for (int i = 0; i < columnDescriptors.size(); i++) {
             ColumnDescriptor columnDescriptor = columnDescriptors.get(i);
             // TODO: check that deleted columns do not come in
-            // if (!columnDescriptor.isProjected()) continue;
+            if (!columnDescriptor.isProjected()) {
+                continue;
+            }
             String columnName = columnDescriptor.columnName(); // TODO: what about quoted / case sensitive / with spaces ?
+            // columnName = StringEscapeUtils.escapeJava(columnName);
+
             DataType dataType = columnDescriptor.getDataType();
             TypeDescription orcType = dataType.isArrayType() ?
-                    TypeDescription.createList(orcTypeFromGreenplumType(dataType.getTypeElem())) : orcTypeFromGreenplumType(dataType);
+                    TypeDescription.createList(orcTypeFromGreenplumType(dataType.getTypeElem(), columnDescriptor)) : orcTypeFromGreenplumType(dataType, columnDescriptor);
             // TODO: can we get a multi-dimensional array in GP type description ?
             writeSchema.addField(columnName, orcType);
         }
@@ -42,7 +47,10 @@ public class ORCSchemaBuilder {
      * @param dataType Greenplum type
      * @return ORC type
      */
-    private TypeDescription orcTypeFromGreenplumType(DataType dataType) {
+    private TypeDescription orcTypeFromGreenplumType(DataType dataType, ColumnDescriptor columnDescriptor) {
+
+        Integer[] columnTypeModifiers = columnDescriptor.columnTypeModifiers();
+
         switch (dataType) {
             case BOOLEAN:
                 return TypeDescription.createBoolean();
@@ -62,13 +70,21 @@ public class ORCSchemaBuilder {
             case FLOAT8:
                 return TypeDescription.createDouble();
             case BPCHAR:
-                return TypeDescription.createChar(); // TODO: handle maxLength
+                int maxLength = 0;
+                if(columnTypeModifiers != null && columnTypeModifiers.length > 0) {
+                    maxLength = columnTypeModifiers[0];
+                }
+                return maxLength > 0 ?  TypeDescription.createChar().withMaxLength(maxLength) :TypeDescription.createChar() ;
             case VARCHAR:
-                return TypeDescription.createVarchar(); // TODO: handle maxLength
+                maxLength = 0;
+                if(columnTypeModifiers != null && columnTypeModifiers.length > 0) {
+                    maxLength = columnTypeModifiers[0];
+                 }
+                return maxLength > 0 ?  TypeDescription.createVarchar().withMaxLength(maxLength) :TypeDescription.createVarchar() ;
             case DATE:
                 return TypeDescription.createDate();
 
-                /* TODO:
+                /* TODO: Does ORC supports time?
                 case TIME:
                  */
             case TIMESTAMP:
@@ -76,7 +92,18 @@ public class ORCSchemaBuilder {
             case TIMESTAMP_WITH_TIME_ZONE:
                 return TypeDescription.createTimestampInstant();
             case NUMERIC:
-                return TypeDescription.createDecimal(); // TODO: handle precision and scale
+
+                boolean withPrecisionScale = false;
+                int precision = 0, scale =0;
+
+                if(columnTypeModifiers != null && columnTypeModifiers.length > 1) {
+                    withPrecisionScale = true;
+                    precision = columnTypeModifiers[0];
+                    scale = columnTypeModifiers[1];
+                }
+                TypeDescription decimalType = TypeDescription.createDecimal();
+
+                return  withPrecisionScale ? decimalType.withPrecision(precision).withScale(scale) : decimalType;
 
 /*
                     INT2ARRAY(1005),
