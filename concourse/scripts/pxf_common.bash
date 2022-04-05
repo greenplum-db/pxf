@@ -28,7 +28,7 @@ function inflate_dependencies() {
 	local tarballs=() files_to_link=()
 	if [[ -f pxf-build-dependencies/pxf-build-dependencies.tar.gz ]]; then
 		tarballs+=(pxf-build-dependencies/pxf-build-dependencies.tar.gz)
-		files_to_link+=(~gpadmin/.{tomcat,go-dep-cached-sources,gradle})
+		files_to_link+=(~gpadmin/.{tomcat,go-mod-cached-sources,gradle})
 	fi
 	if [[ -f pxf-automation-dependencies/pxf-automation-dependencies.tar.gz ]]; then
 		tarballs+=pxf-automation-dependencies/pxf-automation-dependencies.tar.gz

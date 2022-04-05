@@ -13,10 +13,9 @@ RUN apt-get update && \
 
 # install go && go utilities
 RUN cd /tmp && \
-    wget -O go.tgz -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    wget -O go.tgz -q https://dl.google.com/go/go1.17.6.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go.tgz && rm go.tgz && \
-    GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
-    GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo
+    GOPATH=/opt/go /usr/local/go/bin/go install github.com/onsi/ginkgo/ginkgo
 
 ADD . /tmp/pxf_src
 
@@ -36,7 +35,7 @@ RUN export BUILD_PARAMS=-Dorg.gradle.daemon=false && \
     mkdir -p /tmp/output/.tomcat && mkdir -p /tmp/automation && \
     mv /tmp/pxf_src/pxf_commit_sha /tmp/output/pxf_commit_sha && \
     mv /tmp/pxf_src/server/tomcat/build/apache-tomcat-*.tar.gz /tmp/output/.tomcat/ && \
-    mv /tmp/pxf_src/cli/go/pkg/dep/sources /tmp/output/.go-dep-cached-sources && \
+    mv /tmp/pxf_src/cli/go/pkg/mod /tmp/output/.go-mod-cached-sources && \
     mv /root/.gradle /tmp/output && mv /root/.m2 /tmp/automation && \
     tar -czf /tmp/pxf-build-dependencies.tar.gz -C /tmp/output . && \
     tar -czf /tmp/pxf-automation-dependencies.tar.gz -C /tmp/automation . && \
