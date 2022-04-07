@@ -35,8 +35,8 @@ fi
 %__cp -R %{_sourcedir}/* %{buildroot}/%{prefix}
 
 %post
-sed -i "s|directory =.*|directory = '%{prefix}/fdw/'|g" %{prefix}/fdw/pxf_fdw.control
-sed -i "s|module_pathname =.*|module_pathname = '%{prefix}/fdw/pxf_fdw'|g" %{prefix}/fdw/pxf_fdw.control
+sed -i "s|directory =.*|directory = '${RPM_INSTALL_PREFIX}/fdw/'|g" "${RPM_INSTALL_PREFIX}/fdw/pxf_fdw.control"
+sed -i "s|module_pathname =.*|module_pathname = '${RPM_INSTALL_PREFIX}/fdw/pxf_fdw'|g" "${RPM_INSTALL_PREFIX}/fdw/pxf_fdw.control"
 
 %files
 %{prefix}
@@ -64,12 +64,12 @@ sed -i "s|module_pathname =.*|module_pathname = '%{prefix}/fdw/pxf_fdw'|g" %{pre
 %pre
 # cleanup files and directories created by 'pxf init' command
 # only applies for old installations (pre 6.0.0)
-%__rm -f %{prefix}/conf/pxf-private.classpath
-%__rm -rf %{prefix}/pxf-service
+%__rm -f "${RPM_INSTALL_PREFIX}/conf/pxf-private.classpath"
+%__rm -rf "${RPM_INSTALL_PREFIX}/pxf-service"
 
 %posttrans
 # PXF v5 RPM installation removes the run directory during the %preun step.
 # The lack of run directory prevents PXF v6+ from starting up.
 # %posttrans of the new package is the only step that runs after the %preun
 # of the old package
-%{__install} -d -m 700 %{prefix}/run
+%{__install} -d -m 700 "${RPM_INSTALL_PREFIX}/run"
