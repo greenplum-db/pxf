@@ -61,6 +61,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
 
     private static final String ORC_FILE_SUFFIX = ".orc";
     static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
+    private static final CompressionKind DEFAULT_COMPRESSION = CompressionKind.ZLIB;
 
     /**
      * True if the accessor accesses the columns defined in the
@@ -79,7 +80,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     // -- write properties
     private ORCSchemaBuilder schemaBuilder;
     private Writer fileWriter;
-    private CompressionKind codecName;
+    private CompressionKind compressionKind;
 
     @Override
     public void afterPropertiesSet() {
@@ -156,27 +157,25 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         HcfsType hcfsType = HcfsType.getHcfsType(context);
         // ORC does not use codec suffix in filenames
         String fileName = hcfsType.getUriForWrite(context) + ORC_FILE_SUFFIX;
-        //TODO: figure out compression settings
-        /*
-        check Spark OrcUtils.extensionsForCompressionCodecNames(..)
-        val extensionsForCompressionCodecNames = Map(
-                "NONE" -> "",
-                "SNAPPY" -> ".snappy",
-                "ZLIB" -> ".zlib",
-                "LZO" -> ".lzo")
-         */
-        //String compressCodec = context.getOption("COMPRESSION_CODEC");
 
         // TODO: process any PXF options for ORC write
+
         String compressCodec = context.getOption("COMPRESSION_CODEC");
-        codecName = resolveCompression(compressCodec);
         // Do we need to set it in conf?
         //configuration.set("compression", codecName.name());
-        
+
         Path file = new Path(fileName);
         schemaBuilder = new ORCSchemaBuilder();
         TypeDescription writeSchema = schemaBuilder.buildSchema(context.getTupleDescription());
-        fileWriter = OrcFile.createWriter(file, OrcFile.writerOptions(configuration).compress(codecName).setSchema(writeSchema));
+
+        OrcFile.WriterOptions orcWriterOptions = OrcFile.writerOptions(configuration).setSchema(writeSchema);
+
+        if(compressCodec != null){
+            compressionKind = getCompressionKind(compressCodec);
+            orcWriterOptions.compress(compressionKind);
+        }
+
+        fileWriter = OrcFile.createWriter(file, orcWriterOptions);
 
         context.setMetadata(writeSchema);
         return true;
@@ -295,23 +294,14 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     }
 
     /**
-     * Returns the {@link CompressionKind} for the given name
-     * or CompressionKind.NONE if CompressionKind is null
-     *
      * @param compressionCode the name of the compression codec
      * @return the {@link CompressionKind} for the given name, or default if name is null
      */
-
-    /**
-     *
-     * @param compressionCode
-     * @return
-     */
-    private CompressionKind resolveCompression(String compressionCode) {
-        if (compressionCode == null) return  CompressionKind.NONE;
+    private CompressionKind getCompressionKind(String compressionCode) {
+        if (compressionCode == null) return DEFAULT_COMPRESSION;
 
         // NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD
-        switch(compressionCode) {
+        switch(compressionCode.toUpperCase()) {
             case "LZ4":
                 return CompressionKind.LZ4;
             case "SNAPPY":
