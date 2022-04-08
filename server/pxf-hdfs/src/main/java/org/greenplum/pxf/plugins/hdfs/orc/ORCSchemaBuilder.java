@@ -1,10 +1,12 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.orc.TypeDescription;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -12,6 +14,8 @@ import java.util.List;
  * Class for building an ORC schema from a Greenplum table definition.
  */
 public class ORCSchemaBuilder {
+
+    public static final Logger LOG = LoggerFactory.getLogger(ORCSchemaBuilder.class);
 
     /**
      * Builds an ORC schema from Greenplum table description
@@ -24,112 +28,118 @@ public class ORCSchemaBuilder {
         }
         // top level will always be a struct to align with how Hive would expect it
         TypeDescription writeSchema = TypeDescription.createStruct();
-        for (int i = 0; i < columnDescriptors.size(); i++) {
-            ColumnDescriptor columnDescriptor = columnDescriptors.get(i);
-
+        for (ColumnDescriptor columnDescriptor: columnDescriptors) {
             String columnName = columnDescriptor.columnName(); // TODO: what about quoted / case sensitive / with spaces ?
-            // columnName = StringEscapeUtils.escapeJava(columnName);
-
             TypeDescription orcType = orcTypeFromGreenplumType(columnDescriptor);
-            // TODO: can we get a multi-dimensional array in GP type description ?
+            LOG.debug("Mapped column {} of type {} to ORC type {}", columnName, columnDescriptor.getDataType().getOID(), orcType);
             writeSchema.addField(columnName, orcType);
         }
+        LOG.debug("Built schema: {}", writeSchema);
         return writeSchema;
     }
 
     /**
-     * Maps Greenplum primitive type to ORC primitive type.
-     * @param columnDescriptor
-     * @return
+     * Maps Greenplum type to ORC logical type, including handling for arrays.
+     * @param columnDescriptor the Greenplum column descriptor
+     * @return ORC logical type to use when storing the values of provided Greenplum type
      */
     private TypeDescription orcTypeFromGreenplumType(ColumnDescriptor columnDescriptor) {
-
         DataType dataType = columnDescriptor.getDataType();
 
-        TypeDescription orcCategory = null;
-        Integer[] columnTypeModifiers = columnDescriptor.columnTypeModifiers();
-
-        switch (dataType) {
+        // Greenplum does not report dimensionality of arrays, so for auto-generated schema we assume only 1-dim arrays
+        // are supported. Once we allow a user to provide a schema, this might change.
+        DataType scalarDataType = dataType.isArrayType() ? dataType.getTypeElem() : dataType;
+        TypeDescription typeDescription;
+        switch (scalarDataType) {
             case BOOLEAN:
-                orcCategory = TypeDescription.createBoolean();
+                typeDescription = TypeDescription.createBoolean();
                 break;
             case BYTEA:
-                orcCategory = TypeDescription.createBinary();
+                typeDescription = TypeDescription.createBinary();
                 break;
             case BIGINT:
-                orcCategory = TypeDescription.createLong();
+                typeDescription = TypeDescription.createLong();
                 break;
             case SMALLINT:
-                orcCategory = TypeDescription.createShort();
+                typeDescription = TypeDescription.createShort();
                 break;
             case INTEGER:
-                orcCategory = TypeDescription.createInt();
+                typeDescription = TypeDescription.createInt();
                 break;
             case TEXT:
             case UUID:  // TODO: will it load back from string to UUID ?
-                orcCategory = TypeDescription.createString();
+                typeDescription = TypeDescription.createString();
                 break;
             case REAL:
-                orcCategory = TypeDescription.createFloat();
+                typeDescription = TypeDescription.createFloat();
                 break;
             case FLOAT8:
-                orcCategory = TypeDescription.createDouble();
+                typeDescription = TypeDescription.createDouble();
                 break;
             case BPCHAR:
-                orcCategory = TypeDescription.createChar();
-                Integer maxLength = null;
-                if(columnTypeModifiers != null && columnTypeModifiers.length > 0) {
-                    maxLength = columnTypeModifiers[0];
-                }
-                if(maxLength != null && maxLength > 0) {
-                    orcCategory = TypeDescription.createChar().withMaxLength(maxLength);
-                }
+                typeDescription = setMaxLength(TypeDescription.createChar(), columnDescriptor.columnTypeModifiers());
                 break;
             case VARCHAR:
-                orcCategory = TypeDescription.createVarchar();
-                maxLength = null;
-                if(columnTypeModifiers != null && columnTypeModifiers.length > 0) {
-                    maxLength = columnTypeModifiers[0];
-                 }
-                if(maxLength != null && maxLength > 0) {
-                    orcCategory = TypeDescription.createVarchar().withMaxLength(maxLength);
-                }
+                typeDescription = setMaxLength(TypeDescription.createVarchar(), columnDescriptor.columnTypeModifiers());
                 break;
             case DATE:
-                orcCategory = TypeDescription.createDate();
+                typeDescription = TypeDescription.createDate();
                 break;
 
                 /* TODO: Does ORC supports time?
                 case TIME:
                  */
             case TIMESTAMP:
-                orcCategory = TypeDescription.createTimestamp();
+                typeDescription = TypeDescription.createTimestamp();
                 break;
             case TIMESTAMP_WITH_TIME_ZONE:
-                orcCategory = TypeDescription.createTimestampInstant();
+                typeDescription = TypeDescription.createTimestampInstant();
                 break;
             case NUMERIC:
-                orcCategory = TypeDescription.createDecimal();
-
-                Integer precision = null, scale =null;
-                // In case of no precision, columnTypeModifiers will be null
-                // If there is no scale in GPDB column then scale comes as 0
-
-                if(columnTypeModifiers != null && columnTypeModifiers.length > 1) {
-                    precision = columnTypeModifiers[0];
-                    scale = columnTypeModifiers[1];
-                }
-                if(precision != null) {
-                    orcCategory = orcCategory.withPrecision(precision);
-                }
-                if(scale != null) {
-                    orcCategory = orcCategory.withScale(scale);
-                }
+                typeDescription = setPrecisionAndScale(TypeDescription.createDecimal(), columnDescriptor.columnTypeModifiers());
                 break;
             default:
-                throw new PxfRuntimeException("Unsupported Greenplum type: " + dataType);
+                throw new PxfRuntimeException(String.format("Unsupported Greenplum type %d for column %s",
+                        dataType.getOID(), columnDescriptor.columnName()));
         }
+        // wrap a primitive ORC TypeDescription into an list if Greenplum type was an array
+        return dataType.isArrayType() ? TypeDescription.createList(typeDescription) : typeDescription;
+    }
 
-        return dataType.isArrayType() ? TypeDescription.createList(orcCategory) : orcCategory;
+    /**
+     * Sets maximum length for CHAR / VARCHAR ORC types if a corresponding Greenplum column had a size modifier
+     * @param typeDescription ORC type description
+     * @param columnTypeModifiers Greenplum type modifiers
+     * @return type description object with the specified max length, if any
+     */
+    private TypeDescription setMaxLength(TypeDescription typeDescription, Integer[] columnTypeModifiers) {
+        Integer maxLength = ArrayUtils.isNotEmpty(columnTypeModifiers) ? columnTypeModifiers[0] : null;
+        if (maxLength != null && maxLength > 0) {
+            return typeDescription.withMaxLength(maxLength);
+        }
+        return typeDescription;
+    }
+
+    /**
+     * Sets precision and scale for NUMERIC ORC type if a corresponding Greenplum column had modifiers
+     * @param typeDescription ORC type description
+     * @param columnTypeModifiers Greenplum type modifiers
+     * @return type description object with the specified precision and scale, if any
+     */
+    private TypeDescription setPrecisionAndScale(TypeDescription typeDescription, Integer[] columnTypeModifiers) {
+        // if precision is not defined in Greenplum for a column, columnTypeModifiers will be null
+        if (ArrayUtils.isNotEmpty(columnTypeModifiers)) {
+            Integer precision = columnTypeModifiers[0];
+            if (precision != null) {
+                // due to ORC code, can't set precision which is less than current scale, which is 10 by default
+                // so need to set correct scale before setting precision, default scale to 0 if missing
+                int scale = (columnTypeModifiers.length > 1 && columnTypeModifiers[1] != null) ? columnTypeModifiers[1] : 0;
+                typeDescription = typeDescription.withScale(scale); // should be less than 38, default / max ORC precision
+                typeDescription = typeDescription.withPrecision(precision);
+            }
+            // if precision was not sent, ORC defaults will be assumed
+            // TODO: check at runtime that actual value fits into (38,10) if precision was not sent
+        }
+        return typeDescription;
     }
 }
