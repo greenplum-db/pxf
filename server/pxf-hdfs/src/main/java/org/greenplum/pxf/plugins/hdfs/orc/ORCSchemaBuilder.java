@@ -29,7 +29,7 @@ public class ORCSchemaBuilder {
         // top level will always be a struct to align with how Hive would expect it
         TypeDescription writeSchema = TypeDescription.createStruct();
         for (ColumnDescriptor columnDescriptor: columnDescriptors) {
-            String columnName = columnDescriptor.columnName(); // TODO: what about quoted / case sensitive / with spaces ?
+            String columnName = columnDescriptor.columnName();
             TypeDescription orcType = orcTypeFromGreenplumType(columnDescriptor);
             LOG.debug("Mapped column {} of type {} to ORC type {}", columnName, columnDescriptor.getDataType().getOID(), orcType);
             writeSchema.addField(columnName, orcType);
@@ -67,7 +67,8 @@ public class ORCSchemaBuilder {
                 typeDescription = TypeDescription.createInt();
                 break;
             case TEXT:
-            case UUID:  // TODO: will it load back from string to UUID ?
+            case TIME: // TIME is not a separate type in ORC, store it as text
+            case UUID:
                 typeDescription = TypeDescription.createString();
                 break;
             case REAL:
@@ -85,10 +86,6 @@ public class ORCSchemaBuilder {
             case DATE:
                 typeDescription = TypeDescription.createDate();
                 break;
-
-                /* TODO: Does ORC supports time?
-                case TIME:
-                 */
             case TIMESTAMP:
                 typeDescription = TypeDescription.createTimestamp();
                 break;

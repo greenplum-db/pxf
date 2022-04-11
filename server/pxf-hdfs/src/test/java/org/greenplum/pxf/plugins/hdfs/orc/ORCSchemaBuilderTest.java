@@ -27,6 +27,7 @@ public class ORCSchemaBuilderTest {
             .append("col8:char(256),")
             .append("col9:varchar(256),")
             .append("col10:date,")
+            .append("col11:string,")
             .append("col12:timestamp,")
             .append("col13:timestamp with local time zone,")
             .append("col14:decimal(38,10),")
@@ -44,11 +45,12 @@ public class ORCSchemaBuilderTest {
             .append("col26:array<date>,")
             .append("col27:array<string>,")
             .append("col28:array<decimal(38,10)>,")
+            .append("col29:array<string>,")
             .append("col30:array<timestamp>,")
             .append("col31:array<timestamp with local time zone>>").toString();
 
     private ORCSchemaBuilder builder;
-    private List<ColumnDescriptor> columnDescriptors= new ArrayList<>();
+    private List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
 
     @BeforeEach
     public void setup() {
@@ -151,6 +153,16 @@ public class ORCSchemaBuilderTest {
         // have ORC perform this validation since MAX_PRECISION is not a public constant and might change in the future.
     }
 
+    @Test
+    public void testComplexColumnNames() {
+        columnDescriptors.add(new ColumnDescriptor("Hello World", DataType.INTEGER.getOID(), 0, "", null));
+        columnDescriptors.add(new ColumnDescriptor("привет", DataType.TEXT.getOID(), 0, "", null));
+        columnDescriptors.add(new ColumnDescriptor("simple", DataType.TEXT.getOID(), 0, "", null));
+        columnDescriptors.add(new ColumnDescriptor("谢谢你", DataType.TEXT.getOID(), 0, "", null));
+        // ORC schema prints non-latin-alpha-num ("^[a-zA-Z0-9_]+$") column names as escaped with "`" character
+        assertEquals("struct<`Hello World`:int,`привет`:string,simple:string,`谢谢你`:string>", builder.buildSchema(columnDescriptors).toString());
+    }
+
     private List<ColumnDescriptor> buildAllTypes() {
         List<ColumnDescriptor> descriptors = new ArrayList<>();
         // scalar types
@@ -165,7 +177,7 @@ public class ORCSchemaBuilderTest {
         descriptors.add(new ColumnDescriptor("col8", DataType.BPCHAR.getOID(),8,"", null));
         descriptors.add(new ColumnDescriptor("col9", DataType.VARCHAR.getOID(),9,"", null));
         descriptors.add(new ColumnDescriptor("col10", DataType.DATE.getOID(),10,"", null));
-        // TODO: descriptors.add(new ColumnDescriptor("col11", DataType.TIME.getOID(),11,"", null));
+        descriptors.add(new ColumnDescriptor("col11", DataType.TIME.getOID(),11,"", null));
         descriptors.add(new ColumnDescriptor("col12", DataType.TIMESTAMP.getOID(),12,"", null));
         descriptors.add(new ColumnDescriptor("col13", DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(),13,"", null));
         descriptors.add(new ColumnDescriptor("col14", DataType.NUMERIC.getOID(),14,"", null));
@@ -184,7 +196,7 @@ public class ORCSchemaBuilderTest {
         descriptors.add(new ColumnDescriptor("col26", DataType.DATEARRAY.getOID(),26,"", null));
         descriptors.add(new ColumnDescriptor("col27", DataType.UUIDARRAY.getOID(),27,"", null));
         descriptors.add(new ColumnDescriptor("col28", DataType.NUMERICARRAY.getOID(),28,"", null));
-        // TODO: descriptors.add(new ColumnDescriptor("col29", DataType.TIMEARRAY.getOID(),29,"", null));
+        descriptors.add(new ColumnDescriptor("col29", DataType.TIMEARRAY.getOID(),29,"", null));
         descriptors.add(new ColumnDescriptor("col30", DataType.TIMESTAMPARRAY.getOID(),30,"", null));
         descriptors.add(new ColumnDescriptor("col31", DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(),31,"", null));
 
