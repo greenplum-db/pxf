@@ -22,10 +22,10 @@ A server configuration may include default settings for user access credentials 
 
 The configuration information for a PXF server resides in one or more `<connector>-site.xml` files in `$PXF_BASE/servers/<server_name>/`.
 
-PXF provides a template configuration file for each connector.  These server template configuration files are located in the `$PXF_HOME/templates/` directory after you install PXF:
+PXF provides a template configuration file for each connector.  These server template configuration files are located in the `<PXF_INSTALL_DIR>/templates/` directory after you install PXF:
 
 ```
-gpadmin@gpmaster$ ls $PXF_HOME/templates
+gpadmin@gpmaster$ ls <PXF_INSTALL_DIR>/templates
 adl-site.xml   hbase-site.xml  jdbc-site.xml    pxf-site.xml    yarn-site.xml
 core-site.xml  hdfs-site.xml   mapred-site.xml  s3-site.xml
 gs-site.xml    hive-site.xml   minio-site.xml   wasbs-site.xml

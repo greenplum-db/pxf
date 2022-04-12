@@ -186,7 +186,7 @@ When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will
 3. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_HOME/templates/pxf-site.xml .
+    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 4. Open the `pxf-site.xml` file in the editor of your choice, and update the keytab and principal property settings, if required. Specify the location of the keytab file and the Kerberos principal, substituting your realm. For example:
@@ -298,7 +298,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 4. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_HOME/templates/pxf-site.xml .
+    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 5. Open the `pxf-site.xml` file in the editor of your choice, and update the keytab and principal property settings, if required. Specify the location of the keytab file and the Kerberos principal, substituting your realm. *The default values for these settings are identified below*:
@@ -364,7 +364,7 @@ By default, Kerberos constrained delegation is disabled for PXF. Perform the fol
 1. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_HOME/templates/pxf-site.xml .
+    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 1. Open the `pxf-site.xml` file in the editor of your choice, locate the `pxf.service.kerberos-constrained.delegation` property, and set it as follows:

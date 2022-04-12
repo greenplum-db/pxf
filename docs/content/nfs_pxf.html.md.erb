@@ -34,7 +34,7 @@ Before you use PXF to access files on a network file system, ensure that:
 
 Before you use PXF to access a file on a network file system, you must create a server configuration and then synchronize the PXF configuration to all Greenplum hosts.  This procedure will typically be performed by the Greenplum Database administrator.
 
-Use the server template configuration file `$PXF_HOME/templates/pxf-site.xml` when you configure a network file system server for PXF. This template file includes the mandatory property `pxf.fs.basePath` that you configure to identify the network file system share path. PXF considers the file path that you specify in a `CREATE EXTERNAL TABLE` `LOCATION` clause that uses this server to be relative to this share path.
+Use the server template configuration file `<PXF_INSTALL_DIR>/templates/pxf-site.xml` when you configure a network file system server for PXF. This template file includes the mandatory property `pxf.fs.basePath` that you configure to identify the network file system share path. PXF considers the file path that you specify in a `CREATE EXTERNAL TABLE` `LOCATION` clause that uses this server to be relative to this share path.
 
 PXF does not support user impersonation when you access a network file system; you must explicitly turn off user impersonation in a network file system server configuration.
 
@@ -57,7 +57,7 @@ PXF does not support user impersonation when you access a network file system; y
 4. Copy the PXF `pxf-site.xml` template file to the `nfssrvcfg` server configuration directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_HOME/templates/pxf-site.xml $PXF_BASE/servers/nfssrvcfg/
+    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml $PXF_BASE/servers/nfssrvcfg/
     ```
 
 5. Open the template server configuration file in the editor of your choice, and uncomment and provide property values appropriate for your environment. For example, if the file system share point is the directory named `/mnt/extdata/pxffs`, uncomment and set these server properties:

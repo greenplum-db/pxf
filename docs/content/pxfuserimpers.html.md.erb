@@ -103,7 +103,7 @@ Perform the following procedure to configure the Hadoop user:
 4. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_HOME/templates/pxf-site.xml .
+    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 5. Open the `pxf-site.xml` file in the editor of your choice, and configure the Hadoop user name. When impersonation is disabled, this name identifies the Hadoop user identity that PXF will use to access the Hadoop system. When user impersonation is enabled for a non-secure Hadoop cluster, this name identifies the PXF proxy Hadoop user. For example, if you want to access Hadoop as the user `hdfsuser1`, uncomment the property and set it as follows:
@@ -139,7 +139,7 @@ PXF user impersonation is enabled by default for Hadoop servers. You can configu
 2. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_HOME/templates/pxf-site.xml .
+    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 3. Open the `pxf-site.xml` file in the editor of your choice, and update the user impersonation property setting. For example, if you do not require user impersonation for this server configuration, set the `pxf.service.user.impersonation` property to `false`:

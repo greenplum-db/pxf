@@ -25,7 +25,7 @@ PXF is bundled with the `postgresql-42.3.3.jar` JAR file. If you require a diffe
 
 When you configure the PXF JDBC Connector, you add at least one named PXF server configuration for the connector as described in [Configuring PXF Servers](cfg_server.html). You can also configure one or more statically-defined queries to run against the remote SQL database.
 
-PXF provides a template configuration file for the JDBC Connector. This server template configuration file, located in `$PXF_HOME/templates/jdbc-site.xml`, identifies properties that you can configure to establish a connection to the external SQL database. The template also includes optional properties that you can set before executing query or insert commands in the external database session.
+PXF provides a template configuration file for the JDBC Connector. This server template configuration file, located in `<PXF_INSTALL_DIR>/templates/jdbc-site.xml`, identifies properties that you can configure to establish a connection to the external SQL database. The template also includes optional properties that you can set before executing query or insert commands in the external database session.
 
 The required properties in the `jdbc-site.xml` server template file follow:
 
@@ -355,7 +355,7 @@ In this procedure, you name and add a PXF JDBC server configuration for a Postgr
 4. Copy the PXF JDBC server template file to the server configuration directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_HOME/templates/jdbc-site.xml $PXF_BASE/servers/pg_user1_testdb/
+    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/jdbc-site.xml $PXF_BASE/servers/pg_user1_testdb/
     ```
         
 5. Open the template server configuration file in the editor of your choice, and provide appropriate property values for your environment. For example, if you are configuring access to a PostgreSQL database named `testdb` on a PostgreSQL instance running on the host named `pgserverhost` for the user named `user1`:

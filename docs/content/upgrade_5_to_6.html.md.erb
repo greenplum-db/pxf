@@ -56,7 +56,7 @@ After you install the new version of PXF, perform the following procedure:
     gpadmin@gpmaster$ pxf version
     ```
 
-1. (Optional, Advanced) If you want to relocate `$PXF_BASE` outside of `$PXF_HOME`, perform the procedure described in [Relocating $PXF_BASE](about_pxf_dir.html#movebase).
+1. (Optional, Advanced) If you want to relocate `$PXF_BASE` outside of `<PXF_INSTALL_DIR>`, perform the procedure described in [Relocating $PXF_BASE](about_pxf_dir.html#movebase).
 
 1. Auto-migrate your PXF 5.x configuration to PXF 6.x `$PXF_BASE`:
 
@@ -138,7 +138,7 @@ After you install the new version of PXF, perform the following procedure:
     gpadmin@gpmaster$ pxf cluster register
     ```
 
-    The `register` command copies only the `pxf.control` extension file to the Greenplum cluster. In PXF 6.x, the PXF extension `.sql` file and library `pxf.so` reside in `$PXF_HOME/gpextable`. You may choose to remove these now-unused files from the Greenplum Database installation *on the Greenplum Database master host, the standby master host, and all segment hosts*. For example, to remove the files on the master host:
+    The `register` command copies only the `pxf.control` extension file to the Greenplum cluster. In PXF 6.x, the PXF extension `.sql` file and library `pxf.so` reside in `<PXF_INSTALL_DIR>/gpextable`. You may choose to remove these now-unused files from the Greenplum Database installation *on the Greenplum Database master host, the standby master host, and all segment hosts*. For example, to remove the files on the master host:
 
     ``` shell
     gpadmin@gpmaster$ rm $GPHOME/share/postgresql/extension/pxf--1.0.sql
@@ -161,9 +161,9 @@ After you install the new version of PXF, perform the following procedure:
     | `PXF_PRINCIPAL` configuration property | `pxf.service.kerberos.principal` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
     | `PXF_USER_IMPERSONATION` configuration property | `pxf.service.user.impersonation` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
 
-1. PXF 6.x distributes a single JAR file that includes all of its dependencies, and separately makes its HBase JAR file available in `$PXF_HOME/share`. If you have configured a PXF Hadoop server for HBase access, you must register the new `pxf-hbase-<version>.jar` with Hadoop and HBase as follows:
+1. PXF 6.x distributes a single JAR file that includes all of its dependencies, and separately makes its HBase JAR file available in `<PXF_INSTALL_DIR>/share`. If you have configured a PXF Hadoop server for HBase access, you must register the new `pxf-hbase-<version>.jar` with Hadoop and HBase as follows:
 
-    1. Copy `$PXF_HOME/share/pxf-hbase-<version>.jar` to each node in your HBase cluster.
+    1. Copy `<PXF_INSTALL_DIR>/share/pxf-hbase-<version>.jar` to each node in your HBase cluster.
     1. Add the location of this JAR to `$HBASE_CLASSPATH` on each HBase node.
     1. Restart HBase on each node.
 
