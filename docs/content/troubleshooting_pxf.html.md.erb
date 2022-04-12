@@ -119,3 +119,32 @@ Perform the following procedure to configure the number of Hive MetaStore connec
 
 1. Re-run the failing SQL external table command.
 
+## <a id="lzo"></a>Addressing a Missing Compression Codec Error
+
+By default, PXF does not bundle the LZO compression library. If the Hadoop cluster is configured to use LZO compression, PXF returns the error message `Compression codec com.hadoop.compression.lzo.LzoCodec not found` on first access to Hadoop. To remedy the situation, you must register the LZO compression library with PXF as described below (for more information, refer to [Registering a JAR Dependency](reg_jar_depend.html#reg_jar)):
+
+1. Locate the LZO library in the Hadoop installation directory on the Hadoop NameNode. For example, the file system location of the library may be `/usr/lib/hadoop-lzo/lib/hadoop-lzo.jar`.
+
+1. Log in to the Greenplum Database master host.
+
+1. Copy `hadoop-lzo.jar` from the Hadoop NameNode to the Greenplum Database master node. For example:
+
+    ``` shell
+    gpadmin@gpmaster$ cp huser@hnn:/usr/lib/hadoop-lzo/lib/hadoop-lzo.jar .
+    ```
+
+1. Copy the LZO compression library to the PXF configuration directory. For example, if `$PXF_BASE` is `/usr/local/pxf-gp6`:
+
+    ``` shell
+    gpadmin@gpmaster$ cp hadoop-lzo.jar /usr/local/pxf-gp6/lib/
+    ```
+
+1. Synchronize the PXF configuration and restart PXF:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster restart
+    ```
+
+1. Re-run the query.
+
