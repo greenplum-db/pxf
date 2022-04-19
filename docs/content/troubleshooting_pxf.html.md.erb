@@ -127,16 +127,10 @@ By default, PXF does not bundle the LZO compression library. If the Hadoop clust
 
 1. Log in to the Greenplum Database master host.
 
-1. Copy `hadoop-lzo.jar` from the Hadoop NameNode to the Greenplum Database master node. For example:
+1. Copy `hadoop-lzo.jar` from the Hadoop NameNode to the PXF configuration directory on the Greenplum Database master host. For example, if `$PXF_BASE` is `/usr/local/pxf-gp6`:
 
     ``` shell
-    gpadmin@gpmaster$ cp huser@hnn:/usr/lib/hadoop-lzo/lib/hadoop-lzo.jar .
-    ```
-
-1. Copy the LZO compression library to the PXF configuration directory. For example, if `$PXF_BASE` is `/usr/local/pxf-gp6`:
-
-    ``` shell
-    gpadmin@gpmaster$ cp hadoop-lzo.jar /usr/local/pxf-gp6/lib/
+    gpadmin@gpmaster$ scp <hadoop-user>@<namenode-host>:/usr/lib/hadoop-lzo/lib/hadoop-lzo.jar /usr/local/pxf-gp6/lib/
     ```
 
 1. Synchronize the PXF configuration and restart PXF:
