@@ -1,5 +1,5 @@
 ---
-title: Configuring Connectors to Minio and S3 Object Stores (Optional)
+title: Configuring Connectors to MinIO and S3 Object Stores (Optional)
 ---
 
 You can use PXF to access S3-compatible object stores. This topic describes how to configure the PXF connectors to these external data sources.
@@ -13,15 +13,15 @@ To access data in an object store, you must provide a server location and client
 PXF provides a configuration file template for each object store connector. These template files are located in the `<PXF_INSTALL_DIR>/templates/` directory.
 
 
-## <a id="minio_cfg"></a>Minio Server Configuration
+## <a id="minio_cfg"></a>MinIO Server Configuration
 
-The template configuration file for Minio is `<PXF_INSTALL_DIR>/templates/minio-site.xml`. When you configure a Minio server, you must provide the following server configuration properties and replace the template values with your credentials:
+The template configuration file for MinIO is `<PXF_INSTALL_DIR>/templates/minio-site.xml`. When you configure a MinIO server, you must provide the following server configuration properties and replace the template values with your credentials:
 
 | Property       | Description                                | Value |
 |----------------|--------------------------------------------|------ |
-| fs.s3a.endpoint | The Minio S3 endpoint to which to connect. | Your endpoint. |
-| fs.s3a.access.key | The Minio account access key ID. | Your access key. |
-| fs.s3a.secret.key | The secret key associated with the Minio access key ID. | Your secret key. |
+| fs.s3a.endpoint | The MinIO S3 endpoint to which to connect. | Your endpoint. |
+| fs.s3a.access.key | The MinIO account access key. | Your MinIO user name. |
+| fs.s3a.secret.key | The MinIO secret key associated with the access key. | Your MinIO password. |
 
 ## <a id="s3_cfg"></a>S3 Server Configuration
 

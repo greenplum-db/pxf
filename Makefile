@@ -27,7 +27,7 @@ all: external-table cli server
 external-table:
 	make -C external-table
 
-fwd:
+fdw:
 	make -C fdw
 
 cli:
