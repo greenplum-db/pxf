@@ -10,6 +10,44 @@ import java.util.ArrayList;
 
 public class HiveVectorizedOrcTest extends HiveBaseTest {
 
+    static final String[] HIVE_TYPES_NO_TIMESTAMP_COLS = {
+            "t1    STRING",
+            "t2    STRING",
+            "num1  INT",
+            "dub1  DOUBLE",
+            "dec1  DECIMAL(38,18)",
+            "r     FLOAT",
+            "bg    BIGINT",
+            "b     BOOLEAN",
+            "tn    TINYINT",
+            "sml   SMALLINT",
+            "dt    DATE",
+            "vc1   VARCHAR(5)",
+            "c1    CHAR(3)",
+            "bin   BINARY"
+    };
+
+    static final String[] PXF_HIVE_TYPES_NO_TIMESTAMP_COLS = {
+            "t1    TEXT",
+            "t2    TEXT",
+            "num1  INTEGER",
+            "dub1  DOUBLE PRECISION",
+            "dec1  NUMERIC",
+            "r     REAL",
+            "bg    BIGINT",
+            "b     BOOLEAN",
+            "tn    SMALLINT",
+            "sml   SMALLINT",
+            "dt    DATE",
+            "vc1   VARCHAR(5)",
+            "c1    CHAR(3)",
+            "bin   BYTEA"
+    };
+
+    private HiveTable hiveRepeatingCsvTable;
+    private HiveTable hiveRepeatingNoNullsOrcTable;
+    private HiveTable hiveRepeatingNullsOrcTable;
+
     ArrayList<String> hiveTypesNoTMCols = new ArrayList<>(Arrays.asList(HIVE_TYPES_COLS));
     ArrayList<String> gpdbTypesNoTMCols = new ArrayList<>(Arrays.asList(PXF_HIVE_TYPES_COLS));
 
@@ -44,6 +82,26 @@ public class HiveVectorizedOrcTest extends HiveBaseTest {
         createTable(exTable);
     }
 
+    private void prepareOrcDataWithRepeatingData() throws Exception {
+        String dataFileName = "hive_types_all_columns_repeating.txt";
+        // timestamp conversion is not supported by HiveORCVectorizedResolver
+
+        hiveRepeatingCsvTable = prepareTableData(hdfs, hive, hiveRepeatingCsvTable, "hive_types_all_columns_repeating_csv", HIVE_TYPES_NO_TIMESTAMP_COLS, "hive_types_all_columns_repeating.txt");
+
+        hiveRepeatingNoNullsOrcTable = new HiveTable("hive_types_all_columns_repeating_no_nulls_orc", HIVE_TYPES_NO_TIMESTAMP_COLS);
+        hiveRepeatingNoNullsOrcTable.setStoredAs(ORC);
+        hive.createTableAndVerify(hiveRepeatingNoNullsOrcTable);
+        hive.insertData(hiveRepeatingCsvTable, hiveRepeatingNoNullsOrcTable);
+
+        hiveRepeatingCsvTable = prepareTableData(hdfs, hive, null, "hive_types_all_columns_repeating_csv", HIVE_TYPES_NO_TIMESTAMP_COLS, "hive_types_all_columns_repeating_nulls.txt");
+
+        hiveRepeatingNullsOrcTable = new HiveTable("hive_types_all_columns_repeating_nulls_orc", HIVE_TYPES_NO_TIMESTAMP_COLS);
+        hiveRepeatingNullsOrcTable.setStoredAs(ORC);
+        hive.createTableAndVerify(hiveRepeatingNullsOrcTable);
+        hive.insertData(hiveRepeatingCsvTable, hiveRepeatingNullsOrcTable);
+
+    }
+
     @Override
     void prepareData() throws Exception {
 
@@ -75,6 +133,29 @@ public class HiveVectorizedOrcTest extends HiveBaseTest {
         gpdb.copyData(exTable, gpdbNativeTable);
 
         runTincTest("pxf.features.hive.orc_primitive_types_no_timestamp.runTest");
+    }
+
+    @Test(groups = { "hive", "features", "gpdb", "security" })
+    public void columsnWithRepeating() throws Exception {
+        prepareOrcDataWithRepeatingData();
+
+        exTable = TableFactory.getPxfHiveVectorizedOrcReadableTable("pxf_hivevectorizedorc_repeating_no_nulls", PXF_HIVE_TYPES_NO_TIMESTAMP_COLS, hiveRepeatingNoNullsOrcTable, true);
+        createTable(exTable);
+
+        exTable = TableFactory.getPxfHiveVectorizedOrcReadableTable("pxf_hivevectorizedorc_repeating_nulls", PXF_HIVE_TYPES_NO_TIMESTAMP_COLS, hiveRepeatingNullsOrcTable, true);
+        createTable(exTable);
+
+        exTable = TableFactory.getPxfHiveVectorizedOrcReadableTable("pxf_hive_orc_vectorize_repeating_no_nulls", PXF_HIVE_TYPES_NO_TIMESTAMP_COLS, hiveRepeatingNoNullsOrcTable, true);
+        exTable.setProfile("hive:orc");
+        exTable.setUserParameters(new String[] { "VECTORIZE=true" });
+        createTable(exTable);
+
+        exTable = TableFactory.getPxfHiveVectorizedOrcReadableTable("pxf_hive_orc_vectorize_repeating_nulls", PXF_HIVE_TYPES_NO_TIMESTAMP_COLS, hiveRepeatingNullsOrcTable, true);
+        exTable.setProfile("hive:orc");
+        exTable.setUserParameters(new String[] { "VECTORIZE=true" });
+        createTable(exTable);
+
+        runTincTest("pxf.features.hive.orc_repeating.runTest");
     }
 
 }

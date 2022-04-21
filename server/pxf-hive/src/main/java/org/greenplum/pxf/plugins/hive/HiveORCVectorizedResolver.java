@@ -253,7 +253,7 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
                         int rowId = bcv.isRepeating ? 0 : rowIndex;
                         if (!bcv.isNull[rowId]) {
                             Text textValue = new Text();
-                            textValue.set(bcv.vector[rowIndex], bcv.start[rowIndex], bcv.length[rowIndex]);
+                            textValue.set(bcv.vector[rowId], bcv.start[rowId], bcv.length[rowId]);
                             fieldValue = textValue;
                         }
                     }
@@ -270,7 +270,7 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
                         int rowId = bcv.isRepeating ? 0 : rowIndex;
                         if (!bcv.isNull[rowId]) {
                             Text textValue = new Text();
-                            textValue.set(bcv.vector[rowIndex], bcv.start[rowIndex], bcv.length[rowIndex]);
+                            textValue.set(bcv.vector[rowId], bcv.start[rowId], bcv.length[rowId]);
                             fieldValue = textValue;
                         }
                     }
@@ -287,7 +287,7 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
                         int rowId = bcv.isRepeating ? 0 : rowIndex;
                         if (!bcv.isNull[rowId]) {
                             Text textValue = new Text();
-                            textValue.set(bcv.vector[rowIndex], bcv.start[rowIndex], bcv.length[rowIndex]);
+                            textValue.set(bcv.vector[rowId], bcv.start[rowId], bcv.length[rowId]);
                             fieldValue = textValue;
                         }
                     }
@@ -319,7 +319,7 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
                     if (lcv != null) {
                         int rowId = lcv.isRepeating ? 0 : rowIndex;
                         if (!lcv.isNull[rowId]) {
-                            fieldValue = new Date(org.apache.hadoop.hive.serde2.io.DateWritable.daysToMillis((int) lcv.vector[rowIndex]));
+                            fieldValue = new Date(org.apache.hadoop.hive.serde2.io.DateWritable.daysToMillis((int) lcv.vector[rowId]));
                         }
                     }
                     addValueToColumn(columnIndex, rowIndex, new OneField(fieldType.getOID(), fieldValue));
@@ -334,7 +334,7 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
                     if (lcv != null) {
                         int rowId = lcv.isRepeating ? 0 : rowIndex;
                         if (!lcv.isNull[rowId]) {
-                            fieldValue = (short) lcv.vector[rowIndex];
+                            fieldValue = (short) lcv.vector[rowId];
                         }
                     }
                     addValueToColumn(columnIndex, rowIndex, new OneField(fieldType.getOID(), fieldValue));
