@@ -151,14 +151,27 @@ The workaround described in this section applies when all of the following hold 
 - The Greenplum Database PXF external table that you created specifies the `hive:orc` profile.
 - The Greenplum Database PXF external table that you created specifies the `VECTORIZE=false` (the default) setting.
 - There is a case mis-match between the column names specified in the Hive table schema and the column names specified in the ORC embedded schema.
+- You confirm that the field names in the ORC embedded schema are not all in lowercase by performing the following tasks:
+    1. Run `DESC FORMATTED <table-name>` in the `hive` subsystem and note the returned `location`; for example, `location:hdfs://namenode/hive/warehouse/<table-name>`.
+    1. List the ORC files comprising the table by running the following command:
 
-To remedy this situation, perform the following procedure:
+        ``` shell
+        $ hdfs dfs -ls <location>
+        ```
+    1. Dump each ORC file with the following command. For example, if the first step returned `hdfs://namenode/hive/warehouse/hive_orc_tbl1, run:`
+
+        ``` shell
+        $ hive --orcfiledump /hive/warehouse/hive_orc_tbl1/<orc-file> > dump.out
+        ```
+    1. Examine the output, specifically the value of `Type` (sample output: `Type: struct<COL0:int,COL1:string>`). If the field names are not all lowercase, continue with the workaround below.
+
+*To remedy this situation, perform the following procedure*:
 
 1. Log in to the Greenplum Database master host.
 
 1. Identify the name of your Hadoop PXF server configuration.
 
-1. Locate the `hive-site.xml` configuration file in the server configuration directory. For example, if `$PXF_BASE` is `/usr/local/pxf-gp6` and the server name is `<server_name>`, this file is located here:
+1. Locate the `hive-site.xml` configuration file in the server configuration directory. For example, if `$PXF_BASE` is `/usr/local/pxf-gp6` and the server name is `<server_name>`, the file is located here:
 
     ``` pre
     /usr/local/pxf-gp6/servers/<server_name>/hive-site.xml
