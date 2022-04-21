@@ -144,7 +144,7 @@ By default, PXF does not bundle the LZO compression library. If the Hadoop clust
 
 ## <a id="hiveorcnulls"></a>Reading from a Hive table STORED AS ORC Returns NULLs
 
-If you are using PXF to read from a Hive table `STORED AS ORC` and all columns are returned as NULLs, there may be a case sensitivity issue between the column names specified in the Hive table definition and those specified in the ORC embedded schema definition.
+If you are using PXF to read from a Hive table `STORED AS ORC` and all columns are returned as NULLs, there may be a case sensitivity issue between the column names specified in the Hive table definition and those specified in the ORC embedded schema definition. This might happen if the table has been created and populated by another system such as Spark.
 
 The workaround described in this section applies when all of the following hold true:
 
