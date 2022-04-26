@@ -16,6 +16,6 @@ set -x
 PETNAME=$(< "${ENV_FILES_DIR}/name")
 # --quiet to avoid interactive prompts
 # lop off trailing '-m'
-gcloud beta dataproc clusters --quiet \
+gcloud dataproc clusters --quiet \
   delete "${PETNAME%-m}" \
   "--region=$REGION"
