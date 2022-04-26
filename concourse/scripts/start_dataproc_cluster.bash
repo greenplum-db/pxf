@@ -42,7 +42,7 @@ PLAINTEXT=$(mktemp)
 PLAINTEXT_NAME=$(basename "$PLAINTEXT")
 
 # Initialize the dataproc service
-GCLOUD_COMMAND=(gcloud beta dataproc clusters
+GCLOUD_COMMAND=(gcloud dataproc clusters
   create "$CLUSTER_NAME"
   "--region=$REGION"
   --initialization-actions "$INITIALIZATION_SCRIPT"
