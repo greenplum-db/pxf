@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.3.1 (04/27/2022)
+
+### Bug Fixes:
+
+- [#788](https://github.com/greenplum-db/pxf/pull/788) Replace prefix macro with environment variable in scriptlets
+- [#794](https://github.com/greenplum-db/pxf/pull/794) Fix NPE in Hive ORC vectorized query execution
+
 ## 6.3.0 (03/16/2022)
 
 ### Enhancements:

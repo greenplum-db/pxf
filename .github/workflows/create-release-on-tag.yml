@@ -22,19 +22,11 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: PXF Version ${{ github.ref }}
           body: |
-            ## 6.3.0 (03/16/2022)
-
-            ### Enhancements:
-
-            - [#703](https://github.com/greenplum-db/pxf/pull/703) Added Support for Avro Logical Types for Readable External Tables
-            - [#707](https://github.com/greenplum-db/pxf/pull/707) Enabled Kerberos Constrained Delegation impersonation for secure clusters
-            - [#752](https://github.com/greenplum-db/pxf/pull/752) Add support for GPDB6 on RHEL 8
-            - [#754](https://github.com/greenplum-db/pxf/pull/754) Add scripts for modifying PXF extension to support gpupgrade
+            ## 6.3.1 (04/27/2022)
 
             ### Bug Fixes:
 
-            - [#738](https://github.com/greenplum-db/pxf/pull/738) Fix: For reading the records correctly from a MultiLine JSON file
-            - [#756](https://github.com/greenplum-db/pxf/pull/756) Fixed HiveDataFragmenter not closing connections to Hive Metastore
-            - [#760](https://github.com/greenplum-db/pxf/pull/760) Update bundled postgresql to 42.3.3
+            - [#788](https://github.com/greenplum-db/pxf/pull/788) Replace prefix macro with environment variable in scriptlets
+            - [#794](https://github.com/greenplum-db/pxf/pull/794) Fix NPE in Hive ORC vectorized query execution
           draft: false
           prerelease: false
