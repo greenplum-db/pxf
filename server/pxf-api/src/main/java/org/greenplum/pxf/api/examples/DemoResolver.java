@@ -65,6 +65,6 @@ public class DemoResolver extends BasePlugin implements Resolver {
      */
     @Override
     public OneRow setFields(List<OneField> record) throws Exception {
-        throw new UnsupportedOperationException("Current operation is not supported");
+        throw new UnsupportedOperationException("Demo resolver does not support write operation");
     }
 }

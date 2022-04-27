@@ -18,7 +18,7 @@ public class UserDataVerifyAccessor extends BasePlugin implements Accessor {
 
     private int counter = 0;
     private char firstColumn = 'A';
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "UserDataVerifyAccessor does not support write operation";
 
     @Override
     public boolean openForRead() {

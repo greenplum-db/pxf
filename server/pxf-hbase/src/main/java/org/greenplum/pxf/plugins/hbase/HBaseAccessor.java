@@ -77,7 +77,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
 
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "HBase accessor does not support write operation.";
 
     private HBaseTupleDescription tupleDescription;
     private Connection connection;

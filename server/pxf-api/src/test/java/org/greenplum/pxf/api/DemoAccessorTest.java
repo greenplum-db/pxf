@@ -76,12 +76,12 @@ public class DemoAccessorTest {
     @Test
     public void testWriteIsNotSupported() {
         Exception e = assertThrows(UnsupportedOperationException.class, () -> accessor.openForWrite());
-        assertEquals("Write operation is not supported", e.getMessage());
+        assertEquals("Demo accessor does not support write operation", e.getMessage());
 
         e = assertThrows(UnsupportedOperationException.class, () -> accessor.writeNextObject(new OneRow()));
-        assertEquals("Write operation is not supported", e.getMessage());
+        assertEquals("Demo accessor does not support write operation", e.getMessage());
 
         e = assertThrows(UnsupportedOperationException.class, () -> accessor.closeForWrite());
-        assertEquals("Write operation is not supported", e.getMessage());
+        assertEquals("Demo accessor does not support write operation", e.getMessage());
     }
 }

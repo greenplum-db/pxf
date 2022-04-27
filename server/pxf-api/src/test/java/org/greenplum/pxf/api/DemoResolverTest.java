@@ -107,6 +107,6 @@ public class DemoResolverTest {
       Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> customResolver.setFields(null));
 
-      assertEquals("Current operation is not supported", e.getMessage());
+      assertEquals("Demo resolver does not support write operation", e.getMessage());
     }
 }

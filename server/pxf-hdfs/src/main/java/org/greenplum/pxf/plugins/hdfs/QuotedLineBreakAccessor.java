@@ -36,14 +36,13 @@ import java.util.Queue;
  */
 public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
 
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported for text:multi profile";
 
     private boolean fileAsRow;
     private boolean firstLine, lastLine;
     private int skipHeaderCount;
     BufferedReader reader;
     Queue<String> lineQueue;
-
 
     @Override
     public void afterPropertiesSet() {

@@ -34,7 +34,7 @@ public class DemoAccessor extends BasePlugin implements Accessor {
     private int rowNumber;
     private int fragmentNumber;
     private static final int NUM_ROWS = 2;
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Demo accessor does not support write operation";
 
     @Override
     public boolean openForRead() {
