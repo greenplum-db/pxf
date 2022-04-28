@@ -534,7 +534,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf-gp[[gp_ver]].el7.tar.gz
+    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
 {% endfor %}
 
 {% set gp_ver = 6 %}
@@ -544,7 +544,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
+    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
 
 - name: pxf_gp[[gp_ver]]_tarball_rhel8
   type: gcs
@@ -552,7 +552,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf-gp[[gp_ver]].el8.tar.gz
+    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
 {% set gp_ver = None %}
 
 ## ---------- Auxiliary Resources ----------

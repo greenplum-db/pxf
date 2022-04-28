@@ -146,7 +146,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: perf/snapshots/pxf-gp6.el[[redhat_major_version]].tar.gz
+    versioned_file: perf/snapshots/pxf6/pxf-gp6.el[[redhat_major_version]].tar.gz
 
 - name: singlecluster
   type: gcs

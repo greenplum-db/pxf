@@ -310,7 +310,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].el7.tar.gz
+    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
 {% endfor %}
 
 {% set gp_ver = 6 %}
@@ -320,7 +320,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
+    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
 {% set gp_ver = None %}
 
 {% for gp_ver in range(6, 7) %}
@@ -330,7 +330,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].el8.tar.gz
+    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
 {% endfor %}
 
 ## ---------- Auxiliary Resources ----------
