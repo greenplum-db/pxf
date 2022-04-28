@@ -293,13 +293,13 @@ class HiveAccessorTest {
         accessor = new HiveAccessor(null, new HiveUtilities(), serializationService);
 
         Exception e = assertThrows(UnsupportedOperationException.class, () -> accessor.openForWrite());
-        assertEquals("Write operation is not supported", e.getMessage());
+        assertEquals("Write operation is not supported for Hive", e.getMessage());
 
         e = assertThrows(UnsupportedOperationException.class, () -> accessor.writeNextObject(null));
-        assertEquals("Write operation is not supported", e.getMessage());
+        assertEquals("Write operation is not supported for Hive", e.getMessage());
 
         e = assertThrows(UnsupportedOperationException.class, () -> accessor.closeForWrite());
-        assertEquals("Write operation is not supported", e.getMessage());
+        assertEquals("Write operation is not supported for Hive", e.getMessage());
     }
 
     @SuppressWarnings("unchecked")

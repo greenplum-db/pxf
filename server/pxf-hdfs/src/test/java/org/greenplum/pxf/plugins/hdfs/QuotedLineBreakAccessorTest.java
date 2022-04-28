@@ -424,13 +424,13 @@ public class QuotedLineBreakAccessorTest {
         prepareTest("csv/simple.csv", false);
 
         Exception e = assertThrows(UnsupportedOperationException.class, () -> accessor.openForWrite());
-        assertEquals("Write operation is not supported", e.getMessage());
+        assertEquals("Write operation is not supported for text:multi profile", e.getMessage());
 
         e = assertThrows(UnsupportedOperationException.class, () -> accessor.writeNextObject(new OneRow()));
-        assertEquals("Write operation is not supported", e.getMessage());
+        assertEquals("Write operation is not supported for text:multi profile", e.getMessage());
 
         e = assertThrows(UnsupportedOperationException.class, () -> accessor.closeForWrite());
-        assertEquals("Write operation is not supported", e.getMessage());
+        assertEquals("Write operation is not supported for text:multi profile", e.getMessage());
     }
 
     private void prepareTest(String resourceName, boolean fileAsRow) throws Exception {

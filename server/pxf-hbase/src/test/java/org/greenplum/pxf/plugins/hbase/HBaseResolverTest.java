@@ -104,6 +104,6 @@ public class HBaseResolverTest {
         Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> new HBaseResolver().setFields(null));
 
-        assertEquals("Current operation is not supported", e.getMessage());
+        assertEquals("HBase resolver does not support write operation", e.getMessage());
     }
 }

@@ -96,7 +96,7 @@ public class HBaseResolver extends BasePlugin implements Resolver {
      */
     @Override
     public OneRow setFields(List<OneField> record) {
-        throw new UnsupportedOperationException("HBase resolver does not support write operation.");
+        throw new UnsupportedOperationException("HBase resolver does not support write operation");
     }
 
     /**
