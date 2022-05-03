@@ -38,10 +38,12 @@ Run specific method from a test
 make TEST=<testclassname>#<method>
 ```
 
-If you wish to remote debug your PXF Automation test case 
+If you wish to remote debug your PXF Automation test case, use the following:
 ```
-export MAVEN_DEBUG_OPTS=' -Dmaven.surefire.debug'
+PXF_TEST_DEBUG=true PXF_TEST_DEBUG_ATTACH=true make TEST=<testclassname>
 ```
+This will allow you to attach to port 5005 for debugging purposes. See [IntelliJ Setup](#intellij-setup) for more details.
+
 
 If you wish to run with cache 
 ```
@@ -221,3 +223,11 @@ In every "class" directory will be files according to the following format: <tim
 
 TestNg report will generated into target/surefire-reports
 <img src="images/68125531.png" class="confluence-embedded-image confluence-content-image-border" width="1084" height="612" />
+
+## IntelliJ Setup
+In IntelliJ, create an `Automation Debug` configuration:
+1. Click Run > Edit Configurations
+2. Select '+', and pick 'Remote JVM Debug'
+3. Name the configuration `Automation Debug` and set the host to `localhost` and the port to `5005`
+4. Set your breakpoints in the automation test of your choice.
+5. Run automation with `PXF_TEST_DEBUG=true PXF_TEST_DEBUG_ATTACH=true`
