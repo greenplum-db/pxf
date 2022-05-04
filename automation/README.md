@@ -15,6 +15,55 @@ In order to run PXF automation tests the following are needed
 Build & Test
 ===================================
 
+### SSH Setup
+
+The PXF automation project uses an old SSH2 Java library that does not support newer key exchange algorithms (`KexAlgorithms`).
+Newer operating systems such as MacOS 12+ and Debian's openssh-server package (1:8.4p1-5) do not enable support for these algorithms by default.
+You can check the supported algorithms with
+
+```bash
+sudo sshd -T | grep 'kexalgorithms'
+```
+
+The following algorithms _must_ be included:
+
+- diffie-hellman-group-exchange-sha1
+- diffie-hellman-group14-sha1
+- diffie-hellman-group1-sha1
+
+If they are not, you can enable them with the following config file:
+
+```bash
+sudo tee -a /etc/ssh/sshd_config.d/pxf-automation-kex.conf <<EOF
+# pxf automation uses an old SSH2 Java library that doesn't support newer KexAlgorithms
+# this assumes that /etc/ssh/sshd_config contains "Include /etc/ssh/sshd_config.d/*.conf"
+# if it doesn't, try adding this directly to /etc/ssh/sshd_config
+KexAlgorithms +diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group1-sha1
+EOF
+```
+
+
+Then restart sshd based on your OS.
+For MacOS, either run in terminal
+```shell
+sudo launchctl unload /System/Library/LaunchDaemons/ssh.plist
+sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
+```
+or go to System Preferences > Sharing and toggle `Remote Login`
+
+For Linux, run
+```shell
+sudo systemctl restart sshd
+```
+
+Recheck the support algorithms before proceeding
+
+```bash
+sudo sshd -T | grep 'kexalgorithms'
+```
+
+### General Automation Setup
+
 Set necessary Environment Vars
 ```
 export GPHD_ROOT=<parent directory containing hadoop,hive,etc>
