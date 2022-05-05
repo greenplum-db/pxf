@@ -36,6 +36,8 @@ public abstract class PhdCluster extends ShellSystemObject {
 	private String hiveBaseHdfsDirectory = "";
 	private int nodesAmount = 3;
     private String testKerberosPrincipal;
+	// debug flag for the PXF server
+	private String pxfServerDebug;
 
 	public PhdCluster() {
 	}
@@ -51,6 +53,11 @@ public abstract class PhdCluster extends ShellSystemObject {
 		String pxfBase = StringUtils
 				.defaultIfBlank(System.getenv("PXF_BASE"), pxfHome);
 		setPxfBase(pxfBase);
+
+		// if automation is running with debug flags, set the PXF server debug flag as well
+		String pxfDebug = StringUtils
+				.defaultIfBlank(System.getenv("PXF_TEST_DEBUG"), "false");
+		setPxfServerDebug(pxfDebug);
 
 		super.init();
 		// some cluster commands can take a while, set max time out for 2 minutes.
@@ -233,6 +240,14 @@ public abstract class PhdCluster extends ShellSystemObject {
 
 	public void setPxfBase(String pxfBase) {
 		this.pxfBase = pxfBase;
+	}
+
+	public String getPxfServerDebug() {
+		return StringUtils.equalsIgnoreCase(pxfServerDebug, "true") ? "PXF_DEBUG=true" :  "";
+	}
+
+	public void setPxfServerDebug(String pxfServerDebug) {
+		this.pxfServerDebug = pxfServerDebug;
 	}
 
 	public PxfProfileXml getPxfProfiles() {

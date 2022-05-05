@@ -57,7 +57,7 @@ public class SingleCluster extends PhdCluster {
 
         // treat standalone PXF case separately
         if (service == EnumClusterServices.pxf && getPxfHome() != null) {
-            runCommand(getPxfHome() + "/bin/pxf start");
+            runCommand(getPxfServerDebug() + " " + getPxfHome() + "/bin/pxf start");
         } else {
             String serviceName = service.toString();
             runCommand(getPhdRoot() + "/bin/start-" + serviceName + ".sh");
@@ -96,7 +96,7 @@ public class SingleCluster extends PhdCluster {
 
         // treat standalone PXF case separately
         if (service == EnumClusterServices.pxf && getPxfHome() != null) {
-            runCommand("PXF_BASE=" + getPxfBase() + " " + getPxfHome() + "/bin/pxf restart");
+            runCommand("PXF_BASE=" + getPxfBase() + " " + getPxfServerDebug() + " " + getPxfHome() + "/bin/pxf restart");
         } else {
             String serviceName = service.toString();
             runCommand(getPhdRoot() + "/bin/restart-" + serviceName + ".sh");

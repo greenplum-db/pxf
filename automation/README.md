@@ -273,10 +273,31 @@ In every "class" directory will be files according to the following format: <tim
 TestNg report will generated into target/surefire-reports
 <img src="images/68125531.png" class="confluence-embedded-image confluence-content-image-border" width="1084" height="612" />
 
-## IntelliJ Setup
+# IDE Setup (IntelliJ) and Automation Debugging
+
+There are 2 flags that can be used to debug automation tests:
+
+1. `PXF_TEST_DEBUG` - does not remove any test data after an automation test.
+2. `PXF_TEST_DEBUG_ATTACH` - will cause the automation application to wait for a debugger to attach to the session before proceeding. `PXF_TEST_DEBUG` must be true for this flag to take effect.
+
+### Intelli Automation Debug Setup
 In IntelliJ, create an `Automation Debug` configuration:
+
 1. Click Run > Edit Configurations
 2. Select '+', and pick 'Remote JVM Debug'
 3. Name the configuration `Automation Debug` and set the host to `localhost` and the port to `5005`
 4. Set your breakpoints in the automation test of your choice.
 5. Run automation with `PXF_TEST_DEBUG=true PXF_TEST_DEBUG_ATTACH=true`
+
+### PXF Server Debug during an Automation Debug
+
+There are 2 different JVMs running when automation tests. The first is the automation application itself that can be debugged. The second is the PXF server that the automation suite is testing.
+Setting the `PXF_TEST_DEBUG` flag in the automation app will also set the flag `PXF_DEBUG` to enable debugging of the PXF server itself. This also means that a running PXF server debug session may be disconnected while running automation. For that reason, it is easiest to start the PXF server debug session after any necessary restarts have completed.
+
+Follow the steps [here](https://github.com/greenplum-db/pxf#debugging-the-locally-running-instance-of-pxf-server-using-intellij) to set up a PXF server debug configuration if it is not already done.
+
+1. Run automation with `PXF_TEST_DEBUG=true PXF_TEST_DEBUG_ATTACH=true` to connect to the automation debug session.
+2. Attach to the automation debug session
+3. Add a breakpoint at the beginning of the automation test case you are running, or at the end of the beforeClass block to ensure that the PXF server debug session properly attaches
+4. Attach to the PXF server debug session
+5. Debug as you would normally.
