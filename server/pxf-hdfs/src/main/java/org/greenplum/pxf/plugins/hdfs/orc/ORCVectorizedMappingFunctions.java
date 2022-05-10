@@ -30,7 +30,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -412,7 +414,7 @@ class ORCVectorizedMappingFunctions {
             ((LongColumnVector) columnVector).vector[row] = ((Number) val).longValue();
         });
         writeFunctionsMap.put(TypeDescription.Category.FLOAT, (columnVector, row, val) -> {
-            ((DoubleColumnVector) columnVector).vector[row] = ((Number) val).floatValue();
+            ((DoubleColumnVector) columnVector).vector[row] = ((Number) val).doubleValue();
         });
         writeFunctionsMap.put(TypeDescription.Category.DOUBLE, (columnVector, row, val) -> {
             ((DoubleColumnVector) columnVector).vector[row] = ((Number) val).doubleValue();
@@ -429,9 +431,12 @@ class ORCVectorizedMappingFunctions {
         });
         writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP, (columnVector, row, val) -> {
             // parse Greenplum timestamp given as a string to a local dateTime (no timezone info)
-            LocalDateTime dateTime = LocalDateTime.parse((String) val, GreenplumDateTime.DATETIME_FORMATTER);
+            LocalDateTime localDateTime = LocalDateTime.parse((String) val, GreenplumDateTime.DATETIME_FORMATTER);
+            // Timestamp will consider LocalDateTime as an instant in the local time zone when asked getTime()
+            // so we have to explicitly shift instant to UTC before getting epochMillis
+            Instant instant = ZonedDateTime.of(localDateTime, ZoneOffset.UTC).toInstant();
             // convert local dateTime to a Timestamp and store in TimestampColumnVector
-            ((TimestampColumnVector) columnVector).set(row, Timestamp.valueOf(dateTime));
+            ((TimestampColumnVector) columnVector).set(row, Timestamp.from(instant));
         });
         writeFunctionsMap.put(TypeDescription.Category.BINARY, (columnVector, row, val) -> {
             // do not copy the contents of the byte array, just set as a reference
@@ -440,7 +445,7 @@ class ORCVectorizedMappingFunctions {
         writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val) -> {
             // TODO: review, this implementation makes some assumptions (null check, etc)
             // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
-            ((DecimalColumnVector) columnVector).vector[row].set(HiveDecimal.create((BigDecimal) val));
+            ((DecimalColumnVector) columnVector).vector[row].set(HiveDecimal.create((String) val));
         });
 
         writeFunctionsMap.put(TypeDescription.Category.VARCHAR, writeFunctionsMap.get(TypeDescription.Category.STRING));

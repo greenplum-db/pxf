@@ -36,7 +36,6 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
         context.setServerName("fakeServerName");
         context.setUser("fakeUser");
         context.setUser("test-user");
-        context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.setConfiguration(new Configuration());
     }
 
@@ -128,6 +127,7 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
     }
 
     private void runTestScenarioReadOrcTypesFile(int expectedNumCols) throws IOException {
+        context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         String path = Objects.requireNonNull(getClass().getClassLoader().getResource("orc/orc_types.orc")).getPath();
         context.setDataSource(path);
         context.setFragmentMetadata(new HcfsFragmentMetadata(0, 2257));

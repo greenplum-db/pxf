@@ -134,6 +134,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     private List<ColumnDescriptor> columnDescriptors;
 
     private List<List<OneField>> cachedBatch;
+    private VectorizedRowBatch vectorizedRowBatch;
 
     private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
 
@@ -208,7 +209,6 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
 
     @Override
     public int getBatchSize() {
-        // TODO: should we make batch size configurable ?
         return VectorizedRowBatch.DEFAULT_SIZE;
     }
 
@@ -220,22 +220,32 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         if (CollectionUtils.isEmpty(records)) {
             return null; // this will end bridge iterations
         }
+        // make sure provided record set can fit into a single batch, we do not want to produce multiple batches here
+        if (records.size() > getBatchSize()) {
+            throw new PxfRuntimeException(String.format("Provided set of %d records is greater than the batch size of %d",
+                    records.size(), getBatchSize()));
+        }
         ensureWriteFunctionsAreInitialized();
-        // TODO: should we reuse the batch object between iterations ? what if sizes are different ?
-        VectorizedRowBatch batch = orcSchema.createRowBatch(records.size());
+        // reuse the batch object between iterations, create a new the first time and reset on subsequent calls
+        if (vectorizedRowBatch == null) {
+            vectorizedRowBatch = orcSchema.createRowBatch(getBatchSize());
+        } else {
+            vectorizedRowBatch.reset();
+        }
+
         // iterate over incoming rows
         int rowIndex = 0;
         for (List<OneField> record : records) {
             int columnIndex = 0;
             for (OneField field : record) {
                 // fill up column vectors for each column of the given row with record values using mapping functions
-                writeFunctions[columnIndex].accept(batch.cols[columnIndex], rowIndex, field.val);
+                writeFunctions[columnIndex].accept(vectorizedRowBatch.cols[columnIndex], rowIndex, field.val);
                 columnIndex++;
             }
             rowIndex++;
-            batch.size = rowIndex;
+            vectorizedRowBatch.size = rowIndex;
         }
-        return new OneRow(batch);
+        return new OneRow(vectorizedRowBatch);
     }
 
     /**
@@ -346,17 +356,17 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     }
 
     /**
-     * Ensures that functions is initialized. If not initialized, it will
-     * initialize the functions and typeOidMappings by iterating over the
-     * readSchema, and building the mapping between ORC types to Greenplum
-     * types.
+     * Ensures that functions used in write use case are initialized. If not initialized, this method will
+     * initialize the functions by iterating over the ORC schema and getting a corresponding function for each column.
      */
     @SuppressWarnings("unchecked")
     private void ensureWriteFunctionsAreInitialized() {
-        if (writeFunctions != null) return;
-        if (!(context.getMetadata() instanceof TypeDescription))
+        if (writeFunctions != null) {
+            return;
+        }
+        if (context.getMetadata() == null || !(context.getMetadata() instanceof TypeDescription)) {
             throw new PxfRuntimeException("No schema detected in request context");
-
+        }
         orcSchema = (TypeDescription) context.getMetadata();
         List<TypeDescription> columnTypeDescriptions = orcSchema.getChildren();
         int schemaSize = columnTypeDescriptions.size();

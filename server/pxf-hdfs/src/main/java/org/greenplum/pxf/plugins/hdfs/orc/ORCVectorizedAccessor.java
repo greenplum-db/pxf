@@ -1,5 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
+import jdk.internal.jline.internal.Log;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -7,6 +8,7 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
@@ -61,7 +63,6 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
 
     private static final String ORC_FILE_SUFFIX = ".orc";
     static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
-    private static final CompressionKind DEFAULT_COMPRESSION = CompressionKind.ZLIB;
 
     /**
      * True if the accessor accesses the columns defined in the
@@ -77,10 +78,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     private VectorizedRowBatch batch;
     private List<ColumnDescriptor> columnDescriptors;
 
-    // -- write properties
-    private ORCSchemaBuilder schemaBuilder;
     private Writer fileWriter;
-    private CompressionKind compressionKind;
 
     @Override
     public void afterPropertiesSet() {
@@ -158,25 +156,24 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         // ORC does not use codec suffix in filenames
         String fileName = hcfsType.getUriForWrite(context) + ORC_FILE_SUFFIX;
 
-        // TODO: process any PXF options for ORC write
+        // create writer options
+        OrcFile.WriterOptions orcWriterOptions = OrcFile.writerOptions(configuration);
 
-        String compressCodec = context.getOption("COMPRESSION_CODEC");
-        // Do we need to set it in conf?
-        //configuration.set("compression", codecName.name());
-
-        Path file = new Path(fileName);
-        schemaBuilder = new ORCSchemaBuilder();
+        // build write schema
+        ORCSchemaBuilder schemaBuilder = new ORCSchemaBuilder();
         TypeDescription writeSchema = schemaBuilder.buildSchema(context.getTupleDescription());
+        orcWriterOptions.setSchema(writeSchema);
 
-        OrcFile.WriterOptions orcWriterOptions = OrcFile.writerOptions(configuration).setSchema(writeSchema);
+        // get user-specified compression or use a default one (ZLIB) if not explicitly provided
+        String compressionCodec = context.getOption("COMPRESSION_CODEC", (String) OrcConf.COMPRESS.getDefaultValue());
+        CompressionKind compressionKind = CompressionKind.valueOf(compressionCodec.toUpperCase());
+        LOG.debug("Using compression: {}", compressionKind);
+        orcWriterOptions.compress(compressionKind);
 
-        if(compressCodec != null){
-            compressionKind = getCompressionKind(compressCodec);
-            orcWriterOptions.compress(compressionKind);
-        }
+        // create ORC file writer with provided options
+        fileWriter = OrcFile.createWriter(new Path(fileName), orcWriterOptions);
 
-        fileWriter = OrcFile.createWriter(file, orcWriterOptions);
-
+        // store the write schema on the context for downstream resolver to use it
         context.setMetadata(writeSchema);
         return true;
     }
@@ -291,29 +288,5 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
             }
         }
         return readSchema;
-    }
-
-    /**
-     * @param compressionCode the name of the compression codec
-     * @return the {@link CompressionKind} for the given name, or default if name is null
-     */
-    private CompressionKind getCompressionKind(String compressionCode) {
-        if (compressionCode == null) return DEFAULT_COMPRESSION;
-
-        // NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD
-        switch(compressionCode.toUpperCase()) {
-            case "LZ4":
-                return CompressionKind.LZ4;
-            case "SNAPPY":
-                return CompressionKind.SNAPPY;
-            case "LZO":
-                return CompressionKind.LZO;
-            case "ZSTD":
-                return CompressionKind.ZSTD;
-            case "ZLIB":
-                return CompressionKind.ZLIB;
-            default:
-                return CompressionKind.NONE;
-        }
     }
 }

@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
+class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
 
     private static final String ORC_TYPES_SCHEMA = "struct<t1:string,t2:string,num1:int,dub1:double,dec1:decimal(38,18),tm:timestamp,r:float,bg:bigint,b:boolean,tn:tinyint,sml:smallint,dt:date,vc1:varchar(5),c1:char(3),bin:binary>";
     private static final String ORC_TYPES_SCHEMA_COMPOUND = "struct<id:int,bool_arr:array<boolean>,int2_arr:array<smallint>,int_arr:array<int>,int8_arr:array<bigint>,float_arr:array<float>,float8_arr:array<double>,text_arr:array<string>,bytea_arr:array<binary>,char_arr:array<char(15)>,varchar_arr:array<varchar(15)>>";
@@ -188,7 +188,7 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
     }
 
     @Test
-    public void testGetFieldsForBatchCompoundMixedType() throws IOException {
+    public void testGetFieldsForBatchCompoundMixedType() {
         // This schema matches the columnDescriptors schema
         TypeDescription schema = TypeDescription.fromString("struct<id:int,bool_arr:array<struct<completed:boolean>>,int_arr:array<uniontype<int,int>>>");
         context.setMetadata(schema);
