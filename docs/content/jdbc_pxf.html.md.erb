@@ -25,7 +25,7 @@ Some of your data may already reside in an external SQL database. PXF provides a
 
 This section describes how to use the PXF JDBC connector to access data in an external SQL database, including how to create and query or insert data into a PXF external table that references a table in an external database.
 
-<div class="note">The JDBC connector does not guarantee consistency when writing to an external SQL database. Be aware that if an <code>INSERT</code> operation fails, some data may be written to the external database table. If you require consistency for writes, consider writing to a staging table in the external database, and loading to the target table only after verifying the write operation.</div>
+<div class="note"><b>Note:</b> The JDBC connector does not guarantee consistency when writing to an external SQL database. Be aware that if an <code>INSERT</code> operation fails, some data may be written to the external database table. If you require consistency for writes, consider writing to a staging table in the external database, and loading to the target table only after verifying the write operation.</div>
 
 ## <a id="prereq"></a>Prerequisites
 
@@ -256,7 +256,7 @@ For example:
   LOCATION ('pxf://public.forpxf_table1?PROFILE=jdbc<b>&JDBC_DRIVER=org.postgresql.Driver&DB_URL=jdbc:postgresql://pgserverhost:5432/pgtestdb&USER=pxfuser1&PASS=changeme</b>')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');</pre>
 
-<div class="note warning">Credentials that you provide in this manner are visible as part of the external table definition. Do not use this method of passing credentials in a production environment.</div>
+<div class="note warning"><b>Warning:</b> Credentials that you provide in this manner are visible as part of the external table definition. Do not use this method of passing credentials in a production environment.</div>
 
 Refer to [Configuration Property Precedence](cfg_server.html#override) for detailed information about the precedence rules that PXF uses to obtain configuration property settings for a Greenplum Database user.
 

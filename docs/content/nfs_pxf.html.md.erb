@@ -16,7 +16,7 @@ You can use PXF to read data that resides on a network file system mounted on yo
 
 PXF does not support user impersonation when you access a network file system. PXF accesses a file as the operating system user that started the PXF process, usually `gpadmin`.
 
-<div class="note">Reading from, and writing to (where supported), a file of these types on a network file system is similar to reading/writing the file type on Hadoop.</div>
+<div class="note"><b>Note:</b> Reading from, and writing to (where supported), a file of these types on a network file system is similar to reading/writing the file type on Hadoop.</div>
 
 
 ## <a id="prereq"></a>Prerequisites
@@ -110,7 +110,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | FORMAT&nbsp;\<value\>| PXF profiles support the `TEXT`, `CSV`, and `CUSTOM` formats.  |
 | \<formatting&#8209;properties\> | Formatting properties supported by the profile; for example, the `FORMATTER` or `delimiter`. |
 
-<div class="note">The &lt;custom-option>s, FORMAT, and &lt;formatting&#8209;properties> that you specify when accessing a file on a network file system are dependent on the &lt;file-type>. Refer to the <a href="access_hdfs.html#hadoop_connectors">Hadoop documentation</a> for the &lt;file-type> of interest for these settings.</div>
+<div class="note"><b>Note:</b> The &lt;custom-option>s, FORMAT, and &lt;formatting&#8209;properties> that you specify when accessing a file on a network file system are dependent on the &lt;file-type>. Refer to the <a href="access_hdfs.html#hadoop_connectors">Hadoop documentation</a> for the &lt;file-type> of interest for these settings.</div>
 
 ## <a id="example_nfscsv"></a>Example: Reading From and Writing to a CSV File on a Network File System
 

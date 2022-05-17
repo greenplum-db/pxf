@@ -51,7 +51,7 @@ For example, the contents of the `s3-site.xml` template file follow:
 </configuration>
 ```
 
-<div class="note">You specify credentials to PXF in clear text in configuration files.</div>
+<div class="note"><b>Note:</b> You specify credentials to PXF in clear text in configuration files.</div>
 
 **Note**: The template files for the Hadoop connectors are not intended to be modified and used for configuration, as they only provide an example of the information needed. Instead of modifying the Hadoop templates, you will copy several Hadoop `*-site.xml` files from the Hadoop cluster to your PXF Hadoop server configuration.
 
@@ -90,7 +90,7 @@ To configure a PXF server, refer to the connector configuration topic:
 
 PXF includes a template file named `pxf-site.xml` for PXF-specific configuration parameters. You can use the `pxf-site.xml` template file to specify Kerberos and/or user impersonation settings for server configurations, or to specify a base directory for file access.
 
-<div class="note">The Kerberos and user impersonation settings in this file may apply only to Hadoop and JDBC server configurations; they do not apply to file system or object store server configurations.</div>
+<div class="note"><b>Note:</b> The Kerberos and user impersonation settings in this file may apply only to Hadoop and JDBC server configurations; they do not apply to file system or object store server configurations.</div>
 
 You configure properties in the `pxf-site.xml` file for a PXF server when one or more of the following conditions hold:
 
@@ -123,14 +123,14 @@ You can use the `pxf.fs.basePath` property to restrict a user's access to files 
 
 When you configure the `pxf.fs.basePath` property for a server, PXF considers the file path specified in the `CREATE EXTERNAL TABLE` `LOCATION` clause to be relative to this base path setting, and constructs the remote path accordingly.
 
-<div class="note info">You must set <code>pxf.fs.basePath</code> when you configure a PXF server for access to a network file system with a <code>file:*</code> profile. This property is optional for a PXF server that accesses a file in Hadoop or in an object store.</div>
+<div class="note info"><b>Note:</b> You must set <code>pxf.fs.basePath</code> when you configure a PXF server for access to a network file system with a <code>file:*</code> profile. This property is optional for a PXF server that accesses a file in Hadoop or in an object store.</div>
 
 
 ## <a id="usercfg"></a>Configuring a PXF User
 
 You can configure access to an external data store on a per-server, per-Greenplum-user basis.
 
-<div class="note info">PXF per-server, per-user configuration provides the most benefit for JDBC servers.</div>
+<div class="note info"><b>Note:</b> PXF per-server, per-user configuration provides the most benefit for JDBC servers.</div>
 
 You configure external data store user access credentials and properties for a specific Greenplum Database user by providing a `<greenplum_user_name>-user.xml` user configuration file in the PXF server configuration directory, `$PXF_BASE/servers/<server_name>/`. For example, you specify the properties for the Greenplum Database user named `bill` in the file `$PXF_BASE/servers/<server_name>/bill-user.xml`. You can configure zero, one, or more users in a PXF server configuration.
 
@@ -217,5 +217,5 @@ CREATE EXTERNAL TABLE pxf_ext_hdfs(location text, miles int)
 FORMAT 'TEXT' (delimiter=E',');
 </pre>
 
-<div class="note info">A Greenplum Database user who queries or writes to an external table accesses the external data store with the credentials configured for the <code>&lt;server_name></code> user. If no user-specific credentials are configured for <code>&lt;server_name></code>, the Greenplum user accesses the external data store with the default credentials configured for <code>&lt;server_name></code>.</div>
+<div class="note info"><b>Note:</b> A Greenplum Database user who queries or writes to an external table accesses the external data store with the credentials configured for the <code>&lt;server_name></code> user. If no user-specific credentials are configured for <code>&lt;server_name></code>, the Greenplum user accesses the external data store with the default credentials configured for <code>&lt;server_name></code>.</div>
 
