@@ -3,12 +3,14 @@ package org.greenplum.pxf.plugins.hdfs.orc;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
-import org.assertj.core.util.Lists;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
@@ -17,22 +19,24 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
 
     private static final String ORC_TYPES_SCHEMA = "struct<t1:string,t2:string,num1:int,dub1:double,dec1:decimal(38,18),tm:timestamp,r:float,bg:bigint,b:boolean,tn:tinyint,sml:smallint,dt:date,vc1:varchar(5),c1:char(3),bin:binary>";
@@ -41,6 +45,9 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
     private ORCVectorizedResolver resolver;
     private RequestContext context;
     private List<List<OneField>> records;
+
+    @Mock
+    private OrcFile.WriterOptions mockWriterOptions;
 
     @BeforeEach
     public void setup() {
@@ -98,7 +105,9 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
     public void testResolvesSingleRecord_NoRepeating_NoNulls() throws Exception {
         columnDescriptors = getAllColumns();
         context.setTupleDescription(columnDescriptors);
-        context.setMetadata(getSchemaForAllColumns());
+        when(mockWriterOptions.getSchema()).thenReturn(getSchemaForAllColumns());
+        when(mockWriterOptions.getUseUTCTimestamp()).thenReturn(true);
+        context.setMetadata(mockWriterOptions);
 
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
@@ -125,13 +134,12 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         assertBytesColumnVector(batch, 9, false, true, "var1".getBytes(StandardCharsets.UTF_8));
         assertDateColumnVector(batch, 10, false, true, 14610L);
         assertBytesColumnVector(batch, 11, false, true, "10:11:12".getBytes(StandardCharsets.UTF_8));
-        assertTimestampColumnVector(batch, 12, false, true, new long[]{1373774405123L}, new int[]{123456000});
-        assertTimestampColumnVector(batch, 13, false, true, new long[]{1373774405000L+7*60*60*60*1000+987}, new int[]{987654000});
-
-//        fields.add(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "2013-07-13 21:00:05"));
-//        fields.add(new OneField(DataType.NUMERIC.getOID(), "12345678900000.00000" + index));
-//        fields.add(new OneField(DataType.UUID.getOID(),"476f35e4-da1a-43cf-8f7c-950ac71d4848"));
-
+        // 1373774405000 <-- epoch millis for instant in local PST shifted to UTC - will work in PST only
+        // assertTimestampColumnVector(batch, 12, false, true, new long[]{1373774405123L}, new int[]{123456000});
+        assertTimestampColumnVector(batch, 12, false, true, new long[]{(1373774405L-7*60*60)*1000+123}, new int[]{123456000});
+        assertTimestampColumnVector(batch, 13, false, true, new long[]{1373774405987L}, new int[]{987654000});
+        assertDecimalColumnVector(batch, 14, false, true, new HiveDecimalWritable("12345678900000.000001"));
+        assertBytesColumnVector(batch, 15, false, true, "476f35e4-da1a-43cf-8f7c-950ac71d4848".getBytes(StandardCharsets.UTF_8));
     }
 
     private void assertLongColumnVector(VectorizedRowBatch batch, int col, boolean isRepeating, boolean noNulls, Long... values) {
@@ -215,6 +223,25 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
             } else {
                 assertEquals(time[row], ((TimestampColumnVector) columnVector).time[row]);
                 assertEquals(nanos[row], ((TimestampColumnVector) columnVector).nanos[row]);
+            }
+        }
+    }
+
+    private void assertDecimalColumnVector(VectorizedRowBatch batch, int col, boolean isRepeating, boolean noNulls, HiveDecimalWritable... values) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof DecimalColumnVector);
+        assertEquals(isRepeating, columnVector.isRepeating);
+        assertEquals(noNulls, columnVector.noNulls);
+
+        //TODO: handle nulls
+        for (int row = 0; row < values.length; row++) {
+            if (isRepeating) {
+                assertEquals(values[row], ((DecimalColumnVector) columnVector).vector[0]);
+                if (row != 0) {
+                    assertEquals(0, ((DecimalColumnVector) columnVector).vector[row]);
+                }
+            } else {
+                assertEquals(values[row], ((DecimalColumnVector) columnVector).vector[row]);
             }
         }
     }

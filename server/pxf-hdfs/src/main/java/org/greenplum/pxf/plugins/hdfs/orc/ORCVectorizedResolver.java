@@ -2,6 +2,7 @@ package org.greenplum.pxf.plugins.hdfs.orc;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
@@ -216,7 +217,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      * {@inheritDoc}
      */
     @Override
-    public OneRow setFieldsForBatch(List<List<OneField>> records) throws Exception {
+    public OneRow setFieldsForBatch(List<List<OneField>> records) {
         if (CollectionUtils.isEmpty(records)) {
             return null; // this will end bridge iterations
         }
@@ -364,16 +365,19 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         if (writeFunctions != null) {
             return;
         }
-        if (context.getMetadata() == null || !(context.getMetadata() instanceof TypeDescription)) {
+        if (context.getMetadata() == null || !(context.getMetadata() instanceof OrcFile.WriterOptions)) {
             throw new PxfRuntimeException("No schema detected in request context");
         }
-        orcSchema = (TypeDescription) context.getMetadata();
+
+        OrcFile.WriterOptions writerOptions = (OrcFile.WriterOptions) context.getMetadata();
+        orcSchema = writerOptions.getSchema();
         List<TypeDescription> columnTypeDescriptions = orcSchema.getChildren();
         int schemaSize = columnTypeDescriptions.size();
         writeFunctions = new TriConsumer[schemaSize];
 
         for (int i=0; i < schemaSize; i++) {
-            writeFunctions[i] = ORCVectorizedMappingFunctions.getColumnWriter(columnTypeDescriptions.get(i));
+            writeFunctions[i] = ORCVectorizedMappingFunctions.getColumnWriter(
+                    columnTypeDescriptions.get(i), writerOptions.getUseUTCTimestamp());
         }
     }
 

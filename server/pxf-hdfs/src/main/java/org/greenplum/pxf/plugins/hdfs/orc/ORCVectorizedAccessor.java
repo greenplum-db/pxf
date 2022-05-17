@@ -1,6 +1,7 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
-import jdk.internal.jline.internal.Log;
+import com.google.common.annotations.VisibleForTesting;
+import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -15,6 +16,7 @@ import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
@@ -63,6 +65,11 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
 
     private static final String ORC_FILE_SUFFIX = ".orc";
     static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
+    private static final String WRITE_TIMEZONE_PROPERTY_NAME = "pxf.write.timezone";
+    private static final String WRITE_TIMEZONE_ORC_PROPERTY_NAME = "pxf.write.timezone.orc";
+    private static final String TIMEZONE_LOCAL_VALUE = "local";
+    private static final String TIMEZONE_UTC_VALUE = "UTC";
+
 
     /**
      * True if the accessor accesses the columns defined in the
@@ -78,7 +85,16 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     private VectorizedRowBatch batch;
     private List<ColumnDescriptor> columnDescriptors;
 
-    private Writer fileWriter;
+    /**
+     * A POJO capturing the state and the context of ORC file writing operation.
+     */
+    @Data
+    static class WriterState {
+        String fileName;
+        Writer fileWriter;
+        OrcFile.WriterOptions writerOptions;
+    }
+    private final WriterState writerState = new WriterState();
 
     @Override
     public void afterPropertiesSet() {
@@ -154,7 +170,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     public boolean openForWrite() throws IOException {
         HcfsType hcfsType = HcfsType.getHcfsType(context);
         // ORC does not use codec suffix in filenames
-        String fileName = hcfsType.getUriForWrite(context) + ORC_FILE_SUFFIX;
+        writerState.setFileName(hcfsType.getUriForWrite(context) + ORC_FILE_SUFFIX);
 
         // create writer options
         OrcFile.WriterOptions orcWriterOptions = OrcFile.writerOptions(configuration);
@@ -170,28 +186,38 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         LOG.debug("Using compression: {}", compressionKind);
         orcWriterOptions.compress(compressionKind);
 
-        // create ORC file writer with provided options
-        fileWriter = OrcFile.createWriter(new Path(fileName), orcWriterOptions);
+        // check whether to write timestamps in UTC or local timezone, this will be stored in the stripe / file footer and
+        // is important for file readers as Hive 3.1+ will read the value and perform time shifts if necessary
+        String writerTimeZone = getWriterTimezone(WRITE_TIMEZONE_ORC_PROPERTY_NAME, WRITE_TIMEZONE_PROPERTY_NAME);
+        if (writerTimeZone.equalsIgnoreCase(TIMEZONE_UTC_VALUE)) {
+            orcWriterOptions.useUTCTimestamp(true);
+        }
+        LOG.debug("Using writer timezone: {}", orcWriterOptions.getUseUTCTimestamp() ? TIMEZONE_UTC_VALUE : TIMEZONE_LOCAL_VALUE);
 
-        // store the write schema on the context for downstream resolver to use it
-        context.setMetadata(writeSchema);
+        writerState.setWriterOptions(orcWriterOptions);
+
+        // create ORC file writer with provided options, store it in the writer state
+        writerState.setFileWriter(OrcFile.createWriter(new Path(writerState.getFileName()), orcWriterOptions));
+
+        // store writer options on the context for downstream resolver to use it
+        context.setMetadata(orcWriterOptions);
         return true;
     }
 
     @Override
     public boolean writeNextObject(OneRow onerow) throws IOException {
-        // get a row batch produced by the resolver
-        // TODO: do we want to create just once and re-use it ?
+        // get a row batch produced by the resolver, the batch object might be re-usable, but we should not reset it here
         VectorizedRowBatch rowBatch = (VectorizedRowBatch) onerow.getData();
-        fileWriter.addRowBatch(rowBatch);
-        rowBatch.reset(); // TODO: need to reset only if the batch will be reused
+        LOG.debug("Adding VectorizedRowBatch with {} rows", rowBatch.size);
+        writerState.getFileWriter().addRowBatch(rowBatch);
         return true;
     }
 
     @Override
     public void closeForWrite() throws IOException {
-        if (fileWriter != null) {
-            fileWriter.close();
+        if (writerState.getFileWriter() != null) {
+            LOG.debug("Closing ORC file writer for file {}", writerState.fileName);
+            writerState.getFileWriter().close();
         }
     }
 
@@ -288,5 +314,41 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
             }
         }
         return readSchema;
+    }
+
+    /**
+     * Returns the state of the writer, used only for testing.
+     * @return writerState object
+     */
+    @VisibleForTesting
+    WriterState getWriterState() {
+        return writerState;
+    }
+
+    /**
+     * Determines the timezone that ORC writer will store to the stripe footer as the writer timezone. Timestamps will
+     * be interpreted as instants in the writer timezone. The method searches for the value by looking up configuration
+     * properties with the names proved. If the first property is not defined, then the next property is looked up.
+     * Only "local" and "UTC" are considered to be valid values, case-insensitive.
+     * @param propertyNames names of the configuration properties
+     * @return name of the writer timezone specified in the configuration, or UTC if none are found
+     */
+    private String getWriterTimezone(String ...propertyNames) {
+        String timezone = null;
+        for (String propertyName : propertyNames) {
+            timezone = configuration.get(propertyName);
+            if (StringUtils.isBlank(timezone)) {
+                continue;
+            }
+            // WriterImpl in ORC library can only write either UTC or local timezone to the stripe footer, it cannot use
+            // any other arbitrary value, so we limit the values of user-configurable properties to only these
+            if (!(timezone.equalsIgnoreCase(TIMEZONE_LOCAL_VALUE) || timezone.equalsIgnoreCase(TIMEZONE_UTC_VALUE))) {
+                throw new PxfRuntimeException(String.format(
+                        "Invalid value '%s' for %s property, only 'local' or 'UTC' values are allowed.",
+                        timezone, propertyName));
+            }
+            break;
+        }
+        return timezone == null ? ORCVectorizedAccessor.TIMEZONE_UTC_VALUE : timezone;
     }
 }

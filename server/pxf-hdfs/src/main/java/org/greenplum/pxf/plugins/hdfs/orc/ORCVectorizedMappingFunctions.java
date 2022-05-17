@@ -22,7 +22,6 @@ import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
@@ -37,6 +36,7 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Maps vectors of ORC types to a list of OneFields.
@@ -69,9 +69,14 @@ class ORCVectorizedMappingFunctions {
     private static final PgUtilities pgUtilities = new PgUtilities();
 
     private static final Map<TypeDescription.Category, TriConsumer<ColumnVector, Integer, Object>> writeFunctionsMap;
+    private static final TriConsumer<ColumnVector, Integer, Object> timestampInLocalWriteFunction;
+    private static final ZoneId TIMEZONE_UTC = ZoneId.of("UTC");
+    private static final ZoneId TIMEZONE_LOCAL = TimeZone.getDefault().toZoneId();
+
     static {
         writeFunctionsMap = new EnumMap<>(TypeDescription.Category.class);
         initWriteFunctionsMap();
+        timestampInLocalWriteFunction = getTimestampInLocalWriteFunction();
     }
 
     public static OneField[] booleanReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
@@ -380,9 +385,15 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static TriConsumer<ColumnVector, Integer, Object> getColumnWriter(TypeDescription typeDescription) {
+    public static TriConsumer<ColumnVector, Integer, Object> getColumnWriter(TypeDescription typeDescription, boolean timestampsInUTC) {
         TypeDescription.Category columnTypeCategory = typeDescription.getCategory();
-        TriConsumer<ColumnVector, Integer, Object> writeFunction = writeFunctionsMap.get(columnTypeCategory);
+        TriConsumer<ColumnVector, Integer, Object> writeFunction = null;
+        // if timestamps need to be written in local timezone (and not in UTC), get a special function not in the map
+        if (columnTypeCategory.equals(TypeDescription.Category.TIMESTAMP) && !timestampsInUTC) {
+            writeFunction = timestampInLocalWriteFunction;
+        } else {
+            writeFunction = writeFunctionsMap.get(columnTypeCategory);
+        }
         if (writeFunction == null) {
             throw new PxfRuntimeException("Unsupported ORC type " + columnTypeCategory);
         }
@@ -430,13 +441,8 @@ class ORCVectorizedMappingFunctions {
             ((DateColumnVector) columnVector).vector[row] = date.toEpochDay();
         });
         writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP, (columnVector, row, val) -> {
-            // parse Greenplum timestamp given as a string to a local dateTime (no timezone info)
-            LocalDateTime localDateTime = LocalDateTime.parse((String) val, GreenplumDateTime.DATETIME_FORMATTER);
-            // Timestamp will consider LocalDateTime as an instant in the local time zone when asked getTime()
-            // so we have to explicitly shift instant to UTC before getting epochMillis
-            Instant instant = ZonedDateTime.of(localDateTime, ZoneOffset.UTC).toInstant();
-            // convert local dateTime to a Timestamp and store in TimestampColumnVector
-            ((TimestampColumnVector) columnVector).set(row, Timestamp.from(instant));
+            // parse GP string timestamp to instant in UTC timezone, then to a Timestamp and store in TimestampColumnVector
+            ((TimestampColumnVector) columnVector).set(row, Timestamp.from(getTimeStampAsInstant(val, TIMEZONE_UTC)));
         });
         writeFunctionsMap.put(TypeDescription.Category.BINARY, (columnVector, row, val) -> {
             // do not copy the contents of the byte array, just set as a reference
@@ -459,10 +465,10 @@ class ORCVectorizedMappingFunctions {
         // UNION("uniontype", false) - for now ORCSchemaBuilder does not support this type, so we do not expect it
 
         writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP_INSTANT, (columnVector, row, val) -> {
-            // parse Greenplum timestamp given as a string with timezone to a zoned dateTime
-            ZonedDateTime zonedDateTime = ZonedDateTime.parse((String) val, GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
-            // convert zoned dateTime to a Timestamp and store in TimestampColumnVector
-            ((TimestampColumnVector) columnVector).set(row, Timestamp.from(zonedDateTime.toInstant()));
+            // parse Greenplum timestamp given as a string with timezone to an offset dateTime
+            OffsetDateTime offsetDateTime = OffsetDateTime.parse((String) val, GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
+            // convert offset dateTime to an instant and then to a Timestamp and store in TimestampColumnVector
+            ((TimestampColumnVector) columnVector).set(row, Timestamp.from(offsetDateTime.toInstant()));
         });
     }
 
@@ -481,4 +487,32 @@ class ORCVectorizedMappingFunctions {
         LOG.debug("Converted timestamp: {} to date: {}", timestamp, timestampString);
         return timestampString;
     }
+
+    /**
+     * A special function that writes timestamps to ORC file such that the parsed string timestamp from Greenplum
+     * is considered an instant in the local timezone, then it is shifted to UTC and then stored. The ORC writer
+     * will also automatically store the timezone of the writer to the ORC stripe footer, such that other programs
+     * that read the file can deconstruct the timestamp value properly.
+     * @return a function setting the column vector timestamp value based on local timezone
+     */
+    private static TriConsumer<ColumnVector, Integer, Object> getTimestampInLocalWriteFunction() {
+        return (columnVector, row, val) -> {
+            // parse GP string timestamp to instant in local timezone, then to a Timestamp and store in TimestampColumnVector
+            ((TimestampColumnVector) columnVector).set(row, Timestamp.from(getTimeStampAsInstant(val, TIMEZONE_LOCAL)));
+        };
+    }
+
+    /**
+     * Converts the string representation of a timestamp to an instant in a given timezone.
+     * @param val string representation of the timestamp
+     * @param timezone timezone to consider
+     * @return instant representing the given timestamp in the given timezone
+     */
+    private static Instant getTimeStampAsInstant(Object val, ZoneId timezone) {
+        // parse Greenplum timestamp given as a string to a local dateTime (no timezone info)
+        LocalDateTime localDateTime = LocalDateTime.parse((String) val, GreenplumDateTime.DATETIME_FORMATTER);
+        // consider this timestamp as an instant in a requested timezone
+        return ZonedDateTime.of(localDateTime, timezone).toInstant();
+    }
+
 }

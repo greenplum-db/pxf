@@ -12,6 +12,8 @@ public class ORCVectorizedBaseTest {
     protected List<ColumnDescriptor> columnDescriptors;
     protected List<ColumnDescriptor> columnDescriptorsCompound;
 
+    protected List<ColumnDescriptor> twoColumnDescriptors;
+
     // From resources/orc/orc_types.csv
     static final String[] COL1 = {"row1", "row2", "row3", "row4", "row5", "row6", "row7", "row8", "row9", "row10", "row11", "row12_text_null", "row13_int_null", "row14_double_null", "row15_decimal_null", "row16_timestamp_null", "row17_real_null", "row18_bigint_null", "row19_bool_null", "row20_tinyint_null", "row21_smallint_null", "row22_date_null", "row23_varchar_null", "row24_char_null", "row25_binary_null"};
     static final String[] COL2 = {"s_6", "s_7", "s_8", "s_9", "s_10", "s_11", "s_12", "s_13", "s_14", "s_15", "s_16", null, "s_16", "s_16", "s_17", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16"};
@@ -127,7 +129,9 @@ public class ORCVectorizedBaseTest {
         columnDescriptorsCompound.add(new ColumnDescriptor("char_arr", DataType.BPCHARARRAY.getOID(), 9, "bpchar(15)[]", null));
         columnDescriptorsCompound.add(new ColumnDescriptor("varchar_arr", DataType.VARCHARARRAY.getOID(), 10, "varchar(15)[]", null));
 
-
+        twoColumnDescriptors = new ArrayList<>();
+        twoColumnDescriptors.add(new ColumnDescriptor("col0", DataType.TEXT.getOID(), 0, "text", null));
+        twoColumnDescriptors.add(new ColumnDescriptor("col1", DataType.INTEGER.getOID(), 1, "int4", null));
 
     }
 
