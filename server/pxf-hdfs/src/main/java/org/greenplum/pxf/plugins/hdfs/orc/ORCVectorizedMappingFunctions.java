@@ -401,12 +401,11 @@ class ORCVectorizedMappingFunctions {
     }
 
     /**
-     * Initializes functions that update column vector of specific types, registers them into an enum map
+     * Initializes functions that update column vectors of specific types, registers them into an enum map
      * keyed of from the type description category for lookup by consumers later.
      */
     private static void initWriteFunctionsMap() {
-        // TODO: what about nulls ? Can we set null value or do we need to update flags on VectorizedRowBatch ?
-        // TODO: the logic below assumes values are not nulls and does not do any null checking
+        // the functions assumes values are not nulls and do not do any null checking
         // TODO: what will we do with repeating ?
 
         // see TypeUtils.createColumn for backing storage of different Category types
@@ -460,9 +459,7 @@ class ORCVectorizedMappingFunctions {
         writeFunctionsMap.put(TypeDescription.Category.CHAR,  writeFunctionsMap.get(TypeDescription.Category.STRING));
 
         // TODO: LIST collection types
-        // MAP("map", false) - for now ORCSchemaBuilder does not support this type, so we do not expect it
-        // STRUCT("struct", false) - for now ORCSchemaBuilder does not support this type, so we do not expect it
-        // UNION("uniontype", false) - for now ORCSchemaBuilder does not support this type, so we do not expect it
+        // MAP, STRUCT, UNION - not supported by our ORCSchemaBuilder, so we do not expect to see them
 
         writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP_INSTANT, (columnVector, row, val) -> {
             // parse Greenplum timestamp given as a string with timezone to an offset dateTime

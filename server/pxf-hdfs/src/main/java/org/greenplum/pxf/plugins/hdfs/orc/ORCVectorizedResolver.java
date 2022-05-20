@@ -150,7 +150,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     }
 
     /**
-     * Returns the resolved list of list of OneFields given a
+     * Returns the resolved list of lists of OneFields given a
      * VectorizedRowBatch
      *
      * @param batch unresolved batch
@@ -238,9 +238,17 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         int rowIndex = 0;
         for (List<OneField> record : records) {
             int columnIndex = 0;
+            // fill up column vectors for the columns of the given row with record values using mapping functions
             for (OneField field : record) {
-                // fill up column vectors for each column of the given row with record values using mapping functions
-                writeFunctions[columnIndex].accept(vectorizedRowBatch.cols[columnIndex], rowIndex, field.val);
+                ColumnVector columnVector = vectorizedRowBatch.cols[columnIndex];
+                if (field.val == null) {
+                    if (columnVector.noNulls) {
+                        columnVector.noNulls = false; // write only if the value is different from what we need it to be
+                    }
+                    columnVector.isNull[rowIndex] = true;
+                } else {
+                    writeFunctions[columnIndex].accept(columnVector, rowIndex, field.val);
+                }
                 columnIndex++;
             }
             rowIndex++;

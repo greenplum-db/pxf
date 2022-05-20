@@ -29,7 +29,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -38,10 +40,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
-
-    private static final String ORC_TYPES_SCHEMA = "struct<t1:string,t2:string,num1:int,dub1:double,dec1:decimal(38,18),tm:timestamp,r:float,bg:bigint,b:boolean,tn:tinyint,sml:smallint,dt:date,vc1:varchar(5),c1:char(3),bin:binary>";
-    private static final String ORC_TYPES_SCHEMA_COMPOUND = "struct<id:int,bool_arr:array<boolean>,int2_arr:array<smallint>,int_arr:array<int>,int8_arr:array<bigint>,float_arr:array<float>,float8_arr:array<double>,text_arr:array<string>,bytea_arr:array<binary>,char_arr:array<char(15)>,varchar_arr:array<varchar(15)>>";
-    private static final String ORC_TYPES_SCHEMA_COMPOUND_MULTI = "struct<id:int,bool_arr:array<array<boolean>>,int2_arr:array<array<smallint>>,int_arr:array<array<int>>,int8_arr:array<array<bigint>>,float_arr:array<array<float>>,float8_arr:array<array<double>>,text_arr:array<array<string>>,bytea_arr:array<array<binary>>,char_arr:array<array<char(15)>>,varchar_arr:array<array<varchar(15)>>>";
     private ORCVectorizedResolver resolver;
     private RequestContext context;
     private List<List<OneField>> records;
@@ -76,7 +74,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
     }
 
     @Test
-    public void testReturnsNullOnEmptyInput() throws Exception {
+    public void testReturnsNullOnEmptyInput() {
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
         assertNull(resolver.setFieldsForBatch(null));
@@ -102,7 +100,12 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
     }
 
     @Test
-    public void testResolvesSingleRecord_NoRepeating_NoNulls() throws Exception {
+    public void testResolvesSingleRecord_NoRepeating_NoNulls() {
+        // simple test with hardcoded value assertions to make sure basic test logic itself is correct
+        boolean[] IS_NULL = new boolean[16]; // no nulls in test records
+        boolean[] NO_NULL = new boolean[16]; // no nulls in test records
+        Arrays.fill(NO_NULL, true);
+
         columnDescriptors = getAllColumns();
         context.setTupleDescription(columnDescriptors);
         when(mockWriterOptions.getSchema()).thenReturn(getSchemaForAllColumns());
@@ -113,165 +116,117 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         resolver.afterPropertiesSet();
 
         records = new ArrayList<>(1);
-        records.add(getRecord(1)); // use 1 to not get 0-based resulting values that would be similar to defaults
+        records.add(getRecord(0, -1));
+        records.add(getRecord(1, -1));
 
         OneRow batchWrapper = resolver.setFieldsForBatch(records);
         VectorizedRowBatch batch = (VectorizedRowBatch) batchWrapper.getData();
+        // TODO: proper parameter for repeating
+        assertBatch(batch, 2, 16, getAllColumnTypes(), IS_NULL, NO_NULL, new boolean[16][2]);
+
+        // spot check columns in row 1 (not in row 0 to be different from defaults) with hardcoded value assertions
+        assertLongColumnVectorCell     (batch,1, 0,false, IS_NULL, 1L);
+        assertBytesColumnVectorCell    (batch,1, 1,false, IS_NULL, new byte[]{(byte) 0x01, (byte) 0x02});
+        assertLongColumnVectorCell     (batch,1, 2,false, IS_NULL, 123456789000000001L);
+        assertLongColumnVectorCell     (batch,1, 3,false, IS_NULL, 11L);
+        assertLongColumnVectorCell     (batch,1, 4,false, IS_NULL, 101L);
+        assertBytesColumnVectorCell    (batch,1, 5,false, IS_NULL, "row-1".getBytes(StandardCharsets.UTF_8));
+        assertDoubleColumnVectorCell   (batch,1, 6,false, IS_NULL, (double) 1.00001f);
+        assertDoubleColumnVectorCell   (batch,1, 7,false, IS_NULL, 4.14159265358979323846d);
+        assertBytesColumnVectorCell    (batch,1, 8,false, IS_NULL, "1".getBytes(StandardCharsets.UTF_8));
+        assertBytesColumnVectorCell    (batch,1, 9,false, IS_NULL, "var1".getBytes(StandardCharsets.UTF_8));
+        assertDateColumnVectorCell     (batch,1,10,false, IS_NULL, 14611L);
+        assertBytesColumnVectorCell    (batch,1,11,false, IS_NULL, "10:11:01".getBytes(StandardCharsets.UTF_8));
+        assertTimestampColumnVectorCell(batch,1,12,false, IS_NULL, (1373774405L-7*60*60)*1000+1, 1456000);
+        assertTimestampColumnVectorCell(batch,1,13,false, IS_NULL, 1373774405987L,987001000);
+        assertDecimalColumnVectorCell  (batch,1,14,false, IS_NULL, new HiveDecimalWritable("12345678900000.000001"));
+        assertBytesColumnVectorCell    (batch,1,15,false, IS_NULL, "476f35e4-da1a-43cf-8f7c-950a00000001".getBytes(StandardCharsets.UTF_8));
+    }
+    @Test
+    public void testResolvesBatch_WithNulls() {
+        columnDescriptors = getAllColumns();
+        context.setTupleDescription(columnDescriptors);
+        when(mockWriterOptions.getSchema()).thenReturn(getSchemaForAllColumns());
+        when(mockWriterOptions.getUseUTCTimestamp()).thenReturn(true);
+        context.setMetadata(mockWriterOptions);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        int numColumns = 16;
+        int numRows = 3;
+        boolean[] NONE_REPEATING = new boolean[numColumns];
+
+        // iterate over columns
+        for (int column = 0; column < numColumns; column++) {
+            // iterate over null placement of value within the column
+            for (NullPlacement placement : NullPlacement.values()) {
+                // request the set or records
+                records = getRecordsWithNulls(column, placement);
+                // convert into batch
+                VectorizedRowBatch batch = (VectorizedRowBatch) resolver.setFieldsForBatch(records).getData();
+                // prepare expected null values
+                boolean[] noNulls = new boolean[numColumns];
+                Arrays.fill(noNulls, true); // all column are noNulls to start with
+                boolean[][] isNull = new boolean[numColumns][numRows]; // no null indicators by default
+                if (!placement.equals(NullPlacement.NONE)) {
+                    noNulls[column] = false; // column under test when some rows will have null values
+                    for (int row = 0; row < numRows; row++) {
+                        if (row == placement.ordinal() || placement.equals(NullPlacement.ALL)) {
+                            // according to our use case on null placement, we expect this row for the test column to be null
+                            isNull[column][row] = true;
+                        }
+                    }
+                }
+                // assert batch values for null flags and correctness of non-null values
+                assertBatch(batch, 3, numColumns, getAllColumnTypes(), NONE_REPEATING, noNulls, isNull);
+            }
+        }
+    }
+
+    private void assertBatch(VectorizedRowBatch batch, int numRows, int numColumns, ColumnVector.Type[] columnType, boolean[] isRepeating, boolean[] noNulls, boolean[][] isNull) {
         assertNotNull(batch);
-        assertEquals(1, batch.size);
-        // check columns
-        assertEquals(16, batch.cols.length);
-//        assertEquals(32, batch.cols.length);
-        assertLongColumnVector(batch, 0, false, true, 1L);
-        assertBytesColumnVector(batch, 1, false, true, new byte[]{(byte) 0xA0, (byte) 0xA1});
-        assertLongColumnVector(batch, 2, false, true, 123456789000000001L);
-        assertLongColumnVector(batch, 3, false, true, 11L);
-        assertLongColumnVector(batch, 4, false, true, 101L);
-        assertBytesColumnVector(batch, 5, false, true, "row-1".getBytes(StandardCharsets.UTF_8));
-        assertDoubleColumnVector(batch, 6, false, true, (double) 1.00001f);
-        assertDoubleColumnVector(batch, 7, false, true, 4.14159265358979323846d);
-        assertBytesColumnVector(batch, 8, false, true, "1".getBytes(StandardCharsets.UTF_8));
-        assertBytesColumnVector(batch, 9, false, true, "var1".getBytes(StandardCharsets.UTF_8));
-        assertDateColumnVector(batch, 10, false, true, 14610L);
-        assertBytesColumnVector(batch, 11, false, true, "10:11:12".getBytes(StandardCharsets.UTF_8));
-        // 1373774405000 <-- epoch millis for instant in local PST shifted to UTC - will work in PST only
-        // assertTimestampColumnVector(batch, 12, false, true, new long[]{1373774405123L}, new int[]{123456000});
-        assertTimestampColumnVector(batch, 12, false, true, new long[]{(1373774405L-7*60*60)*1000+123}, new int[]{123456000});
-        assertTimestampColumnVector(batch, 13, false, true, new long[]{1373774405987L}, new int[]{987654000});
-        assertDecimalColumnVector(batch, 14, false, true, new HiveDecimalWritable("12345678900000.000001"));
-        assertBytesColumnVector(batch, 15, false, true, "476f35e4-da1a-43cf-8f7c-950ac71d4848".getBytes(StandardCharsets.UTF_8));
-    }
+        assertEquals(numRows, batch.size);
+        assertEquals(numColumns, batch.cols.length);
 
-    private void assertLongColumnVector(VectorizedRowBatch batch, int col, boolean isRepeating, boolean noNulls, Long... values) {
-        ColumnVector columnVector = batch.cols[col];
-        assertTrue(columnVector instanceof LongColumnVector);
-        assertEquals(isRepeating, columnVector.isRepeating);
-        assertEquals(noNulls, columnVector.noNulls);
+        // normalize array for ArrayEquals to be the same size as default batch size of 1024
+        boolean[][] isNullNormalized = new boolean[numColumns][1024];
+        for (int column = 0; column < numColumns; column++) {
+            System.arraycopy(isNull[column], 0, isNullNormalized[column], 0, numRows);
+        }
 
-        //TODO: handle nulls
-        for (int row = 0; row < values.length; row++) {
-            if (isRepeating) {
-                assertEquals(values[row], ((LongColumnVector) columnVector).vector[0]);
-                if (row != 0) {
-                    assertEquals(0, ((LongColumnVector) columnVector).vector[row]);
-                }
-            } else {
-                assertEquals(values[row], ((LongColumnVector) columnVector).vector[row]);
-            }
+        // assert correctness of column metadata
+        for (int column = 0; column < numColumns; column++) {
+            ColumnVector columnVector = batch.cols[column];
+            assertEquals(columnType[column], columnVector.type);
+            assertEquals(noNulls[column], columnVector.noNulls);
+            assertArrayEquals(isNullNormalized[column], columnVector.isNull);
+            assertEquals(isRepeating[column], columnVector.isRepeating);
+        }
+        // assert each row of the batch
+        for (int row = 0; row < numRows; row++) {
+            assertRecord(batch, row, isRepeating, isNullNormalized);
         }
     }
 
-    private void assertBytesColumnVector(VectorizedRowBatch batch, int col, boolean isRepeating, boolean noNulls, byte[]... values) {
-        ColumnVector columnVector = batch.cols[col];
-        assertTrue(columnVector instanceof BytesColumnVector);
-        assertEquals(isRepeating, columnVector.isRepeating);
-        assertEquals(noNulls, columnVector.noNulls);
-
-        //TODO: handle nulls
-        for (int row = 0; row < values.length; row++) {
-            if (isRepeating) {
-                assertTrue(Arrays.equals(values[row], ((BytesColumnVector) columnVector).vector[0]));
-                if (row != 0) {
-                    assertNull(((BytesColumnVector) columnVector).vector[row]);
-                }
-            } else {
-                assertTrue(Arrays.equals(values[row], ((BytesColumnVector) columnVector).vector[row]));
-            }
-        }
-    }
-
-    private void assertDoubleColumnVector(VectorizedRowBatch batch, int col, boolean isRepeating, boolean noNulls, Double... values) {
-        ColumnVector columnVector = batch.cols[col];
-        assertTrue(columnVector instanceof DoubleColumnVector);
-        assertEquals(isRepeating, columnVector.isRepeating);
-        assertEquals(noNulls, columnVector.noNulls);
-
-        //TODO: handle nulls
-        for (int row = 0; row < values.length; row++) {
-            if (isRepeating) {
-                assertEquals(values[row], ((DoubleColumnVector) columnVector).vector[0]);
-                if (row != 0) {
-                    assertEquals(0, ((DoubleColumnVector) columnVector).vector[row]);
-                }
-            } else {
-                assertEquals(values[row], ((DoubleColumnVector) columnVector).vector[row]);
-            }
-        }
-    }
-
-    private void assertDateColumnVector(VectorizedRowBatch batch, int col, boolean isRepeating, boolean noNulls, Long... values) {
-        ColumnVector columnVector = batch.cols[col];
-        assertTrue(columnVector instanceof LongColumnVector);
-        assertLongColumnVector(batch, col, isRepeating, noNulls, values);
-    }
-
-    private void assertTimestampColumnVector(VectorizedRowBatch batch, int col, boolean isRepeating, boolean noNulls, long[] time, int[] nanos) {
-        ColumnVector columnVector = batch.cols[col];
-        assertTrue(columnVector instanceof TimestampColumnVector);
-        assertEquals(isRepeating, columnVector.isRepeating);
-        assertEquals(noNulls, columnVector.noNulls);
-
-        //TODO: handle nulls
-        for (int row = 0; row < time.length; row++) {
-            if (isRepeating) {
-                assertEquals(time[row], ((TimestampColumnVector) columnVector).time[0]);
-                assertEquals(nanos[row], ((TimestampColumnVector) columnVector).nanos[0]);
-                if (row != 0) {
-                    assertEquals(0, ((TimestampColumnVector) columnVector).time[0]);
-                    assertEquals(0, ((TimestampColumnVector) columnVector).nanos[0]);
-                }
-            } else {
-                assertEquals(time[row], ((TimestampColumnVector) columnVector).time[row]);
-                assertEquals(nanos[row], ((TimestampColumnVector) columnVector).nanos[row]);
-            }
-        }
-    }
-
-    private void assertDecimalColumnVector(VectorizedRowBatch batch, int col, boolean isRepeating, boolean noNulls, HiveDecimalWritable... values) {
-        ColumnVector columnVector = batch.cols[col];
-        assertTrue(columnVector instanceof DecimalColumnVector);
-        assertEquals(isRepeating, columnVector.isRepeating);
-        assertEquals(noNulls, columnVector.noNulls);
-
-        //TODO: handle nulls
-        for (int row = 0; row < values.length; row++) {
-            if (isRepeating) {
-                assertEquals(values[row], ((DecimalColumnVector) columnVector).vector[0]);
-                if (row != 0) {
-                    assertEquals(0, ((DecimalColumnVector) columnVector).vector[row]);
-                }
-            } else {
-                assertEquals(values[row], ((DecimalColumnVector) columnVector).vector[row]);
-            }
-        }
-    }
-
-    private void fillEmptyRecords(int size) {
-        records = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            records.add(Collections.emptyList());
-        }
-    }
-
-    private List<OneField> getRecord(int index) {
+    private List<OneField> getRecord(int index, int nullColumn) {
         List<OneField> fields = new ArrayList<>(32);
-        fields.add(new OneField(DataType.BOOLEAN.getOID(), (index % 2 != 0)));
-        fields.add(new OneField(DataType.BYTEA.getOID(), new byte[]{(byte) 0xA0, (byte) 0xA1}));
-
-        fields.add(new OneField(DataType.BIGINT.getOID(), 123456789000000000L + index));
-        fields.add(new OneField(DataType.SMALLINT.getOID(), 10 + index % 32000));
-        fields.add(new OneField(DataType.INTEGER.getOID(), 100 + index));
-        fields.add(new OneField(DataType.TEXT.getOID(), "row-" + index));
-        fields.add(new OneField(DataType.REAL.getOID(), index + 0.00001f * index));
-        fields.add(new OneField(DataType.FLOAT8.getOID(), index + Math.PI));
-        fields.add(new OneField(DataType.BPCHAR.getOID(), String.valueOf(index)));
-        fields.add(new OneField(DataType.VARCHAR.getOID(), "var" + index));
-        fields.add(new OneField(DataType.DATE.getOID(), "2010-01-01"));
-        fields.add(new OneField(DataType.TIME.getOID(), "10:11:12"));
-        fields.add(new OneField(DataType.TIMESTAMP.getOID(), "2013-07-13 21:00:05.123456"));
-        fields.add(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "2013-07-13 21:00:05.987654-07"));
-        fields.add(new OneField(DataType.NUMERIC.getOID(), "12345678900000.00000" + index));
-        fields.add(new OneField(DataType.UUID.getOID(),"476f35e4-da1a-43cf-8f7c-950ac71d4848"));
+        fields.add(new OneField(DataType.BOOLEAN.getOID(),   nullColumn ==  0 ? null : (index % 2 != 0)));
+        fields.add(new OneField(DataType.BYTEA.getOID(),     nullColumn ==  1 ? null : new byte[]{(byte) index, (byte) (index + 1)}));
+        fields.add(new OneField(DataType.BIGINT.getOID(),    nullColumn ==  2 ? null : 123456789000000000L + index));
+        fields.add(new OneField(DataType.SMALLINT.getOID(),  nullColumn ==  3 ? null : 10 + index % 32000));
+        fields.add(new OneField(DataType.INTEGER.getOID(),   nullColumn ==  4 ? null : 100 + index));
+        fields.add(new OneField(DataType.TEXT.getOID(),      nullColumn ==  5 ? null : "row-" + index));
+        fields.add(new OneField(DataType.REAL.getOID(),      nullColumn ==  6 ? null : index + 0.00001f * index));
+        fields.add(new OneField(DataType.FLOAT8.getOID(),    nullColumn ==  7 ? null : index + Math.PI));
+        fields.add(new OneField(DataType.BPCHAR.getOID(),    nullColumn ==  8 ? null : String.valueOf(index)));
+        fields.add(new OneField(DataType.VARCHAR.getOID(),   nullColumn ==  9 ? null : "var" + index));
+        fields.add(new OneField(DataType.DATE.getOID(),      nullColumn == 10 ? null : String.format("2010-01-%02d", (index % 30) + 1)));
+        fields.add(new OneField(DataType.TIME.getOID(),      nullColumn == 11 ? null : String.format("10:11:%02d", index % 60)));
+        fields.add(new OneField(DataType.TIMESTAMP.getOID(), nullColumn == 12 ? null : String.format("2013-07-13 21:00:05.%03d456", index % 1000)));
+        fields.add(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), nullColumn == 13 ? null : String.format("2013-07-13 21:00:05.987%03d-07", index % 1000)));
+        fields.add(new OneField(DataType.NUMERIC.getOID(),   nullColumn == 14 ? null : "12345678900000.00000" + index));
+        fields.add(new OneField(DataType.UUID.getOID(),      nullColumn == 15 ? null : String.format("476f35e4-da1a-43cf-8f7c-950a%08d", index % 100000000)));
         // array types
         /*
         fields.add(new OneField(DataType.INT2ARRAY.getOID(),16,"", null));
@@ -295,25 +250,147 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         return fields;
     }
 
+    private void assertRecord(VectorizedRowBatch batch, int row, boolean[] isRepeating, boolean[][] isNull) {
+        // check columns
+        assertLongColumnVectorCell     (batch, row,  0, isRepeating[ 0], isNull[ 0], (long) row % 2);
+        assertBytesColumnVectorCell    (batch, row,  1, isRepeating[ 1], isNull[ 1], new byte[]{(byte) row, (byte) (row + 1)});
+        assertLongColumnVectorCell     (batch, row,  2, isRepeating[ 2], isNull[ 2], 123456789000000000L + row);
+        assertLongColumnVectorCell     (batch, row,  3, isRepeating[ 3], isNull[ 3], 10L + row % 32000);
+        assertLongColumnVectorCell     (batch, row,  4, isRepeating[ 4], isNull[ 4], 100L + row);
+        assertBytesColumnVectorCell    (batch, row,  5, isRepeating[ 5], isNull[ 5], ("row-" + row).getBytes(StandardCharsets.UTF_8));
+        assertDoubleColumnVectorCell   (batch, row,  6, isRepeating[ 6], isNull[ 6], Float.valueOf(row + 0.00001f * row).doubleValue());
+        assertDoubleColumnVectorCell   (batch, row,  7, isRepeating[ 7], isNull[ 7], row + Math.PI);
+        assertBytesColumnVectorCell    (batch, row,  8, isRepeating[ 8], isNull[ 8], String.valueOf(row).getBytes(StandardCharsets.UTF_8));
+        assertBytesColumnVectorCell    (batch, row,  9, isRepeating[ 9], isNull[ 9], ("var" + row).getBytes(StandardCharsets.UTF_8));
+        assertDateColumnVectorCell     (batch, row, 10, isRepeating[10], isNull[10], 14610L + row % 30); // 14610L is for "2010-01-01"
+        assertBytesColumnVectorCell    (batch, row, 11, isRepeating[11], isNull[11], String.format("10:11:%02d", row % 60).getBytes(StandardCharsets.UTF_8));
+        // 1373774405000 <-- epoch millis for instant "2013-07-13 21:00:05.123456" in PST shifted to UTC
+        // assertTimestampColumnVector(batch, 12, false, true, new long[]{1373774405123L}, new int[]{123456000});
+        assertTimestampColumnVectorCell(batch, row, 12, isRepeating[12], isNull[12], (1373774405L-7*60*60)*1000+row%1000, (row%1000)*1000000+456000);
+        assertTimestampColumnVectorCell(batch, row, 13, isRepeating[13], isNull[13], 1373774405987L, 987 * 1000000 + (row % 1000) * 1000);
+        assertDecimalColumnVectorCell  (batch, row, 14, isRepeating[14], isNull[14], new HiveDecimalWritable("12345678900000.00000" + row));
+        assertBytesColumnVectorCell    (batch, row, 15, isRepeating[15], isNull[15], String.format("476f35e4-da1a-43cf-8f7c-950a%08d", row % 100000000).getBytes(StandardCharsets.UTF_8));
+    }
+    private void assertLongColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean isRepeating, boolean[] isNull, Long value) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof LongColumnVector);
+        LongColumnVector longColumnVector = (LongColumnVector) batch.cols[col];
+
+        if (isNull[row]) {
+            assertFalse(longColumnVector.noNulls);
+            // here and in other types, we can assert that the current value is not written only on the first invocation
+            // of the resolver, since the VectorizedRowBatch object is reused by the resolver and column vectors are not
+            // cleaned between invocations, so we can see some non-null value from the previous use
+            // assertEquals(0L, longColumnVector.vector[row]); // should be default value, not set
+        } else {
+            int rowId = isRepeating ? 0 : row;
+            assertEquals(value, longColumnVector.vector[rowId]); // check expected value in the cell
+        }
+    }
+
+    private void assertBytesColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean isRepeating, boolean[] isNull, byte[] value) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof BytesColumnVector);
+        BytesColumnVector bytesColumnVector = (BytesColumnVector) batch.cols[col];
+
+        if (isNull[row]) {
+            assertFalse(bytesColumnVector.noNulls);
+        } else {
+            int rowId = isRepeating ? 0 : row;
+            assertArrayEquals(value, bytesColumnVector.vector[rowId]); // check expected value in the cell
+        }
+    }
+
+    private void assertDoubleColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean isRepeating, boolean[] isNull, Double value) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof DoubleColumnVector);
+        DoubleColumnVector doubleColumnVector = (DoubleColumnVector) batch.cols[col];
+
+        if (isNull[row]) {
+            assertFalse(doubleColumnVector.noNulls);
+        } else {
+            int rowId = isRepeating ? 0 : row;
+            assertEquals(value, doubleColumnVector.vector[rowId]); // check expected value in the cell
+        }
+    }
+
+    private void assertDateColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean isRepeating, boolean[] isNull, Long value) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof LongColumnVector);
+        assertLongColumnVectorCell(batch, row, col, isRepeating, isNull, value);
+    }
+
+    private void assertTimestampColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean isRepeating, boolean[] isNull, Long time, Integer nanos) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof TimestampColumnVector);
+        TimestampColumnVector timestampColumnVector = (TimestampColumnVector) batch.cols[col];
+
+        if (isNull[row]) {
+            assertFalse(timestampColumnVector.noNulls);
+        } else {
+            int rowId = isRepeating ? 0 : row;
+            assertEquals(time, timestampColumnVector.time[rowId]); // check expected value in the cell
+            assertEquals(nanos, timestampColumnVector.nanos[rowId]); // check expected value in the cell
+        }
+    }
+
+    private void assertDecimalColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean isRepeating, boolean[] isNull, HiveDecimalWritable value) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof DecimalColumnVector);
+        DecimalColumnVector decimalColumnVector = (DecimalColumnVector) batch.cols[col];
+
+        if (isNull[row]) {
+            assertFalse(decimalColumnVector.noNulls);
+        } else {
+            int rowId = isRepeating ? 0 : row;
+            assertEquals(value, decimalColumnVector.vector[rowId]); // check expected value in the cell
+        }
+    }
+
+    private void fillEmptyRecords(int size) {
+        records = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            records.add(Collections.emptyList());
+        }
+    }
+
+    private enum NullPlacement {
+        // order matters as we use ordinal position here to place null values
+        FIRST, MIDDLE, LAST, ALL, NONE
+    }
+
+
+    private List<List<OneField>> getRecordsWithNulls(int nullColumn, NullPlacement mode) {
+        // we will return 3 records with null value for a given column placed in requested position
+        // working with 1 column at a time to make sure there are no mistakes with indices
+        List<List<OneField>> result = new ArrayList<>(3);
+        for (int row = 0; row < 3; row++) {
+            // add a record where given column will take a null value depending on the ordinal number of the record
+            result.add(getRecord(row, mode.ordinal() == row || mode.equals(NullPlacement.ALL) ? nullColumn : -1));
+        }
+        return result;
+    }
+
+
     private List<ColumnDescriptor> getAllColumns() {
         List<ColumnDescriptor> descriptors = new ArrayList<>();
         // scalar types
-        descriptors.add(new ColumnDescriptor("col0", DataType.BOOLEAN.getOID(),0,"", null));
-        descriptors.add(new ColumnDescriptor("col1", DataType.BYTEA.getOID(),1,"", null));
-        descriptors.add(new ColumnDescriptor("col2", DataType.BIGINT.getOID(),2,"", null));
-        descriptors.add(new ColumnDescriptor("col3", DataType.SMALLINT.getOID(),3,"", null));
-        descriptors.add(new ColumnDescriptor("col4", DataType.INTEGER.getOID(),4,"", null));
-        descriptors.add(new ColumnDescriptor("col5", DataType.TEXT.getOID(),5,"", null));
-        descriptors.add(new ColumnDescriptor("col6", DataType.REAL.getOID(),6,"", null));
-        descriptors.add(new ColumnDescriptor("col7", DataType.FLOAT8.getOID(),7,"", null));
-        descriptors.add(new ColumnDescriptor("col8", DataType.BPCHAR.getOID(),8,"", null));
-        descriptors.add(new ColumnDescriptor("col9", DataType.VARCHAR.getOID(),9,"", null));
-        descriptors.add(new ColumnDescriptor("col10", DataType.DATE.getOID(),10,"", null));
-        descriptors.add(new ColumnDescriptor("col11", DataType.TIME.getOID(),11,"", null));
+        descriptors.add(new ColumnDescriptor( "col0", DataType.BOOLEAN.getOID()  ,0,"", null));
+        descriptors.add(new ColumnDescriptor( "col1", DataType.BYTEA.getOID()    ,1,"", null));
+        descriptors.add(new ColumnDescriptor( "col2", DataType.BIGINT.getOID()   ,2,"", null));
+        descriptors.add(new ColumnDescriptor( "col3", DataType.SMALLINT.getOID() ,3,"", null));
+        descriptors.add(new ColumnDescriptor( "col4", DataType.INTEGER.getOID()  ,4,"", null));
+        descriptors.add(new ColumnDescriptor( "col5", DataType.TEXT.getOID()     ,5,"", null));
+        descriptors.add(new ColumnDescriptor( "col6", DataType.REAL.getOID()     ,6,"", null));
+        descriptors.add(new ColumnDescriptor( "col7", DataType.FLOAT8.getOID()   ,7,"", null));
+        descriptors.add(new ColumnDescriptor( "col8", DataType.BPCHAR.getOID()   ,8,"", null));
+        descriptors.add(new ColumnDescriptor( "col9", DataType.VARCHAR.getOID()  ,9,"", null));
+        descriptors.add(new ColumnDescriptor("col10", DataType.DATE.getOID()     ,10,"", null));
+        descriptors.add(new ColumnDescriptor("col11", DataType.TIME.getOID()     ,11,"", null));
         descriptors.add(new ColumnDescriptor("col12", DataType.TIMESTAMP.getOID(),12,"", null));
         descriptors.add(new ColumnDescriptor("col13", DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(),13,"", null));
-        descriptors.add(new ColumnDescriptor("col14", DataType.NUMERIC.getOID(),14,"", null));
-        descriptors.add(new ColumnDescriptor("col15", DataType.UUID.getOID(),15,"", null));
+        descriptors.add(new ColumnDescriptor("col14", DataType.NUMERIC.getOID()  ,14,"", null));
+        descriptors.add(new ColumnDescriptor("col15", DataType.UUID.getOID()     ,15,"", null));
         // array types
         /*
         descriptors.add(new ColumnDescriptor("col16", DataType.INT2ARRAY.getOID(),16,"", null));
@@ -337,24 +414,45 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         return descriptors;
     }
 
+    private ColumnVector.Type[] getAllColumnTypes() {
+        return new ColumnVector.Type[]{
+                ColumnVector.Type.LONG,
+                ColumnVector.Type.BYTES,
+                ColumnVector.Type.LONG,
+                ColumnVector.Type.LONG,
+                ColumnVector.Type.LONG,
+                ColumnVector.Type.BYTES,
+                ColumnVector.Type.DOUBLE,
+                ColumnVector.Type.DOUBLE,
+                ColumnVector.Type.BYTES,
+                ColumnVector.Type.BYTES,
+                ColumnVector.Type.LONG,
+                ColumnVector.Type.BYTES,
+                ColumnVector.Type.TIMESTAMP,
+                ColumnVector.Type.TIMESTAMP,
+                ColumnVector.Type.DECIMAL,
+                ColumnVector.Type.BYTES
+        };
+    }
+
     private TypeDescription getSchemaForAllColumns() {
-        String schema = (new StringBuilder("struct<"))
-                .append("col0:boolean,")
-                .append("col1:binary,")
-                .append("col2:bigint,")
-                .append("col3:smallint,")
-                .append("col4:int,")
-                .append("col5:string,")
-                .append("col6:float,")
-                .append("col7:double,")
-                .append("col8:char(256),")
-                .append("col9:varchar(256),")
-                .append("col10:date,")
-                .append("col11:string,")
-                .append("col12:timestamp,")
-                .append("col13:timestamp with local time zone,")
-                .append("col14:decimal(38,10),")
-                .append("col15:string")
+        String schema = "struct<" +
+                "col0:boolean," +
+                "col1:binary," +
+                "col2:bigint," +
+                "col3:smallint," +
+                "col4:int," +
+                "col5:string," +
+                "col6:float," +
+                "col7:double," +
+                "col8:char(256)," +
+                "col9:varchar(256)," +
+                "col10:date," +
+                "col11:string," +
+                "col12:timestamp," +
+                "col13:timestamp with local time zone," +
+                "col14:decimal(38,10)," +
+                "col15:string" +
 //                .append("col16:array<smallint>,")
 //                .append("col17:array<int>,")
 //                .append("col18:array<bigint>,")
@@ -371,8 +469,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
 //                .append("col29:array<string>,")
 //                .append("col30:array<timestamp>,")
 //                .append("col31:array<timestamp with local time zone>>")
-                .append(">")
-                .toString();
+                ">";
         return TypeDescription.fromString(schema);
     }
 }
