@@ -89,7 +89,7 @@ make TEST=<testclassname>#<method>
 
 If you wish to remote debug your PXF Automation test case, use the following:
 ```
-PXF_TEST_DEBUG=true PXF_TEST_DEBUG_ATTACH=true make TEST=<testclassname>
+PXF_TEST_DEBUG=true make TEST=<testclassname>
 ```
 This will allow you to attach to port 5005 for debugging purposes. See [IntelliJ Setup](#intellij-setup) for more details.
 
@@ -277,8 +277,8 @@ TestNg report will generated into target/surefire-reports
 
 There are 2 flags that can be used to debug automation tests:
 
-1. `PXF_TEST_DEBUG` - does not remove any test data after an automation test.
-2. `PXF_TEST_DEBUG_ATTACH` - will cause the automation application to wait for a debugger to attach to the session before proceeding. `PXF_TEST_DEBUG` must be true for this flag to take effect.
+1. `PXF_TEST_KEEP_DATA` - does not remove any test data after an automation test.
+2. `PXF_TEST_DEBUG` - will cause the automation application to wait for a debugger to attach to the session before proceeding.
 
 ### Intelli Automation Debug Setup
 In IntelliJ, create an `Automation Debug` configuration:
@@ -287,16 +287,16 @@ In IntelliJ, create an `Automation Debug` configuration:
 2. Select '+', and pick 'Remote JVM Debug'
 3. Name the configuration `Automation Debug` and set the host to `localhost` and the port to `5005`
 4. Set your breakpoints in the automation test of your choice.
-5. Run automation with `PXF_TEST_DEBUG=true PXF_TEST_DEBUG_ATTACH=true`
+5. Run automation with `PXF_TEST_DEBUG=true`
 
 ### PXF Server Debug during an Automation Debug
 
 There are 2 different JVMs running when automation tests. The first is the automation application itself that can be debugged. The second is the PXF server that the automation suite is testing.
-Setting the `PXF_TEST_DEBUG` flag in the automation app will also set the flag `PXF_DEBUG` to enable debugging of the PXF server itself. This also means that a running PXF server debug session may be disconnected while running automation. For that reason, it is easiest to start the PXF server debug session after any necessary restarts have completed.
+Setting the `PXF_TEST_DEBUG` flag in the automation app will also set the flag `PXF_DEBUG` to enable debugging of the PXF server itself if the automation restarts PXF server during some of the tests. This is done so that a debugger can be connected to a PXF server restarted by the automation tests.
 
 Follow the steps [here](https://github.com/greenplum-db/pxf#debugging-the-locally-running-instance-of-pxf-server-using-intellij) to set up a PXF server debug configuration if it is not already done.
 
-1. Run automation with `PXF_TEST_DEBUG=true PXF_TEST_DEBUG_ATTACH=true` to connect to the automation debug session.
+1. Run automation with `PXF_TEST_DEBUG=true` to connect to the automation debug session.
 2. Attach to the automation debug session
 3. Add a breakpoint at the beginning of the automation test case you are running, or at the end of the beforeClass block to ensure that the PXF server debug session properly attaches
 4. Attach to the PXF server debug session

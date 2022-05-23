@@ -8,7 +8,7 @@ public class ProtocolUtils {
     public final static String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
     public final static String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
     public static final String PROTOCOL_KEY = "PROTOCOL";
-    public static final String PXF_TEST_DEBUG = "PXF_TEST_DEBUG";
+    public static final String PXF_TEST_KEEP_DATA = "PXF_TEST_KEEP_DATA";
 
     public static ProtocolEnum getProtocol() {
 
@@ -30,8 +30,8 @@ public class ProtocolUtils {
         return System.getProperty(AWS_ACCESS_KEY_ID);
     }
 
-    public static String getPxfTestDebug() {
-        return System.getProperty(PXF_TEST_DEBUG, "false");
+    public static String getPxfTestKeepData() {
+        return System.getProperty(PXF_TEST_KEEP_DATA, "false");
     }
 
 

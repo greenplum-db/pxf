@@ -320,7 +320,7 @@ public class HdfsWritableAvroTest extends BaseFeature {
     @Override
     protected void afterMethod() throws Exception {
         super.afterMethod();
-        if (ProtocolUtils.getPxfTestDebug().equals("true")) {
+        if (ProtocolUtils.getPxfTestKeepData().equals("true")) {
             return;
         }
         for (File file : filesToDelete) {

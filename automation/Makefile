@@ -72,12 +72,13 @@ ifeq ($(UNAME_S),Darwin)
     SED_OPTS+= ""
 endif
 
+ifeq "$(PXF_TEST_KEEP_DATA)" "true"
+	MAVEN_DEBUG_OPTS+= -DPXF_TEST_KEEP_DATA=$(PXF_TEST_KEEP_DATA)
+endif
+
+# set PXF_TEST_DEBUG to true to remotely debug pxf automation test
 ifeq "$(PXF_TEST_DEBUG)" "true"
-	MAVEN_DEBUG_OPTS+= -DPXF_TEST_DEBUG=$(PXF_TEST_DEBUG)
-	# set PXF_TEST_DEBUG_ATTACH to true to remotely debug pxf automation test
-	ifeq "$(PXF_TEST_DEBUG_ATTACH)" "true"
-		MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
-	endif
+	MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
 endif
 
 # disables credentials check by artifactregistry-maven-wagon plugin when run inside GCE VM.

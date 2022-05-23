@@ -243,7 +243,7 @@ public abstract class PhdCluster extends ShellSystemObject {
 	}
 
 	public String getPxfServerDebug() {
-		return StringUtils.equalsIgnoreCase(pxfServerDebug, "true") ? "PXF_DEBUG=true" :  "";
+		return pxfServerDebug;
 	}
 
 	public void setPxfServerDebug(String pxfServerDebug) {
