@@ -45,19 +45,19 @@ The `pxf` utility manages the PXF configuration and the PXF Service instance on 
 <dd>Manage the PXF configuration and the PXF Service instance on all Greenplum Database hosts. See [`pxf cluster`](pxf-cluster.html#topic1).</dd>
 
 <dt>help</dt>
-<dd>Display the `pxf` management utility help message and then exit.</dd>
+<dd>Display the <code>pxf</code> management utility help message and then exit.</dd>
 
 <dt>init (deprecated)</dt>
-<dd>The command is equivalent to the `register` command.</dd>
+<dd>The command is equivalent to the <code>register</code> command.</dd>
 
 <dt>migrate</dt>
-<dd>Migrate the configuration in a PXF 5 `$PXF_CONF` directory to `$PXF_BASE` on the host. When you run the command, you must identify the PXF 5 configuration directory via an environment variable named `PXF_CONF`. PXF migrates the version 5 configuration to the current `$PXF_BASE`, copying and merging files and directories as necessary. <div class="note"><b>Note:</b> You must manually migrate any <code>pxf-log4j.properties</code> customizations to the <code>pxf-log4j2.xml</code> file.</div></dd>
+<dd>Migrate the configuration in a PXF 5 <code>$PXF_CONF</code> directory to <code>$PXF_BASE</code> on the host. When you run the command, you must identify the PXF 5 configuration directory via an environment variable named <code>PXF_CONF</code>. PXF migrates the version 5 configuration to the current <code>$PXF_BASE</code>, copying and merging files and directories as necessary. <div class="note"><b>Note:</b> You must manually migrate any <code>pxf-log4j.properties</code> customizations to the <code>pxf-log4j2.xml</code> file.</div></dd>
 
 <dt>prepare</dt>
-<dd>Prepare a new `$PXF_BASE` directory on the host. When you run the command, you must identify the new PXF runtime configuration directory via an environment variable named `PXF_BASE`. PXF copies runtime configuration file templates and directories to this `$PXF_BASE`.</dd>
+<dd>Prepare a new <code>$PXF_BASE</code> directory on the host. When you run the command, you must identify the new PXF runtime configuration directory via an environment variable named <code>PXF_BASE</code>. PXF copies runtime configuration file templates and directories to this <code>$PXF_BASE</code>.</dd>
 
 <dt>register</dt>
-<dd>Copy the PXF extension files from the PXF installation on the host to the Greenplum installation on the host. This command requires that `$GPHOME` be set, and is run once after you install PXF 6.x the first time, or run when you upgrade your Greenplum Database installation.</dd>
+<dd>Copy the PXF extension files from the PXF installation on the host to the Greenplum installation on the host. This command requires that <code>$GPHOME</code> be set, and is run once after you install PXF 6.x the first time, or run when you upgrade your Greenplum Database installation.</dd>
 
 <dt>reset (deprecated)</dt>
 <dd>The command is a no-op.</dd>
@@ -75,7 +75,7 @@ The `pxf` utility manages the PXF configuration and the PXF Service instance on 
 <dd>Stop the PXF Service instance running on the local master host, standby master host, or segment host.</dd>
 
 <dt>sync  </dt>
-<dd>Synchronize the PXF configuration (`$PXF_BASE`) from the master host to a specific Greenplum Database standby master host or segment host. You must run `pxf sync` on the master host. By default, this command updates files on and copies files to the remote. You can instruct PXF to also delete files during the synchronization; see [Options](#options).</dd>
+<dd>Synchronize the PXF configuration (<code>$PXF_BASE</code>) from the master host to a specific Greenplum Database standby master host or segment host. You must run `pxf sync` on the master host. By default, this command updates files on and copies files to the remote. You can instruct PXF to also delete files during the synchronization; see [Options](#options).</dd>
 
 <dt>version  </dt>
 <dd>Display the PXF version and then exit.</dd>
@@ -85,10 +85,10 @@ The `pxf` utility manages the PXF configuration and the PXF Service instance on 
 The `pxf sync` command, which you must run on the Greenplum Database master host, takes the following option and argument:
 
 <dt>&#8211;d | &#8211;&#8211;delete </dt>
-<dd>Delete any files in the PXF user configuration on `\<gphost\>` that are not also present on the master host. If you specify this option, you must provide it on the command line before `<gphost>`.</dd>
+<dd>Delete any files in the PXF user configuration on <code>&lt;gphost></code> that are not also present on the master host. If you specify this option, you must provide it on the command line before <code>&lt;gphost></code>.</dd>
 
 <dt>\<gphost\> </dt>
-<dd>The Greenplum Database host to which to synchronize the PXF configuration. Required. `<gphost>` must identify the standby master host or a segment host.</dd>
+<dd>The Greenplum Database host to which to synchronize the PXF configuration. Required. <code>&lt;gphost></code> must identify the standby master host or a segment host.</dd>
 
 ## <a id="topic1__section5"></a>Examples
 
