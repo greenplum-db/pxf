@@ -161,7 +161,7 @@ The `hdfs:avro` profile supports the following \<custom-option\>s:
 
 | Option Keyword   | Description       
 |---------------|--------------------|                                                                                        
-| COLLECTION_DELIM | The delimiter character(s) placed between entries in a top-level array, map, or record field when PXF maps an Avro complex data type to a text column. The default is the comma `,` character. (Read)|
+| COLLECTION_DELIM | The delimiter character(s) placed between entries in a top-level array, map, or record field when PXF maps an Avro complex data type to a text column. The default is the comma (`,`) character. (Read)|
 | MAPKEY_DELIM | The delimiter character(s) placed between the key and value of a map entry when PXF maps an Avro complex data type to a text column. The default is the colon `:` character. (Read)|
 | RECORDKEY_DELIM | The delimiter character(s) placed between the field name and value of a record entry when PXF maps an Avro complex data type to a text column. The default is the colon `:` character. (Read)|
 | SCHEMA | The absolute path to the Avro schema file on the Greenplum host or on HDFS, or the relative path to the schema file on the host. (Read and Write)|
@@ -260,7 +260,7 @@ Perform the following steps to create a sample Avro data file conforming to the 
     {"id":2, "username":"jim","followers":["john", "pam"], "relationship": "COLLEAGUE", "fmap": {"john":3,"pam":3}, "address":{"number":9, "street":"deer creek", "city":"palo alto"}}
     ```
 
-    The sample data uses a comma `,` to separate top level records and a colon `:` to separate map/key values and record field name/values.
+    The sample data uses a comma (`,`) to separate top level records and a colon `:` to separate map/key values and record field name/values.
 
 3. Convert the text file to Avro format. There are various ways to perform the conversion, both programmatically and via the command line. In this example, we use the Java Avro tools.
 

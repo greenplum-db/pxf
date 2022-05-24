@@ -15,7 +15,7 @@ PXF manages its service-level logging, and supports the following log levels (mo
 
 The default configuration for the PXF Service logs at the `info` and more severe levels. For some third-party libraries, the PXF Service logs at the `warn` or `error` and more severe levels to reduce verbosity.
 
-- PXF captures messages written to `stdout` and `stderr` and writes them to the `$PXF_LOGDIR/pxf-app.out` file. This file may contain service start-up messages that PXF logs before logging is fully configured. The file may also contain debug output.
+- PXF captures messages written to `stdout` and `stderr` and writes them to the `$PXF_LOGDIR/pxf-app.out` file. This file may contain service startup messages that PXF logs before logging is fully configured. The file may also contain debug output.
 - Messages that PXF logs after start-up are written to the `$PXF_LOGDIR/pxf-service.log` file.
 
 You can change the PXF log directory if you choose.

@@ -66,7 +66,7 @@ PXF loads native libraries from the following directories, in this order:
     # export LD_LIBRARY_PATH=
     ```
 
-    You would uncomment the `LD_LIBRARY_PATH` setting and specify one or more colon-seperated directory names.
+    You would uncomment the `LD_LIBRARY_PATH` setting and specify one or more colon-separated directory names.
 
 2. The default PXF native library directory `$PXF_BASE/lib/native`.
 3. The default Hadoop native library directory `/usr/lib/hadoop/lib/native`.
@@ -75,7 +75,7 @@ As such, you have three file location options when you register a native library
 
 - Copy the library to the default PXF native library directory, `$PXF_BASE/lib/native`, on only the Greenplum Database master host. When you next synchronize PXF, PXF copies the native library to all hosts in the Greenplum cluster.
 - Copy the library to the default Hadoop native library directory, `/usr/lib/hadoop/lib/native`, on the Greenplum master host, standby master host, and each segment host.
-- Copy the library to the same, custom location on the Greenplum master host, standby master host, and each segment host, and uncomment and add the directory path to the `pxf-env.sh` `LD_LIBRARY_PATH` environment variable.
+- Copy the library to the same custom location on the Greenplum master host, standby master host, and each segment host, and uncomment and add the directory path to the `pxf-env.sh` `LD_LIBRARY_PATH` environment variable.
 
 
 ### <a id="reg_native_proc"></a> Procedure

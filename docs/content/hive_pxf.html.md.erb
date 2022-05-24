@@ -101,7 +101,7 @@ Prepare the sample data set for use:
     $ vi /tmp/pxf_hive_datafile.txt
     ```
 
-2. Add the following data to `pxf_hive_datafile.txt`; notice the use of the comma `,` to separate the four field values:
+2. Add the following data to `pxf_hive_datafile.txt`; notice the use of the comma (`,`) to separate the four field values:
 
     ```
     Prague,Jan,101,4875.33
@@ -143,6 +143,7 @@ Create a Hive table to expose the sample data set.
     ```
 
     Notice that:
+
     - The `STORED AS textfile` subclause instructs Hive to create the table in Textfile (the default) format.  Hive Textfile format supports comma-, tab-, and space-separated values, as well as data specified in JSON notation.
     - The `DELIMITED FIELDS TERMINATED BY` subclause identifies the field delimiter within a data record (line). The `sales_info` table field delimiter is a comma (`,`).
 
@@ -530,7 +531,7 @@ When you specify an array field in a Hive table, you must identify the terminato
     $ vi /tmp/pxf_hive_complex.txt
     ```
 
-2. Add the following text to `pxf_hive_complex.txt`.  This data uses a comma `,` to separate field values, the percent symbol `%` to separate collection items, and a `:` to terminate map key values:
+2. Add the following text to `pxf_hive_complex.txt`.  This data uses a comma (`,`) to separate field values, the percent symbol `%` to separate collection items, and a `:` to terminate map key values:
 
     ```
     3,Prague,1%2%3,zone:euro%status:up
@@ -560,6 +561,7 @@ When you specify an array field in a Hive table, you must identify the terminato
     ```
 
     Notice that:
+
     - `FIELDS TERMINATED BY` identifies a comma as the field terminator.
     - The `COLLECTION ITEMS TERMINATED BY` subclause specifies the percent sign as the collection items (array item, map key/value pair) terminator.
     - `MAP KEYS TERMINATED BY` identifies a colon as the terminator for map keys.

@@ -2,7 +2,7 @@
 title: Configuring Hadoop Connectors (Optional)
 ---
 
-PXF is compatible with Cloudera, Hortonworks Data Platform, MapR, and generic Apache Hadoop distributions. This topic describes how configure the PXF Hadoop, Hive, and HBase connectors.
+PXF is compatible with Cloudera, Hortonworks Data Platform, MapR, and generic Apache Hadoop distributions. This topic describes how to configure the PXF Hadoop, Hive, and HBase connectors.
 
 *If you do not want to use the Hadoop-related PXF connectors, then you do not need to perform this procedure.*
 
@@ -15,7 +15,7 @@ Configuring PXF Hadoop connectors involves copying configuration files from your
 
 Perform the following procedure to configure the desired PXF Hadoop-related connectors on the Greenplum Database master host. After you configure the connectors, you will use the `pxf cluster sync` command to copy the PXF configuration to the Greenplum Database cluster.
 
-In this procedure, you use the `default`, or create a new, PXF server configuration. You copy Hadoop configuration files to the server configuration directory on the Greenplum Database master host. You identify Kerberos and user impersonation settings required for access, if applicable. You may also copy libraries to `$PXF_BASE/lib` for MapR support. You then synchronize the PXF configuration on the master host to the standby master host and segment hosts.
+In this procedure, you use the `default`, or create a new PXF server configuration. You copy Hadoop configuration files to the server configuration directory on the Greenplum Database master host. You identify Kerberos and user impersonation settings required for access, if applicable. You may also copy libraries to `$PXF_BASE/lib` for MapR support. You then synchronize the PXF configuration on the master host to the standby master host and segment hosts.
 
 1. Log in to your Greenplum Database master host:
 

@@ -60,7 +60,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 | SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<file\> before reading the data. The default value is 0, do not skip any lines. |
 | FORMAT | Use `FORMAT` `'TEXT'` when \<path-to-file\> references plain text delimited data.<br> Use `FORMAT` `'CSV'`  when \<path-to-file\> references comma-separated value data.  |
-| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma `,`. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
+| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma (`,`). Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 
 **Note**: PXF does not support the `(HEADER)` formatter option in the `CREATE EXTERNAL TABLE` command. If your text file includes header line(s), use `SKIP_HEADER_COUNT` to specify the number of lines that PXF should skip at the beginning of the first split of each file.
 
@@ -95,7 +95,7 @@ To run this example, you must:
     Beijing,Jul,411,11600.67' > /tmp/pxf_s3_simple.txt
     ```
 
-    Note the use of the comma `,` to separate the four data fields.
+    Note the use of the comma (`,`) to separate the four data fields.
 
 4. Copy the data file to the S3 directory you created in Step 1:
 
@@ -171,7 +171,7 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://gpd
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 | SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<file\> before reading the data. The default value is 0, do not skip any lines. |
 | FORMAT | Use `FORMAT` `'TEXT'` when \<path-to-file\> references plain text delimited data.<br> Use `FORMAT` `'CSV'` when \<path-to-file\> references comma-separated value data.  |
-| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma `,`. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
+| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma (`,`). Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 
 **Note**: PXF does not support the `(HEADER)` formatter option in the `CREATE EXTERNAL TABLE` command. If your text file includes header line(s), use `SKIP_HEADER_COUNT` to specify the number of lines that PXF should skip at the beginning of the first split of each file.
 
@@ -274,7 +274,7 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://gpd
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. |
 | \<custom&#8209;option\>=\<value\>  | \<custom-option\>s are described below.|
 | FORMAT | Use `FORMAT` `'TEXT'` to write plain, delimited text to \<path-to-dir\>.<br> Use `FORMAT` `'CSV'` to write comma-separated value text to \<path-to-dir\>. |
-| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma `,`. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
+| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma (`,`). Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 | DISTRIBUTED BY    | If you want to load data from an existing Greenplum Database table into the writable external table, consider specifying the same distribution policy or \<column_name\> on both tables. Doing so will avoid extra motion of data between segments on the load operation. |
 
 Writable external tables that you create using an `<objstore>:text|csv` profile can optionally use record or block compression. You specify the compression type and codec via custom options in the `CREATE EXTERNAL TABLE` `LOCATION` clause. The `<objstore>:text|csv` profiles support the following custom write options:
@@ -303,7 +303,7 @@ This example also optionally uses the Greenplum Database external table named `p
 
 Perform the following procedure to create Greenplum Database writable external tables utilizing the same data schema as described above, one of which will employ compression. You will use the PXF `s3:text` profile to write data to S3. You will also create a separate, readable external table to read the data that you wrote to S3.
 
-1. Create a Greenplum Database writable external table utilizing the data schema described above. Write to the S3 directory `BUCKET/pxf_examples/pxfwrite_s3_textsimple1`. Create the table specifying a comma `,` as the delimiter. For example, if your server name is `s3srvcfg`:
+1. Create a Greenplum Database writable external table utilizing the data schema described above. Write to the S3 directory `BUCKET/pxf_examples/pxfwrite_s3_textsimple1`. Create the table specifying a comma (`,`) as the delimiter. For example, if your server name is `s3srvcfg`:
 
     ``` sql
     postgres=# CREATE WRITABLE EXTERNAL TABLE pxf_s3_writetbl_1(location text, month text, num_orders int, total_sales float8)
@@ -334,7 +334,7 @@ Perform the following procedure to create Greenplum Database writable external t
 			    FORMAT 'CSV';
     ```
 
-    You specify the `'CSV'` `FORMAT` when you create the readable external table because you created the writable table with a comma `,` as the delimiter character, the default delimiter for `'CSV'` `FORMAT`.
+    You specify the `'CSV'` `FORMAT` when you create the readable external table because you created the writable table with a comma (`,`) as the delimiter character, the default delimiter for `'CSV'` `FORMAT`.
 
 6. Query the readable external table:
 

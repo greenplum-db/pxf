@@ -50,7 +50,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 | SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<hdfs-file\> before reading the data. The default value is 0, do not skip any lines. |
 | FORMAT | Use `FORMAT` `'TEXT'` when \<path-to-hdfs-file\> references plain text delimited data.<br> Use `FORMAT` `'CSV'`  when \<path-to-hdfs-file\> references comma-separated value data.  |
-| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma `,`. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
+| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma (`,`). Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 
 **Note**: PXF does not support the `(HEADER)` formatter option in the `CREATE EXTERNAL TABLE` command. If your text file includes header line(s), use `SKIP_HEADER_COUNT` to specify the number of lines that PXF should skip at the beginning of the first split of each file.
 
@@ -73,7 +73,7 @@ Perform the following procedure to create a sample text file, copy the file to H
     Beijing,Jul,411,11600.67' > /tmp/pxf_hdfs_simple.txt
     ```
 
-    Note the use of the comma `,` to separate the four data fields.
+    Note the use of the comma (`,`) to separate the four data fields.
 
 4. Add the data file to HDFS:
 
@@ -149,7 +149,7 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://gpd
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 | SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<hdfs-file\> before reading the data. The default value is 0, do not skip any lines. |
 | FORMAT | Use `FORMAT` `'TEXT'` when \<path-to-hdfs-file\> references plain text delimited data.<br> Use `FORMAT` `'CSV'` when \<path-to-hdfs-file\> references comma-separated value data.  |
-| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma `,`. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
+| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma (`,`). Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 
 **Note**: PXF does not support the `(HEADER)` formatter option in the `CREATE EXTERNAL TABLE` command. If your text file includes header line(s), use `SKIP_HEADER_COUNT` to specify the number of lines that PXF should skip at the beginning of the first split of each file.
 
@@ -244,7 +244,7 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://gpd
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | \<custom&#8209;option\>  | \<custom-option\>s are described below.|
 | FORMAT | Use `FORMAT` `'TEXT'` to write plain, delimited text to \<path-to-hdfs-dir\>.<br> Use `FORMAT` `'CSV'` to write comma-separated value text to \<path-to-hdfs-dir\>. |
-| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma `,`. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
+| delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma (`,`). Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 | DISTRIBUTED BY    | If you want to load data from an existing Greenplum Database table into the writable external table, consider specifying the same distribution policy or \<column_name\> on both tables. Doing so will avoid extra motion of data between segments on the load operation. |
 
 Writable external tables that you create using the `hdfs:text` or the `hdfs:csv` profiles can optionally use record or block compression. You specify the compression type and codec via custom options in the `CREATE EXTERNAL TABLE` `LOCATION` clause. The `hdfs:text` and `hdfs:csv` profiles support the following custom write options:
@@ -271,7 +271,7 @@ This example also optionally uses the Greenplum Database external table named `p
 
 Perform the following procedure to create Greenplum Database writable external tables utilizing the same data schema as described above, one of which will employ compression. You will use the PXF `hdfs:text` profile and the default PXF server to write data to the underlying HDFS directory. You will also create a separate, readable external table to read the data that you wrote to the HDFS directory.
 
-1. Create a Greenplum Database writable external table utilizing the data schema described above. Write to the HDFS directory `/data/pxf_examples/pxfwritable_hdfs_textsimple1`. Create the table specifying a comma `,` as the delimiter:
+1. Create a Greenplum Database writable external table utilizing the data schema described above. Write to the HDFS directory `/data/pxf_examples/pxfwritable_hdfs_textsimple1`. Create the table specifying a comma (`,`) as the delimiter:
 
     ``` sql
     postgres=# CREATE WRITABLE EXTERNAL TABLE pxf_hdfs_writabletbl_1(location text, month text, num_orders int, total_sales float8)
@@ -306,7 +306,7 @@ Perform the following procedure to create Greenplum Database writable external t
     Beijing,Jul,411,11600.67
     ```
 
-    Because you specified comma `,` as the delimiter when you created the writable external table, this character is the field separator used in each record of the HDFS data.
+    Because you specified comma (`,`) as the delimiter when you created the writable external table, this character is the field separator used in each record of the HDFS data.
 
 5. Greenplum Database does not support directly querying a writable external table. To query the data that you just added to HDFS, you must create a readable external Greenplum Database table that references the HDFS directory:
 
@@ -316,7 +316,7 @@ Perform the following procedure to create Greenplum Database writable external t
 			    FORMAT 'CSV';
     ```
 
-    You specify the `'CSV'` `FORMAT` when you create the readable external table because you created the writable table with a comma `,` as the delimiter character, the default delimiter for `'CSV'` `FORMAT`.
+    You specify the `'CSV'` `FORMAT` when you create the readable external table because you created the writable table with a comma (`,`) as the delimiter character, the default delimiter for `'CSV'` `FORMAT`.
 
 6. Query the readable external table:
 
