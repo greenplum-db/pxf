@@ -405,8 +405,9 @@ class ORCVectorizedMappingFunctions {
      * keyed of from the type description category for lookup by consumers later.
      */
     private static void initWriteFunctionsMap() {
-        // the functions assumes values are not nulls and do not do any null checking
-        // TODO: what will we do with repeating ?
+        // the functions assume values are not nulls and do not do any null checking
+        // we also do not use isRepeated optimization as DecimalColumnVector does not have a convenient
+        // flatten() method until Hive 4.0
 
         // see TypeUtils.createColumn for backing storage of different Category types
         // go in the order TypeDescription.Category enum is defined
@@ -448,14 +449,13 @@ class ORCVectorizedMappingFunctions {
             ((BytesColumnVector) columnVector).setRef(row, (byte[]) val, 0, ((byte[]) val).length);
         });
         writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val) -> {
-            // TODO: review, this implementation makes some assumptions (null check, etc)
             // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
             ((DecimalColumnVector) columnVector).vector[row].set(HiveDecimal.create((String) val));
         });
 
         writeFunctionsMap.put(TypeDescription.Category.VARCHAR, writeFunctionsMap.get(TypeDescription.Category.STRING));
 
-        //TODO: do we need to right-trim CHAR values like we do in Parquet ?
+        // TODO: do we need to right-trim CHAR values like we do in Parquet ?
         writeFunctionsMap.put(TypeDescription.Category.CHAR,  writeFunctionsMap.get(TypeDescription.Category.STRING));
 
         // TODO: LIST collection types
