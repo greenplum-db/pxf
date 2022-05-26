@@ -43,7 +43,7 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
 
     public static final String IDENTIFIER_PARAM = "IDENTIFIER";
     public static final String RECORD_MAX_LENGTH_PARAM = "MAXLENGTH";
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Write for JSON is not supported";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "JSON accessor does not support write operation.";
 
     /**
      * If provided indicates the member name which will be used to determine the encapsulating json object to return.

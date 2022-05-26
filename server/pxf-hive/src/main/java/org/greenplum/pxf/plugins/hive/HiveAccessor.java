@@ -96,7 +96,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
     private static final String PXF_PPD_HIVE = "pxf.ppd.hive";
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported for Hive";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Hive accessor does not support write operation.";
 
     private List<HivePartition> partitions;
     private int skipHeaderCount;

@@ -150,7 +150,7 @@ public class ReadBridge extends BaseBridge {
      */
     @Override
     public boolean setNext(DataInputStream inputStream) {
-        throw new UnsupportedOperationException("Current operation is not supported");
+        throw new UnsupportedOperationException("Write operation is not supported.");
     }
 
 }

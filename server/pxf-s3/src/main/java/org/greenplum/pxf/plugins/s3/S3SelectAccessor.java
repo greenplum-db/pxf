@@ -46,7 +46,7 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     public static final String FILE_HEADER_INFO_IGNORE = "IGNORE";
     public static final String FILE_HEADER_INFO_USE = "USE";
     public static final String JSON_TYPE = "JSON-TYPE";
-    private static final String UNSUPPORTED_ERR_MESSAGE = "S3 Select does not support writing";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "S3 Select accessor does not support write operation.";
 
     private AtomicBoolean isResultComplete;
     private AmazonS3 s3Client;

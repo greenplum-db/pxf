@@ -176,6 +176,6 @@ public class HiveResolverTest {
         resolver = new HiveResolver(mockHiveUtilities);
 
         Exception e = assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(null));
-        assertEquals("Current operation is not supported", e.getMessage());
+        assertEquals("Hive resolver does not support write operation.", e.getMessage());
     }
 }

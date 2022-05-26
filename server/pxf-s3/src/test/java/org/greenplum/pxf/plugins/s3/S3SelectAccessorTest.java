@@ -214,21 +214,21 @@ public class S3SelectAccessorTest {
     public void testFailsOnOpenForWrite() {
         Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> new S3SelectAccessor().openForWrite());
-        assertEquals("S3 Select does not support writing", e.getMessage());
+        assertEquals("S3 Select accessor does not support write operation.", e.getMessage());
     }
 
     @Test
     public void testFailsOnWriteNextObject() {
         Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> new S3SelectAccessor().writeNextObject(new OneRow()));
-        assertEquals("S3 Select does not support writing", e.getMessage());
+        assertEquals("S3 Select accessor does not support write operation.", e.getMessage());
     }
 
     @Test
     public void testFailsOnCloseForWrite() {
         Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> new S3SelectAccessor().closeForWrite());
-        assertEquals("S3 Select does not support writing", e.getMessage());
+        assertEquals("S3 Select accessor does not support write operation.", e.getMessage());
     }
 
     private RequestContext getDefaultRequestContext() {

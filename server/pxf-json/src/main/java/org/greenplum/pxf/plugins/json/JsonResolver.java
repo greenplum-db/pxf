@@ -123,7 +123,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
      */
     @Override
     public OneRow setFields(List<OneField> record) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("Current operation is not supported");
+        throw new UnsupportedOperationException("JSON resolver does not support write operation.");
     }
 
     /**

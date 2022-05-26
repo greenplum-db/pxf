@@ -36,7 +36,7 @@ import java.util.Queue;
  */
 public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
 
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported for text:multi profile";
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Profile '%s' does not support write operation.";
 
     private boolean fileAsRow;
     private boolean firstLine, lastLine;
@@ -158,7 +158,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      */
     @Override
     public boolean openForWrite() {
-        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
+        throw new UnsupportedOperationException(String.format(UNSUPPORTED_ERR_MESSAGE, context.getProfile()));
     }
 
     /**
@@ -169,7 +169,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      */
     @Override
     public boolean writeNextObject(OneRow onerow) {
-        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
+        throw new UnsupportedOperationException(String.format(UNSUPPORTED_ERR_MESSAGE, context.getProfile()));
     }
 
     /**
@@ -177,6 +177,6 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      */
     @Override
     public void closeForWrite() {
-        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
+        throw new UnsupportedOperationException(String.format(UNSUPPORTED_ERR_MESSAGE, context.getProfile()));
     }
 }
