@@ -100,6 +100,65 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
     }
 
     @Test
+    public void testExceedingDefaultPrecisionWithRounding() {
+        // simple test with hardcoded value assertions to make sure basic test logic itself is correct
+        boolean[] IS_NULL = new boolean[16]; // no nulls in test records
+        boolean[] NO_NULL = new boolean[16]; // no nulls in test records
+        Arrays.fill(NO_NULL, true);
+
+        columnDescriptors = getAllColumns();
+        context.setTupleDescription(columnDescriptors);
+        when(mockWriterOptions.getSchema()).thenReturn(getSchemaForAllColumns());
+        when(mockWriterOptions.getUseUTCTimestamp()).thenReturn(true);
+        context.setMetadata(mockWriterOptions);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        records = new ArrayList<>(1);
+        List<OneField> record = getRecord(0, -1);
+        // reset the decimal value to a higher unsupported (>38) precision
+        record.set(14, new OneField(DataType.NUMERIC.getOID(),"12345678901234567890123456789.0123456789"));
+        records.add(record);
+
+        OneRow batchWrapper = resolver.setFieldsForBatch(records);
+        VectorizedRowBatch batch = (VectorizedRowBatch) batchWrapper.getData();
+
+        // this value we expect to be rounded
+        assertDecimalColumnVectorCell(batch,0,14, IS_NULL, new HiveDecimalWritable("12345678901234567890123456789.012345679"));
+    }
+
+    @Test
+    public void testExceedingDefaultPrecisionNoRounding() {
+        // simple test with hardcoded value assertions to make sure basic test logic itself is correct
+        boolean[] IS_NULL = new boolean[16]; // no nulls in test records
+        boolean[] NO_NULL = new boolean[16]; // no nulls in test records
+        Arrays.fill(NO_NULL, true);
+
+        columnDescriptors = getAllColumns();
+        context.setTupleDescription(columnDescriptors);
+        when(mockWriterOptions.getSchema()).thenReturn(getSchemaForAllColumns());
+        when(mockWriterOptions.getUseUTCTimestamp()).thenReturn(true);
+        context.setMetadata(mockWriterOptions);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        records = new ArrayList<>(1);
+        List<OneField> record = getRecord(0, -1);
+        // reset the decimal value to a higher unsupported (>38) precision
+        record.set(14, new OneField(DataType.NUMERIC.getOID(),"123456789012345678901234567890123456789"));
+        records.add(record);
+
+        OneRow batchWrapper = resolver.setFieldsForBatch(records);
+        VectorizedRowBatch batch = (VectorizedRowBatch) batchWrapper.getData();
+
+        // this value we expect to be not set and null flag turned on
+        IS_NULL[0] = true;
+        assertDecimalColumnVectorCell(batch,0,14, IS_NULL, null);
+    }
+
+    @Test
     public void testResolvesSingleRecord_NoNulls() {
         // simple test with hardcoded value assertions to make sure basic test logic itself is correct
         boolean[] IS_NULL = new boolean[16]; // no nulls in test records
@@ -124,22 +183,22 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
 
         assertBatch(batch, 2, 16, getAllColumnTypes(), NO_NULL, new boolean[16][2]);
         // spot check columns in row 1 (not in row 0 to be different from defaults) with hardcoded value assertions
-        assertLongColumnVectorCell     (batch,1, 0,IS_NULL, 1L);
-        assertBytesColumnVectorCell    (batch,1, 1,IS_NULL, new byte[]{(byte) 0x01, (byte) 0x02});
-        assertLongColumnVectorCell     (batch,1, 2,IS_NULL, 123456789000000001L);
-        assertLongColumnVectorCell     (batch,1, 3,IS_NULL, 11L);
-        assertLongColumnVectorCell     (batch,1, 4,IS_NULL, 101L);
-        assertBytesColumnVectorCell    (batch,1, 5,IS_NULL, "row-1".getBytes(StandardCharsets.UTF_8));
-        assertDoubleColumnVectorCell   (batch,1, 6,IS_NULL, (double) 1.00001f);
-        assertDoubleColumnVectorCell   (batch,1, 7,IS_NULL, 4.14159265358979323846d);
-        assertBytesColumnVectorCell    (batch,1, 8,IS_NULL, "1".getBytes(StandardCharsets.UTF_8));
-        assertBytesColumnVectorCell    (batch,1, 9,IS_NULL, "var1".getBytes(StandardCharsets.UTF_8));
-        assertDateColumnVectorCell     (batch,1,10,IS_NULL, 14611L);
-        assertBytesColumnVectorCell    (batch,1,11,IS_NULL, "10:11:01".getBytes(StandardCharsets.UTF_8));
-        assertTimestampColumnVectorCell(batch,1,12,IS_NULL, (1373774405L-7*60*60)*1000+1, 1456000);
-        assertTimestampColumnVectorCell(batch,1,13,IS_NULL, 1373774405987L,987001000);
-        assertDecimalColumnVectorCell  (batch,1,14,IS_NULL, new HiveDecimalWritable("12345678900000.000001"));
-        assertBytesColumnVectorCell    (batch,1,15,IS_NULL, "476f35e4-da1a-43cf-8f7c-950a00000001".getBytes(StandardCharsets.UTF_8));
+        assertLongColumnVectorCell     (batch,1, 0, IS_NULL, 1L);
+        assertBytesColumnVectorCell    (batch,1, 1, IS_NULL, new byte[]{(byte) 0x01, (byte) 0x02});
+        assertLongColumnVectorCell     (batch,1, 2, IS_NULL, 123456789000000001L);
+        assertLongColumnVectorCell     (batch,1, 3, IS_NULL, 11L);
+        assertLongColumnVectorCell     (batch,1, 4, IS_NULL, 101L);
+        assertBytesColumnVectorCell    (batch,1, 5, IS_NULL, "row-1".getBytes(StandardCharsets.UTF_8));
+        assertDoubleColumnVectorCell   (batch,1, 6, IS_NULL, (double) 1.00001f);
+        assertDoubleColumnVectorCell   (batch,1, 7, IS_NULL, 4.14159265358979323846d);
+        assertBytesColumnVectorCell    (batch,1, 8, IS_NULL, "1".getBytes(StandardCharsets.UTF_8));
+        assertBytesColumnVectorCell    (batch,1, 9, IS_NULL, "var1".getBytes(StandardCharsets.UTF_8));
+        assertDateColumnVectorCell     (batch,1,10, IS_NULL, 14611L);
+        assertBytesColumnVectorCell    (batch,1,11, IS_NULL, "10:11:01".getBytes(StandardCharsets.UTF_8));
+        assertTimestampColumnVectorCell(batch,1,12, IS_NULL, (1373774405L-7*60*60)*1000+1, 1456000);
+        assertTimestampColumnVectorCell(batch,1,13, IS_NULL, 1373774405987L,987001000);
+        assertDecimalColumnVectorCell  (batch,1,14, IS_NULL, new HiveDecimalWritable("12345678900000.000001"));
+        assertBytesColumnVectorCell    (batch,1,15, IS_NULL, "476f35e4-da1a-43cf-8f7c-950a00000001".getBytes(StandardCharsets.UTF_8));
     }
     @Test
     public void testResolvesBatch_WithNulls() {
