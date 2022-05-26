@@ -679,6 +679,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	int			data_len;
 	int			tuplelen;
 	int			bufidx = 0;
+	int			tupleEndIdx = 0;
 	int16		version;
 	int8		error_flag = 0;
 	int16		ncolumns_remote = 0;
@@ -815,11 +816,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 
 	ncolumns_remote = readInt2FromBuffer(data_buf, &bufidx);
 
-	/* Verify once on the first row */
-	if (FIRST_LINE_NUM == myData->lineno++)
-		verifyExternalTableDefinition(ncolumns_remote, nvalidcolumns, ncolumns, tupdesc, data_buf, &bufidx);
-	else /* Skip the columns' enum types */
-		bufidx += ncolumns_remote;
+	verifyExternalTableDefinition(ncolumns_remote, nvalidcolumns, ncolumns, tupdesc, data_buf, &bufidx);
 
 	/* Extract null bit array */
 	{
@@ -829,6 +826,9 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 		bufidx += nullByteLen;
 		byteArrayToBoolArray(nullByteArray, nullByteLen, &myData->nulls, ncolumns, tupdesc);
 	}
+
+	/* calculate the index of last byte of this tuple in data_buf */
+	tupleEndIdx = data_cur + tuplelen;
 
 	/* extract column value */
 	for (i = 0; i < ncolumns; i++)
@@ -863,6 +863,17 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 				myData->outlen[i] = attr->attlen;
 			}
 
+			/* check that the length of the i-th value is not negative and fits
+			 * within the remaining space for the current tuple in data_buf
+			 */
+			if (myData->outlen[i] < 0 || (tupleEndIdx - bufidx) < myData->outlen[i])
+				ereport(FATAL,
+						(errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+						 errmsg("data for column %d of row %d has invalid length",
+								i + 1, myData->lineno),
+						 errdetail("total length for tuple is %d bytes, length for column %d is %d bytes",
+								   tuplelen, i + 1, myData->outlen[i])));
+
 			if (isBinaryFormatType(attr->atttypid))
 			{
 				StringInfoData tmpbuf;
@@ -879,6 +890,24 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 			}
 			else
 			{
+				/*
+				 * Read string value from data_buf and convert it to internal representation
+				 *
+				 * PXF service should send all strings with a terminating nul-byte, so we can
+				 * determine the length of the string and compare it with the length that PXF
+				 * service computed and sent. Since we've checked that outlen[i] is no larger
+				 * than the number of bytes left for this tuple in data_buf, we use it as max
+				 * number of bytes to scan.
+				 */
+				size_t actual_len = strnlen(data_buf + bufidx, myData->outlen[i]);
+
+				/* outlen[i] includes the terminating nul-byte */
+				if (actual_len != myData->outlen[i] - 1)
+					ereport(FATAL,
+							(errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+									errmsg("data for column %d of row %d has invalid length", i + 1, myData->lineno),
+									errdetail("expected column %d to have length %d, actual length is %ld", i + 1, myData->outlen[i] - 1, actual_len)));
+
 				myData->values[i] = InputFunctionCall(iofunc,
 													  data_buf + bufidx,
 													  myData->typioparams[i],
@@ -889,7 +918,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	}
 	bufidx = DOUBLEALIGN(bufidx);
 
-	if (data_cur + tuplelen != bufidx)
+	if (tupleEndIdx != bufidx)
 		ereport(ERROR,
 				(errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
 				 errmsg("tuplelen != bufidx: %d:%d:%d", tuplelen, bufidx, data_cur)));
