@@ -74,7 +74,7 @@ public class OrcWriteTest extends BaseFeature {
             final String filePath = publicStage + fileName;
             filesToDelete.add(new File(filePath));
             filesToDelete.add(new File(publicStage + "." + fileName + ".crc"));
-            // make sure the file is available, saw flakes on Cloud that listed files were not available
+
             int attempts = 0;
             while (!hdfs.doesFileExist(srcPath) && attempts++ < 20) {
                 sleep(1000);
@@ -84,6 +84,20 @@ public class OrcWriteTest extends BaseFeature {
         }
 
         runTincTest("pxf.features.orc.write.primitive_types.runTest");
+    }
+
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWritePrimitivesWithNulls() throws Exception {
+        gpdbTable = "orc_primitive_types_nulls";
+        fullTestPath = hdfsPath + "orc_primitive_types_nulls";
+        prepareWritableExternalTable(gpdbTable, ORC_TABLE_COLUMNS, fullTestPath);
+
+        prepareReadableExternalTable(gpdbTable, ORC_TABLE_COLUMNS  , fullTestPath, false /*mayByPosition*/);
+
+        insertDataWithNulls(gpdbTable);
+
+        runTincTest("pxf.features.orc.write.primitive_types_nulls.runTest");
     }
 
     @Override
@@ -111,22 +125,27 @@ public class OrcWriteTest extends BaseFeature {
             "(8,'row8','2019-12-08',1900,'bad',TRUE,'2013-07-20 21:00:00',2147483654,'\\x38'::bytea,-550,7.7,'s_13','EUR',45678.00002,1,99999999.99999,8)," +
             "(9,'row9','2019-12-09',2000,'excellent',FALSE,'2013-07-21 21:00:00',2147483655,'\\x39'::bytea,-320,7.7,'s_14','UAH',23457.1,-1,0,9)," +
             "(10,'row10','2019-12-10',2100,'bad',TRUE,'2013-07-22 21:00:00',2147483656,'\\x30'::bytea,-120,7.7,'s_15','USD',45678.00002,789,1,10)," +
-            "(11,'row11','2019-12-11',2200,'good',FALSE,'2013-07-23 21:00:00',2147483657,'\\x31'::bytea,-40,7.7,'s_16','UAH',0.123456789,-789,-1,11)," +
-            "(12,'row12_text_null','2019-12-12',2300,NULL,FALSE,'2013-07-23 21:00:00',2147483658,'\\x31'::bytea,-1,7.7,'s_16','EUR',0.123456789,0.99,0.9,11)," +
-            "(13,'row13_int_null','2019-12-13',2400,'good',FALSE,'2013-07-23 21:00:00',2147483659,'\\x31'::bytea,0,7.7,'s_16','USD',0.123456789,-0.99,-0.9,NULL)," +
-            "(14,'row14_double_null','2019-12-14',NULL,'excellent',FALSE,'2013-07-23 21:00:00',2147483660,'\\x31'::bytea,1,7.7,'s_16','UAH',0.123456789,1.99,45,11)," +
-            "(15,'row15_decimal_null','2019-12-15',2500,'good',FALSE,'2013-07-24 21:00:00',2147483661,'\\x31'::bytea,100,7.7,'s_17','USD',NULL,NULL,NULL,12)," +
-            "(16,'row16_timestamp_null','2019-12-16',2550,'bad',FALSE,NULL,2147483662,'\\x31'::bytea,1000,7.7,'s_160','USD',0.123456789,-1.99,-45,11)," +
-            "(17,'row17_real_null','2019-12-17',2600,'good',FALSE,'2013-07-23 21:00:00',2147483663,'\\x31'::bytea,10000,NULL,'s_161','EUR',0.123456789,15.99,3.14159,11)," +
-            "(18,'row18_bigint_null','2019-12-18',2600,'bad',FALSE,'2013-07-23 21:00:00',NULL,'\\x31'::bytea,20000,7.7,'s_162','USD',0.123456789,-15.99,-3.14159,11)," +
-            "(19,'row19_bool_null','2019-12-19',2600,'good',NULL,'2013-07-23 21:00:00',-1,'\\x31'::bytea,30000,7.7,'s_163','USD',0.123456789,-299.99,2.71828,11)," +
-            "(20,'row20','2019-12-20',2600,'excellent',FALSE,'2013-07-23 21:00:00',-2147483643,'\\x31'::bytea,31000,7.7,'s_164','UAH',0.123456789,299.99,-2.71828,11)," +
-            "(21,'row21_smallint_null','2019-12-21',2600,'good',FALSE,'2013-07-23 21:00:00',-2147483644,'\\x31'::bytea,NULL,7.7,'s_165','USD',0.123456789,555.55,45.99999,11)," +
-            "(22,'row22_date_null',NULL,2600,'excellent',FALSE,'2013-07-23 21:00:00',-2147483645,'\\x31'::bytea,32100,7.7,'s_166','EUR',0.123456789,0.15,-45.99999,11)," +
-            "(23,'row23_varchar_null','2019-12-23',2600,'good',FALSE,'2013-07-23 21:00:00',-2147483646,'\\x31'::bytea,32200,7.7,NULL,'EUR',0.123456789,3.89,450.45001,11)," +
-            "(24,'row24_char_null','2019-12-24',2600,'bad',FALSE,'2013-07-23 21:00:00',-2147483647,'\\x31'::bytea,32500,7.7,'s_168',NULL,0.123456789,3.14,0.00001,11)," +
-            "(25,'row25_binary_null','2019-12-25',2600,'good',FALSE,'2013-07-23 21:00:00',-2147483648,NULL,32767,7.7,'s_169','USD',0.123456789,8,-0.00001,11);");
+            "(11,'row11','2019-12-11',2200,'good',FALSE,'2013-07-23 21:00:00',2147483657,'\\x31'::bytea,-40,7.7,'s_16','UAH',0.123456789,-789,-1,11);");
     }
+
+    private void insertDataWithNulls(String exTable) throws Exception {
+        gpdb.runQuery("INSERT INTO " + exTable + "_writable " + "VALUES " +
+                "(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)," +
+                "(2,'row2_text_null','2019-12-12',2300,NULL,FALSE,'2013-07-23 21:00:00',2147483658,'\\x31'::bytea,-1,7.7,'s_16','EUR',0.123456789,0.99,0.9,11)," +
+                "(3,'row3_int_null','2019-12-13',2400,'good',FALSE,'2013-07-23 21:00:00',2147483659,'\\x31'::bytea,0,7.7,'s_16','USD',0.123456789,-0.99,-0.9,NULL)," +
+                "(4,'row4_double_null','2019-12-14',NULL,'excellent',FALSE,'2013-07-23 21:00:00',2147483660,'\\x31'::bytea,1,7.7,'s_16','UAH',0.123456789,1.99,45,11)," +
+                "(5,'row5_decimal_null','2019-12-15',2500,'good',FALSE,'2013-07-24 21:00:00',2147483661,'\\x31'::bytea,100,7.7,'s_17','USD',NULL,NULL,NULL,12)," +
+                "(6,'row6_timestamp_null','2019-12-16',2550,'bad',FALSE,NULL,2147483662,'\\x31'::bytea,1000,7.7,'s_160','USD',0.123456789,-1.99,-45,11)," +
+                "(7,'row7_real_null','2019-12-17',2600,'good',FALSE,'2013-07-23 21:00:00',2147483663,'\\x31'::bytea,10000,NULL,'s_161','EUR',0.123456789,15.99,3.14159,11)," +
+                "(8,'row8_bigint_null','2019-12-18',2600,'bad',FALSE,'2013-07-23 21:00:00',NULL,'\\x31'::bytea,20000,7.7,'s_162','USD',0.123456789,-15.99,-3.14159,11)," +
+                "(9,'row19_bool_null','2019-12-19',2600,'good',NULL,'2013-07-23 21:00:00',-1,'\\x31'::bytea,30000,7.7,'s_163','USD',0.123456789,-299.99,2.71828,11)," +
+                "(10,'row10','2019-12-20',2600,'excellent',FALSE,'2013-07-23 21:00:00',-2147483643,'\\x31'::bytea,31000,7.7,'s_164','UAH',0.123456789,299.99,-2.71828,11)," +
+                "(11,'row11_smallint_null','2019-12-21',2600,'good',FALSE,'2013-07-23 21:00:00',-2147483644,'\\x31'::bytea,NULL,7.7,'s_165','USD',0.123456789,555.55,45.99999,11)," +
+                "(12,'row12_date_null',NULL,2600,'excellent',FALSE,'2013-07-23 21:00:00',-2147483645,'\\x31'::bytea,32100,7.7,'s_166','EUR',0.123456789,0.15,-45.99999,11)," +
+                "(13,'row13_varchar_null','2019-12-23',2600,'good',FALSE,'2013-07-23 21:00:00',-2147483646,'\\x31'::bytea,32200,7.7,NULL,'EUR',0.123456789,3.89,450.45001,11)," +
+                "(14,'row14_char_null','2019-12-24',2600,'bad',FALSE,'2013-07-23 21:00:00',-2147483647,'\\x31'::bytea,32500,7.7,'s_168',NULL,0.123456789,3.14,0.00001,11)," +
+                "(15,'row15_binary_null','2019-12-25',2600,'good',FALSE,'2013-07-23 21:00:00',-2147483648,NULL,32767,7.7,'s_169','USD',0.123456789,8,-0.00001,11);");
+   }
 
     private void prepareWritableExternalTable(String name, String[] fields, String path) throws Exception {
         exTable = new WritableExternalTable(name + "_writable", fields,
