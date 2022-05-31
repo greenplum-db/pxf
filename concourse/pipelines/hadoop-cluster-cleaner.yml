@@ -53,7 +53,7 @@ jobs:
         type: registry-image
         source:
           repository: ruby
-          tag: "2.3"
+          tag: "2.7"
       inputs:
       - name: ccp_src
       - name: pxf_src
