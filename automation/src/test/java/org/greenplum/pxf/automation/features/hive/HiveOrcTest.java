@@ -1,21 +1,44 @@
 package org.greenplum.pxf.automation.features.hive;
 
+import jsystem.utils.FileUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.OrcFile;
+import org.apache.orc.TypeDescription;
+import org.apache.orc.Writer;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.testng.annotations.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class HiveOrcTest extends HiveBaseTest {
+    private static final String ORC_LARGE_DATA_TYPE = "struct<col1:int,col2:string>";
+    private static final String[] HIVE_ORC_LARGE_DATA_COLS = {
+            "col1 int",
+            "col2 string",
+    };
+
+    private static final String[] PXF_ORC_LARGE_DATA_COLS = {
+            "col1 int",
+            "col2 text",
+    };
 
     private HiveTable hiveOrcSmallDataTable;
     private HiveTable hiveOrcTypesTable;
     private HiveTable hiveOrcPartitionedTable;
     private HiveTable hiveOrcCollectionTable;
     private HiveTable hiveBinaryOrcDataTable;
+    private HiveTable hiveOrcLargeDataTable;
+
+    private String largeOrcDataFile;
 
     @Override
     protected void createExternalTable(String tableName, String[] fields, HiveTable hiveTable) throws Exception {
@@ -104,6 +127,46 @@ public class HiveOrcTest extends HiveBaseTest {
         gpdbNativeTable.setDistributionFields(new String[] { "t1" });
         gpdb.createTableAndVerify(gpdbNativeTable);
         gpdb.copyData(exTable, gpdbNativeTable);
+    }
+
+   private void prepareOrcLargeData(int numRows) throws Exception {
+        hiveOrcLargeDataTable = new HiveTable("hive_orc_large_data", HIVE_ORC_LARGE_DATA_COLS);
+        hiveOrcLargeDataTable.setStoredAs(ORC);
+        hive.createTableAndVerify(hiveOrcLargeDataTable);
+        Configuration configuration = new Configuration();
+        configuration.set("orc.overwrite.output.file", "true");
+        TypeDescription schema = TypeDescription.fromString(ORC_LARGE_DATA_TYPE);
+        String fileName = String.format("large_data_%d_rows.orc", numRows);
+        largeOrcDataFile = dataTempFolder + "/" + fileName;
+        Writer writer = OrcFile.createWriter(new Path(largeOrcDataFile),
+                OrcFile.writerOptions(configuration).setSchema(schema));
+
+        VectorizedRowBatch batch = schema.createRowBatch();
+        LongColumnVector col1 = (LongColumnVector) batch.cols[0];
+        BytesColumnVector col2 = (BytesColumnVector) batch.cols[1];
+
+        for (int i = 0; i < numRows; i++) {
+            int row = batch.size++;
+
+            byte[] bytes = String.format("row%d", i).getBytes(StandardCharsets.UTF_8);
+            col1.vector[row] = i;
+            col2.setRef(row, bytes, 0, bytes.length);
+
+            if (batch.size == batch.getMaxSize()) {
+                writer.addRowBatch(batch);
+                batch.reset();
+            }
+        }
+
+        if (batch.size != 0) {
+            writer.addRowBatch(batch);
+            batch.reset();
+        }
+        writer.close();
+
+        String destPath = hdfs.getWorkingDirectory() + "/" + fileName;
+        hdfs.copyFromLocal(largeOrcDataFile, destPath);
+        hive.loadData(hiveOrcLargeDataTable, destPath, false);
     }
 
     /**
@@ -380,6 +443,13 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable("pxf_hive_table_with_skipheader_orc", PXF_HIVE_SMALLDATA_COLS, hiveOrcSkipHeaderTable);
 
         runTincTest("pxf.features.hive.orc_skip_header_rows.runTest");
+    }
+
+    @Test(groups = {"hive", "features", "gpdb"})
+    public void hiveOrcLargeData() throws Exception {
+        prepareOrcLargeData(8192);
+        createExternalTable("pxf_hive_orc_large_data", PXF_ORC_LARGE_DATA_COLS, hiveOrcLargeDataTable);
+        runTincTest("pxf.features.hive.orc_large_data.runTest");
     }
 
 }

@@ -20,6 +20,7 @@
         <hdp.hadoop.version>2.10.1</hdp.hadoop.version>
         <hdp.hbase.version>1.3.2.1</hdp.hbase.version>
         <hdp.hive.version>1.1.0</hdp.hive.version>
+        <orc.version>1.6.13</orc.version>
         <snappy.java.version>1.1.1.7</snappy.java.version>
         <powermock.version>1.6.4</powermock.version>
     </properties>
@@ -460,6 +461,12 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-jdbc</artifactId>
             <version>${hdp.hive.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.orc</groupId>
+            <artifactId>orc-core</artifactId>
+            <version>${orc.version}</version>
         </dependency>
 
         <dependency>

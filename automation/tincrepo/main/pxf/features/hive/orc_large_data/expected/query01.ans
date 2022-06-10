@@ -1,0 +1,17 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for Hive ORC large data set
+SELECT COUNT(*) FROM pxf_hive_orc_large_data;
+ count
+-------
+  8192
+(1 row)
+
+-- query again for ETL error
+SELECT COUNT(*) FROM pxf_hive_orc_large_data;
+ count
+-------
+  8192
+(1 row)
+
+
