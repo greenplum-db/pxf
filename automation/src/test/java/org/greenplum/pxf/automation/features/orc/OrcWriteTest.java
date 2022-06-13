@@ -10,30 +10,37 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static java.lang.Thread.sleep;
 
 public class OrcWriteTest extends BaseFeature {
 
-    private static final String[] ORC_TABLE_COLUMNS = {
-            "id      integer",
-            "name    text",
-            "cdate   date",
-            "amt     double precision",
-            "grade   text",
-            "b       boolean",
-            "tm      timestamp without time zone",
-            "bg      bigint",
-            "bin     bytea",
-            "sml     smallint",
-            "r       real",
-            "vc1     character varying(5)",
-            "c1      character(3)",
-            "dec1    numeric",
-            "dec2    numeric(5,2)",
-            "dec3    numeric(13,5)",
-            "num1    integer"
+    private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS = {
+            "id     integer"      ,
+            "col00  boolean"      , // DataType.BOOLEAN
+            "col01  bytea"        , // DataType.BYTEA
+            "col02  bigint"       , // DataType.BIGINT
+            "col03  smallint"     , // DataType.SMALLINT
+            "col04  integer"      , // DataType.INTEGER
+            "col05  text"         , // DataType.TEXT
+            "col06  real"         , // DataType.REAL
+            "col07  float"        , // DataType.FLOAT8
+            "col08  char(4)"      , // DataType.BPCHAR
+            "col09  varchar(7)"   , // DataType.VARCHAR
+            "col10  date"         , // DataType.DATE
+            "col11  time"         , // DataType.TIME
+            "col12  timestamp"    , // DataType.TIMESTAMP
+            "col13  timestamptz"  , // DataType.TIMESTAMP_WITH_TIME_ZONE
+            "col14  numeric"      , // DataType.NUMERIC
+            "col15  uuid"           // DataType.UUID
     };
+
+    private static final boolean[] NO_NULLS = new boolean[ORC_PRIMITIVE_TABLE_COLUMNS.length - 1]; // 16 main columns
+    private static final boolean[] ALL_NULLS = new boolean[ORC_PRIMITIVE_TABLE_COLUMNS.length - 1]; // 16 main columns
+    static {
+        Arrays.fill(ALL_NULLS, true);
+    }
 
     private ArrayList<File> filesToDelete;
     private String publicStage;
@@ -62,13 +69,14 @@ public class OrcWriteTest extends BaseFeature {
     public void orcWritePrimitives() throws Exception {
         gpdbTable = "orc_primitive_types";
         fullTestPath = hdfsPath + "orc_primitive_types";
-        prepareWritableExternalTable(gpdbTable, ORC_TABLE_COLUMNS, fullTestPath);
+        prepareWritableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
 
-        prepareReadableExternalTable(gpdbTable, ORC_TABLE_COLUMNS  , fullTestPath, false /*mayByPosition*/);
+        prepareReadableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
 
-        insertPrimitives(gpdbTable);
+        insertDataWithoutNulls(gpdbTable, 33); // > 30 to let the DATE field to repeat the value
 
         // pull down and read created orc files using orc-tools (org.apache.orc.tools)
+        /*
         for (String srcPath : hdfs.list(fullTestPath)) {
             final String fileName = srcPath.replaceAll("(.*)" + fullTestPath + "/", "");
             final String filePath = publicStage + fileName;
@@ -82,7 +90,7 @@ public class OrcWriteTest extends BaseFeature {
             hdfs.copyToLocal(srcPath, filePath);
             sleep(250);
         }
-
+        */
         runTincTest("pxf.features.orc.write.primitive_types.runTest");
     }
 
@@ -91,11 +99,11 @@ public class OrcWriteTest extends BaseFeature {
     public void orcWritePrimitivesWithNulls() throws Exception {
         gpdbTable = "orc_primitive_types_nulls";
         fullTestPath = hdfsPath + "orc_primitive_types_nulls";
-        prepareWritableExternalTable(gpdbTable, ORC_TABLE_COLUMNS, fullTestPath);
+        prepareWritableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
 
-        prepareReadableExternalTable(gpdbTable, ORC_TABLE_COLUMNS  , fullTestPath, false /*mayByPosition*/);
+        prepareReadableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
 
-        insertDataWithNulls(gpdbTable);
+        insertDataWithNulls(gpdbTable, 33);
 
         runTincTest("pxf.features.orc.write.primitive_types_nulls.runTest");
     }
@@ -113,39 +121,54 @@ public class OrcWriteTest extends BaseFeature {
         }
     }
 
-    private void insertPrimitives(String exTable) throws Exception {
-        gpdb.runQuery("INSERT INTO " + exTable + "_writable " + "VALUES " +
-            "(1,'row1','2019-12-01',1200,'good',FALSE,'2013-07-13 21:00:00',2147483647,'\\x31'::bytea,-32768,7.7,'s_6','USD',1.23456,0,0.12345,1)," +
-            "(2,'row2','2019-12-02',1300,'excellent',TRUE,'2013-07-13 21:00:00',2147483648,'\\x32'::bytea,-31500,8.7,'s_7','USD',1.23456,123.45,-0.12345,2)," +
-            "(3,'row3','2019-12-03',1400,'good',FALSE,'2013-07-15 21:00:00',2147483649,'\\x33'::bytea,-31000,9.7,'s_8','USD',-1.23456,-1.45,12345678.90123,3)," +
-            "(4,'row4','2019-12-04',1500,'excellent',TRUE,'2013-07-16 21:00:00',2147483650,'\\x34'::bytea,-30000,10.7,'s_9','USD',123456789.1,0.25,-12345678.90123,4)," +
-            "(5,'row5','2019-12-05',1600,'good',FALSE,'2013-07-17 21:00:00',2147483651,'\\x35'::bytea,-20000,11.7,'s_10','USD',1E-12,-.25,99999999,5)," +
-            "(6,'row6','2019-12-06',1700,'bad',TRUE,'2013-07-18 21:00:00',2147483652,'\\x36'::bytea,-10000,12.7,'s_11','USD',1234.889,999.99,-99999999,6)," +
-            "(7,'row7','2019-12-07',1800,'good',FALSE,'2013-07-19 21:00:00',2147483653,'\\x37'::bytea,-1000,7.7,'s_12','USD',0.0001,-999.99,-99999999.99999,7)," +
-            "(8,'row8','2019-12-08',1900,'bad',TRUE,'2013-07-20 21:00:00',2147483654,'\\x38'::bytea,-550,7.7,'s_13','EUR',45678.00002,1,99999999.99999,8)," +
-            "(9,'row9','2019-12-09',2000,'excellent',FALSE,'2013-07-21 21:00:00',2147483655,'\\x39'::bytea,-320,7.7,'s_14','UAH',23457.1,-1,0,9)," +
-            "(10,'row10','2019-12-10',2100,'bad',TRUE,'2013-07-22 21:00:00',2147483656,'\\x30'::bytea,-120,7.7,'s_15','USD',45678.00002,789,1,10)," +
-            "(11,'row11','2019-12-11',2200,'good',FALSE,'2013-07-23 21:00:00',2147483657,'\\x31'::bytea,-40,7.7,'s_16','UAH',0.123456789,-789,-1,11);");
+    private void insertDataWithoutNulls(String exTable, int numRows) throws Exception {
+        StringBuilder statementBuilder = new StringBuilder("INSERT INTO " + exTable + "_writable VALUES ");
+        for (int i = 0; i < numRows; i++) {
+            statementBuilder.append(getRecordCSV(i, NO_NULLS));
+            statementBuilder.append((i < (numRows - 1)) ? "," : ";");
+        }
+        gpdb.runQuery(statementBuilder.toString());
     }
 
-    private void insertDataWithNulls(String exTable) throws Exception {
-        gpdb.runQuery("INSERT INTO " + exTable + "_writable " + "VALUES " +
-                "(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)," +
-                "(2,'row2_text_null','2019-12-12',2300,NULL,FALSE,'2013-07-23 21:00:00',2147483658,'\\x31'::bytea,-1,7.7,'s_16','EUR',0.123456789,0.99,0.9,11)," +
-                "(3,'row3_int_null','2019-12-13',2400,'good',FALSE,'2013-07-23 21:00:00',2147483659,'\\x31'::bytea,0,7.7,'s_16','USD',0.123456789,-0.99,-0.9,NULL)," +
-                "(4,'row4_double_null','2019-12-14',NULL,'excellent',FALSE,'2013-07-23 21:00:00',2147483660,'\\x31'::bytea,1,7.7,'s_16','UAH',0.123456789,1.99,45,11)," +
-                "(5,'row5_decimal_null','2019-12-15',2500,'good',FALSE,'2013-07-24 21:00:00',2147483661,'\\x31'::bytea,100,7.7,'s_17','USD',NULL,NULL,NULL,12)," +
-                "(6,'row6_timestamp_null','2019-12-16',2550,'bad',FALSE,NULL,2147483662,'\\x31'::bytea,1000,7.7,'s_160','USD',0.123456789,-1.99,-45,11)," +
-                "(7,'row7_real_null','2019-12-17',2600,'good',FALSE,'2013-07-23 21:00:00',2147483663,'\\x31'::bytea,10000,NULL,'s_161','EUR',0.123456789,15.99,3.14159,11)," +
-                "(8,'row8_bigint_null','2019-12-18',2600,'bad',FALSE,'2013-07-23 21:00:00',NULL,'\\x31'::bytea,20000,7.7,'s_162','USD',0.123456789,-15.99,-3.14159,11)," +
-                "(9,'row19_bool_null','2019-12-19',2600,'good',NULL,'2013-07-23 21:00:00',-1,'\\x31'::bytea,30000,7.7,'s_163','USD',0.123456789,-299.99,2.71828,11)," +
-                "(10,'row10','2019-12-20',2600,'excellent',FALSE,'2013-07-23 21:00:00',-2147483643,'\\x31'::bytea,31000,7.7,'s_164','UAH',0.123456789,299.99,-2.71828,11)," +
-                "(11,'row11_smallint_null','2019-12-21',2600,'good',FALSE,'2013-07-23 21:00:00',-2147483644,'\\x31'::bytea,NULL,7.7,'s_165','USD',0.123456789,555.55,45.99999,11)," +
-                "(12,'row12_date_null',NULL,2600,'excellent',FALSE,'2013-07-23 21:00:00',-2147483645,'\\x31'::bytea,32100,7.7,'s_166','EUR',0.123456789,0.15,-45.99999,11)," +
-                "(13,'row13_varchar_null','2019-12-23',2600,'good',FALSE,'2013-07-23 21:00:00',-2147483646,'\\x31'::bytea,32200,7.7,NULL,'EUR',0.123456789,3.89,450.45001,11)," +
-                "(14,'row14_char_null','2019-12-24',2600,'bad',FALSE,'2013-07-23 21:00:00',-2147483647,'\\x31'::bytea,32500,7.7,'s_168',NULL,0.123456789,3.14,0.00001,11)," +
-                "(15,'row15_binary_null','2019-12-25',2600,'good',FALSE,'2013-07-23 21:00:00',-2147483648,NULL,32767,7.7,'s_169','USD',0.123456789,8,-0.00001,11);");
-   }
+    private void insertDataWithNulls(String exTable, int numRows) throws Exception {
+        StringBuilder statementBuilder = new StringBuilder("INSERT INTO " + exTable + "_writable VALUES ");
+        int nullableColumnCount = ORC_PRIMITIVE_TABLE_COLUMNS.length - 1;
+        boolean[] isNull = new boolean[nullableColumnCount]; // id column does not count
+        for (int i = 0; i < numRows; i++) {
+            Arrays.fill(isNull, false); // reset the isNull array
+            if (i > 0) {
+                int indexOfNullColumn = (i - 1) % nullableColumnCount;
+                isNull[indexOfNullColumn] = true;
+            }
+            statementBuilder.append(getRecordCSV(i, (i == 0) ? ALL_NULLS : isNull)); // zero row is all nulls
+            statementBuilder.append((i < (numRows - 1)) ? "," : ";");
+        }
+        gpdb.runQuery(statementBuilder.toString());
+    }
+
+    private String getRecordCSV(int row, boolean[] isNull) {
+        // refer to ORCVectorizedResolverWriteTest unit test where this data is used
+        StringBuilder rowBuilder = new StringBuilder("(")
+        .append(row).append(",")    // always not-null row index, column index starts with 0 after it
+        .append(isNull [0] ? "NULL" : row % 2 != 0).append(",")                                                  // DataType.BOOLEAN
+        .append(isNull [1] ? "NULL" : String.format("'\\x%02d%02d'::bytea", row%100, (row+1)%100)).append(",")   // DataType.BYTEA
+        .append(isNull [2] ? "NULL" : 123456789000000000L + row).append(",")                                     // DataType.BIGINT
+        .append(isNull [3] ? "NULL" : 10L + row % 32000).append(",")                                             // DataType.SMALLINT
+        .append(isNull [4] ? "NULL" : 100L + row).append(",")                                                    // DataType.INTEGER
+        .append(isNull [5] ? "NULL" : String.format("'row-%02d'", row)).append(",")                              // DataType.TEXT
+        .append(isNull [6] ? "NULL" : Float.valueOf(row + 0.00001f * row).doubleValue()).append(",")          // DataType.REAL
+        .append(isNull [7] ? "NULL" : row + Math.PI).append(",")                                                 // DataType.FLOAT8
+        .append(isNull [8] ? "NULL" : String.format("'%s'", row)).append(",")                                    // DataType.BPCHAR
+        .append(isNull [9] ? "NULL" : String.format("'var%02d'", row)).append(",")                               // DataType.VARCHAR
+        .append(isNull[10] ? "NULL" : String.format("'2010-01-%02d'", (row%30)+1)).append(",")                   // DataType.DATE
+        .append(isNull[11] ? "NULL" : String.format("'10:11:%02d'", row % 60)).append(",")                       // DataType.TIME
+        .append(isNull[12] ? "NULL" : String.format("'2013-07-13 21:00:05.%03d456'", row % 1000)).append(",")    // DataType.TIMESTAMP
+        .append(isNull[13] ? "NULL" : String.format("'2013-07-13 21:00:05.987%03d-07'", row % 1000)).append(",") // DataType.TIMESTAMP_WITH_TIME_ZONE
+        .append(isNull[14] ? "NULL" : String.format("'12345678900000.00000%s'", row)).append(",")                // DataType.NUMERIC
+        .append(isNull[15] ? "NULL" : String.format("'476f35e4-da1a-43cf-8f7c-950a%08d'", row % 100000000))      // DataType.UUID
+        .append(")");
+        return rowBuilder.toString();
+    }
 
     private void prepareWritableExternalTable(String name, String[] fields, String path) throws Exception {
         exTable = new WritableExternalTable(name + "_writable", fields,

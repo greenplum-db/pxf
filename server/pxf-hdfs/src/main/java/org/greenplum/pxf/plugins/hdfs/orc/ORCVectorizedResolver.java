@@ -337,6 +337,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     typeOidMappings[i] = DATE.getOID();
                     break;
                 case TIMESTAMP:
+                case TIMESTAMP_INSTANT: // TODO: review if this is correct implementation fot timestampTZ
                     readFunctions[i] = ORCVectorizedMappingFunctions::timestampReader;
                     typeOidMappings[i] = TIMESTAMP.getOID();
                     break;
@@ -360,6 +361,9 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     readFunctions[i] = ORCVectorizedMappingFunctions::listReader;
                     typeOidMappings[i] = getArrayDataType(t.getChildren().get(0)).getOID();
                     break;
+                default:
+                    throw new UnsupportedTypeException(
+                            String.format("ORC type '%s' is not supported for reading.", t.getCategory().getName()));
             }
         }
     }
