@@ -108,6 +108,19 @@ public class OrcWriteTest extends BaseFeature {
         runTincTest("pxf.features.orc.write.primitive_types_nulls.runTest");
     }
 
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWritePrimitivesLargeDataset() throws Exception {
+        gpdbTable = "orc_primitive_types_large";
+        fullTestPath = hdfsPath + "orc_primitive_types_large";
+        prepareWritableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+        prepareReadableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
+
+        // write 3 batches and 1 row of data (1024*3+1=3073) to make sure batch is properly reset when reused
+        insertDataWithoutNulls(gpdbTable, 3073);
+
+        runTincTest("pxf.features.orc.write.primitive_types_large.runTest");
+    }
+
     @Override
     protected void afterMethod() throws Exception {
         super.afterMethod();
