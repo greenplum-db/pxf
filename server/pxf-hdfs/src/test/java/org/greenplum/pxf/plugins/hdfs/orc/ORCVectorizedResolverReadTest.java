@@ -253,7 +253,7 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
 
         UnsupportedTypeException e = assertThrows(UnsupportedTypeException.class,
                 () -> resolver.getFieldsForBatch(batchOfRows));
-        assertEquals("Unable to resolve column 'actor' with category 'STRUCT'. Only primitive and lists of primitive types are supported.", e.getMessage());
+        assertEquals("ORC type 'struct' is not supported for reading.", e.getMessage());
     }
 
     /**
