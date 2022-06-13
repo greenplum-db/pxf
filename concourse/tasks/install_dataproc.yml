@@ -1,18 +1,22 @@
 platform: linux
+
 image_resource:
   type: registry-image
+  source:
+    repository: google/cloud-sdk
+    tag: slim
+
 inputs:
-  - name: pxf_src
+- name: pxf_src
+
 outputs:
-  - name: dataproc_env_files
+- name: dataproc_env_files
+
 params:
   CLUSTER_NAME:
   GOOGLE_CREDENTIALS:
   GOOGLE_PROJECT_ID:
   GOOGLE_ZONE:
-  GOOGLE_SERVICE_ACCOUNT:
-  PLATFORM: centos7
-  CLOUD_PROVIDER: google
   HADOOP_USER:
   IMAGE_VERSION: 1.3
   INITIALIZATION_SCRIPT:
@@ -21,11 +25,11 @@ params:
   KERBEROS: false
   KEYRING:
   KEY:
-  PROJECT:
   PROXY_USER:
   REGION: us-central1
   SECRETS_BUCKET:
   SUBNETWORK: dynamic
   ZONE: us-central1-a
+
 run:
   path: pxf_src/concourse/scripts/start_dataproc_cluster.bash

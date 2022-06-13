@@ -22,14 +22,13 @@ SECRETS_BUCKET=${SECRETS_BUCKET:-data-gpdb-ud-pxf-secrets}
 SUBNETWORK=${SUBNETWORK:-dynamic}
 ZONE=${GOOGLE_ZONE:-us-central1-a}
 
-pip install petname
+pip3 install petname
 
 CLUSTER_NAME=${CLUSTER_NAME:-ccp-$(petname)}
 # remove any . in the value and lower case it as dataproc names can not contain dots or capital letters
 CLUSTER_NAME=${CLUSTER_NAME//./}
 CLUSTER_NAME=$(echo ${CLUSTER_NAME} | tr '[:upper:]' '[:lower:]')
 
-yum install -y -d1 openssh openssh-clients
 mkdir -p ~/.ssh
 ssh-keygen -b 4096 -t rsa -f ~/.ssh/google_compute_engine -N "" -C "$HADOOP_USER"
 

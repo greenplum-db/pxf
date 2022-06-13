@@ -1069,7 +1069,6 @@ jobs:
             IMPERSONATION: ((enable-impersonation-multinode))
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
-      image: ccp-7-image
       params:
         GOOGLE_CREDENTIALS: ((google-service-account-key))
         GOOGLE_PROJECT_ID: ((google-project-id))
@@ -1079,7 +1078,6 @@ jobs:
         ccp_reap_minutes: 120
     - task: Generate Hadoop Cluster 2
       file: pxf_src/concourse/tasks/install_dataproc.yml
-      image: ccp-7-image
       output_mapping:
         dataproc_env_files: dataproc_2_env_files
       params:
@@ -1235,7 +1233,6 @@ jobs:
             IMPERSONATION: ((enable-impersonation-multinode))
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
-      image: ccp-7-image
       params:
         GOOGLE_CREDENTIALS: ((google-service-account-key))
         GOOGLE_PROJECT_ID: ((google-project-id))
@@ -1245,7 +1242,6 @@ jobs:
         ccp_reap_minutes: 120
     - task: Generate Hadoop Cluster 2
       file: pxf_src/concourse/tasks/install_dataproc.yml
-      image: ccp-7-image
       output_mapping:
         dataproc_env_files: dataproc_2_env_files
       params:

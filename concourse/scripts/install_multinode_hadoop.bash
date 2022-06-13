@@ -59,6 +59,10 @@ if ! type ansible-playbook &>/dev/null; then
 fi
 
 pushd "${ansible_play_path}" || exit 1
+
+# https://serverfault.com/a/846232
+export ANSIBLE_STDOUT_CALLBACK=debug
+
 ansible-galaxy collection install -r requirements.yml
 ansible-playbook main.yml
 popd || exit 1
