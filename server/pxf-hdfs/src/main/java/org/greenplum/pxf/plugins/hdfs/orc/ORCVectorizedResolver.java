@@ -45,6 +45,7 @@ import static org.greenplum.pxf.api.io.DataType.SMALLINT;
 import static org.greenplum.pxf.api.io.DataType.TEXT;
 import static org.greenplum.pxf.api.io.DataType.TEXTARRAY;
 import static org.greenplum.pxf.api.io.DataType.TIMESTAMP;
+import static org.greenplum.pxf.api.io.DataType.TIMESTAMP_WITH_TIME_ZONE;
 import static org.greenplum.pxf.api.io.DataType.UNSUPPORTED_TYPE;
 import static org.greenplum.pxf.api.io.DataType.VARCHAR;
 import static org.greenplum.pxf.api.io.DataType.VARCHARARRAY;
@@ -337,9 +338,12 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     typeOidMappings[i] = DATE.getOID();
                     break;
                 case TIMESTAMP:
-                case TIMESTAMP_INSTANT: // TODO: review if this is correct implementation fot timestampTZ
                     readFunctions[i] = ORCVectorizedMappingFunctions::timestampReader;
                     typeOidMappings[i] = TIMESTAMP.getOID();
+                    break;
+                case TIMESTAMP_INSTANT:
+                    readFunctions[i] = ORCVectorizedMappingFunctions::timestampWithTimezoneReader;
+                    typeOidMappings[i] = TIMESTAMP_WITH_TIME_ZONE.getOID();
                     break;
                 case BINARY:
                     readFunctions[i] = ORCVectorizedMappingFunctions::binaryReader;

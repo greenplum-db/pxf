@@ -379,6 +379,25 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
+    public static OneField[] timestampWithTimezoneReader(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
+        TimestampColumnVector tcv = (TimestampColumnVector) columnVector;
+        if (tcv == null)
+            return getNullResultSet(oid, batch.size);
+
+        OneField[] result = new OneField[batch.size];
+        int m = tcv.isRepeating ? 0 : 1;
+        int rowId;
+        String value;
+        for (int rowIndex = 0; rowIndex < batch.size; rowIndex++) {
+            rowId = m * rowIndex;
+            value = (tcv.noNulls || !tcv.isNull[rowId])
+                    ? timestampWithTimezoneToString(tcv.asScratchTimestamp(rowId))
+                    : null;
+            result[rowIndex] = new OneField(oid, value);
+        }
+        return result;
+    }
+
     public static OneField[] getNullResultSet(int oid, int size) {
         OneField[] result = new OneField[size];
         Arrays.fill(result, new OneField(oid, null));
@@ -490,6 +509,21 @@ class ORCVectorizedMappingFunctions {
         String timestampString = instant
                 .atZone(ZoneId.systemDefault())
                 .format(GreenplumDateTime.DATETIME_FORMATTER);
+        LOG.debug("Converted timestamp: {} to date: {}", timestamp, timestampString);
+        return timestampString;
+    }
+
+    /**
+     * Converts Timestamp objects to the String representation given the
+     * Greenplum DATETIME_WITH_TIMEZONE_FORMATTER
+     *
+     * @param timestamp the timestamp object
+     * @return the string representation of the timestamp
+     */
+    private static String timestampWithTimezoneToString(Timestamp timestamp) {
+        String timestampString = timestamp.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .format(GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
         LOG.debug("Converted timestamp: {} to date: {}", timestamp, timestampString);
         return timestampString;
     }
