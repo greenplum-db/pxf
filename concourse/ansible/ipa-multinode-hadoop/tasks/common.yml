@@ -17,3 +17,4 @@
   ansible.builtin.yum:
     name: "*"
     state: latest
+    lock_timeout: 300

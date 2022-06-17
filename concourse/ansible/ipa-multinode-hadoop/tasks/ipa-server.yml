@@ -4,6 +4,8 @@
     name: ['ipa-server', 'ipa-server-dns', 'bind-dyndb-ldap', 'wget']
     state: present
     update_cache: true
+    lock_timeout: 300
+
 - name: configuring ipa-server
   ansible.builtin.shell:
     cmd: "ipa-server-install --unattended --ds-password {{ ipa_password }} --admin-password {{ ipa_password }} --domain {{ ansible_domain }} --realm {{ ansible_domain | upper }} --hostname={{ ansible_fqdn }} --no-host-dns --setup-kra --mkhomedir"

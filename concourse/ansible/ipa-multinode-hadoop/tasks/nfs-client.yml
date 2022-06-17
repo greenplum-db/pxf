@@ -5,6 +5,7 @@
     name: nfs-utils
     state: present
     update_cache: true
+    lock_timeout: 300
 
 - name: Mount shared edits directory
   become: true

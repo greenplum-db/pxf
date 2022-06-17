@@ -5,6 +5,7 @@
     name: [gcc, java-1.8.0-openjdk, python3-devel, python3-setuptools, redhat-rpm-config]
     state: present
     update_cache: true
+    lock_timeout: 300
 
 - name: Create PXF shell config
   ansible.builtin.copy:

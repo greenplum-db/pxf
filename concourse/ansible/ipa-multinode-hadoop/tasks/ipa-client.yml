@@ -4,6 +4,7 @@
     name: ['bind-utils', 'ipa-client', 'ipa-admintools', 'openldap-clients']
     state: present
     update_cache: true
+    lock_timeout: 300
 
 - name: Run IPA client installer
   ansible.builtin.shell:
