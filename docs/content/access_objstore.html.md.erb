@@ -1,5 +1,5 @@
 ---
-title: Accessing Azure, Google Cloud Storage, MinIO, and S3 Object Stores
+title: Accessing Azure, Google Cloud Storage, and S3-Compatible Object Stores
 ---
 
 <!--
@@ -21,14 +21,14 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-PXF is installed with connectors to Azure Blob Storage, Azure Data Lake, Google Cloud Storage, MinIO, and S3 object stores.
+PXF is installed with connectors to Azure Blob Storage, Azure Data Lake, Google Cloud Storage, and AWS, MinIO, and Dell ECS S3-compatible object stores.
 
 ## <a id="objstore_prereq"></a>Prerequisites
 
 Before working with object store data using PXF, ensure that:
 
 - You have configured PXF, and PXF is running on each Greenplum Database host. See [Configuring PXF](instcfg_pxf.html) for additional information.
-- You have configured the PXF Object Store Connectors that you plan to use. Refer to [Configuring Connectors to Azure and Google Cloud Storage Object Stores](objstore_cfg.html) and [Configuring Connectors to MinIO and S3 Object Stores](s3_objstore_cfg.html) for instructions.
+- You have configured the PXF Object Store Connectors that you plan to use. Refer to [Configuring Connectors to Azure and Google Cloud Storage Object Stores](objstore_cfg.html) and [Configuring Connectors to MinIO, AWS S3, and Dell ECS Object Stores](s3_objstore_cfg.html) for instructions.
 - Time is synchronized between the Greenplum Database hosts and the external object store systems.
 
 
@@ -59,9 +59,9 @@ The PXF connectors to Azure expose the following profiles to read, and in many c
 | AvroSequenceFile | wasbs:AvroSequenceFile | adl:AvroSequenceFile | Read, Write |
 | [SequenceFile](objstore_seqfile.html) | wasbs:SequenceFile | adl:SequenceFile | Read, Write |
 
-Similarly, the PXF connectors to Google Cloud Storage, MinIO, and S3 expose these profiles:
+Similarly, the PXF connectors to Google Cloud Storage, and S3-compatible object stores expose these profiles:
 
-| Data Format | Google Cloud Storage | S3 or MinIO | Supported Operations |
+| Data Format | Google Cloud Storage | AWS S3, MinIO, or Dell ECS | Supported Operations |
 |-----|------|---------| ---------|
 | delimited single line [plain text](objstore_text.html) | gs:text | s3:text | Read, Write |
 | delimited single line comma-separated values of [plain text](objstore_text.html) | gs:csv | s3:csv | Read, Write |
