@@ -41,6 +41,7 @@ import static org.greenplum.pxf.api.io.DataType.SMALLINT;
 import static org.greenplum.pxf.api.io.DataType.TEXT;
 import static org.greenplum.pxf.api.io.DataType.TEXTARRAY;
 import static org.greenplum.pxf.api.io.DataType.TIMESTAMP;
+import static org.greenplum.pxf.api.io.DataType.TIMESTAMP_WITH_TIME_ZONE;
 import static org.greenplum.pxf.api.io.DataType.UNSUPPORTED_TYPE;
 import static org.greenplum.pxf.api.io.DataType.VARCHAR;
 import static org.greenplum.pxf.api.io.DataType.VARCHARARRAY;
@@ -88,46 +89,38 @@ import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.MAP_BY_PO
  * | array<varchar>    | VARCHAR[]      | 1015          |
  * | array<binary>     | BYTEA[]        | 1001          |
  * ------------------------------------------------------
- *
  */
 public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedResolver, Resolver {
 
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
     /**
      * The schema used to read the ORC file.
      */
     private TypeDescription readSchema;
-
     /**
      * An array of functions that resolve ColumnVectors into Lists of OneFields
      * The array has the same size as the readSchema, and the functions depend
      * on the type of the elements in the schema.
      */
     private TriFunction<VectorizedRowBatch, ColumnVector, Integer, OneField[]>[] functions;
-
     /**
      * An array of types that map from the readSchema types to Greenplum OIDs.
      */
     private int[] typeOidMappings;
-
     private Map<String, TypeDescription> readFields;
-
     /**
      * True if the resolver resolves the columns defined in the
      * ORC file in the same order they were defined in the Greenplum table,
      * otherwise the columns are matches by name. (Defaults to false)
      */
     private boolean positionalAccess;
-
     /**
      * A local copy of the column descriptors coming from the RequestContext.
      * We make this variable local to improve performance while accessing the
      * descriptors.
      */
     private List<ColumnDescriptor> columnDescriptors;
-
     private List<List<OneField>> cachedBatch;
-
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
 
     /**
      * {@inheritDoc}
@@ -281,6 +274,10 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     functions[i] = ORCVectorizedMappingFunctions::timestampMapper;
                     typeOidMappings[i] = TIMESTAMP.getOID();
                     break;
+                case TIMESTAMP_INSTANT:
+                    functions[i] = ORCVectorizedMappingFunctions::timestampWithTimeZoneMapper;
+                    typeOidMappings[i] = TIMESTAMP_WITH_TIME_ZONE.getOID();
+                    break;
                 case BINARY:
                     functions[i] = ORCVectorizedMappingFunctions::binaryMapper;
                     typeOidMappings[i] = BYTEA.getOID();
@@ -317,7 +314,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         } else {
             // Need to be reallocated when batchSize is not equal to the size of the existing cacheBatch,
             // otherwise we will read more rows which we do not expect.
-            if (batchSize != cachedBatch.size()){
+            if (batchSize != cachedBatch.size()) {
                 cachedBatch = new ArrayList<>(batchSize);
 
                 for (int i = 0; i < batchSize; i++) {
@@ -338,6 +335,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
 
     /**
      * This helper function returns the array DataType for the given primitive type
+     *
      * @param typeDescription must be a child of a list TypeDescription
      * @return the DataType for the array containing elements of the given TypeDescription
      */

@@ -49,13 +49,13 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
 
     @Test
     public void testReadOrcTypesFile() throws IOException {
-        runTestScenarioReadOrcTypesFile(15);
+        runTestScenarioReadOrcTypesFile(16);
     }
 
     @Test
     public void testReadOrcTypesFileByPosition() throws IOException {
         context.addOption("MAP_BY_POSITION", "true");
-        runTestScenarioReadOrcTypesFile(15);
+        runTestScenarioReadOrcTypesFile(16);
     }
 
     @Test
@@ -94,12 +94,13 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
         columnDescriptors.add(new ColumnDescriptor("t1", DataType.TEXT.getOID(), 0, "text", null));
         columnDescriptors.add(new ColumnDescriptor("num1", DataType.INTEGER.getOID(), 2, "int4", null));
         columnDescriptors.add(new ColumnDescriptor("tm", DataType.TIMESTAMP.getOID(), 5, "timestamp", null));
-        columnDescriptors.add(new ColumnDescriptor("r", DataType.REAL.getOID(), 6, "real", null));
-        columnDescriptors.add(new ColumnDescriptor("tn", DataType.SMALLINT.getOID(), 9, "int2", null));
-        columnDescriptors.add(new ColumnDescriptor("dt", DataType.DATE.getOID(), 11, "date", null));
-        columnDescriptors.add(new ColumnDescriptor("bin", DataType.BYTEA.getOID(), 14, "bin", null));
+        columnDescriptors.add(new ColumnDescriptor("tmtz", DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), 6, "timestamp with time zone", null));
+        columnDescriptors.add(new ColumnDescriptor("r", DataType.REAL.getOID(), 7, "real", null));
+        columnDescriptors.add(new ColumnDescriptor("tn", DataType.SMALLINT.getOID(), 10, "int2", null));
+        columnDescriptors.add(new ColumnDescriptor("dt", DataType.DATE.getOID(), 12, "date", null));
+        columnDescriptors.add(new ColumnDescriptor("bin", DataType.BYTEA.getOID(), 15, "bin", null));
 
-        runTestScenarioReadOrcTypesFile(7);
+        runTestScenarioReadOrcTypesFile(8);
     }
 
     /**
@@ -112,12 +113,12 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
     @Test
     public void testReadUnorderedSubsetOfOrcTypesFile() throws IOException {
         columnDescriptors = new ArrayList<>();
-        columnDescriptors.add(new ColumnDescriptor("r", DataType.REAL.getOID(), 6, "real", null));
+        columnDescriptors.add(new ColumnDescriptor("r", DataType.REAL.getOID(), 7, "real", null));
         columnDescriptors.add(new ColumnDescriptor("t2", DataType.TEXT.getOID(), 1, "text", null));
-        columnDescriptors.add(new ColumnDescriptor("dt", DataType.DATE.getOID(), 11, "date", null));
-        columnDescriptors.add(new ColumnDescriptor("tn", DataType.SMALLINT.getOID(), 9, "int2", null));
+        columnDescriptors.add(new ColumnDescriptor("dt", DataType.DATE.getOID(), 12, "date", null));
+        columnDescriptors.add(new ColumnDescriptor("tn", DataType.SMALLINT.getOID(), 10, "int2", null));
         columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 4, "numeric", new Integer[]{38, 18}));
-        columnDescriptors.add(new ColumnDescriptor("bg", DataType.BIGINT.getOID(), 7, "int8", null));
+        columnDescriptors.add(new ColumnDescriptor("bg", DataType.BIGINT.getOID(), 8, "int8", null));
 
         runTestScenarioReadOrcTypesFile(6);
     }

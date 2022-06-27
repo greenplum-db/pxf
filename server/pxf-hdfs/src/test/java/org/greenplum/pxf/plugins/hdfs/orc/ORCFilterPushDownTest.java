@@ -59,6 +59,7 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         assertRowsReturned(ALL_ROWS);
     }
 
+    //Find out the filter string in FilterParser.java
     @Test
     public void testTextPushDown() throws Exception {
         // ORC SearchArgument filters out row groups. Since we have a single
@@ -117,15 +118,15 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         // ORC SearchArgument filters out row groups. Since we have a single
         // group, all rows will be returned
         // r > 7 and r < 8
-        context.setFilterString("a6c701s1d7o2a6c700s1d8o1l0");
+        context.setFilterString("a7c701s1d7o2a7c700s1d8o1l0");
         assertRowsReturned(ALL_ROWS);
 
         // r >= 7 and r <= 8
-        context.setFilterString("a6c701s1d7o4a6c700s1d8o3l0");
+        context.setFilterString("a7c701s1d7o4a7c700s1d8o3l0");
         assertRowsReturned(ALL_ROWS);
 
         // r = 15
-        context.setFilterString("a6c700s2d15o5");
+        context.setFilterString("a7c700s2d15o5");
         assertRowsReturned(NO_ROWS);
     }
 
@@ -134,11 +135,11 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         // ORC SearchArgument filters out row groups. Since we have a single
         // group, all rows will be returned
         // bg = 23456789
-        context.setFilterString("a7c23s8d23456789o5");
+        context.setFilterString("a8c23s8d23456789o5");
         assertRowsReturned(ALL_ROWS);
 
         // bg <> 23456789
-        context.setFilterString("a7c23s8d23456789o6");
+        context.setFilterString("a8c23s8d23456789o6");
         assertRowsReturned(NO_ROWS);
     }
 
@@ -147,11 +148,11 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         // ORC SearchArgument filters out row groups. Since we have a single
         // group, all rows will be returned
         // b
-        context.setFilterString("a8c16s4dtrueo0");
+        context.setFilterString("a9c16s4dtrueo0");
         assertRowsReturned(ALL_ROWS);
 
         // not b
-        context.setFilterString("a8c16s4dtrueo0l2");
+        context.setFilterString("a9c16s4dtrueo0l2");
         assertRowsReturned(ALL_ROWS);
     }
 
@@ -160,11 +161,11 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         // ORC SearchArgument filters out row groups. Since we have a single
         // group, all rows will be returned
         // tn = 5
-        context.setFilterString("a9c23s1d5o5");
+        context.setFilterString("a10c23s1d5o5");
         assertRowsReturned(ALL_ROWS);
 
         // tn = 25
-        context.setFilterString("a9c23s2d25o5");
+        context.setFilterString("a10c23s2d25o5");
         assertRowsReturned(NO_ROWS);
     }
 
@@ -173,11 +174,11 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         // ORC SearchArgument filters out row groups. Since we have a single
         // group, all rows will be returned
         // sml = 1100
-        context.setFilterString("a10c23s4d1100o5");
+        context.setFilterString("a11c23s4d1100o5");
         assertRowsReturned(ALL_ROWS);
 
         // tn = 25
-        context.setFilterString("a10c23s1d0o5");
+        context.setFilterString("a11c23s1d0o5");
         assertRowsReturned(NO_ROWS);
     }
 
@@ -186,11 +187,11 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         // ORC SearchArgument filters out row groups. Since we have a single
         // group, all rows will be returned
         // dt < '2020-09-01'
-        context.setFilterString("a11c1082s10d2020-09-01o1");
+        context.setFilterString("a12c1082s10d2020-09-01o1");
         assertRowsReturned(ALL_ROWS);
 
         // dt > '2020-09-01'
-        context.setFilterString("a11c1082s10d2020-09-01o2");
+        context.setFilterString("a12c1082s10d2020-09-01o2");
         assertRowsReturned(NO_ROWS);
     }
 
@@ -199,11 +200,11 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         // ORC SearchArgument filters out row groups. Since we have a single
         // group, all rows will be returned
         // c1 = 'abc'
-        context.setFilterString("a13c1042s3dabco5");
+        context.setFilterString("a14c1042s3dabco5");
         assertRowsReturned(ALL_ROWS);
 
         // c1 = 'abd'
-        context.setFilterString("a13c1042s3dabdo5");
+        context.setFilterString("a14c1042s3dabdo5");
         assertRowsReturned(NO_ROWS);
     }
 
@@ -260,7 +261,7 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
             int currentRow = 0;
             for (int expectedRow : expectedRows) {
                 List<OneField> fieldList = fieldsForBatch.get(currentRow);
-                assertEquals(15, fieldList.size(), "Row " + expectedRow);
+                assertEquals(16, fieldList.size(), "Row " + expectedRow);
                 assertTypes(fieldList);
                 assertValues(fieldList, expectedRow - 1);
 
@@ -294,32 +295,32 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         if (columnDescriptors.get(5).isProjected()) {
             assertEquals(DataType.TIMESTAMP.getOID(), fieldList.get(5).type);
         }
-        if (columnDescriptors.get(6).isProjected()) {
-            assertEquals(DataType.REAL.getOID(), fieldList.get(6).type);
-        }
         if (columnDescriptors.get(7).isProjected()) {
-            assertEquals(DataType.BIGINT.getOID(), fieldList.get(7).type);
+            assertEquals(DataType.REAL.getOID(), fieldList.get(7).type);
         }
         if (columnDescriptors.get(8).isProjected()) {
-            assertEquals(DataType.BOOLEAN.getOID(), fieldList.get(8).type);
+            assertEquals(DataType.BIGINT.getOID(), fieldList.get(8).type);
         }
         if (columnDescriptors.get(9).isProjected()) {
-            assertEquals(DataType.SMALLINT.getOID(), fieldList.get(9).type);
+            assertEquals(DataType.BOOLEAN.getOID(), fieldList.get(9).type);
         }
         if (columnDescriptors.get(10).isProjected()) {
             assertEquals(DataType.SMALLINT.getOID(), fieldList.get(10).type);
         }
         if (columnDescriptors.get(11).isProjected()) {
-            assertEquals(DataType.DATE.getOID(), fieldList.get(11).type);
+            assertEquals(DataType.SMALLINT.getOID(), fieldList.get(11).type);
         }
         if (columnDescriptors.get(12).isProjected()) {
-            assertEquals(DataType.VARCHAR.getOID(), fieldList.get(12).type);
+            assertEquals(DataType.DATE.getOID(), fieldList.get(12).type);
         }
         if (columnDescriptors.get(13).isProjected()) {
-            assertEquals(DataType.BPCHAR.getOID(), fieldList.get(13).type);
+            assertEquals(DataType.VARCHAR.getOID(), fieldList.get(13).type);
         }
         if (columnDescriptors.get(14).isProjected()) {
-            assertEquals(DataType.BYTEA.getOID(), fieldList.get(14).type);
+            assertEquals(DataType.BPCHAR.getOID(), fieldList.get(14).type);
+        }
+        if (columnDescriptors.get(15).isProjected()) {
+            assertEquals(DataType.BYTEA.getOID(), fieldList.get(15).type);
         }
     }
 
@@ -362,12 +363,6 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
             assertNull(fieldList.get(5).val, "Row " + row);
         }
 
-        if (columnDescriptors.get(6).isProjected() && COL7[row] != null) {
-            assertEquals(COL7[row], fieldList.get(6).val, "Row " + row);
-        } else {
-            assertNull(fieldList.get(6).val, "Row " + row);
-        }
-
         if (columnDescriptors.get(7).isProjected() && COL8[row] != null) {
             assertEquals(COL8[row], fieldList.get(7).val, "Row " + row);
         } else {
@@ -393,15 +388,15 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         }
 
         if (columnDescriptors.get(11).isProjected() && COL12[row] != null) {
-            assertEquals(Date.valueOf(COL12[row]), fieldList.get(11).val, "Row " + row);
+            assertEquals((COL12[row]), fieldList.get(11).val, "Row " + row);
         } else {
             assertNull(fieldList.get(11).val);
         }
 
         if (columnDescriptors.get(12).isProjected() && COL13[row] != null) {
-            assertEquals(COL13[row], fieldList.get(12).val, "Row " + row);
+            assertEquals(Date.valueOf(COL13[row]), fieldList.get(12).val, "Row " + row);
         } else {
-            assertNull(fieldList.get(12).val, "Row " + row);
+            assertNull(fieldList.get(12).val);
         }
 
         if (columnDescriptors.get(13).isProjected() && COL14[row] != null) {
@@ -411,13 +406,19 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         }
 
         if (columnDescriptors.get(14).isProjected() && COL15[row] != null) {
-            assertTrue(fieldList.get(14).val instanceof byte[], "Row " + row);
-            byte[] bin = (byte[]) fieldList.get(14).val;
-            assertEquals(1, bin.length, "Row " + row);
-            assertEquals(COL15[row].byteValue(), bin[0],
-                    "Row " + row + ", actual " + String.format("%8s", Integer.toBinaryString(bin[0] & 0xFF)).replace(' ', '0'));
+            assertEquals(COL15[row], fieldList.get(14).val, "Row " + row);
         } else {
             assertNull(fieldList.get(14).val, "Row " + row);
+        }
+
+        if (columnDescriptors.get(15).isProjected() && COL16[row] != null) {
+            assertTrue(fieldList.get(15).val instanceof byte[], "Row " + row);
+            byte[] bin = (byte[]) fieldList.get(15).val;
+            assertEquals(1, bin.length, "Row " + row);
+            assertEquals(COL16[row].byteValue(), bin[0],
+                    "Row " + row + ", actual " + String.format("%8s", Integer.toBinaryString(bin[0] & 0xFF)).replace(' ', '0'));
+        } else {
+            assertNull(fieldList.get(15).val, "Row " + row);
         }
     }
 }
