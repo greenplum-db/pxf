@@ -24,7 +24,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.function.Function;
 
 /**
  * Maps vectors of ORC types to a list of OneFields.
@@ -77,9 +79,10 @@ class ORCVectorizedMappingFunctions {
 
     /**
      * Serializes ORC lists of PXF-supported primitives into Postgres array syntax
-     * @param batch the column batch to be processed
+     *
+     * @param batch        the column batch to be processed
      * @param columnVector the ListColumnVector that contains another ColumnVector containing the actual data
-     * @param oid the destination GPDB column OID
+     * @param oid          the destination GPDB column OID
      * @return returns an array of OneFields, where each element in the array contains data from an entire row as a String
      */
     public static OneField[] listMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
@@ -90,7 +93,7 @@ class ORCVectorizedMappingFunctions {
 
         OneField[] result = new OneField[batch.size];
         // if the row is repeated, then we only need to serialize the row once.
-        String repeatedRow = listColumnVector.isRepeating ? serializeListRow(listColumnVector,0, oid) : null;
+        String repeatedRow = listColumnVector.isRepeating ? serializeListRow(listColumnVector, 0, oid) : null;
         for (int rowIndex = 0; rowIndex < batch.size; rowIndex++) {
             String value = listColumnVector.isRepeating ? repeatedRow : serializeListRow(listColumnVector, rowIndex, oid);
             result[rowIndex] = new OneField(oid, value);
@@ -101,9 +104,10 @@ class ORCVectorizedMappingFunctions {
 
     /**
      * Helper method for handling the underlying data of ORC list compound types
+     *
      * @param columnVector the ListColumnVector containing the array data
-     * @param row the row of data to pull out from the ColumnVector
-     * @param oid the GPDB mapping of the ORC list compound type
+     * @param row          the row of data to pull out from the ColumnVector
+     * @param oid          the GPDB mapping of the ORC list compound type
      * @return the data of the given row as a string
      */
     public static String serializeListRow(ListColumnVector columnVector, int row, int oid) {
@@ -145,8 +149,9 @@ class ORCVectorizedMappingFunctions {
 
     /**
      * Wraps a byte array for a given row index into a byte buffer
+     *
      * @param bytesColumnVector the ColumnVector containing the byte array data
-     * @param row the index of a row of data to pull out from the ColumnVector
+     * @param row               the index of a row of data to pull out from the ColumnVector
      * @return the ByteBuffer for the given row
      */
     private static ByteBuffer getByteBuffer(BytesColumnVector bytesColumnVector, int row) {
@@ -338,6 +343,14 @@ class ORCVectorizedMappingFunctions {
     }
 
     public static OneField[] timestampMapper(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
+        return timestampMapperWithFormatter(batch, columnVector, oid, ORCVectorizedMappingFunctions::timestampToString);
+    }
+
+    public static OneField[] timestampWithTimeZoneMapper(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
+        return timestampMapperWithFormatter(batch, columnVector, oid, ORCVectorizedMappingFunctions::timestampWithTimeZoneToString);
+    }
+
+    public static OneField[] timestampMapperWithFormatter(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid, Function<Timestamp, String> formatter) {
         TimestampColumnVector tcv = (TimestampColumnVector) columnVector;
         if (tcv == null)
             return getNullResultSet(oid, batch.size);
@@ -349,12 +362,13 @@ class ORCVectorizedMappingFunctions {
         for (int rowIndex = 0; rowIndex < batch.size; rowIndex++) {
             rowId = m * rowIndex;
             value = (tcv.noNulls || !tcv.isNull[rowId])
-                    ? timestampToString(tcv.asScratchTimestamp(rowId))
+                    ? formatter.apply(tcv.asScratchTimestamp(rowId))
                     : null;
             result[rowIndex] = new OneField(oid, value);
         }
         return result;
     }
+
 
     public static OneField[] getNullResultSet(int oid, int size) {
         OneField[] result = new OneField[size];
@@ -370,11 +384,20 @@ class ORCVectorizedMappingFunctions {
      * @return the string representation of the timestamp
      */
     private static String timestampToString(Timestamp timestamp) {
+        return timestampToStringWithFormatter(timestamp, GreenplumDateTime.DATETIME_FORMATTER);
+    }
+
+    private static String timestampWithTimeZoneToString(Timestamp timestamp) {
+        return timestampToStringWithFormatter(timestamp, GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
+    }
+
+    private static String timestampToStringWithFormatter(Timestamp timestamp, DateTimeFormatter formatter) {
         Instant instant = timestamp.toInstant();
         String timestampString = instant
                 .atZone(ZoneId.systemDefault())
-                .format(GreenplumDateTime.DATETIME_FORMATTER);
+                .format(formatter);
         LOG.debug("Converted timestamp: {} to date: {}", timestamp, timestampString);
         return timestampString;
     }
+
 }
