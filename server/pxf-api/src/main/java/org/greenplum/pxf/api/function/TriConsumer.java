@@ -2,7 +2,6 @@ package org.greenplum.pxf.api.function;
 
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Represents an operation that accepts three input arguments and returns no
