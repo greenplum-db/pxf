@@ -35,6 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -68,6 +69,7 @@ class ORCVectorizedMappingFunctions {
     // we intentionally create a new instance of PgUtilities here due to unnecessary complexity
     // required for dependency injection
     private static final PgUtilities pgUtilities = new PgUtilities();
+    private static final OrcUtilities orcUtilities = new OrcUtilities(pgUtilities);
 
     private static final Map<TypeDescription.Category, TriConsumer<ColumnVector, Integer, Object>> writeFunctionsMap;
     private static final TriConsumer<ColumnVector, Integer, Object> timestampInLocalWriteFunction;
@@ -400,7 +402,13 @@ class ORCVectorizedMappingFunctions {
         // if timestamps need to be written in local timezone (and not in UTC), get a special function not in the map
         if (columnTypeCategory.equals(TypeDescription.Category.TIMESTAMP) && !timestampsInUTC) {
             writeFunction = timestampInLocalWriteFunction;
-        } else {
+        } else if (columnTypeCategory.equals(TypeDescription.Category.LIST)) {
+            // pass along the underlying category of the list
+            TypeDescription childTypeDescription = typeDescription.getChildren().get(0);
+            TriConsumer<ColumnVector, Integer, Object> childWriteFunction = writeFunctionsMap.get(childTypeDescription.getCategory());
+            writeFunction = getListWriteFunction(childWriteFunction, typeDescription);
+        }
+        else {
             writeFunction = writeFunctionsMap.get(columnTypeCategory);
         }
         if (writeFunction == null) {
@@ -470,7 +478,6 @@ class ORCVectorizedMappingFunctions {
         // TODO: do we need to right-trim CHAR values like we do in Parquet ?
         writeFunctionsMap.put(TypeDescription.Category.CHAR,  writeFunctionsMap.get(TypeDescription.Category.STRING));
 
-        // TODO: LIST collection types
         // MAP, STRUCT, UNION - not supported by our ORCSchemaBuilder, so we do not expect to see them
 
         writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP_INSTANT, (columnVector, row, val) -> {
@@ -511,6 +518,31 @@ class ORCVectorizedMappingFunctions {
         };
     }
 
+    /**
+     * A special function that writes lists to ORC file
+     * @return a function setting the list column vector
+     */
+    private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TriConsumer<ColumnVector, Integer, Object> childWriteFunction, TypeDescription orcType) {
+        return (columnVector, row, val) -> {
+
+            List<Object> data = orcUtilities.parsePostgresArray((String) val, orcType);
+            int offset = 0;
+            if (row != 0) {
+                offset = (int) (((ListColumnVector) columnVector).offsets[row-1] + ((ListColumnVector) columnVector).lengths[row-1]);
+            }
+            int length = data.size();
+
+            // set the offset and length for this row
+            ((ListColumnVector) columnVector).offsets[row] = offset;
+            ((ListColumnVector) columnVector).lengths[row] = length;
+
+            // add the data to the child columnvector
+            for (int i = 0; i < length; i++) {
+                Object rowElem = data.get(i);
+                childWriteFunction.accept(((ListColumnVector) columnVector).child, offset + i, rowElem);
+            }
+        };
+    }
     /**
      * Converts the string representation of a timestamp to an instant in a given timezone.
      * @param val string representation of the timestamp

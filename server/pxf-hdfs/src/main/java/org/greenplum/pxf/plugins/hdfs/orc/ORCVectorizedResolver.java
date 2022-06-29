@@ -32,6 +32,7 @@ import static org.greenplum.pxf.api.io.DataType.BPCHARARRAY;
 import static org.greenplum.pxf.api.io.DataType.BYTEA;
 import static org.greenplum.pxf.api.io.DataType.BYTEAARRAY;
 import static org.greenplum.pxf.api.io.DataType.DATE;
+import static org.greenplum.pxf.api.io.DataType.DATEARRAY;
 import static org.greenplum.pxf.api.io.DataType.FLOAT4ARRAY;
 import static org.greenplum.pxf.api.io.DataType.FLOAT8;
 import static org.greenplum.pxf.api.io.DataType.FLOAT8ARRAY;
@@ -40,11 +41,14 @@ import static org.greenplum.pxf.api.io.DataType.INT4ARRAY;
 import static org.greenplum.pxf.api.io.DataType.INT8ARRAY;
 import static org.greenplum.pxf.api.io.DataType.INTEGER;
 import static org.greenplum.pxf.api.io.DataType.NUMERIC;
+import static org.greenplum.pxf.api.io.DataType.NUMERICARRAY;
 import static org.greenplum.pxf.api.io.DataType.REAL;
 import static org.greenplum.pxf.api.io.DataType.SMALLINT;
 import static org.greenplum.pxf.api.io.DataType.TEXT;
 import static org.greenplum.pxf.api.io.DataType.TEXTARRAY;
 import static org.greenplum.pxf.api.io.DataType.TIMESTAMP;
+import static org.greenplum.pxf.api.io.DataType.TIMESTAMPARRAY;
+import static org.greenplum.pxf.api.io.DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY;
 import static org.greenplum.pxf.api.io.DataType.TIMESTAMP_WITH_TIME_ZONE;
 import static org.greenplum.pxf.api.io.DataType.UNSUPPORTED_TYPE;
 import static org.greenplum.pxf.api.io.DataType.VARCHAR;
@@ -456,6 +460,14 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                 return BPCHARARRAY;
             case BINARY:
                 return BYTEAARRAY;
+            case DATE:
+                return DATEARRAY;
+            case TIMESTAMP:
+                return TIMESTAMPARRAY;
+            case TIMESTAMP_INSTANT:
+                return TIMESTAMP_WITH_TIMEZONE_ARRAY;
+            case DECIMAL:
+                return NUMERICARRAY;
             case LIST:
                 return getArrayDataType(typeDescription.getChildren().get(0));
             default:
