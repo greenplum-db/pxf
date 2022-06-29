@@ -45,6 +45,7 @@ import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
 import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.SerializationService;
 import org.greenplum.pxf.api.utilities.SpringContext;
@@ -236,6 +237,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         Properties properties;
         try {
             HiveFragmentMetadata metadata = context.getFragmentMetadata();
+            if(metadata == null && context.getRequestType().equals(RequestContext.RequestType.WRITE_BRIDGE))
+                throw new UnsupportedOperationException();
             // clone properties from the fragment metadata as they are shared across fragments and
             // properties for the current fragment will be modified by Hive Resolvers and SerDe classes
             properties = (Properties) metadata.getProperties().clone();
@@ -243,6 +246,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                 String inputFormatClassName = properties.getProperty(FILE_INPUT_FORMAT);
                 this.inputFormat = hiveUtilities.makeInputFormat(inputFormatClassName, jobConf);
             }
+        } catch(UnsupportedOperationException e) {
+            throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize HiveAccessor", e);
         }

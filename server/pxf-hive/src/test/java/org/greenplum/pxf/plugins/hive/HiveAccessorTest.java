@@ -302,6 +302,15 @@ class HiveAccessorTest {
         assertEquals("Hive accessor does not support write operation.", e.getMessage());
     }
 
+    @Test
+    public void testWriteWithRequestContextAsWrite(){
+        accessor = new HiveAccessor(null, new HiveUtilities(), serializationService);
+        context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
+        accessor.setRequestContext(context);
+        Exception e = assertThrows(UnsupportedOperationException.class, () -> accessor.afterPropertiesSet());
+        assertEquals("Hive accessor does not support write operation.", e.getMessage());
+    }
+
     @SuppressWarnings("unchecked")
     private void prepareReaderMocks() throws Exception {
         when(mockHiveUtilities.makeInputFormat(any(), any())).thenReturn(mockInputFormat);
