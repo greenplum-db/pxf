@@ -174,14 +174,13 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = { "hive", "features", "gpdb", "security" })
     public void sanity() throws Exception {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE + "_orc",
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcSmallDataTable);
 
         runTincTest("pxf.features.hive.small_data_orc.runTest");
-        runTincTest("pxf.features.hcatalog.small_data.runTest");
     }
 
     /**
@@ -236,14 +235,13 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = { "hive", "features", "gpdb", "security" })
     public void storeAsOrc() throws Exception {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcTable);
 
         runTincTest("pxf.features.hive.small_data.runTest");
-        runTincTest("pxf.features.hcatalog.small_data_orc.runTest");
     }
 
     /**
@@ -252,12 +250,10 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = { "hive", "features", "gpdb", "security" })
     public void storeAsOrcAllTypesHive1AndHive2() throws Exception {
 
         runTincTest("pxf.features.hive.orc_primitive_types.runTest");
-        // TODO: hcatalog based access still uses the older Hive profile
-        runTincTest("pxf.features.hcatalog.hive_orc_all_types.runTest");
     }
 
     /**
@@ -266,7 +262,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "features", "gpdb", "security" })
     public void storeAsOrcAllTypesHive1Only() throws Exception {
 
         runTincTest("pxf.features.hive.orc_primitive_types_hive1_only.runTest");
@@ -288,7 +284,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = { "hive", "features", "gpdb", "security" })
     public void storeAsOrcSnappy() throws Exception {
 
         prepareOrcSnappyData();
@@ -296,7 +292,6 @@ public class HiveOrcTest extends HiveBaseTest {
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcSnappyTable);
 
         runTincTest("pxf.features.hive.orc_snappy.runTest");
-        runTincTest("pxf.features.hcatalog.hive_orc_snappy.runTest");
     }
 
     /**
@@ -304,7 +299,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = { "hive", "features", "gpdb", "security" })
     public void storeAsOrcZlib() throws Exception {
 
         prepareOrcZlibData();
@@ -312,7 +307,6 @@ public class HiveOrcTest extends HiveBaseTest {
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcZlibTable);
 
         runTincTest("pxf.features.hive.orc_zlib.runTest");
-        runTincTest("pxf.features.hcatalog.hive_orc_zlib.runTest");
     }
 
     /**
@@ -320,7 +314,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = { "hive", "features", "gpdb", "security" })
     public void storeAsOrcMultiFile() throws Exception {
 
         prepareOrcMultiFileData();
@@ -334,7 +328,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = { "hive", "features", "gpdb", "security" })
     public void storeAsOrcMultiFileGetVectorized() throws Exception {
 
         prepareOrcMultiFileData();
@@ -402,7 +396,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "hcatalog" })
+    @Test(groups = { "features"})
     public void aggregateQueries() throws Exception {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
@@ -418,7 +412,6 @@ public class HiveOrcTest extends HiveBaseTest {
         exTable.setUserParameters(new String[] { "TEST-FRAGMENTS-NUM=10" });
         createTable(exTable);
 
-        runTincTest("pxf.features.hcatalog.aggregate_queries.runTest");
         runTincTest("pxf.features.hive.aggregate_queries.runTest");
         runTincTest("pxf.features.hive.aggregate_queries_multiple_fragments_per_file.runTest");
     }

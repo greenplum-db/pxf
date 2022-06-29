@@ -75,7 +75,7 @@ public class HiveOrcAcidTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = { "hive", "features", "gpdb", "security" })
     public void sanity() throws Exception {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE + "_orc" + ACID_POSTPEND,

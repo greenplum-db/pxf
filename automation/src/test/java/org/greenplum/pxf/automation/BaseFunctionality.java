@@ -52,9 +52,7 @@ public abstract class BaseFunctionality extends BaseTestParent {
     @Override
     protected void runTincTest(String tincTest) throws Exception {
         try {
-            if (!tincTest.contains("hcatalog")) {
-                super.runTincTest(tincTest);
-            }  // else These features/test cases are not supported. Do Nothing.
+            super.runTincTest(tincTest);
         } catch (Exception e) {
             throw new Exception("Tinc Failure (" + e.getMessage() + ")");
         }

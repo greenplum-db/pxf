@@ -412,7 +412,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security"})
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void hiveTextTableCustomDelimiter() throws Exception {
 
         //hive text table with custom delimiter
@@ -424,7 +424,7 @@ public class HiveTextTest extends HiveBaseTest {
         hive.runQuery("INSERT INTO TABLE " + hiveTable.getName() +
                 " SELECT * FROM " + hiveSmallDataTable.getName());
 
-        runTincTest("pxf.features.hcatalog.hive_text_custom_delimiter.runTest");
+        // TODO: does this test anything anymore?
     }
 
     /**
@@ -432,10 +432,10 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security"})
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void hiveTextTableOptimizedProfile() throws Exception {
 
-        runTincTest("pxf.features.hcatalog.heterogeneous_table_three_text_partitions.runTest");
+        // TODO: does this test anything anymore?
     }
 
     /**
@@ -443,7 +443,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security"})
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void aggregateQueries() throws Exception {
 
         //hive text table with nulls
@@ -455,7 +455,6 @@ public class HiveTextTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveTable);
 
-        runTincTest("pxf.features.hcatalog.aggregate_queries.runTest");
         runTincTest("pxf.features.hive.aggregate_queries.runTest");
     }
 

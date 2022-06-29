@@ -1,5 +1,0 @@
--- @description query01 for HCatalog with empty hive table
-SELECT * from hcatalog.default.hive_small_data_no_data_file ORDER BY s1;
- s1 | s2 | n1 | d1 
-----+----+----+----
-(0 rows)

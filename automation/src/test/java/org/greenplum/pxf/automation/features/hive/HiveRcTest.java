@@ -554,7 +554,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security"})
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void aggregateQueries() throws Exception {
 
         prepareTypesData();
@@ -572,7 +572,6 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveTable, true);
 
-        runTincTest("pxf.features.hcatalog.aggregate_queries.runTest");
         runTincTest("pxf.features.hive.aggregate_queries.runTest");
     }
 }
