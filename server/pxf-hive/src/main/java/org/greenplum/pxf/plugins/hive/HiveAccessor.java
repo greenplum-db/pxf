@@ -214,6 +214,10 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
 
+        // HiveAccessor requires fragment metadata which is available for read operations but not write operations
+        if(context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE)
+            throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
+
         // determine if predicate pushdown is allowed by configuration
         isPredicatePushdownAllowed = configuration.get(PXF_PPD_HIVE, "true").equalsIgnoreCase("true");
         if (isPredicatePushdownAllowed) {
@@ -237,8 +241,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         Properties properties;
         try {
             HiveFragmentMetadata metadata = context.getFragmentMetadata();
-            if(metadata == null && context.getRequestType().equals(RequestContext.RequestType.WRITE_BRIDGE))
-                throw new UnsupportedOperationException();
             // clone properties from the fragment metadata as they are shared across fragments and
             // properties for the current fragment will be modified by Hive Resolvers and SerDe classes
             properties = (Properties) metadata.getProperties().clone();
@@ -246,8 +248,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                 String inputFormatClassName = properties.getProperty(FILE_INPUT_FORMAT);
                 this.inputFormat = hiveUtilities.makeInputFormat(inputFormatClassName, jobConf);
             }
-        } catch(UnsupportedOperationException e) {
-            throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize HiveAccessor", e);
         }
