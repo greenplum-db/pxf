@@ -161,8 +161,19 @@ class ORCVectorizedMappingFunctions {
                         pgArrayBuilder.addElement(((BytesColumnVector) columnVector.child).toString(childRow));
                     }
                     break;
+                case LONG:
+                    // DateColumnVector extends LongColumnVector but does not override the stringifyValue function to print the
+                    // date in human-readable format (i.e. yyyy-MM-dd) so do that here
+                    if (columnVector.child instanceof DateColumnVector) {
+                        // todo: null handling?
+                        pgArrayBuilder.addElement(Date.valueOf(LocalDate.ofEpochDay(((DateColumnVector) columnVector.child).vector[childRow])).toString());
+                    } else {
+                        pgArrayBuilder.addElement(buf -> columnVector.child.stringifyValue(buf, childRow));
+                    }
+                    break;
                 default:
                     pgArrayBuilder.addElement(buf -> columnVector.child.stringifyValue(buf, childRow));
+
             }
         }
         pgArrayBuilder.endArray();
