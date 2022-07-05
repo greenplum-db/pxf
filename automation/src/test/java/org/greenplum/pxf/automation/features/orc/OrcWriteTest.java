@@ -47,28 +47,28 @@ public class OrcWriteTest extends BaseFeature {
     };
 
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS_HIVE = {
-            "id     INT"      ,
-            "col00  BOOLEAN"      , // DataType.BOOLEAN
-            "col01  BINARY"        , // DataType.BYTEA
-            "col02  BIGINT"       , // DataType.BIGINT
-            "col03  SMALLINT"     , // DataType.SMALLINT
-            "col04  INT"      , // DataType.INTEGER
-            "col05  STRING"         , // DataType.TEXT
-            "col06  DOUBLE"         , // DataType.REAL
-            "col07  FLOAT"        , // DataType.FLOAT8
-            "col08  CHAR(4)"      , // DataType.BPCHAR
-            "col09  VARCHAR(7)"   , // DataType.VARCHAR
-            "col10  DATE"         , // DataType.DATE
-            "col11  STRING"         , // DataType.TIME (ORC stores TIME as string type (see OrcSchemaBuilder.java:70)
-            "col12  TIMESTAMP"    , // DataType.TIMESTAMP
-            "col13  DECIMAL(38,18)"      , // DataType.NUMERIC
-            "col14  STRING"           // DataType.UUID
+            "id     INT"              ,
+            "col00  BOOLEAN"          , // DataType.BOOLEAN
+            "col01  BINARY"           , // DataType.BYTEA
+            "col02  BIGINT"           , // DataType.BIGINT
+            "col03  SMALLINT"         , // DataType.SMALLINT
+            "col04  INT"              , // DataType.INTEGER
+            "col05  STRING"           , // DataType.TEXT
+            "col06  DOUBLE"           , // DataType.REAL
+            "col07  FLOAT"            , // DataType.FLOAT8
+            "col08  CHAR(4)"          , // DataType.BPCHAR
+            "col09  VARCHAR(7)"       , // DataType.VARCHAR
+            "col10  DATE"             , // DataType.DATE
+            "col11  STRING"           , // DataType.TIME (ORC stores TIME as string type (see OrcSchemaBuilder.java:70)
+            "col12  TIMESTAMP"        , // DataType.TIMESTAMP
+            "col13  DECIMAL(38,18)"   , // DataType.NUMERIC
+            "col14  STRING"             // DataType.UUID
     };
 
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS_READ_FROM_HIVE = {
             "id     integer"      ,
             "col00  boolean"      , // DataType.BOOLEAN
-            "col01  text"        , // DataType.BYTEA
+            "col01  text"         , // DataType.BYTEA
             "col02  bigint"       , // DataType.BIGINT
             "col03  smallint"     , // DataType.SMALLINT
             "col04  integer"      , // DataType.INTEGER
