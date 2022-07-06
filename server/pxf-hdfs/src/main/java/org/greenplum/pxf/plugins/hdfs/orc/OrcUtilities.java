@@ -87,7 +87,7 @@ public final class OrcUtilities {
             case DOUBLE:
                 return Double.parseDouble(val);
             case BINARY:
-                return pgUtilities.parseByteaLiteral(val).array();
+                return pgUtilities.parseByteaLiteral(val);
             case STRING:
             case CHAR:
             case VARCHAR:

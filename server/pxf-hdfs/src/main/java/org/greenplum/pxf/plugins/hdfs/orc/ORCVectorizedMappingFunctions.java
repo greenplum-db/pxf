@@ -456,8 +456,14 @@ class ORCVectorizedMappingFunctions {
             ((TimestampColumnVector) columnVector).set(row, Timestamp.from(getTimeStampAsInstant(val, TIMEZONE_UTC)));
         });
         writeFunctionsMap.put(TypeDescription.Category.BINARY, (columnVector, row, val) -> {
+            ByteBuffer buf;
+            if (val instanceof byte[]) {
+                buf = ByteBuffer.wrap((byte[]) val);
+            } else {
+                buf = (ByteBuffer) val;
+            }
             // do not copy the contents of the byte array, just set as a reference
-            ((BytesColumnVector) columnVector).setRef(row, (byte[]) val, 0, ((byte[]) val).length);
+            ((BytesColumnVector) columnVector).setRef(row, buf.array(), 0, buf.limit());
         });
         writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val) -> {
             // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
