@@ -379,12 +379,12 @@ public class OrcWriteTest extends BaseFeature {
     private void insertArrayDataWithoutNulls(String exTable, int numRows, int nullModulo) throws Exception {
         StringBuilder statementBuilder = new StringBuilder("INSERT INTO " + exTable + "_writable VALUES ");
         for (int i = 0; i < numRows; i++) {
-            statementBuilder.append("("
+            statementBuilder.append("(")
                     .append(i).append(",")    // always not-null row index, column index starts with 0 after it
                     .append((i % nullModulo == 0) ? "NULL" : String.format("'{\"%b\"}'", i % 2 != 0)).append(",")                                                  // DataType.BOOLEAN
                     .append((i % nullModulo == 1) ? "NULL" : String.format("'{\\\\x%02d%02d}'::bytea[]", i%100, (i + 1) % 100)).append(",")   // DataType.BYTEA
                     .append((i % nullModulo == 2) ? "NULL" : String.format("'{%d}'", 123456789000000000L + i)).append(",")                                     // DataType.BIGINT
-                    .cappend((i % nullModulo == 4) ? "NULL" : String.format("'{%d}'", 100L + i)).append(",")                                                    // DataType.INTEGER
+                    .append((i % nullModulo == 4) ? "NULL" : String.format("'{%d}'", 100L + i)).append(",")                                                    // DataType.INTEGER
                     .append((i % nullModulo == 5) ? "NULL" : String.format("'{\"row-%02d\"}'", i)).append(",")                              // DataType.TEXT
                     .append((i % nullModulo == 6) ? "NULL" : String.format("'{%f}'", Float.valueOf(i + 0.00001f * i).doubleValue())).append(",")          // DataType.REAL
                     .append((i % nullModulo == 7) ? "NULL" : String.format("'{%f}'", i + Math.PI)).append(",")                                                 // DataType.FLOAT8

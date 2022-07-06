@@ -524,22 +524,23 @@ class ORCVectorizedMappingFunctions {
      */
     private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TriConsumer<ColumnVector, Integer, Object> childWriteFunction, TypeDescription orcType) {
         return (columnVector, row, val) -> {
+            ListColumnVector listColumnVector = (ListColumnVector) columnVector;
 
             List<Object> data = orcUtilities.parsePostgresArray((String) val, orcType);
             int offset = 0;
             if (row != 0) {
-                offset = (int) (((ListColumnVector) columnVector).offsets[row-1] + ((ListColumnVector) columnVector).lengths[row-1]);
+                offset = (int) (listColumnVector.offsets[row-1] + listColumnVector.lengths[row-1]);
             }
             int length = data.size();
 
             // set the offset and length for this row
-            ((ListColumnVector) columnVector).offsets[row] = offset;
-            ((ListColumnVector) columnVector).lengths[row] = length;
+            listColumnVector.offsets[row] = offset;
+            listColumnVector.lengths[row] = length;
 
             // add the data to the child columnvector
             for (int i = 0; i < length; i++) {
                 Object rowElem = data.get(i);
-                childWriteFunction.accept(((ListColumnVector) columnVector).child, offset + i, rowElem);
+                childWriteFunction.accept(listColumnVector.child, offset + i, rowElem);
             }
         };
     }
