@@ -539,6 +539,7 @@ class ORCVectorizedMappingFunctions {
      * A special function that writes lists to ORC file
      * @return a function setting the list column vector
      */
+    // todo: create list map similar to primitives write map
     private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TriConsumer<ColumnVector, Integer, Object> childWriteFunction, TypeDescription orcType) {
         return (columnVector, row, val) -> {
             ListColumnVector listColumnVector = (ListColumnVector) columnVector;
