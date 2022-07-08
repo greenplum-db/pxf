@@ -72,6 +72,7 @@ class ORCVectorizedMappingFunctions {
     private static final OrcUtilities orcUtilities = new OrcUtilities(pgUtilities);
 
     private static final Map<TypeDescription.Category, TriConsumer<ColumnVector, Integer, Object>> writeFunctionsMap;
+    private static final Map<TypeDescription.Category, TriConsumer<ColumnVector, Integer, Object>> writeListFunctionsMap;
     private static final TriConsumer<ColumnVector, Integer, Object> timestampInLocalWriteFunction;
     private static final ZoneId TIMEZONE_UTC = ZoneId.of("UTC");
     private static final ZoneId TIMEZONE_LOCAL = TimeZone.getDefault().toZoneId();
@@ -80,6 +81,8 @@ class ORCVectorizedMappingFunctions {
         writeFunctionsMap = new EnumMap<>(TypeDescription.Category.class);
         initWriteFunctionsMap();
         timestampInLocalWriteFunction = getTimestampInLocalWriteFunction();
+        writeListFunctionsMap = new EnumMap<>(TypeDescription.Category.class);
+        initWriteArrayFunctionsMap();
     }
 
     public static OneField[] booleanReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
@@ -417,7 +420,7 @@ class ORCVectorizedMappingFunctions {
             // pass along the underlying category of the list
             TypeDescription childTypeDescription = typeDescription.getChildren().get(0);
             TriConsumer<ColumnVector, Integer, Object> childWriteFunction = writeFunctionsMap.get(childTypeDescription.getCategory());
-            writeFunction = getListWriteFunction(childWriteFunction, typeDescription);
+            writeFunction = writeListFunctionsMap.get(childTypeDescription.getCategory());
         }
         else {
             writeFunction = writeFunctionsMap.get(columnTypeCategory);
@@ -503,6 +506,40 @@ class ORCVectorizedMappingFunctions {
         });
     }
 
+    private static void initWriteArrayFunctionsMap() {
+        // the functions assume values are not nulls and do not do any null checking
+        // the array write functions rely on the primitive write functions so they must be initialized first
+        // it is assumed that all arrays are one dimensional
+        writeListFunctionsMap.put(TypeDescription.Category.BOOLEAN,
+                getListWriteFunction(TypeDescription.Category.BOOLEAN));
+        writeListFunctionsMap.put(TypeDescription.Category.SHORT,
+                getListWriteFunction(TypeDescription.Category.SHORT));
+        writeListFunctionsMap.put(TypeDescription.Category.INT,
+                getListWriteFunction(TypeDescription.Category.INT));
+        writeListFunctionsMap.put(TypeDescription.Category.LONG,
+                getListWriteFunction(TypeDescription.Category.LONG));
+        writeListFunctionsMap.put(TypeDescription.Category.FLOAT,
+                getListWriteFunction(TypeDescription.Category.FLOAT));
+        writeListFunctionsMap.put(TypeDescription.Category.DOUBLE,
+                getListWriteFunction(TypeDescription.Category.DOUBLE));
+        writeListFunctionsMap.put(TypeDescription.Category.BINARY,
+                getListWriteFunction(TypeDescription.Category.BINARY));
+        writeListFunctionsMap.put(TypeDescription.Category.STRING,
+                getListWriteFunction(TypeDescription.Category.STRING));
+        writeListFunctionsMap.put(TypeDescription.Category.CHAR,
+                getListWriteFunction(TypeDescription.Category.CHAR));
+        writeListFunctionsMap.put(TypeDescription.Category.VARCHAR,
+                getListWriteFunction(TypeDescription.Category.VARCHAR));
+        writeListFunctionsMap.put(TypeDescription.Category.DATE,
+                getListWriteFunction(TypeDescription.Category.DATE));
+        writeListFunctionsMap.put(TypeDescription.Category.TIMESTAMP,
+                getListWriteFunction(TypeDescription.Category.TIMESTAMP));
+        writeListFunctionsMap.put(TypeDescription.Category.TIMESTAMP_INSTANT,
+                getListWriteFunction(TypeDescription.Category.TIMESTAMP_INSTANT));
+        writeListFunctionsMap.put(TypeDescription.Category.DECIMAL,
+                getListWriteFunction(TypeDescription.Category.DECIMAL));
+    }
+
     /**
      * Converts Timestamp objects to the String representation given the formatter
      *
@@ -538,11 +575,14 @@ class ORCVectorizedMappingFunctions {
      * @return a function setting the list column vector
      */
     // todo: create list map similar to primitives write map. however this function takes in the orctype not the child type. this may be problematic?
-    private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TriConsumer<ColumnVector, Integer, Object> childWriteFunction, TypeDescription orcType) {
+    // PXF currently only has the capability to infer an ORC schema from the GPDB schema, so all arrays will be one-dimensional.
+    private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TypeDescription.Category underlyingChildType) {
+        final TriConsumer<ColumnVector, Integer, Object> childWriteFunction = writeFunctionsMap.get(underlyingChildType);
+
         return (columnVector, row, val) -> {
             ListColumnVector listColumnVector = (ListColumnVector) columnVector;
 
-            List<Object> data = orcUtilities.parsePostgresArray((String) val, orcType);
+            List<Object> data = orcUtilities.parsePostgresArray((String) val, underlyingChildType);
             int offset = 0;
             if (row != 0) {
                 offset = (int) (listColumnVector.offsets[row-1] + listColumnVector.lengths[row-1]);

@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,20 +31,15 @@ public final class OrcUtilities {
      * Re-used from GPHDFS
      * https://github.com/greenplum-db/gpdb/blob/3b0bfdc169fab7f686276be7eccb024a5e29543c/gpAux/extensions/gphdfs/src/java/1.2/com/emc/greenplum/gpdb/hadoop/formathandler/util/FormatHandlerUtil.java
      * @param val Postgres external format (the output of function named by typoutput in pg_type) or `null` if null value
-     * @param type ORC list type
+     * @param underlyingChildCategory Underlying type for ORC list. This functions assumes the ORC list is one-dimensional
      * @return
      */
 
-    public List<Object> parsePostgresArray (String val, TypeDescription type) {
-        LOG.debug("type={}, value={}, isTopLevel={}", type, val);
-        TypeDescription underlyingType = type.getChildren().get(0);
+    public List<Object> parsePostgresArray (String val, TypeDescription.Category underlyingChildCategory) {
+        LOG.debug("child type={}, value={}, isTopLevel={}", underlyingChildCategory, val);
 
         if (val == null) {
             return null;
-        }
-
-        if (type.getCategory() != TypeDescription.Category.LIST) {
-            throw new PxfRuntimeException(String.format("Value %s was not of expected type %s", val, type.getCategory()));
         }
 
         List<Object> data = new ArrayList<>();
@@ -54,7 +48,7 @@ public final class OrcUtilities {
             String[] splits = pgUtilities.splitArray(val);
             for (String split : splits) {
                 try {
-                    data.add(decodeString(split, underlyingType.getCategory()));
+                    data.add(decodeString(split, underlyingChildCategory));
                 } catch (NumberFormatException | PxfRuntimeException e) {
                     String hint = "";
                     if (StringUtils.startsWith(split, "{")) {
@@ -62,7 +56,7 @@ public final class OrcUtilities {
                     } else {
                         hint = "Unexpected state since PXF generated the ORC schema.";
                     }
-                    throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, underlyingType.getCategory()), hint, e);
+                    throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, underlyingChildCategory), hint, e);
                 }
             }
         }
