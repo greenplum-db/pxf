@@ -215,7 +215,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         super.afterPropertiesSet();
 
         // HiveAccessor requires fragment metadata which is available for read operations but not write operations
-        if(context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE)
+        if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE)
             throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
 
         // determine if predicate pushdown is allowed by configuration
