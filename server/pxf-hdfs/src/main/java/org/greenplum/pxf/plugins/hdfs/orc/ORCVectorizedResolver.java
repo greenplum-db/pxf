@@ -284,7 +284,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     private void ensureReadFunctionsAreInitialized() {
         if (readFunctions != null) return;
         if (!(context.getMetadata() instanceof TypeDescription))
-            throw new PxfRuntimeException("No schema detected in request context");
+            throw new PxfRuntimeException("No ORC schema detected in request context");
 
         orcSchema = (TypeDescription) context.getMetadata();
         int schemaSize = orcSchema.getChildren().size();
@@ -382,7 +382,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
             return;
         }
         if (context.getMetadata() == null || !(context.getMetadata() instanceof OrcFile.WriterOptions)) {
-            throw new PxfRuntimeException("No schema detected in request context");
+            throw new PxfRuntimeException("No ORC schema detected in request context");
         }
 
         OrcFile.WriterOptions writerOptions = (OrcFile.WriterOptions) context.getMetadata();
@@ -391,9 +391,11 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         int schemaSize = columnTypeDescriptions.size();
         writeFunctions = new TriConsumer[schemaSize];
 
-        for (int i=0; i < schemaSize; i++) {
-            writeFunctions[i] = ORCVectorizedMappingFunctions.getColumnWriter(
-                    columnTypeDescriptions.get(i), writerOptions.getUseUTCTimestamp());
+        int columnIndex = 0;
+        for (TypeDescription columnTypeDescription : columnTypeDescriptions) {
+            writeFunctions[columnIndex] = ORCVectorizedMappingFunctions.getColumnWriter(
+                    columnTypeDescription, writerOptions.getUseUTCTimestamp());
+            columnIndex++;
         }
     }
 

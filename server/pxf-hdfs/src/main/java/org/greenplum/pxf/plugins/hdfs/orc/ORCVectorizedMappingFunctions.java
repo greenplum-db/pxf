@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
@@ -360,25 +361,14 @@ class ORCVectorizedMappingFunctions {
     }
 
     public static OneField[] timestampReader(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
-        TimestampColumnVector tcv = (TimestampColumnVector) columnVector;
-        if (tcv == null)
-            return getNullResultSet(oid, batch.size);
-
-        OneField[] result = new OneField[batch.size];
-        int m = tcv.isRepeating ? 0 : 1;
-        int rowId;
-        String value;
-        for (int rowIndex = 0; rowIndex < batch.size; rowIndex++) {
-            rowId = m * rowIndex;
-            value = (tcv.noNulls || !tcv.isNull[rowId])
-                    ? timestampToString(tcv.asScratchTimestamp(rowId))
-                    : null;
-            result[rowIndex] = new OneField(oid, value);
-        }
-        return result;
+        return timestampReaderHelper(batch, columnVector, oid, GreenplumDateTime.DATETIME_FORMATTER);
     }
 
     public static OneField[] timestampWithTimezoneReader(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid) {
+        return timestampReaderHelper(batch, columnVector, oid, GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
+    }
+
+    private static OneField[] timestampReaderHelper(VectorizedRowBatch batch, ColumnVector columnVector, Integer oid, DateTimeFormatter formatter) {
         TimestampColumnVector tcv = (TimestampColumnVector) columnVector;
         if (tcv == null)
             return getNullResultSet(oid, batch.size);
@@ -390,7 +380,7 @@ class ORCVectorizedMappingFunctions {
         for (int rowIndex = 0; rowIndex < batch.size; rowIndex++) {
             rowId = m * rowIndex;
             value = (tcv.noNulls || !tcv.isNull[rowId])
-                    ? timestampWithTimezoneToString(tcv.asScratchTimestamp(rowId))
+                    ? timestampToString(tcv.asScratchTimestamp(rowId), formatter)
                     : null;
             result[rowIndex] = new OneField(oid, value);
         }
@@ -436,18 +426,12 @@ class ORCVectorizedMappingFunctions {
         writeFunctionsMap.put(TypeDescription.Category.SHORT, (columnVector, row, val) -> {
             ((LongColumnVector) columnVector).vector[row] = ((Number) val).longValue();
         });
-        writeFunctionsMap.put(TypeDescription.Category.INT, (columnVector, row, val) -> {
-            ((LongColumnVector) columnVector).vector[row] = ((Number) val).longValue();
-        });
-        writeFunctionsMap.put(TypeDescription.Category.LONG, (columnVector, row, val) -> {
-            ((LongColumnVector) columnVector).vector[row] = ((Number) val).longValue();
-        });
+        writeFunctionsMap.put(TypeDescription.Category.INT, writeFunctionsMap.get(TypeDescription.Category.SHORT));
+        writeFunctionsMap.put(TypeDescription.Category.LONG, writeFunctionsMap.get(TypeDescription.Category.SHORT));
         writeFunctionsMap.put(TypeDescription.Category.FLOAT, (columnVector, row, val) -> {
             ((DoubleColumnVector) columnVector).vector[row] = ((Number) val).doubleValue();
         });
-        writeFunctionsMap.put(TypeDescription.Category.DOUBLE, (columnVector, row, val) -> {
-            ((DoubleColumnVector) columnVector).vector[row] = ((Number) val).doubleValue();
-        });
+        writeFunctionsMap.put(TypeDescription.Category.DOUBLE, writeFunctionsMap.get(TypeDescription.Category.FLOAT));
         writeFunctionsMap.put(TypeDescription.Category.STRING, (columnVector, row, val) -> {
             byte[] buffer = val.toString().getBytes(StandardCharsets.UTF_8);
             ((BytesColumnVector) columnVector).setRef(row, buffer, 0, buffer.length);
@@ -497,32 +481,17 @@ class ORCVectorizedMappingFunctions {
     }
 
     /**
-     * Converts Timestamp objects to the String representation given the
-     * Greenplum DATETIME_FORMATTER
+     * Converts Timestamp objects to the String representation given the formatter
      *
      * @param timestamp the timestamp object
+     * @param formatter the formatter to use
      * @return the string representation of the timestamp
      */
-    private static String timestampToString(Timestamp timestamp) {
+    private static String timestampToString(Timestamp timestamp, DateTimeFormatter formatter) {
         Instant instant = timestamp.toInstant();
         String timestampString = instant
                 .atZone(ZoneId.systemDefault())
-                .format(GreenplumDateTime.DATETIME_FORMATTER);
-        LOG.debug("Converted timestamp: {} to date: {}", timestamp, timestampString);
-        return timestampString;
-    }
-
-    /**
-     * Converts Timestamp objects to the String representation given the
-     * Greenplum DATETIME_WITH_TIMEZONE_FORMATTER
-     *
-     * @param timestamp the timestamp object
-     * @return the string representation of the timestamp
-     */
-    private static String timestampWithTimezoneToString(Timestamp timestamp) {
-        String timestampString = timestamp.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .format(GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
+                .format(formatter);
         LOG.debug("Converted timestamp: {} to date: {}", timestamp, timestampString);
         return timestampString;
     }

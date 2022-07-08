@@ -91,7 +91,7 @@ public class OrcWriteTest extends BaseFeature {
 
     private ArrayList<File> filesToDelete;
     private String publicStage;
-    private String gpdbTable;
+    private String gpdbTableNamePrefix;
     private String hdfsPath;
     private String resourcePath;
     private String fullTestPath;
@@ -131,19 +131,19 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitives() throws Exception {
-        gpdbTable = "orc_primitive_types";
+        gpdbTableNamePrefix = "orc_primitive_types";
         fullTestPath = hdfsPath + "orc_primitive_types";
 
-        prepareWritableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
-        prepareReadableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
 
-        insertDataWithoutNulls(gpdbTable, 33); // > 30 to let the DATE field to repeat the value
+        insertDataWithoutNulls(gpdbTableNamePrefix, 33); // > 30 to let the DATE field to repeat the value
 
         // use PXF *:orc profile to read the data
         runTincTest("pxf.features.orc.write.primitive_types.runTest");
 
         // load the data into hive to check that PXF-written ORC files can be read by other data
-        hiveTable = new HiveExternalTable(gpdbTable + "_hive", ORC_PRIMITIVE_TABLE_COLUMNS_HIVE, "hdfs:/" + fullTestPath);
+        hiveTable = new HiveExternalTable(gpdbTableNamePrefix + "_hive", ORC_PRIMITIVE_TABLE_COLUMNS_HIVE, "hdfs:/" + fullTestPath);
         hiveTable.setStoredAs("ORC");
         hive.createTableAndVerify(hiveTable);
 
@@ -172,12 +172,12 @@ public class OrcWriteTest extends BaseFeature {
 
         // use the Hive JDBC profile to avoid using the PXF ORC reader implementation
         String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
-        ExternalTable exHiveOrcTable = TableFactory.getPxfJdbcReadableTable(
-                gpdbTable + "_with_hive_readable", ORC_PRIMITIVE_TABLE_COLUMNS_READ_FROM_HIVE, hiveTable.getName() + "_ctas", HIVE_JDBC_DRIVER_CLASS, jdbcUrl, null);
+        ExternalTable exHiveJdbcTable = TableFactory.getPxfJdbcReadableTable(
+                gpdbTableNamePrefix + "_with_hive_readable", ORC_PRIMITIVE_TABLE_COLUMNS_READ_FROM_HIVE, hiveTable.getName() + "_ctas", HIVE_JDBC_DRIVER_CLASS, jdbcUrl, null);
 
-        exHiveOrcTable.setHost(pxfHost);
-        exHiveOrcTable.setPort(pxfPort);
-        gpdb.createTableAndVerify(exHiveOrcTable);
+        exHiveJdbcTable.setHost(pxfHost);
+        exHiveJdbcTable.setPort(pxfPort);
+        gpdb.createTableAndVerify(exHiveJdbcTable);
 
         // use PXF hive:jdbc profile to read the data
         runTincTest("pxf.features.orc.write.primitive_types_with_hive.runTest");
@@ -186,39 +186,39 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitivesWithNulls() throws Exception {
-        gpdbTable = "orc_primitive_types_nulls";
+        gpdbTableNamePrefix = "orc_primitive_types_nulls";
         fullTestPath = hdfsPath + "orc_primitive_types_nulls";
-        prepareWritableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
 
-        prepareReadableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
+        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
 
-        insertDataWithNulls(gpdbTable, 33);
+        insertDataWithNulls(gpdbTableNamePrefix, 33);
 
         runTincTest("pxf.features.orc.write.primitive_types_nulls.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitivesLargeDataset() throws Exception {
-        gpdbTable = "orc_primitive_types_large";
+        gpdbTableNamePrefix = "orc_primitive_types_large";
         fullTestPath = hdfsPath + "orc_primitive_types_large";
-        prepareWritableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
-        prepareReadableExternalTable(gpdbTable, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
 
         // write 3 batches and 1 row of data (1024*3+1=3073) to make sure batch is properly reset when reused
-        insertDataWithoutNulls(gpdbTable, 3073);
+        insertDataWithoutNulls(gpdbTableNamePrefix, 3073);
 
         runTincTest("pxf.features.orc.write.primitive_types_large.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWriteTimestampWithTimezone() throws Exception {
-        gpdbTable = "orc_timestamp_with_timezone";
-        fullTestPath = hdfsPath + gpdbTable;
+        gpdbTableNamePrefix = "orc_timestamp_with_timezone";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
 
-        prepareWritableExternalTable(gpdbTable, ORC_TIMESTAMP_TABLE_COLUMNS, fullTestPath);
-        prepareReadableExternalTable(gpdbTable, ORC_TIMESTAMP_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_TIMESTAMP_TABLE_COLUMNS, fullTestPath);
+        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_TIMESTAMP_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
 
-        insertDataWithTimestamps(gpdbTable, 15, 7);
+        insertDataWithTimestamps(gpdbTableNamePrefix, 15, 7);
 
         runTincTest("pxf.features.orc.write.timestamp_with_timezone_types.runTest");
     }

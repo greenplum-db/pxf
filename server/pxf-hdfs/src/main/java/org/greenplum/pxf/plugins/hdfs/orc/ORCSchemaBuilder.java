@@ -133,9 +133,12 @@ public class ORCSchemaBuilder {
                 int scale = (columnTypeModifiers.length > 1 && columnTypeModifiers[1] != null) ? columnTypeModifiers[1] : 0;
                 typeDescription = typeDescription.withScale(scale); // should be less than 38, default / max ORC precision
                 typeDescription = typeDescription.withPrecision(precision);
+            } else if (columnTypeModifiers.length > 1 && columnTypeModifiers[1] != null) {
+                // invalid input where precision is not defined but scale is
+                throw new PxfRuntimeException(
+                        String.format("Invalid modifiers: scale defined as %d while precision is not set.", columnTypeModifiers[1]));
             }
-            // if precision was not sent, ORC defaults will be assumed
-            // TODO: check at runtime that actual value fits into (38,10) if precision was not sent
+            // if precision was not sent, ORC defaults of (38, 10) will be assumed
         }
         return typeDescription;
     }

@@ -96,7 +96,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
 
         fillEmptyRecords(1);
         Exception e = assertThrows(RuntimeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals("No schema detected in request context", e.getMessage());
+        assertEquals("No ORC schema detected in request context", e.getMessage());
     }
 
     @Test

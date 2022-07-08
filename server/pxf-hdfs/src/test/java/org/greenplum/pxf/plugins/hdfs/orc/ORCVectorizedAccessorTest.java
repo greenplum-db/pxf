@@ -206,10 +206,12 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
         // verify we do not reset the batch in accessor, it should be done in resolver, where it is created
         verify(mockBatch, never()).reset();
     }
+
     @Test
     public void testCloseForWrite() throws IOException {
         accessor.getWriterState().setFileWriter(null);
         accessor.closeForWrite();
+        // no specific assertions -- closeForWrite is a noop when writer is null
 
         Writer mockWriter = mock(Writer.class);
         accessor.getWriterState().setFileWriter(mockWriter);
@@ -246,6 +248,7 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
         assertEquals(writeSchema, writerState.getFileWriter().getSchema());
         assertSame(writerState.getWriterOptions(), context.getMetadata());
     }
+
     private void runErrorScenario_OpenForWrite(String exceptionMessage) throws IOException {
         File tempDirBase = FileUtils.getTempDirectory();
         File writeDir = new File(tempDirBase, "pxf_orc_write");
