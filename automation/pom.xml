@@ -232,27 +232,6 @@
         </dependency>
 
         <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>2.7.1</version>
-        </dependency>
-
-        <!--
-        Based on this StackOverflow answer: https://stackoverflow.com/a/42994052
-        The xalan dependency (above) pulls in an outdated version of xml-apis that causes
-
-        java.lang.NoClassDefFoundError: org/w3c/dom/ElementTraversal
-
-        when running on JDK8. By directly depending on a slightly newer version, we
-        can run on either JDK8 or JDK11.
-        -->
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>1.4.01</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.14.2</version>
