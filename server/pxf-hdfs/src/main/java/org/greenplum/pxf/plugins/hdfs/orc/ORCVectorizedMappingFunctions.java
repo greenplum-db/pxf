@@ -467,14 +467,12 @@ class ORCVectorizedMappingFunctions {
             ((TimestampColumnVector) columnVector).set(row, Timestamp.from(getTimeStampAsInstant(val, TIMEZONE_UTC)));
         });
         writeFunctionsMap.put(TypeDescription.Category.BINARY, (columnVector, row, val) -> {
-            ByteBuffer buf;
-            if (val instanceof byte[]) {
-                buf = ByteBuffer.wrap((byte[]) val);
-            } else {
-                buf = (ByteBuffer) val;
-            }
             // do not copy the contents of the byte array, just set as a reference
-            ((BytesColumnVector) columnVector).setRef(row, buf.array(), 0, buf.limit());
+            if (val instanceof byte[]) {
+                ((BytesColumnVector) columnVector).setRef(row, (byte[]) val, 0, ((byte[]) val).length);
+            } else {
+                ((BytesColumnVector) columnVector).setRef(row, ((ByteBuffer) val).array(), 0, ((ByteBuffer) val).limit());
+            }
         });
         writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val) -> {
             // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
@@ -539,7 +537,7 @@ class ORCVectorizedMappingFunctions {
      * A special function that writes lists to ORC file
      * @return a function setting the list column vector
      */
-    // todo: create list map similar to primitives write map
+    // todo: create list map similar to primitives write map. however this function takes in the orctype not the child type. this may be problematic?
     private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TriConsumer<ColumnVector, Integer, Object> childWriteFunction, TypeDescription orcType) {
         return (columnVector, row, val) -> {
             ListColumnVector listColumnVector = (ListColumnVector) columnVector;

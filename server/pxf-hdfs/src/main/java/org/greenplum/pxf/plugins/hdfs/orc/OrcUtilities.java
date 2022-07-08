@@ -49,6 +49,7 @@ public final class OrcUtilities {
         }
 
         List<Object> data = new ArrayList<>();
+        // todo: this if case is a temp bandaid. for some reason, splitArray gives an error for empty array. avro doesn't seem to have this issue.
         if (!val.equalsIgnoreCase("{}")) {
             String[] splits = pgUtilities.splitArray(val);
             for (String split : splits) {
@@ -74,10 +75,9 @@ public final class OrcUtilities {
         }
 
         switch (valType) {
+            // ignore BYTE case -- for now ORCSchemaBuilder does not support this type, so we do not expect it
             case BOOLEAN:
                 return pgUtilities.parseBoolLiteral(val);
-            case BYTE:
-                return val.getBytes(Charset.defaultCharset());
             case SHORT:
             case INT:
             case LONG:
