@@ -50,110 +50,108 @@ public class ORCSchemaBuilderTest {
             .add("col30:array<timestamp>")
             .add("col31:array<timestamp with local time zone>").toString();
 
-    private ORCSchemaBuilder builder;
     private List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
 
     @BeforeEach
     public void setup() {
-        builder = new ORCSchemaBuilder();
         columnDescriptors.clear();
     }
 
     @Test
     public void testNoColumnDescriptors() {
-        assertNull(builder.buildSchema(null));
+        assertNull(ORCSchemaBuilder.buildSchema(null));
     }
 
     @Test
     public void testEmptyColumnDescriptors() {
-        assertEquals("struct<>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
     }
 
     @Test
     public void testUnsupportedType() {
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.UNSUPPORTED_TYPE.getOID(), 0, "", null));
-        Exception e = assertThrows(PxfRuntimeException.class, () -> builder.buildSchema(columnDescriptors));
+        Exception e = assertThrows(PxfRuntimeException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
         assertEquals("Unsupported Greenplum type -1 for column col0", e.getMessage());
     }
 
     @Test
     public void testAllSupportedTypes() {
         columnDescriptors = buildAllTypes();
-        assertEquals(ALL_TYPES_SCHEMA, builder.buildSchema(columnDescriptors).toString());
+        assertEquals(ALL_TYPES_SCHEMA, ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
     }
 
     @Test
     public void testBpcharMaxLength() {
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.BPCHAR.getOID(), 0, "", new Integer[]{}));
-        assertEquals("struct<col0:char(256)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:char(256)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.BPCHAR.getOID(), 0, "", new Integer[]{3}));
-        assertEquals("struct<col0:char(3)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:char(3)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.BPCHAR.getOID(), 0, "", new Integer[]{300}));
-        assertEquals("struct<col0:char(300)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:char(300)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
     }
 
     @Test
     public void testVarcharMaxLength() {
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.VARCHAR.getOID(), 0, "", new Integer[]{}));
-        assertEquals("struct<col0:varchar(256)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:varchar(256)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.VARCHAR.getOID(), 0, "", new Integer[]{3}));
-        assertEquals("struct<col0:varchar(3)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:varchar(3)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.VARCHAR.getOID(), 0, "", new Integer[]{300}));
-        assertEquals("struct<col0:varchar(300)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:varchar(300)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
     }
 
     @Test
     public void testNumericPrecisionAndScale() {
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{}));
-        assertEquals("struct<col0:decimal(38,10)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:decimal(38,10)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{20,5}));
-        assertEquals("struct<col0:decimal(20,5)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:decimal(20,5)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision and scale are both explicit nulls, same as missing, defaults are assumed
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{null,null}));
-        assertEquals("struct<col0:decimal(38,10)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:decimal(38,10)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision is null, scale is not null, error is reported
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{null,5}));
-        Exception e = assertThrows(PxfRuntimeException.class, () -> builder.buildSchema(columnDescriptors));
+        Exception e = assertThrows(PxfRuntimeException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
         assertEquals("Invalid modifiers: scale defined as 5 while precision is not set.", e.getMessage());
 
         // scale is missing, defaulted to 0
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{20}));
-        assertEquals("struct<col0:decimal(20,0)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:decimal(20,0)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // scale is null, defaulted to 0
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{20}));
-        assertEquals("struct<col0:decimal(20,0)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:decimal(20,0)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision is smaller than ORC default scale of 10, scale missing
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{8}));
-        assertEquals("struct<col0:decimal(8,0)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:decimal(8,0)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision is smaller than ORC default scale of 10, scale is provided
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{8,2}));
-        assertEquals("struct<col0:decimal(8,2)>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:decimal(8,2)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision is larger than ORC max of 38
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{55}));
-        e = assertThrows(IllegalArgumentException.class, () -> builder.buildSchema(columnDescriptors));
+        e = assertThrows(IllegalArgumentException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
         assertEquals("precision 55 is out of range 1 .. 0", e.getMessage());
         // that was rather unfortunate error message from ORC library, since ORC errors out with the same error message
         // for this complex check (precision > MAX_PRECISION || scale > precision), but we'll leave it as such and
@@ -167,7 +165,7 @@ public class ORCSchemaBuilderTest {
         columnDescriptors.add(new ColumnDescriptor("simple", DataType.TEXT.getOID(), 0, "", null));
         columnDescriptors.add(new ColumnDescriptor("谢谢你", DataType.TEXT.getOID(), 0, "", null));
         // ORC schema prints non-latin-alpha-num ("^[a-zA-Z0-9_]+$") column names as escaped with "`" character
-        assertEquals("struct<`Hello World`:int,`привет`:string,simple:string,`谢谢你`:string>", builder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<`Hello World`:int,`привет`:string,simple:string,`谢谢你`:string>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
     }
 
     private List<ColumnDescriptor> buildAllTypes() {

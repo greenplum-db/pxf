@@ -176,8 +176,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         OrcFile.WriterOptions orcWriterOptions = OrcFile.writerOptions(configuration);
 
         // build write schema
-        ORCSchemaBuilder schemaBuilder = new ORCSchemaBuilder();
-        TypeDescription writeSchema = schemaBuilder.buildSchema(context.getTupleDescription());
+        TypeDescription writeSchema = ORCSchemaBuilder.buildSchema(context.getTupleDescription());
         orcWriterOptions.setSchema(writeSchema);
 
         // get user-specified compression or use a default one (ZLIB) if not explicitly provided

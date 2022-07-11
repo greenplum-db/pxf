@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Class for building an ORC schema from a Greenplum table definition.
  */
-public class ORCSchemaBuilder {
+public abstract class ORCSchemaBuilder {
 
     public static final Logger LOG = LoggerFactory.getLogger(ORCSchemaBuilder.class);
 
@@ -22,7 +22,7 @@ public class ORCSchemaBuilder {
      * @param columnDescriptors list of column descriptors of a Greenplum table
      * @return an ORC schema
      */
-    public TypeDescription buildSchema(List<ColumnDescriptor> columnDescriptors) {
+    public static TypeDescription buildSchema(List<ColumnDescriptor> columnDescriptors) {
         if (columnDescriptors == null) {
             return null;
         }
@@ -43,7 +43,7 @@ public class ORCSchemaBuilder {
      * @param columnDescriptor the Greenplum column descriptor
      * @return ORC logical type to use when storing the values of provided Greenplum type
      */
-    private TypeDescription orcTypeFromGreenplumType(ColumnDescriptor columnDescriptor) {
+    private static TypeDescription orcTypeFromGreenplumType(ColumnDescriptor columnDescriptor) {
         DataType dataType = columnDescriptor.getDataType();
 
         // Greenplum does not report dimensionality of arrays, so for auto-generated schema we assume only 1-dim arrays
@@ -109,7 +109,7 @@ public class ORCSchemaBuilder {
      * @param columnTypeModifiers Greenplum type modifiers
      * @return type description object with the specified max length, if any
      */
-    private TypeDescription setMaxLength(TypeDescription typeDescription, Integer[] columnTypeModifiers) {
+    private static TypeDescription setMaxLength(TypeDescription typeDescription, Integer[] columnTypeModifiers) {
         Integer maxLength = ArrayUtils.isNotEmpty(columnTypeModifiers) ? columnTypeModifiers[0] : null;
         if (maxLength != null && maxLength > 0) {
             return typeDescription.withMaxLength(maxLength);
@@ -123,7 +123,7 @@ public class ORCSchemaBuilder {
      * @param columnTypeModifiers Greenplum type modifiers
      * @return type description object with the specified precision and scale, if any
      */
-    private TypeDescription setPrecisionAndScale(TypeDescription typeDescription, Integer[] columnTypeModifiers) {
+    private static TypeDescription setPrecisionAndScale(TypeDescription typeDescription, Integer[] columnTypeModifiers) {
         // if precision is not defined in Greenplum for a column, columnTypeModifiers will be null
         if (ArrayUtils.isNotEmpty(columnTypeModifiers)) {
             Integer precision = columnTypeModifiers[0];
