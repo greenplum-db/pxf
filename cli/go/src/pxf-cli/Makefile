@@ -3,7 +3,7 @@ include ../../../../common.mk
 .PHONY: all build stage install test clean help
 .DEFAULT_GOAL := build
 
-TARGET := $(shell echo $${PWD\#\#*/})
+TARGET := $(shell basename $${PWD})
 PXF_ROOT_DIR := $(shell cd ../../../.. && pwd)
 PXF_SERVER_DIR := ${PXF_ROOT_DIR}/server
 PXF_CLI_DIR := ${PXF_ROOT_DIR}/cli
@@ -20,7 +20,7 @@ help:
 	@echo	"  - build - build pxf-cli binary"
 	@echo	"  - test - runs tests for pxf-cli binary"
 	@echo	"  - stage - install pxf-cli binary into build/stage/pxf/bin directory"
-	@echo	"  - install - install pxf-cli binary into $PXF_HOME/bin/"
+	@echo	"  - install - install pxf-cli binary into \$$PXF_HOME/bin/"
 	@echo	"  - clean - remove pxf-cli binary"
 
 all: test stage install
