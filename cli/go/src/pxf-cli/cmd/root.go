@@ -27,9 +27,6 @@ func Execute() {
 func init() {
 	// InitializeLogging must be called before we attempt to log with gplog.
 	gplog.InitializeLogging("pxf_cli", "")
-	gplog.SetLogPrefixFunc(func(s string) string {
-		return ""
-	})
 
 	rootCmd.SetHelpCommand(&cobra.Command{
 		Use:    "no-help",
