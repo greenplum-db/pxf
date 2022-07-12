@@ -78,10 +78,21 @@ public abstract class ORCSchemaBuilder {
                 typeDescription = TypeDescription.createDouble();
                 break;
             case BPCHAR:
-                typeDescription = setMaxLength(TypeDescription.createChar(), columnDescriptor.columnTypeModifiers());
+                Integer maxCharLength = ArrayUtils.get(columnDescriptor.columnTypeModifiers(), 0);
+                if (maxCharLength == null) {
+                    throw new PxfRuntimeException(String.format("Column %s of CHAR type must have maximum size information.",
+                            columnDescriptor.columnName()));
+                } else {
+                    typeDescription = TypeDescription.createChar().withMaxLength(maxCharLength);
+                }
                 break;
             case VARCHAR:
-                typeDescription = setMaxLength(TypeDescription.createVarchar(), columnDescriptor.columnTypeModifiers());
+                Integer maxVarcharLength = ArrayUtils.get(columnDescriptor.columnTypeModifiers(), 0);
+                if (maxVarcharLength == null) {
+                    typeDescription = TypeDescription.createString(); // unlimited length if not defined explicitly
+                } else {
+                    typeDescription = TypeDescription.createVarchar().withMaxLength(maxVarcharLength);
+                }
                 break;
             case DATE:
                 typeDescription = TypeDescription.createDate();
@@ -101,20 +112,6 @@ public abstract class ORCSchemaBuilder {
         }
         // wrap a primitive ORC TypeDescription into an list if Greenplum type was an array
         return dataType.isArrayType() ? TypeDescription.createList(typeDescription) : typeDescription;
-    }
-
-    /**
-     * Sets maximum length for CHAR / VARCHAR ORC types if a corresponding Greenplum column had a size modifier
-     * @param typeDescription ORC type description
-     * @param columnTypeModifiers Greenplum type modifiers
-     * @return type description object with the specified max length, if any
-     */
-    private static TypeDescription setMaxLength(TypeDescription typeDescription, Integer[] columnTypeModifiers) {
-        Integer maxLength = ArrayUtils.isNotEmpty(columnTypeModifiers) ? columnTypeModifiers[0] : null;
-        if (maxLength != null && maxLength > 0) {
-            return typeDescription.withMaxLength(maxLength);
-        }
-        return typeDescription;
     }
 
     /**

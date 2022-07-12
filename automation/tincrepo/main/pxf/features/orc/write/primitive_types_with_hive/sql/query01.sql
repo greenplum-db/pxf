@@ -4,7 +4,7 @@ SET bytea_output=hex;
 SET timezone='America/Los_Angeles';
 -- for the numeric column in GPDB, decimal(38,18) in Hive, there are differences in output between different hive versions.
 -- make the print consistent by doing `round(col13, 18) as col13` to force the same precision.
-SELECT id, col00, col01, col02, col03, col04, col05, col06, col07, col08, col09, col10, col11, col12, round(col13, 18) as col13, col14 FROM orc_primitive_types_with_hive_readable ORDER BY id;
+SELECT id, c_bool, c_bytea, c_bigint, c_small, c_int, c_text, c_real, c_float, c_char, c_varchar, c_varchar_nolimit, c_date, c_time, c_timestamp, round(c_numeric, 18) as c_numeric, c_uuid FROM pxf_orc_primitive_types_with_hive_readable ORDER BY id;
 
 SET timezone='America/New_York';
-SELECT id, col00, col01, col02, col03, col04, col05, col06, col07, col08, col09, col10, col11, col12, round(col13, 18) as col13, col14 FROM orc_primitive_types_with_hive_readable ORDER BY id;
+SELECT id, c_bool, c_bytea, c_bigint, c_small, c_int, c_text, c_real, c_float, c_char, c_varchar, c_varchar_nolimit, c_date, c_time, c_timestamp, round(c_numeric, 18) as c_numeric, c_uuid FROM pxf_orc_primitive_types_with_hive_readable ORDER BY id;

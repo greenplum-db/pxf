@@ -25,30 +25,32 @@ public class ORCSchemaBuilderTest {
             .add("col5:string")
             .add("col6:float")
             .add("col7:double")
-            .add("col8:char(256)")
-            .add("col9:varchar(256)")
-            .add("col10:date")
-            .add("col11:string")
-            .add("col12:timestamp")
-            .add("col13:timestamp with local time zone")
-            .add("col14:decimal(38,10)")
-            .add("col15:string")
-            .add("col16:array<smallint>")
-            .add("col17:array<int>")
-            .add("col18:array<bigint>")
-            .add("col19:array<boolean>")
-            .add("col20:array<string>")
-            .add("col21:array<float>")
-            .add("col22:array<double>")
-            .add("col23:array<binary>")
-            .add("col24:array<char(256)>")
-            .add("col25:array<varchar(256)>")
-            .add("col26:array<date>")
+            .add("col8:char(12)")
+            .add("col9:varchar(24)")
+            .add("col10:string")
+            .add("col11:date")
+            .add("col12:string")
+            .add("col13:timestamp")
+            .add("col14:timestamp with local time zone")
+            .add("col15:decimal(38,10)")
+            .add("col16:string")
+            .add("col17:array<smallint>")
+            .add("col18:array<int>")
+            .add("col19:array<bigint>")
+            .add("col20:array<boolean>")
+            .add("col21:array<string>")
+            .add("col22:array<float>")
+            .add("col23:array<double>")
+            .add("col24:array<binary>")
+            .add("col25:array<char(12)>")
+            .add("col26:array<varchar(24)>")
             .add("col27:array<string>")
-            .add("col28:array<decimal(38,10)>")
+            .add("col28:array<date>")
             .add("col29:array<string>")
-            .add("col30:array<timestamp>")
-            .add("col31:array<timestamp with local time zone>").toString();
+            .add("col30:array<decimal(38,10)>")
+            .add("col31:array<string>")
+            .add("col32:array<timestamp>")
+            .add("col33:array<timestamp with local time zone>").toString();
 
     private List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
 
@@ -83,7 +85,13 @@ public class ORCSchemaBuilderTest {
     @Test
     public void testBpcharMaxLength() {
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.BPCHAR.getOID(), 0, "", new Integer[]{}));
-        assertEquals("struct<col0:char(256)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
+        Exception e = assertThrows(PxfRuntimeException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
+        assertEquals("Column col0 of CHAR type must have maximum size information.", e.getMessage());
+
+        columnDescriptors.clear();
+        columnDescriptors.add(new ColumnDescriptor("col0", DataType.BPCHAR.getOID(), 0, "", new Integer[]{null}));
+        e = assertThrows(PxfRuntimeException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
+        assertEquals("Column col0 of CHAR type must have maximum size information.", e.getMessage());
 
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.BPCHAR.getOID(), 0, "", new Integer[]{3}));
@@ -97,7 +105,11 @@ public class ORCSchemaBuilderTest {
     @Test
     public void testVarcharMaxLength() {
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.VARCHAR.getOID(), 0, "", new Integer[]{}));
-        assertEquals("struct<col0:varchar(256)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
+        assertEquals("struct<col0:string>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
+
+        columnDescriptors.clear();
+        columnDescriptors.add(new ColumnDescriptor("col0", DataType.VARCHAR.getOID(), 0, "", new Integer[]{null}));
+        assertEquals("struct<col0:string>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.VARCHAR.getOID(), 0, "", new Integer[]{3}));
@@ -179,31 +191,33 @@ public class ORCSchemaBuilderTest {
         descriptors.add(new ColumnDescriptor("col5", DataType.TEXT.getOID(),5,"", null));
         descriptors.add(new ColumnDescriptor("col6", DataType.REAL.getOID(),6,"", null));
         descriptors.add(new ColumnDescriptor("col7", DataType.FLOAT8.getOID(),7,"", null));
-        descriptors.add(new ColumnDescriptor("col8", DataType.BPCHAR.getOID(),8,"", null));
-        descriptors.add(new ColumnDescriptor("col9", DataType.VARCHAR.getOID(),9,"", null));
-        descriptors.add(new ColumnDescriptor("col10", DataType.DATE.getOID(),10,"", null));
-        descriptors.add(new ColumnDescriptor("col11", DataType.TIME.getOID(),11,"", null));
-        descriptors.add(new ColumnDescriptor("col12", DataType.TIMESTAMP.getOID(),12,"", null));
-        descriptors.add(new ColumnDescriptor("col13", DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(),13,"", null));
-        descriptors.add(new ColumnDescriptor("col14", DataType.NUMERIC.getOID(),14,"", null));
-        descriptors.add(new ColumnDescriptor("col15", DataType.UUID.getOID(),15,"", null));
+        descriptors.add(new ColumnDescriptor("col8", DataType.BPCHAR.getOID(),8,"", new Integer[]{12}));
+        descriptors.add(new ColumnDescriptor("col9", DataType.VARCHAR.getOID(),9,"", new Integer[]{24}));
+        descriptors.add(new ColumnDescriptor("col10", DataType.VARCHAR.getOID(),10,"", null)); // no length provided
+        descriptors.add(new ColumnDescriptor("col11", DataType.DATE.getOID(),11,"", null));
+        descriptors.add(new ColumnDescriptor("col12", DataType.TIME.getOID(),12,"", null));
+        descriptors.add(new ColumnDescriptor("col13", DataType.TIMESTAMP.getOID(),13,"", null));
+        descriptors.add(new ColumnDescriptor("col14", DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(),14,"", null));
+        descriptors.add(new ColumnDescriptor("col15", DataType.NUMERIC.getOID(),15,"", null));
+        descriptors.add(new ColumnDescriptor("col16", DataType.UUID.getOID(),16,"", null));
         // array types
-        descriptors.add(new ColumnDescriptor("col16", DataType.INT2ARRAY.getOID(),16,"", null));
-        descriptors.add(new ColumnDescriptor("col17", DataType.INT4ARRAY.getOID(),17,"", null));
-        descriptors.add(new ColumnDescriptor("col18", DataType.INT8ARRAY.getOID(),18,"", null));
-        descriptors.add(new ColumnDescriptor("col19", DataType.BOOLARRAY.getOID(),19,"", null));
-        descriptors.add(new ColumnDescriptor("col20", DataType.TEXTARRAY.getOID(),20,"", null));
-        descriptors.add(new ColumnDescriptor("col21", DataType.FLOAT4ARRAY.getOID(),21,"", null));
-        descriptors.add(new ColumnDescriptor("col22", DataType.FLOAT8ARRAY.getOID(),22,"", null));
-        descriptors.add(new ColumnDescriptor("col23", DataType.BYTEAARRAY.getOID(),23,"", null));
-        descriptors.add(new ColumnDescriptor("col24", DataType.BPCHARARRAY.getOID(),24,"", null));
-        descriptors.add(new ColumnDescriptor("col25", DataType.VARCHARARRAY.getOID(),25,"", null));
-        descriptors.add(new ColumnDescriptor("col26", DataType.DATEARRAY.getOID(),26,"", null));
-        descriptors.add(new ColumnDescriptor("col27", DataType.UUIDARRAY.getOID(),27,"", null));
-        descriptors.add(new ColumnDescriptor("col28", DataType.NUMERICARRAY.getOID(),28,"", null));
-        descriptors.add(new ColumnDescriptor("col29", DataType.TIMEARRAY.getOID(),29,"", null));
-        descriptors.add(new ColumnDescriptor("col30", DataType.TIMESTAMPARRAY.getOID(),30,"", null));
-        descriptors.add(new ColumnDescriptor("col31", DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(),31,"", null));
+        descriptors.add(new ColumnDescriptor("col17", DataType.INT2ARRAY.getOID(),17,"", null));
+        descriptors.add(new ColumnDescriptor("col18", DataType.INT4ARRAY.getOID(),18,"", null));
+        descriptors.add(new ColumnDescriptor("col19", DataType.INT8ARRAY.getOID(),19,"", null));
+        descriptors.add(new ColumnDescriptor("col20", DataType.BOOLARRAY.getOID(),20,"", null));
+        descriptors.add(new ColumnDescriptor("col21", DataType.TEXTARRAY.getOID(),21,"", null));
+        descriptors.add(new ColumnDescriptor("col22", DataType.FLOAT4ARRAY.getOID(),22,"", null));
+        descriptors.add(new ColumnDescriptor("col23", DataType.FLOAT8ARRAY.getOID(),23,"", null));
+        descriptors.add(new ColumnDescriptor("col24", DataType.BYTEAARRAY.getOID(),24,"", null));
+        descriptors.add(new ColumnDescriptor("col25", DataType.BPCHARARRAY.getOID(),25,"", new Integer[]{12}));
+        descriptors.add(new ColumnDescriptor("col26", DataType.VARCHARARRAY.getOID(),26,"", new Integer[]{24}));
+        descriptors.add(new ColumnDescriptor("col27", DataType.VARCHARARRAY.getOID(),27,"", null)); // no length provided
+        descriptors.add(new ColumnDescriptor("col28", DataType.DATEARRAY.getOID(),28,"", null));
+        descriptors.add(new ColumnDescriptor("col29", DataType.UUIDARRAY.getOID(),29,"", null));
+        descriptors.add(new ColumnDescriptor("col30", DataType.NUMERICARRAY.getOID(),30,"", null));
+        descriptors.add(new ColumnDescriptor("col31", DataType.TIMEARRAY.getOID(),31,"", null));
+        descriptors.add(new ColumnDescriptor("col32", DataType.TIMESTAMPARRAY.getOID(),32,"", null));
+        descriptors.add(new ColumnDescriptor("col33", DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(),33,"", null));
 
         return descriptors;
     }

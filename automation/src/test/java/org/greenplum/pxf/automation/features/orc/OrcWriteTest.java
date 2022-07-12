@@ -13,105 +13,100 @@ import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.StringJoiner;
 
 public class OrcWriteTest extends BaseFeature {
 
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS = {
-            "id     integer"      ,
-            "col00  boolean"      , // DataType.BOOLEAN
-            "col01  bytea"        , // DataType.BYTEA
-            "col02  bigint"       , // DataType.BIGINT
-            "col03  smallint"     , // DataType.SMALLINT
-            "col04  integer"      , // DataType.INTEGER
-            "col05  text"         , // DataType.TEXT
-            "col06  real"         , // DataType.REAL
-            "col07  float"        , // DataType.FLOAT8
-            "col08  char(4)"      , // DataType.BPCHAR
-            "col09  varchar(7)"   , // DataType.VARCHAR
-            "col10  date"         , // DataType.DATE
-            "col11  time"         , // DataType.TIME
-            "col12  timestamp"    , // DataType.TIMESTAMP
-            "col13  numeric"      , // DataType.NUMERIC
-            "col14  uuid"           // DataType.UUID
+            "id integer"               ,
+            "c_bool boolean"           , // DataType.BOOLEAN
+            "c_bytea bytea"            , // DataType.BYTEA
+            "c_bigint bigint"          , // DataType.BIGINT
+            "c_small smallint"         , // DataType.SMALLINT
+            "c_int integer"            , // DataType.INTEGER
+            "c_text text"              , // DataType.TEXT
+            "c_real real"              , // DataType.REAL
+            "c_float float"            , // DataType.FLOAT8
+            "c_char char(4)"           , // DataType.BPCHAR
+            "c_varchar varchar(7)"     , // DataType.VARCHAR
+            "c_varchar_nolimit varchar", // DataType.VARCHAR with no length
+            "c_date date"              , // DataType.DATE
+            "c_time time"              , // DataType.TIME
+            "c_timestamp timestamp"    , // DataType.TIMESTAMP
+            "c_numeric numeric"        , // DataType.NUMERIC
+            "c_uuid uuid"                // DataType.UUID
     };
 
     private static final String[] ORC_TIMESTAMP_TABLE_COLUMNS = {
-            "id     integer"      ,
-            "col10  date"         , // DataType.DATE
-            "col11  time"         , // DataType.TIME
-            "col12  timestamp"    , // DataType.TIMESTAMP
-            "col13  timestamptz"  , // DataType.TIMESTAMP_WITH_TIME_ZONE
+            "id integer"               ,
+            "c_date date"              , // DataType.DATE
+            "c_time time"              , // DataType.TIME
+            "c_timestamp timestamp"    , // DataType.TIMESTAMP
+            "c_timestamptz timestamptz", // DataType.TIMESTAMP_WITH_TIME_ZONE
     };
 
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS_HIVE = {
-            "id     INT"              ,
-            "col00  BOOLEAN"          , // DataType.BOOLEAN
-            "col01  BINARY"           , // DataType.BYTEA
-            "col02  BIGINT"           , // DataType.BIGINT
-            "col03  SMALLINT"         , // DataType.SMALLINT
-            "col04  INT"              , // DataType.INTEGER
-            "col05  STRING"           , // DataType.TEXT
-            "col06  DOUBLE"           , // DataType.REAL
-            "col07  FLOAT"            , // DataType.FLOAT8
-            "col08  CHAR(4)"          , // DataType.BPCHAR
-            "col09  VARCHAR(7)"       , // DataType.VARCHAR
-            "col10  DATE"             , // DataType.DATE
-            "col11  STRING"           , // DataType.TIME (ORC stores TIME as string type (see OrcSchemaBuilder.java:70)
-            "col12  TIMESTAMP"        , // DataType.TIMESTAMP
-            "col13  DECIMAL(38,18)"   , // DataType.NUMERIC
-            "col14  STRING"             // DataType.UUID
+            "id INT"                  ,
+            "c_bool BOOLEAN"          , // DataType.BOOLEAN
+            "c_bytea BINARY"          , // DataType.BYTEA
+            "c_bigint BIGINT"         , // DataType.BIGINT
+            "c_small SMALLINT"        , // DataType.SMALLINT
+            "c_int INT"               , // DataType.INTEGER
+            "c_text  STRING"          , // DataType.TEXT
+            "c_real DOUBLE"           , // DataType.REAL
+            "c_float FLOAT"           , // DataType.FLOAT8
+            "c_char CHAR(4)"          , // DataType.BPCHAR
+            "c_varchar VARCHAR(7)"    , // DataType.VARCHAR
+            "c_varchar_nolimit STRING", // DataType.VARCHAR with no length
+            "c_date DATE"             , // DataType.DATE
+            "c_time STRING"           , // DataType.TIME (ORC stores TIME as string type)
+            "c_timestamp TIMESTAMP"   , // DataType.TIMESTAMP
+            "c_numeric DECIMAL(38,18)", // DataType.NUMERIC
+            "c_uuid STRING"             // DataType.UUID
     };
 
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS_READ_FROM_HIVE = {
-            "id     integer"      ,
-            "col00  boolean"      , // DataType.BOOLEAN
-            "col01  text"         , // DataType.BYTEA
-            "col02  bigint"       , // DataType.BIGINT
-            "col03  smallint"     , // DataType.SMALLINT
-            "col04  integer"      , // DataType.INTEGER
-            "col05  text"         , // DataType.TEXT
-            "col06  real"         , // DataType.REAL
-            "col07  float"        , // DataType.FLOAT8
-            "col08  char(4)"      , // DataType.BPCHAR
-            "col09  varchar(7)"   , // DataType.VARCHAR
-            "col10  date"         , // DataType.DATE
-            "col11  text"         , // DataType.TIME
-            "col12  timestamp"    , // DataType.TIMESTAMP
-            "col13  numeric"      , // DataType.NUMERIC
-            "col14  text"           // DataType.UUID
+            "id integer"               ,
+            "c_bool boolean"           , // DataType.BOOLEAN
+            "c_bytea text"             , // DataType.BYTEA
+            "c_bigint bigint"          , // DataType.BIGINT
+            "c_small smallint"         , // DataType.SMALLINT
+            "c_int integer"            , // DataType.INTEGER
+            "c_text text"              , // DataType.TEXT
+            "c_real real"              , // DataType.REAL
+            "c_float float"            , // DataType.FLOAT8
+            "c_char char(4)"           , // DataType.BPCHAR
+            "c_varchar varchar(7)"     , // DataType.VARCHAR
+            "c_varchar_nolimit varchar", // DataType.VARCHAR with no length
+            "c_date date"              , // DataType.DATE
+            "c_time text"              , // DataType.TIME
+            "c_timestamp timestamp"    , // DataType.TIMESTAMP
+            "c_numeric numeric"        , // DataType.NUMERIC
+            "c_uuid text"                // DataType.UUID
     };
     private static final boolean[] NO_NULLS = new boolean[ORC_PRIMITIVE_TABLE_COLUMNS.length - 1]; // 16 main columns
     private static final boolean[] ALL_NULLS = new boolean[ORC_PRIMITIVE_TABLE_COLUMNS.length - 1]; // 16 main columns
     static {
         Arrays.fill(ALL_NULLS, true);
     }
+    private static final String HIVE_JDBC_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
+    private static final String HIVE_JDBC_URL_PREFIX = "jdbc:hive2://";
 
-    private ArrayList<File> filesToDelete;
-    private String publicStage;
     private String gpdbTableNamePrefix;
     private String hdfsPath;
-    private String resourcePath;
     private String fullTestPath;
     private ProtocolEnum protocol;
     private Hive hive;
     private HiveTable hiveTable;
 
 
-    private static final String HIVE_JDBC_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
-    private static final String HIVE_JDBC_URL_PREFIX = "jdbc:hive2://";
-
     @Override
     public void beforeClass() throws Exception {
         // path for storing data on HDFS (for processing by PXF)
         hdfsPath = hdfs.getWorkingDirectory() + "/writableOrc/";
         protocol = ProtocolUtils.getProtocol();
-
-        resourcePath = localDataResourcesFolder + "/orc/";
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
-
     }
 
     @Override
@@ -123,15 +118,9 @@ public class OrcWriteTest extends BaseFeature {
             hive.close();
     }
 
-    @Override
-    public void beforeMethod() throws Exception {
-        filesToDelete = new ArrayList<>();
-        publicStage = "/tmp/publicstage/pxf/";
-    }
-
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitives() throws Exception {
-        gpdbTableNamePrefix = "orc_primitive_types";
+        gpdbTableNamePrefix = "pxf_orc_primitive_types";
         fullTestPath = hdfsPath + "orc_primitive_types";
 
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
@@ -148,33 +137,35 @@ public class OrcWriteTest extends BaseFeature {
         hive.createTableAndVerify(hiveTable);
 
         // the JDBC profile cannot handle binary, time and uuid types
-        StringBuilder ctasHiveQuery = new StringBuilder("CREATE TABLE orc_primitive_types_hive_ctas AS SELECT ")
-                .append("id, ") // int
-                .append("col00, ") // bool
-                .append("hex(col01) as col01, ") // binary cast as string
-                .append("col02, ") // bigint
-                .append("col03, ") // smallint
-                .append("col04, ") // int
-                .append("col05, ") // text
-                .append("col06, ") // real
-                .append("col07, ") // float
-                .append("col08, ") // bpchar
-                .append("col09, ") // varchar
-                .append("col10, ") // date
-                .append("cast(col11 as string) as col11, ") // time cast as string
-                .append("col12, ") // timestamp
-                .append("col13, ") // numeric
-                .append("cast(col14 as string) as col14 ") // uuid cast as string
-                .append("FROM " + hiveTable.getFullName());
+        String ctasHiveQuery = new StringJoiner(",",
+                "CREATE TABLE " + hiveTable.getFullName() + "_ctas AS SELECT ", " FROM " + hiveTable.getFullName())
+                .add("id")
+                .add("c_bool")
+                .add("hex(c_bytea) as c_bytea") // binary cast as string
+                .add("c_bigint")
+                .add("c_small")
+                .add("c_int")
+                .add("c_text")
+                .add("c_real")
+                .add("c_float")
+                .add("c_char")
+                .add("c_varchar")
+                .add("c_varchar_nolimit")
+                .add("c_date")
+                .add("cast(c_time as string) as c_time") // time cast as string
+                .add("c_timestamp")
+                .add("c_numeric")
+                .add("cast(c_uuid as string) as c_uuid") // uuid cast as string
+                .toString();
 
-        hive.runQuery("DROP TABLE IF EXISTS orc_primitive_types_hive_ctas");
-        hive.runQuery(ctasHiveQuery.toString());
+        hive.runQuery("DROP TABLE IF EXISTS " + hiveTable.getFullName() + "_ctas");
+        hive.runQuery(ctasHiveQuery);
 
         // use the Hive JDBC profile to avoid using the PXF ORC reader implementation
         String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
         ExternalTable exHiveJdbcTable = TableFactory.getPxfJdbcReadableTable(
-                gpdbTableNamePrefix + "_with_hive_readable", ORC_PRIMITIVE_TABLE_COLUMNS_READ_FROM_HIVE, hiveTable.getName() + "_ctas", HIVE_JDBC_DRIVER_CLASS, jdbcUrl, null);
-
+                gpdbTableNamePrefix + "_with_hive_readable", ORC_PRIMITIVE_TABLE_COLUMNS_READ_FROM_HIVE,
+                hiveTable.getName() + "_ctas", HIVE_JDBC_DRIVER_CLASS, jdbcUrl, null);
         exHiveJdbcTable.setHost(pxfHost);
         exHiveJdbcTable.setPort(pxfPort);
         gpdb.createTableAndVerify(exHiveJdbcTable);
@@ -186,10 +177,9 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitivesWithNulls() throws Exception {
-        gpdbTableNamePrefix = "orc_primitive_types_nulls";
+        gpdbTableNamePrefix = "pxf_orc_primitive_types_nulls";
         fullTestPath = hdfsPath + "orc_primitive_types_nulls";
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
-
         prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
 
         insertDataWithNulls(gpdbTableNamePrefix, 33);
@@ -199,7 +189,7 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitivesLargeDataset() throws Exception {
-        gpdbTableNamePrefix = "orc_primitive_types_large";
+        gpdbTableNamePrefix = "pxf_orc_primitive_types_large";
         fullTestPath = hdfsPath + "orc_primitive_types_large";
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
         prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
@@ -212,13 +202,12 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWriteTimestampWithTimezone() throws Exception {
-        gpdbTableNamePrefix = "orc_timestamp_with_timezone";
+        gpdbTableNamePrefix = "pxf_orc_timestamp_with_timezone";
         fullTestPath = hdfsPath + gpdbTableNamePrefix;
-
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_TIMESTAMP_TABLE_COLUMNS, fullTestPath);
-        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_TIMESTAMP_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
+        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_TIMESTAMP_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
 
-        insertDataWithTimestamps(gpdbTableNamePrefix, 15, 7);
+        insertDataWithTimestamps(gpdbTableNamePrefix, 10, 5);
 
         runTincTest("pxf.features.orc.write.timestamp_with_timezone_types.runTest");
     }
@@ -252,11 +241,10 @@ public class OrcWriteTest extends BaseFeature {
         StringBuilder statementBuilder = new StringBuilder("INSERT INTO " + exTable + "_writable VALUES ");
         for (int i = 0; i < numRows; i++) {
             statementBuilder.append("(").append(i).append(",")
-                .append((i % nullModulo == 0) ? "NULL" : String.format("'2010-01-%02d'", (i% 30) + 1)).append(",")                   // DataType.DATE
-                .append((i % nullModulo == 1) ? "NULL" : String.format("'10:11:%02d'", i % 60)).append(",")                       // DataType.TIME
-                .append((i % nullModulo == 2) ? "NULL" : String.format("'2013-07-13 21:00:05.%03d456'", i % 1000)).append(",")    // DataType.TIMESTAMP
+                .append((i % nullModulo == 0) ? "NULL" : String.format("'2010-01-%02d'", (i % 30) + 1)).append(",")                // DataType.DATE
+                .append((i % nullModulo == 1) ? "NULL" : String.format("'10:11:%02d'", i % 60)).append(",")                        // DataType.TIME
+                .append((i % nullModulo == 2) ? "NULL" : String.format("'2013-07-13 21:00:05.%03d456'", i % 1000)).append(",")     // DataType.TIMESTAMP
                 .append((i % nullModulo == 3) ? "NULL" : String.format("'2013-07-13 21:00:05.987%03d-07'", i % 1000)).append(")"); // DataType.TIMESTAMP_WITH_TIME_ZONE
-
             statementBuilder.append((i < (numRows - 1)) ? "," : ";");
         }
         gpdb.runQuery(statementBuilder.toString());
@@ -276,11 +264,12 @@ public class OrcWriteTest extends BaseFeature {
         .append(isNull [7] ? "NULL" : row + Math.PI).append(",")                                                 // DataType.FLOAT8
         .append(isNull [8] ? "NULL" : String.format("'%s'", row)).append(",")                                    // DataType.BPCHAR
         .append(isNull [9] ? "NULL" : String.format("'var%02d'", row)).append(",")                               // DataType.VARCHAR
-        .append(isNull[10] ? "NULL" : String.format("'2010-01-%02d'", (row % 30) + 1)).append(",")                   // DataType.DATE
-        .append(isNull[11] ? "NULL" : String.format("'10:11:%02d'", row % 60)).append(",")                       // DataType.TIME
-        .append(isNull[12] ? "NULL" : String.format("'2013-07-13 21:00:05.%03d456'", row % 1000)).append(",")    // DataType.TIMESTAMP
-        .append(isNull[13] ? "NULL" : String.format("'12345678900000.00000%s'", row)).append(",")                // DataType.NUMERIC
-        .append(isNull[14] ? "NULL" : String.format("'476f35e4-da1a-43cf-8f7c-950a%08d'", row % 100000000))      // DataType.UUID
+        .append(isNull[10] ? "NULL" : String.format("'var-no-length-%02d'", row)).append(",")                    // DataType.VARCHAR no length
+        .append(isNull[11] ? "NULL" : String.format("'2010-01-%02d'", (row % 30) + 1)).append(",")               // DataType.DATE
+        .append(isNull[12] ? "NULL" : String.format("'10:11:%02d'", row % 60)).append(",")                       // DataType.TIME
+        .append(isNull[13] ? "NULL" : String.format("'2013-07-13 21:00:05.%03d456'", row % 1000)).append(",")    // DataType.TIMESTAMP
+        .append(isNull[14] ? "NULL" : String.format("'12345678900000.00000%s'", row)).append(",")                // DataType.NUMERIC
+        .append(isNull[15] ? "NULL" : String.format("'476f35e4-da1a-43cf-8f7c-950a%08d'", row % 100000000))      // DataType.UUID
         .append(")");
         return rowBuilder.toString();
     }
