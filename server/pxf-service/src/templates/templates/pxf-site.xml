@@ -76,23 +76,11 @@
     </property>
 
     <property>
-        <name>pxf.write.timezone</name>
-        <value>utc</value>
+        <name>pxf.orc.write.timezone.utc</name>
+        <value>true</value>
         <description>
-            Specifies the timezone a PXF writer should report in the file written, if applicable.
-            Timestamps without timezone are interpreted as instants in the specified timezone.
-            The only valid values are 'utc' and 'local'. It is possible to overwrite this value
-            for specific file formats, e.g. for ORC specify property 'pxf.write.timezone.orc'.
-        </description>
-    </property>
-
-    <property>
-        <name>pxf.write.timezone.orc</name>
-        <value>utc</value>
-        <description>
-            Specifies the timezone a PXF ORC writer should report in the file written.
-            Timestamps without timezone are interpreted as instants in the specified timezone.
-            The only valid values are 'utc' and 'local'.
+            Specifies whether the PXF ORC writer should use UTC timezone when writing timestamp values.
+            If set to false, the PXF ORC writer will use the local timezone of the PXF JVM instead.
         </description>
     </property>
 
