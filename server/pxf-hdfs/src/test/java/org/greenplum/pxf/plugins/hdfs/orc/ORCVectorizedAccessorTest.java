@@ -149,45 +149,25 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
     }
 
     @Test
-    public void testOpenForWrite_WriteTimeZoneLocal() throws IOException {
-        context.getConfiguration().set("pxf.write.timezone", "loCAl");
-        runTestScenario_OpenForWrite(CompressionKind.ZLIB, false);
-    }
-
-    @Test
-    public void testOpenForWrite_WriteTimeZoneUTC() throws IOException {
-        context.getConfiguration().set("pxf.write.timezone", "uTc");
+    public void testOpenForWrite_OrcWriteTimeZoneUTCMissing() throws IOException {
         runTestScenario_OpenForWrite(CompressionKind.ZLIB, true);
     }
 
     @Test
-    public void testOpenForWrite_WriteTimeZoneInvalid() throws IOException {
-        context.getConfiguration().set("pxf.write.timezone", "America/Los_Angeles");
-        runErrorScenario_OpenForWrite("Invalid value 'America/Los_Angeles' for pxf.write.timezone property, only 'local' or 'UTC' values are allowed.");
+    public void testOpenForWrite_OrcWriteTimeZoneUTCInvalid() throws IOException {
+        context.getConfiguration().set("pxf.orc.write.timezone.utc", "foo");
+        runErrorScenario_OpenForWrite("Property pxf.orc.write.timezone.utc has invalid value foo");
     }
 
     @Test
-    public void testOpenForWrite_WriteTimeZoneOrcLocal() throws IOException {
-        context.getConfiguration().set("pxf.write.timezone.orc", "loCAl");
-        runTestScenario_OpenForWrite(CompressionKind.ZLIB, false);
-    }
-
-    @Test
-    public void testOpenForWrite_WriteTimeZoneOrcUTC() throws IOException {
-        context.getConfiguration().set("pxf.write.timezone.orc", "uTc");
+    public void testOpenForWrite_OrcWriteTimeZoneUTCTrue() throws IOException {
+        context.getConfiguration().set("pxf.orc.write.timezone.utc", "tRuE");
         runTestScenario_OpenForWrite(CompressionKind.ZLIB, true);
     }
 
     @Test
-    public void testOpenForWrite_WriteTimeZoneOrcInvalid() throws IOException {
-        context.getConfiguration().set("pxf.write.timezone.orc", "America/Los_Angeles");
-        runErrorScenario_OpenForWrite("Invalid value 'America/Los_Angeles' for pxf.write.timezone.orc property, only 'local' or 'UTC' values are allowed.");
-    }
-
-    @Test
-    public void testOpenForWrite_WriteTimeZoneTakesOrcFirst() throws IOException {
-        context.getConfiguration().set("pxf.write.timezone", "uTc");
-        context.getConfiguration().set("pxf.write.timezone.orc", "loCAl");
+    public void testOpenForWrite_OrcWriteTimeZoneUTCFalse() throws IOException {
+        context.getConfiguration().set("pxf.orc.write.timezone.utc", "FalSe");
         runTestScenario_OpenForWrite(CompressionKind.ZLIB, false);
     }
 

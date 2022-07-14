@@ -65,11 +65,8 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
 
     private static final String ORC_FILE_SUFFIX = ".orc";
     static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
-    private static final String WRITE_TIMEZONE_PROPERTY_NAME = "pxf.write.timezone";
-    private static final String WRITE_TIMEZONE_ORC_PROPERTY_NAME = "pxf.write.timezone.orc";
-    private static final String TIMEZONE_LOCAL_VALUE = "local";
-    private static final String TIMEZONE_UTC_VALUE = "UTC";
 
+    private static final String ORC_WRITE_TIMEZONE_UTC_PROPERTY_NAME = "pxf.orc.write.timezone.utc";
 
     /**
      * True if the accessor accesses the columns defined in the
@@ -185,13 +182,12 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         LOG.debug("Using compression: {}", compressionKind);
         orcWriterOptions.compress(compressionKind);
 
-        // check whether to write timestamps in UTC or local timezone, this will be stored in the stripe / file footer and
-        // is important for file readers as Hive 3.1+ will read the value and perform time shifts if necessary
-        String writerTimeZone = getWriterTimezone(WRITE_TIMEZONE_ORC_PROPERTY_NAME, WRITE_TIMEZONE_PROPERTY_NAME);
-        if (writerTimeZone.equalsIgnoreCase(TIMEZONE_UTC_VALUE)) {
-            orcWriterOptions.useUTCTimestamp(true);
-        }
-        LOG.debug("Using writer timezone: {}", orcWriterOptions.getUseUTCTimestamp() ? TIMEZONE_UTC_VALUE : TIMEZONE_LOCAL_VALUE);
+        // check whether to write timestamps in UTC or local timezone, timestamps will be interpreted as instants in the writer timezone.
+        // the writer timezone will be stored in the stripe / file footer and is important for file readers
+        // as Hive 3.1+ will read the value and perform time shifts if necessary
+        boolean writeTimestampsInUTC = parseWriterTimezoneProperty();
+        orcWriterOptions.useUTCTimestamp(writeTimestampsInUTC);
+        LOG.debug("Using UTC for writer timezone: {}", writeTimestampsInUTC);
 
         writerState.setWriterOptions(orcWriterOptions);
 
@@ -202,6 +198,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         context.setMetadata(orcWriterOptions);
         return true;
     }
+
 
     @Override
     public boolean writeNextObject(OneRow onerow) throws IOException {
@@ -325,29 +322,19 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     }
 
     /**
-     * Determines the timezone that ORC writer will store to the stripe footer as the writer timezone. Timestamps will
-     * be interpreted as instants in the writer timezone. The method searches for the value by looking up configuration
-     * properties with the names proved. If the first property is not defined, then the next property is looked up.
-     * Only "local" and "UTC" are considered to be valid values, case-insensitive.
-     * @param propertyNames names of the configuration properties
-     * @return name of the writer timezone specified in the configuration, or UTC if none are found
+     * Parses a boolean property such that if the property has a value other that true or false, an exception is thrown
+     * @return value of the property, true if the property is not defined
      */
-    private String getWriterTimezone(String ...propertyNames) {
-        String timezone = null;
-        for (String propertyName : propertyNames) {
-            timezone = configuration.get(propertyName);
-            if (StringUtils.isBlank(timezone)) {
-                continue;
-            }
-            // WriterImpl in ORC library can only write either UTC or local timezone to the stripe footer, it cannot use
-            // any other arbitrary value, so we limit the values of user-configurable properties to only these
-            if (!(timezone.equalsIgnoreCase(TIMEZONE_LOCAL_VALUE) || timezone.equalsIgnoreCase(TIMEZONE_UTC_VALUE))) {
-                throw new PxfRuntimeException(String.format(
-                        "Invalid value '%s' for %s property, only 'local' or 'UTC' values are allowed.",
-                        timezone, propertyName));
-            }
-            break;
+    private boolean parseWriterTimezoneProperty() {
+        // do not use getBoolean as it would return default value for an invalid property value
+        String writeTimestampsInUTCStr = configuration.get(ORC_WRITE_TIMEZONE_UTC_PROPERTY_NAME, "true").trim();
+        if (writeTimestampsInUTCStr.equalsIgnoreCase("true")) {
+            return true;
+        } else if (writeTimestampsInUTCStr.equalsIgnoreCase("false")) {
+            return false;
+        } else {
+            throw new PxfRuntimeException(String.format(
+                    "Property %s has invalid value %s", ORC_WRITE_TIMEZONE_UTC_PROPERTY_NAME, writeTimestampsInUTCStr));
         }
-        return timezone == null ? ORCVectorizedAccessor.TIMEZONE_UTC_VALUE : timezone;
     }
 }
