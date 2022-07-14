@@ -4,9 +4,9 @@
 
 1. Ensure you are set up for PXF development by following the README.md at the root of this repository. This tool requires Go version 1.9 or higher. Follow the directions [here](https://golang.org/doc/) to get the language set up.
 
-1. Go to the pxf-cluster folder and install dependencies
+1. Go to the pxf-cli folder and install dependencies
    ```
-   cd pxf/server/pxf-cli/go/src/pxf-cli
+   cd pxf/cli/go/src/pxf-cli
    go get github.com/onsi/ginkgo/ginkgo
    ```
 
@@ -19,12 +19,12 @@
    ```
    make
    ```
-   This will put the binary at `pxf/server/pxf-cli/go/bin/pxf-cli`. You can also install the binary into `${PXF_HOME}/bin/pxf-cli` with:
+   This will put the binary at `pxf/cli/go/bin/pxf-cli`. You can also install the binary into `${PXF_HOME}/bin/pxf-cli` with:
    ```
    make install
    ```
 
-1. There is also end to end testing for the pxf-cli located at `../../../../concourse/scripts/cli`. These tests can be run by flying the following pipeline:
+1. There is also end to end testing for the pxf-cli located at `pxf/concourse/scripts/cli`. These tests can be run by flying the following pipeline:
 ```sh
 MULTINODE=true make -C ~/workspace/pxf/concourse dev
 ```
