@@ -269,7 +269,7 @@ public class OrcWriteTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
-    public void orcWritePrimitiveArrays() throws Exception {
+    public void orcWritePrimitiveArraysWithNulls() throws Exception {
         gpdbTable = "orc_primitive_arrays";
         fullTestPath = hdfsPath + gpdbTable;
 
@@ -277,7 +277,7 @@ public class OrcWriteTest extends BaseFeature {
         prepareReadableExternalTable(gpdbTable, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ  , fullTestPath, false /*mapByPosition*/);
 
         // todo: double check timestamp with timezone. doesn't seem to be working correctly.
-        insertArrayDataWithoutNulls(gpdbTable, 33, 17); // > 30 to let the DATE field to repeat the value
+        insertArrayDataWithNulls(gpdbTable, 33, 17); // > 30 to let the DATE field to repeat the value
 
         // use PXF *:orc profile to read the data
         runTincTest("pxf.features.orc.write.primitive_types_array.runTest");
@@ -321,7 +321,7 @@ public class OrcWriteTest extends BaseFeature {
         gpdb.runQuery(statementBuilder.toString());
     }
 
-    private void insertArrayDataWithoutNulls(String exTable, int numRows, int nullModulo) throws Exception {
+    private void insertArrayDataWithNulls(String exTable, int numRows, int nullModulo) throws Exception {
         StringBuilder statementBuilder = new StringBuilder("INSERT INTO " + exTable + "_writable VALUES ");
         for (int i = 0; i < numRows; i++) {
             // todo: add empty array case, add more than 1 element per array
