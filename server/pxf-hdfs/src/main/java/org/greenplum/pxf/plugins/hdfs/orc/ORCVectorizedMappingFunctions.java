@@ -168,8 +168,11 @@ class ORCVectorizedMappingFunctions {
                     // DateColumnVector extends LongColumnVector but does not override the stringifyValue function to print the
                     // date in human-readable format (i.e. yyyy-MM-dd) so do that here
                     if (columnVector.child instanceof DateColumnVector) {
-                        // todo: null handling?
-                        pgArrayBuilder.addElement(Date.valueOf(LocalDate.ofEpochDay(((DateColumnVector) columnVector.child).vector[childRow])).toString());
+                        DateColumnVector childVector = (DateColumnVector) columnVector.child;
+                        String val = (childVector.noNulls || !childVector.isNull[childRow])
+                                ? Date.valueOf(LocalDate.ofEpochDay(childVector.vector[childRow])).toString()
+                                : null;
+                        pgArrayBuilder.addElement(val);
                     } else {
                         pgArrayBuilder.addElement(buf -> columnVector.child.stringifyValue(buf, childRow));
                     }
@@ -593,10 +596,29 @@ class ORCVectorizedMappingFunctions {
             listColumnVector.offsets[row] = offset;
             listColumnVector.lengths[row] = length;
 
-            // add the data to the child columnvector
-            for (int i = 0; i < length; i++) {
-                Object rowElem = data.get(i);
-                childWriteFunction.accept(listColumnVector.child, offset + i, rowElem);
+            if (val != null) {
+                // add the data to the child columnvector
+                ColumnVector childColumnVector = listColumnVector.child;
+                int childRow;
+                for (int i = 0; i < length; i++) {
+                    childRow = offset + i;
+                    Object rowElem = data.get(i);
+                    if (rowElem == null) {
+                        // the array element is null
+                        if (childColumnVector.noNulls) {
+                            childColumnVector.noNulls = false; // write only if the value is different from what we need it to be
+                        }
+                        childColumnVector.isNull[childRow] = true;
+                    } else {
+                        childWriteFunction.accept(childColumnVector, childRow, rowElem);
+                    }
+                }
+            } else {
+                // the entire array is null
+                if (columnVector.noNulls) {
+                    columnVector.noNulls = false; // write only if the value is different from what we need it to be
+                }
+                columnVector.isNull[row] = true;
             }
         };
     }

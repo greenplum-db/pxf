@@ -132,7 +132,7 @@ public class PgUtilities {
      * @return string representing Postgres array
      */
     public String unescapeArrayElement(String str) {
-        if (StringUtils.equals(str, "NULL")) {
+        if (StringUtils.equals(str, "NULL") || StringUtils.equals(str, "")) {
             return null;
         }
 

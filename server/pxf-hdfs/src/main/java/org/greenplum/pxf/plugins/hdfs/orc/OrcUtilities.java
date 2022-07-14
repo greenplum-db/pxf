@@ -43,21 +43,18 @@ public final class OrcUtilities {
         }
 
         List<Object> data = new ArrayList<>();
-        // todo: this if case is a temp bandaid. for some reason, splitArray gives an error for empty array. avro doesn't seem to have this issue.
-        if (!val.equalsIgnoreCase("{}")) {
-            String[] splits = pgUtilities.splitArray(val);
-            for (String split : splits) {
-                try {
-                    data.add(decodeString(split, underlyingChildCategory));
-                } catch (NumberFormatException | PxfRuntimeException e) {
-                    String hint = "";
-                    if (StringUtils.startsWith(split, "{")) {
-                        hint = "Value is a multi-dimensional array, PXF does not currently support multi-dimensional arrays for writing ORC files.";
-                    } else {
-                        hint = "Unexpected state since PXF generated the ORC schema.";
-                    }
-                    throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, underlyingChildCategory), hint, e);
+        String[] splits = pgUtilities.splitArray(val);
+        for (String split : splits) {
+            try {
+                data.add(decodeString(split, underlyingChildCategory));
+            } catch (NumberFormatException | PxfRuntimeException e) {
+                String hint = "";
+                if (StringUtils.startsWith(split, "{")) {
+                    hint = "Value is a multi-dimensional array, PXF does not currently support multi-dimensional arrays for writing ORC files.";
+                } else {
+                    hint = "Unexpected state since PXF generated the ORC schema.";
                 }
+                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, underlyingChildCategory), hint, e);
             }
         }
         return data;
