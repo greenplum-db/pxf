@@ -177,6 +177,18 @@ class ORCVectorizedMappingFunctions {
                         pgArrayBuilder.addElement(buf -> columnVector.child.stringifyValue(buf, childRow));
                     }
                     break;
+                case TIMESTAMP:
+                    TimestampColumnVector childVector = (TimestampColumnVector) columnVector.child;
+                    String val;
+                    if (!(childVector.noNulls || !childVector.isNull[childRow])) {
+                        val = null;
+                    } else if (oid == DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID()) {
+                        val = timestampWithTimezoneToString(childVector.asScratchTimestamp(childRow));
+                    } else {
+                        val = timestampToString(childVector.asScratchTimestamp(childRow));
+                    }
+                    pgArrayBuilder.addElement(val);
+                    break;
                 default:
                     pgArrayBuilder.addElement(buf -> columnVector.child.stringifyValue(buf, childRow));
 
@@ -510,6 +522,7 @@ class ORCVectorizedMappingFunctions {
     }
 
     private static void initWriteArrayFunctionsMap() {
+        // todo do we need to worry about null cases here? doesn't seem so?
         // the functions assume values are not nulls and do not do any null checking
         // the array write functions rely on the primitive write functions so they must be initialized first
         // it is assumed that all arrays are one dimensional
