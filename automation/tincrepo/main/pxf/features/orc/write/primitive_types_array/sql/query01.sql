@@ -1,4 +1,5 @@
 -- @description query01 for writing arrays of primitive ORC data types
+\pset null 'NIL'
 SET bytea_output=hex;
 
 SET timezone='America/Los_Angeles';
