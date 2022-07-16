@@ -599,39 +599,32 @@ class ORCVectorizedMappingFunctions {
             ListColumnVector listColumnVector = (ListColumnVector) columnVector;
 
             List<Object> data = orcUtilities.parsePostgresArray((String) val, underlyingChildType);
-            int offset = 0;
-            if (row != 0) {
-                offset = (int) (listColumnVector.offsets[row-1] + listColumnVector.lengths[row-1]);
-            }
-            int length = data.size();
 
-            // set the offset and length for this row
+            int length = data.size();
+            // the childCount refers to "the number of children slots used"
+            int offset = listColumnVector.childCount;
+
+            // set the offset, length and new childCount for this row
             listColumnVector.offsets[row] = offset;
             listColumnVector.lengths[row] = length;
+            listColumnVector.childCount += length;
+            listColumnVector.child.ensureSize(listColumnVector.childCount, true);
 
-            if (val != null) {
-                // add the data to the child columnvector
-                ColumnVector childColumnVector = listColumnVector.child;
-                int childRow;
-                for (int i = 0; i < length; i++) {
-                    childRow = offset + i;
-                    Object rowElem = data.get(i);
-                    if (rowElem == null) {
-                        // the array element is null
-                        if (childColumnVector.noNulls) {
-                            childColumnVector.noNulls = false; // write only if the value is different from what we need it to be
-                        }
-                        childColumnVector.isNull[childRow] = true;
-                    } else {
-                        childWriteFunction.accept(childColumnVector, childRow, rowElem);
+            // add the data to the child columnvector
+            ColumnVector childColumnVector = listColumnVector.child;
+            int childIndex;
+            for (int i = 0; i < length; i++) {
+                childIndex = offset + i;
+                Object rowElem = data.get(i);
+                if (rowElem == null) {
+                    // the array element is null
+                    if (childColumnVector.noNulls) {
+                        childColumnVector.noNulls = false; // write only if the value is different from what we need it to be
                     }
+                    childColumnVector.isNull[childIndex] = true;
+                } else {
+                    childWriteFunction.accept(childColumnVector, childIndex, rowElem);
                 }
-            } else {
-                // the entire array is null
-                if (columnVector.noNulls) {
-                    columnVector.noNulls = false; // write only if the value is different from what we need it to be
-                }
-                columnVector.isNull[row] = true;
             }
         };
     }

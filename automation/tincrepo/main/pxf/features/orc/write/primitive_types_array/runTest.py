@@ -1,6 +1,6 @@
 from mpp.models import SQLConcurrencyTestCase
 
-class OrcWritePrimitiveTypes(SQLConcurrencyTestCase):
+class OrcWriteArrayTypesWithNulls(SQLConcurrencyTestCase):
     """
     @db_name pxfautomation
     @concurrency 1

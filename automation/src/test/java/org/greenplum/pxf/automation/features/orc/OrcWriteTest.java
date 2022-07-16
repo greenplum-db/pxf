@@ -342,9 +342,9 @@ public class OrcWriteTest extends BaseFeature {
             statementBuilder.append("(")
                 .append(i).append(",")    // always not-null row index, column index starts with 0 after it
                 .append((i % nullModulo == 0) ? "NULL" : String.format("'{\"%b\"}'", i % 2 != 0)).append(",")                                // DataType.BOOLEAN
-                .append((i % nullModulo == 1) ? "NULL" : String.format("'{\\\\x%02d%02d}'::bytea[]", i%100, (i + 1) % 100)).append(",")      // DataType.BYTEA
+                .append((i % nullModulo == 1) ? "NULL" : String.format("'{\\\\x%02d%02d}'::bytea[]", i % 100, (i + 1) % 100)).append(",")      // DataType.BYTEA
                 .append((i % nullModulo == 2) ? "NULL" : String.format("'{%d}'", 123456789000000000L + i)).append(",")                       // DataType.BIGINT
-                .append((i % nullModulo == 3) ? "NULL" : String.format("'{%d}'",10L + i % 32000)).append(",")                                             // DataType.SMALLINT
+                .append((i % nullModulo == 3) ? "NULL" : String.format("'{%d}'",10L + i % 32000)).append(",")                                // DataType.SMALLINT
                 .append((i % nullModulo == 4) ? "NULL" : String.format("'{%d}'", 100L + i)).append(",")                                      // DataType.INTEGER
                 .append((i % nullModulo == 5) ? "NULL" : String.format("'{\"row-%02d\"}'", i)).append(",")                                   // DataType.TEXT
                 .append((i % nullModulo == 6) ? "NULL" : String.format("'{%f}'", Float.valueOf(i + 0.00001f * i).doubleValue())).append(",") // DataType.REAL
@@ -354,7 +354,7 @@ public class OrcWriteTest extends BaseFeature {
                 .append((i % nullModulo == 10) ? "NULL" : String.format("'{\"2010-01-%02d\"}'", (i % 30) + 1)).append(",")                   // DataType.DATE
                 .append((i % nullModulo == 11) ? "NULL" : String.format("'{\"10:11:%02d\"}'", i % 60)).append(",")                           // DataType.TIME
                 .append((i % nullModulo == 12) ? "NULL" : String.format("'{\"2013-07-13 21:00:05.%03d456\"}'", i % 1000)).append(",")        // DataType.TIMESTAMP
-                .append((i % nullModulo == 13) ? "NULL" : String.format("'{\"2013-07-13 21:00:05.987%03d-07\"}'", i % 1000)).append(",") // DataType.TIMESTAMP_WITH_TIME_ZONE
+                .append((i % nullModulo == 13) ? "NULL" : String.format("'{\"2013-07-13 21:00:05.987%03d-07\"}'", i % 1000)).append(",")     // DataType.TIMESTAMP_WITH_TIME_ZONE
                 .append((i % nullModulo == 14) ? "NULL" : String.format("'{12345678900000.00000%s}'", i)).append(",")                        // DataType.NUMERIC
                 .append((i % nullModulo == 15) ? "NULL" : String.format("'{\"476f35e4-da1a-43cf-8f7c-950a%08d\"}'", i % 100000000))          // DataType.UUID
                 .append(")");
@@ -370,7 +370,7 @@ public class OrcWriteTest extends BaseFeature {
             statementBuilder.append("(")
                     .append(i).append(",")    // always not-null row index, column index starts with 0 after it
                     .append(String.format("'{\"%b\", \"%b\", NULL}'", i % 2 != 0, i % 3 != 0)).append(",")                                // DataType.BOOLEAN
-                    .append(String.format("'{\\\\x%02d%02d, NULL, \\\\x%02d%02d}'::bytea[]", i % 100, (i + 1) % 100,  (i + 3) % 100, (i + 3) % 100)).append(",")      // DataType.BYTEA
+                    .append(String.format("'{\\\\x%02d%02d, NULL, \\\\x%02d%02d}'::bytea[]", i % 100, (i + 1) % 100,  (i + 2) % 100, (i + 3) % 100)).append(",")      // DataType.BYTEA
                     .append(String.format("'{NULL, %d}'", 123456789000000000L + i)).append(",")                       // DataType.BIGINT
                     .append(String.format("'{%d, NULL}'", 10L + i % 32000)).append(",")                                             // DataType.SMALLINT
                     .append(String.format("'{%d, %d, NULL}'", 100L + i, 200L + i)).append(",")                                      // DataType.INTEGER
