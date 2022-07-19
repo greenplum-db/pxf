@@ -130,9 +130,21 @@ public class OrcWriteTest extends BaseFeature {
 
         // use PXF *:orc profile to read the data
         runTincTest("pxf.features.orc.write.primitive_types.runTest");
+    }
+
+    /*
+     * Do not run this test with "hcfs" group as Hive is not available in the environments prepared for that group
+     */
+    @Test(groups = {"features", "gpdb", "security"})
+    public void orcWritePrimitivesReadWithHive() throws Exception {
+        gpdbTableNamePrefix = "pxf_orc_primitive_types_with_hive";
+        fullTestPath = hdfsPath + "orc_primitive_types_with_hive";
+
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+        insertDataWithoutNulls(gpdbTableNamePrefix, 33); // > 30 to let the DATE field to repeat the value
 
         // load the data into hive to check that PXF-written ORC files can be read by other data
-        hiveTable = new HiveExternalTable(gpdbTableNamePrefix + "_hive", ORC_PRIMITIVE_TABLE_COLUMNS_HIVE, "hdfs:/" + fullTestPath);
+        hiveTable = new HiveExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS_HIVE, "hdfs:/" + fullTestPath);
         hiveTable.setStoredAs("ORC");
         hive.createTableAndVerify(hiveTable);
 
@@ -164,7 +176,7 @@ public class OrcWriteTest extends BaseFeature {
         // use the Hive JDBC profile to avoid using the PXF ORC reader implementation
         String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
         ExternalTable exHiveJdbcTable = TableFactory.getPxfJdbcReadableTable(
-                gpdbTableNamePrefix + "_with_hive_readable", ORC_PRIMITIVE_TABLE_COLUMNS_READ_FROM_HIVE,
+                gpdbTableNamePrefix + "_readable", ORC_PRIMITIVE_TABLE_COLUMNS_READ_FROM_HIVE,
                 hiveTable.getName() + "_ctas", HIVE_JDBC_DRIVER_CLASS, jdbcUrl, null);
         exHiveJdbcTable.setHost(pxfHost);
         exHiveJdbcTable.setPort(pxfPort);
@@ -173,7 +185,6 @@ public class OrcWriteTest extends BaseFeature {
         // use PXF hive:jdbc profile to read the data
         runTincTest("pxf.features.orc.write.primitive_types_with_hive.runTest");
     }
-
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitivesWithNulls() throws Exception {
