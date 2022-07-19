@@ -21,7 +21,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-The PXF object store connectors support reading and writing Parquet-format data. This section describes how to use PXF to access Parquet-format data in an object store, including how to create and query external tables that references a Parquet file in the store.
+The PXF object store connectors support reading and writing Parquet-format data. This section describes how to use PXF to access Parquet-format data in an object store, including how to create and query an external table that references a Parquet file in the store.
 
 **Note**: Accessing Parquet-format data from an object store is very similar to accessing Parquet-format data in HDFS. This topic identifies object store-specific information required to read and write Parquet data, and links to the [PXF HDFS Parquet documentation](hdfs_parquet.html) where appropriate for common information.
 
@@ -36,7 +36,7 @@ Refer to [Data Type Mapping](hdfs_parquet.html#datatype_map) in the PXF HDFS Par
 
 ## <a id="profile_cet"></a>Creating the External Table
 
-The PXF `<objstore>:parquet` profiles support reading and writing data in Parquet-format. PXF supports the following `<objstore>` profile prefixes:
+The PXF `<objstore>:parquet` profiles support reading and writing data in Parquet format. PXF supports the following `<objstore>` profile prefixes:
 
 | Object Store  | Profile Prefix |
 |-------|-------------------------------------|
@@ -54,7 +54,7 @@ CREATE [WRITABLE] EXTERNAL TABLE <table_name>
     ( <column_name> <data_type> [, ...] | LIKE <other_table> )
 LOCATION ('pxf://<path-to-dir>
     ?PROFILE=<objstore>:parquet&SERVER=<server_name>[&<custom-option>=<value>[...]]')
-FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import'|'pxfwritable_export');
+FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import'|'pxfwritable_export')
 [DISTRIBUTED BY (<column_name> [, ... ] ) | DISTRIBUTED RANDOMLY];
 ```
 

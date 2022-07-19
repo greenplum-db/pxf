@@ -1,10 +1,10 @@
 ---
-title: Reading ORC Data from HDFS
+title: Reading and Writing HDFS ORC Data
 ---
 
-Use the PXF HDFS connector `hdfs:orc` profile to read ORC-format data when the data resides in a Hadoop file system. This section describes how to read HDFS files that are stored in ORC format, including how to create and query an external table that references these files in the HDFS data store.
+Use the PXF HDFS connector `hdfs:orc` profile to read and write ORC-format data. This section describes how to read and write HDFS files that are stored in ORC format, including how to create, query, and insert into external tables that references files in the HDFS data store.
 
-The `hdfs:orc` profile:
+When you use the `hdfs:orc` profile to read ORC-format data, the connector:
 
 - Reads 1024 rows of data at a time.
 - Supports column projection.
@@ -12,12 +12,15 @@ The `hdfs:orc` profile:
 - Supports the compound list type for a subset of ORC scalar types.
 - Does not support the map, union or struct compound types.
 
-The `hdfs:orc` profile currently supports reading scalar data types and lists of certain scalar types from ORC files. If the data resides in a Hive table, and you want to read complex types or the Hive table is partitioned, use the [`hive:orc`](hive_pxf.html#hive_orc) profile.
+When you use the `hdfs:orc` profile to write ORC-format data, the connector:
+- LIST HERE
+
+The `hdfs:orc` profile currently supports reading and writing scalar data types and lists of certain scalar types from ORC files. If the data resides in a Hive table, and you want to read complex types or the Hive table is partitioned, use the [`hive:orc`](hive_pxf.html#hive_orc) profile.
 
 
 ## <a id="prereq"></a>Prerequisites
 
-Ensure that you have met the PXF Hadoop [Prerequisites](access_hdfs.html#hadoop_prereq) before you attempt to read data from HDFS.
+Ensure that you have met the PXF Hadoop [Prerequisites](access_hdfs.html#hadoop_prereq) before you attempt to read data from or write data to HDFS.
 
 
 ## <a id="about_orc"></a>About the ORC Data Format
@@ -33,7 +36,13 @@ Refer to the [Apache orc](https://orc.apache.org/docs/) documentation for detail
 
 ## <a id="datatype_map"></a>Data Type Mapping
 
-To read ORC scalar data types in Greenplum Database, map ORC data values to Greenplum Database columns of the same type. PXF uses the following data type mapping when it reads ORC data:
+To read and write ORC primitive data types in Greenplum Database, map ORC data values to Greenplum Database columns of the same type.
+
+### <a id="read_map"></a>Read Mapping
+
+To read ORC scalar data types in Greenplum Database, map ORC data values to Greenplum Database columns of the same type.
+
+PXF uses the following data type mapping when it reads ORC data:
 
 | ORC Physical Type | ORC Logical Type | PXF/Greenplum Data Type |
 |-------------------|---------------|--------------------------|
@@ -68,16 +77,25 @@ PXF supports only the list ORC compound type, and only for a subset of the ORC s
 | array\<int> | Integer[] |
 | array\<bigint> | Bigint[] |
 
+### <a id="write_map"></a>Write Mapping
+
+PXF uses the following data type mapping when writing ORC data:
+
+XXX TABLE(S) HERE
+
 ## <a id="createexttbl"></a>Creating the External Table
 
-The PXF HDFS connector `hdfs:orc` profile supports reading ORC-format HDFS files. Use the following syntax to create a Greenplum Database external table that references a file or directory:
+The PXF HDFS connector `hdfs:orc` profile supports reading and writing ORC-format HDFS files. When you insert records into a writable external table, the block(s) of data that you insert are written to one or more files in the directory that you specified.
+
+Use the following syntax to create a Greenplum Database external table that references an HDFS file or directory:
 
 ``` sql
-CREATE EXTERNAL TABLE <table_name>
+CREATE [WRITABLE] EXTERNAL TABLE <table_name>
     ( <column_name> <data_type> [, ...] | LIKE <other_table> )
 LOCATION ('pxf://<path-to-hdfs-file>
     ?PROFILE=hdfs:orc[&SERVER=<server_name>][&<custom-option>=<value>[...]]')
-FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import')
+FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import'|'pxfwritable_export')
+[DISTRIBUTED BY (<column_name> [, ... ] ) | DISTRIBUTED RANDOMLY];
 ```
 
 The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Tanzu-Greenplum/6/greenplum-database/GUID-ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) command are described below.
@@ -88,10 +106,11 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | PROFILE    | The `PROFILE` keyword must specify `hdfs:orc`. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | \<custom-option\>    | \<custom-option\>s are described below. |
-| FORMAT | Use `FORMAT 'CUSTOM'`; the `CUSTOM` format requires the built-in `pxfwritable_import` `formatter`.   |
+| FORMAT 'CUSTOM' | Use `FORMAT 'CUSTOM'`with `(FORMATTER='pxfwritable_export')` (write) or `(FORMATTER='pxfwritable_import')` (read).   |
+| DISTRIBUTED BY | If you want to load data from an existing Greenplum Database table into the writable external table, consider specifying the same distribution policy or \<column_name\> on both tables. Doing so will avoid extra motion of data between segments on the load operation.  |
 
 <a id="customopts"></a>
-The PXF `hdfs:orc` profile supports the following read options. You specify this option in the `LOCATION` clause:
+The PXF `hdfs:orc` profile supports the following *read* options. You specify this option in the `LOCATION` clause:
 
 | Read Option  | Value Description |
 |-------|-------------------------------------|
@@ -207,3 +226,30 @@ Procedure:
      Prague    | Jan   |        101 |     4875.33 | {boots,hats}
     (1 row)
     ```
+
+## <a id="write_example"></a>Example: Writing to an ORC File on HDFS
+
+1. Use the `hdfs:orc` profile to create a writable external table that references `sample.orc`. For example:
+
+    ``` sql
+    postgres=# CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location text, month text, number_of_orders int, total_sales numeric(10,2), items_sold text[] )
+        LOCATION ('pxf://data/pxf_examples/sampledata.orc?PROFILE=hdfs:orc')
+      FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
+    ```
+
+1. Write a few records to the `sampledata.orc` XXX by inserting directly into the `write_to_sample_orc` table. For example:
+   
+    ``` sql
+postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Frankfurt', 'Mar', 777, 3956.98, {"winter socks","pants",boots} );
+postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Cleveland', 'Oct', 3218, 96645.37, {"long-sleeved shirts",hats} );
+    ```
+
+1. Recall that Greenplum Database does not support directly querying a writable external table. Query the `sample_orc` table to read the data you added to XXX:
+
+    ``` sql
+    postgres=# SELECT * FROM sample_orc ORDER BY number_of_orders;
+    ```
+    ``` sql
+    XXX OUTPUT HERE
+    ```
+
