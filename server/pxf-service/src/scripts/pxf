@@ -478,22 +478,21 @@ function doStatus()
     checkJavaHome
     warnUserEnvScript
 
-    if [[ ! -f "${pid_file}" ]]; then
-        # TODO: what if pidfile has been accidentally delete but PXF is still running?
-        # should we print a warning here and still try to curl the endpoint to check that PXF
-        # really down?
-        echoRed "Not running -- no pidfile found"
+    if ! checkWebapp 1 0; then
+        if [[ ! -f "${pid_file}" ]]; then
+            echoRed "PID file '${pid_file}' not found"
+            return 1
+        fi
+
+        local pid
+        pid="$(cat "${pid_file}")"
+        if ! isRunning "${pid}"; then
+            echoRed "Process with PID=${pid} not found"
+        fi
+
         return 1
     fi
 
-    local pid
-    pid="$(cat "${pid_file}")"
-    if ! isRunning "${pid}"; then
-        echoRed "Not running -- no process with PID=${pid} found"
-        return 1
-    fi
-
-    checkWebapp 1 0 || return 1
     echoGreen "PXF is listening on port $PXF_PORT"
     return 0
 }
