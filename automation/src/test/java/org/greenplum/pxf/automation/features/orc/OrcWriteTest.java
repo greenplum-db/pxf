@@ -53,9 +53,9 @@ public class OrcWriteTest extends BaseFeature {
             "c_bigint BIGINT"         , // DataType.BIGINT
             "c_small SMALLINT"        , // DataType.SMALLINT
             "c_int INT"               , // DataType.INTEGER
-            "c_text  STRING"          , // DataType.TEXT
-            "c_real DOUBLE"           , // DataType.REAL
-            "c_float FLOAT"           , // DataType.FLOAT8
+            "c_text STRING"           , // DataType.TEXT
+            "c_real FLOAT"            , // DataType.REAL
+            "c_float DOUBLE"          , // DataType.FLOAT8
             "c_char CHAR(4)"          , // DataType.BPCHAR
             "c_varchar VARCHAR(7)"    , // DataType.VARCHAR
             "c_varchar_nolimit STRING", // DataType.VARCHAR with no length
