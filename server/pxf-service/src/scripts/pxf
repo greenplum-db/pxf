@@ -159,6 +159,7 @@ function checkWebapp()
 # determines whether the application is running
 function isRunning()
 {
+    [[ -z "$1" ]] && { return 1; }
     ps -o pid,command -p "$1" | grep 'pxf-app' &> /dev/null
 }
 
