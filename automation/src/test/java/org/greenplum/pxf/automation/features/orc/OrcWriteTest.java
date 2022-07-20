@@ -106,7 +106,6 @@ public class OrcWriteTest extends BaseFeature {
         // path for storing data on HDFS (for processing by PXF)
         hdfsPath = hdfs.getWorkingDirectory() + "/writableOrc/";
         protocol = ProtocolUtils.getProtocol();
-        hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
     }
 
     @Override
@@ -137,6 +136,9 @@ public class OrcWriteTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "security"})
     public void orcWritePrimitivesReadWithHive() throws Exception {
+        // init only here, not in beforeClass() method as other tests run in environments without Hive
+        hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
+
         gpdbTableNamePrefix = "pxf_orc_primitive_types_with_hive";
         fullTestPath = hdfsPath + "orc_primitive_types_with_hive";
 
