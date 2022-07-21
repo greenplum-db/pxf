@@ -89,6 +89,15 @@ function validate_user()
 
 function checkPermissions()
 {
+    # TODO
+    # Currently, in case of any error if PXF doesn't come up, the empty PID file created here remains.
+    # If the pxf is restarted again after the failure, this empty PID file will cause issues. For e.g.
+    # isRunning function will try to ps on the empty PID which will fail with the error "error: list of process IDs must follow -p"
+    # To avoid that we can either
+    # 1. Check if the PID exists in the isRunning function
+    # 2. Removes the PID file which is created here after checking for write permissions
+    # 3. Touch a file with another name to check for the write permissions in the directory
+    # 4. In case PXF doesn't come up for any reason, clean the stale PID
     touch "$pid_file" &> /dev/null || { echoRed "ERROR: Operation not permitted (cannot access pid file: '$pid_file')"; return 4; }
     [[ -d "$PXF_LOGDIR" ]] || { echoRed "ERROR: Operation not permitted (log directory does not exist: '$PXF_LOGDIR')"; return 4; }
 }
