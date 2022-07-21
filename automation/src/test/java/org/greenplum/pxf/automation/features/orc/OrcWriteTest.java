@@ -133,8 +133,9 @@ public class OrcWriteTest extends BaseFeature {
 
     /*
      * Do not run this test with "hcfs" group as Hive is not available in the environments prepared for that group
+     * Also do not run with "security" group that would require kerberos principal to be included in Hive JDBC URL
      */
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb"})
     public void orcWritePrimitivesReadWithHive() throws Exception {
         // init only here, not in beforeClass() method as other tests run in environments without Hive
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
