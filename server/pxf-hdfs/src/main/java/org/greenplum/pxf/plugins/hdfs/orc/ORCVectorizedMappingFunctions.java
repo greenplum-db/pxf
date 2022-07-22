@@ -183,9 +183,9 @@ class ORCVectorizedMappingFunctions {
                     if (!(childVector.noNulls || !childVector.isNull[childRow])) {
                         val = null;
                     } else if (oid == DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID()) {
-                        val = timestampWithTimezoneToString(childVector.asScratchTimestamp(childRow));
+                        val = timestampToString(childVector.asScratchTimestamp(childRow), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
                     } else {
-                        val = timestampToString(childVector.asScratchTimestamp(childRow));
+                        val = timestampToString(childVector.asScratchTimestamp(childRow), GreenplumDateTime.DATETIME_FORMATTER);
                     }
                     pgArrayBuilder.addElement(val);
                     break;

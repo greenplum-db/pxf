@@ -87,43 +87,43 @@ public class OrcWriteTest extends BaseFeature {
     };
 
     private static final String[] ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS = {
-            "id     integer"        ,
-            "col00  boolean[]"      , // DataType.BOOLARRAY
-            "col01  bytea[]"        , // DataType.BYTEAARRAY
-            "col02  bigint[]"       , // DataType.INT8ARRAY
-            "col03  smallint[]"     , // DataType.INT2ARRAY
-            "col04  integer[]"      , // DataType.INT4ARRAY
-            "col05  text[]"         , // DataType.TEXTARRAY
-            "col06  real[]"         , // DataType.FLOAT4ARRAY
-            "col07  float[]"        , // DataType.FLOAT8ARRAY
-            "col08  char(4)[]"      , // DataType.BPCHARARRAY
-            "col09  varchar(7)[]"   , // DataType.VARCHARARRAY
-            "col10  date[]"         , // DataType.DATEARRAY
-            "col11  time[]"         , // DataType.TIMEARRAY
-            "col12  timestamp[]"    , // DataType.TIMESTAMPARRAY
-            "col13  timestamptz[]"  , // DataType.TIMESTAMP_WITH_TIME_ZONE
-            "col14  numeric[]"      , // DataType.NUMERICARRAY
-            "col15  uuid[]"           // DataType.UUIDARRAY
+            "id     integer"                ,
+            "bool_arr  boolean[]"           , // DataType.BOOLARRAY
+            "bytea_arr  bytea[]"            , // DataType.BYTEAARRAY
+            "bigint_arr  bigint[]"          , // DataType.INT8ARRAY
+            "smallint_arr  smallint[]"      , // DataType.INT2ARRAY
+            "int_arr  integer[]"            , // DataType.INT4ARRAY
+            "text_arr  text[]"              , // DataType.TEXTARRAY
+            "real_arr  real[]"              , // DataType.FLOAT4ARRAY
+            "float_arr  float[]"            , // DataType.FLOAT8ARRAY
+            "bpchar_arr  char(4)[]"         , // DataType.BPCHARARRAY
+            "varchar_arr  varchar(7)[]"     , // DataType.VARCHARARRAY
+            "date_arr  date[]"              , // DataType.DATEARRAY
+            "time_arr  time[]"              , // DataType.TIMEARRAY
+            "timestamp_arr  timestamp[]"    , // DataType.TIMESTAMPARRAY
+            "timestamptz_arr  timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE
+            "numeric_arr  numeric[]"        , // DataType.NUMERICARRAY
+            "uuid_arr  uuid[]"                // DataType.UUIDARRAY
     };
 
     private static final String[] ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ = {
-            "id     integer"      ,
-            "col00  boolean[]"      , // DataType.BOOLARRAY
-            "col01  bytea[]"        , // DataType.BYTEAARRAY
-            "col02  bigint[]"       , // DataType.INT8ARRAY
-            "col03  smallint[]"     , // DataType.INT2ARRAY
-            "col04  integer[]"      , // DataType.INT4ARRAY
-            "col05  text[]"         , // DataType.TEXTARRAY
-            "col06  real[]"         , // DataType.FLOAT4ARRAY
-            "col07  float[]"        , // DataType.FLOAT8ARRAY
-            "col08  char(4)[]"      , // DataType.BPCHARARRAY
-            "col09  varchar(7)[]"   , // DataType.VARCHARARRAY
-            "col10  date[]"         , // DataType.DATEARRAY
-            "col11  text[]"         , // DataType.TIMEARRAY --> time is not a separate type in orc (see OrcSchemaBuilder.java)
-            "col12  timestamp[]"    , // DataType.TIMESTAMPARRAY
-            "col13  timestamptz[]"  , // DataType.TIMESTAMP_WITH_TIME_ZONE
-            "col14  numeric[]"      , // DataType.NUMERICARRAY
-            "col15  text[]"           // DataType.UUIDARRAY --> uuid is stored as string (see OrcSchemaBuilder.java)
+            "id     integer"                ,
+            "bool_arr  boolean[]"           , // DataType.BOOLARRAY
+            "bytea_arr  bytea[]"            , // DataType.BYTEAARRAY
+            "bigint_arr  bigint[]"          , // DataType.INT8ARRAY
+            "smallint_arr  smallint[]"      , // DataType.INT2ARRAY
+            "int_arr  integer[]"            , // DataType.INT4ARRAY
+            "text_arr  text[]"              , // DataType.TEXTARRAY
+            "real_arr  real[]"              , // DataType.FLOAT4ARRAY
+            "float_arr  float[]"            , // DataType.FLOAT8ARRAY
+            "bpchar_arr  char(4)[]"         , // DataType.BPCHARARRAY
+            "varchar_arr  varchar(7)[]"     , // DataType.VARCHARARRAY
+            "date_arr  date[]"              , // DataType.DATEARRAY
+            "time_arr  text[]"              , // DataType.TIMEARRAY --> time is not a separate type in orc (see OrcSchemaBuilder.java)
+            "timestamp_arr  timestamp[]"    , // DataType.TIMESTAMPARRAY
+            "timestamptz_arr  timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE
+            "numeric_arr  numeric[]"        , // DataType.NUMERICARRAY
+            "uuid_arr  text[]"                // DataType.UUIDARRAY --> uuid is stored as string (see OrcSchemaBuilder.java)
     };
 
 
@@ -270,13 +270,13 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitiveArraysWithNulls() throws Exception {
-        gpdbTable = "orc_primitive_arrays";
-        fullTestPath = hdfsPath + gpdbTable;
+        gpdbTableNamePrefix = "orc_primitive_arrays";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
 
-        prepareWritableExternalTable(gpdbTable, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS, fullTestPath);
-        prepareReadableExternalTable(gpdbTable, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ  , fullTestPath, false /*mapByPosition*/);
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS, fullTestPath);
+        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ, fullTestPath, false /*mapByPosition*/);
 
-        insertArrayDataWithNulls(gpdbTable, 33, 17); // > 30 to let the DATE field to repeat the value
+        insertArrayDataWithNulls(gpdbTableNamePrefix, 33, 17); // > 30 to let the DATE field to repeat the value
 
         // use PXF *:orc profile to read the data
         runTincTest("pxf.features.orc.write.primitive_types_array.runTest");
@@ -284,17 +284,18 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitiveArraysWithNullElements() throws Exception {
-        gpdbTable = "orc_primitive_arrays_null_elements";
-        fullTestPath = hdfsPath + gpdbTable;
+        gpdbTableNamePrefix = "orc_primitive_arrays_null_elements";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
 
-        prepareWritableExternalTable(gpdbTable, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS, fullTestPath);
-        prepareReadableExternalTable(gpdbTable, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ  , fullTestPath, false /*mapByPosition*/);
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS, fullTestPath);
+        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ  , fullTestPath, false /*mapByPosition*/);
 
-        insertArrayDataWithNullElements(gpdbTable, 33, 17); // > 30 to let the DATE field to repeat the value
+        insertArrayDataWithNullElements(gpdbTableNamePrefix, 33, 17); // > 30 to let the DATE field to repeat the value
 
         // use PXF *:orc profile to read the data
         runTincTest("pxf.features.orc.write.primitive_types_array_null_elements.runTest");
     }
+
     private void insertDataWithoutNulls(String exTable, int numRows) throws Exception {
         StringBuilder statementBuilder = new StringBuilder("INSERT INTO " + exTable + "_writable VALUES ");
         for (int i = 0; i < numRows; i++) {
