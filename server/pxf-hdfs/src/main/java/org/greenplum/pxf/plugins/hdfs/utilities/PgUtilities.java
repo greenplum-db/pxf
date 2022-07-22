@@ -81,6 +81,11 @@ public class PgUtilities {
             throw new PxfRuntimeException(String.format("array dimension mismatch, rawData: %s", new String(value)));
         }
 
+        // handle the empty array {} case
+        if (value[0] == '{' && value[1] == '}') {
+            return new String[0];
+        }
+
         int depth = 0;
         boolean inQuoted = false;
         for (int i = 0; i < value.length; i++) {
@@ -132,7 +137,7 @@ public class PgUtilities {
      * @return string representing Postgres array
      */
     public String unescapeArrayElement(String str) {
-        if (StringUtils.equals(str, "NULL") || StringUtils.equals(str, "")) {
+        if (StringUtils.equals(str, "NULL")) {
             return null;
         }
 

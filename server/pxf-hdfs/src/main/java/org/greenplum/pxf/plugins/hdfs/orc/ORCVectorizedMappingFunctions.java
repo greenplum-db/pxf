@@ -522,8 +522,6 @@ class ORCVectorizedMappingFunctions {
     }
 
     private static void initWriteArrayFunctionsMap() {
-        // todo do we need to worry about null cases here? doesn't seem so?
-        // the functions assume values are not nulls and do not do any null checking
         // the array write functions rely on the primitive write functions so they must be initialized first
         // it is assumed that all arrays are one dimensional
         writeListFunctionsMap.put(TypeDescription.Category.BOOLEAN,
@@ -590,7 +588,6 @@ class ORCVectorizedMappingFunctions {
      * A special function that writes lists to ORC file
      * @return a function setting the list column vector
      */
-    // todo: create list map similar to primitives write map. however this function takes in the orctype not the child type. this may be problematic?
     // PXF currently only has the capability to infer an ORC schema from the GPDB schema, so all arrays will be one-dimensional.
     private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TypeDescription.Category underlyingChildType) {
         final TriConsumer<ColumnVector, Integer, Object> childWriteFunction = writeFunctionsMap.get(underlyingChildType);
@@ -628,6 +625,7 @@ class ORCVectorizedMappingFunctions {
             }
         };
     }
+
     /**
      * Converts the string representation of a timestamp to an instant in a given timezone.
      * @param val string representation of the timestamp
