@@ -93,10 +93,10 @@ import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.MAP_BY_PO
  * | array<varchar>    | VARCHAR[]      | 1015          |
  * | array<binary>     | BYTEA[]        | 1001          |
  * ------------------------------------------------------
- *
  */
 public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedResolver, WriteVectorizedResolver, Resolver {
 
+    private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
     /**
      * The schema used to read or write the ORC file.
      */
@@ -113,7 +113,6 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      * The array has the same size as the writeSchema, and the functions depend on the type of the elements in the schema.
      */
     private TriConsumer<ColumnVector, Integer, Object>[] writeFunctions;
-
     /**
      * An array of types that map from the readSchema types to Greenplum OIDs.
      */
@@ -137,8 +136,6 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
 
     private List<List<OneField>> cachedBatch;
     private VectorizedRowBatch vectorizedRowBatch;
-
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
 
     /**
      * {@inheritDoc}
@@ -411,7 +408,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         } else {
             // Need to be reallocated when batchSize is not equal to the size of the existing cacheBatch,
             // otherwise we will read more rows which we do not expect.
-            if (batchSize != cachedBatch.size()){
+            if (batchSize != cachedBatch.size()) {
                 cachedBatch = new ArrayList<>(batchSize);
 
                 for (int i = 0; i < batchSize; i++) {

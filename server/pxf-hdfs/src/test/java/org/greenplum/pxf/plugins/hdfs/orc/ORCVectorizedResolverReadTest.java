@@ -20,6 +20,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.sql.Date;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
 
-    private static final String ORC_TYPES_SCHEMA = "struct<t1:string,t2:string,num1:int,dub1:double,dec1:decimal(38,18),tm:timestamp,r:float,bg:bigint,b:boolean,tn:tinyint,sml:smallint,dt:date,vc1:varchar(5),c1:char(3),bin:binary>";
+    private static final String ORC_TYPES_SCHEMA = "struct<t1:string,t2:string,num1:int,dub1:double,dec1:decimal(38,18),tm:timestamp,tmtz:timestamp with local time zone,r:float,bg:bigint,b:boolean,tn:tinyint,sml:smallint,dt:date,vc1:varchar(5),c1:char(3),bin:binary>";
     private static final String ORC_TYPES_SCHEMA_COMPOUND = "struct<id:int,bool_arr:array<boolean>,int2_arr:array<smallint>,int_arr:array<int>,int8_arr:array<bigint>,float_arr:array<float>,float8_arr:array<double>,text_arr:array<string>,bytea_arr:array<binary>,char_arr:array<char(15)>,varchar_arr:array<varchar(15)>>";
     private static final String ORC_TYPES_SCHEMA_COMPOUND_MULTI = "struct<id:int,bool_arr:array<array<boolean>>,int2_arr:array<array<smallint>>,int_arr:array<array<int>>,int8_arr:array<array<bigint>>,float_arr:array<array<float>>,float8_arr:array<array<double>>,text_arr:array<array<string>>,bytea_arr:array<array<binary>>,char_arr:array<array<char(15)>>,varchar_arr:array<array<varchar(15)>>>";
     private ORCVectorizedResolver resolver;
@@ -91,7 +94,7 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
 
         // all OneField's values should be null since there is no projection
         for (List<OneField> oneFieldList : fieldsForBatch) {
-            assertEquals(15, oneFieldList.size());
+            assertEquals(16, oneFieldList.size());
             for (OneField field : oneFieldList) {
                 assertNull(field.val);
             }
@@ -212,10 +215,10 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
         IntStream.range(0, columnDescriptors.size()).forEach(idx ->
                 columnDescriptors
                         .get(idx)
-                        .setProjected(idx == 1 || idx == 2 || idx == 5 || idx == 6 || idx == 9 || idx == 13));
+                        .setProjected(idx == 1 || idx == 2 || idx == 5 || idx == 6 || idx == 7 || idx == 10 || idx == 14));
 
         // This schema matches the columnDescriptors schema
-        TypeDescription schema = TypeDescription.fromString("struct<t2:string,num1:int,tm:timestamp,r:float,tn:tinyint,c1:char(3)>");
+        TypeDescription schema = TypeDescription.fromString("struct<t2:string,num1:int,tm:timestamp,tmtz: timestamp with local time zone,r:float,tn:tinyint,c1:char(3)>");
         context.setMetadata(schema);
 
         resolver.setRequestContext(context);
@@ -347,10 +350,15 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
                     Object expectedValue = expected[colNum][rowNum];
                     if (colNum == 4 && expectedValue != null) {
                         expectedValue = new HiveDecimalWritable(String.valueOf(expectedValue));
-                    } else if (colNum == 11 && expectedValue != null) {
+                    } else if (colNum == 12 && expectedValue != null) {
                         expectedValue = Date.valueOf(String.valueOf(expectedValue));
+                    } else if (colNum == 6 && expectedValue != null) {
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssX");
+                        expectedValue = ZonedDateTime.parse(String.valueOf(expectedValue), dateTimeFormatter).withZoneSameInstant(ZoneOffset.UTC);
+                        dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX");
+                        value = ZonedDateTime.parse(String.valueOf(value), dateTimeFormatter).withZoneSameInstant(ZoneOffset.UTC);
                     }
-                    if (colNum == 14) {
+                    if (colNum == 15) {
                         if (expectedValue == null) {
                             assertNull(value, "Row " + rowNum + ", COL" + (colNum + 1));
                         } else {
@@ -411,23 +419,31 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
                         case 5:
                             expectedValue = COL6_SUBSET[rowNum];
                             break;
-                        case 8:
-                            expectedValue = COL9_SUBSET[rowNum];
+                        case 6:
+                            if (COL7_SUBSET[rowNum] != null) {
+                                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssX");
+                                expectedValue = ZonedDateTime.parse(String.valueOf(COL7_SUBSET[rowNum]), dateTimeFormatter).withZoneSameInstant(ZoneOffset.UTC);
+                                dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX");
+                                value = ZonedDateTime.parse(String.valueOf(value), dateTimeFormatter).withZoneSameInstant(ZoneOffset.UTC);
+                            }
                             break;
-                        case 10:
-                            expectedValue = COL11_SUBSET[rowNum];
+                        case 9:
+                            expectedValue = COL10_SUBSET[rowNum];
                             break;
-                        case 12:
-                            expectedValue = COL13_SUBSET[rowNum];
+                        case 11:
+                            expectedValue = COL12_SUBSET[rowNum];
+                            break;
+                        case 13:
+                            expectedValue = COL14_SUBSET[rowNum];
                             break;
                         case 1:
                         case 3:
-                        case 6:
                         case 7:
-                        case 9:
-                        case 11:
-                        case 13:
+                        case 8:
+                        case 10:
+                        case 12:
                         case 14:
+                        case 15:
                             expectedValue = null;
                             break;
                     }
@@ -473,10 +489,11 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
 
     /**
      * Helper method for returning a list of batches from a single ORC file
-     * @param filename name of ORC file to read
-     * @param rowBatchMaxSize max size of batch to read from file
+     *
+     * @param filename                name of ORC file to read
+     * @param rowBatchMaxSize         max size of batch to read from file
      * @param expectedNumberOfBatches expected number of batches that should be returned by this method
-     * @param readSchema description of types in ORC file
+     * @param readSchema              description of types in ORC file
      * @return
      * @throws IOException
      */
