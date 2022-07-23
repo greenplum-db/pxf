@@ -259,6 +259,7 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 			switch (attribute->atttypid)
 			{
 				case NUMERICOID:
+				case 1231: // numeric array oid
 					{
 						resetStringInfo(&formatter);
 						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", attrIx);
@@ -280,8 +281,11 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 						break;
 					}
 				case CHAROID:
+				case 1002: // char array oid
 				case BPCHAROID:
+				case 1014: // bpchar array oid
 				case VARCHAROID:
+				case 1015: // varchar array oid
 					{
 						resetStringInfo(&formatter);
 						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", attrIx);
@@ -295,11 +299,17 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 						break;
 					}
 				case VARBITOID:
+				case 1563: //varbit array oid
 				case BITOID:
+				case 1561: // bit array oid
 				case TIMESTAMPOID:
+				case 1115: // timestamp array oid
 				case TIMESTAMPTZOID:
+				case 1185: // timestamp with timezone array oid
 				case TIMEOID:
+				case 1183: //time array oid
 				case TIMETZOID:
+				case 1270: //time with timezone array oid
 					{
 						resetStringInfo(&formatter);
 						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", attrIx);
@@ -313,6 +323,7 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 						break;
 					}
 				case INTERVALOID:
+				case 1187: // interval array oid
 					{
 						resetStringInfo(&formatter);
 						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", attrIx);
