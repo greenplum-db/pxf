@@ -491,7 +491,7 @@ class ORCVectorizedMappingFunctions {
         Instant instant = timestamp.toInstant();
         String timestampString = instant
                 .atZone(ZoneId.systemDefault())
-                .format(GreenplumDateTime.DATETIME_FORMATTER);
+                .format(formatter);
         LOG.debug("Converted timestamp: {} to date: {}", timestamp, timestampString);
         return timestampString;
     }

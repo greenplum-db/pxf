@@ -9,6 +9,7 @@ import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.SchemaEvolution;
+import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.sql.Date;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -353,10 +356,8 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
                     } else if (colNum == 12 && expectedValue != null) {
                         expectedValue = Date.valueOf(String.valueOf(expectedValue));
                     } else if (colNum == 6 && expectedValue != null) {
-                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssX");
-                        expectedValue = ZonedDateTime.parse(String.valueOf(expectedValue), dateTimeFormatter).withZoneSameInstant(ZoneOffset.UTC);
-                        dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX");
-                        value = ZonedDateTime.parse(String.valueOf(value), dateTimeFormatter).withZoneSameInstant(ZoneOffset.UTC);
+                        expectedValue = ZonedDateTime.parse(String.valueOf(expectedValue), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER).withZoneSameInstant(ZoneOffset.UTC);
+                        value = ZonedDateTime.parse(String.valueOf(value), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER).withZoneSameInstant(ZoneOffset.UTC);
                     }
                     if (colNum == 15) {
                         if (expectedValue == null) {
@@ -421,10 +422,8 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
                             break;
                         case 6:
                             if (COL7_SUBSET[rowNum] != null) {
-                                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssX");
-                                expectedValue = ZonedDateTime.parse(String.valueOf(COL7_SUBSET[rowNum]), dateTimeFormatter).withZoneSameInstant(ZoneOffset.UTC);
-                                dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX");
-                                value = ZonedDateTime.parse(String.valueOf(value), dateTimeFormatter).withZoneSameInstant(ZoneOffset.UTC);
+                                expectedValue = ZonedDateTime.parse(String.valueOf(COL7_SUBSET[rowNum]), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER).withZoneSameInstant(ZoneOffset.UTC);
+                                value = ZonedDateTime.parse(String.valueOf(value), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER).withZoneSameInstant(ZoneOffset.UTC);
                             }
                             break;
                         case 9:
