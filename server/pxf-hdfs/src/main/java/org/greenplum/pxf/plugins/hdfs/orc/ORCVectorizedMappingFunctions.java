@@ -31,8 +31,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -589,13 +590,13 @@ class ORCVectorizedMappingFunctions {
      * @return a function setting the list column vector
      */
     // PXF currently only has the capability to infer an ORC schema from the GPDB schema, so all arrays will be one-dimensional.
-    private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TypeDescription.Category underlyingChildType) {
-        final TriConsumer<ColumnVector, Integer, Object> childWriteFunction = writeFunctionsMap.get(underlyingChildType);
+    private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TypeDescription.Category underlyingChildCategory) {
+        final TriConsumer<ColumnVector, Integer, Object> childWriteFunction = writeFunctionsMap.get(underlyingChildCategory);
 
         return (columnVector, row, val) -> {
             ListColumnVector listColumnVector = (ListColumnVector) columnVector;
 
-            List<Object> data = orcUtilities.parsePostgresArray((String) val, underlyingChildType);
+            List<Object> data = orcUtilities.parsePostgresArray((String) val, underlyingChildCategory);
 
             int length = data.size();
             // the childCount refers to "the number of children slots used"
@@ -620,7 +621,11 @@ class ORCVectorizedMappingFunctions {
                     }
                     childColumnVector.isNull[childIndex] = true;
                 } else {
-                    childWriteFunction.accept(childColumnVector, childIndex, rowElem);
+                    try {
+                        childWriteFunction.accept(childColumnVector, childIndex, rowElem);
+                    } catch (NumberFormatException | DateTimeParseException | PxfRuntimeException e) {
+                        orcUtilities.throwArrayException((String) rowElem, underlyingChildCategory, e);
+                    }
                 }
             }
         };
