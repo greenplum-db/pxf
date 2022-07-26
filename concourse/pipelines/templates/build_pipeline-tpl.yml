@@ -117,9 +117,9 @@ anchors:
     platform: linux
   image: ccp-7-image
   params:
-    GOOGLE_CREDENTIALS: ((google-service-account-key))
-    GOOGLE_PROJECT_ID: ((google-project-id))
-    GOOGLE_ZONE: ((google-zone))
+    GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+    GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+    GOOGLE_ZONE: ((ud/pxf/common/google-zone))
 
 - &destroy_dataproc_2
   task: Cleanup Dataproc 2
@@ -134,9 +134,9 @@ anchors:
     platform: linux
   image: ccp-7-image
   params:
-    GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
-    GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
-    GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
+    GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-kerberos-google-service-account-key))
+    GOOGLE_PROJECT_ID: ((ud/pxf/common/data-gpdb-ud-kerberos-google-project-id))
+    GOOGLE_ZONE: ((ud/pxf/common/data-gpdb-ud-kerberos-google-zone))
 
 - &destroy_gpdb_cluster
   put: terraform_gpdb
@@ -163,12 +163,12 @@ anchors:
     put: slack-alert
     params:
       text: |
-        <((ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went red :blob_slightly_frowning_face:
+        <((ud/pxf/common/concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went red :blob_slightly_frowning_face:
   on_success:
     put: slack-alert
     params:
       text: |
-        <((ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went green! :smile:
+        <((ud/pxf/common/concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went green! :smile:
 {% endif %}
 
 ## ======================================================================
@@ -182,7 +182,7 @@ resource_types:
     repository: gcr.io/data-gpdb-ud/terraform-resource
     tag: 0.11.15
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 - name: terraform-0.14.10
   type: registry-image
@@ -220,7 +220,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
 - name: pxf-automation-dependencies
@@ -228,7 +228,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
 ## ---------- Single Cluster tarballs ----------
@@ -237,7 +237,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
 - name: singlecluster-cdh
@@ -245,7 +245,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
 
 - name: singlecluster-hdp3
@@ -253,7 +253,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 
 ## ---------- Github Repos ----------
@@ -261,8 +261,8 @@ resources:
   type: git
   icon: git
   source:
-    branch: ((pxf-git-branch))
-    uri: ((pxf-git-remote))
+    branch: ((ud/pxf/[[dev|prod]]/git-branch))
+    uri: ((ud/pxf/[[dev | prod ]]/git-remote))
     ignore_paths:
       - docs/**
       - singlecluster/**
@@ -272,81 +272,83 @@ resources:
 - name: ccp_src
   type: git
   source:
+    # vvv ccp-git-* from gpdb_common-ci-secrets
     branch: ((ccp-git-branch))
     private_key: ((ccp-git-key))
     uri: ((ccp-git-remote))
+    # ^^^
 
 ## ---------- RelEng Drop Artifacts ----------
 - name: pxf_gp5_rhel7_release_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-drop-path))/gpdb5/pxf-gp5-(.*)-2.el7.x86_64.rpm
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb5/pxf-gp5-(.*)-2.el7.x86_64.rpm
 
 - name: pxf_gp6_rhel7_release_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-drop-path))/gpdb6/pxf-gp6-(.*)-2.el7.x86_64.rpm
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2.el7.x86_64.rpm
 
 - name: pxf_gp6_rhel8_release_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-drop-path))/gpdb6/pxf-gp6-(.*)-2.el8.x86_64.rpm
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2.el8.x86_64.rpm
 
 - name: pxf_gp6_ubuntu18_release_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-drop-path))/gpdb6/pxf-gp6-(.*)-2-ubuntu18.04-amd64.deb
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2-ubuntu18.04-amd64.deb
 
 - name: pxf_gp5_osl_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-osl-drop-path))/gpdb5/((pxf-osl-file-prefix))_(.*)_GA.txt
+    regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb5/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
 
 - name: pxf_gp5_odp_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-odp-drop-path))/gpdb5/((pxf-odp-file-prefix))-(.*)-ODP.tar.gz
+    regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb5/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
 
 - name: pxf_gp6_osl_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-osl-drop-path))/gpdb6/((pxf-osl-file-prefix))_(.*)_GA.txt
+    regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb6/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
 
 - name: pxf_gp6_odp_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-osl-drop-path))/gpdb6/((pxf-odp-file-prefix))-(.*)-ODP.tar.gz
+    regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb6/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
 
 ## ---------- RelEng Drop Artifacts for tarballs ----------
 - name: pxf_gp5_tarball_release_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-drop-path))/gpdb5/pxf-gp5-(.*)-el7.x86_64.tar.gz
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb5/pxf-gp5-(.*)-el7.x86_64.tar.gz
 
 - name: pxf_gp6_tarball_release_to_releng
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-drop-path))/gpdb6/pxf-gp6-(.*)-el7.x86_64.tar.gz
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-el7.x86_64.tar.gz
 
 ## ---------- PXF ShipIt resources ----------
 - name: pxf_shipit_file
@@ -354,19 +356,19 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-releases
-    json_key: ((pxf-storage-service-account-key))
-    regexp: ((pxf-releases-bucket-prefix))/shipit/greenplum-pxf-(.*).txt
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    regexp: [[dev|prod]]/shipit/greenplum-pxf-(.*).txt
 
 {% if email_notification %}
 - name: send-an-email
   type: email
   source:
     smtp:
-      host: ((pxf-smtp-host))
-      port: ((pxf-smpt-port)) # this must be a string
-      username: ((pxf-smtp-username))
-      password: ((pxf-smtp-password))
-    from: ((pxf-email-sender))
+      host: ((ud/pxf/common/smtp-host))
+      port: ((ud/pxf/common/smtp-port)) # this must be a string
+      username: ((ud/pxf/secrets/smtp-username))
+      password: ((ud/pxf/secrets/smtp-password))
+    from: ((ud/pxf/common/email-sender))
 {% endif %}
 
 ## ---------- Docker Images ----------
@@ -380,7 +382,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 {% endfor %} {# gp5, gp6, and gp7 #}
 
 {% set gp_ver = 6 %}
@@ -391,7 +393,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rhel8-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 - name: gpdb6-pxf-dev-oel7-image
@@ -401,7 +403,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-oel7-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 {% set gp_ver = 6 %}
 - name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
@@ -411,7 +413,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 - name: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
   type: registry-image
@@ -420,7 +422,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf-mapr
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 - name: rpmrebuild-centos7-image
@@ -430,7 +432,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/rpmrebuild-centos7
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 - name: rpmrebuild-rhel8-image
   type: registry-image
@@ -439,7 +441,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/rpmrebuild-rhel8
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 - name: ccp-7-image
   type: registry-image
@@ -470,7 +472,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 {% endfor %} {# range(num_gpdb5_versions) #}
 {% set gp_ver = None %}
@@ -482,7 +484,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
@@ -490,7 +492,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
@@ -502,7 +504,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel8-x86_64.rpm
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
@@ -512,7 +514,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: ((gp7-alpha-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/gp7-alpha-releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/master/greenplum-db-(7.*)-rhel7-x86_64.rpm
 
@@ -520,9 +522,9 @@ resources:
 - name: pxf5_gp6_rhel7_released
   type: gcs
   source:
-    bucket: ((pxf-releng-drop-bucket))
+    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
 
 ## ---------- PXF Build Artifacts ----------
 {% set gp_ver = None %}
@@ -533,8 +535,9 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((pxf-storage-service-account-key))
-    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    versioned_file: ((ud/pxf/[[dev|prod]/build-bucket-prefix]))/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
+    versioned_file: [[ dev|prod ]]/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
 {% endfor %}
 
 {% set gp_ver = 6 %}
@@ -543,16 +546,16 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((pxf-storage-service-account-key))
-    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    versioned_file: [[dev|prod]]/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
 
 - name: pxf_gp[[gp_ver]]_tarball_rhel8
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((pxf-storage-service-account-key))
-    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    versioned_file: [[dev|prod]]/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
 {% set gp_ver = None %}
 
 ## ---------- Auxiliary Resources ----------
@@ -562,9 +565,9 @@ resources:
     env:
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      GOOGLE_CREDENTIALS: ((google-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
     vars:
-      project_id: ((google-project-id))
+      project_id: ((ud/pxf/common/google-project-id))
     storage:
       access_key_id: ((tf-machine-access-key-id))
       secret_access_key: ((tf-machine-secret-access-key))
@@ -1712,7 +1715,7 @@ jobs:
       GIT_REMOTE_URL: ((pxf-git-remote-ssh-url))
       GIT_SSH_KEY: ((pxf-git-deploy-key))
       GIT_USERNAME: ((pxf-git-deploy-username))
-      GOOGLE_CREDENTIALS: ((pxf-storage-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -1737,7 +1740,7 @@ jobs:
       GCS_OSL_PATH: ((pxf-releases-bucket-prefix))/OSL
       GCS_RELEASES_BUCKET: data-gpdb-ud-pxf-releases
       GCS_RELEASES_PATH: ((pxf-releases-bucket-prefix))/releases
-      GOOGLE_CREDENTIALS: ((pxf-storage-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
   #  - in_parallel: does not work since all tasks modify pxf_artifacts
 {% for gp_ver in range(5, 7) %}
   - task: Add OSL file to PXF-GP[[gp_ver]] RPM on RHEL7
@@ -1779,9 +1782,9 @@ jobs:
       PXF_ODP_FILE_PREFIX: ((pxf-odp-file-prefix))
       PXF_SLACK_CHANNEL_NAME: ((pxf-slack-channel-name))
       PXF_SLACK_CHANNEL_LINK: ((pxf-slack-channel-link))
-      RELENG_DROP_URL: gs://((pxf-releng-drop-bucket))/((pxf-releng-drop-path))
-      RELENG_OSL_DROP_URL: gs://((pxf-releng-drop-bucket))/((pxf-releng-osl-drop-path))
-      RELENG_ODP_DROP_URL: gs://((pxf-releng-drop-bucket))/((pxf-releng-odp-drop-path))
+      RELENG_DROP_URL: gs://((ud/pxf/[[dev|prod]]/releng-drop-bucket))/((ud/pxf/common/releng-drop-path))
+      RELENG_OSL_DROP_URL: gs://((ud/pxf/[[dev|prod]]/releng-drop-bucket))/((pxf-releng-osl-drop-path))
+      RELENG_ODP_DROP_URL: gs://((ud/pxf/[[dev|prod]]/releng-drop-bucket))/((pxf-releng-odp-drop-path))
   - in_parallel:
     - put: pxf_gp5_rhel7_release_to_releng
       params:

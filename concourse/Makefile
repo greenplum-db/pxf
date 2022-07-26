@@ -17,7 +17,6 @@ REDHAT_MAJOR_VERSION        ?= 7
 FLY_CMD                      = /usr/local/bin/fly
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
-SECRETS_HOME                 = $(HOME)/workspace/gp-continuous-integration/secrets
 EMAIL                       ?= true
 SLACK                       ?= true
 # below are dev-build specific vars
@@ -59,10 +58,6 @@ set-build-pipeline:
 		--pipeline=$(BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		--var=pxf-git-branch=master \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
@@ -84,11 +79,6 @@ set-dev-release-pipeline:
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-dev.yml \
-		--load-vars-from=$(SECRETS_HOME)/pivotal-gp-pxf-dev-deploy-key.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=pxf-build-bucket-prefix=dev/$(USER)-$(BRANCH) \
 		--var=pxf-releases-bucket-prefix=dev/$(USER)-$(BRANCH) \
@@ -127,10 +117,6 @@ set-dev-build-pipeline:
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-dev.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=slack-integration-webhook-url=$${SLACK_INTEGRATION_WEBHOOK_URL} \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
@@ -145,9 +131,6 @@ set-hadoop-cluster-cleaner:
 		--check-creds \
 		--pipeline=hadoop-cluster-cleaner \
 		--config=pipelines/hadoop-cluster-cleaner.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
 		--var=pxf-git-branch=$(BRANCH) \
 		${FLY_OPTIONS_NON-INTERACTIVE} || echo "pipelines/hadoop-cluster-cleaner.yml has errors"
 
@@ -167,10 +150,6 @@ set-pr-build-pipeline:
 		--check-creds \
 		--pipeline=$(PR_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
@@ -186,10 +165,6 @@ set-certification-pipeline:
 		--check-creds \
 		--pipeline=$(CERTIFICATION_PIPELINE_NAME) \
 		--config pipelines/certification_pipeline.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/certification_pipeline.yml has errors"
 
@@ -204,8 +179,6 @@ set-cloudbuild-pipeline:
 		set-pipeline \
 		--check-creds \
 		--config $(HOME)/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
-		--load-vars-from=$(SECRETS_HOME)/gp-image-baking-dockerfiles.prod.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--pipeline cloudbuild
 
@@ -223,10 +196,6 @@ set-pivnet-pipeline:
 		--check-creds \
 		--pipeline=${PIVNET_PIPELINE_NAME} \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--var pxf-git-remote=https://github.com/greenplum-db/pxf \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
@@ -238,7 +207,6 @@ set-pivnet-pipeline:
 singlecluster:
 	fly -t ud set-pipeline \
 		-c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
-		-l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		-v pxf-git-branch=master -p pxf-singlecluster
 
 # ============================= PERFORMANCE PIPELINE TARGETS =============================
@@ -257,10 +225,6 @@ perf:
 		--check-creds \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/perf-settings-$(SCALE)g.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--pipeline $(PERF_PIPELINE_NAME) \
 		${FLY_OPTION_NON-INTERACTIVE}
@@ -275,7 +239,6 @@ data-gen-1g:
 		FLY_TARGET=ud \
 		data-gen-pxf-parquet-tpc-h-1g-6X \
 		INPUT_FILE=data-gen-6x-pxf.yml \
-		TEAM_SECRETS="--load-vars-from=${HOME}/workspace/gp-continuous-integration/secrets/pxf-perf-secrets.yml"
 
 .PHONY: query-execution-parquet
 query-execution-parquet-1g:
@@ -287,7 +250,6 @@ query-execution-parquet-1g:
 		FLY_TARGET=ud \
 		query-execution-pxf-parquet-tpc-h-1g-6X \
 		INPUT_FILE=ccp-provision-from-release-pxf.yml \
-		TEAM_SECRETS="--load-vars-from=${HOME}/workspace/gp-continuous-integration/secrets/pxf-perf-secrets.yml"
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------
