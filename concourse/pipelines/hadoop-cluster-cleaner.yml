@@ -14,20 +14,20 @@ resources:
 - name: ccp_src
   type: git
   source:
-    branch: ((ccp-git-branch))
-    private_key: ((ccp-git-key))
-    uri: ((ccp-git-remote))
+    branch: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-branch))
+    private_key: ((gp-concourse-cluster-provisioner-git-key))
+    uri: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-remote))
 
 - name: pxf_src
   type: git
   source:
     branch: ((pxf-git-branch))
-    uri: ((pxf-git-remote))
+    uri: ((ud/pxf/prod/git-remote))
 
 - name: slack-alert
   type: slack-notification
   source:
-    url: ((ud-dev-slack-integration-webhook))
+    url: ((ud/pxf/secrets/slack-integration-webhook))
 
 jobs:
 - name: hadoop-cluster-cleaner
@@ -60,13 +60,13 @@ jobs:
       params:
         AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
         AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-        AWS_DEFAULT_REGION: ((tf-machine-region))
-        BUCKET_NAME: ((tf-bucket-name))
-        GOOGLE_CREDENTIALS: ((data-gpdb-ud-ipa-google-service-account-key))
+        AWS_DEFAULT_REGION: ((ud/pxf/common/tf-machine-region))
+        BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-ipa-google-service-account-key))
         GOOGLE_APPLICATION_CREDENTIALS: /tmp/key.json
         LIFETIME_MINS: 240
         CLOUD: google
-        GOOGLE_CLUSTER_PREFIX: ((pxf-tf-bucket-path-hadoop))
+        GOOGLE_CLUSTER_PREFIX: ((ud/pxf/common/tf-bucket-path-hadoop))
         TERRAFORM_INIT_PATH: /tmp/build/*/pxf_src/concourse/terraform/ipa-multinode-hadoop
       run:
         path: ccp_src/utilities/ClusterReaper/run_ccp_reaper.sh

@@ -48,6 +48,7 @@ cloudbuild: set-cloudbuild-pipeline
 set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
+		pipeline_type=prod \
 		email_notification=$(EMAIL) \
 		slack_notification=$(SLACK) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
@@ -68,6 +69,7 @@ set-build-pipeline:
 set-dev-release-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
+		pipeline_type=dev \
 		email_notification=false \
 		slack_notification=false \
 		git_branch=$(BRANCH) \
