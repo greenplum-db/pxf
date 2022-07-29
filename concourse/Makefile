@@ -134,7 +134,7 @@ set-hadoop-cluster-cleaner:
 		--check-creds \
 		--pipeline=hadoop-cluster-cleaner \
 		--config=pipelines/hadoop-cluster-cleaner.yml \
-		--var=pxf-git-branch=$(BRANCH) \
+		--var=pxf-git-branch=master \
 		${FLY_OPTIONS_NON-INTERACTIVE} || echo "pipelines/hadoop-cluster-cleaner.yml has errors"
 
 	@echo "using the following command to unpause the pipeline"
