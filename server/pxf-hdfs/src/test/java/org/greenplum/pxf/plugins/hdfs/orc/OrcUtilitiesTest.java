@@ -1,9 +1,7 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.TypeDescription;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,20 +16,12 @@ import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OrcUtilitiesTest {
-    private RequestContext context;
-    private String orcDirectory;
     private OrcUtilities orcUtilities;
     private PgUtilities pgUtilities;
 
 
     @BeforeEach
     public void setup() {
-        orcDirectory = this.getClass().getClassLoader().getResource("orc/").getPath();
-        context = new RequestContext();
-        Configuration configuration = new Configuration();
-        configuration.set("pxf.fs.basePath", "/");
-        context.setDataSource(orcDirectory + "test.orc");
-        context.setConfiguration(configuration);
         pgUtilities = new PgUtilities();
         orcUtilities = new OrcUtilities(pgUtilities);
     }

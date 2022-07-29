@@ -83,7 +83,7 @@ class ORCVectorizedMappingFunctions {
         initWriteFunctionsMap();
         timestampInLocalWriteFunction = getTimestampInLocalWriteFunction();
         writeListFunctionsMap = new EnumMap<>(TypeDescription.Category.class);
-        initWriteArrayFunctionsMap();
+        initWriteListFunctionsMap();
     }
 
     public static OneField[] booleanReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
@@ -180,13 +180,13 @@ class ORCVectorizedMappingFunctions {
                     break;
                 case TIMESTAMP:
                     TimestampColumnVector childVector = (TimestampColumnVector) columnVector.child;
-                    String val;
-                    if (!(childVector.noNulls || !childVector.isNull[childRow])) {
-                        val = null;
-                    } else if (oid == DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID()) {
-                        val = timestampToString(childVector.asScratchTimestamp(childRow), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
-                    } else {
-                        val = timestampToString(childVector.asScratchTimestamp(childRow), GreenplumDateTime.DATETIME_FORMATTER);
+                    String val = null;
+
+                    if (childVector.noNulls || !childVector.isNull[childRow]) {
+                        DateTimeFormatter formatter = oid == DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID()
+                                ? GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER
+                                : GreenplumDateTime.DATETIME_FORMATTER;
+                        val = timestampToString(childVector.asScratchTimestamp(childRow), formatter);
                     }
                     pgArrayBuilder.addElement(val);
                     break;
@@ -435,7 +435,6 @@ class ORCVectorizedMappingFunctions {
         } else if (columnTypeCategory.equals(TypeDescription.Category.LIST)) {
             // pass along the underlying category of the list
             TypeDescription childTypeDescription = typeDescription.getChildren().get(0);
-            TriConsumer<ColumnVector, Integer, Object> childWriteFunction = writeFunctionsMap.get(childTypeDescription.getCategory());
             writeFunction = writeListFunctionsMap.get(childTypeDescription.getCategory());
         }
         else {
@@ -522,7 +521,7 @@ class ORCVectorizedMappingFunctions {
         });
     }
 
-    private static void initWriteArrayFunctionsMap() {
+    private static void initWriteListFunctionsMap() {
         // the array write functions rely on the primitive write functions so they must be initialized first
         // it is assumed that all arrays are one dimensional
         writeListFunctionsMap.put(TypeDescription.Category.BOOLEAN,
@@ -611,9 +610,9 @@ class ORCVectorizedMappingFunctions {
             // add the data to the child columnvector
             ColumnVector childColumnVector = listColumnVector.child;
             int childIndex;
-            for (int i = 0; i < length; i++) {
-                childIndex = offset + i;
-                Object rowElem = data.get(i);
+            int childCounter = 0;
+            for (Object rowElem : data) {
+                childIndex = offset + childCounter;
                 if (rowElem == null) {
                     // the array element is null
                     if (childColumnVector.noNulls) {
@@ -624,9 +623,11 @@ class ORCVectorizedMappingFunctions {
                     try {
                         childWriteFunction.accept(childColumnVector, childIndex, rowElem);
                     } catch (NumberFormatException | DateTimeParseException | PxfRuntimeException e) {
-                        orcUtilities.throwArrayException((String) rowElem, underlyingChildCategory, e);
+                        String hint = orcUtilities.createErrorHintFromValue(rowElem.toString());
+                        throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", val, underlyingChildCategory), hint, e);
                     }
                 }
+                childCounter++;
             }
         };
     }

@@ -47,7 +47,8 @@ public final class OrcUtilities {
             try {
                 data.add(decodeString(split, underlyingChildCategory));
             } catch (NumberFormatException | PxfRuntimeException e) {
-                throwArrayException(split, underlyingChildCategory, e);
+                String hint = createErrorHintFromValue(split);
+                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", val, underlyingChildCategory), hint, e);
             }
         }
         return data;
@@ -92,14 +93,11 @@ public final class OrcUtilities {
         }
     }
 
-    protected Exception throwArrayException(String val, TypeDescription.Category orcType, Exception exception) {
-       String hint = "";
+    protected String createErrorHintFromValue(String val) {
         if (StringUtils.startsWith(val, "{")) {
-            hint = "Value is a multi-dimensional array, PXF does not currently support multi-dimensional arrays for writing ORC files.";
+            return "Value is a multi-dimensional array, PXF does not currently support multi-dimensional arrays for writing ORC files.";
         } else {
-            hint = "Unexpected state since PXF generated the ORC schema.";
+            return "";
         }
-        throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", val, orcType), hint, exception);
-
     }
 }

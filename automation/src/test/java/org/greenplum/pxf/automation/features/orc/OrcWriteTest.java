@@ -20,111 +20,111 @@ import java.util.StringJoiner;
 public class OrcWriteTest extends BaseFeature {
 
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS = {
-            "id integer"               ,
-            "c_bool boolean"           , // DataType.BOOLEAN
-            "c_bytea bytea"            , // DataType.BYTEA
-            "c_bigint bigint"          , // DataType.BIGINT
-            "c_small smallint"         , // DataType.SMALLINT
-            "c_int integer"            , // DataType.INTEGER
-            "c_text text"              , // DataType.TEXT
-            "c_real real"              , // DataType.REAL
-            "c_float float"            , // DataType.FLOAT8
-            "c_char char(4)"           , // DataType.BPCHAR
-            "c_varchar varchar(7)"     , // DataType.VARCHAR
-            "c_varchar_nolimit varchar", // DataType.VARCHAR with no length
-            "c_date date"              , // DataType.DATE
-            "c_time time"              , // DataType.TIME
-            "c_timestamp timestamp"    , // DataType.TIMESTAMP
-            "c_numeric numeric"        , // DataType.NUMERIC
-            "c_uuid uuid"                // DataType.UUID
+            "id                 integer"    ,
+            "c_bool             boolean"    , // DataType.BOOLEAN
+            "c_bytea            bytea"      , // DataType.BYTEA
+            "c_bigint           bigint"     , // DataType.BIGINT
+            "c_small            smallint"   , // DataType.SMALLINT
+            "c_int              integer"    , // DataType.INTEGER
+            "c_text             text"       , // DataType.TEXT
+            "c_real             real"       , // DataType.REAL
+            "c_float            float"      , // DataType.FLOAT8
+            "c_char             char(4)"    , // DataType.BPCHAR
+            "c_varchar          varchar(7)" , // DataType.VARCHAR
+            "c_varchar_nolimit  varchar"    , // DataType.VARCHAR with no length
+            "c_date             date"       , // DataType.DATE
+            "c_time             time"       , // DataType.TIME
+            "c_timestamp        timestamp"  , // DataType.TIMESTAMP
+            "c_numeric          numeric"    , // DataType.NUMERIC
+            "c_uuid             uuid"         // DataType.UUID
     };
 
     private static final String[] ORC_TIMESTAMP_TABLE_COLUMNS = {
-            "id integer"               ,
-            "c_date date"              , // DataType.DATE
-            "c_time time"              , // DataType.TIME
-            "c_timestamp timestamp"    , // DataType.TIMESTAMP
-            "c_timestamptz timestamptz", // DataType.TIMESTAMP_WITH_TIME_ZONE
+            "id             integer"    ,
+            "c_date         date"       , // DataType.DATE
+            "c_time         time"       , // DataType.TIME
+            "c_timestamp    timestamp"  , // DataType.TIMESTAMP
+            "c_timestamptz  timestamptz", // DataType.TIMESTAMP_WITH_TIME_ZONE
     };
 
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS_HIVE = {
-            "id INT"                  ,
-            "c_bool BOOLEAN"          , // DataType.BOOLEAN
-            "c_bytea BINARY"          , // DataType.BYTEA
-            "c_bigint BIGINT"         , // DataType.BIGINT
-            "c_small SMALLINT"        , // DataType.SMALLINT
-            "c_int INT"               , // DataType.INTEGER
-            "c_text STRING"           , // DataType.TEXT
-            "c_real FLOAT"            , // DataType.REAL
-            "c_float DOUBLE"          , // DataType.FLOAT8
-            "c_char CHAR(4)"          , // DataType.BPCHAR
-            "c_varchar VARCHAR(7)"    , // DataType.VARCHAR
-            "c_varchar_nolimit STRING", // DataType.VARCHAR with no length
-            "c_date DATE"             , // DataType.DATE
-            "c_time STRING"           , // DataType.TIME (ORC stores TIME as string type)
-            "c_timestamp TIMESTAMP"   , // DataType.TIMESTAMP
-            "c_numeric DECIMAL(38,18)", // DataType.NUMERIC
-            "c_uuid STRING"             // DataType.UUID
+            "id                 INT"           ,
+            "c_bool             BOOLEAN"       , // DataType.BOOLEAN
+            "c_bytea            BINARY"        , // DataType.BYTEA
+            "c_bigint           BIGINT"        , // DataType.BIGINT
+            "c_small            SMALLINT"      , // DataType.SMALLINT
+            "c_int              INT"           , // DataType.INTEGER
+            "c_text             STRING"        , // DataType.TEXT
+            "c_real             FLOAT"         , // DataType.REAL
+            "c_float            DOUBLE"        , // DataType.FLOAT8
+            "c_char             CHAR(4)"       , // DataType.BPCHAR
+            "c_varchar          VARCHAR(7)"    , // DataType.VARCHAR
+            "c_varchar_nolimit  STRING"        , // DataType.VARCHAR with no length
+            "c_date             DATE"          , // DataType.DATE
+            "c_time             STRING"        , // DataType.TIME (ORC stores TIME as string type)
+            "c_timestamp        TIMESTAMP"     , // DataType.TIMESTAMP
+            "c_numeric          DECIMAL(38,18)", // DataType.NUMERIC
+            "c_uuid             STRING"          // DataType.UUID
     };
 
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS_READ_FROM_HIVE = {
-            "id integer"               ,
-            "c_bool boolean"           , // DataType.BOOLEAN
-            "c_bytea text"             , // DataType.BYTEA
-            "c_bigint bigint"          , // DataType.BIGINT
-            "c_small smallint"         , // DataType.SMALLINT
-            "c_int integer"            , // DataType.INTEGER
-            "c_text text"              , // DataType.TEXT
-            "c_real real"              , // DataType.REAL
-            "c_float float"            , // DataType.FLOAT8
-            "c_char char(4)"           , // DataType.BPCHAR
-            "c_varchar varchar(7)"     , // DataType.VARCHAR
-            "c_varchar_nolimit varchar", // DataType.VARCHAR with no length
-            "c_date date"              , // DataType.DATE
-            "c_time text"              , // DataType.TIME
-            "c_timestamp timestamp"    , // DataType.TIMESTAMP
-            "c_numeric numeric"        , // DataType.NUMERIC
-            "c_uuid text"                // DataType.UUID
+            "id                 integer"    ,
+            "c_bool             boolean"    , // DataType.BOOLEAN
+            "c_bytea            text"       , // DataType.BYTEA
+            "c_bigint           bigint"     , // DataType.BIGINT
+            "c_small            smallint"   , // DataType.SMALLINT
+            "c_int              integer"    , // DataType.INTEGER
+            "c_text             text"       , // DataType.TEXT
+            "c_real             real"       , // DataType.REAL
+            "c_float            float"      , // DataType.FLOAT8
+            "c_char             char(4)"    , // DataType.BPCHAR
+            "c_varchar          varchar(7)" , // DataType.VARCHAR
+            "c_varchar_nolimit  varchar"    , // DataType.VARCHAR with no length
+            "c_date             date"       , // DataType.DATE
+            "c_time             text"       , // DataType.TIME
+            "c_timestamp        timestamp"  , // DataType.TIMESTAMP
+            "c_numeric          numeric"    , // DataType.NUMERIC
+            "c_uuid             text"         // DataType.UUID
     };
 
     private static final String[] ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS = {
-            "id     integer"                ,
-            "bool_arr  boolean[]"           , // DataType.BOOLARRAY
-            "bytea_arr  bytea[]"            , // DataType.BYTEAARRAY
-            "bigint_arr  bigint[]"          , // DataType.INT8ARRAY
-            "smallint_arr  smallint[]"      , // DataType.INT2ARRAY
-            "int_arr  integer[]"            , // DataType.INT4ARRAY
-            "text_arr  text[]"              , // DataType.TEXTARRAY
-            "real_arr  real[]"              , // DataType.FLOAT4ARRAY
-            "float_arr  float[]"            , // DataType.FLOAT8ARRAY
-            "bpchar_arr  char(4)[]"         , // DataType.BPCHARARRAY
-            "varchar_arr  varchar(7)[]"     , // DataType.VARCHARARRAY
-            "date_arr  date[]"              , // DataType.DATEARRAY
-            "time_arr  time[]"              , // DataType.TIMEARRAY
-            "timestamp_arr  timestamp[]"    , // DataType.TIMESTAMPARRAY
+            "id               integer"      ,
+            "bool_arr         boolean[]"    , // DataType.BOOLARRAY
+            "bytea_arr        bytea[]"      , // DataType.BYTEAARRAY
+            "bigint_arr       bigint[]"     , // DataType.INT8ARRAY
+            "smallint_arr     smallint[]"   , // DataType.INT2ARRAY
+            "int_arr          integer[]"    , // DataType.INT4ARRAY
+            "text_arr         text[]"       , // DataType.TEXTARRAY
+            "real_arr         real[]"       , // DataType.FLOAT4ARRAY
+            "float_arr        float[]"      , // DataType.FLOAT8ARRAY
+            "bpchar_arr       char(4)[]"    , // DataType.BPCHARARRAY
+            "varchar_arr      varchar(7)[]" , // DataType.VARCHARARRAY
+            "date_arr         date[]"       , // DataType.DATEARRAY
+            "time_arr         time[]"       , // DataType.TIMEARRAY
+            "timestamp_arr    timestamp[]"  , // DataType.TIMESTAMPARRAY
             "timestamptz_arr  timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE
-            "numeric_arr  numeric[]"        , // DataType.NUMERICARRAY
-            "uuid_arr  uuid[]"                // DataType.UUIDARRAY
+            "numeric_arr      numeric[]"    , // DataType.NUMERICARRAY
+            "uuid_arr         uuid[]"         // DataType.UUIDARRAY
     };
 
     private static final String[] ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ = {
-            "id     integer"                ,
-            "bool_arr  boolean[]"           , // DataType.BOOLARRAY
-            "bytea_arr  bytea[]"            , // DataType.BYTEAARRAY
-            "bigint_arr  bigint[]"          , // DataType.INT8ARRAY
-            "smallint_arr  smallint[]"      , // DataType.INT2ARRAY
-            "int_arr  integer[]"            , // DataType.INT4ARRAY
-            "text_arr  text[]"              , // DataType.TEXTARRAY
-            "real_arr  real[]"              , // DataType.FLOAT4ARRAY
-            "float_arr  float[]"            , // DataType.FLOAT8ARRAY
-            "bpchar_arr  char(4)[]"         , // DataType.BPCHARARRAY
-            "varchar_arr  varchar(7)[]"     , // DataType.VARCHARARRAY
-            "date_arr  date[]"              , // DataType.DATEARRAY
-            "time_arr  text[]"              , // DataType.TIMEARRAY --> time is not a separate type in orc (see OrcSchemaBuilder.java)
-            "timestamp_arr  timestamp[]"    , // DataType.TIMESTAMPARRAY
-            "timestamptz_arr  timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE
-            "numeric_arr  numeric[]"        , // DataType.NUMERICARRAY
-            "uuid_arr  text[]"                // DataType.UUIDARRAY --> uuid is stored as string (see OrcSchemaBuilder.java)
+            "id              integer"      ,
+            "bool_arr        boolean[]"    , // DataType.BOOLARRAY
+            "bytea_arr       bytea[]"      , // DataType.BYTEAARRAY
+            "bigint_arr      bigint[]"     , // DataType.INT8ARRAY
+            "smallint_arr    smallint[]"   , // DataType.INT2ARRAY
+            "int_arr         integer[]"    , // DataType.INT4ARRAY
+            "text_arr        text[]"       , // DataType.TEXTARRAY
+            "real_arr        real[]"       , // DataType.FLOAT4ARRAY
+            "float_arr       float[]"      , // DataType.FLOAT8ARRAY
+            "bpchar_arr      char(4)[]"    , // DataType.BPCHARARRAY
+            "varchar_arr     varchar(7)[]" , // DataType.VARCHARARRAY
+            "date_arr        date[]"       , // DataType.DATEARRAY
+            "time_arr        text[]"       , // DataType.TIMEARRAY --> time is not a separate type in orc (see OrcSchemaBuilder.java)
+            "timestamp_arr   timestamp[]"  , // DataType.TIMESTAMPARRAY
+            "timestamptz_arr timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE
+            "numeric_arr     numeric[]"    , // DataType.NUMERICARRAY
+            "uuid_arr        text[]"         // DataType.UUIDARRAY --> uuid is stored as string (see OrcSchemaBuilder.java)
     };
 
 
