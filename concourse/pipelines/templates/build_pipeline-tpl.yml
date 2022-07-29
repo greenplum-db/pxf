@@ -261,8 +261,8 @@ resources:
   type: git
   icon: git
   source:
-    branch: ((ud/pxf/[[dev|prod]]/git-branch))
-    uri: ((ud/pxf/[[dev | prod ]]/git-remote))
+    branch: ((ud/pxf/[[ pipeline_type ]]/git-branch))
+    uri: ((ud/pxf/[[ pipeline_type ]]/git-remote))
     ignore_paths:
       - docs/**
       - singlecluster/**
@@ -280,56 +280,56 @@ resources:
 - name: pxf_gp5_rhel7_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb5/pxf-gp5-(.*)-2.el7.x86_64.rpm
 
 - name: pxf_gp6_rhel7_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2.el7.x86_64.rpm
 
 - name: pxf_gp6_rhel8_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2.el8.x86_64.rpm
 
 - name: pxf_gp6_ubuntu18_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2-ubuntu18.04-amd64.deb
 
 - name: pxf_gp5_osl_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb5/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
 
 - name: pxf_gp5_odp_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb5/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
 
 - name: pxf_gp6_osl_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb6/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
 
 - name: pxf_gp6_odp_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb6/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
 
@@ -337,14 +337,14 @@ resources:
 - name: pxf_gp5_tarball_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb5/pxf-gp5-(.*)-el7.x86_64.tar.gz
 
 - name: pxf_gp6_tarball_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-el7.x86_64.tar.gz
 
@@ -355,7 +355,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-releases
     json_key: ((ud/pxf/secrets/storage-service-account-key))
-    regexp: [[dev|prod]]/shipit/greenplum-pxf-(.*).txt
+    regexp: [[ pipeline_type ]]/shipit/greenplum-pxf-(.*).txt
 
 {% if email_notification %}
 - name: send-an-email
@@ -512,7 +512,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/gp7-alpha-releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/gp7-alpha-releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/master/greenplum-db-(7.*)-rhel7-x86_64.rpm
 
@@ -520,7 +520,7 @@ resources:
 - name: pxf5_gp6_rhel7_released
   type: gcs
   source:
-    bucket: ((ud/pxf/[[dev|prod]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
 
@@ -534,8 +534,8 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((ud/pxf/secrets/storage-service-account-key))
-    versioned_file: ((ud/pxf/[[dev|prod]/build-bucket-prefix]))/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
-    versioned_file: [[ dev|prod ]]/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
+    versioned_file: ((ud/pxf/[[ pipeline_type ]]/build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
+    versioned_file: [[ pipeline_type ]]/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
 {% endfor %}
 
 {% set gp_ver = 6 %}
@@ -545,7 +545,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((ud/pxf/secrets/storage-service-account-key))
-    versioned_file: [[dev|prod]]/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
+    versioned_file: [[ pipeline_type ]]/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
 
 - name: pxf_gp[[gp_ver]]_tarball_rhel8
   type: gcs
@@ -553,7 +553,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((ud/pxf/secrets/storage-service-account-key))
-    versioned_file: [[dev|prod]]/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
+    versioned_file: [[ pipeline_type ]]/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
 {% set gp_ver = None %}
 
 ## ---------- Auxiliary Resources ----------
@@ -1707,10 +1707,10 @@ jobs:
     file: pxf_src/concourse/tasks/promote_pxf_artifacts.yml
     params:
       GCS_RELEASES_BUCKET: data-gpdb-ud-pxf-releases
-      GCS_RELEASES_PATH: [[dev | prod ]]/releases
+      GCS_RELEASES_PATH: [[ pipeline_type ]]/releases
       GIT_BRANCH: ((pxf-git-branch))
       GIT_EMAIL: ((ud/pxf/common/git-deploy-email))
-      GIT_REMOTE_URL: ((ud/pxf/[[dev|prod]]/git-remote-ssh-url))
+      GIT_REMOTE_URL: ((ud/pxf/[[ pipeline_type ]]/git-remote-ssh-url))
       GIT_SSH_KEY: ((ud/pxf/secrets/git-deploy-key))
       GIT_USERNAME: ((ud/pxf/common/git-deploy-username))
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
@@ -1734,10 +1734,10 @@ jobs:
     image: google-cloud-sdk-slim-image
     file: pxf_src/concourse/tasks/get_pxf_release_artifacts.yml
     params:
-      GCS_ODP_PATH: [[dev|prod]]/ODP
-      GCS_OSL_PATH: [[dev|prod]]/OSL
+      GCS_ODP_PATH: [[ pipeline_type ]]/ODP
+      GCS_OSL_PATH: [[ pipeline_type ]]/OSL
       GCS_RELEASES_BUCKET: data-gpdb-ud-pxf-releases
-      GCS_RELEASES_PATH: [[dev|prod]]/releases
+      GCS_RELEASES_PATH: [[ pipeline_type ]]/releases
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
   #  - in_parallel: does not work since all tasks modify pxf_artifacts
 {% for gp_ver in range(5, 7) %}
@@ -1780,9 +1780,9 @@ jobs:
       PXF_ODP_FILE_PREFIX: ((ud/pxf/common/odp-file-prefix))
       PXF_SLACK_CHANNEL_NAME: ((ud/pxf/common/slack-channel-name))
       PXF_SLACK_CHANNEL_LINK: ((ud/pxf/secrets/slack-channel-link))
-      RELENG_DROP_URL: gs://((ud/pxf/[[dev|prod]]/releng-drop-bucket))/((ud/pxf/common/releng-drop-path))
-      RELENG_OSL_DROP_URL: gs://((ud/pxf/[[dev|prod]]/releng-drop-bucket))/((ud/pxf/common/releng-osl-drop-path))
-      RELENG_ODP_DROP_URL: gs://((ud/pxf/[[dev|prod]]/releng-drop-bucket))/((ud/pxf/common/releng-odp-drop-path))
+      RELENG_DROP_URL: gs://((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))/((ud/pxf/common/releng-drop-path))
+      RELENG_OSL_DROP_URL: gs://((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))/((ud/pxf/common/releng-osl-drop-path))
+      RELENG_ODP_DROP_URL: gs://((ud/pxf/[[ pipeline_type ]]/releng-drop-bucket))/((ud/pxf/common/releng-odp-drop-path))
   - in_parallel:
     - put: pxf_gp5_rhel7_release_to_releng
       params:
@@ -1821,5 +1821,5 @@ jobs:
       body: pxf_artifacts/email_body.txt
       attachment_globs: [pxf_artifacts/((ud/pxf/common/osl-file-prefix))*.txt]
       # TODO: how does this work on master w/ dev?
-      to_text: "((ud/pxf/[[dev|prod]]/releng-email)),((ud/pxf/[[dev|prod]]/ud-email))"
+      to_text: "((ud/pxf/[[ pipeline_type ]]/releng-email)),((ud/pxf/[[ pipeline_type ]]/ud-email))"
 {% endif %}
