@@ -7,9 +7,9 @@ pxf_dev_mapr_image_check: &pxf_dev_mapr_image
     timeout: 30m
     image: gcloud
     params:
-      GOOGLE_CREDENTIALS: {{pxf-cloudbuild-service-account-key}}
-      GOOGLE_PROJECT_ID: {{google-project-id}}
-      GOOGLE_ZONE: {{google-zone}}
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/cloudbuild-service-account-key))
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+      GOOGLE_ZONE: ((ud/pxf/common/google-zone))
       IMAGE_LIST: "gpdb6-centos7-test-pxf-mapr"
     config:
       platform: linux
@@ -33,7 +33,7 @@ resources:
     type: git
     icon: git
     source:
-      branch: {{pxf-git-branch}}
+      branch: ((pxf-git-branch))
       uri: https://github.com/greenplum-db/pxf.git
       paths:
         - concourse/docker/pxf-dev-base
@@ -42,7 +42,7 @@ resources:
     type: git
     icon: git
     source:
-      branch: {{pxf-git-branch}}
+      branch: ((pxf-git-branch))
       uri: https://github.com/greenplum-db/pxf.git
       paths:
         - concourse/docker/mapr
@@ -51,9 +51,9 @@ resources:
     type: git
     icon: git
     source:
-      uri: {{gp-image-baking-repo-uri}}
-      branch: {{gp-image-baking-repo-branch}}
-      private_key: {{gp-image-baking-repo-key}}
+      uri: ((gp-image-baking-repo-uri))
+      branch: ((gp-image-baking-repo-branch))
+      private_key: ((gp-image-baking-repo-key))
       paths:
         - images/docker/gpdb5/gpdb5-centos7-build-test
         - images/docker/gpdb6/gpdb6-centos7-test
@@ -78,9 +78,9 @@ jobs:
     - task: trigger_builds
       image: gcloud
       params:
-        GOOGLE_CREDENTIALS: {{pxf-cloudbuild-service-account-key}}
-        GOOGLE_PROJECT_ID: {{google-project-id}}
-        GOOGLE_ZONE: {{google-zone}}
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/cloudbuild-service-account-key))
+        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         TRIGGER_LIST: "pxf-dev-base rpmrebuild"
       config:
         platform: linux
@@ -104,9 +104,9 @@ jobs:
       timeout: 30m
       image: gcloud
       params:
-        GOOGLE_CREDENTIALS: {{pxf-cloudbuild-service-account-key}}
-        GOOGLE_PROJECT_ID: {{google-project-id}}
-        GOOGLE_ZONE: {{google-zone}}
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/cloudbuild-service-account-key))
+        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         IMAGE_LIST: "gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-rhel8-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf gpdb7-centos7-test-pxf gpdb7-ubuntu18.04-test-pxf"
       config:
         platform: linux
@@ -117,9 +117,9 @@ jobs:
     - task: trigger_builds
       image: gcloud
       params:
-        GOOGLE_CREDENTIALS: {{pxf-cloudbuild-service-account-key}}
-        GOOGLE_PROJECT_ID: {{google-project-id}}
-        GOOGLE_ZONE: {{google-zone}}
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/cloudbuild-service-account-key))
+        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         TRIGGER_LIST: "pxf-dev-server pxf-dev-mapr"
       config:
         platform: linux
