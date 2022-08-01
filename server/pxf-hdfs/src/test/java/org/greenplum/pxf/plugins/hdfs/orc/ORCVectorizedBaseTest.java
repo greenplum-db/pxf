@@ -9,6 +9,11 @@ import java.util.List;
 
 public class ORCVectorizedBaseTest {
 
+    protected List<ColumnDescriptor> columnDescriptors;
+    protected List<ColumnDescriptor> columnDescriptorsCompound;
+
+    protected List<ColumnDescriptor> twoColumnDescriptors;
+
     // From resources/orc/orc_types.csv
     static final String[] COL1 = {"row1", "row2", "row3", "row4", "row5", "row6", "row7", "row8", "row9", "row10", "row11", "row12_text_null", "row13_int_null", "row14_double_null", "row15_decimal_null", "row16_timestamp_null", "row17_real_null", "row18_bigint_null", "row19_bool_null", "row20_tinyint_null", "row21_smallint_null", "row22_date_null", "row23_varchar_null", "row24_char_null", "row25_binary_null"};
     static final String[] COL2 = {"s_6", "s_7", "s_8", "s_9", "s_10", "s_11", "s_12", "s_13", "s_14", "s_15", "s_16", null, "s_16", "s_16", "s_17", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16", "s_16"};
@@ -71,7 +76,9 @@ public class ORCVectorizedBaseTest {
     // for bpchar and varchar, ORC knows about the character limit in the schema, but will only store the original string in the file (without the additional whitespaces appended)
     static final String[] BPCHAR_LIST = {"{hello}", "{\"this is exactly\",\" fifteen chars.\"}", "{\"\"}", null, "{\"specials \\\\ \\\"\"}", "{\"test string\",NULL}"};
     static final String[] VARCHAR_LIST = {"{hello}", "{\"this is exactly\",\" fifteen chars.\"}", "{\"\"}", null, "{\"specials \\\\ \\\"\"}", "{\"test string\",NULL}"};
+
     static final Object[][] ORC_COMPOUND_TYPES_DATASET = {COL1_COMPOUND, BOOL_LIST, INT2_LIST, INTEGER_LIST, INT8_LIST, FLOAT_LIST, FLOAT8_LIST, TEXT_LIST, BYTEA_LIST, BPCHAR_LIST, VARCHAR_LIST};
+
     // From resources/orc/generate_orc_types_compound_multi.hql
     // postgres cannot support multi-dimensional arrays with subarrays of different sizes nor can it support nulls in the form of {{2,3},null,{4,5}}
     // while PXF can handle that sort of data, we will just allow it to error out on the GPDB side
@@ -86,9 +93,9 @@ public class ORCVectorizedBaseTest {
     static final String[] BYTEA_LIST_MULTI = {null, "{}", "{{\"\\\\xdeadbeef\"}}", "{{NULL,\"\\\\x5c22\"}}", "{{\"\\\\x5c5c5c\",\"\\\\x5b48495d\"},null}", "{{\"\\\\x313233\"},{\"\\\\x343536\"}}"};
     static final String[] BPCHAR_LIST_MULTI = {"{{hello}}", "{{\"this is exactly\"},{\" fifteen chars.\"}}", "{}", null, "{{\"specials \\\\ \\\"\"},null}", "{{\"test string\",NULL},{\"2 whitespace\",\"no whitespace\"}}"};
     static final String[] VARCHAR_LIST_MULTI = {"{{hello}}", "{{\"this is exactly\"},{\" fifteen chars.\"}}", "{}", null, "{{\"specials \\\\ \\\"\"},null}", "{{\"test string\",NULL},{\"2 whitespace  \",\"no whitespace\"}}"};
+
     static final Object[][] ORC_COMPOUND_MULTI_TYPES_DATASET = {COL1_COMPOUND_MULTI, BOOL_LIST_MULTI, INT2_LIST_MULTI, INTEGER_LIST_MULTI, INT8_LIST_MULTI, FLOAT_LIST_MULTI, FLOAT8_LIST_MULTI, TEXT_LIST_MULTI, BYTEA_LIST_MULTI, BPCHAR_LIST_MULTI, VARCHAR_LIST_MULTI};
-    protected List<ColumnDescriptor> columnDescriptors;
-    protected List<ColumnDescriptor> columnDescriptorsCompound;
+
 
     @BeforeEach
     public void setup() {
@@ -123,6 +130,9 @@ public class ORCVectorizedBaseTest {
         columnDescriptorsCompound.add(new ColumnDescriptor("char_arr", DataType.BPCHARARRAY.getOID(), 9, "bpchar(15)[]", null));
         columnDescriptorsCompound.add(new ColumnDescriptor("varchar_arr", DataType.VARCHARARRAY.getOID(), 10, "varchar(15)[]", null));
 
+        twoColumnDescriptors = new ArrayList<>();
+        twoColumnDescriptors.add(new ColumnDescriptor("col0", DataType.TEXT.getOID(), 0, "text", null));
+        twoColumnDescriptors.add(new ColumnDescriptor("col1", DataType.INTEGER.getOID(), 1, "int4", null));
 
     }
 

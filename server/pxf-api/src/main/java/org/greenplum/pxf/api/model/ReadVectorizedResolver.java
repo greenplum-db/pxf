@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api;
+package org.greenplum.pxf.api.model;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,6 +18,9 @@ package org.greenplum.pxf.api;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.OneRow;
 
 import java.util.List;
 

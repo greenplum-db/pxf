@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.3.2 (07/20/2022)
+
+### Bug Fixes:
+
+- [#781] (https://github.com/greenplum-db/pxf/pull/781) Fix: In case of UnsupportedOperationException, Add an error message.
+- [#789] (https://github.com/greenplum-db/pxf/pull/789) Upgrade to Springboot 2.5.12
+- [#799] (https://github.com/greenplum-db/pxf/pull/799) Bump jackson-databind from 2.11.0 to 2.12.6.1
+- [#814] (https://github.com/greenplum-db/pxf/pull/814) Add data buffer boundary checks to PXF extension
+- [#815] (https://github.com/greenplum-db/pxf/pull/815) Upgrade ORC version to 1.6.13 to get a fix for ORC-1065
+- [#819] (https://github.com/greenplum-db/pxf/pull/819) Upgrade Hadoop to 2.10.2
+- [#823] (https://github.com/greenplum-db/pxf/pull/823) Add unsupported exception in case of hive write
+
 ## 6.3.1 (04/27/2022)
 
 ### Bug Fixes:

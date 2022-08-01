@@ -1,5 +1,5 @@
 ---
-title: Configuring Connectors to MinIO and S3 Object Stores (Optional)
+title: Configuring Connectors to MinIO, AWS S3, and Dell ECS Object Stores (Optional)
 ---
 
 You can use PXF to access S3-compatible object stores. This topic describes how to configure the PXF connectors to these external data sources.
@@ -10,7 +10,7 @@ You can use PXF to access S3-compatible object stores. This topic describes how 
 
 To access data in an object store, you must provide a server location and client credentials. When you configure a PXF object store connector, you add at least one named PXF server configuration for the connector as described in [Configuring PXF Servers](cfg_server.html).
 
-PXF provides a configuration file template for each object store connector. These template files are located in the `<PXF_INSTALL_DIR>/templates/` directory.
+PXF provides a configuration file template for most object store connectors. These template files are located in the `<PXF_INSTALL_DIR>/templates/` directory.
 
 
 ## <a id="minio_cfg"></a>MinIO Server Configuration
@@ -22,6 +22,8 @@ The template configuration file for MinIO is `<PXF_INSTALL_DIR>/templates/minio-
 | fs.s3a.endpoint | The MinIO S3 endpoint to which to connect. | Your endpoint. |
 | fs.s3a.access.key | The MinIO account access key. | Your MinIO user name. |
 | fs.s3a.secret.key | The MinIO secret key associated with the access key. | Your MinIO password. |
+| fs.s3a.fast.upload | Property that governs fast upload; the default value is `false`. | Set to `true` to enable fast upload. |
+| fs.s3a.path.style.access | Property that governs file specification via paths; the default value is `false`. | Set to `true` to enable path style access. |
 
 ## <a id="s3_cfg"></a>S3 Server Configuration
 
@@ -191,4 +193,18 @@ In this procedure, you name and add a PXF server configuration in the `$PXF_BASE
     ``` shell
     gpadmin@gpmaster$ pxf cluster sync
     ```
+
+## <a id="ecs_cfg"></a>Dell ECS Server Configuration
+
+There is no template server configuration file for Dell ECS. You can use the MinIO server configuration template, `<PXF_INSTALL_DIR>/templates/minio-site.xml`.
+
+When you configure a Dell ECS server, you must provide the following server configuration properties and replace the template values with your credentials:
+
+| Property       | Description                                | Value |
+|----------------|--------------------------------------------|------ |
+| fs.s3a.endpoint | The Dell ECS S3 endpoint to which to connect. | Your ECS endpoint. |
+| fs.s3a.access.key | The Dell ECS account access key. | Your ECS user name. |
+| fs.s3a.secret.key | The Dell ECS secret key associated with the access key. | Your ECS secret key1. |
+| fs.s3a.fast.upload | Property that governs fast upload; the default value is `false`. | Set to `true` to enable fast upload. |
+| fs.s3a.path.style.access | Property that governs file specification via paths; the default value is `false`. | Set to `true` to enable path style access. |
 

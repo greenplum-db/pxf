@@ -21,7 +21,7 @@ package org.greenplum.pxf.api.error;
 
 
 /**
- * Thrown when the resolver tries to serializes/deserializes an unsupported type.
+ * Thrown when the resolver tries to serialize/deserialize an unsupported type.
  */
 public class UnsupportedTypeException extends RuntimeException {
 

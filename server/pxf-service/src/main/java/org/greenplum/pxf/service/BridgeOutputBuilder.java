@@ -62,6 +62,20 @@ public class BridgeOutputBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(BridgeOutputBuilder.class);
 
     private static final byte DELIM = 10; /* (byte)'\n'; */
+    public static final List<DataType> DATA_TYPES_SERIALIZED_AS_STRINGS = Arrays.asList(
+            DataType.VARCHAR,
+            DataType.BPCHAR,
+            DataType.TEXT,
+            DataType.NUMERIC,
+            DataType.TIME,
+            DataType.TIMESTAMP,
+            DataType.TIMESTAMP_WITH_TIME_ZONE,
+            DataType.DATE,
+            DataType.UUID);
+    public static final List<DataType> DATA_TYPES_SERIALIZED_AS_STRING_ARRAYS = Arrays.asList(
+            DataType.BPCHARARRAY,
+            DataType.VARCHARARRAY,
+            DataType.TEXTARRAY);
     private final Charset databaseEncoding;
     private final String newLine;
     private final byte[] newLineBytes;
@@ -261,15 +275,7 @@ public class BridgeOutputBuilder {
      * @return whether data type is string type
      */
     boolean isStringType(DataType type) {
-        return Arrays.asList(
-                DataType.VARCHAR,
-                DataType.BPCHAR,
-                DataType.TEXT,
-                DataType.NUMERIC,
-                DataType.TIMESTAMP,
-                DataType.TIMESTAMP_WITH_TIME_ZONE,
-                DataType.DATE)
-                .contains(type);
+        return DATA_TYPES_SERIALIZED_AS_STRINGS.contains(type);
     }
 
     /**
@@ -280,11 +286,7 @@ public class BridgeOutputBuilder {
      * @return whether data type is compatible string array type
      */
     boolean isStringArrayType(DataType type) {
-        return Arrays.asList(
-                DataType.BPCHARARRAY,
-                DataType.VARCHARARRAY,
-                DataType.TEXTARRAY)
-                .contains(type);
+        return DATA_TYPES_SERIALIZED_AS_STRING_ARRAYS.contains(type);
     }
 
     /**
