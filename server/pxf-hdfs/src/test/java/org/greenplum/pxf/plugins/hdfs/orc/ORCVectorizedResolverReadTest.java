@@ -353,11 +353,11 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
                     Object expectedValue = expected[colNum][rowNum];
                     if (colNum == 4 && expectedValue != null) {
                         expectedValue = new HiveDecimalWritable(String.valueOf(expectedValue));
-                    } else if (colNum == 12 && expectedValue != null) {
-                        expectedValue = Date.valueOf(String.valueOf(expectedValue));
-                    } else if (colNum == 6 && expectedValue != null) {
+                    }else if (colNum == 6 && expectedValue != null) {
                         expectedValue = ZonedDateTime.parse(String.valueOf(expectedValue), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER).withZoneSameInstant(ZoneOffset.UTC);
                         value = ZonedDateTime.parse(String.valueOf(value), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER).withZoneSameInstant(ZoneOffset.UTC);
+                    } else if (colNum == 12 && expectedValue != null) {
+                        expectedValue = Date.valueOf(String.valueOf(expectedValue));
                     }
                     if (colNum == 15) {
                         if (expectedValue == null) {

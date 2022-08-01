@@ -113,6 +113,8 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         assertRowsReturned(NO_ROWS);
     }
 
+    //TODO: add testTimestampWithTimeZonePushDown()
+
     @Test
     public void testRealPushDown() throws Exception {
         // ORC SearchArgument filters out row groups. Since we have a single
@@ -295,6 +297,9 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         if (columnDescriptors.get(5).isProjected()) {
             assertEquals(DataType.TIMESTAMP.getOID(), fieldList.get(5).type);
         }
+
+        //TODO: assertType check for col6 TIMESTAMP_WITH_TIME_ZONE
+
         if (columnDescriptors.get(7).isProjected()) {
             assertEquals(DataType.REAL.getOID(), fieldList.get(7).type);
         }
@@ -363,6 +368,8 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
             assertNull(fieldList.get(5).val, "Row " + row);
         }
 
+        //TODO: assertValue check for col6 TIMESTAMP_WITH_TIME_ZONE
+
         if (columnDescriptors.get(7).isProjected() && COL8[row] != null) {
             assertEquals(COL8[row], fieldList.get(7).val, "Row " + row);
         } else {
@@ -388,7 +395,7 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         }
 
         if (columnDescriptors.get(11).isProjected() && COL12[row] != null) {
-            assertEquals((COL12[row]), fieldList.get(11).val, "Row " + row);
+            assertEquals(COL12[row], fieldList.get(11).val, "Row " + row);
         } else {
             assertNull(fieldList.get(11).val);
         }

@@ -9,7 +9,7 @@ follow the instructions below.
 - Oracle Java Version 1.8
 - orc-tools-1.7.5-uber.jar
 
-Note: If you download orc-tools-1.7.5-uber.jar not into the current project path, you will need to:
+Note: If you don't download orc-tools-1.7.5-uber.jar into the current project path, you will need to:
 
 ```shell script
 export ORC_TOOLS_JAR="your orc-tools-1.7.5-uber.jar path"
@@ -57,7 +57,6 @@ make orc_types_compound_multi.orc
 ```shell script
 make orc_types_repeated.orc
 ```
-
 
 ## Origin of orc_file_predicate_pushdown.orc file
 

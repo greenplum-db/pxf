@@ -113,6 +113,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      * The array has the same size as the writeSchema, and the functions depend on the type of the elements in the schema.
      */
     private TriConsumer<ColumnVector, Integer, Object>[] writeFunctions;
+
     /**
      * An array of types that map from the readSchema types to Greenplum OIDs.
      */
