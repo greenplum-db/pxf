@@ -41,7 +41,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: {{pxf-storage-service-account-key}}
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
 - name: singlecluster-hdp2
@@ -49,7 +49,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: {{pxf-storage-service-account-key}}
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
 ## ---------- Github Repos ----------
@@ -68,7 +68,7 @@ resources:
     # TODO: revert this change and unpin resouce in UI.
     #tag_filter: release-*
     branch: master
-    uri: {{pxf-git-remote}}
+    uri: ((ud/pxf/[[ pipeline_type ]]/git-remote))
 
 ## ---------- Docker Images ----------
 - name: gpdb5-pxf-dev-centos7-image
@@ -78,7 +78,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb5-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: {{pxf-cloudbuild-service-account-key}}
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 - name: gpdb6-pxf-dev-centos7-image
   type: registry-image
@@ -87,7 +87,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: {{pxf-cloudbuild-service-account-key}}
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 - name: gpdb6-pxf-dev-rhel8-image
   type: registry-image
@@ -96,7 +96,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-rhel8-test-pxf
     tag: latest
     username: _json_key
-    password: {{pxf-cloudbuild-service-account-key}}
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 - name: gpdb6-pxf-dev-ubuntu18-image
   type: registry-image
@@ -105,7 +105,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf
     tag: latest
     username: _json_key
-    password: {{pxf-cloudbuild-service-account-key}}
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 - name: ccp-7-image
   type: registry-image
@@ -119,10 +119,10 @@ resources:
   type: s3
   icon: aws
   source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{gpdb-stable-builds-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
+    access_key_id: ((bucket-access-key-id))
+    bucket: ((gpdb-stable-builds-bucket-name))
+    region_name: ((aws_region))
+    secret_access_key: ((bucket-secret-access-key))
     versioned_file: release_candidates/bin_gpdb_centos7/gpdb5/bin_gpdb.tar.gz
 
 - name: gpdb6_tarball_rhel7
@@ -130,7 +130,7 @@ resources:
   icon: google-drive
   source:
     bucket: pivotal-gpdb-concourse-resources-prod
-    json_key: {{concourse-gcs-resources-service-account-key}}
+    json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.tar.gz
 
 - name: gpdb6_tarball_rhel8
@@ -138,7 +138,7 @@ resources:
   icon: google-drive
   source:
     bucket: pivotal-gpdb-concourse-resources-prod
-    json_key: {{concourse-gcs-resources-service-account-key}}
+    json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/gpdb6/server-rc-(.*)-rhel8_x86_64.tar.gz
 
 - name: gpdb6_ubuntu18_tarball
@@ -146,7 +146,7 @@ resources:
   icon: google-drive
   source:
     bucket: pivotal-gpdb-concourse-resources-prod
-    json_key: {{concourse-gcs-resources-service-account-key}}
+    json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.tar.gz
 
 ## ---------- PXF Released RPM Artifacts ----------
@@ -155,7 +155,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-releases
-    json_key: {{pxf-storage-service-account-key}}
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     regexp: prod/releases/gp5/pxf-gp5-(.*)-1.el7.x86_64.rpm
 
 - name: pxf_gp6_rpm_rhel7
@@ -163,7 +163,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-releases
-    json_key: {{pxf-storage-service-account-key}}
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     regexp: prod/releases/gp6/pxf-gp6-(.*)-1.el7.x86_64.rpm
 
 - name: pxf_gp6_rpm_rhel8
@@ -171,7 +171,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-releases
-    json_key: {{pxf-storage-service-account-key}}
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     regexp: prod/releases/gp6/pxf-gp6-(.*)-1.el8.x86_64.rpm
 
 - name: pxf_gp6_deb_ubuntu18
@@ -179,7 +179,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-releases
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     regexp: prod/releases/gp6/pxf-gp6-(.*)-1-ubuntu18.04-amd64.deb
 
 - name: slack-alert
@@ -212,15 +212,15 @@ jobs:
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb5-pxf-dev-centos7-image
     params:
-      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: 5
       GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      SECRET_ACCESS_KEY: ((tachine-secret-access-key))
   - task: Upload certification for GPDB-5 with PXF-GP5-HDP2 on RHEL7
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
-      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
       GP_VER: 5
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
@@ -243,15 +243,15 @@ jobs:
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-centos7-image
     params:
-      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: 6
       GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      SECRET_ACCESS_KEY: ((tachine-secret-access-key))
   - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on RHEL7
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
-      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
@@ -275,15 +275,15 @@ jobs:
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-rhel8-image
     params:
-      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: 6
       GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      SECRET_ACCESS_KEY: ((tachine-secret-access-key))
   - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on RHEL8
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
-      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
@@ -307,15 +307,15 @@ jobs:
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-ubuntu18-image
     params:
-      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: 6
       GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
   - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on Ubuntu 18.04
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
-      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
@@ -339,7 +339,7 @@ jobs:
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
-      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
       GP_VER: 5
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
@@ -368,6 +368,6 @@ jobs:
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
-      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
