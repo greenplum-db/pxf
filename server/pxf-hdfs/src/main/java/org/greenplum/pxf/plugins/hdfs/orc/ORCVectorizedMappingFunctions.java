@@ -624,7 +624,7 @@ class ORCVectorizedMappingFunctions {
                         childWriteFunction.accept(childColumnVector, childIndex, rowElem);
                     } catch (NumberFormatException | DateTimeParseException | PxfRuntimeException e) {
                         String hint = orcUtilities.createErrorHintFromValue(rowElem.toString());
-                        throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", val, underlyingChildCategory), hint, e);
+                        throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", rowElem, underlyingChildCategory), hint, e);
                     }
                 }
                 childCounter++;
