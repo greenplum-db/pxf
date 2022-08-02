@@ -15,72 +15,72 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: {{bucket-access-key-id}}
-      secret_access_key: {{bucket-secret-access-key}}
-      bucket: {{pxf-aws-bucket-name}}
-      region_name: {{aws-region}}
+      access_key_id: ((ud/pxf/common/ud/pxf/common/bucket-access-key-id))
+      secret_access_key: ((bucket-secret-access-key))
+      bucket: ((pxf-aws-bucket-name))
+      region_name: ((aws-region))
       versioned_file: hortonworks/HDP-2.5.3.0-centos6-tars-tarball.tar.gz
 
   - name: hdp3_tars_tarball
     type: s3
     icon: s3
     source:
-      access_key_id: {{bucket-access-key-id}}
-      secret_access_key: {{bucket-secret-access-key}}
-      bucket: {{pxf-aws-bucket-name}}
-      region_name: {{aws-region}}
+      access_key_id: ((ud/pxf/common/bucket-access-key-id))
+      secret_access_key: ((bucket-secret-access-key))
+      bucket: ((pxf-aws-bucket-name))
+      region_name: ((aws-region))
       versioned_file: hortonworks/HDP-3.1.4.0-centos7-tars-tarball.tar.gz
 
   - name: cdh_tars_tarball
     type: s3
     icon: s3
     source:
-      access_key_id: {{bucket-access-key-id}}
-      secret_access_key: {{bucket-secret-access-key}}
-      bucket: {{pxf-aws-bucket-name}}
-      region_name: {{aws-region}}
+      access_key_id: ((ud/pxf/common/bucket-access-key-id))
+      secret_access_key: ((bucket-secret-access-key))
+      bucket: ((pxf-aws-bucket-name))
+      region_name: ((aws-region))
       versioned_file: cloudera/CDH-5.12.2.tar.gz
 
   - name: jdbc
     type: s3
     icon: s3
     source:
-      access_key_id: {{bucket-access-key-id}}
-      secret_access_key: {{bucket-secret-access-key}}
-      bucket: {{pxf-aws-bucket-name}}
-      region_name: {{aws-region}}
+      access_key_id: ((ud/pxf/common/bucket-access-key-id))
+      secret_access_key: ((bucket-secret-access-key))
+      bucket: ((pxf-aws-bucket-name))
+      region_name: ((aws-region))
       versioned_file: jdbc/postgresql-jdbc-8.4.704.jar
 
   - name: singlecluster-HDP2-gcs
     type: google-cloud-storage
     icon: google-drive
     source:
-      bucket: {{pxf-build-resources-bucket-name}}
-      json_key: {{data-gpdb-ud-google-json-key}}
+      bucket: ((ud/pxf/common/build-resources-bucket-name))
+      json_key: ((ud/pxf/secrets/data-gpdb-ud-google-json-key))
       versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
   - name: singlecluster-HDP3-gcs
     type: google-cloud-storage
     icon: google-drive
     source:
-      bucket: {{pxf-build-resources-bucket-name}}
-      json_key: {{data-gpdb-ud-google-json-key}}
+      bucket: ((ud/pxf/common/build-resources-bucket-name))
+      json_key: ((ud/pxf/secrets/data-gpdb-ud-google-json-key))
       versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 
   - name: singlecluster-CDH-gcs
     type: google-cloud-storage
     icon: google-drive
     source:
-      bucket: {{pxf-build-resources-bucket-name}}
-      json_key: {{data-gpdb-ud-google-json-key}}
+      bucket: ((ud/pxf/common/build-resources-bucket-name))
+      json_key: ((ud/pxf/secrets/data-gpdb-ud-google-json-key))
       versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
 
   - name: pxf_singlecluster
     type: git
     icon: git
     source:
-      branch: {{pxf-git-branch}}
-      uri: {{pxf-git-remote}}
+      branch: ((pxf-git-branch))
+      uri: ((ud/pxf/[[ pipeline_type ]]/git-remote))
       paths: [singlecluster/*]
 
   - name: gpdb6-centos7
