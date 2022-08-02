@@ -68,7 +68,7 @@ resources:
     # TODO: revert this change and unpin resouce in UI.
     #tag_filter: release-*
     branch: master
-    uri: ((ud/pxf/[[ pipeline_type ]]/git-remote))
+    uri: ((ud/pxf/prod/git-remote))
 
 ## ---------- Docker Images ----------
 - name: gpdb5-pxf-dev-centos7-image

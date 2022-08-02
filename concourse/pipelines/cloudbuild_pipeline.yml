@@ -51,9 +51,9 @@ resources:
     type: git
     icon: git
     source:
-      uri: ((gp-image-baking-repo-uri))
-      branch: ((gp-image-baking-repo-branch))
-      private_key: ((gp-image-baking-repo-key))
+      uri: ((ud/pxf/common/gp-image-baking-repo-uri))
+      branch: ((ud/pxf/common/gp-image-baking-repo-branch))
+      private_key: ((ud/pxf/secrets/gp-image-baking-repo-key))
       paths:
         - images/docker/gpdb5/gpdb5-centos7-build-test
         - images/docker/gpdb6/gpdb6-centos7-test

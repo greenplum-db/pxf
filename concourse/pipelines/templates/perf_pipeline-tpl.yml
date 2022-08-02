@@ -82,7 +82,7 @@ resource_types:
     repository: gcr.io/data-gpdb-ud/terraform-resource
     tag: 0.11.15
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 
 - name: gcs
   type: registry-image
@@ -110,7 +110,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     regexp: latest-0_gpdb6/greenplum-db-(.*)-rhel[[redhat_major_version]]-x86_64.rpm
 
 {% if redhat_major_version == 7 %}
@@ -121,7 +121,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 {%  elif redhat_major_version == 8 %}
 - name: gpdb6-pxf-dev-rhel8-image
   type: registry-image
@@ -130,7 +130,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-rhel8-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
 {% endif %}
 
 - name: ccp-7
@@ -145,7 +145,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: perf/snapshots/pxf6/pxf-gp6.el[[redhat_major_version]].tar.gz
 
 - name: singlecluster
@@ -153,7 +153,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
 - name: terraform
@@ -178,7 +178,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    json_key: ((ud/pxf/secrets/storage-service-account-key))
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
 - name: timed-trigger
@@ -206,8 +206,8 @@ jobs:
     image: gpdb6-pxf-dev-rhel[[redhat_major_version]]-image
     file: pxf_src/concourse/tasks/build.yml
     params:
-      LICENSE: ((pxf-rpm-license))
-      VENDOR: ((pxf-rpm-vendor))
+      LICENSE: ((ud/pxf/common/rpm-license))
+      VENDOR: ((ud/pxf/common/rpm-vendor))
   - put: pxf_tarball
     params:
       file: dist/pxf-gp6-*.el[[redhat_major_version]].tar.gz

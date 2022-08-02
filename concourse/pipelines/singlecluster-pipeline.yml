@@ -15,9 +15,9 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((ud/pxf/common/ud/pxf/common/bucket-access-key-id))
+      access_key_id: ((bucket-access-key-id))
       secret_access_key: ((bucket-secret-access-key))
-      bucket: ((pxf-aws-bucket-name))
+      bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((aws-region))
       versioned_file: hortonworks/HDP-2.5.3.0-centos6-tars-tarball.tar.gz
 
@@ -25,9 +25,9 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((ud/pxf/common/bucket-access-key-id))
+      access_key_id: ((bucket-access-key-id))
       secret_access_key: ((bucket-secret-access-key))
-      bucket: ((pxf-aws-bucket-name))
+      bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((aws-region))
       versioned_file: hortonworks/HDP-3.1.4.0-centos7-tars-tarball.tar.gz
 
@@ -35,9 +35,9 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((ud/pxf/common/bucket-access-key-id))
+      access_key_id: ((bucket-access-key-id))
       secret_access_key: ((bucket-secret-access-key))
-      bucket: ((pxf-aws-bucket-name))
+      bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((aws-region))
       versioned_file: cloudera/CDH-5.12.2.tar.gz
 
@@ -45,9 +45,9 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((ud/pxf/common/bucket-access-key-id))
+      access_key_id: ((bucket-access-key-id))
       secret_access_key: ((bucket-secret-access-key))
-      bucket: ((pxf-aws-bucket-name))
+      bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((aws-region))
       versioned_file: jdbc/postgresql-jdbc-8.4.704.jar
 
@@ -80,7 +80,7 @@ resources:
     icon: git
     source:
       branch: ((pxf-git-branch))
-      uri: ((ud/pxf/[[ pipeline_type ]]/git-remote))
+      uri: ((ud/pxf/prod/git-remote))
       paths: [singlecluster/*]
 
   - name: gpdb6-centos7

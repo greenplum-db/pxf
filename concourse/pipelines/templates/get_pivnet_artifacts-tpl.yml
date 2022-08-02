@@ -19,7 +19,7 @@ resources:
   icon: git
   source:
     branch: ((pxf-git-branch))
-    uri: ((ud/pxf/[[ pipeline_type ]]/git-remote))
+    uri: ((ud/pxf/prod/git-remote))
 
 - name: ubuntu18
   type: registry-image
