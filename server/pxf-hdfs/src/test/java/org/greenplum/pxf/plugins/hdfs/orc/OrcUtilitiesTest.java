@@ -110,7 +110,7 @@ public class OrcUtilitiesTest {
 
     @Test
     public void testParsePostgresArrayInValidBooleanArrayPXFGeneratedSchema() {
-        // this situation should never happen as the toString method of booleans (boolout) should not return a string in this format
+        // this situation should never happen as the toString method of booleans (boolout in GPDB) should not return a string in this format
         String value = "{true,false,true}";
 
         Exception exception = assertThrows(PxfRuntimeException.class, () -> orcUtilities.parsePostgresArray(value, TypeDescription.Category.BOOLEAN));

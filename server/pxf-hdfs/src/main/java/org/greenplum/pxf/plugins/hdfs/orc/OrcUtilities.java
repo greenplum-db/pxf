@@ -95,7 +95,7 @@ public final class OrcUtilities {
 
     protected String createErrorHintFromValue(String val) {
         if (StringUtils.startsWith(val, "{")) {
-            return "Value is a multi-dimensional array, PXF does not currently support multi-dimensional arrays for writing ORC files.";
+            return "Value is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files.";
         } else {
             return "Unexpected state since PXF generated the ORC schema.";
         }
