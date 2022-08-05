@@ -112,7 +112,7 @@ configure(javaProjects) {
             dependency("org.threeten:threeten-extra:1.5.0")
             dependency("org.tukaani:xz:1.8")
             dependency("org.wildfly.openssl:wildfly-openssl:1.0.7.Final")
-            dependency("org.xerial.snappy:snappy-java:1.0.5")
+            dependency("org.xerial.snappy:snappy-java:1.1.8.4")
 
             // Hadoop dependencies
             dependencySet(group:"org.apache.hadoop", version:"${hadoopVersion}") {
