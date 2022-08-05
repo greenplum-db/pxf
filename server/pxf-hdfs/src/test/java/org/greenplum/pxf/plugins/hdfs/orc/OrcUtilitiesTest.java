@@ -134,7 +134,7 @@ public class OrcUtilitiesTest {
 
         Exception exception = assertThrows(PxfRuntimeException.class, () -> orcUtilities.parsePostgresArray(value, TypeDescription.Category.INT));
         assertEquals("Error parsing array element: {1,2} was not of expected type INT", exception.getMessage());
-        assertEquals("Value is a multi-dimensional array, PXF does not currently support multi-dimensional arrays for writing ORC files.", ((PxfRuntimeException) exception).getHint());
+        assertEquals("Column value \"{{1,2},{3,4}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files.", ((PxfRuntimeException) exception).getHint());
     }
 
     @Test
@@ -145,7 +145,7 @@ public class OrcUtilitiesTest {
 
         Exception exception = assertThrows(PxfRuntimeException.class, () -> orcUtilities.parsePostgresArray(value, TypeDescription.Category.BOOLEAN));
         assertEquals("Error parsing array element: {t,f} was not of expected type BOOLEAN", exception.getMessage());
-        assertEquals("Value is a multi-dimensional array, PXF does not currently support multi-dimensional arrays for writing ORC files.", ((PxfRuntimeException) exception).getHint());
+        assertEquals("Column value \"{{t,f},{f,t}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files.", ((PxfRuntimeException) exception).getHint());
     }
 
     @Test
@@ -156,7 +156,7 @@ public class OrcUtilitiesTest {
 
         Exception exception = assertThrows(PxfRuntimeException.class, () -> orcUtilities.parsePostgresArray(value, TypeDescription.Category.BINARY));
         assertEquals("Error parsing array element: {\\x0001, \\x0002} was not of expected type BINARY", exception.getMessage());
-        assertEquals("Value is a multi-dimensional array, PXF does not currently support multi-dimensional arrays for writing ORC files.", ((PxfRuntimeException) exception).getHint());
+        assertEquals("Column value \"{{\\\\x0001, \\\\x0002},{\\\\x4041, \\\\x4142}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files.", ((PxfRuntimeException) exception).getHint());
     }
 
     @Test
