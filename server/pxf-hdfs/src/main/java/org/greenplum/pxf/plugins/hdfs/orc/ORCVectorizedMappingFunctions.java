@@ -1,5 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -623,7 +624,7 @@ class ORCVectorizedMappingFunctions {
                     try {
                         childWriteFunction.accept(childColumnVector, childIndex, rowElement);
                     } catch (NumberFormatException | DateTimeParseException | PxfRuntimeException e) {
-                        String hint = orcUtilities.createErrorHintFromValue(rowElement.toString());
+                        String hint = orcUtilities.createErrorHintFromValue(StringUtils.startsWith(rowElement.toString(), "{"), val.toString());
                         throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", rowElement, underlyingChildCategory), hint, e);
                     }
                 }
