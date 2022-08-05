@@ -362,11 +362,11 @@ resources:
   type: email
   source:
     smtp:
-      host: ((ud/pxf/common/smtp-host))
-      port: ((ud/pxf/common/smtp-port)) # this must be a string
-      username: ((ud/pxf/secrets/smtp-username))
-      password: ((ud/pxf/secrets/smtp-password))
-    from: ((ud/pxf/common/email-sender))
+      host: ((ud/common/smtp-host))
+      port: ((ud/common/smtp-port)) # this must be a string
+      username: ((ud/secrets/smtp-username))
+      password: ((ud/secrets/smtp-password))
+    from: ((ud/common/email-sender))
 {% endif %}
 
 ## ---------- Docker Images ----------
