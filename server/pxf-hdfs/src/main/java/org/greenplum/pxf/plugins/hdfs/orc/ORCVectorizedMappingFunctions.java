@@ -78,6 +78,27 @@ class ORCVectorizedMappingFunctions {
     private static final ZoneId TIMEZONE_UTC = ZoneId.of("UTC");
     private static final ZoneId TIMEZONE_LOCAL = TimeZone.getDefault().toZoneId();
 
+    private static final List<TypeDescription.Category> SUPPORTED_PRIMITIVE_CATEGORIES = Arrays.asList(
+            TypeDescription.Category.BOOLEAN,
+            // TypeDescription.Category.BYTE,
+            TypeDescription.Category.SHORT,
+            TypeDescription.Category.INT,
+            TypeDescription.Category.LONG,
+            TypeDescription.Category.FLOAT,
+            TypeDescription.Category.DOUBLE,
+            TypeDescription.Category.STRING,
+            TypeDescription.Category.DATE,
+            TypeDescription.Category.TIMESTAMP,
+            TypeDescription.Category.BINARY,
+            TypeDescription.Category.DECIMAL,
+            TypeDescription.Category.VARCHAR,
+            TypeDescription.Category.CHAR,
+            // TypeDescription.Category.MAP,
+            // TypeDescription.Category.STRUCT,
+            // TypeDescription.Category.UNION,
+            TypeDescription.Category.TIMESTAMP_INSTANT
+    );
+
     static {
         writeFunctionsMap = new EnumMap<>(TypeDescription.Category.class);
         initWriteFunctionsMap();
@@ -183,7 +204,7 @@ class ORCVectorizedMappingFunctions {
                     String val = null;
 
                     if (childVector.noNulls || !childVector.isNull[childRow]) {
-                        DateTimeFormatter formatter = oid == DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID()
+                        DateTimeFormatter formatter = (oid == DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID())
                                 ? GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER
                                 : GreenplumDateTime.DATETIME_FORMATTER;
                         val = timestampToString(childVector.asScratchTimestamp(childRow), formatter);
@@ -524,34 +545,9 @@ class ORCVectorizedMappingFunctions {
     private static void initWriteListFunctionsMap() {
         // the array write functions rely on the primitive write functions so they must be initialized first
         // it is assumed that all arrays are one dimensional
-        writeListFunctionsMap.put(TypeDescription.Category.BOOLEAN,
-                getListWriteFunction(TypeDescription.Category.BOOLEAN));
-        writeListFunctionsMap.put(TypeDescription.Category.SHORT,
-                getListWriteFunction(TypeDescription.Category.SHORT));
-        writeListFunctionsMap.put(TypeDescription.Category.INT,
-                getListWriteFunction(TypeDescription.Category.INT));
-        writeListFunctionsMap.put(TypeDescription.Category.LONG,
-                getListWriteFunction(TypeDescription.Category.LONG));
-        writeListFunctionsMap.put(TypeDescription.Category.FLOAT,
-                getListWriteFunction(TypeDescription.Category.FLOAT));
-        writeListFunctionsMap.put(TypeDescription.Category.DOUBLE,
-                getListWriteFunction(TypeDescription.Category.DOUBLE));
-        writeListFunctionsMap.put(TypeDescription.Category.BINARY,
-                getListWriteFunction(TypeDescription.Category.BINARY));
-        writeListFunctionsMap.put(TypeDescription.Category.STRING,
-                getListWriteFunction(TypeDescription.Category.STRING));
-        writeListFunctionsMap.put(TypeDescription.Category.CHAR,
-                getListWriteFunction(TypeDescription.Category.CHAR));
-        writeListFunctionsMap.put(TypeDescription.Category.VARCHAR,
-                getListWriteFunction(TypeDescription.Category.VARCHAR));
-        writeListFunctionsMap.put(TypeDescription.Category.DATE,
-                getListWriteFunction(TypeDescription.Category.DATE));
-        writeListFunctionsMap.put(TypeDescription.Category.TIMESTAMP,
-                getListWriteFunction(TypeDescription.Category.TIMESTAMP));
-        writeListFunctionsMap.put(TypeDescription.Category.TIMESTAMP_INSTANT,
-                getListWriteFunction(TypeDescription.Category.TIMESTAMP_INSTANT));
-        writeListFunctionsMap.put(TypeDescription.Category.DECIMAL,
-                getListWriteFunction(TypeDescription.Category.DECIMAL));
+        for (TypeDescription.Category orcType : SUPPORTED_PRIMITIVE_CATEGORIES) {
+            writeListFunctionsMap.put(orcType, getListWriteFunction(orcType));
+        }
     }
 
     /**
@@ -586,16 +582,20 @@ class ORCVectorizedMappingFunctions {
 
     /**
      * A special function that writes lists to ORC file
+     * @param underlyingChildCategory the underlying primitive child category. As PXF currently only has the capability to infer
+     *                                an ORC schema from the GPDB schema, so all arrays will be one-dimensional, and this value
+     *                                will be the underlying primitive type
      * @return a function setting the list column vector
      */
-    // PXF currently only has the capability to infer an ORC schema from the GPDB schema, so all arrays will be one-dimensional.
     private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TypeDescription.Category underlyingChildCategory) {
         final TriConsumer<ColumnVector, Integer, Object> childWriteFunction = writeFunctionsMap.get(underlyingChildCategory);
 
         return (columnVector, row, val) -> {
+            // TODO: as all schemas right now are auto-generated, the columnVector will always be a ListColumnVector
+            // when we allow user-generated schemas, do we need to consider checking the type of the columnvector before casting?
             ListColumnVector listColumnVector = (ListColumnVector) columnVector;
 
-            List<Object> data = orcUtilities.parsePostgresArray((String) val, underlyingChildCategory);
+            List<Object> data = orcUtilities.parsePostgresArray(val.toString(), underlyingChildCategory);
 
             int length = data.size();
             // the childCount refers to "the number of children slots used"
@@ -611,9 +611,9 @@ class ORCVectorizedMappingFunctions {
             ColumnVector childColumnVector = listColumnVector.child;
             int childIndex;
             int childCounter = 0;
-            for (Object rowElem : data) {
+            for (Object rowElement : data) {
                 childIndex = offset + childCounter;
-                if (rowElem == null) {
+                if (rowElement == null) {
                     // the array element is null
                     if (childColumnVector.noNulls) {
                         childColumnVector.noNulls = false; // write only if the value is different from what we need it to be
@@ -621,10 +621,10 @@ class ORCVectorizedMappingFunctions {
                     childColumnVector.isNull[childIndex] = true;
                 } else {
                     try {
-                        childWriteFunction.accept(childColumnVector, childIndex, rowElem);
+                        childWriteFunction.accept(childColumnVector, childIndex, rowElement);
                     } catch (NumberFormatException | DateTimeParseException | PxfRuntimeException e) {
-                        String hint = orcUtilities.createErrorHintFromValue(rowElem.toString());
-                        throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", rowElem, underlyingChildCategory), hint, e);
+                        String hint = orcUtilities.createErrorHintFromValue(rowElement.toString());
+                        throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", rowElement, underlyingChildCategory), hint, e);
                     }
                 }
                 childCounter++;

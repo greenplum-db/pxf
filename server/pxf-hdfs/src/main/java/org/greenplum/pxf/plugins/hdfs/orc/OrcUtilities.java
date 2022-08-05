@@ -6,12 +6,10 @@ import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
 public final class OrcUtilities {
 
     private static final Logger LOG = LoggerFactory.getLogger(OrcUtilities.class);
@@ -31,18 +29,18 @@ public final class OrcUtilities {
      * Re-used from GPHDFS
      * https://github.com/greenplum-db/gpdb/blob/3b0bfdc169fab7f686276be7eccb024a5e29543c/gpAux/extensions/gphdfs/src/java/1.2/com/emc/greenplum/gpdb/hadoop/formathandler/util/FormatHandlerUtil.java
      * @param val Postgres external format (the output of function named by typoutput in pg_type) or `null` if null value
-     * @param underlyingChildCategory Underlying type for ORC list. This functions assumes the ORC list is one-dimensional
+     * @param underlyingChildCategory Underlying ORC type for ORC list. This functions assumes the ORC list is one-dimensional
      * @return
      */
     public List<Object> parsePostgresArray (String val, TypeDescription.Category underlyingChildCategory) {
-        LOG.debug("child type={}, value={}, isTopLevel={}", underlyingChildCategory, val);
+        LOG.debug("child type={}, value={}", underlyingChildCategory, val);
 
         if (val == null) {
             return null;
         }
 
-        List<Object> data = new ArrayList<>();
         String[] splits = pgUtilities.splitArray(val);
+        List<Object> data = new ArrayList<>(splits.length);
         for (String split : splits) {
             try {
                 data.add(decodeString(split, underlyingChildCategory));
@@ -58,15 +56,15 @@ public final class OrcUtilities {
      * Parse a string based off the ORC type.
      *
      * @param val String representation of value
-     * @param valType ORC type
-     * @return an java representation of the value for the given valType
+     * @param orcType ORC type
+     * @return a java representation of the value for the given valType
      */
-    private Object decodeString(String val, TypeDescription.Category valType) {
+    private Object decodeString(String val, TypeDescription.Category orcType) {
         if (val == null) {
             return null;
         }
 
-        switch (valType) {
+        switch (orcType) {
             // ignore BYTE case -- for now ORCSchemaBuilder does not support this type, so we do not expect it
             case BOOLEAN:
                 return pgUtilities.parseBoolLiteral(val);
@@ -89,10 +87,15 @@ public final class OrcUtilities {
             case DECIMAL:
                 return val;
             default:
-                throw new PxfRuntimeException(String.format("type: %s is not supported", valType));
+                throw new PxfRuntimeException(String.format("type: %s is not supported", orcType));
         }
     }
 
+    /**
+     * Determine the error hint to return based off the value of the column
+     * @param val the array value that caused the error
+     * @return the appropriate error hint
+     */
     protected String createErrorHintFromValue(String val) {
         if (StringUtils.startsWith(val, "{")) {
             return "Value is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files.";
