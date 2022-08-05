@@ -76,8 +76,11 @@ public class ORCVectorizedBaseTest {
     // for bpchar and varchar, ORC knows about the character limit in the schema, but will only store the original string in the file (without the additional whitespaces appended)
     static final String[] BPCHAR_LIST = {"{hello}", "{\"this is exactly\",\" fifteen chars.\"}", "{\"\"}", null, "{\"specials \\\\ \\\"\"}", "{\"test string\",NULL}"};
     static final String[] VARCHAR_LIST = {"{hello}", "{\"this is exactly\",\" fifteen chars.\"}", "{\"\"}", null, "{\"specials \\\\ \\\"\"}", "{\"test string\",NULL}"};
+    static final String[] DATE_LIST = {"{2015-03-06}", "{2015-03-06,2015-03-07}", "{2015-03-08,2015-03-09,2015-03-10}", "{2015-03-11,NULL,2015-03-12}", "{}", null};
+    static final String[] TIMESTAMP_LIST = {null, "{\"2013-07-13 21:00:05\"}", "{\"2013-07-13 21:00:05\",\"2013-07-15 22:00:05\"}", "{}", "{\"2013-07-17 23:00:05\",\"2013-07-18 20:00:05\",NULL}", "{\"2013-07-17 09:00:05\",NULL,\"2013-07-18 10:00:05\"}"};
+    static final String[] TIMESTAMP_WITH_TIMEZONE_LIST = {null, "{\"2013-07-13 21:00:05-07\"}", "{\"2013-07-13 21:00:05-07\",\"2013-07-15 22:00:05-07\"}", "{}", "{\"2013-07-17 23:00:05-07\",\"2013-07-18 20:00:05-07\",NULL}", "{\"2013-07-17 09:00:05-07\",NULL,\"2013-07-18 10:00:05-07\"}"};
 
-    static final Object[][] ORC_COMPOUND_TYPES_DATASET = {COL1_COMPOUND, BOOL_LIST, INT2_LIST, INTEGER_LIST, INT8_LIST, FLOAT_LIST, FLOAT8_LIST, TEXT_LIST, BYTEA_LIST, BPCHAR_LIST, VARCHAR_LIST};
+    static final Object[][] ORC_COMPOUND_TYPES_DATASET = {COL1_COMPOUND, BOOL_LIST, INT2_LIST, INTEGER_LIST, INT8_LIST, FLOAT_LIST, FLOAT8_LIST, TEXT_LIST, BYTEA_LIST, BPCHAR_LIST, VARCHAR_LIST, DATE_LIST, TIMESTAMP_LIST, TIMESTAMP_WITH_TIMEZONE_LIST};
 
     // From resources/orc/generate_orc_types_compound_multi.hql
     // postgres cannot support multi-dimensional arrays with subarrays of different sizes nor can it support nulls in the form of {{2,3},null,{4,5}}
@@ -93,8 +96,11 @@ public class ORCVectorizedBaseTest {
     static final String[] BYTEA_LIST_MULTI = {null, "{}", "{{\"\\\\xdeadbeef\"}}", "{{NULL,\"\\\\x5c22\"}}", "{{\"\\\\x5c5c5c\",\"\\\\x5b48495d\"},null}", "{{\"\\\\x313233\"},{\"\\\\x343536\"}}"};
     static final String[] BPCHAR_LIST_MULTI = {"{{hello}}", "{{\"this is exactly\"},{\" fifteen chars.\"}}", "{}", null, "{{\"specials \\\\ \\\"\"},null}", "{{\"test string\",NULL},{\"2 whitespace\",\"no whitespace\"}}"};
     static final String[] VARCHAR_LIST_MULTI = {"{{hello}}", "{{\"this is exactly\"},{\" fifteen chars.\"}}", "{}", null, "{{\"specials \\\\ \\\"\"},null}", "{{\"test string\",NULL},{\"2 whitespace  \",\"no whitespace\"}}"};
+    static final String[] DATE_LIST_MULTI = {"{{2015-03-06}}", "{{2015-03-06},{2015-03-07}}", "{{2015-03-08,2015-03-09},{2015-03-10,NULL}}", "{{2015-03-11},{NULL},{2015-03-12}}", "{{}}", null};
+    static final String[] TIMESTAMP_LIST_MULTI = {null, "{{\"2013-07-13 21:00:05\"}}", "{{\"2013-07-13 21:00:05\"},{\"2013-07-15 22:00:05\"}}", "{{}}", "{{NULL,\"2013-07-17 23:00:05\"},{\"2013-07-18 20:00:05\",NULL}}", "{{\"2013-07-17 09:00:05\"},{NULL},{\"2013-07-18 10:00:05\"}}"};
+    static final String[] TIMESTAMP_WITH_TIMEZONE_LIST_MULTI = {null, "{{\"2013-07-13 21:00:05-07\"}}", "{{\"2013-07-13 21:00:05-07\"},{\"2013-07-15 22:00:05-07\"}}", "{{}}", "{{NULL,\"2013-07-17 23:00:05-07\"},{\"2013-07-18 20:00:05-07\",NULL}}", "{{\"2013-07-17 09:00:05-07\"},{NULL},{\"2013-07-18 10:00:05-07\"}}"};
 
-    static final Object[][] ORC_COMPOUND_MULTI_TYPES_DATASET = {COL1_COMPOUND_MULTI, BOOL_LIST_MULTI, INT2_LIST_MULTI, INTEGER_LIST_MULTI, INT8_LIST_MULTI, FLOAT_LIST_MULTI, FLOAT8_LIST_MULTI, TEXT_LIST_MULTI, BYTEA_LIST_MULTI, BPCHAR_LIST_MULTI, VARCHAR_LIST_MULTI};
+    static final Object[][] ORC_COMPOUND_MULTI_TYPES_DATASET = {COL1_COMPOUND_MULTI, BOOL_LIST_MULTI, INT2_LIST_MULTI, INTEGER_LIST_MULTI, INT8_LIST_MULTI, FLOAT_LIST_MULTI, FLOAT8_LIST_MULTI, TEXT_LIST_MULTI, BYTEA_LIST_MULTI, BPCHAR_LIST_MULTI, VARCHAR_LIST_MULTI, DATE_LIST_MULTI, TIMESTAMP_LIST_MULTI, TIMESTAMP_WITH_TIMEZONE_LIST_MULTI};
 
 
     @BeforeEach
@@ -129,6 +135,9 @@ public class ORCVectorizedBaseTest {
         columnDescriptorsCompound.add(new ColumnDescriptor("bytea_arr", DataType.BYTEAARRAY.getOID(), 8, "bytea[]", null));
         columnDescriptorsCompound.add(new ColumnDescriptor("char_arr", DataType.BPCHARARRAY.getOID(), 9, "bpchar(15)[]", null));
         columnDescriptorsCompound.add(new ColumnDescriptor("varchar_arr", DataType.VARCHARARRAY.getOID(), 10, "varchar(15)[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("date_arr", DataType.DATEARRAY.getOID(), 11, "date[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("timestamp_arr", DataType.TIMESTAMPARRAY.getOID(), 12, "timestamp[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("tmtz_arr", DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), 13, "timestamp with time zone[]", null));
 
         twoColumnDescriptors = new ArrayList<>();
         twoColumnDescriptors.add(new ColumnDescriptor("col0", DataType.TEXT.getOID(), 0, "text", null));
