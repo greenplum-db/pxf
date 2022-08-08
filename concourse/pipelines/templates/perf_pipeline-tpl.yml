@@ -47,7 +47,7 @@ set_failed_gpdb_anchor: &set_failed
           AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
           AWS_DEFAULT_REGION: ((ud/pxf/common/tf-machine-region))
           BUCKET_PATH: ((tf-bucket-path))
-          BUCKET_NAME: ((tf-bucket-name))
+          BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
 
     - task: on_failure_set_failed_dataproc
       input_mapping:
@@ -73,7 +73,7 @@ set_failed_gpdb_anchor: &set_failed
           AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
           AWS_DEFAULT_REGION: ((ud/pxf/common/tf-machine-region))
           BUCKET_PATH: ((tf-bucket-path))
-          BUCKET_NAME: ((tf-bucket-name))
+          BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
 
 resource_types:
 - name: terraform
@@ -169,8 +169,8 @@ resources:
     storage:
       access_key_id: ((tf-machine-access-key-id))
       secret_access_key: ((tf-machine-secret-access-key))
-      region_name: ((aws-region))
-      bucket: ((tf-bucket-name))
+      region_name: ((ud/common/aws-region))
+      bucket: ((ud/pxf/common/tf-bucket-name))
       bucket_path: ((tf-bucket-path))
 
 - name: pxf-build-dependencies
@@ -286,9 +286,9 @@ jobs:
           params:
             AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
             AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-            AWS_DEFAULT_REGION: ((aws-region))
+            AWS_DEFAULT_REGION: ((ud/common/aws-region))
             BUCKET_PATH: ((tf-bucket-path))
-            BUCKET_NAME: ((tf-bucket-name))
+            BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
 {% if redhat_major_version == 7 %}
             PLATFORM: centos7
 {% elif redhat_major_version == 8 %}
@@ -309,9 +309,9 @@ jobs:
           params:
             AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
             AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-            AWS_DEFAULT_REGION: ((aws-region))
+            AWS_DEFAULT_REGION: ((ud/common/aws-region))
             BUCKET_PATH: ((tf-bucket-path))
-            BUCKET_NAME: ((tf-bucket-name))
+            BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
             GP_VER: 6
             CLOUD_PROVIDER: google
             IMPERSONATION: ((enable-impersonation-multinode))
@@ -357,7 +357,7 @@ jobs:
       ADL_REFRESH_URL: ((adl-refresh-url))
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      AWS_DEFAULT_REGION: ((aws-region))
+      AWS_DEFAULT_REGION: ((ud/common/aws-region))
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-google-json-key))
       WASB_ACCOUNT_NAME: ((wasb-account-name))
       WASB_ACCOUNT_KEY: ((wasb-account-key))

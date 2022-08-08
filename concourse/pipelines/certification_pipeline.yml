@@ -185,7 +185,7 @@ resources:
 - name: slack-alert
   type: slack-notification
   source:
-    url: ((ud-dev-slack-integration-webhook))
+    url: ((ud/pxf/secrets/dev-slack-integration-webhook))
 
 ## ======================================================================
 ## JOBS

@@ -347,8 +347,8 @@ resources:
     storage:
       access_key_id: ((tf-machine-access-key-id))
       secret_access_key: ((tf-machine-secret-access-key))
-      region_name: ((aws-region))
-      bucket: ((tf-bucket-name))
+      region_name: ((ud/common/aws-region))
+      bucket: ((ud/pxf/common/tf-bucket-name))
       bucket_path: ((tf-bucket-path))
 {% endif %}
 
@@ -360,9 +360,9 @@ resources:
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-ipa-google-service-account-key))
     delete_on_failure: true
     storage:
-      bucket: ((tf-bucket-name))
+      bucket: ((ud/pxf/common/tf-bucket-name))
       bucket_path: ((ud/pxf/common/tf-bucket-path-hadoop))
-      region_name: ((aws-region))
+      region_name: ((ud/common/aws-region))
       access_key_id: ((tf-machine-access-key-id))
       secret_access_key: ((tf-machine-secret-access-key))
 {% endif %}
@@ -793,9 +793,9 @@ jobs:
     params:
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      AWS_DEFAULT_REGION: ((aws-region))
+      AWS_DEFAULT_REGION: ((ud/common/aws-region))
       BUCKET_PATH: ((tf-bucket-path))
-      BUCKET_NAME: ((tf-bucket-name))
+      BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
       PLATFORM: centos7
       CLOUD_PROVIDER: google
       GPDB_RPM: true
@@ -1051,9 +1051,9 @@ jobs:
         params:
           AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
           AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-          AWS_DEFAULT_REGION: ((aws-region))
+          AWS_DEFAULT_REGION: ((ud/common/aws-region))
           BUCKET_PATH: ((tf-bucket-path))
-          BUCKET_NAME: ((tf-bucket-name))
+          BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
           PLATFORM: centos7
           CLOUD_PROVIDER: google
           GPDB_RPM: true
@@ -1208,9 +1208,9 @@ jobs:
         params:
           AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
           AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-          AWS_DEFAULT_REGION: ((aws-region))
+          AWS_DEFAULT_REGION: ((ud/common/aws-region))
           BUCKET_PATH: ((tf-bucket-path))
-          BUCKET_NAME: ((tf-bucket-name))
+          BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
           PLATFORM: centos7
           CLOUD_PROVIDER: google
           GPDB_RPM: true
