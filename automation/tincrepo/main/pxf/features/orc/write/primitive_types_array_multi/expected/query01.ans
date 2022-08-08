@@ -23,19 +23,19 @@ Null display is "NIL".
 SET bytea_output=hex;
 SET
 INSERT INTO orc_primitive_arrays_multi_bool_writable SELECT id, bool_arr FROM orc_primitive_arrays_multi_heap;
-psql:/Users/axue/workspace/pxf/automation/tincrepo/main/pxf/features/orc/write/primitive_types_array_multi/output/query01.sql:27: ERROR:  PXF server error : malformed boolean literal "{t,f}"  (seg0 127.0.0.1:6002 pid=96655)
+ERROR:  PXF server error : malformed boolean literal "{t,f}"  (seg0 127.0.0.1:6002 pid=96655)
 HINT:  Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
 INSERT INTO orc_primitive_arrays_multi_bytea_writable SELECT id, bytea_arr FROM orc_primitive_arrays_multi_heap;
-psql:/Users/axue/workspace/pxf/automation/tincrepo/main/pxf/features/orc/write/primitive_types_array_multi/output/query01.sql:28: ERROR:  PXF server error : Error parsing array element: {"\x1617"} was not of expected type BINARY  (seg1 127.0.0.1:6003 pid=96656)
+ERROR:  PXF server error : Error parsing array element: {"\x1617"} was not of expected type BINARY  (seg1 127.0.0.1:6003 pid=96656)
 HINT:  Column value "{{"\\x1617"},{"\\x1819"}}" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files. Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
 INSERT INTO orc_primitive_arrays_multi_int_writable SELECT id, int_arr FROM orc_primitive_arrays_multi_heap;
-psql:/Users/axue/workspace/pxf/automation/tincrepo/main/pxf/features/orc/write/primitive_types_array_multi/output/query01.sql:29: ERROR:  PXF server error : Error parsing array element: {123} was not of expected type INT  (seg0 127.0.0.1:6002 pid=96655)
+ERROR:  PXF server error : Error parsing array element: {123} was not of expected type INT  (seg0 127.0.0.1:6002 pid=96655)
 HINT:  Column value "{{123},{223}}" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files. Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
 INSERT INTO orc_primitive_arrays_multi_float_writable SELECT id, float_arr FROM orc_primitive_arrays_multi_heap;
-psql:/Users/axue/workspace/pxf/automation/tincrepo/main/pxf/features/orc/write/primitive_types_array_multi/output/query01.sql:30: ERROR:  PXF server error : Error parsing array element: {15.141593,NULL} was not of expected type DOUBLE  (seg0 127.0.0.1:6002 pid=96655)
+ERROR:  PXF server error : Error parsing array element: {15.141593,NULL} was not of expected type DOUBLE  (seg0 127.0.0.1:6002 pid=96655)
 HINT:  Column value "{{15.141593,NULL}}" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files. Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
 INSERT INTO orc_primitive_arrays_multi_date_writable SELECT id, date_arr FROM orc_primitive_arrays_multi_heap;
-psql:/Users/axue/workspace/pxf/automation/tincrepo/main/pxf/features/orc/write/primitive_types_array_multi/output/query01.sql:31: ERROR:  PXF server error : Error parsing array element: {2010-01-19,NULL,2010-01-07} was not of expected type DATE  (seg2 127.0.0.1:6004 pid=96657)
+ERROR:  PXF server error : Error parsing array element: {2010-01-19,NULL,2010-01-07} was not of expected type DATE  (seg2 127.0.0.1:6004 pid=96657)
 HINT:  Column value "{{2010-01-19,NULL,2010-01-07}}" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files. Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
 INSERT INTO orc_primitive_arrays_multi_text_writable SELECT id, text_arr FROM orc_primitive_arrays_multi_heap;
 INSERT 0 33

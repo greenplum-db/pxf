@@ -108,28 +108,6 @@ public class OrcWriteTest extends BaseFeature {
             "uuid_arr             uuid[]"         // DataType.UUIDARRAY
     };
 
-//    private static final String[] ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ = {
-//            "id                   integer"      ,
-//            "bool_arr             boolean[]"    , // DataType.BOOLARRAY
-//            "bytea_arr            bytea[]"      , // DataType.BYTEAARRAY
-//            "bigint_arr           bigint[]"     , // DataType.INT8ARRAY
-//            "smallint_arr         smallint[]"   , // DataType.INT2ARRAY
-//            "int_arr              integer[]"    , // DataType.INT4ARRAY
-//            "text_arr             text[]"       , // DataType.TEXTARRAY
-//            "real_arr             real[]"       , // DataType.FLOAT4ARRAY
-//            "float_arr            float[]"      , // DataType.FLOAT8ARRAY
-//            "char_arr             char(4)[]"    , // DataType.BPCHARARRAY
-//            "varchar_arr          varchar(7)[]" , // DataType.VARCHARARRAY
-//            "varchar_arr_nolimit  varchar[]"    , // DataType.VARCHARARRAY with no length
-//            "date_arr             date[]"       , // DataType.DATEARRAY
-//            "time_arr             text[]"       , // DataType.TIMEARRAY --> time is not a separate type in orc (see OrcSchemaBuilder.java)
-//            "timestamp_arr        timestamp[]"  , // DataType.TIMESTAMPARRAY
-//            "timestamptz_arr      timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
-//            "numeric_arr          numeric[]"    , // DataType.NUMERICARRAY
-//            "uuid_arr             text[]"         // DataType.UUIDARRAY --> uuid is stored as string (see OrcSchemaBuilder.java)
-//    };
-
-
     private static final boolean[] NO_NULLS = new boolean[ORC_PRIMITIVE_TABLE_COLUMNS.length - 1]; // 16 main columns
     private static final boolean[] ALL_NULLS = new boolean[ORC_PRIMITIVE_TABLE_COLUMNS.length - 1]; // 16 main columns
     static {
@@ -282,7 +260,7 @@ public class OrcWriteTest extends BaseFeature {
         insertArrayDataWithNulls(gpdbTableNamePrefix, 33, 17); // > 30 to let the DATE field to repeat the value
 
         // use PXF *:orc profile to read the data
-        runTincTest("pxf.features.orc.write.primitive_types_array.runTest");
+        runTincTest("pxf.features.orc.write.primitive_types_array_with_nulls.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
