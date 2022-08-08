@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -23,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +45,8 @@ public class JdbcAccessorTest {
     private SecureLogin mockSecureLogin;
     @Mock
     private Statement mockStatement;
+    @Mock
+    private PreparedStatement mockPreparedStatement;
     @Mock
     private ResultSet mockResultSet;
 
@@ -137,6 +142,28 @@ public class JdbcAccessorTest {
                 "ON dept.id = emp.dept_id\n" +
                 "GROUP BY dept.name) pxfsubquery";
         assertEquals(expected, queryPassed.getValue());
+    }
+
+    @Test
+    public void testReadFromQueryWithPreparedStatement() throws Exception {
+        String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
+        configuration.set("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
+        context.setDataSource("query:testquery");
+        configuration.set("jdbc.read.prepared-statement", "true");
+        when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        ArgumentCaptor<String> queryPassed = wireMocksForReadWithPrepareStatement();
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
+                "FROM dept JOIN emp\n" +
+                "ON dept.id = emp.dept_id\n" +
+                "GROUP BY dept.name) pxfsubquery";
+
+        assertEquals(expected, queryPassed.getValue());
+        verify(mockPreparedStatement, times(1)).executeQuery();
     }
 
     @Test
@@ -263,6 +290,16 @@ public class JdbcAccessorTest {
         when(mockConnection.createStatement()).thenReturn(mockStatement);
         when(mockMetaData.getDatabaseProductName()).thenReturn("Greenplum");
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
+    }
+
+    private ArgumentCaptor<String> wireMocksForReadWithPrepareStatement() throws SQLException {
+        wireMocksForRead();
+        ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
+        when(mockConnection.prepareStatement(queryPassed.capture())).thenReturn(mockPreparedStatement);
+        when(mockMetaData.getDatabaseProductName()).thenReturn("Greenplum");
+        when(mockMetaData.getExtraNameCharacters()).thenReturn("");
+
+        return queryPassed;
     }
 
     private void wireMocksForRead() throws SQLException {

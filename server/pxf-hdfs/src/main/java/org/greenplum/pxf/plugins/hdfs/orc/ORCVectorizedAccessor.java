@@ -26,6 +26,7 @@ import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.HcfsType;
 import org.greenplum.pxf.plugins.hdfs.filter.BPCharOperatorTransformer;
 import org.greenplum.pxf.plugins.hdfs.filter.SearchArgumentBuilder;
@@ -321,20 +322,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         return writerState;
     }
 
-    /**
-     * Parses a boolean property such that if the property has a value other that true or false, an exception is thrown
-     * @return value of the property, true if the property is not defined
-     */
     private boolean parseWriterTimezoneProperty() {
-        // do not use getBoolean as it would return default value for an invalid property value
-        String writeTimestampsInUTCStr = configuration.get(ORC_WRITE_TIMEZONE_UTC_PROPERTY_NAME, "true").trim();
-        if (writeTimestampsInUTCStr.equalsIgnoreCase("true")) {
-            return true;
-        } else if (writeTimestampsInUTCStr.equalsIgnoreCase("false")) {
-            return false;
-        } else {
-            throw new PxfRuntimeException(String.format(
-                    "Property %s has invalid value %s", ORC_WRITE_TIMEZONE_UTC_PROPERTY_NAME, writeTimestampsInUTCStr));
-        }
+        return Utilities.parseBooleanProperty(configuration, ORC_WRITE_TIMEZONE_UTC_PROPERTY_NAME, true);
     }
 }

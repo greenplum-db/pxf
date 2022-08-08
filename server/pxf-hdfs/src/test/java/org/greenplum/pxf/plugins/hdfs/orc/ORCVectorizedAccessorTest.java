@@ -156,7 +156,7 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
     @Test
     public void testOpenForWrite_OrcWriteTimeZoneUTCInvalid() throws IOException {
         context.getConfiguration().set("pxf.orc.write.timezone.utc", "foo");
-        runErrorScenario_OpenForWrite("Property pxf.orc.write.timezone.utc has invalid value foo");
+        runErrorScenario_OpenForWrite("Property pxf.orc.write.timezone.utc has invalid value 'foo'; value should be either 'true' or 'false'");
     }
 
     @Test
