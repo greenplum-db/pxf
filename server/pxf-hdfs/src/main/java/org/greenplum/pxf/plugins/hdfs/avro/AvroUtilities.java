@@ -105,7 +105,7 @@ public final class AvroUtilities {
      * @return
      */
     public Object decodeString(Schema schema, String value, boolean isTopLevel, boolean hasUserProvidedSchema) {
-        LOG.debug("schema={}, value={}, isTopLevel={}", schema, value, isTopLevel);
+        LOG.trace("schema={}, value={}, isTopLevel={}", schema, value, isTopLevel);
 
         Schema.Type fieldType = schema.getType();
         if (fieldType == Schema.Type.ARRAY) {

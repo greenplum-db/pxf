@@ -76,6 +76,7 @@ class ORCVectorizedMappingFunctions {
     private static final Map<TypeDescription.Category, TriConsumer<ColumnVector, Integer, Object>> writeFunctionsMap;
     private static final Map<TypeDescription.Category, TriConsumer<ColumnVector, Integer, Object>> writeListFunctionsMap;
     private static final TriConsumer<ColumnVector, Integer, Object> timestampInLocalWriteFunction;
+    private static final TriConsumer<ColumnVector, Integer, Object> timestampInLocalWriteListFunction;
     private static final ZoneId TIMEZONE_UTC = ZoneId.of("UTC");
     private static final ZoneId TIMEZONE_LOCAL = TimeZone.getDefault().toZoneId();
 
@@ -106,6 +107,7 @@ class ORCVectorizedMappingFunctions {
         timestampInLocalWriteFunction = getTimestampInLocalWriteFunction();
         writeListFunctionsMap = new EnumMap<>(TypeDescription.Category.class);
         initWriteListFunctionsMap();
+        timestampInLocalWriteListFunction = getListWriteFunction(TypeDescription.Category.TIMESTAMP, timestampInLocalWriteFunction);
     }
 
     public static OneField[] booleanReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
@@ -457,7 +459,11 @@ class ORCVectorizedMappingFunctions {
         } else if (columnTypeCategory.equals(TypeDescription.Category.LIST)) {
             // pass along the underlying category of the list
             TypeDescription childTypeDescription = typeDescription.getChildren().get(0);
-            writeFunction = writeListFunctionsMap.get(childTypeDescription.getCategory());
+            if (childTypeDescription.equals(TypeDescription.Category.TIMESTAMP) && !timestampsInUTC) {
+                writeFunction = timestampInLocalWriteListFunction;
+            } else {
+                writeFunction = writeListFunctionsMap.get(childTypeDescription.getCategory());
+            }
         }
         else {
             writeFunction = writeFunctionsMap.get(columnTypeCategory);
@@ -563,7 +569,7 @@ class ORCVectorizedMappingFunctions {
         String timestampString = instant
                 .atZone(ZoneId.systemDefault())
                 .format(formatter);
-        LOG.debug("Converted timestamp: {} to date: {}", timestamp, timestampString);
+        LOG.trace("Converted timestamp: {} to date: {}", timestamp, timestampString);
         return timestampString;
     }
 
@@ -585,12 +591,23 @@ class ORCVectorizedMappingFunctions {
      * A special function that writes lists to ORC file
      * @param underlyingChildCategory the underlying primitive child category. As PXF currently only has the capability to infer
      *                                an ORC schema from the GPDB schema, so all arrays will be one-dimensional, and this value
-     *                                will be the underlying primitive type
+     *                                will be the underlying primitive type. This category is used to determine the write
+     *                                function that will be used to write the primitive value in the child column vector
      * @return a function setting the list column vector
      */
     private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TypeDescription.Category underlyingChildCategory) {
-        final TriConsumer<ColumnVector, Integer, Object> childWriteFunction = writeFunctionsMap.get(underlyingChildCategory);
+        return getListWriteFunction(underlyingChildCategory, writeFunctionsMap.get(underlyingChildCategory));
+    }
 
+    /**
+     * A special function that writes lists to ORC file
+     * @param underlyingChildCategory the underlying primitive child category. As PXF currently only has the capability to infer
+     *                                an ORC schema from the GPDB schema, so all arrays will be one-dimensional, and this value
+     *                                will be the underlying primitive type
+     * @param childWriteFunction      the write function that will be used to write the primitive value in the child column vector
+     * @return a function setting the list column vector
+     */
+    private static TriConsumer<ColumnVector, Integer, Object> getListWriteFunction(TypeDescription.Category underlyingChildCategory, final TriConsumer<ColumnVector, Integer, Object> childWriteFunction) {
         return (columnVector, row, val) -> {
             // TODO: as all schemas right now are auto-generated, the columnVector will always be a ListColumnVector
             // when we allow user-generated schemas, do we need to consider checking the type of the columnvector before casting?

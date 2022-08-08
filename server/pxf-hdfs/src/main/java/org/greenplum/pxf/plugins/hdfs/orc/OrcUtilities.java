@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility methods for converting between ORC types and Postgres types text format
+ */
 public final class OrcUtilities {
 
     private static final Logger LOG = LoggerFactory.getLogger(OrcUtilities.class);
@@ -33,7 +36,7 @@ public final class OrcUtilities {
      * @return
      */
     public List<Object> parsePostgresArray (String val, TypeDescription.Category underlyingChildCategory) {
-        LOG.debug("child type={}, value={}", underlyingChildCategory, val);
+        LOG.trace("child type={}, value={}", underlyingChildCategory, val);
 
         if (val == null) {
             return null;
