@@ -194,25 +194,14 @@ class ORCVectorizedMappingFunctions {
                     // date in human-readable format (i.e. yyyy-MM-dd) so do that here
                     if (columnVector.child instanceof DateColumnVector) {
                         DateColumnVector childVector = (DateColumnVector) columnVector.child;
-                        String val = (childVector.noNulls || !childVector.isNull[childRow])
-                                ? Date.valueOf(LocalDate.ofEpochDay(childVector.vector[childRow])).toString()
-                                : null;
-                        pgArrayBuilder.addElement(val);
+                        pgArrayBuilder.addElement(stringifyDateColumnVectorValue(childVector, childRow));
                     } else {
                         pgArrayBuilder.addElement(buf -> columnVector.child.stringifyValue(buf, childRow));
                     }
                     break;
                 case TIMESTAMP:
                     TimestampColumnVector childVector = (TimestampColumnVector) columnVector.child;
-                    String val = null;
-
-                    if (childVector.noNulls || !childVector.isNull[childRow]) {
-                        DateTimeFormatter formatter = (oid == DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID())
-                                ? GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER
-                                : GreenplumDateTime.DATETIME_FORMATTER;
-                        val = timestampToString(childVector.asScratchTimestamp(childRow), formatter);
-                    }
-                    pgArrayBuilder.addElement(val);
+                    pgArrayBuilder.addElement(stringifyTimestampColumnVectorValue(childVector, childRow, oid));
                     break;
                 default:
                     pgArrayBuilder.addElement(buf -> columnVector.child.stringifyValue(buf, childRow));
@@ -238,6 +227,45 @@ class ORCVectorizedMappingFunctions {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns a string representation of the date stored in the DateColumnVector at the given row
+     * DateColumnVector does not override LongColumnVector's stringifyValue, so we need to add that functionality here
+     * @param dateColumnVector the column vector from which to pull the data
+     * @param row the row to stringify
+     * @return the string representation of the date for the given row
+     */
+    private static String stringifyDateColumnVectorValue(DateColumnVector dateColumnVector, int row) {
+        if (dateColumnVector.isRepeating) {
+            row = 0;
+        }
+        return (dateColumnVector.noNulls || !dateColumnVector.isNull[row])
+                ? Date.valueOf(LocalDate.ofEpochDay(dateColumnVector.vector[row])).toString()
+                : null;
+    }
+
+    /**
+     * Returns a string representation of the timestamp stored in the TimestampColumnVector at the given row.
+     * This function handles both the timestamp and the timestamp with timezone cases.
+     * We do not use the TimestampColumnVector stringifyValue as we need to handle Greenplum Datetime formatting
+     * @param timestampColumnVector the column vector from which to pull the data
+     * @param row the row to stringify
+     * @param oid the oid to determine which date time formatter to use (with or without timezone)
+     * @return the string representation of the timestamp for the given row
+     */
+    private static String stringifyTimestampColumnVectorValue(TimestampColumnVector timestampColumnVector, int row, int oid) {
+        String val = null;
+        if (timestampColumnVector.isRepeating) {
+            row = 0;
+        }
+        if (timestampColumnVector.noNulls || !timestampColumnVector.isNull[row]) {
+            DateTimeFormatter formatter = (oid == DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID())
+                    ? GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER
+                    : GreenplumDateTime.DATETIME_FORMATTER;
+            val = timestampToString(timestampColumnVector.asScratchTimestamp(row), formatter);
+        }
+        return val;
     }
 
     public static OneField[] shortReader(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
