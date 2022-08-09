@@ -623,7 +623,14 @@ class ORCVectorizedMappingFunctions {
             listColumnVector.offsets[row] = offset;
             listColumnVector.lengths[row] = length;
             listColumnVector.childCount += length;
-            listColumnVector.child.ensureSize(listColumnVector.childCount, true);
+            // if the number of children slots needed is greater than the current size
+            if (listColumnVector.childCount > listColumnVector.child.isNull.length) {
+                // reallocate to ensure that the columnvector can hold the data
+                // use the average row size to calculate what the new size should be
+                // (childCount/row) * (batchsize - row) => assume average size and # of rows
+                float avgRow = listColumnVector.childCount / (row+1);
+                listColumnVector.child.ensureSize(Math.round(avgRow) * (VectorizedRowBatch.DEFAULT_SIZE - (row+1)),   true);
+            }
 
             // add the data to the child columnvector
             ColumnVector childColumnVector = listColumnVector.child;
