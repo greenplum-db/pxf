@@ -93,7 +93,6 @@ set-dev-release-pipeline:
 set-dev-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template dev_build_pipeline-tpl.yml --vars \
-		pipeline_type=dev \
 		slack_notification=$(SLACK) \
 		multinode=$(MULTINODE) \
 		multinode_no_impersonation=$(MULTINODE_NO_IMPERSONATION) \

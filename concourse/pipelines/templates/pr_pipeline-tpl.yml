@@ -24,7 +24,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
 - name: singlecluster-hdp2
@@ -32,7 +32,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
 ## ---------- Github Repos ----------
@@ -54,7 +54,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endfor %} {# gp5, gp6, and gp7 #}
 
 {% set gp_ver = 6 %}
@@ -65,7 +65,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rhel8-test-pxf
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 - name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
   type: registry-image
@@ -74,7 +74,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 ## ---------- Product Packages ----------
@@ -85,7 +85,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 {% endfor %} {# range(num_gpdb5_versions) #}
 {% set gp_ver = None %}
@@ -97,7 +97,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_rhel8_rpm_latest-[[i]]
@@ -105,7 +105,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel8-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
@@ -113,7 +113,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}

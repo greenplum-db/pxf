@@ -27,7 +27,7 @@ resources:
 - name: slack-alert
   type: slack-notification
   source:
-    url: ((ud/pxf/secrets/slack-integration-webhook))
+    url: ((ud/pxf/secrets/ud-dev-slack-integration-webhook))
 
 jobs:
 - name: hadoop-cluster-cleaner
