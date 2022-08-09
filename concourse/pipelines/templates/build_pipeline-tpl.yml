@@ -182,7 +182,7 @@ resource_types:
     repository: gcr.io/data-gpdb-ud/terraform-resource
     tag: 0.11.15
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 - name: terraform-0.14.10
   type: registry-image
@@ -220,7 +220,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
 - name: pxf-automation-dependencies
@@ -228,7 +228,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
 ## ---------- Single Cluster tarballs ----------
@@ -237,7 +237,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
 - name: singlecluster-cdh
@@ -245,7 +245,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
 
 - name: singlecluster-hdp3
@@ -253,7 +253,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 
 ## ---------- Github Repos ----------
@@ -354,7 +354,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-releases
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: [[ pipeline_type ]]/shipit/greenplum-pxf-(.*).txt
 
 {% if email_notification %}
@@ -380,7 +380,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endfor %} {# gp5, gp6, and gp7 #}
 
 {% set gp_ver = 6 %}
@@ -391,7 +391,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rhel8-test-pxf
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 - name: gpdb6-pxf-dev-oel7-image
@@ -401,7 +401,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-oel7-test-pxf
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 {% set gp_ver = 6 %}
 - name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
@@ -411,7 +411,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 - name: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
   type: registry-image
@@ -420,7 +420,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf-mapr
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 - name: rpmrebuild-centos7-image
@@ -430,7 +430,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/rpmrebuild-centos7
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 - name: rpmrebuild-rhel8-image
   type: registry-image
@@ -439,7 +439,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/rpmrebuild-rhel8
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 - name: ccp-7-image
   type: registry-image
@@ -470,7 +470,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 {% endfor %} {# range(num_gpdb5_versions) #}
 {% set gp_ver = None %}
@@ -482,7 +482,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
@@ -490,7 +490,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
@@ -502,7 +502,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel8-x86_64.rpm
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
@@ -533,7 +533,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: ((ud/pxf/[[ pipeline_type ]]/build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
     versioned_file: [[ pipeline_type ]]/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
 {% endfor %}
@@ -544,7 +544,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: [[ pipeline_type ]]/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
 
 - name: pxf_gp[[gp_ver]]_tarball_rhel8
@@ -552,7 +552,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((ud/pxf/secrets/storage-service-account-key))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: [[ pipeline_type ]]/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
 {% set gp_ver = None %}
 
@@ -1713,7 +1713,7 @@ jobs:
       GIT_REMOTE_URL: ((ud/pxf/[[ pipeline_type ]]/git-remote-ssh-url))
       GIT_SSH_KEY: ((ud/pxf/secrets/git-deploy-key))
       GIT_USERNAME: ((ud/pxf/common/git-deploy-username))
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -1738,7 +1738,7 @@ jobs:
       GCS_OSL_PATH: [[ pipeline_type ]]/OSL
       GCS_RELEASES_BUCKET: data-gpdb-ud-pxf-releases
       GCS_RELEASES_PATH: [[ pipeline_type ]]/releases
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/storage-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
   #  - in_parallel: does not work since all tasks modify pxf_artifacts
 {% for gp_ver in range(5, 7) %}
   - task: Add OSL file to PXF-GP[[gp_ver]] RPM on RHEL7
