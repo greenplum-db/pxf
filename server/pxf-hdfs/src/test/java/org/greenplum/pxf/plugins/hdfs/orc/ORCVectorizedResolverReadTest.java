@@ -1,5 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -21,11 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.sql.Date;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -387,9 +385,35 @@ class ORCVectorizedResolverReadTest extends ORCVectorizedBaseTest {
                 Object value = row.get(colNum).val;
                 if (columnDescriptor.isProjected()) {
                     Object expectedValue = expected[colNum][rowNum];
-                    assertEquals(expectedValue, value, "Row " + rowNum + ", COL" + (colNum + 1));
+                    if (colNum == 13 && expectedValue != null) {
+                        checkListTimestampwithTimezoneReturned(expectedValue, value, rowNum, colNum);
+                    } else {
+                        assertEquals(expectedValue, value, "Row " + rowNum + ", COL" + (colNum + 1));
+                    }
                 } else {
                     assertNull(value);
+                }
+            }
+        }
+    }
+
+    private void checkListTimestampwithTimezoneReturned(Object expectedValue, Object value, int rowNum, int colNum) {
+        // expect empty arrays to be empty
+        if (StringUtils.equalsIgnoreCase("{}", expectedValue.toString()) || StringUtils.equalsIgnoreCase("{{}}", expectedValue.toString())) {
+            assertEquals(expectedValue, value, "Row " + rowNum + ", COL" + (colNum + 1));
+        } else {
+            // check each element in the array
+            String[] expected_timestamps = expectedValue.toString().replace("{", "").replace("}", "").split(",");
+            String[] actual_timestamps = value.toString().replace("{", "").replace("}", "").split(",");
+            for (int i = 0; i < expected_timestamps.length; i++) {
+                String expected = expected_timestamps[i];
+                String actual = actual_timestamps[i];
+                if (StringUtils.equalsIgnoreCase("NULL", expected)) {
+                    assertEquals("NULL", actual);
+                } else {
+                    Object expectedTimestamp = ZonedDateTime.parse(expected.substring(1, expected_timestamps[i].length() - 1), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER).withZoneSameInstant(ZoneOffset.UTC);
+                    Object actualTimestamp = ZonedDateTime.parse(actual.substring(1, actual_timestamps[i].length() - 1), GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER).withZoneSameInstant(ZoneOffset.UTC);
+                    assertEquals(expectedTimestamp, actualTimestamp, "Row " + rowNum + ", COL" + (colNum + 1));
                 }
             }
         }
