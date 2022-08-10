@@ -205,8 +205,18 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         assertListLongColumnVectorCell(batch, 1, 17, IS_NULL, Arrays.asList((long) 101, null, (long) 102 ), 1);
         assertListLongColumnVectorCell(batch, 1, 18, IS_NULL, Arrays.asList(123456789000000001L, 123456789000000002L, null), 2);
         assertListLongColumnVectorCell(batch, 1, 19, IS_NULL, Arrays.asList(1L, 1L, null), 2);
-        assertListBytesColumnVectorCell(batch, 1, 20, IS_NULL, Arrays.asList(new byte[]{(byte) 0x01, (byte) 0x02}, null, new byte[]{(byte) 0x03, (byte) 0x04}), 1);
-
+        assertListBytesColumnVectorCell(batch, 1, 20, IS_NULL, Arrays.asList("row-1".getBytes(StandardCharsets.UTF_8), "row-2".getBytes(StandardCharsets.UTF_8), null), 2);
+        assertListDoubleColumnVectorCell(batch, 1, 21, IS_NULL, Arrays.asList((double) 1.00001f, null, (double) 2.00001f), 1);
+        assertListDoubleColumnVectorCell(batch, 1, 22, IS_NULL, Arrays.asList(null, 4.14159265358979323846d, 5.14159265358979323846d), 0);
+        assertListBytesColumnVectorCell(batch, 1, 23, IS_NULL, Arrays.asList(new byte[]{(byte) 0x01, (byte) 0x02}, null, new byte[]{(byte) 0x03, (byte) 0x04}),1);
+        assertListBytesColumnVectorCell(batch, 1, 24, IS_NULL, Arrays.asList("1".getBytes(StandardCharsets.UTF_8), "2".getBytes(StandardCharsets.UTF_8), null),2);
+        assertListBytesColumnVectorCell(batch, 1, 25, IS_NULL, Arrays.asList("var-1".getBytes(StandardCharsets.UTF_8), null, "var-2".getBytes(StandardCharsets.UTF_8)),1);
+        assertListLongColumnVectorCell(batch, 1, 26, IS_NULL, Arrays.asList(null, 14611L, 14612L), 0);
+        assertListBytesColumnVectorCell(batch, 1, 27, IS_NULL, Arrays.asList("476f35e4-da1a-43cf-8f7c-950a00000001".getBytes(StandardCharsets.UTF_8), null, "476f35e4-da1a-43cf-8f7c-950a00000002".getBytes(StandardCharsets.UTF_8)),1);
+        assertListDecimalColumnVectorCell(batch, 1, 28, IS_NULL, Arrays.asList(new HiveDecimalWritable("12345678900000.000001"), new HiveDecimalWritable("12345678900000.000002"), null), 2);
+        assertListBytesColumnVectorCell(batch, 1, 29, IS_NULL, Arrays.asList("10:11:01".getBytes(StandardCharsets.UTF_8), null, "10:11:%2".getBytes(StandardCharsets.UTF_8)), 1);
+        assertListTimestampColumnVectorCell(batch, 1, 30, IS_NULL, Arrays.asList(null, (1373774405L-7*60*60)*1000+1, (1373774405L-7*60*60)*1000+2), Arrays.asList(null, 1456000L, 2456000L), 0);
+        assertListTimestampColumnVectorCell(batch, 1,31, IS_NULL, Arrays.asList(1373774405987L, 1373774405987L, null), Arrays.asList(987001000L, 987002000L, null), 2);
     }
     @Test
     public void testResolvesBatch_WithNulls() {
@@ -337,8 +347,18 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         assertListLongColumnVectorCell(batch, row, 17, isNull[17], Arrays.asList((long) 100 + row, null, (long) 101 + row ), 1);
         assertListLongColumnVectorCell(batch, row, 18, isNull[18], Arrays.asList(123456789000000000L + row, 123456789000000001L + row, null), 2);
         assertListLongColumnVectorCell(batch, row, 19, isNull[19], Arrays.asList((row % 2 != 0 ? 1L : 0L), (row % 3 != 0 ? 1L : 0L), null), 2);
-        assertListBytesColumnVectorCell(batch, row, 20, isNull[20], Arrays.asList(new byte[]{(byte) row, (byte) (row + 1)}, null, new byte[]{(byte) (row + 2), (byte) (row + 3)}), 2);
-
+        assertListBytesColumnVectorCell(batch, row, 20, isNull[20], Arrays.asList(("row-" + row).getBytes(StandardCharsets.UTF_8), ("row-" + (row + 1)).getBytes(StandardCharsets.UTF_8), null), 2);
+        assertListDoubleColumnVectorCell(batch, row, 21, isNull[21], Arrays.asList(Float.valueOf(row + 0.00001f * row).doubleValue(), null, Float.valueOf(row + 1 + 0.00001f * row).doubleValue()), 1);
+        assertListDoubleColumnVectorCell(batch, row, 22, isNull[22], Arrays.asList(null, row + Math.PI, row + 1 + Math.PI), 0);
+        assertListBytesColumnVectorCell(batch, row, 23, isNull[23], Arrays.asList(new byte[]{(byte) row, (byte) (row + 1)}, null, new byte[]{(byte) (row + 2), (byte) (row + 3)}), 1);
+        assertListBytesColumnVectorCell(batch, row, 24, isNull[24], Arrays.asList(String.valueOf(row).getBytes(StandardCharsets.UTF_8), String.valueOf(row + 1).getBytes(StandardCharsets.UTF_8), null), 2);
+        assertListBytesColumnVectorCell(batch, row, 25, isNull[25], Arrays.asList(("var-" + row).getBytes(StandardCharsets.UTF_8), null, ("var-" + (row + 1)).getBytes(StandardCharsets.UTF_8)), 1);
+        assertListLongColumnVectorCell(batch, row, 26, isNull[26], Arrays.asList(null, 14610L + row % 30, 14610L + row + 1 % 30), 0);
+        assertListBytesColumnVectorCell(batch, row, 27, isNull[27], Arrays.asList(String.format("476f35e4-da1a-43cf-8f7c-950a%08d", row % 100000000).getBytes(StandardCharsets.UTF_8), null, String.format("476f35e4-da1a-43cf-8f7c-950a%08d", row + 1 % 100000000).getBytes(StandardCharsets.UTF_8)), 1);
+        assertListDecimalColumnVectorCell(batch, row, 28, isNull[28], Arrays.asList(new HiveDecimalWritable("12345678900000.00000" + row), new HiveDecimalWritable("12345678900000.00000" + (row + 1)), null), 2);
+        assertListBytesColumnVectorCell(batch, row, 29, isNull[29], Arrays.asList(String.format("10:11:%02d", row % 60).getBytes(StandardCharsets.UTF_8), null, String.format("10:11:%02d", row + 1 % 60).getBytes(StandardCharsets.UTF_8)), 1);
+        assertListTimestampColumnVectorCell(batch, row, 30, isNull[30], Arrays.asList(null, (1373774405L-7*60*60)*1000+row%1000, (1373774405L-7*60*60)*1000+(row+1)%1000), Arrays.asList(null, (row%1000)*1000000L+456000, ((row+1)%1000)*1000000L+456000), 0);
+        assertListTimestampColumnVectorCell(batch, row,31, isNull[31], Arrays.asList(1373774405987L, 1373774405987L, null), Arrays.asList(987 * 1000000L + (row % 1000) * 1000, 987 * 1000000L + ((row + 1) % 1000) * 1000, null), 2);
     }
 
     private void assertLongColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean[] isNull, Long value) {
@@ -434,6 +454,33 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         }
     }
 
+    private void assertListDoubleColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean[] isNull, List<Double> values, int childNullElementIndex) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof ListColumnVector);
+        ListColumnVector listColumnVector = (ListColumnVector) batch.cols[col];
+
+        ColumnVector childVector = listColumnVector.child;
+        assertTrue(childVector instanceof DoubleColumnVector);
+        DoubleColumnVector childColumnVector = (DoubleColumnVector) listColumnVector.child;
+
+        if (isNull[row]) {
+            assertFalse(listColumnVector.noNulls);
+            assertTrue(listColumnVector.isNull[row]);
+        } else {
+            // all the inserted rows have an array with 3 elements
+            assertEquals(3, listColumnVector.lengths[row]);
+            assertFalse(childColumnVector.noNulls);
+            assertTrue(childColumnVector.isNull[childNullElementIndex]);
+            int i = 0;
+            for (Double rowElement : values) {
+                if (i != childNullElementIndex) {
+                    assertEquals(rowElement, childColumnVector.vector[(int) (listColumnVector.offsets[row] + i)]); // check expected value in the cell
+                    i++;
+                }
+            }
+        }
+    }
+
     private void assertDateColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean[] isNull, Long value) {
         ColumnVector columnVector = batch.cols[col];
         assertTrue(columnVector instanceof LongColumnVector);
@@ -454,6 +501,33 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         }
     }
 
+    private void assertListTimestampColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean[] isNull, List<Long> time_values, List<Long> nanos_values, int childNullElementIndex) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof ListColumnVector);
+        ListColumnVector listColumnVector = (ListColumnVector) batch.cols[col];
+
+        ColumnVector childVector = listColumnVector.child;
+        assertTrue(childVector instanceof TimestampColumnVector);
+        TimestampColumnVector childColumnVector = (TimestampColumnVector) listColumnVector.child;
+
+        if (isNull[row]) {
+            assertFalse(listColumnVector.noNulls);
+            assertTrue(listColumnVector.isNull[row]);
+        } else {
+            // all the inserted rows have an array with 3 elements
+            assertEquals(3, listColumnVector.lengths[row]);
+            assertFalse(childColumnVector.noNulls);
+            assertTrue(childColumnVector.isNull[childNullElementIndex]);
+
+            for (int i = 0; i < time_values.size(); i++) {
+                if (i != childNullElementIndex) {
+                    assertEquals(time_values.get(i), childColumnVector.time[(int) (listColumnVector.offsets[row] + i)]); // check expected value in the cell
+                    assertEquals(nanos_values.get(i), childColumnVector.nanos[(int) (listColumnVector.offsets[row] + i)]); // check expected value in the cell
+                }
+            }
+        }
+    }
+
     private void assertDecimalColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean[] isNull, HiveDecimalWritable value) {
         ColumnVector columnVector = batch.cols[col];
         assertTrue(columnVector instanceof DecimalColumnVector);
@@ -464,6 +538,33 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
             assertTrue(decimalColumnVector.isNull[row]);
         } else {
             assertEquals(value, decimalColumnVector.vector[row]); // check expected value in the cell
+        }
+    }
+
+    private void assertListDecimalColumnVectorCell(VectorizedRowBatch batch, int row, int col, boolean[] isNull, List<HiveDecimalWritable> values, int childNullElementIndex) {
+        ColumnVector columnVector = batch.cols[col];
+        assertTrue(columnVector instanceof ListColumnVector);
+        ListColumnVector listColumnVector = (ListColumnVector) batch.cols[col];
+
+        ColumnVector childVector = listColumnVector.child;
+        assertTrue(childVector instanceof DecimalColumnVector);
+        DecimalColumnVector childColumnVector = (DecimalColumnVector) listColumnVector.child;
+
+        if (isNull[row]) {
+            assertFalse(listColumnVector.noNulls);
+            assertTrue(listColumnVector.isNull[row]);
+        } else {
+            // all the inserted rows have an array with 3 elements
+            assertEquals(3, listColumnVector.lengths[row]);
+            assertFalse(childColumnVector.noNulls);
+            assertTrue(childColumnVector.isNull[childNullElementIndex]);
+            int i = 0;
+            for (HiveDecimalWritable rowElement : values) {
+                if (i != childNullElementIndex) {
+                    assertEquals(rowElement, childColumnVector.vector[(int) (listColumnVector.offsets[row] + i)]); // check expected value in the cell
+                    i++;
+                }
+            }
         }
     }
 
