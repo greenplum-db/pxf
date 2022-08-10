@@ -218,6 +218,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         assertListTimestampColumnVectorCell(batch, 1, 30, IS_NULL, Arrays.asList(null, (1373774405L-7*60*60)*1000+1, (1373774405L-7*60*60)*1000+2), Arrays.asList(null, 1456000L, 2456000L), 0);
         assertListTimestampColumnVectorCell(batch, 1,31, IS_NULL, Arrays.asList(1373774405987L, 1373774405987L, null), Arrays.asList(987001000L, 987002000L, null), 2);
     }
+
     @Test
     public void testResolvesBatch_WithNulls() {
         columnDescriptors = getAllColumns();
@@ -257,6 +258,66 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
                 assertBatch(batch, 3, numColumns, getAllColumnTypes(), noNulls, isNull);
             }
         }
+    }
+
+    @Test
+    public void testResolvesBatch_ListRequiresReallocation() {
+        // getListWriteFunction has some logic that allows us to reallocate only if necessary. Try to test that here.
+        columnDescriptors = new ArrayList<ColumnDescriptor>(1);
+        columnDescriptors.add(new ColumnDescriptor("int2_array", DataType.INT2ARRAY.getOID(),0,"", null));
+        context.setTupleDescription(columnDescriptors);
+        when(mockWriterOptions.getSchema()).thenReturn(TypeDescription.fromString("struct<int2_array:array<smallint>>"));
+        when(mockWriterOptions.getUseUTCTimestamp()).thenReturn(true);
+        context.setMetadata(mockWriterOptions);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        int numRows = 1024;
+        records = new ArrayList<>(1);
+        for (int i = 0; i < numRows; i++) {
+            records.add(getIntListRecord(i, (i % 3) + 1));
+        }
+
+        OneRow batchWrapper = resolver.setFieldsForBatch(records);
+        VectorizedRowBatch batch = (VectorizedRowBatch) batchWrapper.getData();
+
+        // assert the batch
+        assertNotNull(batch);
+        assertEquals(numRows, batch.size);
+        assertEquals(1, batch.cols.length);
+
+        boolean[] NO_NULL = new boolean[1024]; // no nulls in test records
+
+        ColumnVector columnVector = batch.cols[0];
+        assertTrue(columnVector instanceof ListColumnVector);
+        ListColumnVector listColumnVector = (ListColumnVector) batch.cols[0];
+
+        assertEquals(ColumnVector.Type.LIST, columnVector.type);
+        assertArrayEquals(NO_NULL, columnVector.isNull);
+        assertFalse(columnVector.isRepeating); // we are not setting this flag
+
+        ColumnVector childVector = listColumnVector.child;
+        assertTrue(childVector instanceof LongColumnVector);
+        LongColumnVector childColumnVector = (LongColumnVector) listColumnVector.child;
+
+        assertEquals(2048, childColumnVector.isNull.length);
+    }
+
+    private List<OneField> getIntListRecord(int index, int numElements) {
+        List<OneField> fields = new ArrayList<>(1);
+        switch (numElements) {
+            case 1:
+                fields.add(new OneField(DataType.INT2ARRAY.getOID(), String.format("{%d}", 10 + index % 32000)));
+                break;
+            case 2:
+                fields.add(new OneField(DataType.INT2ARRAY.getOID(), String.format("{%d,%d}", 10 + index % 32000, 11 + index % 32000)));
+                break;
+            case 3:
+                fields.add(new OneField(DataType.INT2ARRAY.getOID(), String.format("{NULL,%d,%d}", 10 + index % 32000, 11 + index % 32000)));
+                break;
+        }
+        return fields;
     }
 
     private void assertBatch(VectorizedRowBatch batch, int numRows, int numColumns, ColumnVector.Type[] columnType, boolean[] noNulls, boolean[][] isNull) {
