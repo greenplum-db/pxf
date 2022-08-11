@@ -48,7 +48,7 @@ cloudbuild: set-cloudbuild-pipeline
 set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
-		pipeline_type=prod \
+		environment=prod \
 		email_notification=$(EMAIL) \
 		slack_notification=$(SLACK) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
@@ -69,7 +69,7 @@ set-build-pipeline:
 set-dev-release-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
-		pipeline_type=dev \
+		environment=dev \
 		email_notification=false \
 		slack_notification=false \
 		git_branch=$(BRANCH) \
@@ -240,7 +240,7 @@ data-gen-1g:
 	make -C ~/workspace/gp-performance-testing \
 		FLY_TARGET=ud \
 		data-gen-pxf-parquet-tpc-h-1g-6X \
-		INPUT_FILE=data-gen-6x-pxf.yml \
+		INPUT_FILE=data-gen-6x-pxf.yml
 
 .PHONY: query-execution-parquet
 query-execution-parquet-1g:
@@ -251,7 +251,7 @@ query-execution-parquet-1g:
 	make -C ~/workspace/gp-performance-testing \
 		FLY_TARGET=ud \
 		query-execution-pxf-parquet-tpc-h-1g-6X \
-		INPUT_FILE=ccp-provision-from-release-pxf.yml \
+		INPUT_FILE=ccp-provision-from-release-pxf.yml
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------

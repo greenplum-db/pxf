@@ -31,9 +31,9 @@ anchors:
     platform: linux
   image: ccp-7-image
   params:
-    GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-kerberos-google-service-account-key))
-    GOOGLE_PROJECT_ID: ((ud/pxf/common/data-gpdb-ud-kerberos-google-project-id))
-    GOOGLE_ZONE: ((ud/pxf/common/data-gpdb-ud-kerberos-google-zone))
+    GOOGLE_CREDENTIALS: ((ud/pxf/secrets/kerberos-ccp-ci-service-account-key))
+    GOOGLE_PROJECT_ID: ((ud/pxf/common/kerberos-google-project-id))
+    GOOGLE_ZONE: ((ud/pxf/common/kerberos-google-zone))
 
 - &destroy_gpdb_cluster
   put: terraform_gpdb
@@ -113,7 +113,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
@@ -121,7 +121,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
@@ -129,7 +129,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
@@ -138,7 +138,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
 {% endif %}
@@ -148,7 +148,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 {% endif %}
@@ -158,7 +158,7 @@ resources:
   type: git
   icon: git
   source:
-    branch: ((pxf-git-branch))
+    branch: ((ud/pxf/prod/git-branch))
     uri: ((ud/pxf/dev/git-remote))
 
 {% if multinode or multinode_no_impersonation or file %}
@@ -250,7 +250,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 {% set gp_ver = None %}
@@ -260,7 +260,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 
@@ -268,7 +268,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 
@@ -276,7 +276,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: pivotal-gpdb-concourse-resources-prod
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/gpdb6/greenplum-db-(6.*)-rhel8-x86_64.rpm
 {% set gp_ver = None %}
@@ -286,7 +286,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: pivotal-gpdb-concourse-resources-prod
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/master/greenplum-db-(7.*)-rhel7-x86_64.rpm
 
@@ -308,7 +308,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build
+    bucket: ((ud/pxf/common/build-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
 {% endfor %}
@@ -318,7 +318,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build
+    bucket: ((ud/pxf/common/build-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
 {% set gp_ver = None %}
@@ -328,7 +328,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build
+    bucket: ((ud/pxf/common/build-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
 {% endfor %}
@@ -357,7 +357,7 @@ resources:
   type: terraform-0.14.10
   source:
     env:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-ipa-google-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ipa-ccp-ci-service-account-key))
     delete_on_failure: true
     storage:
       bucket: ((ud/pxf/common/tf-bucket-name))
@@ -962,7 +962,7 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-google-json-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
       GP_VER: [[gp_ver]]
       GROUP: hcfs
       IMPERSONATION: false
@@ -1081,9 +1081,9 @@ jobs:
       output_mapping:
         dataproc_env_files: dataproc_2_env_files
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-kerberos-google-service-account-key))
-        GOOGLE_PROJECT_ID: ((ud/pxf/common/data-gpdb-ud-kerberos-google-project-id))
-        GOOGLE_ZONE: ((ud/pxf/common/data-gpdb-ud-kerberos-google-zone))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/kerberos-ccp-ci-service-account-key))
+        GOOGLE_PROJECT_ID: ((ud/pxf/common/kerberos-google-project-id))
+        GOOGLE_ZONE: ((ud/pxf/common/kerberos-google-zone))
         HADOOP_USER: gpuser
         IMAGE_VERSION: ((dataproc-image-version))
         INITIALIZATION_SCRIPT: gs://data-gpdb-ud-kerberos-scripts/scripts/initialization-for-kerberos.sh
@@ -1094,7 +1094,7 @@ jobs:
         ccp_reap_minutes: 120
         NO_ADDRESS: false
         PROXY_USER: gpuser
-        SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
+        SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
     - do: # Generate IPA Hadoop cluster
       - put: terraform_ipa_hadoop
         params:
@@ -1102,12 +1102,12 @@ jobs:
           generate_random_name: true
           terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
           vars:
-            gcp_project: ((ud/pxf/common/data-gpdb-ud-ipa-google-project-id))
+            gcp_project: ((ud/pxf/common/ipa-google-project-id))
       - task: Generate Multinode Hadoop Cluster
         file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
         image: gpdb[[gp_ver]]-pxf-dev-centos7-image
         params:
-          ANSIBLE_VAR_gcp_storage_bucket: data-gpdb-ud-pxf-build-resources
+          ANSIBLE_VAR_gcp_storage_bucket: ((ud/pxf/common/build-resources-bucket-name))
           ANSIBLE_VAR_ipa_password: ((ud/pxf/secrets/ipa-password))
           ANSIBLE_VAR_ssl_store_password: ((ud/pxf/secrets/ssl-store-password))
   - task: Setup PXF 5 Latest
@@ -1245,9 +1245,9 @@ jobs:
       output_mapping:
         dataproc_env_files: dataproc_2_env_files
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-kerberos-google-service-account-key))
-        GOOGLE_PROJECT_ID: ((ud/pxf/common/data-gpdb-ud-kerberos-google-project-id))
-        GOOGLE_ZONE: ((ud/pxf/common/data-gpdb-ud-kerberos-google-zone))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/kerberos-ccp-ci-service-account-key))
+        GOOGLE_PROJECT_ID: ((ud/pxf/common/kerberos-google-project-id))
+        GOOGLE_ZONE: ((ud/pxf/common/kerberos-google-zone))
         HADOOP_USER: gpuser
         IMAGE_VERSION: ((dataproc-image-version))
         INITIALIZATION_SCRIPT: gs://data-gpdb-ud-kerberos-scripts/scripts/initialization-for-kerberos.sh
@@ -1258,7 +1258,7 @@ jobs:
         ccp_reap_minutes: 120
         NO_ADDRESS: false
         PROXY_USER: gpuser
-        SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
+        SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
   - task: Setup PXF
     input_mapping:
       terraform: terraform_gpdb

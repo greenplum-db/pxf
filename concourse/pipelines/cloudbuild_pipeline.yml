@@ -33,7 +33,7 @@ resources:
     type: git
     icon: git
     source:
-      branch: ((pxf-git-branch))
+      branch: ((ud/pxf/prod/git-branch))
       uri: https://github.com/greenplum-db/pxf.git
       paths:
         - concourse/docker/pxf-dev-base
@@ -42,7 +42,7 @@ resources:
     type: git
     icon: git
     source:
-      branch: ((pxf-git-branch))
+      branch: ((ud/pxf/prod/git-branch))
       uri: https://github.com/greenplum-db/pxf.git
       paths:
         - concourse/docker/mapr

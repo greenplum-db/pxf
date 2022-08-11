@@ -22,7 +22,7 @@ resource_types:
     repository: gcr.io/data-gpdb-ud/terraform-resource
     tag: 0.11.15
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 - name: gcs
   type: registry-image
@@ -45,25 +45,25 @@ resources:
   icon: tractor
   source:
     env:
-      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
-      GOOGLE_CREDENTIALS: {{google-service-account-key}}
+      AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
     vars:
-      project_id: {{google-project-id}}
+      project_id: ((ud/pxf/common/google-project-id))
     storage:
-      access_key_id: {{tf-machine-access-key-id}}
-      secret_access_key: {{tf-machine-secret-access-key}}
-      region_name: {{aws-region}}
-      bucket: {{tf-bucket-name}}
-      bucket_path: {{tf-bucket-path}}
+      access_key_id: ((tf-machine-access-key-id))
+      secret_access_key: ((tf-machine-secret-access-key))
+      region_name: ((ud/common/aws-region))
+      bucket: ((ud/pxf/common/tf-bucket-name))
+      bucket_path: ((tf-bucket-path))
 
 - name: ccp_src
   type: git
   icon: github-circle
   source:
-    branch: {{ccp-git-branch}}
-    private_key: {{ccp-git-key}}
-    uri: {{ccp-git-remote}}
+    branch: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-branch))
+    private_key: ((gp-concourse-cluster-provisioner-git-key))
+    uri: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-remote))
 
 - name: ccp-7
   type: registry-image
@@ -79,14 +79,14 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 - name: gpdb6_rhel7_rpm_latest-0
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-0_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 - name: pxf_src_tag
@@ -94,70 +94,70 @@ resources:
   icon: github-circle
   source:
     branch: master
-    uri: {{pxf-git-remote}}
+    uri: ((pxf-git-remote))
     tag_filter: ((pxf-tag))
 
 - name: pxf_src
   type: git
   icon: github-circle
   source:
-    branch: {{pxf-git-branch}}
-    uri: {{pxf-git-remote}}
+    branch: ((ud/pxf/prod/git-branch))
+    uri: ((pxf-git-remote))
 
 - name: pxf_tarball
   type: s3
   icon: archive
   source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
+    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/pxf-gp6.el7.tar.gz
 
 - name: cluster_env_files_tar
   type: s3
   icon: archive
   source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
+    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/cluster_env_files.tar.gz
 
 - name: dataproc_env_files_tar
   type: s3
   icon: archive
   source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
+    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_env_files.tar.gz
 
 - name: dataproc_2_env_files_tar
   type: s3
   icon: archive
   source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
+    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_2_env_files.tar.gz
 
 - name: singlecluster-hdp2
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
 - name: pxf-automation-dependencies
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
 ## ======================================================================
@@ -208,7 +208,7 @@ jobs:
           terraform_source: ccp_src/google/
           vars:
             PLATFORM: centos7
-            number_of_nodes: {{number_of_gpdb_nodes}}
+            number_of_nodes: ((number_of_gpdb_nodes))
             extra_nodes: 1
             segments_per_host: 4
             instance_type: n1-standard-4
@@ -220,11 +220,11 @@ jobs:
         file: ccp_src/ci/tasks/gen_cluster.yml
         image: ccp-7
         params:
-          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
-          AWS_DEFAULT_REGION: {{aws-region}}
-          BUCKET_PATH: {{tf-bucket-path}}
-          BUCKET_NAME: {{tf-bucket-name}}
+          AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
+          AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+          AWS_DEFAULT_REGION: ((ud/common/aws-region))
+          BUCKET_PATH: ((tf-bucket-path))
+          BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
           PLATFORM: centos7
           CLOUD_PROVIDER: google
           GPDB_RPM: true
@@ -235,18 +235,18 @@ jobs:
           file: pxf_src/concourse/tasks/install_hadoop.yml
           image: gpdb6-pxf-dev-centos7-image
           params:
-            ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-            SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
-            IMPERSONATION: {{enable-impersonation-multinode}}
+            ACCESS_KEY_ID: ((tf-machine-access-key-id))
+            SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+            IMPERSONATION: ((enable-impersonation-multinode))
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       params:
         CLUSTER_NAME: pxf-((pxf-tag))-longevity-1
-        GOOGLE_CREDENTIALS: {{google-service-account-key}}
-        GOOGLE_PROJECT_ID: {{google-project-id}}
-        GOOGLE_ZONE: {{google-zone}}
-        IMAGE_VERSION: {{dataproc-image-version}}
-        KERBEROS: {{kerberos-enabled}}
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
+        IMAGE_VERSION: ((dataproc-image-version))
+        KERBEROS: ((kerberos-enabled))
         ccp_reap_minutes: 20160
     - task: Generate Hadoop Cluster 2
       file: pxf_src/concourse/tasks/install_dataproc.yml
@@ -254,38 +254,38 @@ jobs:
         dataproc_env_files: dataproc_2_env_files
       params:
         CLUSTER_NAME: pxf-((pxf-tag))-longevity-2
-        GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
-        GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
-        GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/kerberos-ccp-ci-service-account-key))
+        GOOGLE_PROJECT_ID: ((ud/pxf/common/kerberos-google-project-id))
+        GOOGLE_ZONE: ((ud/pxf/common/kerberos-google-zone))
         HADOOP_USER: gpuser
-        IMAGE_VERSION: {{dataproc-image-version}}
+        IMAGE_VERSION: ((dataproc-image-version))
         INITIALIZATION_SCRIPT: gs://data-gpdb-ud-kerberos-scripts/scripts/initialization-for-kerberos.sh
         INSTANCE_TAGS: bosh-network,data-gpdb-ud-access
-        KERBEROS: {{kerberos-enabled}}
+        KERBEROS: ((kerberos-enabled))
         KEY: dataproc-kerberos-key
         KEYRING: dataproc-kerberos
         ccp_reap_minutes: 20160
         NO_ADDRESS: false
         PROXY_USER: gpuser
-        SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
+        SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
   - task: Setup PXF
     input_mapping:
       terraform: terraform_gpdb
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7
     params:
-      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
-      AWS_DEFAULT_REGION: {{aws-region}}
-      BUCKET_PATH: {{tf-bucket-path}}
-      BUCKET_NAME: {{tf-bucket-name}}
+      AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      AWS_DEFAULT_REGION: ((ud/common/aws-region))
+      BUCKET_PATH: ((tf-bucket-path))
+      BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
       CLOUD_PROVIDER: google
       GP_VER: 6
-      IMPERSONATION: {{enable-impersonation-multinode}}
+      IMPERSONATION: ((enable-impersonation-multinode))
       INSTALL_GPHDFS: false
-      KERBEROS: {{kerberos-enabled}}
+      KERBEROS: ((kerberos-enabled))
       PLATFORM: centos7
-      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+      PXF_JVM_OPTS: ((pxf-jvm-opts))
   - in_parallel:
     - do:
       - task: Archive Cluster Configs
@@ -370,12 +370,12 @@ jobs:
     image: gpdb6-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     params:
-      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       HIVE_VERSION: 2
-      IMPERSONATION: {{enable-impersonation-multinode}}
-      KERBEROS: {{kerberos-enabled}}
-      GOOGLE_PROJECT_ID: {{google-project-id}}
+      IMPERSONATION: ((enable-impersonation-multinode))
+      KERBEROS: ((kerberos-enabled))
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: 6
       GROUP: multiClusterSecurity
-      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+      PXF_JVM_OPTS: ((pxf-jvm-opts))

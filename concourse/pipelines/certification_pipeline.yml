@@ -40,7 +40,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
@@ -48,7 +48,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
@@ -119,17 +119,17 @@ resources:
   type: s3
   icon: aws
   source:
-    access_key_id: ((bucket-access-key-id))
-    bucket: ((gpdb-stable-builds-bucket-name))
-    region_name: ((aws_region))
-    secret_access_key: ((bucket-secret-access-key))
+    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    bucket: ((ud/pxf/common/gpdb-stable-builds-bucket-name))
+    region_name: ((ud/common/aws_region))
+    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: release_candidates/bin_gpdb_centos7/gpdb5/bin_gpdb.tar.gz
 
 - name: gpdb6_tarball_rhel7
   type: gcs
   icon: google-drive
   source:
-    bucket: pivotal-gpdb-concourse-resources-prod
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.tar.gz
 
@@ -137,7 +137,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: pivotal-gpdb-concourse-resources-prod
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/gpdb6/server-rc-(.*)-rhel8_x86_64.tar.gz
 
@@ -145,7 +145,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: pivotal-gpdb-concourse-resources-prod
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.tar.gz
 
@@ -154,7 +154,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-releases
+    bucket: ((ud/pxf/common/releases-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: prod/releases/gp5/pxf-gp5-(.*)-1.el7.x86_64.rpm
 
@@ -162,7 +162,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-releases
+    bucket: ((ud/pxf/common/releases-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: prod/releases/gp6/pxf-gp6-(.*)-1.el7.x86_64.rpm
 
@@ -170,7 +170,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-releases
+    bucket: ((ud/pxf/common/releases-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: prod/releases/gp6/pxf-gp6-(.*)-1.el8.x86_64.rpm
 
@@ -178,7 +178,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-releases
+    bucket: ((ud/pxf/common/releases-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: prod/releases/gp6/pxf-gp6-(.*)-1-ubuntu18.04-amd64.deb
 

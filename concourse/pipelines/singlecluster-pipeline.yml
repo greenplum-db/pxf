@@ -15,8 +15,8 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((bucket-access-key-id))
-      secret_access_key: ((bucket-secret-access-key))
+      access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+      secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
       bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((ud/common/aws-region))
       versioned_file: hortonworks/HDP-2.5.3.0-centos6-tars-tarball.tar.gz
@@ -25,8 +25,8 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((bucket-access-key-id))
-      secret_access_key: ((bucket-secret-access-key))
+      access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+      secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
       bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((ud/common/aws-region))
       versioned_file: hortonworks/HDP-3.1.4.0-centos7-tars-tarball.tar.gz
@@ -35,8 +35,8 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((bucket-access-key-id))
-      secret_access_key: ((bucket-secret-access-key))
+      access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+      secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
       bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((ud/common/aws-region))
       versioned_file: cloudera/CDH-5.12.2.tar.gz
@@ -45,8 +45,8 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((bucket-access-key-id))
-      secret_access_key: ((bucket-secret-access-key))
+      access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+      secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
       bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((ud/common/aws-region))
       versioned_file: jdbc/postgresql-jdbc-8.4.704.jar
@@ -56,7 +56,7 @@ resources:
     icon: google-drive
     source:
       bucket: ((ud/pxf/common/build-resources-bucket-name))
-      json_key: ((ud/pxf/secrets/data-gpdb-ud-google-json-key))
+      json_key: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
       versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
   - name: singlecluster-HDP3-gcs
@@ -64,7 +64,7 @@ resources:
     icon: google-drive
     source:
       bucket: ((ud/pxf/common/build-resources-bucket-name))
-      json_key: ((ud/pxf/secrets/data-gpdb-ud-google-json-key))
+      json_key: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
       versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 
   - name: singlecluster-CDH-gcs
@@ -72,14 +72,14 @@ resources:
     icon: google-drive
     source:
       bucket: ((ud/pxf/common/build-resources-bucket-name))
-      json_key: ((ud/pxf/secrets/data-gpdb-ud-google-json-key))
+      json_key: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
       versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
 
   - name: pxf_singlecluster
     type: git
     icon: git
     source:
-      branch: ((pxf-git-branch))
+      branch: ((ud/pxf/prod/git-branch))
       uri: ((ud/pxf/prod/git-remote))
       paths: [singlecluster/*]
 

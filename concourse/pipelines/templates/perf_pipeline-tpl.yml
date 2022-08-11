@@ -102,14 +102,14 @@ resources:
   type: git
   icon: git
   source:
-    branch: ((pxf-git-branch))
+    branch: ((ud/pxf/prod/git-branch))
     uri: ((ud/pxf/prod/git-remote))
 
 - name: gpdb6_rhel[[redhat_major_version]]
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-0_gpdb6/greenplum-db-(.*)-rhel[[redhat_major_version]]-x86_64.rpm
 
@@ -144,7 +144,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build
+    bucket: ((ud/pxf/common/build-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: perf/snapshots/pxf6/pxf-gp6.el[[redhat_major_version]].tar.gz
 
@@ -152,7 +152,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
@@ -177,7 +177,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
@@ -358,8 +358,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       AWS_DEFAULT_REGION: ((ud/common/aws-region))
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-google-json-key))
-      WASB_ACCOUNT_NAME: ((wasb-account-name))
-      WASB_ACCOUNT_KEY: ((wasb-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
+      WASB_ACCOUNT_NAME: ((ud/pxf/common/wasb-account-name))
+      WASB_ACCOUNT_KEY: ((ud/pxf/secrets/wasb-account-key))
       SLEEP_BEFORE_DESTROY_IN_SEC: ((perf-sleep-before-destroy))
       GP_VER: 6

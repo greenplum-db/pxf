@@ -18,7 +18,7 @@ resources:
   type: git
   icon: git
   source:
-    branch: ((pxf-git-branch))
+    branch: ((ud/pxf/prod/git-branch))
     uri: ((ud/pxf/prod/git-remote))
 
 - name: ubuntu18
@@ -32,7 +32,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: pivotal-cf/pivnet-cli/pivnet
 
@@ -41,7 +41,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb5/greenplum-db-(.*)-rhel7-x86_64.rpm
 
@@ -51,7 +51,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
 
@@ -59,7 +59,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-rhel8-x86_64.rpm
 
@@ -67,7 +67,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 {% endfor %}

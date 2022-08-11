@@ -16,8 +16,8 @@ resources:
   type: git
   icon: git
   source:
-    branch: {{pxf-git-branch}}
-    uri: {{pxf-git-remote}}
+    branch: ((ud/pxf/prod/git-branch))
+    uri: ((pxf-git-remote))
     private_key: ((ccp-git-key))
 
 - name: gpdb-pxf-dev-centos6-hdp2-server
@@ -31,9 +31,9 @@ resources:
 {% endif %}
     tag: latest
     username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
+    password: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
 
-- name: gpdb-pxf-dev-centos7-hdp2-server
+    - name: gpdb-pxf-dev-centos7-hdp2-server
   type: registry-image
   icon: docker
   source:
@@ -44,7 +44,7 @@ resources:
 {% endif %}
     tag: latest
     username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
+    password: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
 {% if gpdb_type == "6X_STABLE" %}
 
 - name: gpdb-pxf-dev-ubuntu18-hdp2-server
@@ -54,7 +54,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf-hdp2
     tag: latest
     username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
+    password: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
 {% endif %}
 
 {% for version in range(num_versions) %}
@@ -62,8 +62,8 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
 {% if gpdb_type == "5X_STABLE" %}
     regexp: latest-[[ version ]]_gpdb5/greenplum-db-(.*)-rhel6-x86_64.rpm
 {% else %}
@@ -74,8 +74,8 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
 {% if gpdb_type == "5X_STABLE" %}
     regexp: latest-[[ version ]]_gpdb5/greenplum-db-(.*)-rhel7-x86_64.rpm
 {% else %}
@@ -86,8 +86,8 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
     regexp: latest-[[ version ]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 
 {% endif %}
@@ -97,24 +97,24 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build
-    json_key: {{data-gpdb-ud-google-json-key}}
+    bucket: ((ud/pxf/common/build-bucket-name))
+    json_key: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
     versioned_file: prod/snapshots/pxf6/pxf-gpdb6-SNAPSHOT-rhel6-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_rhel7
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build
-    json_key: {{data-gpdb-ud-google-json-key}}
+    bucket: ((ud/pxf/common/build-bucket-name))
+    json_key: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
     versioned_file: prod/snapshots/pxf6/pxf-gpdb6-SNAPSHOT-rhel7-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_ubuntu18
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build
-    json_key: {{data-gpdb-ud-google-json-key}}
+    bucket: ((ud/pxf/common/build-bucket-name))
+    json_key: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
     versioned_file: prod/snapshots/pxf6/pxf-gpdb6-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
 
 ## ======================================================================

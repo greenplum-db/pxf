@@ -21,7 +21,7 @@ resources:
 - name: pxf_src
   type: git
   source:
-    branch: ((pxf-git-branch))
+    branch: ((ud/pxf/prod/git-branch))
     uri: ((ud/pxf/prod/git-remote))
 
 - name: slack-alert
@@ -62,7 +62,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
         AWS_DEFAULT_REGION: ((ud/pxf/common/tf-machine-region))
         BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/data-gpdb-ud-ipa-google-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ipa-ccp-ci-service-account-key))
         GOOGLE_APPLICATION_CREDENTIALS: /tmp/key.json
         LIFETIME_MINS: 240
         CLOUD: google
