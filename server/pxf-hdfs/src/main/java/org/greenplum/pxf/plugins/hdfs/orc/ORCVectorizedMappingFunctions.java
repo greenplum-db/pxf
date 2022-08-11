@@ -655,9 +655,11 @@ class ORCVectorizedMappingFunctions {
             if (listColumnVector.childCount > listColumnVector.child.isNull.length) {
                 // reallocate to ensure that the columnvector can hold the data
                 // use the average row size to calculate what the new size should be
-                double avgRow = (double) listColumnVector.childCount / (row + 1);
+                double averageChildrenPerRow = (double) listColumnVector.childCount / (row + 1);
                 int batchSize = listColumnVector.isNull.length;
-                listColumnVector.child.ensureSize((int) Math.ceil(avgRow * batchSize), true);
+                int newChildArraySize = (int) Math.ceil(averageChildrenPerRow * batchSize);
+                listColumnVector.child.ensureSize(newChildArraySize, true);
+                LOG.debug("Increasing the child size to {} [childCount={}, row={}, batchsize={}, averageChildrenPerRow={}]", newChildArraySize, listColumnVector.childCount, row, averageChildrenPerRow);
             }
 
             // add the data to the child columnvector
