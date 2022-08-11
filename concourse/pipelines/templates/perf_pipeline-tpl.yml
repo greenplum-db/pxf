@@ -103,7 +103,7 @@ resources:
   icon: git
   source:
     branch: ((ud/pxf/prod/git-branch))
-    uri: ((ud/pxf/prod/git-remote))
+    uri: ((ud/pxf/common/git-remote))
 
 - name: gpdb6_rhel[[redhat_major_version]]
   type: gcs

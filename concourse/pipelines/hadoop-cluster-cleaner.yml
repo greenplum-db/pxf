@@ -22,7 +22,7 @@ resources:
   type: git
   source:
     branch: ((ud/pxf/prod/git-branch))
-    uri: ((ud/pxf/prod/git-remote))
+    uri: ((ud/pxf/common/git-remote))
 
 - name: slack-alert
   type: slack-notification

@@ -94,7 +94,7 @@ resources:
   icon: github-circle
   source:
     branch: master
-    uri: ((pxf-git-remote))
+    uri: ((ud/pxf/common/git-remote))
     tag_filter: ((pxf-tag))
 
 - name: pxf_src
@@ -102,7 +102,7 @@ resources:
   icon: github-circle
   source:
     branch: ((ud/pxf/prod/git-branch))
-    uri: ((pxf-git-remote))
+    uri: ((ud/pxf/common/git-remote))
 
 - name: pxf_tarball
   type: s3

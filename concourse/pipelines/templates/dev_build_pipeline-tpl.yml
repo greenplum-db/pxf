@@ -159,7 +159,7 @@ resources:
   icon: git
   source:
     branch: ((ud/pxf/prod/git-branch))
-    uri: ((ud/pxf/dev/git-remote))
+    uri: ((ud/pxf/common/git-remote))
 
 {% if multinode or multinode_no_impersonation or file %}
 - name: ccp_src
@@ -566,7 +566,7 @@ jobs:
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP]
+      passed: [Build PXF-GP[[gp_ver]] on RHEL7]
       trigger: true
     - get: pxf_tarball
       resource: pxf_gp[[gp_ver]]_tarball_rhel7

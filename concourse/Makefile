@@ -35,13 +35,14 @@ MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
 
-.PHONY: build certification dev pr cloudbuild
+.PHONY: build certification dev pr cloudbuild longevity
 build: set-build-pipeline
 certification: set-certification-pipeline
 dev-release: set-dev-release-pipeline
 dev: set-dev-build-pipeline
 pr: set-pr-build-pipeline
 cloudbuild: set-cloudbuild-pipeline
+longevity: set-longevity-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-build-pipeline
@@ -252,6 +253,24 @@ query-execution-parquet-1g:
 		FLY_TARGET=ud \
 		query-execution-pxf-parquet-tpc-h-1g-6X \
 		INPUT_FILE=ccp-provision-from-release-pxf.yml
+
+# ============================= LONGEVITY PIPELINE TARGETS =============================
+.PHONY: set-longevity-pipeline
+set-longevity-pipeline:
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		set-pipeline \
+		--check-creds \
+		--pipeline=dev:longevity_$(YOUR_TAG)_6X_STABLE \
+		--config pipelines/longevity_pipeline.yml \
+		--load-vars-from=settings/pxf-multinode-params.yml \
+		--var=folder-prefix=dev/pivotal \
+		--var=test-env=dev \
+		--var=icw_green_bucket=gpdb5-assert-concourse-builds \
+		--var=gcs-bucket-intermediates=pivotal-gpdb-concourse-resources-intermediates-prod \
+		--var=gcs-bucket-resources-prod=pivotal-gpdb-concourse-resources-prod \
+		--var=gpdb-branch=6X_STABLE \
+		--var=pgport=6000 \
+		--var=pxf-tag=$(YOUR_TAG)
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------

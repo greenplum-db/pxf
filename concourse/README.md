@@ -101,13 +101,5 @@ and runs a multi-cluster security test every 15 minutes. CCP cluster is set with
 it needs to be cleaned manually and so do the dataproc clusters.
 
 ```shell
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/longevity_pipeline.yml \
-    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-    -v folder-prefix=dev/pivotal -v test-env=dev \
-    -v icw_green_bucket=gpdb5-assert-concourse-builds \
-    -v gcs-bucket-intermediates=pivotal-gpdb-concourse-resources-intermediates-prod \
-    -v gcs-bucket-resources-prod=pivotal-gpdb-concourse-resources-prod \
-    -v gpdb-branch=6X_STABLE -v pgport=6000 \
-    -v pxf-tag=<YOUR-TAG> -p dev:longevity_<YOUR-TAG>_6X_STABLE
+YOUR_TAG=<YOUR_TAG> make -C "${HOME}/workspace/pxf/concourse" longevity
 ```

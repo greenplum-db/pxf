@@ -80,7 +80,7 @@ resources:
     icon: git
     source:
       branch: ((ud/pxf/prod/git-branch))
-      uri: ((ud/pxf/prod/git-remote))
+      uri: ((ud/pxf/common/git-remote))
       paths: [singlecluster/*]
 
   - name: gpdb6-centos7
