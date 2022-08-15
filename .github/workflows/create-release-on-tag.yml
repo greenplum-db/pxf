@@ -22,17 +22,19 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: PXF Version ${{ github.ref }}
           body: |
-            ## 6.3.2 (07/20/2022)
+            ## 6.4.0 (08/15/2022)
+
+            ### Enhancements:
+
+            - [#818] (https://github.com/greenplum-db/pxf/pull/818) Add support for writing ORC primitive types
+            - [#836] (https://github.com/greenplum-db/pxf/pull/836) Add write support for one-dimensional ORC arrays
+            - [#842] (https://github.com/greenplum-db/pxf/pull/842) Add support for using a PreparedStatement when reading
 
             ### Bug Fixes:
 
-            - [#781] (https://github.com/greenplum-db/pxf/pull/781) Fix: In case of UnsupportedOperationException, Add an error message.
-            - [#789] (https://github.com/greenplum-db/pxf/pull/789) Upgrade to Springboot 2.5.12
-            - [#799] (https://github.com/greenplum-db/pxf/pull/799) Bump jackson-databind from 2.11.0 to 2.12.6.1
-            - [#814] (https://github.com/greenplum-db/pxf/pull/814) Add data buffer boundary checks to PXF extension
-            - [#815] (https://github.com/greenplum-db/pxf/pull/815) Upgrade ORC version to 1.6.13 to get a fix for ORC-1065
-            - [#819] (https://github.com/greenplum-db/pxf/pull/819) Upgrade Hadoop to 2.10.2
-            - [#823] (https://github.com/greenplum-db/pxf/pull/823) Add unsupported exception in case of hive write
+            - [#833] (https://github.com/greenplum-db/pxf/pull/833) Bump aws-java-sdk-s3 from 1.11.472 to 1.12.261
+            - [#838] (https://github.com/greenplum-db/pxf/pull/838) Upgrade org.xerial.snappy:snappy-java to 1.1.8.4
+            - [#845] (https://github.com/greenplum-db/pxf/pull/845) Bump postgresql version from 42.3.3 to 42.4.1
 
           draft: false
           prerelease: false
