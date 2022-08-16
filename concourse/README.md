@@ -90,36 +90,17 @@ and runs a multi-cluster security test every 15 minutes. CCP cluster is set with
 it needs to be cleaned manually and so do the dataproc clusters.
 
 ```shell
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/longevity_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
-    -v folder-prefix=dev/pivotal -v test-env=dev \
-    -v icw_green_bucket=gpdb5-assert-concourse-builds \
-    -v gcs-bucket-intermediates=pivotal-gpdb-concourse-resources-intermediates-prod \
-    -v gcs-bucket-resources-prod=pivotal-gpdb-concourse-resources-prod \
-    -v gpdb-branch=6X_STABLE -v pgport=6000 \
-    -v pxf-tag=<YOUR-TAG> -p dev:longevity_<YOUR-TAG>_6X_STABLE
+YOUR_TAG=<YOUR_TAG> make -C "${HOME}/workspace/pxf/concourse" longevity
 ```
 
 # Deploy `pg_regress` pipeline
 
 This pipeline currently runs the smoke test group against the different clouds using `pg_regress` instead of automation.
 It uses both external and foreign tables.
-You can adjust the `folder-prefix`, `gpdb-git-branch`, `gpdb-git-remote`, `pxf-git-branch`, and `pxf-git-remote`.
-For example, you may want to work off of a development branch for PXF or Greenplum.
+You can adjust the `folder-prefix`, `gpdb-git-branch`, `gpdb-git-remote`, `pxf-git-branch`, and `pxf-git-remote` in the makefile.
 
 ```shell
-fly -t ud set-pipeline -p pg_regress \
-    -c ~/workspace/pxf/concourse/pipelines/pg_regress_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb6-integration-testing.dev.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp-integration-pipelne-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
-    -v gpdb-git-branch=master -v gpdb-git-remote=https://github.com/greenplum-db/gpdb \
-    -v pxf-git-branch=master -v pxf-git-remote=https://github.com/greenplum-db/pxf
+make -C "${HOME}/workspace/pxf/concourse" pg_regress
 ```
 
 Expose the `pg_regress` pipeline:

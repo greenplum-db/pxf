@@ -16,7 +16,6 @@ NUM_GPDB6_VERSIONS          ?=  9
 FLY_CMD                      = /usr/local/bin/fly
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
-SECRETS_HOME                 = $(HOME)/workspace/gp-continuous-integration/secrets
 EMAIL                       ?= true
 SLACK                       ?= true
 # below are dev-build specific vars
@@ -35,19 +34,22 @@ MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
 
-.PHONY: build certification dev pr cloudbuild
+.PHONY: build certification dev pr cloudbuild longevity pg_regress
 build: set-build-pipeline
 certification: set-certification-pipeline
 dev-release: set-dev-release-pipeline
 dev: set-dev-build-pipeline
 pr: set-pr-build-pipeline
 cloudbuild: set-cloudbuild-pipeline
+longevity: set-longevity-pipeline
+pg_regress: set-pg_regress-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-build-pipeline
 set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
+		environment=prod \
 		email_notification=$(EMAIL) \
 		slack_notification=$(SLACK) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
@@ -58,10 +60,6 @@ set-build-pipeline:
 		--pipeline=$(BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		--var=pxf-git-branch=branch-5.16 \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
@@ -72,6 +70,7 @@ set-build-pipeline:
 set-dev-release-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
+		environment=dev \
 		email_notification=false \
 		slack_notification=false \
 		git_branch=$(BRANCH) \
@@ -83,11 +82,6 @@ set-dev-release-pipeline:
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-dev.yml \
-		--load-vars-from=$(SECRETS_HOME)/pivotal-gp-pxf-dev-deploy-key.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=pxf-build-bucket-prefix=dev/$(USER)-$(BRANCH) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
@@ -125,10 +119,6 @@ set-dev-build-pipeline:
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-dev.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=slack-integration-webhook-url=$${SLACK_INTEGRATION_WEBHOOK_URL} \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
@@ -149,9 +139,6 @@ set-pr-build-pipeline:
 		--check-creds \
 		--pipeline=$(PR_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
@@ -167,10 +154,6 @@ set-certification-pipeline:
 		--check-creds \
 		--pipeline=$(CERTIFICATION_PIPELINE_NAME) \
 		--config pipelines/certification_pipeline.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/certification_pipeline.yml has errors"
 
@@ -185,8 +168,6 @@ set-cloudbuild-pipeline:
 		set-pipeline \
 		--check-creds \
 		--config $(HOME)/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
-		--load-vars-from=$(SECRETS_HOME)/gp-image-baking-dockerfiles.prod.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--pipeline cloudbuild
 
@@ -203,10 +184,6 @@ set-pivnet-pipeline:
 		set-pipeline \
 		--check-creds \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--var pxf-git-remote=https://github.com/greenplum-db/pxf \
 		--pipeline pivnet_artifacts \
@@ -226,10 +203,6 @@ perf:
 		--check-creds \
 		--config $(HOME)/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/perf-settings-$(SCALE)g.yml \
-		--load-vars-from=$(SECRETS_HOME)/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
-		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--pipeline $(PERF_PIPELINE_NAME) \
 		${FLY_OPTION_NON-INTERACTIVE}
@@ -241,6 +214,36 @@ singlecluster:
 		-l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		-v pxf-git-branch=master -p pxf-singlecluster
 
+# ============================= LONGEVITY PIPELINE TARGETS =============================
+.PHONY: set-longevity-pipeline
+set-longevity-pipeline:
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		set-pipeline \
+		--check-creds \
+		--pipeline=dev:longevity_$(YOUR_TAG)_6X_STABLE \
+		--config pipelines/longevity_pipeline.yml \
+		--load-vars-from=settings/pxf-multinode-params.yml \
+		--var=folder-prefix=dev/pivotal \
+		--var=test-env=dev \
+		--var=icw_green_bucket=gpdb5-assert-concourse-builds \
+		--var=gcs-bucket-intermediates=pivotal-gpdb-concourse-resources-intermediates-prod \
+		--var=gcs-bucket-resources-prod=pivotal-gpdb-concourse-resources-prod \
+		--var=gpdb-branch=6X_STABLE \
+		--var=pgport=6000 \
+		--var=pxf-tag=$(YOUR_TAG)
+
+
+# ============================= PG_REGRESS PIPELINE TARGETS =============================
+.PHONY: set-pg_regress-pipeline
+set-pg_regress-pipeline:
+	$(FLY_CMD) --target=$(CONCOURSE) \
+	set-pipeline \
+	--check-creds \
+	--pipeline=pg_regress \
+	--config pipelines/pg_regress_pipeline.yml \
+	 -v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
+	 -v gpdb-git-branch=master -v gpdb-git-remote=https://github.com/greenplum-db/gpdb \
+	 -v pxf-git-branch=master -v pxf-git-remote=https://github.com/greenplum-db/pxf
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------
