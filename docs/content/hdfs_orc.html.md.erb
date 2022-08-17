@@ -2,9 +2,9 @@
 title: Reading and Writing HDFS ORC Data
 ---
 
-Use the PXF HDFS connector `hdfs:orc` profile to read and write ORC-format data. This section describes how to read and write HDFS files that are stored in ORC format, including how to create, query, and insert into external tables that references files in the HDFS data store.
+Use the PXF HDFS connector `hdfs:orc` profile to read and write ORC-formatted data. This section describes how to read and write HDFS files that are stored in ORC format, including how to create, query, and insert into external tables that references files in the HDFS data store.
 
-When you use the `hdfs:orc` profile to read ORC-format data, the connector:
+When you use the `hdfs:orc` profile to read ORC-formatted data, the connector:
 
 - Reads 1024 rows of data at a time.
 - Supports column projection.
@@ -12,7 +12,7 @@ When you use the `hdfs:orc` profile to read ORC-format data, the connector:
 - Supports the compound list type for a subset of ORC scalar types.
 - Does not support the map, union or struct compound types.
 
-When you use the `hdfs:orc` profile to write ORC-format data, the connector:
+When you use the `hdfs:orc` profile to write ORC-formatted data, the connector:
 - LIST HERE
 
 The `hdfs:orc` profile currently supports reading and writing scalar data types and lists of certain scalar types from ORC files. If the data resides in a Hive table, and you want to read complex types or the Hive table is partitioned, use the [`hive:orc`](hive_pxf.html#hive_orc) profile.
@@ -85,7 +85,7 @@ XXX TABLE(S) HERE
 
 ## <a id="createexttbl"></a>Creating the External Table
 
-The PXF HDFS connector `hdfs:orc` profile supports reading and writing ORC-format HDFS files. When you insert records into a writable external table, the block(s) of data that you insert are written to one or more files in the directory that you specified.
+The PXF HDFS connector `hdfs:orc` profile supports reading and writing ORC-formatted HDFS files. When you insert records into a writable external table, the block(s) of data that you insert are written to one or more files in the directory that you specified.
 
 Use the following syntax to create a Greenplum Database external table that references an HDFS file or directory:
 
@@ -132,7 +132,7 @@ This example operates on a simple data set that models a retail sales operation.
 
 In this example, you:
 
-- Create a sample data set in JSON format, use the `orc-tools` JAR utilities to convert the JSON file into an ORC-format file, and then copy the ORC file to HDFS.
+- Create a sample data set in JSON format, use the `orc-tools` JAR utilities to convert the JSON file into an ORC-formatted file, and then copy the ORC file to HDFS.
 - Create a Greenplum Database readable external table that references the ORC file and that specifies the `hdfs:orc` profile.
 - Query the external table.
 
