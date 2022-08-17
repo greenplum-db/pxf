@@ -274,7 +274,7 @@ Procedure:
       FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
 
-1. Write a few records to segment files in `sampledata.orc` directory by inserting directly into the `write_to_sample_orc` table:
+1. Write a few records to segment files in the `sampledata.orc` directory by inserting to the `write_to_sample_orc` table:
    
     ``` sql
 postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Frankfurt', 'Mar', 777, 3956.98, {"winter socks","pants",boots} );
