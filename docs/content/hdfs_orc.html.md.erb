@@ -10,10 +10,13 @@ When you use the `hdfs:orc` profile to read ORC-formatted data, the connector:
 - Supports column projection.
 - Supports filter pushdown based on file-level, stripe-level, and row-level ORC statistics.
 - Supports the compound list type for a subset of ORC scalar types.
-- Does not support the map, union or struct compound types.
+- Does not support the map, union, or struct compound types.
 
 When you use the `hdfs:orc` profile to write ORC-formatted data, the connector:
-- LIST HERE
+
+- Supports writing the same subset of primitives that are supported for reading ORC-formatted data.
+- Supports writing compound list types only for one-dimensional arrays. User-provided schemas are not supported.
+- Does not support the map, union, or struct compound types.
 
 The `hdfs:orc` profile currently supports reading and writing scalar data types and lists of certain scalar types from ORC files. If the data resides in a Hive table, and you want to read complex types or the Hive table is partitioned, use the [`hive:orc`](hive_pxf.html#hive_orc) profile.
 
@@ -81,7 +84,41 @@ PXF supports only the list ORC compound type, and only for a subset of the ORC s
 
 PXF uses the following data type mapping when writing ORC data:
 
-XXX TABLE(S) HERE
+| ORC Physical Type | ORC Logical Type | PXF/Greenplum Data Type |
+|-------------------|---------------|--------------------------|
+| binary | decimal | Numeric |
+| binary | timestamp | Timestamp |
+| byte[] | string | Text |
+| byte[] | char | Bpchar |
+| byte[] | varchar | Varchar |
+| byte[] | binary | Bytea |
+| Double | float | Real |
+| Double | double | Float8 |
+| Integer | boolean (1 bit) | Boolean |
+| Integer | tinyint (8 bit) | Smallint |
+| Integer | smallint (16 bit) | Smallint |
+| Integer | int (32 bit) | Integer |
+| Integer | bigint (64 bit) | Bigint |
+| Integer | date | Date |
+
+PXF supports writing the list ORC compound type for one-dimensional arrays, for all of the above of the ORC primitive types. The supported mappings are:
+
+| ORC Compound Type | PXF/Greenplum Data Type |
+|-------------------|-------------------------|
+| array\<decimal> | Numeric[] |
+| array\<timestamp> | Timestamp[] |
+| array\<string> | Text[] |
+| array\<char> | Bpchar[] |
+| array\<varchar> | Varchar[] |
+| array\<binary> | Bytea[] |
+| array\<float> | Real[] |
+| array\<double> | Float8[] |
+| array\<boolean> | Boolean[] |
+| array\<tinyint> | Smallint[] |
+| array\<smallint> | Smallint[] |
+| array\<int> | Integer[] |
+| array\<bigint> | Bigint[] |
+| array\<date> | Date[] |
 
 ## <a id="createexttbl"></a>Creating the External Table
 
@@ -229,7 +266,7 @@ Procedure:
 
 ## <a id="write_example"></a>Example: Writing to an ORC File on HDFS
 
-1. Use the `hdfs:orc` profile to create a writable external table that references `sample.orc`. For example:
+1. Use the `hdfs:orc` profile to create a writable external table that references `sample_orc`:
 
     ``` sql
     postgres=# CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location text, month text, number_of_orders int, total_sales numeric(10,2), items_sold text[] )
@@ -237,19 +274,15 @@ Procedure:
       FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
 
-1. Write a few records to the `sampledata.orc` XXX by inserting directly into the `write_to_sample_orc` table. For example:
+1. Write a few records to segment files in `sampledata.orc` directory by inserting directly into the `write_to_sample_orc` table:
    
     ``` sql
 postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Frankfurt', 'Mar', 777, 3956.98, {"winter socks","pants",boots} );
 postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Cleveland', 'Oct', 3218, 96645.37, {"long-sleeved shirts",hats} );
     ```
 
-1. Recall that Greenplum Database does not support directly querying a writable external table. Query the `sample_orc` table to read the data you added to XXX:
+1. Recall that Greenplum Database does not support directly querying a writable external table. Query the `sample_orc` table to read the data you added to files in the `sampledata.orc` directory:
 
     ``` sql
     postgres=# SELECT * FROM sample_orc ORDER BY number_of_orders;
     ```
-    ``` sql
-    XXX OUTPUT HERE
-    ```
-
