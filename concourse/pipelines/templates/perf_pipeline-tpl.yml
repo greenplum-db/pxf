@@ -42,7 +42,7 @@ set_failed_gpdb_anchor: &set_failed
           GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
           GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
           GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-          GOOGLE_SERVICE_ACCOUNT: ((ud/pxf/common/google-zone))
+          GOOGLE_SERVICE_ACCOUNT: ((ud/pxf/common/google-service-account))
           AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
           AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
           AWS_DEFAULT_REGION: ((ud/pxf/common/tf-machine-region))
@@ -102,7 +102,7 @@ resources:
   type: git
   icon: git
   source:
-    branch: ((ud/pxf/prod/git-branch))
+    branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
 - name: gpdb6_rhel[[redhat_major_version]]

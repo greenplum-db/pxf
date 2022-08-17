@@ -40,8 +40,8 @@ resources:
   type: pull-request
   source:
     repository: greenplum-db/pxf
-    base_branch: {{pxf-git-branch}}
-    access_token: {{pxf-bot-access-token}}
+    base_branch: ((ud/pxf/prod/git-branch))
+    access_token: ((ud/pxf/secrets/bot-access-token))
 
 ## ---------- Docker Images ----------
 {% set gp_ver = None %}

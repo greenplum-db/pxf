@@ -21,7 +21,7 @@ resources:
 - name: pxf_src
   type: git
   source:
-    branch: ((ud/pxf/prod/git-branch))
+    branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
 - name: slack-alert

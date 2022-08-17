@@ -79,7 +79,7 @@ resources:
     type: git
     icon: git
     source:
-      branch: ((ud/pxf/prod/git-branch))
+      branch: ((pxf-git-branch))
       uri: ((ud/pxf/common/git-remote))
       paths: [singlecluster/*]
 

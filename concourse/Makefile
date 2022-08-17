@@ -61,6 +61,7 @@ set-build-pipeline:
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--var=pxf-git-branch=master \
+		--var=pxf-build-bucket-prefix=prod \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
@@ -200,7 +201,6 @@ set-pivnet-pipeline:
 		--pipeline=${PIVNET_PIPELINE_NAME} \
 		--config "$${PIPELINE_FILE}" \
 		--var pxf-git-branch=$(BRANCH) \
-		--var pxf-git-remote=https://github.com/greenplum-db/pxf \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
