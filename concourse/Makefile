@@ -185,7 +185,6 @@ set-pivnet-pipeline:
 		--check-creds \
 		--config "$${PIPELINE_FILE}" \
 		--var pxf-git-branch=$(BRANCH) \
-		--var pxf-git-remote=https://github.com/greenplum-db/pxf \
 		--pipeline pivnet_artifacts \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
@@ -211,7 +210,6 @@ perf:
 singlecluster:
 	fly -t ud set-pipeline \
 		-c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
-		-l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		-v pxf-git-branch=master -p pxf-singlecluster
 
 # ============================= LONGEVITY PIPELINE TARGETS =============================
@@ -242,8 +240,8 @@ set-pg_regress-pipeline:
 	--pipeline=pg_regress \
 	--config pipelines/pg_regress_pipeline.yml \
 	 -v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
-	 -v gpdb-git-branch=master -v gpdb-git-remote=https://github.com/greenplum-db/gpdb \
-	 -v pxf-git-branch=master -v pxf-git-remote=https://github.com/greenplum-db/pxf
+	 -v gpdb-git-branch=master \
+	 -v pxf-git-branch=master
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------

@@ -23,16 +23,16 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: build-dependencies/pxf-5/pxf-build-dependencies.tar.gz
 
 - name: singlecluster-hdp2
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
 ## ---------- Github Repos ----------
@@ -41,7 +41,7 @@ resources:
   source:
     repository: greenplum-db/pxf
     base_branch: "branch-5.16"
-    access_token: {{pxf-bot-access-token}}
+    access_token: ((ud/pxf/secrets/bot-access-token))
 
 ## ---------- Docker Images ----------
 {% set gp_ver = 5 %}
@@ -52,7 +52,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos6-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 {% for gp_ver in range(5, 7) %}
@@ -63,7 +63,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endfor %} {# gp5 and gp6 #}
 
 {% set gp_ver = 6 %}
@@ -74,7 +74,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 ## ---------- Product Packages ----------
@@ -84,16 +84,16 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel6-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_rhel7_rpm_latest-[[i]]
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 {% endfor %} {# range(num_gpdb5_versions) #}
 {% set gp_ver = None %}
@@ -104,16 +104,16 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
   type: gcs
   icon: google-drive
   source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
@@ -153,9 +153,9 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     file: pxf_src/concourse/tasks/build.yml
     params:
-      LICENSE: ((pxf-rpm-license))
+      LICENSE: ((ud/pxf/common/rpm-license))
       TARGET_OS: rhel6
-      VENDOR: ((pxf-rpm-vendor))
+      VENDOR: ((ud/pxf/common/rpm-vendor))
   - task: Test Against Greenplum Latest RHEL6
     image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     config:
@@ -208,9 +208,9 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
     params:
-      LICENSE: ((pxf-rpm-license))
+      LICENSE: ((ud/pxf/common/rpm-license))
       TARGET_OS: rhel7
-      VENDOR: ((pxf-rpm-vendor))
+      VENDOR: ((ud/pxf/common/rpm-vendor))
   - task: Test Against Greenplum Latest RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     config:
@@ -263,9 +263,9 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     file: pxf_src/concourse/tasks/build.yml
     params:
-      LICENSE: ((pxf-rpm-license))
+      LICENSE: ((ud/pxf/common/rpm-license))
       TARGET_OS: ubuntu18.04
-      VENDOR: ((pxf-rpm-vendor))
+      VENDOR: ((ud/pxf/common/deb-maintainer))
   - task: Test Against Greenplum Latest Ubuntu18
     image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     config:
