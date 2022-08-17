@@ -248,7 +248,7 @@ resources:
   icon: git
   source:
     branch: ((pxf-git-branch))
-    uri: ((ud/pxf/[[ environment ]]/git-remote))
+    uri: ((ud/pxf/common/git-remote))
     ignore_paths:
       - docs/**
       - singlecluster/**
@@ -1755,6 +1755,6 @@ jobs:
       subject: pxf_artifacts/email_subject.txt
       body: pxf_artifacts/email_body.txt
       attachment_globs: [pxf_artifacts/((ud/pxf/common/osl-file-prefix))*.txt]
-      to_text: "((pxf-releng-email)),((pxf-ud-email))"
+      to_text: "((ud/pxf/[[ environment ]]/releng-email)),((ud/pxf/[[ environment ]]/ud-email))"
 {% endif %}
 
