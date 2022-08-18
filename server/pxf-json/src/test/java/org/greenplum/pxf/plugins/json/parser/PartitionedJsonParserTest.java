@@ -82,4 +82,100 @@ public class PartitionedJsonParserTest {
 
         jsonInputStream.close();
     }
+
+    @Test
+    public void testMidObjectSimple() throws URISyntaxException, IOException {
+
+        File file = new File(this.getClass().getClassLoader().getResource("parser-tests/midobject/simple.json").toURI());
+
+        InputStream jsonInputStream = new FileInputStream(file);
+
+        PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream);
+        String result = parser.nextObjectContainingMember("cüstömerstätüs");
+        assertNotNull(result);
+        // The total number of bytes read here are 162
+        // 2 bytes for "[" & "\n"
+        // + 55 bytes for the partial record i.e: ar": "2022", "address": "söme city", "zip": "95051"},
+        // + 105 bytes for the first record i.e: {"cüstömerstätüs":"invälid","name": "yī", "year": "2020", "address": "anöther city", "zip": "12345"}
+        assertEquals(162, parser.getBytesRead());
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"yī\", \"year\": \"2020\", \"address\": \"anöther city\", \"zip\": \"12345\"}", result);
+        assertEquals(107, result.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(55, parser.getBytesRead() - result.getBytes(StandardCharsets.UTF_8).length);
+
+        result = parser.nextObjectContainingMember("cüstömerstätüs");
+        assertNotNull(result);
+
+        // The total number of bytes read here are
+        // 268 = 162 bytes from the earlier record + 2 bytes for "," and "\n" and 104 bytes from current record
+        assertEquals(268, parser.getBytesRead());
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"₡¥\", \"year\": \"2022\", \"address\": \"\uD804\uDC13exas\", \"zip\": \"12345\"}", result);
+        assertEquals(104,  result.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(164, parser.getBytesRead() - result.getBytes(StandardCharsets.UTF_8).length);
+
+        jsonInputStream.close();
+    }
+
+    @Test
+    public void testMidObjectWithCurlyBrackets() throws URISyntaxException, IOException {
+
+        File file = new File(this.getClass().getClassLoader().getResource("parser-tests/midobject/withcurlybrackets.json").toURI());
+
+        InputStream jsonInputStream = new FileInputStream(file);
+
+        PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream);
+        String result = parser.nextObjectContainingMember("cüstömerstätüs");
+        assertNotNull(result);
+        // The total number of bytes read here are 166
+        // 2 bytes for "[" & "\n"
+        // + 59 bytes for the partial record i.e: ar": "2022", "address": "söme { } city", "zip": "95051"},
+        // + 105 bytes for the first record i.e: {"cüstömerstätüs":"invälid","name": "yī", "year": "2020", "address": "anöther city", "zip": "12345"}
+        assertEquals(166, parser.getBytesRead());
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"yī\", \"year\": \"2020\", \"address\": \"anöther city\", \"zip\": \"12345\"}", result);
+        assertEquals(107, result.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(59, parser.getBytesRead() - result.getBytes(StandardCharsets.UTF_8).length);
+
+        result = parser.nextObjectContainingMember("cüstömerstätüs");
+        assertNotNull(result);
+
+        // The total number of bytes read here are
+        // 272 = 168 bytes from the earlier record + 2 bytes for "," and "\n" and 104 bytes from current record
+        assertEquals(272, parser.getBytesRead());
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"₡¥\", \"year\": \"2022\", \"address\": \"\uD804\uDC13exas\", \"zip\": \"12345\"}", result);
+        assertEquals(104,  result.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(168, parser.getBytesRead() - result.getBytes(StandardCharsets.UTF_8).length);
+
+        jsonInputStream.close();
+    }
+
+    @Test
+    public void testMidObjectWithOpeningBracket() throws URISyntaxException, IOException {
+
+        File file = new File(this.getClass().getClassLoader().getResource("parser-tests/midobject/withopenbracket.json").toURI());
+
+        InputStream jsonInputStream = new FileInputStream(file);
+
+        PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream);
+        String result = parser.nextObjectContainingMember("cüstömerstätüs");
+        assertNotNull(result);
+        // The total number of bytes read here are 134
+        // 2 bytes for "[" & "\n"
+        // + 27 bytes for the partial record i.e:  { city", "zip": "95051"},
+        // + 105 bytes for the first record i.e: {"cüstömerstätüs":"invälid","name": "yī", "year": "2020", "address": "anöther city", "zip": "12345"}
+        assertEquals(134, parser.getBytesRead());
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"yī\", \"year\": \"2020\", \"address\": \"anöther city\", \"zip\": \"12345\"}", result);
+        assertEquals(107, result.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(27, parser.getBytesRead() - result.getBytes(StandardCharsets.UTF_8).length);
+
+        result = parser.nextObjectContainingMember("cüstömerstätüs");
+        assertNotNull(result);
+
+        // The total number of bytes read here are
+        // 239 = 133 bytes from the earlier record + 2 bytes for "," and "\n" and 104 bytes from current record
+        assertEquals(240, parser.getBytesRead());
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"₡¥\", \"year\": \"2022\", \"address\": \"\uD804\uDC13exas\", \"zip\": \"12345\"}", result);
+        assertEquals(104,  result.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(136, parser.getBytesRead() - result.getBytes(StandardCharsets.UTF_8).length);
+
+        jsonInputStream.close();
+    }
 }

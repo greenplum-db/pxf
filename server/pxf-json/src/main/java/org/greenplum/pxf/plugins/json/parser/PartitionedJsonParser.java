@@ -40,6 +40,7 @@ import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
 public class PartitionedJsonParser {
 
 	private static final char BACKSLASH = '\\';
+	private static final char NEW_LINE = '\n';
 	private static final char START_BRACE = '{';
 	private static final int EOF = -1;
 	private static final int CHARS_READ_LIMIT = 8192;
@@ -65,6 +66,12 @@ public class PartitionedJsonParser {
 		int i;
 		while ((i = readNextChar()) != EOF) {
 			char c = (char) i;
+			// this check does not seem to handle the case if a curly bracket is in the middle of a string
+			// the beginning of an JSON object will occur after 3 instances:
+			//     after an array marker (i.e. '[')
+			//     after a value separator (i.e. ',')
+			//     after a name separator (i.e. ':')
+			// we also need to check that it is not an escaped character. not all
 			if (c == START_BRACE && prev != BACKSLASH) {
 				lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
 				return true;
