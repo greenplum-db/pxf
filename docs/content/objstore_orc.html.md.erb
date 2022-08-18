@@ -73,7 +73,7 @@ Refer to [Example: Reading an ORC File on HDFS](hdfs_orc.html#read_example) in t
 - Using the `CREATE WRITABLE EXTERNAL TABLE` syntax and `LOCATION` keywords and settings described above for the writable external table. For example, if your server name is `s3srvcfg`:
 
     ``` sql
-    CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location TEXT, month TEXT, number_of_orders INT, total_sales NUMERIC(10,2), items_sold TEXT[])
+    CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location TEXT, month TEXT, num_orders INT, total_sales NUMERIC(10,2), items_sold TEXT[])
       LOCATION ('pxf://BUCKET/pxf_examples/sample-orc-data?PROFILE=s3:orc&SERVER=s3srvcfg')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```

@@ -269,7 +269,7 @@ Procedure:
 1. Use the `hdfs:orc` profile to create a writable external table that references `sample_orc`:
 
     ``` sql
-    postgres=# CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location text, month text, number_of_orders int, total_sales numeric(10,2), items_sold text[] )
+    postgres=# CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location text, month text, num_orders int, total_sales numeric(10,2), items_sold text[] )
         LOCATION ('pxf://data/pxf_examples/sampledata.orc?PROFILE=hdfs:orc')
       FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
@@ -277,12 +277,12 @@ Procedure:
 1. Write a few records to segment files in the `sampledata.orc` directory by inserting to the `write_to_sample_orc` table:
    
     ``` sql
-postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Frankfurt', 'Mar', 777, 3956.98, {"winter socks","pants",boots} );
-postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Cleveland', 'Oct', 3218, 96645.37, {"long-sleeved shirts",hats} );
+postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Frankfurt', 'Mar', 777, 3956.98, '{"winter socks","pants",boots}' );
+postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Cleveland', 'Oct', 3218, 96645.37, '{"long-sleeved shirts",hats}' );
     ```
 
 1. Recall that Greenplum Database does not support directly querying a writable external table. Query the `sample_orc` table to read the data you added to files in the `sampledata.orc` directory:
 
     ``` sql
-    postgres=# SELECT * FROM sample_orc ORDER BY number_of_orders;
+    postgres=# SELECT * FROM sample_orc ORDER BY num_orders;
     ```
