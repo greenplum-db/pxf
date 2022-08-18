@@ -84,7 +84,7 @@ resources:
   source:
     access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
-    region_name: ((ud/common/aws_region))
+    region_name: ((ud/common/aws-region))
     secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/pxf.tar.gz
 
@@ -93,7 +93,7 @@ resources:
   source:
     access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
-    region_name: ((ud/common/aws_region))
+    region_name: ((ud/common/aws-region))
     secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/bin_gpdb.tar.gz
 

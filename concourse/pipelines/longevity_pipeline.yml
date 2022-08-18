@@ -92,7 +92,7 @@ resources:
     storage:
       access_key_id: ((tf-machine-access-key-id))
       secret_access_key: ((tf-machine-secret-access-key))
-      region_name: ((ud/common/aws_region))
+      region_name: ((ud/common/aws-region))
       bucket: ((ud/pxf/common/tf-bucket-name))
       bucket_path: ((tf-bucket-path))
 
@@ -161,7 +161,7 @@ resources:
   source:
     access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
-    region_name: ((ud/common/aws_region))
+    region_name: ((ud/common/aws-region))
     secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/pxf.tar.gz
 
@@ -171,7 +171,7 @@ resources:
   source:
     access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
-    region_name: ((ud/common/aws_region))
+    region_name: ((ud/common/aws-region))
     secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/cluster_env_files.tar.gz
 
@@ -181,7 +181,7 @@ resources:
   source:
     access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
-    region_name: ((ud/common/aws_region))
+    region_name: ((ud/common/aws-region))
     secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_env_files.tar.gz
 
@@ -191,7 +191,7 @@ resources:
   source:
     access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
-    region_name: ((ud/common/aws_region))
+    region_name: ((ud/common/aws-region))
     secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_2_env_files.tar.gz
 
@@ -252,7 +252,7 @@ jobs:
         params:
           AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
           AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-          AWS_DEFAULT_REGION: ((ud/common/aws_region))
+          AWS_DEFAULT_REGION: ((ud/common/aws-region))
           BUCKET_PATH: ((tf-bucket-path))
           BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
           PLATFORM: centos7
@@ -307,7 +307,7 @@ jobs:
     params:
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      AWS_DEFAULT_REGION: ((ud/common/aws_region))
+      AWS_DEFAULT_REGION: ((ud/common/aws-region))
       BUCKET_PATH: ((tf-bucket-path))
       BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
       CLOUD_PROVIDER: google

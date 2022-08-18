@@ -236,13 +236,13 @@ set-longevity-pipeline:
 .PHONY: set-pg_regress-pipeline
 set-pg_regress-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
-	set-pipeline \
-	--check-creds \
-	--pipeline=pg_regress \
-	--config pipelines/pg_regress_pipeline.yml \
-	 -v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
-	 -v gpdb-git-branch=master \
-	 -v pxf-git-branch=master
+		set-pipeline \
+		--check-creds \
+		--pipeline=pg_regress \
+		--config pipelines/pg_regress_pipeline.yml \
+		 -v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
+		 -v gpdb-git-branch=master \
+		 -v pxf-git-branch=master
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------
