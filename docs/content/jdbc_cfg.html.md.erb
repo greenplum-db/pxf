@@ -109,6 +109,14 @@ Example: To set the read fetch size to 5000, add the following property block to
 
 Ensure that the JDBC driver for the external SQL database supports any statement-level property that you specify.
 
+### <a id="prepared"></a>Prepared Statements
+
+The PXF JDBC Connector supports reading a `PreparedStatement` instead of a `Statement` from an external data source. This may be necessary to enable JDBC driver features with data sources that require a `PreparedStatement`. Enable `PreparedStatement` support using the property: 
+
+| Property       | Description                                | Default Value |
+|----------------|--------------------------------------------|---------------|
+| jdbc.read.prepared-statement | Use a `PreparedStatement` instead of a `Statement` when reading from the external data source. | false |
+
 ### <a id="sessprop"></a>Session-Level Properties
 
 To set session-level properties, add the `jdbc.session.property.<SPROP_NAME>` property to `jdbc-site.xml`. PXF will `SET` these properties in the external database before executing a query.
