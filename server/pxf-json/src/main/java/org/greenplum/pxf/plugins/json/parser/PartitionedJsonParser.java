@@ -41,6 +41,9 @@ public class PartitionedJsonParser {
 
 	private static final char BACKSLASH = '\\';
 	private static final char NEW_LINE = '\n';
+	private static final char VALUE_SEPARATOR = ',';
+	private static final char START_TEXT = '\u0002';
+	private static final char START_ARRAY_BRACKET = '[';
 	private static final char START_BRACE = '{';
 	private static final int EOF = -1;
 	private static final int CHARS_READ_LIMIT = 8192;
@@ -62,19 +65,25 @@ public class PartitionedJsonParser {
 
 	private boolean scanToFirstBeginObject() throws IOException {
 		// seek until we hit the first begin-object
-		char prev = ' ';
+		char prev = START_TEXT;
 		int i;
 		while ((i = readNextChar()) != EOF) {
 			char c = (char) i;
-			// this check does not seem to handle the case if a curly bracket is in the middle of a string
+			// It is possible that a curly bracket will occur in the middle of a string without being escaped
+			// i.e. value = "this is some {} string"
 			// the beginning of an JSON object will occur after 3 instances:
+			//     after a new line (i.e. '\n')
 			//     after an array marker (i.e. '[')
 			//     after a value separator (i.e. ',')
-			//     after a name separator (i.e. ':')
-			// we also need to check that it is not an escaped character. not all
+			// we also need to check that it is not an escaped character.
 			if (c == START_BRACE && prev != BACKSLASH) {
-				lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
-				return true;
+				if ((prev == NEW_LINE) ||
+					(prev == START_ARRAY_BRACKET) ||
+					(prev == VALUE_SEPARATOR) ||
+					(prev == START_TEXT)) {
+					lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
+					return true;
+				}
 			}
 			prev = c;
 		}
