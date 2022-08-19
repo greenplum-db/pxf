@@ -61,7 +61,7 @@ public interface Accessor extends Plugin {
      * Writes the next object.
      *
      * @param onerow the object to be written
-     * @return true if the write succeeded
+     * @return true if the write operation succeeded
      * @throws Exception writing to the resource failed
      */
     boolean writeNextObject(OneRow onerow) throws Exception;

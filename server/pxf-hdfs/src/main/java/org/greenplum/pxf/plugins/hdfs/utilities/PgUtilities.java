@@ -81,6 +81,11 @@ public class PgUtilities {
             throw new PxfRuntimeException(String.format("array dimension mismatch, rawData: %s", new String(value)));
         }
 
+        // handle the empty array {} case
+        if (isEmptyArray(value)) {
+            return new String[0];
+        }
+
         int depth = 0;
         boolean inQuoted = false;
         for (int i = 0; i < value.length; i++) {
@@ -315,6 +320,10 @@ public class PgUtilities {
 
     private boolean arrayIsSpace(char c) {
         return (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0b || c == '\f');
+    }
+
+    private boolean isEmptyArray(char[] value) {
+        return (value[0] == '{' && value[1] == '}');
     }
 
     private boolean isQuote(char[] value, int index) {

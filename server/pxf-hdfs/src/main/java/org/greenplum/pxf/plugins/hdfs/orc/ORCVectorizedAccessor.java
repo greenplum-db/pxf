@@ -1,16 +1,22 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
+import com.google.common.annotations.VisibleForTesting;
+import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.FileSplit;
+import org.apache.orc.CompressionKind;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.Writer;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
@@ -20,6 +26,8 @@ import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.HcfsType;
 import org.greenplum.pxf.plugins.hdfs.filter.BPCharOperatorTransformer;
 import org.greenplum.pxf.plugins.hdfs.filter.SearchArgumentBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
@@ -56,8 +64,10 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
+    private static final String ORC_FILE_SUFFIX = ".orc";
     static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
-    private static final String UNSUPPORTED_ERR_MESSAGE = "Write operation is not supported";
+
+    private static final String ORC_WRITE_TIMEZONE_UTC_PROPERTY_NAME = "pxf.orc.write.timezone.utc";
 
     /**
      * True if the accessor accesses the columns defined in the
@@ -72,6 +82,17 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     private RecordReader recordReader;
     private VectorizedRowBatch batch;
     private List<ColumnDescriptor> columnDescriptors;
+
+    /**
+     * A POJO capturing the state and the context of ORC file writing operation.
+     */
+    @Data
+    static class WriterState {
+        String fileName;
+        Writer fileWriter;
+        OrcFile.WriterOptions writerOptions;
+    }
+    private final WriterState writerState = new WriterState();
 
     @Override
     public void afterPropertiesSet() {
@@ -144,18 +165,57 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     }
 
     @Override
-    public boolean openForWrite() {
-        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
+    public boolean openForWrite() throws IOException {
+        HcfsType hcfsType = HcfsType.getHcfsType(context);
+        // ORC does not use codec suffix in filenames
+        writerState.setFileName(hcfsType.getUriForWrite(context) + ORC_FILE_SUFFIX);
+
+        // create writer options
+        OrcFile.WriterOptions orcWriterOptions = OrcFile.writerOptions(configuration);
+
+        // build write schema
+        TypeDescription writeSchema = ORCSchemaBuilder.buildSchema(context.getTupleDescription());
+        orcWriterOptions.setSchema(writeSchema);
+
+        // get user-specified compression or use a default one (ZLIB) if not explicitly provided
+        String compressionCodec = context.getOption("COMPRESSION_CODEC", (String) OrcConf.COMPRESS.getDefaultValue());
+        CompressionKind compressionKind = CompressionKind.valueOf(compressionCodec.toUpperCase());
+        LOG.debug("Using compression: {}", compressionKind);
+        orcWriterOptions.compress(compressionKind);
+
+        // check whether to write timestamps in UTC or local timezone, timestamps will be interpreted as instants in the writer timezone.
+        // the writer timezone will be stored in the stripe / file footer and is important for file readers
+        // as Hive 3.1+ will read the value and perform time shifts if necessary
+        boolean writeTimestampsInUTC = parseWriterTimezoneProperty();
+        orcWriterOptions.useUTCTimestamp(writeTimestampsInUTC);
+        LOG.debug("Using UTC for writer timezone: {}", writeTimestampsInUTC);
+
+        writerState.setWriterOptions(orcWriterOptions);
+
+        // create ORC file writer with provided options, store it in the writer state
+        writerState.setFileWriter(OrcFile.createWriter(new Path(writerState.getFileName()), orcWriterOptions));
+
+        // store writer options on the context for downstream resolver to use it
+        context.setMetadata(orcWriterOptions);
+        return true;
+    }
+
+
+    @Override
+    public boolean writeNextObject(OneRow onerow) throws IOException {
+        // get a row batch produced by the resolver, the batch object might be re-usable, but we should not reset it here
+        VectorizedRowBatch rowBatch = (VectorizedRowBatch) onerow.getData();
+        LOG.debug("Adding VectorizedRowBatch with {} rows", rowBatch.size);
+        writerState.getFileWriter().addRowBatch(rowBatch);
+        return true;
     }
 
     @Override
-    public boolean writeNextObject(OneRow onerow) {
-        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
-    }
-
-    @Override
-    public void closeForWrite() {
-        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
+    public void closeForWrite() throws IOException {
+        if (writerState.getFileWriter() != null) {
+            LOG.debug("Closing ORC file writer for file {}", writerState.fileName);
+            writerState.getFileWriter().close();
+        }
     }
 
     /**
@@ -251,5 +311,18 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
             }
         }
         return readSchema;
+    }
+
+    /**
+     * Returns the state of the writer, used only for testing.
+     * @return writerState object
+     */
+    @VisibleForTesting
+    WriterState getWriterState() {
+        return writerState;
+    }
+
+    private boolean parseWriterTimezoneProperty() {
+        return Utilities.parseBooleanProperty(configuration, ORC_WRITE_TIMEZONE_UTC_PROPERTY_NAME, true);
     }
 }

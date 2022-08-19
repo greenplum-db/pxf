@@ -75,4 +75,13 @@
         </description>
     </property>
 
+    <property>
+        <name>pxf.orc.write.timezone.utc</name>
+        <value>true</value>
+        <description>
+            Specifies whether the PXF ORC writer should use UTC timezone when writing timestamp values.
+            If set to false, the PXF ORC writer will use the local timezone of the PXF JVM instead.
+        </description>
+    </property>
+
 </configuration>

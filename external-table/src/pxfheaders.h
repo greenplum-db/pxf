@@ -52,4 +52,16 @@ typedef struct sPxfInputData
  */
 extern void build_http_headers(PxfInputData *input);
 
+#define CHAR_ARRAY_OID 1002
+#define BPCHAR_ARRAY_OID 1014
+#define VARCHAR_ARRAY_OID 1015
+#define TIMESTAMP_ARRAY_OID 1115
+#define TIME_ARRAY_OID 1183
+#define TIMESTAMPTZ_ARRAY_OID 1185
+#define INTERVAL_ARRAY_OID 1187
+#define NUMERIC_ARRAY_OID 1231
+#define TIMETZ_ARRAY_OID 1270
+#define BIT_ARRAY_OID 1561
+#define VARBIT_ARRAY_OID 1563
+
 #endif							/* _PXFHEADERS_H_ */

@@ -24,6 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
@@ -356,6 +357,32 @@ public class Utilities {
         } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException |
                 InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(String.format("Error when invoking handlerClass '%s' : %s", handlerClassName, e), e);
+        }
+    }
+
+    /**
+     * Parses a boolean property such that if the property has a value other than true or false, an exception is thrown
+     * @param configuration the configuration to search for the given property name
+     * @param propertyName the name of the property to parse
+     * @param defaultValue the default value if the property is not defined
+     * @return the parsed property value if the property is defined, else the default
+     */
+    public static boolean parseBooleanProperty(Configuration configuration, String propertyName, boolean defaultValue) {
+        // do not use getBoolean as it would return default value for an invalid property value
+        String propertyValue = configuration.get(propertyName);
+        if (propertyValue == null) {
+            return defaultValue;
+        }
+
+        propertyValue = propertyValue.trim();
+        if (propertyValue.equalsIgnoreCase("true")) {
+            return true;
+        } else if (propertyValue.equalsIgnoreCase("false")) {
+            return  false;
+        } else {
+            throw new PxfRuntimeException(String.format(
+                    "Property %s has invalid value '%s'; value should be either 'true' or 'false'", propertyName, propertyValue
+            ));
         }
     }
 }

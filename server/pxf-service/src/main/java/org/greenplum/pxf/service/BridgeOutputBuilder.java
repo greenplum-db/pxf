@@ -261,30 +261,11 @@ public class BridgeOutputBuilder {
      * @return whether data type is string type
      */
     boolean isStringType(DataType type) {
-        return Arrays.asList(
-                DataType.VARCHAR,
-                DataType.BPCHAR,
-                DataType.TEXT,
-                DataType.NUMERIC,
-                DataType.TIMESTAMP,
-                DataType.TIMESTAMP_WITH_TIME_ZONE,
-                DataType.DATE)
-                .contains(type);
-    }
-
-    /**
-     * Tests if data type is a string array type. String array type is a type that can be
-     * serialized as string array, such as varchar[], bpchar[] and text[]
-     *
-     * @param type data type
-     * @return whether data type is compatible string array type
-     */
-    boolean isStringArrayType(DataType type) {
-        return Arrays.asList(
-                DataType.BPCHARARRAY,
-                DataType.VARCHARARRAY,
-                DataType.TEXTARRAY)
-                .contains(type);
+        if (type.isArrayType()) {
+           return DataType.isTextForm(type.getTypeElem().getOID());
+        } else {
+            return DataType.isTextForm(type.getOID());
+        }
     }
 
     /**
@@ -300,8 +281,7 @@ public class BridgeOutputBuilder {
         DataType dtSchema = DataType.get(schemaType);
 
         return (dtSchema == DataType.UNSUPPORTED_TYPE || dtRec == dtSchema
-                || (isStringType(dtRec) && isStringType(dtSchema))
-                || (isStringArrayType(dtRec) && isStringArrayType(dtSchema)));
+                || (isStringType(dtRec) && isStringType(dtSchema)));
     }
 
     /**

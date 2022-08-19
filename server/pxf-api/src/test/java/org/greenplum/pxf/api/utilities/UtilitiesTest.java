@@ -22,7 +22,8 @@ package org.greenplum.pxf.api.utilities;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadVectorizedResolver;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.model.ReadVectorizedResolver;
 import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -398,5 +399,29 @@ public class UtilitiesTest {
         assertEquals("0.0.0.0", Utilities.getHost("hdfs://0.0.0.0?PROFILE=foo"));
         assertEquals("www.example.com", Utilities.getHost("www.example.com"));
         assertEquals("10.0.0.15", Utilities.getHost("10.0.0.15"));
+    }
+
+    @Test
+    public void testParseBooleanProperty() {
+        Configuration configuration = new Configuration();
+
+        configuration.set("trueProperty", "tRUe");
+        configuration.set("falseProperty", "fALSe");
+        configuration.set("invalidProperty", "foo");
+        configuration.set("trueWithExtraWhitespace", "    true    ");
+
+        assertTrue(Utilities.parseBooleanProperty(configuration, "trueProperty", true));
+        assertTrue(Utilities.parseBooleanProperty(configuration, "trueProperty", false));
+
+        assertFalse(Utilities.parseBooleanProperty(configuration, "falseProperty", true));
+        assertFalse(Utilities.parseBooleanProperty(configuration, "falseProperty", false));
+
+        assertTrue(Utilities.parseBooleanProperty(configuration, "unsetProperty", true));
+        assertFalse(Utilities.parseBooleanProperty(configuration, "unsetProperty", false));
+
+        Exception e = assertThrows(PxfRuntimeException.class, () -> Utilities.parseBooleanProperty(configuration, "invalidProperty", false));
+        assertEquals("Property invalidProperty has invalid value 'foo'; value should be either 'true' or 'false'", e.getMessage());
+
+        assertTrue(Utilities.parseBooleanProperty(configuration, "trueWithExtraWhitespace", false));
     }
 }

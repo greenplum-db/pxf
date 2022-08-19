@@ -22,9 +22,11 @@ package org.greenplum.pxf.plugins.jdbc;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.security.SecureLogin;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
@@ -57,6 +59,8 @@ import java.util.concurrent.Future;
 public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcAccessor.class);
+
+    private static final String JDBC_READ_PREPARED_STATEMENT_PROPERTY_NAME = "jdbc.read.prepared-statement";
 
     private Statement statementRead = null;
     private ResultSet resultSetRead = null;
@@ -112,14 +116,28 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         LOG.trace("Select query: {}", queryRead);
 
         // Execute queries
-        statementRead = connection.createStatement();
+        // Certain features of third-party JDBC drivers may require the use of a PreparedStatement, even if there are no
+
+        // bind parameters. For example, Teradata's FastExport only works with PreparedStatements
+        // https://teradata-docs.s3.amazonaws.com/doc/connectivity/jdbc/reference/current/jdbcug_chapter_2.html#BGBFBBEG
+        boolean usePreparedStatement = parseJdbcUsePreparedStatementProperty();
+        if (usePreparedStatement) {
+            LOG.debug("Using a PreparedStatement instead of a Statement because {} was set to true", JDBC_READ_PREPARED_STATEMENT_PROPERTY_NAME);
+        }
+        statementRead = usePreparedStatement ?
+                connection.prepareStatement(queryRead) :
+                connection.createStatement();
+
         statementRead.setFetchSize(fetchSize);
 
         if (queryTimeout != null) {
             LOG.debug("Setting query timeout to {} seconds", queryTimeout);
             statementRead.setQueryTimeout(queryTimeout);
         }
-        resultSetRead = statementRead.executeQuery(queryRead);
+
+        resultSetRead = usePreparedStatement ?
+                ((PreparedStatement) statementRead).executeQuery() :
+                statementRead.executeQuery(queryRead);
 
         return true;
     }
@@ -344,4 +362,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         return queryText;
     }
 
+    private boolean parseJdbcUsePreparedStatementProperty() {
+        return Utilities.parseBooleanProperty(configuration, JDBC_READ_PREPARED_STATEMENT_PROPERTY_NAME, false);
+    }
 }

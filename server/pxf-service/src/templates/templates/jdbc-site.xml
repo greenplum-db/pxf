@@ -144,4 +144,16 @@
     </property>
     -->
 
+    <!--
+    <property>
+        <name>jdbc.read.prepared-statement</name>
+        <value>false</value>
+        <description>
+            Use a PreparedStatement instead of a Statement when reading from the external data source. This may be
+            required to enable certain features of the JDBC driver or external data source; for example, Teradata's
+            FastExport requires the use of a PreparedStatement.
+        </description>
+    </property>
+    -->
+
 </configuration>

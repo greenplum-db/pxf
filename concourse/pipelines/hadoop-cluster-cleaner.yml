@@ -52,8 +52,8 @@ jobs:
       image_resource:
         type: registry-image
         source:
-          repository: ruby
-          tag: "2.7"
+          repository: gcr.io/data-gpdb-public-images/ccp-cleaner
+          tag: latest
       inputs:
       - name: ccp_src
       - name: pxf_src

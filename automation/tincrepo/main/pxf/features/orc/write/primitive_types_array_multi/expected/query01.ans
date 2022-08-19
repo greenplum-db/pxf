@@ -1,0 +1,78 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for writing arrays of multi-dimensional primitive ORC data types
+-- start_matchsubs
+--
+-- # create a match/subs
+--
+-- m/DETAIL/
+-- s/DETAIL/CONTEXT/
+--
+-- m/(.*)ERROR:/
+-- s/(.*)ERROR:/ERROR:/
+--
+-- m/Error parsing array element: (.*) was not of expected type/
+-- s/Error parsing array element: (.*) was not of expected type/Error parsing array element: val was not of expected type/
+--
+-- m/malformed boolean literal (.*)/
+-- s/malformed boolean literal (.*)/malformed boolean literal value/
+--
+-- end_matchsubs
+\pset null 'NIL'
+Null display is "NIL".
+SET bytea_output=hex;
+SET
+INSERT INTO orc_primitive_arrays_multi_bool_writable SELECT id, bool_arr FROM orc_primitive_arrays_multi_heap;
+ERROR:  PXF server error : malformed boolean literal "{t,f}"  (seg0 127.0.0.1:6002 pid=96655)
+HINT:  Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
+INSERT INTO orc_primitive_arrays_multi_bytea_writable SELECT id, bytea_arr FROM orc_primitive_arrays_multi_heap;
+ERROR:  PXF server error : Error parsing array element: {"\x1617"} was not of expected type BINARY  (seg1 127.0.0.1:6003 pid=96656)
+HINT:  Column value "{{"\\x1617"},{"\\x1819"}}" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files. Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
+INSERT INTO orc_primitive_arrays_multi_int_writable SELECT id, int_arr FROM orc_primitive_arrays_multi_heap;
+ERROR:  PXF server error : Error parsing array element: {123} was not of expected type INT  (seg0 127.0.0.1:6002 pid=96655)
+HINT:  Column value "{{123},{223}}" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files. Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
+INSERT INTO orc_primitive_arrays_multi_float_writable SELECT id, float_arr FROM orc_primitive_arrays_multi_heap;
+ERROR:  PXF server error : Error parsing array element: {15.141593,NULL} was not of expected type DOUBLE  (seg0 127.0.0.1:6002 pid=96655)
+HINT:  Column value "{{15.141593,NULL}}" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files. Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
+INSERT INTO orc_primitive_arrays_multi_date_writable SELECT id, date_arr FROM orc_primitive_arrays_multi_heap;
+ERROR:  PXF server error : Error parsing array element: {2010-01-19,NULL,2010-01-07} was not of expected type DATE  (seg2 127.0.0.1:6004 pid=96657)
+HINT:  Column value "{{2010-01-19,NULL,2010-01-07}}" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files. Check the PXF logs located in the '/Users/axue/pxf-base/logs' directory on host 'axue-a01.vmware.com' or 'set client_min_messages=LOG' for additional details.
+INSERT INTO orc_primitive_arrays_multi_text_writable SELECT id, text_arr FROM orc_primitive_arrays_multi_heap;
+INSERT 0 33
+SELECT * FROM orc_primitive_arrays_multi_text_readable ORDER BY id;
+ id |             text_arr
+----+-----------------------------------
+  0 | {"{row-00,row-00}","{NULL,\"\"}"}
+  1 | {"{row-01,row-02}","{NULL,\"\"}"}
+  2 | {"{row-02,row-04}","{NULL,\"\"}"}
+  3 | {"{row-03,row-06}","{NULL,\"\"}"}
+  4 | {"{row-04,row-08}","{NULL,\"\"}"}
+  5 | {NULL}
+  6 | {"{row-06,row-12}","{NULL,\"\"}"}
+  7 | {"{row-07,row-14}","{NULL,\"\"}"}
+  8 | {"{row-08,row-16}","{NULL,\"\"}"}
+  9 | {"{row-09,row-18}","{NULL,\"\"}"}
+ 10 | {"{row-10,row-20}","{NULL,\"\"}"}
+ 11 | {"{row-11,row-22}","{NULL,\"\"}"}
+ 12 | {"{row-12,row-24}","{NULL,\"\"}"}
+ 13 | {}
+ 14 | {"{row-14,row-28}","{NULL,\"\"}"}
+ 15 | {"{row-15,row-30}","{NULL,\"\"}"}
+ 16 | {"{row-16,row-32}","{NULL,\"\"}"}
+ 17 | {"{row-17,row-34}","{NULL,\"\"}"}
+ 18 | {"{row-18,row-36}","{NULL,\"\"}"}
+ 19 | {"{row-19,row-38}","{NULL,\"\"}"}
+ 20 | {"{row-20,row-40}","{NULL,\"\"}"}
+ 21 | {"{row-21,row-42}","{NULL,\"\"}"}
+ 22 | {NULL}
+ 23 | {"{row-23,row-46}","{NULL,\"\"}"}
+ 24 | {"{row-24,row-48}","{NULL,\"\"}"}
+ 25 | {"{row-25,row-50}","{NULL,\"\"}"}
+ 26 | {"{row-26,row-52}","{NULL,\"\"}"}
+ 27 | {"{row-27,row-54}","{NULL,\"\"}"}
+ 28 | {"{row-28,row-56}","{NULL,\"\"}"}
+ 29 | {"{row-29,row-58}","{NULL,\"\"}"}
+ 30 | {}
+ 31 | {"{row-31,row-62}","{NULL,\"\"}"}
+ 32 | {"{row-32,row-64}","{NULL,\"\"}"}
+(33 rows)

@@ -40,9 +40,9 @@ import java.util.List;
  */
 public class WriteBridge extends BaseBridge {
 
-    private final BridgeInputBuilder inputBuilder;
-    private final OutputFormat outputFormat;
-    private final Charset databaseEncoding;
+    protected final BridgeInputBuilder inputBuilder;
+    protected final OutputFormat outputFormat;
+    protected final Charset databaseEncoding;
 
     public WriteBridge(BasePluginFactory pluginFactory, RequestContext context, GSSFailureHandler failureHandler) {
         super(pluginFactory, context, failureHandler);

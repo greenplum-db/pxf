@@ -58,56 +58,128 @@ public class BridgeOutputBuilderTest {
     private enum TestEnum { HELLO }
 
     @Test
-    public void testFillGPDBWritable() throws Exception {
+    public void testFillGPDBWritable_NativePrimitiveTypes() throws Exception {
         RequestContext context = new RequestContext();
 
-        addColumn(context, 0, DataType.INTEGER, "col0");
-        addColumn(context, 1, DataType.FLOAT8, "col1");
-        addColumn(context, 2, DataType.REAL, "col2");
-        addColumn(context, 3, DataType.BIGINT, "col3");
-        addColumn(context, 4, DataType.SMALLINT, "col4");
-        addColumn(context, 5, DataType.BOOLEAN, "col5");
-        addColumn(context, 6, DataType.BYTEA, "col6");
-        addColumn(context, 7, DataType.VARCHAR, "col7");
-        addColumn(context, 8, DataType.BPCHAR, "col8");
-        addColumn(context, 9, DataType.TEXT, "col9");
-        addColumn(context, 10, DataType.NUMERIC, "col10");
-        addColumn(context, 11, DataType.TIMESTAMP, "col11");
-        addColumn(context, 12, DataType.DATE, "col12");
+        // go in the order of types defined in DataType enum
+        addColumn(context,  0, DataType.BOOLEAN                 , "col00");
+        addColumn(context,  1, DataType.BYTEA                   , "col01");
+        addColumn(context,  2, DataType.BIGINT                  , "col02");
+        addColumn(context,  3, DataType.SMALLINT                , "col03");
+        addColumn(context,  4, DataType.INTEGER                 , "col04");
+        addColumn(context,  5, DataType.TEXT                    , "col05");
+        addColumn(context,  6, DataType.REAL                    , "col06");
+        addColumn(context,  7, DataType.FLOAT8                  , "col07");
+        addColumn(context,  8, DataType.BPCHAR                  , "col08");
+        addColumn(context,  9, DataType.VARCHAR                 , "col09");
+        addColumn(context, 10, DataType.DATE                    , "col10");
+        addColumn(context, 11, DataType.TIME                    , "col11");
+        addColumn(context, 12, DataType.TIMESTAMP               , "col12");
+        addColumn(context, 13, DataType.TIMESTAMP_WITH_TIME_ZONE, "col13");
+        addColumn(context, 14, DataType.NUMERIC                 , "col14");
+        addColumn(context, 15, DataType.UUID                    , "col15");
 
         BridgeOutputBuilder builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         List<OneField> recFields = Arrays.asList(
-                new OneField(DataType.INTEGER.getOID(), 0), new OneField(
-                        DataType.FLOAT8.getOID(), (double) 0), new OneField(
-                        DataType.REAL.getOID(), (float) 0), new OneField(
-                        DataType.BIGINT.getOID(), (long) 0), new OneField(
-                        DataType.SMALLINT.getOID(), (short) 0), new OneField(
-                        DataType.BOOLEAN.getOID(), true), new OneField(
-                        DataType.BYTEA.getOID(), new byte[]{0}),
-                new OneField(DataType.VARCHAR.getOID(), "value"), new OneField(
-                        DataType.BPCHAR.getOID(), "value"), new OneField(
-                        DataType.TEXT.getOID(), "value"), new OneField(
-                        DataType.NUMERIC.getOID(), "0"), new OneField(
-                        DataType.TIMESTAMP.getOID(), new Timestamp(0)),
-                new OneField(DataType.DATE.getOID(), new Date(1)));
+                new OneField(DataType.BOOLEAN.getOID()                 , true),
+                new OneField(DataType.BYTEA.getOID()                   , new byte[]{0,1}),
+                new OneField(DataType.BIGINT.getOID()                  , 1L),
+                new OneField(DataType.SMALLINT.getOID()                , (short) 2),
+                new OneField(DataType.INTEGER.getOID()                 , 3),
+                new OneField(DataType.TEXT.getOID()                    , "text-value"),
+                new OneField(DataType.REAL.getOID()                    , 4.5f),
+                new OneField(DataType.FLOAT8.getOID()                  , 6.7d),
+                new OneField(DataType.BPCHAR.getOID()                  , "char-value"),
+                new OneField(DataType.VARCHAR.getOID()                 , "varchar-value"),
+                new OneField(DataType.DATE.getOID()                    , Date.valueOf("1994-08-03")),
+                new OneField(DataType.TIME.getOID()                    , "10:11:12"),
+                new OneField(DataType.TIMESTAMP.getOID()               , Timestamp.valueOf("2022-06-10 11:44:33.123456")),
+                new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), Timestamp.valueOf("2022-06-10 11:44:55.123456")),
+                new OneField(DataType.NUMERIC.getOID()                 , "9876.54321"),
+                new OneField(DataType.UUID.getOID()                    , "667b97ba-38d0-4b91-9c7d-1f8b30a75c6e"));
         builder.fillGPDBWritable(recFields);
 
-        assertEquals(output.getInt(0), Integer.valueOf(0));
-        assertEquals(output.getDouble(1), Double.valueOf(0));
-        assertEquals(output.getFloat(2), Float.valueOf(0));
-        assertEquals(output.getLong(3), Long.valueOf(0));
-        assertEquals(output.getShort(4), Short.valueOf((short) 0));
-        assertEquals(output.getBoolean(5), true);
-        assertArrayEquals(output.getBytes(6), new byte[]{0});
-        assertEquals(output.getString(7), "value\0");
-        assertEquals(output.getString(8), "value\0");
-        assertEquals(output.getString(9), "value\0");
-        assertEquals(output.getString(10), "0\0");
-        assertEquals(Timestamp.valueOf(output.getString(11)), new Timestamp(0));
-        assertEquals(Date.valueOf(output.getString(12).trim()).toString(),
-                new Date(1).toString());
+        assertTrue(output.getBoolean(0));
+        assertArrayEquals(new byte[]{0, 1}, output.getBytes(1));
+        assertEquals(1L, output.getLong(2));
+        assertEquals((short) 2, output.getShort(3));
+        assertEquals(3, output.getInt(4));
+        assertEquals("text-value\0", output.getString(5));
+        assertEquals(4.5f, output.getFloat(6));
+        assertEquals(6.7d, output.getDouble(7));
+        assertEquals("char-value\0", output.getString(8));
+        assertEquals("varchar-value\0", output.getString(9));
+        assertEquals("1994-08-03\0", output.getString(10));
+        assertEquals("10:11:12\0", output.getString(11));
+        assertEquals("2022-06-10 11:44:33.123456\0", output.getString(12));
+        assertEquals("2022-06-10 11:44:55.123456\0", output.getString(13));
+        assertEquals("9876.54321\0", output.getString(14));
+        assertEquals("667b97ba-38d0-4b91-9c7d-1f8b30a75c6e\0", output.getString(15));
+    }
+
+    @Test
+    public void testFillGPDBWritable_StringifiedPrimitiveTypes() throws Exception {
+        RequestContext context = new RequestContext();
+
+        // go in the order of types defined in DataType enum
+        addColumn(context,  0, DataType.BOOLEAN                 , "col00");
+        addColumn(context,  1, DataType.BYTEA                   , "col01");
+        addColumn(context,  2, DataType.BIGINT                  , "col02");
+        addColumn(context,  3, DataType.SMALLINT                , "col03");
+        addColumn(context,  4, DataType.INTEGER                 , "col04");
+        addColumn(context,  5, DataType.TEXT                    , "col05");
+        addColumn(context,  6, DataType.REAL                    , "col06");
+        addColumn(context,  7, DataType.FLOAT8                  , "col07");
+        addColumn(context,  8, DataType.BPCHAR                  , "col08");
+        addColumn(context,  9, DataType.VARCHAR                 , "col09");
+        addColumn(context, 10, DataType.DATE                    , "col10");
+        addColumn(context, 11, DataType.TIME                    , "col11");
+        addColumn(context, 12, DataType.TIMESTAMP               , "col12");
+        addColumn(context, 13, DataType.TIMESTAMP_WITH_TIME_ZONE, "col13");
+        addColumn(context, 14, DataType.NUMERIC                 , "col14");
+        addColumn(context, 15, DataType.UUID                    , "col15");
+
+        BridgeOutputBuilder builder = makeBuilder(context);
+        output = builder.makeGPDBWritableOutput();
+
+        // in OneField objects use DataType.TEXT and String values for primitive types that are serialized as strings
+        List<OneField> recFields = Arrays.asList(
+                new OneField(DataType.BOOLEAN.getOID()  , true),
+                new OneField(DataType.BYTEA.getOID()    , new byte[]{0,1}),
+                new OneField(DataType.BIGINT.getOID()   , 1L),
+                new OneField(DataType.SMALLINT.getOID() , (short) 2),
+                new OneField(DataType.INTEGER.getOID()  , 3),
+                new OneField(DataType.TEXT.getOID()     , "text-value"),
+                new OneField(DataType.REAL.getOID()     , 4.5f),
+                new OneField(DataType.FLOAT8.getOID()   , 6.7d),
+                new OneField(DataType.TEXT.getOID()     , "char-value"),
+                new OneField(DataType.TEXT.getOID()     , "varchar-value"),
+                new OneField(DataType.TEXT.getOID()     , "1994-08-03"),
+                new OneField(DataType.TEXT.getOID()     , "10:11:12"),
+                new OneField(DataType.TEXT.getOID()     , "2022-06-10 11:44:33.123456"),
+                new OneField(DataType.TEXT.getOID()     , "2022-06-10 11:44:55.123456"),
+                new OneField(DataType.TEXT.getOID()     , "9876.54321"),
+                new OneField(DataType.TEXT.getOID()     , "667b97ba-38d0-4b91-9c7d-1f8b30a75c6e"));
+        builder.fillGPDBWritable(recFields);
+
+        assertTrue(output.getBoolean(0));
+        assertArrayEquals(new byte[]{0, 1}, output.getBytes(1));
+        assertEquals(1L, output.getLong(2));
+        assertEquals((short) 2, output.getShort(3));
+        assertEquals(3, output.getInt(4));
+        assertEquals("text-value\0", output.getString(5));
+        assertEquals(4.5f, output.getFloat(6));
+        assertEquals(6.7d, output.getDouble(7));
+        assertEquals("char-value\0", output.getString(8));
+        assertEquals("varchar-value\0", output.getString(9));
+        assertEquals("1994-08-03\0", output.getString(10));
+        assertEquals("10:11:12\0", output.getString(11));
+        assertEquals("2022-06-10 11:44:33.123456\0", output.getString(12));
+        assertEquals("2022-06-10 11:44:55.123456\0", output.getString(13));
+        assertEquals("9876.54321\0", output.getString(14));
+        assertEquals("667b97ba-38d0-4b91-9c7d-1f8b30a75c6e\0", output.getString(15));
     }
 
     @Test
