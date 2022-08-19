@@ -199,10 +199,10 @@ Procedure:
       -o /tmp/sampledata.orc
     ```
 
-1. Copy the ORC file to HDFS. The following command copies the file to the `/data/pxf_examples` directory:
+1. Copy the ORC file to HDFS. The following command copies the file to the `/data/pxf_examples/orc_example` directory:
 
     ``` shell
-    $ hdfs dfs -put /tmp/sampledata.orc /data/pxf_examples/
+    $ hdfs dfs -put /tmp/sampledata.orc /data/pxf_examples/orc_example/
     ```
 
 1. Log in to the Greenplum Database master host and connect to a database. This command connects to the database named `testdb` as the `gpadmin` user:
@@ -211,11 +211,11 @@ Procedure:
     gpadmin@gpmaster$ psql -d testdb
     ```
 
-1. Create an external table named `sample_orc` that references the `/data/pxf_examples/sampledata.orc` file on HDFS. This command creates the table with the column names specified in the ORC schema, and uses the `default` PXF server:
+1. Create an external table named `sample_orc` that references the `/data/pxf_examples/orc_example/sampledata.orc` file on HDFS. This command creates the table with the column names specified in the ORC schema, and uses the `default` PXF server:
 
     ``` sql
     testdb=# CREATE EXTERNAL TABLE sample_orc(location text, month text, num_orders int, total_sales numeric(10,2), items_sold text[])
-               LOCATION ('pxf://data/pxf_examples/sampledata.orc?PROFILE=hdfs:orc')
+               LOCATION ('pxf://data/pxf_examples/orc_example?PROFILE=hdfs:orc')
              FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
@@ -270,18 +270,18 @@ Procedure:
 
     ``` sql
     postgres=# CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location text, month text, num_orders int, total_sales numeric(10,2), items_sold text[] )
-        LOCATION ('pxf://data/pxf_examples/sampledata.orc?PROFILE=hdfs:orc')
+        LOCATION ('pxf://data/pxf_examples/orc_example?PROFILE=hdfs:orc')
       FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
 
-1. Write a few records to segment files in the `sampledata.orc` directory by inserting to the `write_to_sample_orc` table:
+1. Write a few records to segment files in the `orc_example` directory by inserting to the `write_to_sample_orc` table:
    
     ``` sql
 postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Frankfurt', 'Mar', 777, 3956.98, '{"winter socks","pants",boots}' );
 postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Cleveland', 'Oct', 3218, 96645.37, '{"long-sleeved shirts",hats}' );
     ```
 
-1. Recall that Greenplum Database does not support directly querying a writable external table. Query the `sample_orc` table to read the data you added to files in the `sampledata.orc` directory:
+1. Recall that Greenplum Database does not support directly querying a writable external table. Query the `sample_orc` table to read the data you added to files in the `orc_example` directory:
 
     ``` sql
     postgres=# SELECT * FROM sample_orc ORDER BY num_orders;
