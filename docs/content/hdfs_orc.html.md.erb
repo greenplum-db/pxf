@@ -84,22 +84,24 @@ PXF supports only the list ORC compound type, and only for a subset of the ORC s
 
 PXF uses the following data type mapping when writing ORC data:
 
-| ORC Physical Type | ORC Logical Type | PXF/Greenplum Data Type |
-|-------------------|---------------|--------------------------|
-| binary | decimal | Numeric |
-| binary | timestamp | Timestamp |
-| byte[] | string | Text |
-| byte[] | char | Bpchar |
-| byte[] | varchar | Varchar |
-| byte[] | binary | Bytea |
-| Double | float | Real |
-| Double | double | Float8 |
-| Integer | boolean (1 bit) | Boolean |
-| Integer | tinyint (8 bit) | Smallint |
-| Integer | smallint (16 bit) | Smallint |
+| PXF/Greenplum Data Type | ORC Logical Type | ORC Physical Type |
+|-------------------------|------------------|-------------------|
+| Numeric | decimal | binary |
+| Timestamp | timestamp | binary |
+| Timestamp with Timezone | timestamp with local time zone | timestamp |
+| Text | string | byte[] |
+| Bpchar | char | byte[] |
+| Varchar | varchar | byte[] |
+| Bytea | binary | byte[] |
+| Real | float | Double |
+| Float8 | double | Double |
+| Boolean | boolean (1 bit) | Integer |
+| Smallint | tinyint (8 bit) | Integer |
+| Smallint | smallint (16 bit) | Integer |
 | Integer | int (32 bit) | Integer |
-| Integer | bigint (64 bit) | Bigint |
-| Integer | date | Date |
+| Bigint | bigint (64 bit) | Integer |
+| Date | date | Integer |
+| UUID | string | byte[] |
 
 PXF supports writing the list ORC compound type for one-dimensional arrays, for all of the above of the ORC primitive types. The supported mappings are:
 
