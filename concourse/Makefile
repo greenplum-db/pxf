@@ -33,6 +33,7 @@ GS                          ?= false
 MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
+YOUR_TAG 					?= $(shell git describe --tags --abbrev=0)
 
 .PHONY: build certification dev pr cloudbuild longevity pg_regress
 build: set-build-pipeline
@@ -242,7 +243,7 @@ set-pg_regress-pipeline:
 		--config pipelines/pg_regress_pipeline.yml \
 		 -v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
 		 -v gpdb-git-branch=master \
-		 -v pxf-git-branch=master
+		 -v pxf-git-branch=$(BRACH)
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------
