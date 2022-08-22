@@ -122,7 +122,7 @@ anchors:
         platform: linux
       image: ccp-7-image
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
     - task: Cleanup Dataproc 2
@@ -525,7 +525,7 @@ resources:
     env:
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
     vars:
       project_id: ((ud/pxf/common/google-project-id))
     storage:
@@ -862,7 +862,7 @@ jobs:
     file: pxf_src/concourse/tasks/load_ambari_config.yml
     image: ccp-7-image
     params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
       GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GOOGLE_ZONE: ((ud/pxf/common/google-zone))
   - task: Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
@@ -1135,7 +1135,7 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
       GP_VER: [[gp_ver]]
       GROUP: hcfs
       IMPERSONATION: false
@@ -1236,7 +1236,7 @@ jobs:
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7-image
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         IMAGE_VERSION: ((dataproc-image-version))
@@ -1362,7 +1362,7 @@ jobs:
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7-image
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         IMAGE_VERSION: ((dataproc-image-version))
