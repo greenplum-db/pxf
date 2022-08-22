@@ -117,7 +117,7 @@ anchors:
     platform: linux
   image: ccp-7-image
   params:
-    GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+    GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
     GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
     GOOGLE_ZONE: ((ud/pxf/common/google-zone))
 
@@ -261,7 +261,7 @@ resources:
   type: git
   icon: git
   source:
-    branch: ((pix-git-branch))
+    branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
     ignore_paths:
       - docs/**
@@ -562,7 +562,7 @@ resources:
     env:
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
     vars:
       project_id: ((ud/pxf/common/google-project-id))
     storage:
@@ -897,7 +897,7 @@ jobs:
     file: pxf_src/concourse/tasks/load_ambari_config.yml
     image: ccp-7-image
     params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
       GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GOOGLE_ZONE: ((ud/pxf/common/google-zone))
   - task: Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
@@ -1158,7 +1158,7 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/gsc-ci-service-account-key))
       GP_VER: [[gp_ver]]
       GROUP: hcfs
       IMPERSONATION: false
@@ -1257,7 +1257,7 @@ jobs:
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         IMAGE_VERSION: ((dataproc-image-version))
@@ -1417,7 +1417,7 @@ jobs:
     - task: Generate Hadoop Cluster 1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         IMAGE_VERSION: ((dataproc-image-version))
@@ -1707,7 +1707,7 @@ jobs:
     params:
       GCS_RELEASES_BUCKET: ((ud/pxf/common/releases-bucket-name))
       GCS_RELEASES_PATH: [[ environment ]]/releases
-      GIT_BRANCH: ((pix-git-branch))
+      GIT_BRANCH: ((pxf-git-branch))
       GIT_EMAIL: ((ud/pxf/common/git-deploy-email))
       GIT_REMOTE_URL: ((ud/pxf/[[ environment ]]/git-remote-ssh-url))
       GIT_SSH_KEY: ((ud/pxf/secrets/git-deploy-key))

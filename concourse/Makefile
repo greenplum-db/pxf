@@ -34,6 +34,7 @@ GS                          ?= false
 MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
+YOUR_TAG	?= $(shell git describe --tags --abbrev=0)
 
 .PHONY: build certification dev pr cloudbuild longevity
 build: set-build-pipeline

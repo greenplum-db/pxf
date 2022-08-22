@@ -39,7 +39,7 @@ set_failed_gpdb_anchor: &set_failed
         run:
           path: 'ccp_src/((tf-cloud-provider))/ccp_failed_test.sh'
         params:
-          GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+          GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
           GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
           GOOGLE_ZONE: ((ud/pxf/common/google-zone))
           GOOGLE_SERVICE_ACCOUNT: ((ud/pxf/common/google-service-account))
@@ -65,7 +65,7 @@ set_failed_gpdb_anchor: &set_failed
         run:
           path: 'ccp_src/((tf-cloud-provider))/ccp_failed_test.sh'
         params:
-          GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+          GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
           GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
           GOOGLE_ZONE: ((ud/pxf/common/google-zone))
           GOOGLE_SERVICE_ACCOUNT: ((ud/pxf/common/google-service-account))
@@ -163,7 +163,7 @@ resources:
     env:
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
     vars:
       project_id: ((ud/pxf/common/google-project-id))
     storage:
@@ -330,7 +330,7 @@ jobs:
           run:
             path: pxf_src/concourse/scripts/load_data.bash
           params:
-            GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-service-account-key))
+            GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
             GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
             GOOGLE_ZONE: ((ud/pxf/common/google-zone))
             GOOGLE_SERVICE_ACCOUNT: ((ud/pxf/common/google-zone))
@@ -358,7 +358,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       AWS_DEFAULT_REGION: ((ud/common/aws-region))
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/gsc-ci-service-account-key))
       WASB_ACCOUNT_NAME: ((ud/pxf/common/wasb-account-name))
       WASB_ACCOUNT_KEY: ((ud/pxf/secrets/wasb-account-key))
       SLEEP_BEFORE_DESTROY_IN_SEC: ((perf-sleep-before-destroy))

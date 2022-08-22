@@ -254,7 +254,7 @@ jobs:
       - name: pxf_tarball
       params:
         ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/google-project-id-ccp-ci-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/gsc-ci-service-account-key))
         GROUP: fdw_hcfs_schedule
         HADOOP_CLIENT: HDP
         IMPERSONATION: true

@@ -67,7 +67,7 @@ resources:
     # release, this should be reverted back to using a tag_filter.
     # TODO: revert this change and unpin resouce in UI.
     #tag_filter: release-*
-    branch: master
+    branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
 ## ---------- Docker Images ----------
@@ -119,10 +119,10 @@ resources:
   type: s3
   icon: aws
   source:
-    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
     bucket: ((ud/pxf/common/gpdb-stable-builds-bucket-name))
-    region_name: ((ud/common/aws_region))
-    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+    region_name: ((ud/common/aws-region))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
     versioned_file: release_candidates/bin_gpdb_centos7/gpdb5/bin_gpdb.tar.gz
 
 - name: gpdb6_tarball_rhel7
