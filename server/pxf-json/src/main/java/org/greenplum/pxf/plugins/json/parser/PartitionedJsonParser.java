@@ -27,7 +27,10 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.lib.input.SplitLineReader;
 import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
+
 
 /**
  * A simple parser that can support reading JSON objects from a random point in JSON text. It reads from the supplied
@@ -40,16 +43,16 @@ import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
 public class PartitionedJsonParser {
 
 	private static final char BACKSLASH = '\\';
-	private static final char NEW_LINE = '\n';
-	private static final char VALUE_SEPARATOR = ',';
-	private static final char START_TEXT = '\u0002';
-	private static final char START_ARRAY_BRACKET = '[';
+	private static final char QUOTE = '\"';
 	private static final char START_BRACE = '{';
 	private static final int EOF = -1;
 	private static final int CHARS_READ_LIMIT = 8192;
-	private final InputStreamReader inputStreamReader;
+	private final SplitLineReader splitLineReader;
+	private StringBuffer currentLineBuffer;
+	private int currentBufferIndex;
 	private final JsonLexer lexer;
 	private long bytesRead = 0;
+
 	private boolean endOfStream = false;
 	private final StringBuilder uncountedCharsReadFromStream;
 
@@ -58,34 +61,27 @@ public class PartitionedJsonParser {
 
 		// You need to wrap the InputStream with an InputStreamReader, so that it can encode the incoming byte stream as
 		// UTF-8 characters
-		this.inputStreamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
+		this.splitLineReader = new SplitLineReader(is, new byte[] {(byte)','});
 
 		this.uncountedCharsReadFromStream = new StringBuilder(CHARS_READ_LIMIT);
 	}
 
 	private boolean scanToFirstBeginObject() throws IOException {
 		// seek until we hit the first begin-object
-		char prev = START_TEXT;
+		boolean inString = false;
 		int i;
 		while ((i = readNextChar()) != EOF) {
 			char c = (char) i;
-			// It is possible that a curly bracket will occur in the middle of a string without being escaped
-			// i.e. value = "this is some {} string"
-			// the beginning of an JSON object will occur after 3 instances:
-			//     after a new line (i.e. '\n')
-			//     after an array marker (i.e. '[')
-			//     after a value separator (i.e. ',')
-			// we also need to check that it is not an escaped character.
-			if (c == START_BRACE && prev != BACKSLASH) {
-				if ((prev == NEW_LINE) ||
-					(prev == START_ARRAY_BRACKET) ||
-					(prev == VALUE_SEPARATOR) ||
-					(prev == START_TEXT)) {
-					lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
-					return true;
-				}
+			// if the current value is a backslash, then ignore the next value as it's an escaped char
+			if (c == BACKSLASH) {
+				 readNextChar();
+				 break;
+			} else if (c == QUOTE) {
+				inString = !inString;
+			} else if (c == START_BRACE && !inString) {
+				lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
+				return true;
 			}
-			prev = c;
 		}
 		endOfStream = true;
 		return false;
@@ -218,16 +214,40 @@ public class PartitionedJsonParser {
 	}
 
 	private int readNextChar() throws IOException {
-		int i = inputStreamReader.read();
 
-		if (i != EOF) {
-			uncountedCharsReadFromStream.append((char) i);
+		// read from buffer if buffer != null and index < buffer.length
+		if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
+			// else pull new line into buffer
+			Text currentLine = new Text();
+			int i = splitLineReader.readLine(currentLine);
+			currentLineBuffer = new StringBuffer(currentLine.toString());
+			currentBufferIndex = 0;
+		}
+
+		// track where you are in the buffer with some global index
+		int c = currentLineBuffer.charAt(currentBufferIndex);
+		currentBufferIndex++;
+		// if we need more but its the end of the split,
+		// we have exhausted the split and we would need to create a new line record reader with diff start and diff end
+
+
+		// option 1: from get go, start at 100, end at endOfFile
+		// // somehow we will know to stop at object because we crossed original split.
+
+		// option 2: linerecorder reader 100-200. then create new linerecordreader 201-300?? assume same split size
+		// then read until end of object and then die. // repeat until we find end of object or end of file
+
+		// if i am at end of object. then check if im in my split. otherwise done
+
+
+		if (c != EOF) {
+			uncountedCharsReadFromStream.append((char) c);
 			if (uncountedCharsReadFromStream.length() == CHARS_READ_LIMIT) {
 				bytesRead += countBytesInReadChars();
 			}
 		}
 
-		return i;
+		return c;
 	}
 
 	private int countBytesInReadChars() {
