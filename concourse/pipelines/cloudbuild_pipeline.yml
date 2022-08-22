@@ -7,7 +7,7 @@ pxf_dev_mapr_image_check: &pxf_dev_mapr_image
     timeout: 30m
     image: gcloud
     params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
       GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GOOGLE_ZONE: ((ud/pxf/common/google-zone))
       IMAGE_LIST: "gpdb5-centos7-test-pxf-mapr gpdb6-centos7-test-pxf-mapr"
@@ -74,7 +74,7 @@ jobs:
     - task: trigger_builds
       image: gcloud
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         TRIGGER_LIST: "pxf-dev-base"
@@ -100,7 +100,7 @@ jobs:
       timeout: 30m
       image: gcloud
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         IMAGE_LIST: "gpdb5-centos6-test-pxf gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf gpdb7-centos7-test-pxf gpdb7-ubuntu18.04-test-pxf"
@@ -113,7 +113,7 @@ jobs:
     - task: trigger_builds
       image: gcloud
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         TRIGGER_LIST: "pxf-dev-server pxf-dev-mapr"

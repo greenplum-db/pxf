@@ -15,8 +15,8 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
-      secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+      access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+      secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
       bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((ud/common/aws-region))
       versioned_file: hortonworks/HDP-2.5.3.0-centos6-tars-tarball.tar.gz
@@ -25,8 +25,8 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
-      secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+      access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+      secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
       bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((ud/common/aws-region))
       versioned_file: hortonworks/HDP-3.1.4.0-centos7-tars-tarball.tar.gz
@@ -35,8 +35,8 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
-      secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+      access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+      secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
       bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((ud/common/aws-region))
       versioned_file: cloudera/CDH-5.12.2.tar.gz
@@ -45,8 +45,8 @@ resources:
     type: s3
     icon: s3
     source:
-      access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
-      secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+      access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+      secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
       bucket: ((ud/pxf/common/aws-bucket-name))
       region_name: ((ud/common/aws-region))
       versioned_file: jdbc/postgresql-jdbc-8.4.704.jar

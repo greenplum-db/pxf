@@ -109,20 +109,20 @@ resources:
   type: s3
   icon: aws
   source:
-    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
     bucket: ((ud/pxf/common/gpdb-stable-builds-bucket-name))
     region_name: ((ud/common/aws-region))
-    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
     versioned_file: release_candidates/bin_gpdb_centos6/gpdb5/bin_gpdb.tar.gz
 
 - name: gpdb5_tarball_rhel7
   type: s3
   icon: aws
   source:
-    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
     bucket: ((ud/pxf/common/gpdb-stable-builds-bucket-name))
     region_name: ((ud/common/aws-region))
-    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
     versioned_file: release_candidates/bin_gpdb_centos7/gpdb5/bin_gpdb.tar.gz
 
 - name: gpdb6_tarball_rhel7

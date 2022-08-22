@@ -243,7 +243,7 @@ set-pg_regress-pipeline:
 		--config pipelines/pg_regress_pipeline.yml \
 		 -v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
 		 -v gpdb-git-branch=master \
-		 -v pxf-git-branch=master
+		 -v pxf-git-branch=$(BRACH)
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------

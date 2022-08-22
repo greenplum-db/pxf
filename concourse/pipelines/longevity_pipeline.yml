@@ -32,7 +32,7 @@ dataproc_timed_destroy_anchor: &dataproc_timed_destroy
         platform: linux
       image: ccp-7
       params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
     - task: Cleanup Dataproc 2
@@ -86,7 +86,7 @@ resources:
     env:
       AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
     vars:
       project_id: ((ud/pxf/common/google-project-id))
     storage:
@@ -159,40 +159,40 @@ resources:
   type: s3
   icon: archive
   source:
-    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
     region_name: ((ud/common/aws-region))
-    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/pxf.tar.gz
 
 - name: cluster_env_files_tar
   type: s3
   icon: archive
   source:
-    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
     region_name: ((ud/common/aws-region))
-    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/cluster_env_files.tar.gz
 
 - name: dataproc_env_files_tar
   type: s3
   icon: archive
   source:
-    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
     region_name: ((ud/common/aws-region))
-    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_env_files.tar.gz
 
 - name: dataproc_2_env_files_tar
   type: s3
   icon: archive
   source:
-    access_key_id: ((ud/pxf/secrets/bucket-access-key-id))
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
     bucket: ((ud/pxf/common/aws-bucket-name))
     region_name: ((ud/common/aws-region))
-    secret_access_key: ((ud/pxf/secrets/bucket-secret-access-key))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_2_env_files.tar.gz
 
 ## ======================================================================
@@ -273,7 +273,7 @@ jobs:
       image: ccp-7
       params:
         CLUSTER_NAME: pxf-((pxf-tag))-longevity-1
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         IMAGE_VERSION: ((dataproc-image-version))
