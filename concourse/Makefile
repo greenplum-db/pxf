@@ -4,6 +4,9 @@ CONCOURSE ?= ud
 # set the pxf-protocol-extension default branch to current branch
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
+# set YOUR_TAG to current release tag for longevity pipeline
+YOUR_TAG ?= $(shell git describe --tags --abbrev=0)
+
 SHELL                        = /bin/bash
 BUILD_PIPELINE_NAME         ?= pxf-build
 DEV_BUILD_PIPELINE_NAME     ?= dev:$(USER)-$(BRANCH)
@@ -34,7 +37,6 @@ GS                          ?= false
 MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
-YOUR_TAG	?= $(shell git describe --tags --abbrev=0)
 
 .PHONY: build certification dev pr cloudbuild longevity
 build: set-build-pipeline

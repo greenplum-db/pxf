@@ -10,14 +10,14 @@ resources:
 - name: gpdb_src
   type: git
   source:
-    branch: {{gpdb-git-branch}}
-    uri: {{gpdb-git-remote}}
+    branch: ((gpdb-git-branch))
+    uri: ((gpdb-git-remote))
 
 - name: gpdb_pxf_trigger
   type: git
   source:
-    branch: {{gpdb-branch}}
-    uri: {{gpdb-git-remote}}
+    branch: ((gpdb-branch))
+    uri: ((ud/pxf/common/gpdb-git-remote))
     paths:
     - gpcontrib/pxf_fdw
     - src/backend/foreign
@@ -31,9 +31,9 @@ resources:
 - name: pxf_src
   type: git
   source:
-    branch: {{pxf-git-branch}}
-    uri: {{pxf-git-remote}}
-    private_key: ((ccp-git-key))
+    branch: ((pxf-git-branch))
+    uri: ((ud/pxf/common/git-remote))
+    private_key: ((gp-concourse-cluster-provisioner-git-key))
 
 - name: gpdb-pxf-dev-centos7
   type: registry-image
@@ -41,7 +41,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 - name: gpdb6-centos7-build
   type: registry-image
@@ -55,46 +55,46 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2
     tag: latest
     username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
 # ~/workspace/gp-continuous-integration/secrets/gpdb6-integration-testing.dev.yml
 - name: libquicklz-centos7
   type: gcs
   source:
-    bucket: ((gcs-bucket))
+    bucket: ((ud/pxf/common/gpdb-concourse-resources))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: gp-internal-artifacts/centos7/libquicklz-(\d.*)\.el7\.x86_64\.rpm
 
 - name: libquicklz-devel-centos7
   type: gcs
   source:
-    bucket: ((gcs-bucket))
+    bucket: ((ud/pxf/common/gpdb-concourse-resources))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: gp-internal-artifacts/centos7/libquicklz-devel-(\d.*)\.el7\.x86_64\.rpm
 
 - name: libsigar-centos7
   type: gcs
   source:
-    bucket: ((gcs-bucket))
+    bucket: ((ud/pxf/common/gpdb-concourse-resources))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: gp-internal-artifacts/centos7/sigar-rhel7_x86_64-(.*)\.targz
 
 - name: pxf_tarball
   type: s3
   source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
     versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/pxf.tar.gz
 
 - name: bin_gpdb
   type: s3
   source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
     versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/bin_gpdb.tar.gz
 
 jobs:
@@ -173,7 +173,7 @@ jobs:
         GROUP: fdw_smoke_schedule
         HADOOP_CLIENT: HDP
         IMPERSONATION: true
-        PGPORT: {{pgport}}
+        PGPORT: ((pgport))
         PG_REGRESS: true
       run:
         path: pxf_src/concourse/scripts/test_pxf.bash
@@ -210,14 +210,14 @@ jobs:
       - name: pxf_src
       - name: pxf_tarball
       params:
-        ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+        ACCESS_KEY_ID: ((tf-machine-access-key-id))
         GROUP: fdw_hcfs_schedule
         HADOOP_CLIENT: HDP
         IMPERSONATION: true
-        PGPORT: {{pgport}}
+        PGPORT: ((pgport))
         PG_REGRESS: true
         PROTOCOL: s3
-        SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+        SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       run:
         path: pxf_src/concourse/scripts/test_pxf.bash
 
@@ -253,12 +253,12 @@ jobs:
       - name: pxf_src
       - name: pxf_tarball
       params:
-        ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+        ACCESS_KEY_ID: ((tf-machine-access-key-id))
         GOOGLE_CREDENTIALS: ((ud/pxf/secrets/gsc-ci-service-account-key))
         GROUP: fdw_hcfs_schedule
         HADOOP_CLIENT: HDP
         IMPERSONATION: true
-        PGPORT: {{pgport}}
+        PGPORT: ((pgport))
         PG_REGRESS: true
         PROTOCOL: gs
       run:
@@ -296,11 +296,11 @@ jobs:
       - name: pxf_src
       - name: pxf_tarball
       params:
-        ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+        ACCESS_KEY_ID: ((tf-machine-access-key-id))
         GROUP: fdw_hcfs_schedule
         HADOOP_CLIENT: HDP
         IMPERSONATION: true
-        PGPORT: {{pgport}}
+        PGPORT: ((pgport))
         PG_REGRESS: true
         PROTOCOL: wasbs
         WASBS_ACCOUNT_KEY: ((ud/pxf/secrets/wasb-account-key))
@@ -340,14 +340,14 @@ jobs:
       - name: pxf_src
       - name: pxf_tarball
       params:
-        ADL_ACCOUNT: {{adl-account}}
-        ADL_OAUTH2_CLIENT_ID: {{adl-client-id}}
-        ADL_OAUTH2_CREDENTIAL: {{adl-credential}}
-        ADL_OAUTH2_REFRESH_URL: {{adl-refresh-url}}
+        ADL_ACCOUNT: ((ud/pxf/common/adl-account))
+        ADL_OAUTH2_CLIENT_ID: ((ud/pxf/secrets/adl-client-id))
+        ADL_OAUTH2_CREDENTIAL: ((ud/pxf/secrets/adl-credential))
+        ADL_OAUTH2_REFRESH_URL: ((ud/pxf/common/adl-refresh-url))
         GROUP: fdw_hcfs_schedule
         HADOOP_CLIENT: HDP
         IMPERSONATION: true
-        PGPORT: {{pgport}}
+        PGPORT: ((pgport))
         PG_REGRESS: true
         PROTOCOL: adl
       run:
@@ -380,6 +380,6 @@ jobs:
     params:
       GROUP: fdw_hcfs_schedule
       IMPERSONATION: false
-      PGPORT: {{pgport}}
+      PGPORT: ((pgport))
       PG_REGRESS: true
       PROTOCOL: minio
