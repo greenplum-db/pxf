@@ -31,7 +31,7 @@ resources:
 {% endif %}
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/ccp-ci-service-account-key))
+    password: ((ud/pxf/secrets/gsc-ci-service-account-key))
 
 - name: gpdb-pxf-dev-centos7-hdp2-server
   type: registry-image
@@ -44,7 +44,7 @@ resources:
 {% endif %}
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/ccp-ci-service-account-key))
+    password: ((ud/pxf/secrets/gsc-ci-service-account-key))
 {% if gpdb_type == "6X_STABLE" %}
 
 - name: gpdb-pxf-dev-ubuntu18-hdp2-server
@@ -54,7 +54,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf-hdp2
     tag: latest
     username: _json_key
-    password: ((ud/pxf/secrets/ccp-ci-service-account-key))
+    password: ((ud/pxf/secrets/gsc-ci-service-account-key))
 {% endif %}
 
 {% for version in range(num_versions) %}
@@ -63,7 +63,7 @@ resources:
   icon: google-drive
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/ccp-ci-service-account-key))
+    json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
 {% if gpdb_type == "5X_STABLE" %}
     regexp: latest-[[ version ]]_gpdb5/greenplum-db-(.*)-rhel6-x86_64.rpm
 {% else %}
@@ -75,7 +75,7 @@ resources:
   icon: google-drive
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/ccp-ci-service-account-key))
+    json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
 {% if gpdb_type == "5X_STABLE" %}
     regexp: latest-[[ version ]]_gpdb5/greenplum-db-(.*)-rhel7-x86_64.rpm
 {% else %}
@@ -87,7 +87,7 @@ resources:
   icon: google-drive
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/ccp-ci-service-account-key))
+    json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
     regexp: latest-[[ version ]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 
 {% endif %}
@@ -98,7 +98,7 @@ resources:
   icon: google-drive
   source:
     bucket: ((ud/pxf/common/build-bucket-name))
-    json_key: ((ud/pxf/secrets/ccp-ci-service-account-key))
+    json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
     versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel6-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_rhel7
@@ -106,7 +106,7 @@ resources:
   icon: google-drive
   source:
     bucket: ((ud/pxf/common/build-bucket-name))
-    json_key: ((ud/pxf/secrets/ccp-ci-service-account-key))
+    json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
     versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel7-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_ubuntu18
@@ -114,7 +114,7 @@ resources:
   icon: google-drive
   source:
     bucket: ((ud/pxf/common/build-bucket-name))
-    json_key: ((ud/pxf/secrets/ccp-ci-service-account-key))
+    json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
     versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
 
 ## ======================================================================

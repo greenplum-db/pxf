@@ -56,7 +56,7 @@ resources:
     icon: google-drive
     source:
       bucket: ((ud/pxf/common/build-resources-bucket-name))
-      json_key: ((ud/pxf/secrets/ccp-ci-service-account-key))
+      json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
       versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
   - name: singlecluster-HDP3-gcs
@@ -64,7 +64,7 @@ resources:
     icon: google-drive
     source:
       bucket: ((ud/pxf/common/build-resources-bucket-name))
-      json_key: ((ud/pxf/secrets/ccp-ci-service-account-key))
+      json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
       versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 
   - name: singlecluster-CDH-gcs
@@ -72,7 +72,7 @@ resources:
     icon: google-drive
     source:
       bucket: ((ud/pxf/common/build-resources-bucket-name))
-      json_key: ((ud/pxf/secrets/ccp-ci-service-account-key))
+      json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
       versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
 
   - name: pxf_singlecluster
