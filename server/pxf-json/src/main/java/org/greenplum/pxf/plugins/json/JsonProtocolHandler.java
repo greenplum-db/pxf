@@ -1,0 +1,47 @@
+package org.greenplum.pxf.plugins.json;
+
+import org.greenplum.pxf.api.model.ProtocolHandler;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hdfs.HcfsFragmentMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Implementation of ProtocolHandler for json protocol.
+ */
+public class JsonProtocolHandler implements ProtocolHandler {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JsonProtocolHandler.class);
+    private static final String HCFS_FILE_FRAGMENTER = "org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter";
+
+    @Override
+    public String getFragmenterClassName(RequestContext context) {
+        String fragmenter = context.getFragmenter(); // default to fragmenter defined by the profile
+        if (useMultilineJson(context)) {
+            fragmenter = HCFS_FILE_FRAGMENTER;
+        }
+        LOG.debug("Determined to use {} fragmenter", fragmenter);
+        return fragmenter;
+    }
+
+    @Override
+    public String getAccessorClassName(RequestContext context) {
+        return context.getAccessor();
+    }
+
+    @Override
+    public String getResolverClassName(RequestContext context) {
+        return context.getResolver();
+    }
+
+
+    private boolean useMultilineJson(RequestContext context) {
+        String identifier = context.getOption("identifier");
+
+        if (!identifier.isEmpty()) {
+            return true;
+        }
+
+        return false;
+    }
+}

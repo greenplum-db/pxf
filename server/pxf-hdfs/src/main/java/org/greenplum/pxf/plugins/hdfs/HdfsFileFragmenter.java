@@ -47,7 +47,7 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
         }
 
         fragments = Arrays.stream(fileStatusArray)
-                .map(fileStatus -> new Fragment(fileStatus.getPath().toUri().toString()))
+                .map(fileStatus -> new Fragment(fileStatus.getPath().toUri().toString(), new HcfsFragmentMetadata(0, fileStatus.getLen())))
                 .collect(Collectors.toList());
         LOG.debug("Total number of fragments = {}", fragments.size());
 

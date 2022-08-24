@@ -723,6 +723,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
         </plugins>
+        <handler>org.greenplum.pxf.plugins.json.JsonProtocolHandler</handler>
     </profile>
     <profile>
         <name>s3:json</name>
