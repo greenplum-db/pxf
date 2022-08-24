@@ -3,6 +3,7 @@ CONCOURSE ?= ud
 
 # set the pxf-protocol-extension default branch to current branch
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
+
 # set YOUR_TAG to current release tag for longevity pipeline
 YOUR_TAG ?= $(shell git describe --tags --abbrev=0)
 
@@ -244,11 +245,10 @@ set-pg_regress-pipeline:
 		--config pipelines/pg_regress_pipeline.yml \
 		 -v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
 		 -v gpdb-git-branch=master \
-		 -v pxf-git-branch=$(BRACH)
+		 -v pxf-git-branch=$(BRANCH)
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------
-
 .PHONY: list
 list:
 	@sh -c "$(MAKE) -p no_targets__ 2>/dev/null | \
