@@ -280,56 +280,56 @@ resources:
 - name: pxf_gp5_rhel7_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb5/pxf-gp5-(.*)-2.el7.x86_64.rpm
 
 - name: pxf_gp6_rhel7_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2.el7.x86_64.rpm
 
 - name: pxf_gp6_rhel8_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2.el8.x86_64.rpm
 
 - name: pxf_gp6_ubuntu18_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2-ubuntu18.04-amd64.deb
 
 - name: pxf_gp5_osl_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb5/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
 
 - name: pxf_gp5_odp_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb5/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
 
 - name: pxf_gp6_osl_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb6/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
 
 - name: pxf_gp6_odp_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb6/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
 
@@ -337,14 +337,14 @@ resources:
 - name: pxf_gp5_tarball_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb5/pxf-gp5-(.*)-el7.x86_64.tar.gz
 
 - name: pxf_gp6_tarball_release_to_releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-el7.x86_64.tar.gz
 
@@ -512,7 +512,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: ((ud/pxf/[[ environment ]]/gp7-alpha-releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/gp7-alpha-releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/master/greenplum-db-(7.*)-rhel7-x86_64.rpm
 
@@ -520,7 +520,7 @@ resources:
 - name: pxf5_gp6_rhel7_released
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket))
+    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
 
@@ -1779,9 +1779,9 @@ jobs:
       PXF_ODP_FILE_PREFIX: ((ud/pxf/common/odp-file-prefix))
       PXF_SLACK_CHANNEL_NAME: ((ud/pxf/common/slack-channel-name))
       PXF_SLACK_CHANNEL_LINK: ((ud/pxf/secrets/slack-channel-link))
-      RELENG_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket))/((ud/pxf/common/releng-drop-path))
-      RELENG_OSL_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket))/((ud/pxf/common/releng-osl-drop-path))
-      RELENG_ODP_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket))/((ud/pxf/common/releng-odp-drop-path))
+      RELENG_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-drop-path))
+      RELENG_OSL_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-osl-drop-path))
+      RELENG_ODP_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-odp-drop-path))
   - in_parallel:
     - put: pxf_gp5_rhel7_release_to_releng
       params:

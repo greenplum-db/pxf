@@ -295,7 +295,7 @@ resources:
 - name: pxf5_gp6_rhel7_released
   type: gcs
   source:
-    bucket: ((ud/pxf/dev/releng-drop-bucket))
+    bucket: ((ud/pxf/dev/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
 {% endif %}

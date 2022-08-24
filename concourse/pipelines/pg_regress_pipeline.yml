@@ -61,21 +61,21 @@ resources:
 - name: libquicklz-centos7
   type: gcs
   source:
-    bucket: ((ud/pxf/common/gpdb-concourse-resources))
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-dev-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: gp-internal-artifacts/centos7/libquicklz-(\d.*)\.el7\.x86_64\.rpm
 
 - name: libquicklz-devel-centos7
   type: gcs
   source:
-    bucket: ((ud/pxf/common/gpdb-concourse-resources))
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-dev-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: gp-internal-artifacts/centos7/libquicklz-devel-(\d.*)\.el7\.x86_64\.rpm
 
 - name: libsigar-centos7
   type: gcs
   source:
-    bucket: ((ud/pxf/common/gpdb-concourse-resources))
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-dev-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: gp-internal-artifacts/centos7/sigar-rhel7_x86_64-(.*)\.targz
 
