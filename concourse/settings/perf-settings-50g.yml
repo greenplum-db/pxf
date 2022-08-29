@@ -2,7 +2,7 @@
 tf-bucket-path: clusters-google/
 tf-cloud-provider: google
 folder-prefix: perf
-perf-scale: 50
+perf-scale: "50"
 
 enable-impersonation-multinode: true
 pxf-jvm-opts: "-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heap_dump -Xmx2g -Xms1g"
