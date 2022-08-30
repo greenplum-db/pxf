@@ -8,12 +8,12 @@ anchors:
     put: slack-alert
     params:
       text: |
-        <((ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went red :blob_slightly_frowning_face:
+        <((ud/pxf/secrets/ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went red :blob_slightly_frowning_face:
   on_success:
     put: slack-alert
     params:
       text: |
-        <((ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went green! :smile:
+        <((ud/pxf/secrets/ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went green! :smile:
 
 ## ======================================================================
 ## RESOURCE TYPES
