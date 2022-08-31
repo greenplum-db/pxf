@@ -60,6 +60,7 @@ it:
 
 install:
 	make -C $(SOURCE_EXTENSION_DIR) install
+	make -C external-table install
 	make -C cli/go/src/pxf-cli install
 	make -C server install
 
