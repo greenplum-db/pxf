@@ -111,7 +111,9 @@ Ensure that the JDBC driver for the external SQL database supports any statement
 
 ### <a id="prepared"></a>Prepared Statements
 
-The PXF JDBC Connector supports reading using a `PreparedStatement` instead of a `Statement` from an external data source. This may be necessary to enable JDBC driver features with data sources that require a `PreparedStatement`. Enable `PreparedStatement` support using the property: 
+By default, the PXF JDBC Connector reads from an external data source using a JDBC `Statement`.
+
+The PXF `jdbc.read.prepared-statement` property governs the use of `PreparedStatements` by the connector. If the JDBC driver that you are using to access the external data source requires the use of a `PreparedStatement`, set the property to `true`:
 
 | Property       | Description                                | Default Value |
 |----------------|--------------------------------------------|---------------|
