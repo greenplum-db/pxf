@@ -395,7 +395,7 @@ churl_init_upload(const char *url, CHURL_HEADERS headers)
 
 	context->upload = true;
 
-	set_curl_option(context, CURLOPT_POST, (const void *) TRUE);
+	set_curl_option(context, CURLOPT_POST, (const void *) true);
 	set_curl_option(context, CURLOPT_READFUNCTION, read_callback);
 	set_curl_option(context, CURLOPT_READDATA, context);
 	churl_headers_append(headers, "Content-Type", "application/octet-stream");
@@ -851,10 +851,11 @@ fill_internal_buffer(churl_context *context, int want)
 			pg_usleep(100);
 		else if (-1 == select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout))
 		{
-			if (errno == EINTR || errno == EAGAIN)
+			int save_errno = errno;
+			if (save_errno == EINTR || save_errno == EAGAIN)
 				continue;
 			elog(ERROR, "internal error: select failed on curl_multi_fdset (maxfd %d) (%d - %s)",
-				 maxfd, errno, strerror(errno));
+				 maxfd, save_errno, strerror(save_errno));
 		}
 		multi_perform(context);
 	}

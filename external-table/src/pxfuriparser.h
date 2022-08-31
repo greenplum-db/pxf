@@ -21,6 +21,7 @@
 #define _PXFURIPARSER_H_
 
 #include "postgres.h"
+#include "nodes/pg_list.h"
 #include "fmgr.h"
 #include "utils/builtins.h"
 

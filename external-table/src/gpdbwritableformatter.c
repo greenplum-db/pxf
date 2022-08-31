@@ -335,7 +335,7 @@ boolArrayToByteArray(bool *data, int len, int validlen, int *outlen, TupleDesc t
 	for (i = 0, j = 0, k = 7; i < len; i++)
 	{
 		/* Ignore dropped attributes. */
-		if (tupdesc->attrs[i]->attisdropped) continue;
+		if (tupdesc->attrs[i].attisdropped) continue;
 
 		result[j] |= (data[i] ? 1 : 0) << k--;
 		if (k < 0)
@@ -378,7 +378,7 @@ byteArrayToBoolArray(bits8 *data, int data_len, int len, bool **booldata, int bo
 	for (i = 0, j = 0, k = 7; i < boollen; i++)
 	{
 		/* Ignore dropped attributes. */
-		if (tupdesc->attrs[i]->attisdropped)
+		if (tupdesc->attrs[i].attisdropped)
 		{
 			(*booldata)[i] = true;
 			continue;
@@ -417,10 +417,10 @@ verifyExternalTableDefinition(int16 ncolumns_remote, AttrNumber nvalidcolumns, A
 	for (i = 0; i < ncolumns; i++)
 	{
 		/* Ignore dropped attributes. */
-		if (tupdesc->attrs[i]->attisdropped) continue;
+		if (tupdesc->attrs[i].attisdropped) continue;
 
 		input_type = 0;
-		defined_type = tupdesc->attrs[i]->atttypid;
+		defined_type = tupdesc->attrs[i].atttypid;
 		enumType = readInt1FromBuffer(data_buf, data_len, bufidx);
 
 		/* Convert enumType to type oid */
@@ -430,7 +430,7 @@ verifyExternalTableDefinition(int16 ncolumns_remote, AttrNumber nvalidcolumns, A
 		{
 			char	   *intype = format_type_be(input_type);
 			char	   *deftype = format_type_be(defined_type);
-			char	   *attname = NameStr(tupdesc->attrs[i]->attname);
+			char	   *attname = NameStr(tupdesc->attrs[i].attname);
 
 			if (errMsg.len > 0)
 				appendStringInfoString(&errMsg, ", ");
@@ -481,7 +481,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	/* Get the number of valid columns, excludes dropped columns */
 	nvalidcolumns = 0;
 	for (i = 0; i < ncolumns; i++)
-		if (!tupdesc->attrs[i]->attisdropped)
+		if (!tupdesc->attrs[i].attisdropped)
 			nvalidcolumns++;
 
 	/*
@@ -505,12 +505,12 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 		/* setup the text/binary input function */
 		for (i = 0; i < ncolumns; i++)
 		{
-			Oid			type = tupdesc->attrs[i]->atttypid;
+			Oid			type = tupdesc->attrs[i].atttypid;
 			bool		isvarlena;
 			Oid			functionId;
 
 			/* Ignore dropped attributes. */
-			if (tupdesc->attrs[i]->attisdropped)
+			if (tupdesc->attrs[i].attisdropped)
 				continue;
 
 			/* Get the text/binary "send" function */
@@ -561,7 +561,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	 */
 	for (i = 0; i < ncolumns; i++)
 	{
-		Form_pg_attribute attr = tupdesc->attrs[i];
+		Form_pg_attribute attr = &tupdesc->attrs[i];
 
 		/* Ignore dropped attributes. */
 		if (attr->attisdropped) continue;
@@ -648,10 +648,10 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	for (i = 0; i < ncolumns; i++)
 	{
 		/* Ignore dropped attributes. */
-		if (!tupdesc->attrs[i]->attisdropped)
+		if (!tupdesc->attrs[i].attisdropped)
 		{
 			appendInt1ToBuffer(myData->export_format_tuple,
-							   getJavaEnumOrdinal(tupdesc->attrs[i]->atttypid));
+							   getJavaEnumOrdinal(tupdesc->attrs[i].atttypid));
 		}
 	}
 
@@ -663,13 +663,13 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	for (i = 0; i < ncolumns; i++)
 	{
 		/* Ignore dropped attributes and null values. */
-		if (!tupdesc->attrs[i]->attisdropped && !myData->nulls[i])
+		if (!tupdesc->attrs[i].attisdropped && !myData->nulls[i])
 		{
 			/* Pad the alignment byte first */
 			appendStringInfoFill(myData->export_format_tuple, myData->outpadlen[i], '\0');
 
 			/* For variable length type, we added a 4 byte length header */
-			if (isVariableLength(tupdesc->attrs[i]->atttypid))
+			if (isVariableLength(tupdesc->attrs[i].atttypid))
 				appendIntToBuffer(myData->export_format_tuple, myData->outlen[i]);
 
 			/* Now, write the actual column value */
@@ -681,7 +681,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	/* End padding */
 	appendStringInfoFill(myData->export_format_tuple, endpadding, '\0');
 
-	Insist(myData->export_format_tuple->len == datlen + VARHDRSZ);
+	Assert(myData->export_format_tuple->len == datlen + VARHDRSZ);
 	SET_VARSIZE(myData->export_format_tuple->data, datlen + VARHDRSZ);
 	PG_RETURN_BYTEA_P(myData->export_format_tuple->data);
 }
@@ -721,7 +721,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 
 	/* Get the number of valid columns, excluding dropped columns */
 	for (i = 0; i < ncolumns; i++)
-		if (!tupdesc->attrs[i]->attisdropped)
+		if (!tupdesc->attrs[i].attisdropped)
 			nvalidcolumns++;
 
 	/*
@@ -743,11 +743,11 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 
 		for (i = 0; i < ncolumns; i++)
 		{
-			Oid			type = tupdesc->attrs[i]->atttypid;
+			Oid			type = tupdesc->attrs[i].atttypid;
 			Oid			functionId;
 
 			/* Ignore dropped attributes. */
-			if (tupdesc->attrs[i]->attisdropped)
+			if (tupdesc->attrs[i].attisdropped)
 				continue;
 
 			/* Get the text/binary "receive" function */
@@ -858,7 +858,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	/* extract column value */
 	for (i = 0; i < ncolumns; i++)
 	{
-		Form_pg_attribute attr = tupdesc->attrs[i];
+		Form_pg_attribute attr = &tupdesc->attrs[i];
 
 		/* Ignore dropped attributes. */
 		if (attr->attisdropped) continue;
