@@ -5,12 +5,15 @@ import org.greenplum.pxf.automation.components.common.DbSystemObject;
 import org.greenplum.pxf.automation.components.common.ShellSystemObject;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
+import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.springframework.util.Assert;
 
 import java.io.File;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * GPDB system object, defines functionality for GPDB Data Base.
@@ -74,7 +77,12 @@ public class Gpdb extends DbSystemObject {
 		connect();
 
 		// Create the extensions if they don't exist
-		createExtension("pxf", true);
+		String extensionName = FDWUtils.useFDW ? "pxf_fdw" : "pxf";
+		createExtension(extensionName, true);
+
+		if (FDWUtils.useFDW) {
+			createForeignServers(true);
+		}
 
 		ReportUtils.stopLevel(report);
 	}
@@ -139,6 +147,19 @@ public class Gpdb extends DbSystemObject {
 
 	private void createExtension(String extensionName, boolean ignoreFail) throws Exception {
 		runQuery("CREATE EXTENSION IF NOT EXISTS " + extensionName, ignoreFail, false);
+	}
+
+	private void createForeignServers(boolean ignoreFail) throws Exception {
+		Map<String,String> servers = new HashMap<>();
+		servers.put("default_hdfs", "hdfs_pxf_fdw");
+		servers.put("default_hive", "hive_pxf_fdw");
+		servers.put("default_hbase", "hbase_pxf_fdw");
+		for (Map.Entry<String, String> entry : servers.entrySet()) {
+			runQuery(String.format("CREATE SERVER IF NOT EXISTS %s FOREIGN DATA WRAPPER %s OPTIONS(config '%s')",
+					entry.getKey(), entry.getValue(), entry.getKey().split("_")[0]), ignoreFail, false);
+			runQuery(String.format("CREATE USER MAPPING IF NOT EXISTS FOR CURRENT_USER SERVER %s", entry.getKey()),
+					ignoreFail, false);
+		}
 	}
 
 	@Override

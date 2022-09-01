@@ -10,8 +10,10 @@ import org.greenplum.pxf.automation.structures.tables.hbase.HBaseTable;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
+import org.greenplum.pxf.automation.structures.tables.pxf.ForeignTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
+import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 
 /**
@@ -34,7 +36,7 @@ public abstract class TableFactory {
                                                                 HiveTable hiveTable,
                                                                 boolean useProfile) {
 
-        ReadableExternalTable exTable = new ReadableExternalTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
                 fields, hiveTable.getName(), "CUSTOM");
 
         if (useProfile) {
@@ -65,7 +67,7 @@ public abstract class TableFactory {
                                                                   HiveTable hiveTable,
                                                                   boolean useProfile) {
 
-        ReadableExternalTable exTable = new ReadableExternalTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
                 fields, hiveTable.getName(), "TEXT");
 
         if (useProfile) {
@@ -95,7 +97,7 @@ public abstract class TableFactory {
                                                                   HiveTable hiveTable,
                                                                   boolean useProfile) {
 
-        ReadableExternalTable exTable = new ReadableExternalTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
                 fields, hiveTable.getName(), "CUSTOM");
 
         if (useProfile) {
@@ -125,7 +127,7 @@ public abstract class TableFactory {
                                                                    HiveTable hiveTable,
                                                                    boolean useProfile) {
 
-        ReadableExternalTable exTable = new ReadableExternalTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
                 fields, hiveTable.getName(), "CUSTOM");
 
         if (useProfile) {
@@ -162,7 +164,7 @@ public abstract class TableFactory {
                                                                     String[] fields,
                                                                     HiveTable hiveTable,
                                                                     boolean useProfile) {
-        ReadableExternalTable exTable = new ReadableExternalTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
                 fields, hiveTable.getName(), "TEXT");
         if (useProfile) {
             exTable.setProfile(EnumPxfDefaultProfiles.HiveText.toString());
@@ -187,7 +189,7 @@ public abstract class TableFactory {
     public static ReadableExternalTable getPxfHBaseReadableTable(String tableName,
                                                                  String[] fields,
                                                                  HBaseTable hbaseTable) {
-        ReadableExternalTable exTable = new ReadableExternalTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
                 fields, hbaseTable.getName(), "CUSTOM");
         exTable.setProfile("hbase");
         exTable.setFormatter("pxfwritable_import");
@@ -209,8 +211,8 @@ public abstract class TableFactory {
                                                                 String[] fields,
                                                                 String path,
                                                                 String delimiter) {
-        ReadableExternalTable exTable = new ReadableExternalTable(name, fields,
-                path, "Text");
+
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, path, "Text");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(delimiter);
         return exTable;
@@ -299,7 +301,7 @@ public abstract class TableFactory {
                                                                     String path,
                                                                     String schema) {
 
-        ReadableExternalTable exTable = new ReadableExternalTable(name, fields,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields,
                 path, "CUSTOM");
 
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":SequenceFile");
@@ -397,7 +399,7 @@ public abstract class TableFactory {
                                                          Integer partitionByColumnIndex, String rangeExpression,
                                                          String interval, String user, EnumPartitionType partitionType,
                                                          String server, String customParameters) {
-        ExternalTable exTable = new ReadableExternalTable(tableName, fields,
+        ExternalTable exTable = getReadableExternalOrForeignTable(tableName, fields,
                 dataSourcePath, "CUSTOM");
         List<String> userParameters = new ArrayList<String>();
         if (driver != null) {
@@ -580,4 +582,12 @@ public abstract class TableFactory {
         String customParameter = server != null ? "SERVER=" + server : null;
         return getPxfJdbcWritableTable(tableName, fields, dataSourcePath, null, null, null, customParameter);
     }
+
+    // ============ FDW Adapter ============
+    private static ReadableExternalTable getReadableExternalOrForeignTable (String name, String[] fields, String path, String format) {
+        return FDWUtils.useFDW ?
+               new ForeignTable(name, fields, path, "Text") :
+               new ReadableExternalTable(name, fields, path, "Text");
+    }
+
 }

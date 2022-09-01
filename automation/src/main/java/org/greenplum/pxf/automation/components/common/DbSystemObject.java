@@ -323,7 +323,7 @@ public abstract class DbSystemObject extends BaseSystemObject implements IDbFunc
 		if (table != null) {
 			tableName = table.getName();
 		}
-		return metaData.getTables(null, null, "%" + tableName, new String[] { "TABLE" });
+		return metaData.getTables(null, null, "%" + tableName, new String[] { "TABLE", "FOREIGN TABLE" });
 	}
 
 	@Override

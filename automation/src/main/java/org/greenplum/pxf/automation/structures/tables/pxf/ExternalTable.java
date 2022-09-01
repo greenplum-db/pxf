@@ -397,7 +397,7 @@ public abstract class ExternalTable extends Table {
         }
     }
 
-    private String[] getUserParameters() {
+    protected String[] getUserParameters() {
         return userParameters;
     }
 
