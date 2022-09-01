@@ -2,9 +2,10 @@ package org.greenplum.pxf.plugins.json;
 
 import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hdfs.HcfsFragmentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * Implementation of ProtocolHandler for json protocol.
@@ -38,7 +39,7 @@ public class JsonProtocolHandler implements ProtocolHandler {
     private boolean useMultilineJson(RequestContext context) {
         String identifier = context.getOption("identifier");
 
-        if (!identifier.isEmpty()) {
+        if (isNotEmpty(identifier)) {
             return true;
         }
 
