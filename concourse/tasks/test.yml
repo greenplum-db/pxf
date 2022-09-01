@@ -13,6 +13,8 @@ inputs:
   optional: true
 - name: ambari_env_files
   optional: true
+- name: package_for_python_deps
+  optional: true
 
 params:
   ACCESS_KEY_ID:
@@ -29,6 +31,7 @@ params:
   RUN_JDK_VERSION: 8
   PROTOCOL:
   PG_REGRESS:
+  USE_FDW: false
 
 run:
   path: pxf_src/concourse/scripts/test.bash

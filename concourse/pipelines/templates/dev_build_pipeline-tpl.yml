@@ -405,6 +405,11 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
+{% if gp_ver == 7 %}
+    - get: package_for_python_deps
+      resource: gpdb6_rhel7_rpm_latest-0
+      passed: [Build PXF-GP6 on RHEL7]
+{% endif %}
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
     - get: pxf-automation-dependencies
@@ -417,12 +422,9 @@ jobs:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
 {% if gp_ver == 7 %}
-      GROUP: fdw_gpdb_schedule
-      HADOOP_JAVA_HOME: /usr/lib/jvm/jre-1.8.0-openjdk
-      PG_REGRESS: true
-{% else %}
-      GROUP: gpdb,proxy,profile
+      USE_FDW: true
 {% endif %}
+      GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
 {% if slack_notification %}
     <<: *slack_alert

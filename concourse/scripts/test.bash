@@ -228,6 +228,12 @@ function _main() {
 		install_gpdb_package
 	fi
 
+	# Install Python 2.7 dependencies for Tinc to use when running against GP7
+	# for now, the fastest way to do that is to install GP6 alongside with GP7, but not init/run it
+	if [[ -d package_for_python_deps ]]; then
+	  unpackage_gpdb_package "package_for_python_deps"
+	fi
+
 	# Install PXF
 	if [[ -d pxf_package ]]; then
 		# forward compatibility pipeline works with PXF rpms, not rpm tarballs
@@ -305,11 +311,12 @@ function _main() {
 
 	# Run tests
 	if [[ -n ${GROUP} ]]; then
-		if [[ $PG_REGRESS == true ]]; then
-			run_pg_regress
-		else
-			run_pxf_automation
-		fi
+	  run_pxf_automation
+#		if [[ $PG_REGRESS == true ]]; then
+#			run_pg_regress
+#		else
+#			run_pxf_automation
+#		fi
 	fi
 }
 
