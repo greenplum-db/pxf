@@ -50,6 +50,9 @@ function inflate_dependencies() {
 	if [[ -f regression-tools/regression-tools.tar.gz ]]; then
 		tarballs+=(regression-tools/regression-tools.tar.gz)
 	fi
+	if [[ -f gp6-python-libs/gp6-python-libs.tar.gz ]]; then
+		tarballs+=(gp6-python-libs/gp6-python-libs.tar.gz)
+	fi
 	(( ${#tarballs[@]} == 0 )) && return
 	for t in "${tarballs[@]}"; do
 		tar -xzf "${t}" -C ~gpadmin
@@ -188,59 +191,6 @@ function install_gpdb_package() {
 	chown -R gpadmin:gpadmin /usr/local/greenplum-db*
 }
 
-# unpackages GPDB package but does not init or starts it, used for access to supplied Python libraries
-function unpackage_gpdb_package() {
-	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH' pkg_file version
-	gpdb_package=${PWD}/${1:-package_for_python_deps}
-
-	if command -v rpm; then
-		# install GPDB RPM
-		pkg_file=$(find "${gpdb_package}" -name 'greenplum-db-*x86_64.rpm')
-		if [[ -z ${pkg_file} ]]; then
-			echo "Couldn't find RPM file in ${gpdb_package}. Skipping install..."
-			return 1
-		fi
-		echo "Installing ${pkg_file}..."
-		rpm --quiet -ivh "${pkg_file}" >/dev/null
-
-		# We can't use service sshd restart as service is not installed on CentOS 7 or RHEL 8.
-		python_dir=python${python_version}/site-packages
-		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/${python_dir}
-	elif command -v apt-get; then
-		# install GPDB DEB, apt-get wants an absolute path
-		pkg_file=$(find "${gpdb_package}" -name 'greenplum-db-*-ubuntu18.04-amd64.deb')
-		if [[ -z ${pkg_file} ]]; then
-			echo "Couldn't find DEB file in ${gpdb_package}. Skipping install..."
-			return 1
-		fi
-		echo "Installing ${pkg_file}..."
-		apt-get install -qq "${pkg_file}" >/dev/null
-
-		python_dir=python${python_version}/dist-packages
-		export_pythonpath+=:/usr/local/lib/$python_dir
-	else
-		echo "Unsupported operating system '$(source /etc/os-release && echo "${PRETTY_NAME}")'. Exiting..."
-		exit 1
-	fi
-
-	echo "$export_pythonpath" >> "${PXF_SRC}/automation/tinc/main/tinc_env.sh"
-
-	# create symlink to allow pgregress to run (hardcoded to look for /usr/local/greenplum-db-devel/psql)
-	rm -rf /usr/local/greenplum-db-devel
-	# get version from the package file name
-	: "${pkg_file#*greenplum-db-}"
-	version=${_%%-*}
-	gphome_dir=$(find /usr/local/ -name "greenplum-db-${version}*" -type d)
-
-	# update PYTHONPATH that another GPDB install (GP7) uses to point to python libs of this package
-	# since Tinc calls "source greenplum_path.sh" from multiple places
-	if [[ -e /usr/local/greenplum-db-devel ]]; then
-	  sed -i "/PYTHONPATH=/ s/=.*/=${gphome_dir}/" /usr/local/greenplum-db-devel/greenplum_path.sh
-	fi
-	# change permissions to gpadmin
-	chown -R gpadmin:gpadmin /usr/local/greenplum-db*
-}
-
 function remote_access_to_gpdb() {
 	# Copy cluster keys to root user
 	passwd -u root
@@ -266,7 +216,6 @@ function remote_access_to_gpdb() {
 		EOF
 	"
 }
-
 
 function create_gpdb_cluster() {
 	su gpadmin -c "source ${GPHOME}/greenplum_path.sh && make -C gpdb_src/gpAux/gpdemo create-demo-cluster"

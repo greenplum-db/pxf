@@ -13,7 +13,7 @@ inputs:
   optional: true
 - name: ambari_env_files
   optional: true
-- name: package_for_python_deps
+- name: gp6-python-libs
   optional: true
 
 params:

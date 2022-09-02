@@ -125,6 +125,14 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
+- name: gp6-python-libs
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    versioned_file: automation-dependencies/gp6-python-libs.tar.gz
+
 - name: singlecluster-hdp2
   type: gcs
   icon: google-drive
@@ -406,9 +414,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
 {% if gp_ver == 7 %}
-    - get: package_for_python_deps
-      resource: gpdb6_rhel7_rpm_latest-0
-      passed: [Build PXF-GP6 on RHEL7]
+    - get: gp6-python-libs
 {% endif %}
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]

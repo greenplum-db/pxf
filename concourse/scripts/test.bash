@@ -228,12 +228,6 @@ function _main() {
 		install_gpdb_package
 	fi
 
-	# Install Python 2.7 dependencies for Tinc to use when running against GP7
-	# for now, the fastest way to do that is to install GP6 alongside with GP7, but not init/run it
-	if [[ -d package_for_python_deps ]]; then
-	  unpackage_gpdb_package "package_for_python_deps"
-	fi
-
 	# Install PXF
 	if [[ -d pxf_package ]]; then
 		# forward compatibility pipeline works with PXF rpms, not rpm tarballs
@@ -306,6 +300,13 @@ function _main() {
 	configure_sut
 
 	inflate_dependencies
+
+	# To run Tinc against GP7 we need to modify PYTHONPATH in $GPHOME/greenplum_path.sh since Tinc calls that script
+	# we will set PYTHONPATH to point to the set of python libs compiled with Python2 for GP6
+	if [[ ${GP_VER} == 7 ]]; then
+	  local gp6_python_libs=~gpadmin/python
+	  sed -i "/PYTHONPATH=/ s/=.*/=${gp6_python_libs}/" /usr/local/greenplum-db/greenplum_path.sh
+	fi
 
 	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src
 
