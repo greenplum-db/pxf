@@ -20,9 +20,19 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio \
     && chmod +x /opt/minio/bin/minio \
     && chown -R minio:minio /opt/minio
 
-# install java 8 and 11 and dependencies that are missing on the base images
-# java 8 is required to run hadoop. Do not use java 8 to build / run PXF
-RUN yum install -y rpm-build sudo java-1.8.0-openjdk java-11-openjdk-devel jq
+ARG MAVEN_VERSION=3.6.3
+ARG USER_HOME_DIR="/root"
+ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
+
+# install dependencies that are missing on the base images
+RUN curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+    && mkdir -p /usr/share/maven \
+    && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
+    && rm -f /tmp/apache-maven.tar.gz \
+    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
+    && yum install -y rpm-build python-devel jq sudo java-1.8.0-openjdk java-11-openjdk-devel && yum clean all \
+    && cd /tmp && /usr/bin/pip install --upgrade pip==20.3.3 \
+    && /usr/bin/pip install psi paramiko --no-cache-dir
 
 # create user gpadmin since GPDB cannot run under root
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
@@ -61,7 +71,7 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && echo >> ~gpadmin/.pxfrc 'export GPHD_ROOT=/singlecluster' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_HOME=/usr/local/pxf-gp7' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_CONF=/home/gpadmin/pxf' \
-    && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/java-11' \
+    && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk' \
     && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/usr/local/go/bin:$JAVA_HOME/bin:$PATH' \
     && ln -s ~gpadmin/.pxfrc ~root \
     && echo >> ~gpadmin/.bashrc 'source ~/.pxfrc' \
