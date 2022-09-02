@@ -75,9 +75,13 @@ function run_pxf_automation() {
 	chmod a+w pxf_src/automation /singlecluster || true
 	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
 
+	local extension_name="pxf"
+	if [[ ${USE_FDW} == "true" ]]; then
+		extension_name="pxf_fdw"
+	fi
 	su gpadmin -c "
 		source '${GPHOME}/greenplum_path.sh' &&
-		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION PXF'
+		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION ${extension_name}'
 	"
 	# prepare certification output directory
 	mkdir -p certification
@@ -93,6 +97,7 @@ function run_pxf_automation() {
 		export GPHD_ROOT=${GPHD_ROOT}
 		export PXF_HOME=${PXF_HOME}
 		export PGPORT=${PGPORT}
+		export USE_FDW=${USE_FDW}
 
 		cd pxf_src/automation
 		time make GROUP=${GROUP} test
