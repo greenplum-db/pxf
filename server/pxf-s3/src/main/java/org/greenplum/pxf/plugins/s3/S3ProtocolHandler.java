@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.greenplum.pxf.plugins.s3.S3SelectAccessor.FILE_HEADER_INFO_IGNORE;
 import static org.greenplum.pxf.plugins.s3.S3SelectAccessor.FILE_HEADER_INFO_USE;
 
@@ -54,7 +55,7 @@ public class S3ProtocolHandler implements ProtocolHandler {
     @Override
     public String getFragmenterClassName(RequestContext context) {
         String fragmenter = context.getFragmenter(); // default to fragmenter defined by the profile
-        if (useS3Select(context)) {
+        if (useS3Select(context) || useMultilineJson(context)) {
             fragmenter = HCFS_FILE_FRAGMENTER;
         }
         LOG.debug("Determined to use {} fragmenter", fragmenter);
@@ -125,6 +126,10 @@ public class S3ProtocolHandler implements ProtocolHandler {
             default:
                 return false;
         }
+    }
+
+    public boolean useMultilineJson(RequestContext context) {
+        return isNotEmpty(context.getOption("identifier"));
     }
 
     /**

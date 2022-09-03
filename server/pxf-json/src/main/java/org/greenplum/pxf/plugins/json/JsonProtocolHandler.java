@@ -35,14 +35,7 @@ public class JsonProtocolHandler implements ProtocolHandler {
         return context.getResolver();
     }
 
-
-    private boolean useMultilineJson(RequestContext context) {
-        String identifier = context.getOption("identifier");
-
-        if (isNotEmpty(identifier)) {
-            return true;
-        }
-
-        return false;
+    public boolean useMultilineJson(RequestContext context) {
+        return isNotEmpty(context.getOption("identifier"));
     }
 }
