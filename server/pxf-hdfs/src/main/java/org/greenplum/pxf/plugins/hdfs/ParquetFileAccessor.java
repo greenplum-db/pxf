@@ -31,6 +31,8 @@ import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.filter2.compat.FilterCompat;
+import org.apache.parquet.format.ListType;
+import org.apache.parquet.format.LogicalType;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.ParquetFileWriter;
@@ -440,164 +442,95 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     }
 
     /**
-     * Generate parquet schema for all the supported types using column descriptors
-     *
-     * @param columns
-     * @return the generated parquet schema used for write
+     * Generate parquet schema using column descriptors
      */
     private MessageType generateParquetSchema(List<ColumnDescriptor> columns) {
         LOG.debug("{}-{}: Generating parquet schema for write using {}", context.getTransactionId(),
                 context.getSegmentId(), columns);
         List<Type> fields = new ArrayList<>();
         for (ColumnDescriptor column : columns) {
-            fields.add(generateParquetSchemaType(column));
-        }
-        return new MessageType("hive_schema", fields);
-    }
+            String columnName = column.columnName();
+            int columnTypeCode = column.columnTypeCode();
 
-    /**
-     * Generate parquet schema type
-     *
-     * @param column contains Greenplum data type and column name
-     * @return the generated schema type for parquet primitive types only
-     */
-    private Type generateParquetSchemaType(ColumnDescriptor column) {
-        DataType dataType = column.getDataType();
-        int columnTypeCode = column.columnTypeCode();
-        String columnName = column.columnName();
+            Types.PrimitiveBuilder<PrimitiveType> primitiveBuilder = null;
+            Types.GroupBuilder<GroupType> groupBuilder = null;
 
-        Types.PrimitiveBuilder<PrimitiveType> primitiveBuilder = null;
-        Types.BaseListBuilder.ElementBuilder<GroupType, Types.ListBuilder<GroupType>> complexBuilder = null;
-
-        boolean isPrimitive = !dataType.isArrayType();
-        DataType elementType = isPrimitive ? dataType : dataType.getTypeElem();
-        switch (elementType) {
-            case BOOLEAN:
-                if (isPrimitive) {
+            switch (DataType.get(columnTypeCode)) {
+                case BOOLEAN:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.BOOLEAN);
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.BOOLEAN);
-                }
-                break;
-            case BYTEA:
-                if (isPrimitive) {
+                    break;
+                case BYTEA:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.BINARY);
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.BINARY);
-                }
-                break;
-            case BIGINT:
-                if (isPrimitive) {
+                    break;
+                case BIGINT:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.INT64);
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT64);
-                }
-                break;
-            case SMALLINT:
-                if (isPrimitive) {
+                    break;
+                case SMALLINT:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.INT32)
                             .as(intType(16, true));
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT32)
-                            .as(intType(16, true));
-                }
-                break;
-            case INTEGER:
-                if (isPrimitive) {
+                    break;
+                case INTEGER:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.INT32);
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT32);
-                }
-                break;
-            case REAL:
-                if (isPrimitive) {
+                    break;
+                case REAL:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.FLOAT);
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.FLOAT);
-                }
-                break;
-            case FLOAT8:
-                if (isPrimitive) {
+                    break;
+                case FLOAT8:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.DOUBLE);
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.DOUBLE);
-                }
-                break;
-            case NUMERIC:
-                Integer[] columnTypeModifiers = column.columnTypeModifiers();
-                int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
-                int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
+                    break;
+                case NUMERIC:
+                    Integer[] columnTypeModifiers = column.columnTypeModifiers();
+                    int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
+                    int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
 
-                if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
-                    precision = columnTypeModifiers[0];
-                    scale = columnTypeModifiers[1];
-                }
-
-                if (isPrimitive) {
+                    if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
+                        precision = columnTypeModifiers[0];
+                        scale = columnTypeModifiers[1];
+                    }
                     primitiveBuilder = Types
                             .optional(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
                             .length(PRECISION_TO_BYTE_COUNT[precision - 1])
                             .as(DecimalLogicalTypeAnnotation.decimalType(scale, precision));
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
-                            .length(PRECISION_TO_BYTE_COUNT[precision - 1])
-                            .as(DecimalLogicalTypeAnnotation.decimalType(scale, precision));
-                }
-                break;
-            case TIMESTAMP:
-            case TIMESTAMP_WITH_TIME_ZONE:
-                if (isPrimitive) {
+                    break;
+                case TIMESTAMP:
+                case TIMESTAMP_WITH_TIME_ZONE:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.INT96);
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT96);
-                }
-                break;
-            case DATE:
-                // DATE is used to for a logical date type, without a time
-                // of day. It must annotate an int32 that stores the number
-                // of days from the Unix epoch, 1 January 1970. The sort
-                // order used for DATE is signed.
-                if (isPrimitive) {
+                    break;
+                case DATE:
+                    // DATE is used to for a logical date type, without a time
+                    // of day. It must annotate an int32 that stores the number
+                    // of days from the Unix epoch, 1 January 1970. The sort
+                    // order used for DATE is signed.
                     primitiveBuilder = Types.optional(PrimitiveTypeName.INT32)
                             .as(dateType());
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT32)
-                            .as(dateType());
-                }
-                break;
-            case TIME:
-            case VARCHAR:
-            case BPCHAR:
-            case TEXT:
-                if (isPrimitive) {
+                    break;
+                case TIME:
+                case VARCHAR:
+                case BPCHAR:
+                case TEXT:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.BINARY)
                             .as(stringType());
-                } else {
-                    complexBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.BINARY)
-                            .as(stringType());
-                }
-                break;
-            default:
-                throw new UnsupportedTypeException(
-                        String.format("Type %d is not supported", columnTypeCode));
-        }
+                    break;
+                case BOOLARRAY:
+                    groupBuilder = Types.optionalGroup()
+                            .repeatedGroup()
+                            .optional(PrimitiveTypeName.BOOLEAN).named("element")
+                            .named("list");
+                    break;
+                default:
+                    throw new UnsupportedTypeException(
+                            String.format("Type %d is not supported", columnTypeCode));
+            }
 
-        if (primitiveBuilder != null) {
-            return primitiveBuilder.named(columnName);
-        }
+            if(primitiveBuilder != null){
+                fields.add(primitiveBuilder.named(columnName));
+            }
 
-        return complexBuilder != null ? complexBuilder.named(columnName) : null;
+            if(groupBuilder != null){
+                fields.add((Type) groupBuilder.named(columnName));
+            }
+        }
+        return new MessageType("hive_schema", fields);
     }
 
     /**
