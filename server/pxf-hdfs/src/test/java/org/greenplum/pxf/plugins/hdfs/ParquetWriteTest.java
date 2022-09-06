@@ -907,6 +907,212 @@ public class ParquetWriteTest {
     }
 
     @Test
+    public void testWriteIntArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123470");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    @Test
+    public void testWriteTextArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123471");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    @Test
+    public void testWriteDateArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123472");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    @Test
+    public void testWriteFloat8Array() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123473");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    @Test
+    public void testWriteBooleanArray() throws Exception {
+        String path = temp + "/out/boolean_array/";
+
+        columnDescriptors.add(new ColumnDescriptor("bool_arr", DataType.BOOLARRAY.getOID(), 0, "bool_arr", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123474");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+    }
+
+    //TODO
+    @Test
+    public void testWriteTimestampArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123475");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    //TODO
+    @Test
+    public void testWriteBigIntArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123476");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    //TODO
+    @Test
+    public void testWriteByteaArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123477");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    //TODO
+    @Test
+    public void testWriteSmallIntArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123478");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    //TODO
+    @Test
+    public void testWriteRealArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123479");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    //TODO
+    @Test
+    public void testWriteVarcharArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123480");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    //TODO
+    @Test
+    public void testWriteCharArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123481");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    //TODO
+    @Test
+    public void testWriteNumericArray() throws Exception {
+        String path = temp + "/out/int/";
+
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123482");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+    }
+
+    //TODO
+    @Test
     public void testWriteMultipleTypes() throws Exception {
         String path = temp + "/out/multiple/";
         columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", null));
@@ -916,7 +1122,7 @@ public class ParquetWriteTest {
         columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 4, "text", null));
 
         context.setDataSource(path);
-        context.setTransactionId("XID-XYZ-123470");
+        context.setTransactionId("XID-XYZ-123483");
 
         accessor.setRequestContext(context);
         accessor.afterPropertiesSet();

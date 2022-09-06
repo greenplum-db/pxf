@@ -31,6 +31,8 @@ import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.filter2.compat.FilterCompat;
+import org.apache.parquet.format.ListType;
+import org.apache.parquet.format.LogicalType;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.ParquetFileWriter;
@@ -449,29 +451,31 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             String columnName = column.columnName();
             int columnTypeCode = column.columnTypeCode();
 
-            Types.PrimitiveBuilder<PrimitiveType> builder;
+            Types.PrimitiveBuilder<PrimitiveType> primitiveBuilder = null;
+            Types.GroupBuilder<GroupType> groupBuilder = null;
+
             switch (DataType.get(columnTypeCode)) {
                 case BOOLEAN:
-                    builder = Types.optional(PrimitiveTypeName.BOOLEAN);
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.BOOLEAN);
                     break;
                 case BYTEA:
-                    builder = Types.optional(PrimitiveTypeName.BINARY);
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.BINARY);
                     break;
                 case BIGINT:
-                    builder = Types.optional(PrimitiveTypeName.INT64);
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT64);
                     break;
                 case SMALLINT:
-                    builder = Types.optional(PrimitiveTypeName.INT32)
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT32)
                             .as(intType(16, true));
                     break;
                 case INTEGER:
-                    builder = Types.optional(PrimitiveTypeName.INT32);
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT32);
                     break;
                 case REAL:
-                    builder = Types.optional(PrimitiveTypeName.FLOAT);
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.FLOAT);
                     break;
                 case FLOAT8:
-                    builder = Types.optional(PrimitiveTypeName.DOUBLE);
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.DOUBLE);
                     break;
                 case NUMERIC:
                     Integer[] columnTypeModifiers = column.columnTypeModifiers();
@@ -482,38 +486,49 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                         precision = columnTypeModifiers[0];
                         scale = columnTypeModifiers[1];
                     }
-                    builder = Types
+                    primitiveBuilder = Types
                             .optional(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
                             .length(PRECISION_TO_BYTE_COUNT[precision - 1])
                             .as(DecimalLogicalTypeAnnotation.decimalType(scale, precision));
                     break;
                 case TIMESTAMP:
                 case TIMESTAMP_WITH_TIME_ZONE:
-                    builder = Types.optional(PrimitiveTypeName.INT96);
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT96);
                     break;
                 case DATE:
                     // DATE is used to for a logical date type, without a time
                     // of day. It must annotate an int32 that stores the number
                     // of days from the Unix epoch, 1 January 1970. The sort
                     // order used for DATE is signed.
-                    builder = Types.optional(PrimitiveTypeName.INT32)
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT32)
                             .as(dateType());
                     break;
                 case TIME:
                 case VARCHAR:
                 case BPCHAR:
                 case TEXT:
-                    builder = Types.optional(PrimitiveTypeName.BINARY)
+                    primitiveBuilder = Types.optional(PrimitiveTypeName.BINARY)
                             .as(stringType());
+                    break;
+                case BOOLARRAY:
+                    groupBuilder = Types.optionalGroup()
+                            .repeatedGroup()
+                            .optional(PrimitiveTypeName.BOOLEAN).named("element")
+                            .named("list");
                     break;
                 default:
                     throw new UnsupportedTypeException(
                             String.format("Type %d is not supported", columnTypeCode));
             }
 
-            fields.add(builder.named(columnName));
-        }
+            if(primitiveBuilder != null){
+                fields.add(primitiveBuilder.named(columnName));
+            }
 
+            if(groupBuilder != null){
+                fields.add((Type) groupBuilder.named(columnName));
+            }
+        }
         return new MessageType("hive_schema", fields);
     }
 
