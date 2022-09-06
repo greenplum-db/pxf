@@ -9,11 +9,6 @@ FDW_SUPPORT = $(shell $(PG_CONFIG) --version | egrep "PostgreSQL 12")
 
 SOURCE_EXTENSION_DIR = external-table
 TARGET_EXTENSION_DIR = gpextable
-ifneq ($(FDW_SUPPORT),)
-	SOURCE_EXTENSION_DIR = fdw
-	TARGET_EXTENSION_DIR = fdw
-endif
-
 
 LICENSE ?= ASL 2.0
 VENDOR ?= Open Source
@@ -45,6 +40,9 @@ clean:
 	make -C $(SOURCE_EXTENSION_DIR) clean-all
 	make -C cli/go/src/pxf-cli clean
 	make -C server clean
+ifneq ($(FDW_SUPPORT),)
+	make -C fdw clean
+endif
 
 test:
 ifneq ($(FDW_SUPPORT),)
@@ -60,9 +58,11 @@ it:
 
 install:
 	make -C $(SOURCE_EXTENSION_DIR) install
-	make -C external-table install
 	make -C cli/go/src/pxf-cli install
 	make -C server install
+ifneq ($(FDW_SUPPORT),)
+	make -C fdw install
+endif
 
 install-server:
 	make -C server install-server
