@@ -32,7 +32,7 @@ RUN curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERS
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
     && yum install -y rpm-build python-devel jq sudo java-1.8.0-openjdk java-11-openjdk-devel && yum clean all \
     && cd /tmp && /usr/bin/pip install --upgrade pip==20.3.3 \
-    && /usr/bin/pip install psi paramiko --no-cache-dir
+    && /usr/bin/pip install paramiko --no-cache-dir
 
 # create user gpadmin since GPDB cannot run under root
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \

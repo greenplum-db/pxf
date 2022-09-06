@@ -50,7 +50,7 @@ RUN locale-gen en_US.UTF-8 \
     && { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts \
     && chown -R gpadmin:gpadmin /home/gpadmin \
     # install dependencies as gpadmin
-    && su gpadmin -c "pip install psi paramiko --no-cache-dir" \
+    && su gpadmin -c "pip install paramiko --no-cache-dir" \
     # configure gpadmin limits
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft core unlimited' \
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft nproc 131072' \
