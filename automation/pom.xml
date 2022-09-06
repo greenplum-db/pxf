@@ -231,12 +231,6 @@
             <version>1.10.11</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.14.2</version>
-        </dependency>
-
         <!-- AWS Dependencies -->
         <dependency>
             <groupId>com.amazonaws</groupId>
