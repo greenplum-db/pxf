@@ -60,8 +60,6 @@ public class S3ProtocolHandlerTest {
     private static final String[] EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER = {DEFAULT_RESOLVER, STRING_PASS_RESOLVER, STRING_PASS_RESOLVER, STRING_PASS_RESOLVER, DEFAULT_RESOLVER};
     private static final String[] EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER = {DEFAULT_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, DEFAULT_FRAGMENTER};
 
-    private static final String[] EXPECTED_FRAGMENTER_MULTILINE = {FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER};
-
     private S3ProtocolHandler handler;
     private RequestContext context;
 
@@ -415,38 +413,6 @@ public class S3ProtocolHandlerTest {
         context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "foo");
         // EXPECTED_RESOLVER_GPDB_WRITABLE_OFF is used as its values are desirable as expected value
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_OFF);
-    }
-
-    @Test
-    public void testTextIdentifierAndSelectOff() {
-        context.addOption("S3_SELECT", "off");
-        context.addOption("IDENTIFIER", "c1");
-        context.setOutputFormat(OutputFormat.TEXT);
-        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_OFF);
-        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_OFF);
-        verifyFragmenters(context, EXPECTED_FRAGMENTER_MULTILINE);
-    }
-
-    @Test
-    public void testTextIdentifierAndSelectOn() {
-        // s3 options should override multiline json fragmenter option
-        context.addOption("S3_SELECT", "on");
-        context.addOption("IDENTIFIER", "c1");
-        context.setOutputFormat(OutputFormat.TEXT);
-        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
-        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_ON);
-        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_ON);
-    }
-
-    @Test
-    public void testTextIdentifierAndSelectAuto() {
-        // s3 options should override multiline json fragmenter option
-        context.addOption("S3_SELECT", "auto");
-        context.addOption("IDENTIFIER", "c1");
-        context.setOutputFormat(OutputFormat.TEXT);
-        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
-        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);
-        verifyFragmenters(context, EXPECTED_FRAGMENTER_MULTILINE);
     }
 
     private void verifyFragmenters(RequestContext context, String[] expected) {
