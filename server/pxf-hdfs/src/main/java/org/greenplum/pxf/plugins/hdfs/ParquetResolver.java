@@ -23,9 +23,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.parquet.example.data.Group;
+import org.apache.parquet.example.data.simple.SimpleGroup;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
@@ -36,6 +38,8 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetUtilities;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -53,10 +57,13 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     // used to distinguish string pattern between type "timestamp" ("2019-03-14 14:10:28")
     // and type "timestamp with time zone" ("2019-03-14 14:10:28+07:30")
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
-    private final ObjectMapper mapper = new ObjectMapper();
+
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
     private List<ColumnDescriptor> columnDescriptors;
+    private final ObjectMapper mapper = new ObjectMapper();
+    private static final PgUtilities pgUtilities = new PgUtilities();
+    private ParquetUtilities parquetUtilities=new ParquetUtilities(pgUtilities);
 
     @Override
     public void afterPropertiesSet() {
@@ -115,7 +122,19 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         return new OneRow(null, group);
     }
 
-    private void fillGroup(int index, OneField field, Group group, Type type) {
+    private void fillGroup(int index, OneField field, Group group, Type type) throws IOException {
+        if (field.val == null)
+            return;
+        if(type.isPrimitive()){
+            fillPrimitiveGroup(index,field,group,type);
+        }else{
+            fillComplexGroup(index,field,group,type);
+        }
+
+    }
+
+
+    private void fillPrimitiveGroup(int index, OneField field, Group group, Type type) throws IOException {
         if (field.val == null)
             return;
         switch (type.asPrimitiveType().getPrimitiveTypeName()) {
@@ -201,6 +220,47 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 break;
             default:
                 throw new UnsupportedTypeException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
+        }
+    }
+
+    private void fillComplexGroup(int index, OneField field, Group group, Type type) throws IOException {
+        if (field.val == null)
+            return;
+        switch (type.asGroupType().getOriginalType()){
+            case LIST:
+
+                PrimitiveType.PrimitiveTypeName elementTypeName = type.asGroupType().getFields().get(0).asGroupType().getFields().get(0).asPrimitiveType().getPrimitiveTypeName();
+                LOG.debug(elementTypeName.toString());
+                LOG.debug(context.getMetadata().toString());
+                LOG.debug(type.asGroupType().getFields()+"");
+                LOG.debug(schema.getType(0).asGroupType().getType(0).asGroupType().getRepetition().toString());
+                LOG.debug(schema.getType(0).asGroupType().getType(0).asGroupType().getFields().toString());
+                fillListGroup(index, field, group, elementTypeName);
+                break;
+            default:
+                throw new IOException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
+        }
+    }
+
+    private void fillListGroup(int index, OneField field, Group group, PrimitiveType.PrimitiveTypeName elementTypeName) throws IOException {
+        if (field.val == null)
+            return;
+        switch (elementTypeName) {
+            case BOOLEAN:
+                List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(),elementTypeName);
+//                int count = group.getFieldRepetitionCount(index);
+//                schema.getType(0).asGroupType().getFields();
+//                Group listGroup= new SimpleGroup(schema.getType(0).asGroupType());
+//                Group elementGroup= new SimpleGroup(schema.getType(0).asGroupType().getType(0).asGroupType());
+//                for(int i = 0 ; i < vals.size() ; i++){
+//
+//                    elementGroup.add(0 , vals.get(i));
+//                    listGroup.add(0, elementGroup);
+//                }
+//                group.add(index,listGroup);
+                break;
+            default:
+                throw new IOException("Not supported type " + elementTypeName);
         }
     }
 

@@ -77,7 +77,7 @@ public class PgUtilities {
         List<Integer> posList = new ArrayList<>();
         posList.add(0);
 
-        if (value[0] != '{' || value[value.length - 1] != '}') {
+        if (value[0] != '[' || value[value.length - 1] != ']') {
             throw new PxfRuntimeException(String.format("array dimension mismatch, rawData: %s", new String(value)));
         }
 
@@ -97,12 +97,12 @@ public class PgUtilities {
                 continue;
             }
             switch (value[i]) {
-                case '{':
+                case '[':
                     if (!inQuoted) {
                         depth++;
                     }
                     break;
-                case '}':
+                case ']':
                     if (!inQuoted) {
                         depth--;
                         if (depth == 0) {
@@ -224,9 +224,9 @@ public class PgUtilities {
      * @throws {@link PxfRuntimeException} if the input is not a valid text format Postgres boolean
      */
     public boolean parseBoolLiteral(final String value) {
-        if (StringUtils.equals(value, "t")) {
+        if (StringUtils.equals(value, "t") || StringUtils.equals(value, "true")) {
             return true;
-        } else if (StringUtils.equals(value, "f")) {
+        } else if (StringUtils.equals(value, "f") || StringUtils.equals(value, "false")) {
             return false;
         }
 
