@@ -44,6 +44,8 @@ public class PartitionedJsonParser {
 
 	private static final char BACKSLASH = '\\';
 	private static final char QUOTE = '\"';
+	private static final char NEWLINE = '\n';
+	private static final char START_ARRAY = '[';
 	private static final char START_BRACE = '{';
 	private static final int EOF = -1;
 	private static final int CHARS_READ_LIMIT = 8192;
@@ -215,38 +217,41 @@ public class PartitionedJsonParser {
 
 	private int readNextChar() throws IOException {
 
-		// read from buffer if buffer != null and index < buffer.length
 		if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
-			// else pull new line into buffer
+			// pull new line into buffer if buffer == null and index >= buffer.length
 			Text currentLine = new Text();
 			int i = splitLineReader.readLine(currentLine);
 			currentLineBuffer = new StringBuffer(currentLine.toString());
 			currentBufferIndex = 0;
-		}
+			int c = currentLineBuffer.charAt(currentBufferIndex);
+			// ignore whitespace
+			while (c == 32) {
+				// white space then go next char
+				currentBufferIndex++;
+				c = currentLineBuffer.charAt(currentBufferIndex);
+			}
+			// if the current line does not start with a quote, then
+			// we are in the middle of a line when we start the split.
+			// ignore this half line because it will be handled by the split before it.
 
+			if (c != QUOTE && c != NEWLINE && c != START_BRACE && c != START_ARRAY) {
+				i = splitLineReader.readLine(currentLine);
+				currentLineBuffer = new StringBuffer(currentLine.toString());
+				currentBufferIndex = 0;
+			}
+		}
+		// otherwise read from buffer
 		// track where you are in the buffer with some global index
 		int c = currentLineBuffer.charAt(currentBufferIndex);
 		currentBufferIndex++;
-		// if we need more but its the end of the split,
-		// we have exhausted the split and we would need to create a new line record reader with diff start and diff end
-
-
-		// option 1: from get go, start at 100, end at endOfFile
-		// // somehow we will know to stop at object because we crossed original split.
-
-		// option 2: linerecorder reader 100-200. then create new linerecordreader 201-300?? assume same split size
-		// then read until end of object and then die. // repeat until we find end of object or end of file
 
 		// if i am at end of object. then check if im in my split. otherwise done
-
-
 		if (c != EOF) {
 			uncountedCharsReadFromStream.append((char) c);
 			if (uncountedCharsReadFromStream.length() == CHARS_READ_LIMIT) {
 				bytesRead += countBytesInReadChars();
 			}
 		}
-
 		return c;
 	}
 
