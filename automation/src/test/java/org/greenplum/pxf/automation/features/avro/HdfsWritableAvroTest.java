@@ -340,8 +340,10 @@ public class HdfsWritableAvroTest extends BaseFeature {
     }
 
     private void dropComplexTypes() throws Exception {
-        gpdb.runQuery("DROP TYPE IF EXISTS struct CASCADE", true, false);
-        gpdb.runQuery("DROP TYPE IF EXISTS mood CASCADE", true, false);
+        if (gpdb != null) {
+            gpdb.runQuery("DROP TYPE IF EXISTS struct CASCADE", true, false);
+            gpdb.runQuery("DROP TYPE IF EXISTS mood CASCADE", true, false);
+        }
     }
 
     private void insertPrimitives(String exTable) throws Exception {
