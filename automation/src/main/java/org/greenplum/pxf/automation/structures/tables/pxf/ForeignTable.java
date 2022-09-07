@@ -34,8 +34,10 @@ public class ForeignTable extends ReadableExternalTable {
     }
 
     protected String createServer() {
-        String serverBase = StringUtils.defaultIfBlank(getServer(), "default");
-        return String.format(" SERVER %s_%s", serverBase, getProtocol());
+        String[] serverParameters = StringUtils.defaultIfBlank(getServer(), "default").split("=");
+        // getServer() might return a string "server=<..>", strip the prefix
+        int index = serverParameters.length > 1 ? 1 : 0;
+        return String.format(" SERVER %s_%s", serverParameters[index], getProtocol());
     }
 
     protected String createOptions() {
