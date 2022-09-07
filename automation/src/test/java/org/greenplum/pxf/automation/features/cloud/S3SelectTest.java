@@ -68,7 +68,9 @@ public class S3SelectTest extends BaseFeature {
     @Override
     protected void afterClass() throws Exception {
         super.afterClass();
-        s3Server.removeDirectory(PROTOCOL_S3 + s3Path);
+        if (s3Server != null) {
+            s3Server.removeDirectory(PROTOCOL_S3 + s3Path);
+        }
     }
 
     @Test(groups = {"gpdb", "s3"})

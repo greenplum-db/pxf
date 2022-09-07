@@ -4,6 +4,7 @@ import org.greenplum.pxf.automation.components.gpdb.Gpdb;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
+import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -48,7 +49,8 @@ public class DatabaseEncodingTest extends BaseFeature {
         hdfsPath = hdfs.getWorkingDirectory() + "/database-encoding/";
         protocol = ProtocolUtils.getProtocol();
 
-        nonUtf8Gpdb.runQuery("CREATE EXTENSION IF NOT EXISTS PXF", true, false);
+        String extensionName = FDWUtils.useFDW ? "pxf_fdw" : "pxf";
+        nonUtf8Gpdb.runQuery("CREATE EXTENSION IF NOT EXISTS " + extensionName, true, false);
     }
 
     /**

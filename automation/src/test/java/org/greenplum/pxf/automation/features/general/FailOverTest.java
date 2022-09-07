@@ -27,7 +27,9 @@ public class FailOverTest extends BaseFeature {
     protected void afterClass() throws Exception {
         super.afterClass();
         // We need to restore the service after it has been killed
-        cluster.start(PhdCluster.EnumClusterServices.pxf);
+        if (cluster != null) {
+            cluster.start(PhdCluster.EnumClusterServices.pxf);
+        }
     }
 
     /**

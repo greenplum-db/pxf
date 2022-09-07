@@ -18,7 +18,7 @@ public class FDWSkipTestAnalyzer implements IInvokedMethodListener {
         if (method == null) {
             return;
         }
-        // check only @Test annotated methodd, not @Before.. and @After.. ones
+        // check only @Test annotated method, not @Before.. and @After.. ones
         if (FDWUtils.useFDW && method.isAnnotationPresent(Test.class) && !method.isAnnotationPresent(WorksWithFDW.class)) {
             throw new SkipException("The test is not supported in FDW mode");
         }

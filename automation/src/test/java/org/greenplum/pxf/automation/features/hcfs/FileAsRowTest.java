@@ -22,7 +22,9 @@ public class FileAsRowTest extends BaseFeature {
     @Override
     protected void afterClass() throws Exception {
         super.afterClass();
-        hdfs.removeDirectory(hdfs.getWorkingDirectory() + "/file_as_row/");
+        if (hdfs != null) {
+            hdfs.removeDirectory(hdfs.getWorkingDirectory() + "/file_as_row/");
+        }
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})

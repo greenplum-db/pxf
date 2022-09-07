@@ -28,7 +28,9 @@ public class GpupgradeTest extends BaseFunctionality {
 
     @Override
     protected void afterMethod() throws Exception {
-        gpdb.dropTable(externalTable, true);
+        if (gpdb != null) {
+            gpdb.dropTable(externalTable, true);
+        }
         super.afterMethod();
     }
 

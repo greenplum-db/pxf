@@ -323,9 +323,11 @@ public class HdfsWritableAvroTest extends BaseFeature {
         if (ProtocolUtils.getPxfTestKeepData().equals("true")) {
             return;
         }
-        for (File file : filesToDelete) {
-            if (!file.delete()) {
-                ReportUtils.startLevel(null, getClass(), String.format("Problem deleting file '%s'", file));
+        if (filesToDelete != null) {
+            for (File file : filesToDelete) {
+                if (!file.delete()) {
+                    ReportUtils.startLevel(null, getClass(), String.format("Problem deleting file '%s'", file));
+                }
             }
         }
         dropComplexTypes();

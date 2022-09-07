@@ -93,7 +93,9 @@ public class MultiServerTest extends BaseFeature {
     @Override
     protected void afterMethod() throws Exception {
         super.afterMethod();
-        s3Server.removeDirectory(PROTOCOL_S3 + s3Path);
+        if (s3Server != null) {
+            s3Server.removeDirectory(PROTOCOL_S3 + s3Path);
+        }
     }
 
     @Override
