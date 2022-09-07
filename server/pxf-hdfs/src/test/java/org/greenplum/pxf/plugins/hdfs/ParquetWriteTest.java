@@ -42,7 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static java.math.BigDecimal.ROUND_UNNECESSARY;
+
 import static org.apache.parquet.hadoop.ParquetOutputFormat.BLOCK_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.DICTIONARY_PAGE_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.ENABLE_DICTIONARY;
@@ -981,6 +981,20 @@ public class ParquetWriteTest {
         resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
+
+        // write parquet file with boolean array values
+        for (int i = 0; i < 10; i++) {
+            boolean b = (i % 2 == 0);
+            List<Boolean> bool_list=new ArrayList<>();
+            bool_list.add(b);
+            bool_list.add(b);
+            bool_list.add(null);
+            List<OneField> record = Collections.singletonList(new OneField(DataType.BOOLARRAY.getOID(),bool_list));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
+
+        accessor.closeForWrite();
     }
 
     //TODO

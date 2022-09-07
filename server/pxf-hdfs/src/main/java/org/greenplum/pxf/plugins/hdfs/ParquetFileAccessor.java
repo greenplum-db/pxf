@@ -452,7 +452,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             int columnTypeCode = column.columnTypeCode();
 
             Types.PrimitiveBuilder<PrimitiveType> primitiveBuilder = null;
-            Types.GroupBuilder<GroupType> groupBuilder = null;
+            Types.BaseListBuilder.ElementBuilder<GroupType, Types.ListBuilder<GroupType>> listBuilder = null;
 
             switch (DataType.get(columnTypeCode)) {
                 case BOOLEAN:
@@ -511,10 +511,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                             .as(stringType());
                     break;
                 case BOOLARRAY:
-                    groupBuilder = Types.optionalGroup()
-                            .repeatedGroup()
-                            .optional(PrimitiveTypeName.BOOLEAN).named("element")
-                            .named("list");
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.BOOLEAN);
                     break;
                 default:
                     throw new UnsupportedTypeException(
@@ -525,8 +523,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 fields.add(primitiveBuilder.named(columnName));
             }
 
-            if(groupBuilder != null){
-                fields.add((Type) groupBuilder.named(columnName));
+            if(listBuilder != null){
+                fields.add(listBuilder.named(columnName));
             }
         }
         return new MessageType("hive_schema", fields);
