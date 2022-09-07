@@ -79,7 +79,8 @@ public abstract class PhdCluster extends ShellSystemObject {
 	public void addPathToPxfClassPath(String path) throws Exception {
 		String content = "export PXF_LOADER_PATH=file:" + path;
 		// path to local fetch pxf class file
-		File pathToLocalClassPathFile = new File(getPxfBase() + "/conf", getPxfConfigurationFile());
+
+		File pathToLocalClassPathFile = new File(getPathToLocalPxfConfDirectory(), getPxfConfigurationFile());
 		ReportUtils.report(report, getClass(), "Add " + content + " to PXF class path (" + pathToLocalClassPathFile.getAbsolutePath() + ")");
 		// read file content
 		String pxfClasspathContent = new String(Files.readAllBytes(Paths.get(pathToLocalClassPathFile.getAbsolutePath())));
