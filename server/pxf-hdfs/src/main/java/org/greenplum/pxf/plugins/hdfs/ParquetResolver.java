@@ -26,6 +26,7 @@ import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroup;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.io.api.Binary;
+import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
@@ -230,38 +231,35 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private void fillComplexGroup(int index, OneField field, Group group, Type type) throws IOException {
         if (field.val == null)
             return;
+
         switch (type.asGroupType().getOriginalType()){
             case LIST:
+                //Get the internal array structure
+                GroupType arrrayType=type.asGroupType();
+                GroupType repeatedType=arrrayType.getType(0).asGroupType();
+                fillListGroup(index,field,group,arrrayType,repeatedType);
 
-                PrimitiveType.PrimitiveTypeName elementTypeName = type.asGroupType().getFields().get(0).asGroupType().getFields().get(0).asPrimitiveType().getPrimitiveTypeName();
-                LOG.debug(elementTypeName.toString());
-                LOG.debug(context.getMetadata().toString());
-                LOG.debug(type.asGroupType().getFields()+"");
-                LOG.debug(schema.getType(0).asGroupType().getType(0).asGroupType().getRepetition().toString());
-                LOG.debug(schema.getType(0).asGroupType().getType(0).asGroupType().getFields().toString());
-                fillListGroup(index, field, group, elementTypeName);
                 break;
             default:
                 throw new IOException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
         }
     }
 
-    private void fillListGroup(int index, OneField field, Group group, PrimitiveType.PrimitiveTypeName elementTypeName) throws IOException {
+    private void fillListGroup(int index, OneField field, Group group, GroupType arrayType, GroupType repeatedType) throws IOException {
         if (field.val == null)
             return;
+        Type elementType=repeatedType.getType(0).asPrimitiveType();
+        PrimitiveType.PrimitiveTypeName elementTypeName=elementType.asPrimitiveType().getPrimitiveTypeName();
         switch (elementTypeName) {
             case BOOLEAN:
                 List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(),elementTypeName);
-//                int count = group.getFieldRepetitionCount(index);
-//                schema.getType(0).asGroupType().getFields();
-//                Group listGroup= new SimpleGroup(schema.getType(0).asGroupType());
-//                Group elementGroup= new SimpleGroup(schema.getType(0).asGroupType().getType(0).asGroupType());
-//                for(int i = 0 ; i < vals.size() ; i++){
-//
-//                    elementGroup.add(0 , vals.get(i));
-//                    listGroup.add(0, elementGroup);
-//                }
-//                group.add(index,listGroup);
+                Group repeatedGroup=new SimpleGroup(arrayType);
+                for(int i=0;i<vals.size();i++){
+                    Group elementGroup=new SimpleGroup(repeatedType);
+                    elementGroup.add(0,(Boolean) vals.get(i));
+                    repeatedGroup.add(0,elementGroup);
+                }
+                group.add(index,repeatedGroup);
                 break;
             default:
                 throw new IOException("Not supported type " + elementTypeName);
