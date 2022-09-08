@@ -142,8 +142,36 @@ public class ForeignTable extends ReadableExternalTable {
             // TODO: what will we do with tests that set F/A/R directly without a profile ?
             throw new IllegalStateException("Cannot create foreign table when profile is not specified");
         }
+        String format;
         String[] profileParts = getProfile().split(":");
-        return (profileParts.length < 2) ? null : profileParts[1];
+        if (profileParts.length == 1) {
+            format = profileParts[0].toLowerCase();
+            if (format.equals("hive") || format.equals("hbase") || format.equals("jdbc") ) {
+                return null;
+            } else if (format.startsWith("hdfs") || format.startsWith("hive")) {
+                format = format.substring(4);
+            } else {
+                // special case of old 1 word profiles that are basically formats (Parquet, Json, etc)
+                if (format.equals("textsimple")) {
+                    format = "text";
+                } else if (format.equals("textmulti")) {
+                    format = "text:multi";
+                } else if (format.equals("hivevectorizedorc")) {
+                    //TODO: vectorized becomes a separate option, how to handle this ?
+                    format = "orc";
+                } else if (format.equals("sequencewritable")) {
+                    format = "sequencefile";
+                }
+                // just leave it as parsed for json / avro / parquet that are left
+            }
+        } else {
+            format = profileParts[1];
+            if (profileParts.length == 3) {
+                // edge case for kinds of hdfs:text:multi
+                format += ":" + profileParts[2];
+            }
+        }
+        return format;
     }
 
     private String getProtocol() {
@@ -152,7 +180,27 @@ public class ForeignTable extends ReadableExternalTable {
             // TODO: what will we do with tests that set F/A/R directly without a profile ?
             throw new IllegalStateException("Cannot create foreign table when profile is not specified");
         }
-        return getProfile().split(":")[0];
+        String[] profileParts = getProfile().split(":");
+        String protocol = profileParts[0].toLowerCase();
+
+        // special case: one-word old-style compound profiles of HiveOrc and similar Hive* or Hdfs*
+        if (profileParts.length == 1) {
+            if (protocol.startsWith("hdfs")) {
+                protocol = "hdfs";
+            } else if (protocol.startsWith("hive")) {
+                protocol = "hive";
+            } else if (protocol.equals("hbase")) {
+                protocol = "hbase";
+            } else if (protocol.equals("jdbc")) {
+                protocol = "jdbc";
+            } else {
+                // single word profiles that are left are basically for format (Parquet or Json)
+                // so assume they will work against hdfs, at least for now
+                protocol = "hdfs";
+            }
+        }
+
+        return protocol;
     }
 
 }
