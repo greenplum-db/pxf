@@ -19,16 +19,18 @@
 
 #include "pxffilters.h"
 #include "pxfheaders.h"
-#include "access/external.h"
 #include "commands/defrem.h"
-#if PG_VERSION_NUM >= 90400
+#if PG_VERSION_NUM >= 120000
 #include "utils/timestamp.h"
+#include "access/external.h"
+#include "extension/gp_exttable_fdw/extaccess.h"
 #else
-#include "nodes/makefuncs.h"
+#include "access/fileam.h"
+#include "catalog/pg_exttable.h"
 #endif
 #include "nodes/makefuncs.h"
 #include "cdb/cdbvars.h"
-#include "extension/gp_exttable_fdw/extaccess.h"
+
 
 /* helper function declarations */
 static void add_alignment_size_httpheader(CHURL_HEADERS headers);
@@ -78,19 +80,19 @@ build_http_headers(PxfInputData *input)
 		/* Parse fmtOptString here */
 		if (fmttype_is_text(exttbl->fmtcode) || fmttype_is_csv(exttbl->fmtcode))
 		{
-#if PG_VERSION_NUM <= 90400
-			copyFmtOpts = parseCopyFormatString(rel, exttbl->fmtopts, exttbl->fmtcode);
-#else
+#if PG_VERSION_NUM >= 120000
 			copyFmtOpts = exttbl->options;
+#else
+			copyFmtOpts = parseCopyFormatString(rel, exttbl->fmtopts, exttbl->fmtcode);
 #endif
 		}
 
-#if PG_VERSION_NUM <= 90400
+#if PG_VERSION_NUM >= 120000
 		/* pass external table's encoding to copy's options */
-		copyFmtOpts = appendCopyEncodingOption(copyFmtOpts, exttbl->encoding);
+		copyFmtOpts =  lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(exttbl->encoding)), -1));
 #else
         //copyFmtOpts = exttbl->options;
-        copyFmtOpts =  lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(exttbl->encoding)), -1));
+        copyFmtOpts = appendCopyEncodingOption(copyFmtOpts, exttbl->encoding);
 #endif
 
 		/* Extract options from the statement node tree */
@@ -241,7 +243,11 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 	/* Iterate attributes */
 	for (i = 0, attrIx = 0; i < tuple->natts; ++i)
 	{
-		FormData_pg_attribute *attribute = &tuple->attrs[i];
+        #if PG_VERSION_NUM >= 120000
+            Form_pg_attribute attribute = &tuple->attrs[i];
+        #else
+            Form_pg_attribute attribute = tuple->attrs[i];
+        #endif
 
 		/* Ignore dropped attributes. */
 		if (attribute->attisdropped)
@@ -503,8 +509,13 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 
 	for (i = 1; i <= tupdesc->natts; i++)
 	{
+        #if PG_VERSION_NUM >= 120000
+            Form_pg_attribute attr = &tupdesc->attrs[i];
+        #else
+            Form_pg_attribute attr = tupdesc->attrs[i];
+        #endif
 		/* Ignore dropped attributes. */
-		if (tupdesc->attrs[i - 1].attisdropped)
+		if (attr->attisdropped)
 		{
 			/* keep a counter of the number of dropped attributes */
 			dropped_count++;
