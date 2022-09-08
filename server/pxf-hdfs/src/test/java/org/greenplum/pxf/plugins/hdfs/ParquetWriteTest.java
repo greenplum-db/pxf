@@ -16,6 +16,7 @@ import org.apache.parquet.hadoop.metadata.FileMetaData;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.io.api.Binary;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
@@ -987,14 +988,47 @@ public class ParquetWriteTest {
             boolean b = (i % 2 == 0);
             List<Boolean> bool_list=new ArrayList<>();
             bool_list.add(b);
-            bool_list.add(b);
-            bool_list.add(null);
+            bool_list.add(b^=true);
             List<OneField> record = Collections.singletonList(new OneField(DataType.BOOLARRAY.getOID(),bool_list));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
 
         accessor.closeForWrite();
+
+        // Validate write
+        Path expectedFile = new Path(HcfsType.FILE.getUriForWrite(context) + ".snappy.parquet");
+        assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
+
+        MessageType schema = validateFooter(expectedFile);
+
+        ParquetReader<Group> fileReader = ParquetReader.builder(new GroupReadSupport(), expectedFile)
+                .withConf(configuration)
+                .build();
+
+        for(int i=0;i<10;i++){
+            Type outerType = schema.getType(0);
+            assertNotNull(outerType.getLogicalTypeAnnotation());
+            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
+
+            Group resGroup=fileReader.read();
+            assertEquals(1,resGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+
+            Group resRepeatedGroup=resGroup.getGroup(0,0);
+            Type repeatedType=outerType.asGroupType().getType(0);
+            int repetitionCount=resRepeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
+            assertEquals(2, repetitionCount);
+            for(int j=0;j<repetitionCount;j++){
+                Group tmpGroup=resRepeatedGroup.getGroup(0,j);
+                boolean b=tmpGroup.getBoolean(0,0);
+                if((i+j)%2==0){
+                    assertTrue(b);
+                }else{
+                    assertFalse(b);
+                }
+            }
+        }
+        fileReader.close();
     }
 
     //TODO
