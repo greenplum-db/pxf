@@ -456,12 +456,12 @@ public class OrcWriteTest extends BaseFeature {
     }
 
     private void prepareWritableExternalTable(String name, String[] fields, String path) throws Exception {
-        exTable = TableFactory.getPxfOrcWritableTable(name + "_writable", fields, path, hdfs.getBasePath());
+        exTable = TableFactory.getPxfHcfsWritableTable(name + "_writable", fields, path, hdfs.getBasePath(), "orc");
         createTable(exTable);
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path, boolean mapByPosition) throws Exception {
-        exTable = TableFactory.getPxfOrcReadableTable(name + "_readable", fields, path, hdfs.getBasePath());
+        exTable = TableFactory.getPxfHcfsReadableTable(name + "_readable", fields, path, hdfs.getBasePath(), "orc");
         if (mapByPosition) {
             exTable.setUserParameters(new String[]{"MAP_BY_POSITION=true"});
         }

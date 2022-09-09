@@ -4,6 +4,7 @@ import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
+import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -196,24 +197,12 @@ public class ParquetTest extends BaseFeature {
     public void parquetWriteUndefinedPrecisionNumeric() throws Exception {
 
         String filename = "parquet_write_undefined_precision_numeric";
-        exTable = new WritableExternalTable("pxf_parquet_write_undefined_precision_numeric",
-                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename, "custom");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        exTable.setFormatter("pxfwritable_export");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
-
-        gpdb.createTableAndVerify(exTable);
+        prepareWritableExternalTable("pxf_parquet_write_undefined_precision_numeric",
+                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename, null);
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT * FROM " + NUMERIC_UNDEFINED_PRECISION_TABLE);
 
-        exTable = new ReadableExternalTable("pxf_parquet_read_undefined_precision_numeric",
-                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename, "custom");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        exTable.setFormatter("pxfwritable_import");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
-        gpdb.createTableAndVerify(exTable);
-
+        prepareReadableExternalTable("pxf_parquet_read_undefined_precision_numeric",
+                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename);
         runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision.runTest");
     }
 
@@ -272,18 +261,12 @@ public class ParquetTest extends BaseFeature {
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path) throws Exception {
-        exTable = new ReadableExternalTable(name, fields,
-                protocol.getExternalTablePath(hdfs.getBasePath(), path), "custom");
-        exTable.setFormatter("pxfwritable_import");
-        exTable.setProfile(protocol.value() + ":parquet");
+        exTable = TableFactory.getPxfHcfsReadableTable(name, fields, path, hdfs.getBasePath(), "parquet");
         createTable(exTable);
     }
 
     private void prepareWritableExternalTable(String name, String[] fields, String path, String[] userParameters) throws Exception {
-        exTable = new WritableExternalTable(name, fields,
-                protocol.getExternalTablePath(hdfs.getBasePath(), path), "custom");
-        exTable.setFormatter("pxfwritable_export");
-        exTable.setProfile(protocol.value() + ":parquet");
+        exTable = TableFactory.getPxfHcfsWritableTable(name, fields, path, hdfs.getBasePath(), "parquet");
         if (userParameters != null) {
             exTable.setUserParameters(userParameters);
         }

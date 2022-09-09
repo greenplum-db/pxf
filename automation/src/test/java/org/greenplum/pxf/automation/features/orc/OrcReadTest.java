@@ -152,7 +152,7 @@ public class OrcReadTest extends BaseFeature {
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path, boolean mapByPosition) throws Exception {
-        exTable = TableFactory.getPxfOrcReadableTable(name, fields, path, hdfs.getBasePath());
+        exTable = TableFactory.getPxfHcfsReadableTable(name, fields, path, hdfs.getBasePath(), "orc");
         if (mapByPosition) {
             exTable.setUserParameters(new String[]{"MAP_BY_POSITION=true"});
         }

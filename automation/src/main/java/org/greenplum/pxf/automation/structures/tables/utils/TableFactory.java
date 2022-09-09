@@ -239,24 +239,26 @@ public abstract class TableFactory {
         return exTable;
     }
 
-    public static ReadableExternalTable getPxfOrcReadableTable(String name,
-                                                               String[] fields,
-                                                               String path,
-                                                               String hdfsBasePath) {
+    public static ReadableExternalTable getPxfHcfsReadableTable(String name,
+                                                                String[] fields,
+                                                                String path,
+                                                                String hdfsBasePath,
+                                                                String profileFormat) {
         String effectivePath = ProtocolUtils.getProtocol().getExternalTablePath(hdfsBasePath, path);
         ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, effectivePath, "custom");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":orc");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":" + profileFormat);
         exTable.setFormatter("pxfwritable_import");
         return exTable;
     }
 
-    public static ReadableExternalTable getPxfOrcWritableTable(String name,
-                                                               String[] fields,
-                                                               String path,
-                                                               String hdfsBasePath) {
+    public static ReadableExternalTable getPxfHcfsWritableTable(String name,
+                                                                String[] fields,
+                                                                String path,
+                                                                String hdfsBasePath,
+                                                                String profileFormat) {
         String effectivePath = ProtocolUtils.getProtocol().getExternalTablePath(hdfsBasePath, path);
         ReadableExternalTable exTable = getWritableExternalOrForeignTable(name, fields, effectivePath, "custom");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":orc");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":" + profileFormat);
         exTable.setFormatter("pxfwritable_export");
         return exTable;
     }
