@@ -21,11 +21,11 @@
 #include "pxfheaders.h"
 #include "commands/defrem.h"
 #if PG_VERSION_NUM >= 120000
-#include "utils/timestamp.h"
 #include "access/external.h"
 #include "extension/gp_exttable_fdw/extaccess.h"
 #else
 #include "access/fileam.h"
+#include "utils/timestamp.h"
 #include "catalog/pg_exttable.h"
 #endif
 #include "nodes/makefuncs.h"
