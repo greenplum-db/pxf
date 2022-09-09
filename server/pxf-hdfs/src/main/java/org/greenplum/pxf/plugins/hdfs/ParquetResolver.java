@@ -130,7 +130,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }else{
             fillComplexGroup(index,field,group,type);
         }
-
     }
 
 
@@ -252,13 +251,13 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             case BOOLEAN:
                 Group arrayGroup=new SimpleGroup(listType);
                 for(int i=0;i<vals.size();i++){
-
+                    Group repeatedGroup=new SimpleGroup(repeatedType);
+                    // if current element is not a null, add it into repeated group
                     if(vals.get(i) != null){
-                        Group repeatedGroup=new SimpleGroup(repeatedType);
                         repeatedGroup.add(0,(Boolean) vals.get(i));
-                        arrayGroup.add(0,repeatedGroup);
                     }
-
+                    // if the current element is a null, add an empty repeated group into array group
+                    arrayGroup.add(0,repeatedGroup);
                 }
                 group.add(index,arrayGroup);
                 break;
