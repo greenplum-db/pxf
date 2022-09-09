@@ -161,6 +161,12 @@ public class Gpdb extends DbSystemObject {
 		servers.put("default_adl", "adl_pxf_fdw");
 		servers.put("default_wasbs", "wasbs_pxf_fdw");
 
+		// for multi-server test
+		servers.put("s3_s3", "s3_pxf_fdw");
+		servers.put("hdfs-non-secure_hdfs", "hdfs_pxf_fdw");
+		servers.put("hdfs-secure_hdfs", "hdfs_pxf_fdw");
+		servers.put("hdfs-ipa_hdfs", "hdfs_pxf_fdw");
+
 		for (Map.Entry<String, String> entry : servers.entrySet()) {
 			runQuery(String.format("CREATE SERVER IF NOT EXISTS %s FOREIGN DATA WRAPPER %s OPTIONS(config '%s')",
 					entry.getKey(), entry.getValue(), entry.getKey().split("_")[0]), ignoreFail, false);
