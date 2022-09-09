@@ -239,6 +239,28 @@ public abstract class TableFactory {
         return exTable;
     }
 
+    public static ReadableExternalTable getPxfOrcReadableTable(String name,
+                                                               String[] fields,
+                                                               String path,
+                                                               String hdfsBasePath) {
+        String effectivePath = ProtocolUtils.getProtocol().getExternalTablePath(hdfsBasePath, path);
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, effectivePath, "custom");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":orc");
+        exTable.setFormatter("pxfwritable_import");
+        return exTable;
+    }
+
+    public static ReadableExternalTable getPxfOrcWritableTable(String name,
+                                                               String[] fields,
+                                                               String path,
+                                                               String hdfsBasePath) {
+        String effectivePath = ProtocolUtils.getProtocol().getExternalTablePath(hdfsBasePath, path);
+        ReadableExternalTable exTable = getWritableExternalOrForeignTable(name, fields, effectivePath, "custom");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":orc");
+        exTable.setFormatter("pxfwritable_export");
+        return exTable;
+    }
+
     /**
      * Prepares PXF Writable External Table for Simple Text data, using
      * "HdfsTextSimple" profile and Gzip Codec

@@ -2,6 +2,7 @@ package org.greenplum.pxf.automation.features.orc;
 
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
+import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -151,15 +152,10 @@ public class OrcReadTest extends BaseFeature {
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path, boolean mapByPosition) throws Exception {
-        exTable = new ReadableExternalTable(name, fields,
-                protocol.getExternalTablePath(hdfs.getBasePath(), path), "custom");
-        exTable.setFormatter("pxfwritable_import");
-        exTable.setProfile(protocol.value() + ":orc");
-
+        exTable = TableFactory.getPxfOrcReadableTable(name, fields, path, hdfs.getBasePath());
         if (mapByPosition) {
             exTable.setUserParameters(new String[]{"MAP_BY_POSITION=true"});
         }
-
         createTable(exTable);
     }
 }
