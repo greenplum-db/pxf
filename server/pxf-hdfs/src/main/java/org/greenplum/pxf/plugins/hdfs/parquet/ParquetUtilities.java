@@ -23,10 +23,20 @@ public class ParquetUtilities {
 
     private PgUtilities pgUtilities;
 
+    /**
+     * default constructor
+     * @param pgUtilities
+     */
     public ParquetUtilities(PgUtilities pgUtilities) {
         this.pgUtilities = pgUtilities;
     }
 
+    /**
+     *
+     * @param val
+     * @param primitiveTypeName
+     * @return
+     */
     public List<Object> parsePostgresArray(String val, PrimitiveType.PrimitiveTypeName primitiveTypeName) {
         LOG.trace("primivitve element type={}, value={}", primitiveTypeName, val);
 
@@ -38,21 +48,23 @@ public class ParquetUtilities {
         List<Object> data = new ArrayList<>(splits.length);
         for (String split : splits) {
             try {
-                if(StringUtils.equals(split,"null")){
-                    continue;
-                }
-                Object obj=decodeString(split, primitiveTypeName);
-                data.add(obj);
+                data.add(decodeString(split, primitiveTypeName));
             } catch (NumberFormatException | PxfRuntimeException e) {
-                String hint = createErrorHintFromValue(StringUtils.startsWith(split, "{"), val);
+                String hint = createErrorHintFromValue(StringUtils.startsWith(split, "["), val);
                 throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, primitiveTypeName), hint, e);
             }
         }
         return data;
     }
 
+    /**
+     * parse a string base off the parquet primitive type
+     * @param val a string representation of the value
+     * @param primitiveTypeName parquet primitive type
+     * @return a java representation of the value for the given valType
+     */
     private Object decodeString(String val, PrimitiveType.PrimitiveTypeName primitiveTypeName) {
-        if (val == null) {
+        if (val == null || val.equals("null")) {
             return null;
         }
         switch (primitiveTypeName) {
@@ -83,6 +95,12 @@ public class ParquetUtilities {
         }
     }
 
+    /**
+     *
+     * @param isMultiDimensional
+     * @param val
+     * @return
+     */
     private String createErrorHintFromValue(boolean isMultiDimensional, String val) {
         if (isMultiDimensional) {
             return "Column value \"" + val + "\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files.";
