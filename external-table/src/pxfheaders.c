@@ -26,6 +26,7 @@
 #include "executor/execExpr.h"
 #else
 #include "access/fileam.h"
+#include "utils/timestamp.h"
 #include "catalog/pg_exttable.h"
 #endif
 #include "utils/timestamp.h"
