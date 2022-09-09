@@ -986,18 +986,16 @@ public class ParquetWriteTest {
         Boolean b=true;
         for (int i = 0; i < 10; i++) {
             List<Boolean> bool_list=null;
-            if(i!=2){
+            if(i!=9){
                 bool_list=new ArrayList<>();
-                bool_list.add(b);
-                bool_list.add(b^=true);
-                bool_list.add(b^=true);
-                bool_list.add(b^=true);
                 bool_list.add(null);
+                bool_list.add(b);
+                bool_list.add(b);
             }
             List<OneField> record = Collections.singletonList(new OneField(DataType.BOOLARRAY.getOID(),bool_list));
             OneRow rowToWrite = resolver.setFields(record);
-            accessor.writeNextObject(rowToWrite);
-//            assertTrue(accessor.writeNextObject(rowToWrite));
+            assertTrue(accessor.writeNextObject(rowToWrite));
+            b^=true;
         }
 
         accessor.closeForWrite();
@@ -1012,35 +1010,46 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-//        for (int i = 0; i < 10; i++) {
-//            Type outerType = schema.getType(0);
-//            assertNotNull(outerType.getLogicalTypeAnnotation());
-//            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-//
-//            Group resGroup = fileReader.read();
-//            if(i%3!=0){
-//                assertEquals(1, resGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-//
-//                Group resRepeatedGroup = resGroup.getGroup(0, 0);
-//                Type repeatedType = outerType.asGroupType().getType(0);
-//                int repetitionCount = resRepeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-//                assertEquals(3, repetitionCount);
-//                for (int j = 0; j < repetitionCount; j++) {
-//                    Group tmpGroup = resRepeatedGroup.getGroup(0, j);
-//                    Boolean b = tmpGroup.getBoolean(0, 0);
-//                    if ((i + j) % 3 == 0) {
-//                        assertTrue(b);
-//                    } else if(j==2){
-//                        assertNull(b);
-//                    }else {
-//                        assertFalse(b);
-//                    }
-//                }
-//            }else{// null array
-//                assertEquals(0, resGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-//            }
-//
-//        }
+        for (int i = 0; i < 10; i++) {
+            Type outerType = schema.getType(0);
+            assertNotNull(outerType.getLogicalTypeAnnotation());
+            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
+
+            // get the outer group
+            Group outerGroup = fileReader.read();
+            if(i!=9){
+                // if the array is not a null array, the outer group should only have one field
+                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+
+                // get the repeated list group
+                Group repeatedGroup = outerGroup.getGroup(0, 0);
+                Type repeatedType = outerType.asGroupType().getType(0);
+                //repeated group must use "repeated" keyword
+                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
+                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
+                assertEquals(3, repetitionCount);
+
+                for (int j = 0; j < repetitionCount; j++) {
+                    Group elementGroup = repeatedGroup.getGroup(0, j);
+                    if(j==0){// have a null element in the repeated list, the repetition count should be 0
+                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
+                        continue;
+                    }
+                    // have a Boolean element in the repeated list, the repetition count should be 1
+                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
+                    Boolean res = elementGroup.getBoolean(0, 0);
+                    if(i%2==0){
+                        assertTrue(res);
+                    }else if(i%2==1){
+                        assertFalse(res);
+                    }
+                }
+            }else{// the last row is a null array
+                // if the array is a null array, the outer group should have no field
+                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+            }
+
+        }
         fileReader.close();
     }
 
