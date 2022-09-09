@@ -2,7 +2,7 @@ package org.greenplum.pxf.automation.structures.tables.pxf;
 
 import org.apache.commons.lang.StringUtils;
 
-public class ForeignTable extends ReadableExternalTable {
+public class ForeignTable extends WritableExternalTable {
 
     public ForeignTable(String name, String[] fields, String path, String format) {
         super(name, fields, path, format);

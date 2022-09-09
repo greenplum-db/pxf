@@ -233,8 +233,7 @@ public abstract class TableFactory {
                                                                 String[] fields,
                                                                 String path,
                                                                 String delimiter) {
-        WritableExternalTable exTable = new WritableExternalTable(name, fields,
-                path, "Text");
+        WritableExternalTable exTable = getWritableExternalOrForeignTable(name, fields, path, "Text");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(delimiter);
         return exTable;
@@ -254,8 +253,7 @@ public abstract class TableFactory {
                                                                 String[] fields,
                                                                 String path,
                                                                 String delimiter) {
-        WritableExternalTable exTable = new WritableExternalTable(name, fields,
-                path, "Text");
+        WritableExternalTable exTable = getWritableExternalOrForeignTable(name, fields, path, "Text");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(delimiter);
         exTable.setCompressionCodec("org.apache.hadoop.io.compress.GzipCodec");
@@ -276,8 +274,7 @@ public abstract class TableFactory {
                                                                  String[] fields,
                                                                  String path,
                                                                  String delimiter) {
-        WritableExternalTable exTable = new WritableExternalTable(name, fields,
-                path, "Text");
+        WritableExternalTable exTable = getWritableExternalOrForeignTable(name, fields, path, "Text");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(delimiter);
         exTable.setCompressionCodec("org.apache.hadoop.io.compress.BZip2Codec");
@@ -328,8 +325,7 @@ public abstract class TableFactory {
                                                                     String path,
                                                                     String schema) {
 
-        WritableExternalTable exTable = new WritableExternalTable(name, fields,
-                path, "CUSTOM");
+        WritableExternalTable exTable = getWritableExternalOrForeignTable(name, fields, path, "CUSTOM");
 
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":SequenceFile");
         exTable.setDataSchema(schema);
@@ -451,7 +447,7 @@ public abstract class TableFactory {
             String[] fields, String dataSourcePath, String driver,
             String dbUrl, String user, String customParameters) {
 
-        ExternalTable exTable = new WritableExternalTable(tableName, fields, dataSourcePath, "CUSTOM");
+        ExternalTable exTable = getWritableExternalOrForeignTable(tableName, fields, dataSourcePath, "CUSTOM");
         List<String> userParameters = new ArrayList<String>();
         if (driver != null) {
             userParameters.add("JDBC_DRIVER=" + driver);
@@ -586,8 +582,14 @@ public abstract class TableFactory {
     // ============ FDW Adapter ============
     private static ReadableExternalTable getReadableExternalOrForeignTable (String name, String[] fields, String path, String format) {
         return FDWUtils.useFDW ?
-               new ForeignTable(name, fields, path, "Text") :
-               new ReadableExternalTable(name, fields, path, "Text");
+               new ForeignTable(name, fields, path, format) :
+               new ReadableExternalTable(name, fields, path, format);
+    }
+
+    private static WritableExternalTable getWritableExternalOrForeignTable (String name, String[] fields, String path, String format) {
+        return FDWUtils.useFDW ?
+                new ForeignTable(name, fields, path, format) :
+                new WritableExternalTable(name, fields, path, format);
     }
 
 }
