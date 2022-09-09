@@ -28,7 +28,6 @@ import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
@@ -231,35 +230,41 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
         switch (type.asGroupType().getOriginalType()){
             case LIST:
-                //Get the internal array structure
-                GroupType arrrayType=type.asGroupType();
-                GroupType repeatedType=arrrayType.getType(0).asGroupType();
-                fillListGroup(index,field,group,arrrayType,repeatedType);
-
+                fillListGroup(index,field,group,type);
                 break;
             default:
                 throw new IOException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
         }
     }
 
-    private void fillListGroup(int index, OneField field, Group group, GroupType arrayType, GroupType repeatedType) throws IOException {
+    private void fillListGroup(int index, OneField field, Group group, Type type) throws IOException {
         if (field.val == null)
             return;
+        //Get the LIST group type and schema
+        GroupType listType=type.asGroupType();
+        //Get the repeated list group type and schema
+        GroupType repeatedType=listType.getType(0).asGroupType();
+        //Get the element type
         Type elementType=repeatedType.getType(0).asPrimitiveType();
-        PrimitiveType.PrimitiveTypeName elementTypeName=elementType.asPrimitiveType().getPrimitiveTypeName();
-        switch (elementTypeName) {
+        //parse parquet values into a postgres Object list
+        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(),elementType.asPrimitiveType().getPrimitiveTypeName());
+
+        switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
             case BOOLEAN:
-                List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(),elementTypeName);
-                Group repeatedGroup=new SimpleGroup(arrayType);
+                Group arrayGroup=new SimpleGroup(listType);
                 for(int i=0;i<vals.size();i++){
-                    Group elementGroup=new SimpleGroup(repeatedType);
-                    elementGroup.add(0,(Boolean) vals.get(i));
-                    repeatedGroup.add(0,elementGroup);
+
+                    if(vals.get(i) != null){
+                        Group repeatedGroup=new SimpleGroup(repeatedType);
+                        repeatedGroup.add(0,(Boolean) vals.get(i));
+                        arrayGroup.add(0,repeatedGroup);
+                    }
+
                 }
-                group.add(index,repeatedGroup);
+                group.add(index,arrayGroup);
                 break;
             default:
-                throw new IOException("Not supported type " + elementTypeName);
+                throw new IOException("Not supported type " + elementType.asPrimitiveType().getPrimitiveTypeName());
         }
     }
 
