@@ -77,7 +77,7 @@ public class PgUtilities {
         List<Integer> posList = new ArrayList<>();
         posList.add(0);
 
-        if (value[0] != '[' || value[value.length - 1] != ']') {
+        if ((value[0] != '{' || value[value.length - 1] != '}') && (value[0] != '[' || value[value.length - 1] != ']')) {
             throw new PxfRuntimeException(String.format("array dimension mismatch, rawData: %s", new String(value)));
         }
 
@@ -97,11 +97,13 @@ public class PgUtilities {
                 continue;
             }
             switch (value[i]) {
+                case '{':
                 case '[':
                     if (!inQuoted) {
                         depth++;
                     }
                     break;
+                case '}':
                 case ']':
                     if (!inQuoted) {
                         depth--;
