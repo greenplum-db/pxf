@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.components.gpdb;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.components.common.DbSystemObject;
 import org.greenplum.pxf.automation.components.common.ShellSystemObject;
@@ -150,27 +151,28 @@ public class Gpdb extends DbSystemObject {
 	}
 
 	private void createForeignServers(boolean ignoreFail) throws Exception {
-		Map<String,String> servers = new HashMap<>();
-		servers.put("default_hdfs", "hdfs_pxf_fdw");
-		servers.put("default_hive", "hive_pxf_fdw");
-		servers.put("default_hbase", "hbase_pxf_fdw");
-		servers.put("default_jdbc", "jdbc_pxf_fdw");
-		servers.put("default_file", "file_pxf_fdw");
-		servers.put("default_s3", "s3_pxf_fdw");
-		servers.put("default_gs", "gs_pxf_fdw");
-		servers.put("default_adl", "adl_pxf_fdw");
-		servers.put("default_wasbs", "wasbs_pxf_fdw");
+		List<String> servers = Lists.newArrayList(
+		"default_hdfs",
+		"default_hive",
+		"default_hbase",
+		"default_jdbc",
+		"default_file",
+		"default_s3",
+		"default_gs",
+		"default_adl",
+		"default_wasbs",
+		"s3_s3",
+		"hdfs-non-secure_hdfs",
+		"hdfs-secure_hdfs",
+		"hdfs-ipa_hdfs");
 
-		// for multi-server test
-		servers.put("s3_s3", "s3_pxf_fdw");
-		servers.put("hdfs-non-secure_hdfs", "hdfs_pxf_fdw");
-		servers.put("hdfs-secure_hdfs", "hdfs_pxf_fdw");
-		servers.put("hdfs-ipa_hdfs", "hdfs_pxf_fdw");
-
-		for (Map.Entry<String, String> entry : servers.entrySet()) {
+		for (String server : servers) {
+			String foreignServerName = server.replace("-", "_");
+			String pxfServerName = server.substring(0,server.lastIndexOf("_")); // strip protocol at the end
+			String fdwName = server.substring(server.lastIndexOf("_") + 1) + "_pxf_fdw"; // strip protocol at the end
 			runQuery(String.format("CREATE SERVER IF NOT EXISTS %s FOREIGN DATA WRAPPER %s OPTIONS(config '%s')",
-					entry.getKey(), entry.getValue(), entry.getKey().split("_")[0]), ignoreFail, false);
-			runQuery(String.format("CREATE USER MAPPING IF NOT EXISTS FOR CURRENT_USER SERVER %s", entry.getKey()),
+					foreignServerName, fdwName, pxfServerName), ignoreFail, false);
+			runQuery(String.format("CREATE USER MAPPING IF NOT EXISTS FOR CURRENT_USER SERVER %s", foreignServerName),
 					ignoreFail, false);
 		}
 	}
