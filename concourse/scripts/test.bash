@@ -239,6 +239,13 @@ function _main() {
 		install_gpdb_package
 	fi
 
+HEADER_FILE_GP7=pxf_gp7_headerfile
+if [[ ${GP_VER} -ge 7 ]]; then
+  mkdir ${GPHOME}/include/postgresql/server/extension/gp_exttable_fdw
+  cp ${HEADER_FILE_GP7}/extaccess.h  ${GPHOME}/include/postgresql/server/extension/gp_exttable_fdw
+fi
+
+
 	# Install PXF
 	if [[ -d pxf_package ]]; then
 		# forward compatibility pipeline works with PXF rpms, not rpm tarballs
