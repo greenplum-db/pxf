@@ -21,14 +21,15 @@ package org.greenplum.pxf.plugins.json.parser;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.lib.input.SplitLineReader;
+import org.apache.hadoop.mapred.LineRecordReader;
 import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
 
 
@@ -44,12 +45,9 @@ public class PartitionedJsonParser {
 
 	private static final char BACKSLASH = '\\';
 	private static final char QUOTE = '\"';
-	private static final char NEWLINE = '\n';
-	private static final char START_ARRAY = '[';
 	private static final char START_BRACE = '{';
 	private static final int EOF = -1;
 	private static final int CHARS_READ_LIMIT = 8192;
-	private final SplitLineReader splitLineReader;
 	private StringBuffer currentLineBuffer;
 	private int currentBufferIndex;
 	private final JsonLexer lexer;
@@ -57,15 +55,18 @@ public class PartitionedJsonParser {
 
 	private boolean endOfStream = false;
 	private final StringBuilder uncountedCharsReadFromStream;
+	private LineRecordReader lineRecordReader;
+	private boolean inNextSplit = false;
+	private InputStream is;
 
-	public PartitionedJsonParser(InputStream is) {
+	private static final Log LOG = LogFactory.getLog(PartitionedJsonParser.class);
+
+	public PartitionedJsonParser(InputStream is, LineRecordReader lineRecordReader) {
 		this.lexer = new JsonLexer();
 
-		// You need to wrap the InputStream with an InputStreamReader, so that it can encode the incoming byte stream as
-		// UTF-8 characters
-		this.splitLineReader = new SplitLineReader(is, new byte[] {(byte)','});
-
 		this.uncountedCharsReadFromStream = new StringBuilder(CHARS_READ_LIMIT);
+		this.is = is;
+		this.lineRecordReader = lineRecordReader;
 	}
 
 	private boolean scanToFirstBeginObject() throws IOException {
@@ -109,7 +110,8 @@ public class PartitionedJsonParser {
 	 */
 	public String nextObjectContainingMember(String memberName) throws IOException {
 
-		if (endOfStream) {
+		// if its the end of the stream, or you have finished your object in the next split, move on.s
+		if (endOfStream || inNextSplit) {
 			return null;
 		}
 
@@ -218,41 +220,46 @@ public class PartitionedJsonParser {
 	private int readNextChar() throws IOException {
 
 		if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
+
 			// pull new line into buffer if buffer == null and index >= buffer.length
 			Text currentLine = new Text();
-			int i = splitLineReader.readLine(currentLine);
+			boolean i = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
+			// if you need to pull a new line, but we have reached the end of the record reader
+			// but not the end of the object
+			if (i == false) {
+				LOG.debug("End of last split, opening new split to finish object");
+				inNextSplit = true;
+				long newStart = lineRecordReader.getPos();
+				// modified to figure out how to pass in the block size
+				long newEnd = newStart * 2;
+				// figure out how to pass the maxLineLength
+				int maxLineLength = Integer.MAX_VALUE;
+				LOG.debug(String.format("New split starts: %d ends: %d", newStart, newEnd));
+				lineRecordReader = new LineRecordReader(is, newStart, newEnd, maxLineLength);
+				lineRecordReader.next(lineRecordReader.createKey(), currentLine);
+			}
+
 			currentLineBuffer = new StringBuffer(currentLine.toString());
 			currentBufferIndex = 0;
-			int c = currentLineBuffer.charAt(currentBufferIndex);
-			// ignore whitespace
-			while (c == 32) {
-				// white space then go next char
-				currentBufferIndex++;
-				c = currentLineBuffer.charAt(currentBufferIndex);
-			}
-			// if the current line does not start with a quote, then
-			// we are in the middle of a line when we start the split.
-			// ignore this half line because it will be handled by the split before it.
-
-			if (c != QUOTE && c != NEWLINE && c != START_BRACE && c != START_ARRAY) {
-				i = splitLineReader.readLine(currentLine);
-				currentLineBuffer = new StringBuffer(currentLine.toString());
-				currentBufferIndex = 0;
-			}
 		}
 		// otherwise read from buffer
 		// track where you are in the buffer with some global index
-		int c = currentLineBuffer.charAt(currentBufferIndex);
-		currentBufferIndex++;
+		if (currentLineBuffer.length() >= 1) {
+			int c = currentLineBuffer.charAt(currentBufferIndex);
+			currentBufferIndex++;
 
-		// if i am at end of object. then check if im in my split. otherwise done
-		if (c != EOF) {
-			uncountedCharsReadFromStream.append((char) c);
-			if (uncountedCharsReadFromStream.length() == CHARS_READ_LIMIT) {
-				bytesRead += countBytesInReadChars();
+			// if i am at end of object. then check if im in my split. otherwise done
+			if (c != EOF) {
+				uncountedCharsReadFromStream.append((char) c);
+				if (uncountedCharsReadFromStream.length() == CHARS_READ_LIMIT) {
+					bytesRead += countBytesInReadChars();
+				}
 			}
+			return c;
 		}
-		return c;
+		else {
+			return -1;
+		}
 	}
 
 	private int countBytesInReadChars() {

@@ -22,6 +22,7 @@ package org.greenplum.pxf.plugins.json.parser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.mapred.LineRecordReader;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -55,7 +56,7 @@ public class PartitionedJsonParserNoSeekTest {
 
     public void runTest(final File jsonFile) throws IOException {
         try (InputStream jsonInputStream = new FileInputStream(jsonFile)) {
-            PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream);
+            PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream, new LineRecordReader(jsonInputStream, 0,jsonFile.length(), 10000));
 
             File[] jsonObjectFiles = jsonFile.getParentFile().listFiles(new FilenameFilter() {
                 public boolean accept(File file, String s) {

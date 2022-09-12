@@ -30,6 +30,7 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.RecordReader;
 import org.greenplum.pxf.plugins.json.parser.PartitionedJsonParser;
 
@@ -90,7 +91,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             }
             is = fileIn;
         }
-        parser = new PartitionedJsonParser(is);
+        parser = new PartitionedJsonParser(is, new LineRecordReader(conf, split));
         this.pos = start;
     }
 
