@@ -25,9 +25,9 @@
 #include "extension/gp_exttable_fdw/extaccess.h"
 #else
 #include "access/fileam.h"
-#include "utils/timestamp.h"
 #include "catalog/pg_exttable.h"
 #endif
+#include "utils/timestamp.h"
 #include "nodes/makefuncs.h"
 #include "cdb/cdbvars.h"
 
