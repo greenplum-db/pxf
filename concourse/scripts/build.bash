@@ -90,6 +90,18 @@ install_gpdb
 # installation of GPDB from RPM/DEB doesn't ensure that the installation location will match the version
 # given in the gpdb_package, so set the GPHOME after installation
 GPHOME=$(find /usr/local/ -name "greenplum-db-${GPDB_VERSION}*")
+
+HEADER_FILE_GP7=pxf_gp7_headerfile
+if [[ ${GPDB_VERSION:0:1} -ge 7 ]]; then
+ #PROJECT=${GOOGLE_PROJECT_ID:-}
+
+ #gcloud config set project "$PROJECT"
+ #gcloud auth activate-service-account --key-file=<(echo "$GOOGLE_CREDENTIALS")
+
+  mkdir ${GPHOME}/include/postgresql/server/extension/gp_exttable_fdw
+  cp ${HEADER_FILE_GP7}/extaccess.h  ${GPHOME}/include/postgresql/server/extension/gp_exttable_fdw
+fi
+
 inflate_dependencies
 compile_pxf
 package_pxf
