@@ -245,7 +245,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         //Get the element type
         Type elementType=repeatedType.getType(0).asPrimitiveType();
         //parse parquet values into a postgres Object list
-        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(),elementType.asPrimitiveType().getPrimitiveTypeName());
+        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(),elementType);
         Group arrayGroup=new SimpleGroup(listType);
 
         for(int i=0;i<vals.size();i++){
@@ -253,7 +253,16 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             if(vals.get(i)!=null){
                 switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
                     case INT32:
-                        repeatedGroup.add(0, (Integer) vals.get(i));
+//                        if (type.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
+//                            String dateString = (String) field.val;
+//                            group.add(index, ParquetTypeConverter.getDaysFromEpochFromDateString(dateString));
+//                        }
+                        if( elementType.getLogicalTypeAnnotation() instanceof  IntLogicalTypeAnnotation &&
+                                 ((IntLogicalTypeAnnotation) elementType.getLogicalTypeAnnotation()).getBitWidth() ==16){
+                            repeatedGroup.add(0, (Short) vals.get(i));
+                        }else {
+                            repeatedGroup.add(0, (Integer) vals.get(i));
+                        }
                         break;
                     case BOOLEAN:
                         repeatedGroup.add(0,(Boolean) vals.get(i));
