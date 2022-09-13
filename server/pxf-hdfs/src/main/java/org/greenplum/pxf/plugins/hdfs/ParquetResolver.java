@@ -246,24 +246,27 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         Type elementType=repeatedType.getType(0).asPrimitiveType();
         //parse parquet values into a postgres Object list
         List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(),elementType.asPrimitiveType().getPrimitiveTypeName());
+        Group arrayGroup=new SimpleGroup(listType);
 
-        switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
-            case BOOLEAN:
-                Group arrayGroup=new SimpleGroup(listType);
-                for(int i=0;i<vals.size();i++){
-                    Group repeatedGroup=new SimpleGroup(repeatedType);
-                    // if current element is not a null, add it into repeated group
-                    if(vals.get(i) != null){
+        for(int i=0;i<vals.size();i++){
+            Group repeatedGroup=new SimpleGroup(repeatedType);
+            if(vals.get(i)!=null){
+                switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
+                    case INT32:
+                        repeatedGroup.add(0, (Integer) vals.get(i));
+                        break;
+                    case BOOLEAN:
                         repeatedGroup.add(0,(Boolean) vals.get(i));
-                    }
-                    // if the current element is a null, add an empty repeated group into array group
-                    arrayGroup.add(0,repeatedGroup);
+                        break;
+                    default:
+                        throw new IOException("Not supported type " + elementType.asPrimitiveType().getPrimitiveTypeName());
                 }
-                group.add(index,arrayGroup);
-                break;
-            default:
-                throw new IOException("Not supported type " + elementType.asPrimitiveType().getPrimitiveTypeName());
+            }
+            // if the current element is a null, add an empty repeated group into array group
+            arrayGroup.add(0,repeatedGroup);
         }
+        group.add(index,arrayGroup);
+
     }
 
     // Set schema from context if null
