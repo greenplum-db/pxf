@@ -88,7 +88,7 @@ PXF uses the following data type mapping when writing Parquet data:
 | Text | utf8 | binary |
 | OTHERS | -- | UNSUPPORTED |
 
-</br><sup>1</sup>&nbsp;PXF localizes a <code>Timestamp</code> to the current system timezone and converts it to universal time (UTC) before finally converting to <code>int96</code>.
+</br><sup>1</sup>&nbsp;PXF localizes a <code>Timestamp</code> to the current system time zone and converts it to universal time (UTC) before finally converting to <code>int96</code>.
 </br><sup>2</sup>&nbsp;PXF converts a <code>Timestamptz</code> to a UTC <code>timestamp</code> and then converts to <code>int96</code>. PXF loses the time zone information during this conversion.
 
 

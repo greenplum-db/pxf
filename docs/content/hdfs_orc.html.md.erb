@@ -156,6 +156,17 @@ The PXF `hdfs:orc` profile supports the following *read* options. You specify th
 | IGNORE_MISSING_PATH | A Boolean value that specifies the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 | MAP_BY_POSITION | A Boolean value that, when set to `true`, specifies that PXF should map an ORC column to a Greenplum Database column by position. The default value is `false`, PXF maps an ORC column to a Greenplum column by name. |
 
+The PXF `hdfs:orc` profile supports a single compression-related write option; you specify this option in the `CREATE WRITABLE EXTERNAL TABLE` `LOCATION` clause:
+
+| Write Option  | Value Description |
+|-------|-------------------------------------|
+| COMPRESSION_CODEC    | The compression codec alias. Supported compression codecs for writing ORC data include: `lz4`, `lzo`, `zstd`, `snappy`, `zlib`, and `none` . If this option is not specified, PXF compresses the data using `zlib` compression. |
+
+## <a id="write"></a>About Writing ORC data
+
+When you insert records into a writable external table, the block(s) of data that you insert are written to one or more files in the directory that you specify in the `LOCATION` clause.
+
+When you insert ORC data records, the `pxf.orc.write.timezone.utc` property in the `pxf-site.xml` file governs how PXF writes timestamp values to the external data store. By default, PXF writes a timestamp type using the UTC time zone. If you require PXF to write a timestamp type using the local time zone of the PXF JVM, set the `pxf.orc.write.timezone.utc` property to `false` for the server and synchronize the PXF configuration.
 
 ## <a id="read_example"></a>Example: Reading an ORC File on HDFS
 
@@ -184,10 +195,10 @@ Procedure:
 
     ``` shell
     $ echo '{"location": "Prague", "month": "Jan","num_orders": 101, "total_sales": 4875.33, "items_sold": ["boots", "hats"]}
-  {"location": "Rome", "month": "Mar","num_orders": 87, "total_sales": 1557.39, "items_sold": ["coats"]}
-  {"location": "Bangalore", "month": "May","num_orders": 317, "total_sales": 8936.99, "items_sold": ["winter socks", "long-sleeved shirts", "boots"]}
-  {"location": "Beijing", "month": "Jul","num_orders": 411, "total_sales": 11600.67, "items_sold": ["hoodies/sweaters", "pants"]}
-  {"location": "Los Angeles", "month": "Dec","num_orders": 0, "total_sales": 0.00, "items_sold": null}
+    {"location": "Rome", "month": "Mar","num_orders": 87, "total_sales": 1557.39, "items_sold": ["coats"]}
+    {"location": "Bangalore", "month": "May","num_orders": 317, "total_sales": 8936.99, "items_sold": ["winter socks", "long-sleeved shirts", "boots"]}
+    {"location": "Beijing", "month": "Jul","num_orders": 411, "total_sales": 11600.67, "items_sold": ["hoodies/sweaters", "pants"]}
+    {"location": "Los Angeles", "month": "Dec","num_orders": 0, "total_sales": 0.00, "items_sold": null}
 ' > /tmp/sampledata.json
     ```
 
@@ -268,7 +279,9 @@ Procedure:
 
 ## <a id="write_example"></a>Example: Writing to an ORC File on HDFS
 
-1. Use the `hdfs:orc` profile to create a writable external table that references `sample_orc`:
+In this example, you create a writable external table to write some data to the directory referenced by the `sample_orc` table.
+
+1. Use the `hdfs:orc` profile to create a writable external table that references the `/data/pxf_examples/orc_example` directory on HDFS:
 
     ``` sql
     postgres=# CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location text, month text, num_orders int, total_sales numeric(10,2), items_sold text[] )
@@ -276,15 +289,16 @@ Procedure:
       FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
 
-1. Write a few records to segment files in the `orc_example` directory by inserting to the `write_to_sample_orc` table:
+1. Write a few records to segment files in the `orc_example` directory by inserting into the `write_to_sample_orc` table:
    
     ``` sql
     postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Frankfurt', 'Mar', 777, 3956.98, '{"winter socks","pants",boots}' );
     postgres=# INSERT INTO write_to_sample_orc VALUES ( 'Cleveland', 'Oct', 3218, 96645.37, '{"long-sleeved shirts",hats}' );
     ```
 
-1. Recall that Greenplum Database does not support directly querying a writable external table. Query the `sample_orc` table to read the data you added to files in the `orc_example` directory:
+1. Recall that Greenplum Database does not support directly querying a writable external table. Query the `sample_orc` table that you created in the previous example to read the new data that you added:
 
     ``` sql
     postgres=# SELECT * FROM sample_orc ORDER BY num_orders;
     ```
+

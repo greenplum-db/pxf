@@ -56,17 +56,17 @@ If you are accessing an S3 object store, you can provide S3 credentials via cust
 
 Refer to [Example: Reading an ORC File on HDFS](hdfs_orc.html#read_example) in the PXF Hadoop ORC documentation for an example. Modifications that you must make to run the example with an object store include:
 
-- Copying the segment files to the object store instead of HDFS. For example, to copy the files to S3:
+- Copying the ORC file to the object store instead of HDFS. For example, to copy the file to S3:
 
     ``` shell
-    $ aws s3 cp /tmp/sample-orc-data s3://BUCKET/pxf_examples/
+    $ aws s3 cp /tmp/sampledata.orc s3://BUCKET/pxf_examples/orc_example/
     ```
 
 - Using the `CREATE EXTERNAL TABLE` syntax and `LOCATION` keywords and settings described above. For example, if your server name is `s3srvcfg`:
 
     ``` sql
     CREATE EXTERNAL TABLE sample_orc( location TEXT, month TEXT, num_orders INTEGER, total_sales NUMERIC(10,2), items_sold TEXT[] )
-      LOCATION('pxf://BUCKET/pxf_examples/sample-orc-data?PROFILE=s3:orc&SERVER=s3srvcfg')
+      LOCATION('pxf://BUCKET/pxf_examples/orc_example?PROFILE=s3:orc&SERVER=s3srvcfg')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
@@ -74,7 +74,7 @@ Refer to [Example: Reading an ORC File on HDFS](hdfs_orc.html#read_example) in t
 
     ``` sql
     CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location TEXT, month TEXT, num_orders INT, total_sales NUMERIC(10,2), items_sold TEXT[])
-      LOCATION ('pxf://BUCKET/pxf_examples/sample-orc-data?PROFILE=s3:orc&SERVER=s3srvcfg')
+      LOCATION ('pxf://BUCKET/pxf_examples/orc_example?PROFILE=s3:orc&SERVER=s3srvcfg')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
 
