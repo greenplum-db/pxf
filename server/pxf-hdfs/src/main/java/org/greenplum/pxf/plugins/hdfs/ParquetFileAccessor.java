@@ -517,7 +517,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.BOOLEAN);
                     break;
-
+                case INT2ARRAY:
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.INT32)
+                            .as(intType(16, true));
+                    break;
                 default:
                     throw new UnsupportedTypeException(
                             String.format("Type %d is not supported", columnTypeCode));
