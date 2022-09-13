@@ -26,6 +26,7 @@ import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
 import org.greenplum.pxf.api.io.BufferWritable;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.io.GPDBWritable;
+import org.greenplum.pxf.api.io.Text;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -42,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,10 +59,7 @@ public class BridgeOutputBuilderTest {
     private final DataOutputToBytes dos = new DataOutputToBytes();
     private enum TestEnum { HELLO }
 
-    @Test
-    public void testFillGPDBWritable_NativePrimitiveTypes() throws Exception {
-        RequestContext context = new RequestContext();
-
+    private void createPrimitiveTypesSchema(RequestContext context) {
         // go in the order of types defined in DataType enum
         addColumn(context,  0, DataType.BOOLEAN                 , "col00");
         addColumn(context,  1, DataType.BYTEA                   , "col01");
@@ -78,11 +77,10 @@ public class BridgeOutputBuilderTest {
         addColumn(context, 13, DataType.TIMESTAMP_WITH_TIME_ZONE, "col13");
         addColumn(context, 14, DataType.NUMERIC                 , "col14");
         addColumn(context, 15, DataType.UUID                    , "col15");
+    }
 
-        BridgeOutputBuilder builder = makeBuilder(context);
-        output = builder.makeGPDBWritableOutput();
-
-        List<OneField> recFields = Arrays.asList(
+    private List<OneField> createPrimitiveTypes_NativeValuesFields() {
+        return Arrays.asList(
                 new OneField(DataType.BOOLEAN.getOID()                 , true),
                 new OneField(DataType.BYTEA.getOID()                   , new byte[]{0,1}),
                 new OneField(DataType.BIGINT.getOID()                  , 1L),
@@ -99,7 +97,75 @@ public class BridgeOutputBuilderTest {
                 new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), Timestamp.valueOf("2022-06-10 11:44:55.123456")),
                 new OneField(DataType.NUMERIC.getOID()                 , "9876.54321"),
                 new OneField(DataType.UUID.getOID()                    , "667b97ba-38d0-4b91-9c7d-1f8b30a75c6e"));
-        builder.fillGPDBWritable(recFields);
+    }
+
+    private List<OneField> createPrimitiveTypes_StringifiedValuesFields() {
+        return Arrays.asList(
+                new OneField(DataType.BOOLEAN.getOID()                 , true),
+                new OneField(DataType.BYTEA.getOID()                   , new byte[]{0,1}),
+                new OneField(DataType.BIGINT.getOID()                  , 1L),
+                new OneField(DataType.SMALLINT.getOID()                , (short) 2),
+                new OneField(DataType.INTEGER.getOID()                 , 3),
+                new OneField(DataType.TEXT.getOID()                    , "text-value"),
+                new OneField(DataType.REAL.getOID()                    , 4.5f),
+                new OneField(DataType.FLOAT8.getOID()                  , 6.7d),
+                new OneField(DataType.BPCHAR.getOID()                  , "char-value"),
+                new OneField(DataType.VARCHAR.getOID()                 , "varchar-value"),
+                new OneField(DataType.DATE.getOID()                    , "1994-08-03"),
+                new OneField(DataType.TIME.getOID()                    , "10:11:12"),
+                new OneField(DataType.TIMESTAMP.getOID()               , "2022-06-10 11:44:33.123456"),
+                new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "2022-06-10 11:44:55.123456"),
+                new OneField(DataType.NUMERIC.getOID()                 , "9876.54321"),
+                new OneField(DataType.UUID.getOID()                    , "667b97ba-38d0-4b91-9c7d-1f8b30a75c6e"));
+    }
+
+    private List<OneField> createPrimitiveTypes_StringifiedTypesAndValuesFields() {
+        // in OneField objects use DataType.TEXT and String values for primitive types that are serialized as strings
+        return Arrays.asList(
+                new OneField(DataType.BOOLEAN.getOID()  , true),
+                new OneField(DataType.BYTEA.getOID()    , new byte[]{0,1}),
+                new OneField(DataType.BIGINT.getOID()   , 1L),
+                new OneField(DataType.SMALLINT.getOID() , (short) 2),
+                new OneField(DataType.INTEGER.getOID()  , 3),
+                new OneField(DataType.TEXT.getOID()     , "text-value"),
+                new OneField(DataType.REAL.getOID()     , 4.5f),
+                new OneField(DataType.FLOAT8.getOID()   , 6.7d),
+                new OneField(DataType.TEXT.getOID()     , "char-value"),
+                new OneField(DataType.TEXT.getOID()     , "varchar-value"),
+                new OneField(DataType.TEXT.getOID()     , "1994-08-03"),
+                new OneField(DataType.TEXT.getOID()     , "10:11:12"),
+                new OneField(DataType.TEXT.getOID()     , "2022-06-10 11:44:33.123456"),
+                new OneField(DataType.TEXT.getOID()     , "2022-06-10 11:44:55.123456"),
+                new OneField(DataType.TEXT.getOID()     , "9876.54321"),
+                new OneField(DataType.TEXT.getOID()     , "667b97ba-38d0-4b91-9c7d-1f8b30a75c6e"));
+    }
+
+    private String getExpectedSerializedString() {
+        return new StringJoiner(",")
+                .add("true")
+                .add("\\x0001") // underlying assumption is CSV table format
+                .add("1")
+                .add("2")
+                .add("3")
+                .add("text-value")
+                .add("4.5")
+                .add("6.7")
+                .add("char-value")
+                .add("varchar-value")
+                .add("1994-08-03")
+                .add("10:11:12")
+                .add("2022-06-10 11:44:33.123456")
+                .add("2022-06-10 11:44:55.123456")
+                .add("9876.54321")
+                .add("667b97ba-38d0-4b91-9c7d-1f8b30a75c6e")
+                + "\n";
+    }
+
+    private void assertPrimitiveTypesInGPDBWritable(List<Writable> outputQueue) throws GPDBWritable.TypeMismatchException {
+        assertNotNull(outputQueue);
+        assertEquals(1, outputQueue.size());
+        assertTrue(outputQueue.get(0) instanceof GPDBWritable);
+        output = (GPDBWritable) outputQueue.get(0);
 
         assertTrue(output.getBoolean(0));
         assertArrayEquals(new byte[]{0, 1}, output.getBytes(1));
@@ -119,67 +185,50 @@ public class BridgeOutputBuilderTest {
         assertEquals("667b97ba-38d0-4b91-9c7d-1f8b30a75c6e\0", output.getString(15));
     }
 
+    private void assertPrimitiveTypesInText(List<Writable> outputQueue) throws IOException {
+        assertNotNull(outputQueue);
+        assertEquals(1, outputQueue.size());
+        assertTrue(outputQueue.get(0) instanceof Text);
+        outputQueue.get(0).write(dos);
+        assertEquals(getExpectedSerializedString(), new String(dos.getOutput(), StandardCharsets.UTF_8));
+    }
+
+    // ---------- Serializing into GPDBWritable format ----------
     @Test
-    public void testFillGPDBWritable_StringifiedPrimitiveTypes() throws Exception {
-        RequestContext context = new RequestContext();
+    public void testFillGPDBWritable_PrimitiveTypesNativeValues() throws Exception {
+        assertPrimitiveTypesInGPDBWritable(getBridgeOutputBuilder(OutputFormat.GPDBWritable)
+                .makeOutput(createPrimitiveTypes_NativeValuesFields()));
+    }
 
-        // go in the order of types defined in DataType enum
-        addColumn(context,  0, DataType.BOOLEAN                 , "col00");
-        addColumn(context,  1, DataType.BYTEA                   , "col01");
-        addColumn(context,  2, DataType.BIGINT                  , "col02");
-        addColumn(context,  3, DataType.SMALLINT                , "col03");
-        addColumn(context,  4, DataType.INTEGER                 , "col04");
-        addColumn(context,  5, DataType.TEXT                    , "col05");
-        addColumn(context,  6, DataType.REAL                    , "col06");
-        addColumn(context,  7, DataType.FLOAT8                  , "col07");
-        addColumn(context,  8, DataType.BPCHAR                  , "col08");
-        addColumn(context,  9, DataType.VARCHAR                 , "col09");
-        addColumn(context, 10, DataType.DATE                    , "col10");
-        addColumn(context, 11, DataType.TIME                    , "col11");
-        addColumn(context, 12, DataType.TIMESTAMP               , "col12");
-        addColumn(context, 13, DataType.TIMESTAMP_WITH_TIME_ZONE, "col13");
-        addColumn(context, 14, DataType.NUMERIC                 , "col14");
-        addColumn(context, 15, DataType.UUID                    , "col15");
+    @Test
+    public void testFillGPDBWritable_PrimitiveTypesStringifiedValues() throws Exception {
+        assertPrimitiveTypesInGPDBWritable(getBridgeOutputBuilder(OutputFormat.GPDBWritable)
+                .makeOutput(createPrimitiveTypes_StringifiedValuesFields()));
+    }
 
-        BridgeOutputBuilder builder = makeBuilder(context);
-        output = builder.makeGPDBWritableOutput();
+    @Test
+    public void testFillGPDBWritable_PrimitiveTypesStringifiedTypesAndValues() throws Exception {
+        assertPrimitiveTypesInGPDBWritable(getBridgeOutputBuilder(OutputFormat.GPDBWritable)
+                .makeOutput(createPrimitiveTypes_StringifiedTypesAndValuesFields()));
+    }
 
-        // in OneField objects use DataType.TEXT and String values for primitive types that are serialized as strings
-        List<OneField> recFields = Arrays.asList(
-                new OneField(DataType.BOOLEAN.getOID()  , true),
-                new OneField(DataType.BYTEA.getOID()    , new byte[]{0,1}),
-                new OneField(DataType.BIGINT.getOID()   , 1L),
-                new OneField(DataType.SMALLINT.getOID() , (short) 2),
-                new OneField(DataType.INTEGER.getOID()  , 3),
-                new OneField(DataType.TEXT.getOID()     , "text-value"),
-                new OneField(DataType.REAL.getOID()     , 4.5f),
-                new OneField(DataType.FLOAT8.getOID()   , 6.7d),
-                new OneField(DataType.TEXT.getOID()     , "char-value"),
-                new OneField(DataType.TEXT.getOID()     , "varchar-value"),
-                new OneField(DataType.TEXT.getOID()     , "1994-08-03"),
-                new OneField(DataType.TEXT.getOID()     , "10:11:12"),
-                new OneField(DataType.TEXT.getOID()     , "2022-06-10 11:44:33.123456"),
-                new OneField(DataType.TEXT.getOID()     , "2022-06-10 11:44:55.123456"),
-                new OneField(DataType.TEXT.getOID()     , "9876.54321"),
-                new OneField(DataType.TEXT.getOID()     , "667b97ba-38d0-4b91-9c7d-1f8b30a75c6e"));
-        builder.fillGPDBWritable(recFields);
+    // ---------- Serializing into TEXT format ----------
+    @Test
+    public void testFillText_PrimitiveTypesNativeValues() throws Exception {
+        assertPrimitiveTypesInText(getBridgeOutputBuilder(OutputFormat.TEXT)
+                .makeOutput(createPrimitiveTypes_NativeValuesFields()));
+    }
 
-        assertTrue(output.getBoolean(0));
-        assertArrayEquals(new byte[]{0, 1}, output.getBytes(1));
-        assertEquals(1L, output.getLong(2));
-        assertEquals((short) 2, output.getShort(3));
-        assertEquals(3, output.getInt(4));
-        assertEquals("text-value\0", output.getString(5));
-        assertEquals(4.5f, output.getFloat(6));
-        assertEquals(6.7d, output.getDouble(7));
-        assertEquals("char-value\0", output.getString(8));
-        assertEquals("varchar-value\0", output.getString(9));
-        assertEquals("1994-08-03\0", output.getString(10));
-        assertEquals("10:11:12\0", output.getString(11));
-        assertEquals("2022-06-10 11:44:33.123456\0", output.getString(12));
-        assertEquals("2022-06-10 11:44:55.123456\0", output.getString(13));
-        assertEquals("9876.54321\0", output.getString(14));
-        assertEquals("667b97ba-38d0-4b91-9c7d-1f8b30a75c6e\0", output.getString(15));
+    @Test
+    public void testFillText_PrimitiveTypesStringifiedValues() throws Exception {
+        assertPrimitiveTypesInText(getBridgeOutputBuilder(OutputFormat.TEXT)
+                .makeOutput(createPrimitiveTypes_StringifiedValuesFields()));
+    }
+
+    @Test
+    public void testFillText_PrimitiveTypesStringifiedTypesAndValues() throws Exception {
+        assertPrimitiveTypesInText(getBridgeOutputBuilder(OutputFormat.TEXT)
+                .makeOutput(createPrimitiveTypes_StringifiedTypesAndValuesFields()));
     }
 
     @Test
@@ -534,12 +583,25 @@ public class BridgeOutputBuilderTest {
         context.getTupleDescription().add(column);
     }
 
+    private BridgeOutputBuilder getBridgeOutputBuilder(OutputFormat format) {
+        RequestContext context = new RequestContext();
+        context.setOutputFormat(format);
+        if (format == OutputFormat.TEXT) {
+            context.setFormat("CSV"); // assume CSV table format for TEXT transport format
+        }
+        createPrimitiveTypesSchema(context);
+        BridgeOutputBuilder builder = makeBuilder(context);
+        return builder;
+    }
+
     private BridgeOutputBuilder makeBuilder(RequestContext context) {
         System.setProperty("greenplum.alignment", "8");
 
         context.setSegmentId(-44);
         context.setTotalSegments(2);
-        context.setOutputFormat(OutputFormat.TEXT);
+        if (context.getOutputFormat() == null) {
+            context.setOutputFormat(OutputFormat.TEXT);
+        }
         context.setHost("my://bags");
         context.setPort(-8020);
         context.setAccessor("are");
@@ -633,4 +695,5 @@ public class BridgeOutputBuilderTest {
             throw new IOException("not implemented");
         }
     }
+
 }

@@ -10,6 +10,9 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 
+/**
+ * Method invocation listener that skips tests that are not annotated as working with FDW when ran in FDW context.
+ */
 public class FDWSkipTestAnalyzer implements IInvokedMethodListener {
 
     @Override
