@@ -1,8 +1,9 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.parquet.schema.GroupType;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.plugins.hdfs.orc.OrcUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
@@ -34,11 +35,11 @@ public class ParquetUtilities {
     /**
      *
      * @param val
-     * @param primitiveTypeName
+     * @param schemaType
      * @return
      */
-    public List<Object> parsePostgresArray(String val, PrimitiveType.PrimitiveTypeName primitiveTypeName) {
-        LOG.trace("primivitve element type={}, value={}", primitiveTypeName, val);
+    public List<Object> parsePostgresArray(String val, Type schemaType) {
+        LOG.trace("schema type={}, value={}", schemaType, val);
 
         if (val == null) {
             return null;
@@ -48,10 +49,10 @@ public class ParquetUtilities {
         List<Object> data = new ArrayList<>(splits.length);
         for (String split : splits) {
             try {
-                data.add(decodeString(split, primitiveTypeName));
+                data.add(decodeString(split, schemaType));
             } catch (NumberFormatException | PxfRuntimeException e) {
                 String hint = createErrorHintFromValue(StringUtils.startsWith(split, "["), val);
-                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, primitiveTypeName), hint, e);
+                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, schemaType), hint, e);
             }
         }
         return data;
@@ -60,20 +61,26 @@ public class ParquetUtilities {
     /**
      * parse a string base off the parquet primitive type
      * @param val a string representation of the value
-     * @param primitiveTypeName parquet primitive type
+     * @param schemaType parquet schema type
      * @return a java representation of the value for the given valType
      */
-    private Object decodeString(String val, PrimitiveType.PrimitiveTypeName primitiveTypeName) {
+    private Object decodeString(String val, Type schemaType) {
         if (val == null || val.equals("null")) {
             return null;
         }
+        PrimitiveType.PrimitiveTypeName primitiveTypeName = schemaType.asPrimitiveType().getPrimitiveTypeName();
         switch (primitiveTypeName) {
             case BINARY:
                 return pgUtilities.parseByteaLiteral(val);
             case BOOLEAN:
                 return pgUtilities.parseBoolLiteral(val);
             case INT32:
-                return Integer.parseInt(val);
+                if( schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation &&
+                        ((LogicalTypeAnnotation.IntLogicalTypeAnnotation) schemaType.getLogicalTypeAnnotation()).getBitWidth() ==16){
+                    return Short.parseShort(val);
+                }else{
+                    return Integer.parseInt(val);
+                }
             case INT64:
                 return Long.parseLong(val);
             case DOUBLE:
