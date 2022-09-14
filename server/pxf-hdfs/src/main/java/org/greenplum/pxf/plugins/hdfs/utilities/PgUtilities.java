@@ -145,6 +145,9 @@ public class PgUtilities {
         if (StringUtils.equals(str, "NULL")) {
             return null;
         }
+        if (str.length() == 0) {
+            return "";
+        }
 
         int beginIndx = 0;
         int endIndex = str.length();

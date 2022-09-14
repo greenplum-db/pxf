@@ -534,6 +534,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.DOUBLE);
                     break;
+                case BPCHARARRAY:
                 case TEXTARRAY:
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.BINARY)

@@ -1008,10 +1008,13 @@ public class ParquetWriteTest {
         // write parquet array with TEXT values of a and b, repeated i + 1 times
         //todo: skip null element
         for (int i = 0; i < 10; i++) {
-            List<String> textList = new ArrayList<>();
-            textList.add(null);
-            textList.add(StringUtils.repeat("a", i + 1));
-            textList.add(StringUtils.repeat("b", i + 1));
+            List<String> textList = null;
+            if (i != 9) {
+                textList = new ArrayList<>();
+                textList.add(null);
+                textList.add(StringUtils.repeat("a", i + 1));
+                textList.add(StringUtils.repeat("b", i + 1));
+            }
             List<OneField> record = Collections.singletonList(new OneField(DataType.TEXTARRAY.getOID(), textList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
@@ -1037,41 +1040,43 @@ public class ParquetWriteTest {
             // get the outer group
             Group outerGroup = fileReader.read();
 
-            // if the array is not a null array, the outer group should only have one field
-            assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+            if (i != 9) {
+                // if the array is not a null array, the outer group should only have one field
+                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
 
-            // get the repeated list group
-            Group repeatedGroup = outerGroup.getGroup(0, 0);
-            Type repeatedType = outerType.asGroupType().getType(0);
-            //repeated group must use "repeated" keyword
-            assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-            int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-            assertEquals(3, repetitionCount);
+                // get the repeated list group
+                Group repeatedGroup = outerGroup.getGroup(0, 0);
+                Type repeatedType = outerType.asGroupType().getType(0);
+                //repeated group must use "repeated" keyword
+                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
+                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
+                assertEquals(3, repetitionCount);
 
-            for (int j = 0; j < repetitionCount; j++) {
-                Group elementGroup = repeatedGroup.getGroup(0, j);
-                if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                    assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                    continue;
+                for (int j = 0; j < repetitionCount; j++) {
+                    Group elementGroup = repeatedGroup.getGroup(0, j);
+                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
+                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
+                        continue;
+                    }
+                    // only one  element in the repeated list, the repetition count should be 1
+                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
+                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
+                    // Physical type is binary, logical type is String
+                    assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, elementType.asPrimitiveType().getPrimitiveTypeName());
+                    assertTrue(elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
+                    Binary binary = elementGroup.getBinary(0, 0);
+                    String str = binary.toStringUsingUTF8();
+                    if (j % 2 == 1) {
+                        assertEquals(StringUtils.repeat("a", i + 1), str);
+                    } else {
+                        assertEquals(StringUtils.repeat("b", i + 1), str);
+                    }
                 }
-                // only one  element in the repeated list, the repetition count should be 1
-                assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                // Physical type is binary, logical type is String
-                assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, elementType.asPrimitiveType().getPrimitiveTypeName());
-                assertTrue(elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
-                Binary binary = elementGroup.getBinary(0, 0);
-                String str = binary.toStringUsingUTF8();
-                if (j % 2 == 1) {
-                    assertEquals(StringUtils.repeat("a", i + 1), str);
-                } else {
-                    assertEquals(StringUtils.repeat("b", i + 1), str);
-                }
-
+            } else {
+                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
             }
         }
         fileReader.close();
-
     }
 
     //TODO
@@ -1465,7 +1470,6 @@ public class ParquetWriteTest {
         fileReader.close();
     }
 
-    //TODO
     @Test
     public void testWriteRealArray() throws Exception {
         String path = temp + "/out/real_array/";
@@ -1565,12 +1569,11 @@ public class ParquetWriteTest {
         resolver.afterPropertiesSet();
     }
 
-    //TODO
     @Test
     public void testWriteCharArray() throws Exception {
-        String path = temp + "/out/int/";
+        String path = temp + "/out/char_arr/";
 
-        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+        columnDescriptors.add(new ColumnDescriptor("char_arr", DataType.BPCHARARRAY.getOID(), 0, "bpchararray", new Integer[]{3}));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123481");
@@ -1579,6 +1582,77 @@ public class ParquetWriteTest {
         accessor.afterPropertiesSet();
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+
+        // write parquet file with char values
+        for (int i = 0; i < 10; i++) {
+            List<String> bpcharList = null;
+            if (i != 9) {
+                bpcharList = new ArrayList<>();
+                bpcharList.add(null);
+                String s = StringUtils.repeat("c", i % 3);
+                bpcharList.add(s);
+                bpcharList.add(s);
+            }
+            List<OneField> record = Collections.singletonList(new OneField(DataType.BPCHARARRAY.getOID(), bpcharList));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
+        accessor.closeForWrite();
+
+        // Validate write
+        Path expectedFile = new Path(HcfsType.FILE.getUriForWrite(context) + ".snappy.parquet");
+        assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
+
+        MessageType schema = validateFooter(expectedFile);
+
+        ParquetReader<Group> fileReader = ParquetReader.builder(new GroupReadSupport(), expectedFile)
+                .withConf(configuration)
+                .build();
+
+        for (int i = 0; i < 10; i++) {
+            Type outerType = schema.getType(0);
+            assertNotNull(outerType.getLogicalTypeAnnotation());
+            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
+
+            // get the outer group
+            Group outerGroup = fileReader.read();
+
+            if (i != 9) {
+                // if the array is not a null array, the outer group should only have one field
+                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+
+                // get the repeated list group
+                Group repeatedGroup = outerGroup.getGroup(0, 0);
+                Type repeatedType = outerType.asGroupType().getType(0);
+                //repeated group must use "repeated" keyword
+                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
+                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
+                assertEquals(3, repetitionCount);
+
+                for (int j = 0; j < repetitionCount; j++) {
+                    Group elementGroup = repeatedGroup.getGroup(0, j);
+                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
+                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
+                        continue;
+                    }
+                    // only one  element in the repeated list, the repetition count should be 1
+                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
+                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
+                    // Physical type is binary, logical type is String
+                    assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, elementType.asPrimitiveType().getPrimitiveTypeName());
+                    assertTrue(elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
+
+                    Binary binary = elementGroup.getBinary(0, 0);
+                    String str = binary.toStringUsingUTF8();
+                    assertEquals(StringUtils.repeat("c", i % 3), str);
+                }
+            } else {
+                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+            }
+        }
+        fileReader.close();
     }
 
     //TODO
