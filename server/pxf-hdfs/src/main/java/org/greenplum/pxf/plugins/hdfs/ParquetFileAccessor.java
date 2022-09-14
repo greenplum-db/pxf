@@ -509,29 +509,38 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     primitiveBuilder = Types.optional(PrimitiveTypeName.BINARY)
                             .as(stringType());
                     break;
+                case INT2ARRAY:
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.INT32)
+                            .as(intType(16, true));
+                    break;
                 case INT4ARRAY:
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.INT32);
+                    break;
+                case INT8ARRAY:
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.INT64);
                     break;
                 case BOOLARRAY:
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.BOOLEAN);
                     break;
-                case INT2ARRAY:
+                case TEXTARRAY:
                     listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT32)
-                            .as(intType(16, true));
+                            .optionalElement(PrimitiveTypeName.BINARY)
+                            .as(stringType());
                     break;
                 default:
                     throw new UnsupportedTypeException(
                             String.format("Type %d is not supported", columnTypeCode));
             }
 
-            if(primitiveBuilder != null){
+            if (primitiveBuilder != null) {
                 fields.add(primitiveBuilder.named(columnName));
             }
 
-            if(listBuilder != null){
+            if (listBuilder != null) {
                 fields.add(listBuilder.named(columnName));
             }
         }
