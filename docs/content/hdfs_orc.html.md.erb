@@ -124,7 +124,7 @@ PXF supports writing the list ORC compound type for one-dimensional arrays, for 
 
 ## <a id="createexttbl"></a>Creating the External Table
 
-The PXF HDFS connector `hdfs:orc` profile supports reading and writing ORC-formatted HDFS files. When you insert records into a writable external table, the block(s) of data that you insert are written to one or more files in the directory that you specified.
+The PXF HDFS connector `hdfs:orc` profile supports reading and writing ORC-formatted HDFS files. When you insert records into a writable external table, the block(s) of data that you insert are written to one file per segment in the directory that you specified.
 
 Use the following syntax to create a Greenplum Database external table that references an HDFS file or directory:
 
