@@ -273,6 +273,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     case BOOLEAN:
                         repeatedGroup.add(0, (Boolean) vals.get(i));
                         break;
+                    case DOUBLE:
+                        repeatedGroup.add(0, (Double) vals.get(i));
+                        break;
                     case BINARY:
                         if (elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
                             repeatedGroup.add(0, Charset.forName("UTF-8").decode((ByteBuffer) vals.get(i)).toString());
