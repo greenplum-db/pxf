@@ -273,6 +273,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     case BOOLEAN:
                         repeatedGroup.add(0, (Boolean) vals.get(i));
                         break;
+                    case FLOAT:
+                        repeatedGroup.add(0, (Float) vals.get(i));
+                        break;
                     case DOUBLE:
                         repeatedGroup.add(0, (Double) vals.get(i));
                         break;
