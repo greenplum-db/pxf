@@ -47,7 +47,6 @@ public class PartitionedJsonParser {
 	private final JsonLexer lexer;
 	private long bytesRead = 0;
 
-	private boolean endOfStream = false;
 	private final StringBuilder uncountedCharsReadFromStream;
 	private String memberName;
 	private MemberSearchState memberState;
@@ -167,7 +166,6 @@ public class PartitionedJsonParser {
 			break;
 		}
 
-		endOfStream = true;
 		return false;
 	}
 
@@ -179,16 +177,7 @@ public class PartitionedJsonParser {
 		return bytesRead;
 	}
 
-	/**
-	 * @return Returns true if the end of the stream has been reached and false otherwise.
-	 */
-	public boolean isEndOfStream() {
-		return endOfStream;
-	}
-
 	public void trackUncountedCharsReadFromStream(int c) {
-
-		// if i am at end of object. then check if im in my split. otherwise done
 		if (c != EOF) {
 			uncountedCharsReadFromStream.append((char) c);
 			if (uncountedCharsReadFromStream.length() == CHARS_READ_LIMIT) {

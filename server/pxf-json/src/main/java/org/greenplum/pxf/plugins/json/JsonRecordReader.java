@@ -115,27 +115,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     public boolean next(LongWritable key, Text value) throws IOException {
 
         while (pos < end) {
-
-
-
-
-            // read until first begin object
-            // send the char to parser
-            // parser returns true if identifier found + object finishes
-            // otherwise returns false
-            //
-
-            // send char to parser, continuously
-            // parser keeps list of json objects
-            // when we finish the split, we check the state
-            // if in the middle of an object, pull the next split
-            // nextSplit start: currentSplit end, finish: end of file.
-            // if the list is empty, return nothing to be done
-            // if at the end of an object, but list is not empty, return list
-
-            // instead of keeping list, pass in empty object for streaming
-
             int i;
+            // object to pass in for streaming
             Text jsonObject = new Text();
             boolean completedObject = false;
             // scan to first start brace object.
@@ -146,14 +127,13 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 parser.startNewJsonObject();
 
                 // read through the file until the object is completed
-                while ((i = readNextChar()) >= EOF && !completedObject) {
+                while ((i = readNextChar()) > EOF && !completedObject) {
                     char c = (char) i;
                     completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
 
-
                     if (completedObject) {
-                        String json = jsonObject.toString();
                         // we have a completed object
+                        String json = jsonObject.toString();
                         pos = start + parser.getBytesRead();
 
                         long jsonStart = pos - json.getBytes(StandardCharsets.UTF_8).length;
@@ -247,19 +227,23 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         if (!getNext || currentLine == null) {
             return END_OF_SPLIT;
         }
-        char c = currentLineBuffer.charAt(currentBufferIndex);
-        currentBufferIndex++;
+        // its possible for the json object to have an empty line
+        if (currentLineBuffer.length() > 0) {
+            char c = currentLineBuffer.charAt(currentBufferIndex);
+            currentBufferIndex++;
+            parser.trackUncountedCharsReadFromStream(c);
 
-        parser.trackUncountedCharsReadFromStream(c);
-
-        return c;
+            return c;
+        } else {
+            return readNextChar();
+        }
     }
 
     private boolean scanToFirstBeginObject() throws IOException {
         // seek until we hit the first begin-object
         boolean inString = false;
         int i;
-        while ((i = readNextChar()) != END_OF_SPLIT) {
+        while ((i = readNextChar()) > EOF) {
             char c = (char) i;
             // if the current value is a backslash, then ignore the next value as it's an escaped char
             if (c == BACKSLASH) {
@@ -275,7 +259,9 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     }
 
     private void getNextSplit() throws IOException {
-        FileSplit nextSplit = new FileSplit(file, end, Long.MAX_VALUE, (String[]) null);
+        // we need to move into the next split, so create one that starts at the current pos
+        // and goes until the end of the file
+        FileSplit nextSplit = new FileSplit(file, pos, Long.MAX_VALUE, (String[]) null);
         lineRecordReader = new LineRecordReader(conf, nextSplit);
     }
 }
