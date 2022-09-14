@@ -281,7 +281,7 @@ Procedure:
 
 In this example, you create a writable external table to write some data to the directory referenced by the `sample_orc` table.
 
-1. Use the `hdfs:orc` profile to create a writable external table that references the `/data/pxf_examples/orc_example` directory on HDFS:
+1. Create an external table that specifies the `hdfs:orc` profile and the HDFS directory `/data/pxf_examples/orc_example` in the `LOCATION` URL:
 
     ``` sql
     postgres=# CREATE WRITABLE EXTERNAL TABLE write_to_sample_orc (location text, month text, num_orders int, total_sales numeric(10,2), items_sold text[] )
