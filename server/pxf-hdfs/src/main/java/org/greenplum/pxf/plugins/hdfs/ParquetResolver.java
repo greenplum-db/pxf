@@ -267,6 +267,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                             repeatedGroup.add(0, (Integer) vals.get(i));
                         }
                         break;
+                    case INT64:
+                        repeatedGroup.add(0, (Long) vals.get(i));
+                        break;
                     case BOOLEAN:
                         repeatedGroup.add(0, (Boolean) vals.get(i));
                         break;
@@ -274,8 +277,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                         if (elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
                             repeatedGroup.add(0, Charset.forName("UTF-8").decode((ByteBuffer) vals.get(i)).toString());
                         }
-
-
                         break;
                     default:
                         throw new IOException("Not supported type " + elementType.asPrimitiveType().getPrimitiveTypeName());
