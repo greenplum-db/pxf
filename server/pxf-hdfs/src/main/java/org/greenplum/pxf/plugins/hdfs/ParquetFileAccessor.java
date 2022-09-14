@@ -526,6 +526,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.BOOLEAN);
                     break;
+                case FLOAT8ARRAY:
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.DOUBLE);
+                    break;
                 case TEXTARRAY:
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.BINARY)
