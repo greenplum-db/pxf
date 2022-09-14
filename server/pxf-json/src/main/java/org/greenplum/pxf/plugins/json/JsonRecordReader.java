@@ -59,6 +59,17 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private int maxObjectLength;
     private InputStream is;
     private PartitionedJsonParser parser;
+    private LineRecordReader lineRecordReader;
+    private StringBuffer currentLineBuffer;
+    private JobConf conf;
+    private final Path file;
+    private int currentBufferIndex;
+
+    private static final char BACKSLASH = '\\';
+    private static final char QUOTE = '\"';
+    private static final char START_BRACE = '{';
+    private static final int EOF = -1;
+    private static final int END_OF_SPLIT = -2;
 
     /**
      * Create new multi-line json object reader.
@@ -74,7 +85,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
         start = split.getStart();
         end = start + split.getLength();
-        final Path file = split.getPath();
+        file = split.getPath();
         compressionCodecs = new CompressionCodecFactory(conf);
         final CompressionCodec codec = compressionCodecs.getCodec(file);
 
@@ -91,7 +102,9 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             }
             is = fileIn;
         }
-        parser = new PartitionedJsonParser(is, new LineRecordReader(conf, split));
+        this.conf = conf;
+        lineRecordReader =  new LineRecordReader(conf, split);
+        parser = new PartitionedJsonParser(jsonMemberName);
         this.pos = start;
     }
 
@@ -103,26 +116,77 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
         while (pos < end) {
 
-            String json = parser.nextObjectContainingMember(jsonMemberName);
-            pos = start + parser.getBytesRead();
-            if (json == null) {
-                return false;
-            }
 
-            long jsonStart = pos - json.getBytes(StandardCharsets.UTF_8).length;
 
-            // if the "begin-object" position is after the end of our split, we should ignore it
-            if (jsonStart >= end) {
-                return false;
-            }
 
-            if (json.length() > maxObjectLength) {
-                LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + jsonStart);
-            } else {
-                key.set(jsonStart);
-                value.set(json);
-                return true;
+            // read until first begin object
+            // send the char to parser
+            // parser returns true if identifier found + object finishes
+            // otherwise returns false
+            //
+
+            // send char to parser, continuously
+            // parser keeps list of json objects
+            // when we finish the split, we check the state
+            // if in the middle of an object, pull the next split
+            // nextSplit start: currentSplit end, finish: end of file.
+            // if the list is empty, return nothing to be done
+            // if at the end of an object, but list is not empty, return list
+
+            // instead of keeping list, pass in empty object for streaming
+
+            int i;
+            Text jsonObject = new Text();
+            boolean completedObject = false;
+            // scan to first start brace object.
+            boolean foundBeginObject = scanToFirstBeginObject();
+            // found an object, so we will either return a completed object or be mid-object
+            if (foundBeginObject) {
+                // found a start brace so begin a new json object
+                parser.startNewJsonObject();
+
+                // read through the file until the object is completed
+                while ((i = readNextChar()) >= EOF && !completedObject) {
+                    char c = (char) i;
+                    completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
+
+
+                    if (completedObject) {
+                        String json = jsonObject.toString();
+                        // we have a completed object
+                        pos = start + parser.getBytesRead();
+
+                        long jsonStart = pos - json.getBytes(StandardCharsets.UTF_8).length;
+
+                        // if the "begin-object" position is after the end of our split, we should ignore it
+                        if (jsonStart >= end) {
+                            return false;
+                        }
+
+                        if (json.length() > maxObjectLength) {
+                            LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + jsonStart);
+                        } else {
+                            key.set(jsonStart);
+                            value.set(json);
+                            return true;
+                        }
+                        return true;
+                    } else if (!completedObject && pos >= end) {
+                        // we have items in the list but the last one is incomplete so we pull in the next split
+                        // and continue reading until end of object
+                        getNextSplit();
+                        // continue the while loop to complete the object
+                        continue;
+                    } else {
+                        // if we don't have a completed item and we aren't at the end of the split
+                        // we should just continue to read
+                        continue;
+                    }
+                }
             }
+            // begin object never found
+            // don't move onto next split here
+            return false;
         }
 
         return false;
@@ -169,5 +233,49 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         } else {
             return Math.min(1.0f, (pos - start) / (float) (end - start));
         }
+    }
+
+    private int readNextChar() throws IOException {
+        Text currentLine = new Text();
+        boolean getNext = true;
+        // if we are at the end of the buffer, refresh
+        if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
+            getNext = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
+            currentLineBuffer = new StringBuffer(currentLine.toString());
+            currentBufferIndex = 0;
+        }
+        if (!getNext || currentLine == null) {
+            return END_OF_SPLIT;
+        }
+        char c = currentLineBuffer.charAt(currentBufferIndex);
+        currentBufferIndex++;
+
+        parser.trackUncountedCharsReadFromStream(c);
+
+        return c;
+    }
+
+    private boolean scanToFirstBeginObject() throws IOException {
+        // seek until we hit the first begin-object
+        boolean inString = false;
+        int i;
+        while ((i = readNextChar()) != END_OF_SPLIT) {
+            char c = (char) i;
+            // if the current value is a backslash, then ignore the next value as it's an escaped char
+            if (c == BACKSLASH) {
+                readNextChar();
+                break;
+            } else if (c == QUOTE) {
+                inString = !inString;
+            } else if (c == START_BRACE && !inString) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void getNextSplit() throws IOException {
+        FileSplit nextSplit = new FileSplit(file, end, Long.MAX_VALUE, (String[]) null);
+        lineRecordReader = new LineRecordReader(conf, nextSplit);
     }
 }

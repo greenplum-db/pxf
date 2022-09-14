@@ -20,7 +20,6 @@ package org.greenplum.pxf.plugins.json.parser;
  */
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -29,7 +28,6 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.LineRecordReader;
 import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
 
 
@@ -43,53 +41,36 @@ import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
  */
 public class PartitionedJsonParser {
 
-	private static final char BACKSLASH = '\\';
-	private static final char QUOTE = '\"';
 	private static final char START_BRACE = '{';
 	private static final int EOF = -1;
 	private static final int CHARS_READ_LIMIT = 8192;
-	private StringBuffer currentLineBuffer;
-	private int currentBufferIndex;
 	private final JsonLexer lexer;
 	private long bytesRead = 0;
 
 	private boolean endOfStream = false;
 	private final StringBuilder uncountedCharsReadFromStream;
-	private LineRecordReader lineRecordReader;
-	private boolean inNextSplit = false;
-	private InputStream is;
+	private String memberName;
+	private MemberSearchState memberState;
+	private StringBuilder currentObject;
+	private StringBuilder currentString;
+	private int objectCount;
+	private List<Integer> objectStack;
 
 	private static final Log LOG = LogFactory.getLog(PartitionedJsonParser.class);
 
-	public PartitionedJsonParser(InputStream is, LineRecordReader lineRecordReader) {
+	public PartitionedJsonParser(String memberName) {
 		this.lexer = new JsonLexer();
 
 		this.uncountedCharsReadFromStream = new StringBuilder(CHARS_READ_LIMIT);
-		this.is = is;
-		this.lineRecordReader = lineRecordReader;
-	}
+		this.memberName = memberName;
+		this.memberState = MemberSearchState.SEARCHING;
 
-	private boolean scanToFirstBeginObject() throws IOException {
-		// seek until we hit the first begin-object
-		boolean inString = false;
-		int i;
-		while ((i = readNextChar()) != EOF) {
-			char c = (char) i;
-			// if the current value is a backslash, then ignore the next value as it's an escaped char
-			if (c == BACKSLASH) {
-				 readNextChar();
-				 break;
-			} else if (c == QUOTE) {
-				inString = !inString;
-			} else if (c == START_BRACE && !inString) {
-				lexer.setState(JsonLexer.JsonLexerState.BEGIN_OBJECT);
-				return true;
-			}
-		}
-		endOfStream = true;
-		return false;
-	}
+		this.objectCount = 0;
+		this.currentObject = new StringBuilder();
+		this.currentString = new StringBuilder();
 
+		this.objectStack = new ArrayList<Integer>();
+	}
 	private enum MemberSearchState {
 		FOUND_STRING_NAME,
 
@@ -101,105 +82,93 @@ public class PartitionedJsonParser {
 	private static final EnumSet<JsonLexerState> inStringStates = EnumSet.of(JsonLexerState.INSIDE_STRING,
 			JsonLexerState.STRING_ESCAPE);
 
+	public void startNewJsonObject() {
+		lexer.setState(JsonLexerState.BEGIN_OBJECT);
+		this.objectCount = 0;
+		this.currentObject = new StringBuilder();
+		this.currentString = new StringBuilder();
+		this.objectStack = new ArrayList<Integer>();
+
+		currentObject.append(START_BRACE);
+
+	}
 	/**
-	 * @param memberName
+	 * @param c character to parse
 	 *            Indicates the member name used to determine the encapsulating object to return.
 	 * @return Returns next json object that contains a member attribute with name: memberName. Returns null if no such
 	 *         object is found or the end of the stream is reached.
 	 * @throws IOException IOException when stream reading
 	 */
-	public String nextObjectContainingMember(String memberName) throws IOException {
+	public boolean buildNextObjectContainingMember(char c, Text jsonObject) {
+		lexer.lex(c);
 
-		// if its the end of the stream, or you have finished your object in the next split, move on.s
-		if (endOfStream || inNextSplit) {
-			return null;
-		}
+		currentObject.append(c);
 
-		int i;
-		int objectCount = 0;
-		StringBuilder currentObject = new StringBuilder();
-		StringBuilder currentString = new StringBuilder();
-		MemberSearchState memberState = MemberSearchState.SEARCHING;
+		switch (memberState) {
+		case SEARCHING:
+			if (lexer.getState() == JsonLexerState.BEGIN_STRING) {
+				// we found the start of a string, so reset our string buffer
+				currentString.setLength(0);
+			} else if (inStringStates.contains(lexer.getState())) {
+				// we're still inside a string, so keep appending to our buffer
+				currentString.append(c);
+			} else if (lexer.getState() == JsonLexerState.END_STRING && memberName.equals(currentString.toString())) {
 
-		List<Integer> objectStack = new ArrayList<Integer>();
-
-		if (!scanToFirstBeginObject()) {
-			return null;
-		}
-		currentObject.append(START_BRACE);
-		objectStack.add(0);
-
-		while ((i = readNextChar()) != EOF) {
-			char c = (char) i;
-
-			lexer.lex(c);
-
-			currentObject.append(c);
-
-			switch (memberState) {
-			case SEARCHING:
-				if (lexer.getState() == JsonLexerState.BEGIN_STRING) {
-					// we found the start of a string, so reset our string buffer
+				if (objectStack.size() > 0) {
+					// we hit the end of the string and it matched the member name (yay)
+					memberState = MemberSearchState.FOUND_STRING_NAME;
 					currentString.setLength(0);
-				} else if (inStringStates.contains(lexer.getState())) {
-					// we're still inside a string, so keep appending to our buffer
-					currentString.append(c);
-				} else if (lexer.getState() == JsonLexerState.END_STRING && memberName.equals(currentString.toString())) {
-
-					if (objectStack.size() > 0) {
-						// we hit the end of the string and it matched the member name (yay)
-						memberState = MemberSearchState.FOUND_STRING_NAME;
-						currentString.setLength(0);
-					}
-				} else if (lexer.getState() == JsonLexerState.BEGIN_OBJECT) {
-					// we are searching and found a '{', so we reset the current object string
-					if (objectStack.size() == 0) {
-						currentObject.setLength(0);
-						currentObject.append(START_BRACE);
-					}
-					objectStack.add(currentObject.length() - 1);
-				} else if (lexer.getState() == JsonLexerState.END_OBJECT) {
-					if (objectStack.size() > 0) {
-						objectStack.remove(objectStack.size() - 1);
-					}
-					if (objectStack.size() == 0) {
-						currentObject.setLength(0);
-					}
 				}
-				break;
-			case FOUND_STRING_NAME:
-				// keep popping whitespaces until we hit a different token
-				if (lexer.getState() != JsonLexerState.WHITESPACE) {
-					if (lexer.getState() == JsonLexerState.NAME_SEPARATOR) {
-						// found our member!
-						memberState = MemberSearchState.IN_MATCHING_OBJECT;
-						objectCount = 0;
-
-						if (objectStack.size() > 1) {
-							currentObject.delete(0, objectStack.get(objectStack.size() - 1));
-						}
-						objectStack.clear();
-					} else {
-						// we didn't find a value-separator (:), so our string wasn't a member string. keep searching
-						memberState = MemberSearchState.SEARCHING;
-					}
+			} else if (lexer.getState() == JsonLexerState.BEGIN_OBJECT) {
+				// we are searching and found a '{', so we reset the current object string
+				if (objectStack.size() == 0) {
+					currentObject.setLength(0);
+					currentObject.append(START_BRACE);
 				}
-				break;
-			case IN_MATCHING_OBJECT:
-				if (lexer.getState() == JsonLexerState.BEGIN_OBJECT) {
-					objectCount++;
-				} else if (lexer.getState() == JsonLexerState.END_OBJECT) {
-					objectCount--;
-					if (objectCount < 0) {
-						// we're done! we reached an "}" which is at the same level as the member we found
-						return currentObject.toString();
-					}
+				objectStack.add(currentObject.length() - 1);
+			} else if (lexer.getState() == JsonLexerState.END_OBJECT) {
+				if (objectStack.size() > 0) {
+					objectStack.remove(objectStack.size() - 1);
 				}
-				break;
+				if (objectStack.size() == 0) {
+					currentObject.setLength(0);
+				}
 			}
+			break;
+		case FOUND_STRING_NAME:
+			// keep popping whitespaces until we hit a different token
+			if (lexer.getState() != JsonLexerState.WHITESPACE) {
+				if (lexer.getState() == JsonLexerState.NAME_SEPARATOR) {
+					// found our member!
+					memberState = MemberSearchState.IN_MATCHING_OBJECT;
+					objectCount = 0;
+
+					if (objectStack.size() > 1) {
+						currentObject.delete(0, objectStack.get(objectStack.size() - 1));
+					}
+					objectStack.clear();
+				} else {
+					// we didn't find a value-separator (:), so our string wasn't a member string. keep searching
+					memberState = MemberSearchState.SEARCHING;
+				}
+			}
+			break;
+		case IN_MATCHING_OBJECT:
+			if (lexer.getState() == JsonLexerState.BEGIN_OBJECT) {
+				objectCount++;
+			} else if (lexer.getState() == JsonLexerState.END_OBJECT) {
+				objectCount--;
+				if (objectCount < 0) {
+					// we're done! we reached an "}" which is at the same level as the member we found
+					jsonObject.set(currentObject.toString());
+					return true;
+				}
+			}
+			break;
 		}
+
 		endOfStream = true;
-		return null;
+		return false;
 	}
 
 	/**
@@ -217,48 +186,14 @@ public class PartitionedJsonParser {
 		return endOfStream;
 	}
 
-	private int readNextChar() throws IOException {
+	public void trackUncountedCharsReadFromStream(int c) {
 
-		if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
-
-			// pull new line into buffer if buffer == null and index >= buffer.length
-			Text currentLine = new Text();
-			boolean i = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
-			// if you need to pull a new line, but we have reached the end of the record reader
-			// but not the end of the object
-			if (i == false) {
-				LOG.debug("End of last split, opening new split to finish object");
-				inNextSplit = true;
-				long newStart = lineRecordReader.getPos();
-				// modified to figure out how to pass in the block size
-				long newEnd = newStart * 2;
-				// figure out how to pass the maxLineLength
-				int maxLineLength = Integer.MAX_VALUE;
-				LOG.debug(String.format("New split starts: %d ends: %d", newStart, newEnd));
-				lineRecordReader = new LineRecordReader(is, newStart, newEnd, maxLineLength);
-				lineRecordReader.next(lineRecordReader.createKey(), currentLine);
+		// if i am at end of object. then check if im in my split. otherwise done
+		if (c != EOF) {
+			uncountedCharsReadFromStream.append((char) c);
+			if (uncountedCharsReadFromStream.length() == CHARS_READ_LIMIT) {
+				bytesRead += countBytesInReadChars();
 			}
-
-			currentLineBuffer = new StringBuffer(currentLine.toString());
-			currentBufferIndex = 0;
-		}
-		// otherwise read from buffer
-		// track where you are in the buffer with some global index
-		if (currentLineBuffer.length() >= 1) {
-			int c = currentLineBuffer.charAt(currentBufferIndex);
-			currentBufferIndex++;
-
-			// if i am at end of object. then check if im in my split. otherwise done
-			if (c != EOF) {
-				uncountedCharsReadFromStream.append((char) c);
-				if (uncountedCharsReadFromStream.length() == CHARS_READ_LIMIT) {
-					bytesRead += countBytesInReadChars();
-				}
-			}
-			return c;
-		}
-		else {
-			return -1;
 		}
 	}
 
