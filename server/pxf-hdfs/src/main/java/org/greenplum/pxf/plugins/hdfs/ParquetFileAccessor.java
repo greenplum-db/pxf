@@ -522,16 +522,21 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                             .optionalElement(PrimitiveTypeName.INT32)
                             .as(intType(16, true));
                     break;
+                case TEXTARRAY:
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.BINARY)
+                            .as(stringType());
+                    break;
                 default:
                     throw new UnsupportedTypeException(
                             String.format("Type %d is not supported", columnTypeCode));
             }
 
-            if(primitiveBuilder != null){
+            if (primitiveBuilder != null) {
                 fields.add(primitiveBuilder.named(columnName));
             }
 
-            if(listBuilder != null){
+            if (listBuilder != null) {
                 fields.add(listBuilder.named(columnName));
             }
         }

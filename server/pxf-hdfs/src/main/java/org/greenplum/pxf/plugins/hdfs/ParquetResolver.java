@@ -41,6 +41,9 @@ import org.greenplum.pxf.plugins.hdfs.parquet.ParquetUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -56,13 +59,12 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     // used to distinguish string pattern between type "timestamp" ("2019-03-14 14:10:28")
     // and type "timestamp with time zone" ("2019-03-14 14:10:28+07:30")
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
-
+    private static final PgUtilities pgUtilities = new PgUtilities();
+    private final ObjectMapper mapper = new ObjectMapper();
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
     private List<ColumnDescriptor> columnDescriptors;
-    private final ObjectMapper mapper = new ObjectMapper();
-    private static final PgUtilities pgUtilities = new PgUtilities();
-    private ParquetUtilities parquetUtilities=new ParquetUtilities(pgUtilities);
+    private ParquetUtilities parquetUtilities = new ParquetUtilities(pgUtilities);
 
     @Override
     public void afterPropertiesSet() {
@@ -126,10 +128,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private void fillGroup(int index, OneField field, Group group, Type type) throws IOException {
         if (field.val == null)
             return;
-        if(type.isPrimitive()){
-            fillPrimitiveGroup(index,field,group,type);
-        }else{
-            fillComplexGroup(index,field,group,type);
+        if (type.isPrimitive()) {
+            fillPrimitiveGroup(index, field, group, type);
+        } else {
+            fillComplexGroup(index, field, group, type);
         }
     }
 
@@ -227,9 +229,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         if (field.val == null)
             return;
 
-        switch (type.asGroupType().getOriginalType()){
+        switch (type.asGroupType().getOriginalType()) {
             case LIST:
-                fillListGroup(index,field,group,type);
+                fillListGroup(index, field, group, type);
                 break;
             default:
                 throw new IOException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
@@ -240,42 +242,49 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         if (field.val == null)
             return;
         //Get the LIST group type and schema
-        GroupType listType=type.asGroupType();
+        GroupType listType = type.asGroupType();
         //Get the repeated list group type and schema
-        GroupType repeatedType=listType.getType(0).asGroupType();
+        GroupType repeatedType = listType.getType(0).asGroupType();
         //Get the element type
-        Type elementType=repeatedType.getType(0).asPrimitiveType();
+        Type elementType = repeatedType.getType(0).asPrimitiveType();
         //parse parquet values into a postgres Object list
-        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(),elementType);
-        Group arrayGroup=new SimpleGroup(listType);
+        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(), elementType);
+        Group arrayGroup = new SimpleGroup(listType);
 
-        for(int i=0;i<vals.size();i++){
-            Group repeatedGroup=new SimpleGroup(repeatedType);
-            if(vals.get(i)!=null){
+        for (int i = 0; i < vals.size(); i++) {
+            Group repeatedGroup = new SimpleGroup(repeatedType);
+            if (vals.get(i) != null) {
                 switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
                     case INT32:
 //                        if (type.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
 //                            String dateString = (String) field.val;
 //                            group.add(index, ParquetTypeConverter.getDaysFromEpochFromDateString(dateString));
 //                        }
-                        if( elementType.getLogicalTypeAnnotation() instanceof  IntLogicalTypeAnnotation &&
-                                 ((IntLogicalTypeAnnotation) elementType.getLogicalTypeAnnotation()).getBitWidth() ==16){
+                        if (elementType.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
+                                ((IntLogicalTypeAnnotation) elementType.getLogicalTypeAnnotation()).getBitWidth() == 16) {
                             repeatedGroup.add(0, (Short) vals.get(i));
-                        }else {
+                        } else {
                             repeatedGroup.add(0, (Integer) vals.get(i));
                         }
                         break;
                     case BOOLEAN:
-                        repeatedGroup.add(0,(Boolean) vals.get(i));
+                        repeatedGroup.add(0, (Boolean) vals.get(i));
+                        break;
+                    case BINARY:
+                        if (elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
+                            repeatedGroup.add(0, Charset.forName("UTF-8").decode((ByteBuffer) vals.get(i)).toString());
+                        }
+
+
                         break;
                     default:
                         throw new IOException("Not supported type " + elementType.asPrimitiveType().getPrimitiveTypeName());
                 }
             }
             // if the current element is a null, add an empty repeated group into array group
-            arrayGroup.add(0,repeatedGroup);
+            arrayGroup.add(0, repeatedGroup);
         }
-        group.add(index,arrayGroup);
+        group.add(index, arrayGroup);
 
     }
 
