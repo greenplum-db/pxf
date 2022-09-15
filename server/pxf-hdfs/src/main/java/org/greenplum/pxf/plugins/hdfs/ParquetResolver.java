@@ -256,12 +256,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             if (vals.get(i) != null) {
                 switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
                     case INT32:
-//                        if (type.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
-//                            String dateString = (String) field.val;
-//                            group.add(index, ParquetTypeConverter.getDaysFromEpochFromDateString(dateString));
-//                        }
-                        if( elementType.getLogicalTypeAnnotation() instanceof  IntLogicalTypeAnnotation &&
-                                 ((IntLogicalTypeAnnotation) elementType.getLogicalTypeAnnotation()).getBitWidth() ==16){
+                        if (elementType.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
+                            repeatedGroup.add(index, (Integer) vals.get(i));
+                        } else if (elementType.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
+                                ((IntLogicalTypeAnnotation) elementType.getLogicalTypeAnnotation()).getBitWidth() == 16) {
                             repeatedGroup.add(0, (Short) vals.get(i));
                         } else {
                             repeatedGroup.add(0, (Integer) vals.get(i));
