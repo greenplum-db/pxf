@@ -43,7 +43,6 @@ import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
@@ -257,7 +256,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
                     case INT32:
                         if (elementType.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
-                            repeatedGroup.add(index, (Integer) vals.get(i));
+                            repeatedGroup.add(0, (Integer) vals.get(i));
                         } else if (elementType.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
                                 ((IntLogicalTypeAnnotation) elementType.getLogicalTypeAnnotation()).getBitWidth() == 16) {
                             repeatedGroup.add(0, (Short) vals.get(i));
@@ -280,6 +279,16 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     case BINARY:
                         if (elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
                             repeatedGroup.add(0, Charset.forName("UTF-8").decode((ByteBuffer) vals.get(i)).toString());
+                        }
+                        break;
+                    case INT96:
+                        String timestamp = (String) vals.get(i);
+                        if (TIMESTAMP_PATTERN.matcher(timestamp).find()) {
+                            // Note: this conversion convert type "timestamp with time zone" will lose timezone information
+                            // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
+                            repeatedGroup.add(0, ParquetTypeConverter.getBinaryFromTimestampWithTimeZone(timestamp));
+                        } else {
+                            repeatedGroup.add(0, ParquetTypeConverter.getBinaryFromTimestamp(timestamp));
                         }
                         break;
                     default:
