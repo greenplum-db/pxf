@@ -1343,9 +1343,9 @@ public class ParquetWriteTest {
     //TODO
     @Test
     public void testWriteTimestampArray() throws Exception {
-        String path = temp + "/out/int/";
+        String path = temp + "/out/timestamp_array/";
 
-        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+        columnDescriptors.add(new ColumnDescriptor("ts_array", DataType.TIMESTAMPARRAY.getOID(), 0, "ts_array", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123475");
@@ -1354,6 +1354,81 @@ public class ParquetWriteTest {
         accessor.afterPropertiesSet();
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+
+        // write parquet file with timestamp values
+        for (int i = 0; i < 10; i++) {
+            List<String> tsList = null;
+            if (i != 9) {
+                tsList = new ArrayList<>();
+                tsList.add(null);
+                Instant timestamp = Instant.parse(String.format("2020-08-%02dT04:00:05Z", i + 1)); // UTC
+                ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
+                String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2020-08-%02dT04:00:05Z" in PST
+                tsList.add(localTimestampString);
+            }
+            List<OneField> record = Collections.singletonList(new OneField(DataType.TIMESTAMP.getOID(), tsList));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
+
+        accessor.closeForWrite();
+
+        // Validate write
+        Path expectedFile = new Path(HcfsType.FILE.getUriForWrite(context) + ".snappy.parquet");
+        assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
+
+        MessageType schema = validateFooter(expectedFile);
+
+        ParquetReader<Group> fileReader = ParquetReader.builder(new GroupReadSupport(), expectedFile)
+                .withConf(configuration)
+                .build();
+
+        for (int i = 0; i < 10; i++) {
+            Type outerType = schema.getType(0);
+            assertNotNull(outerType.getLogicalTypeAnnotation());
+            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
+
+            // get the outer group
+            Group outerGroup = fileReader.read();
+
+            if (i != 9) {
+                // if the array is not a null array, the outer group should only have one field
+                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+
+                // get the repeated list group
+                Group repeatedGroup = outerGroup.getGroup(0, 0);
+                Type repeatedType = outerType.asGroupType().getType(0);
+                //repeated group must use "repeated" keyword
+                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
+                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
+                assertEquals(3, repetitionCount);
+
+                for (int j = 0; j < repetitionCount; j++) {
+                    Group elementGroup = repeatedGroup.getGroup(0, j);
+                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
+                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
+                        continue;
+                    }
+                    // only one  element in the repeated list, the repetition count should be 1
+                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
+                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
+                    // Physical type is INT96
+                    assertEquals(PrimitiveType.PrimitiveTypeName.INT96, elementType.asPrimitiveType().getPrimitiveTypeName());
+                    assertNull(elementType.getLogicalTypeAnnotation());
+
+                    Instant timestamp = Instant.parse(String.format("2020-08-%02dT04:00:05Z", i + 1)); // UTC
+                    ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
+                    String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2020-08-%02dT04:00:05Z" in PST
+
+                    assertEquals(localTimestampString, bytesToTimestamp(elementGroup.getInt96(0, 0).getBytes()));
+                }
+            } else {
+                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+            }
+        }
+        fileReader.close();
     }
 
     @Test
