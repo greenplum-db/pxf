@@ -51,6 +51,7 @@ PG_FUNCTION_INFO_V1(gpdbwritableformatter_export);
 PG_FUNCTION_INFO_V1(gpdbwritableformatter_import);
 Datum		gpdbwritableformatter_import(PG_FUNCTION_ARGS);
 Datum		gpdbwritableformatter_export(PG_FUNCTION_ARGS);
+static Form_pg_attribute getAttributeFromTupleDesc(TupleDesc, int);
 
 static const int ERR_COL_OFFSET = 9;
 static const int FIRST_LINE_NUM = 1;
@@ -336,11 +337,7 @@ boolArrayToByteArray(bool *data, int len, int validlen, int *outlen, TupleDesc t
 	for (i = 0, j = 0, k = 7; i < len; i++)
 	{
 		/* Ignore dropped attributes. */
-        #if PG_VERSION_NUM >= 120000
-            Form_pg_attribute attr = &tupdesc->attrs[i];
-        #else
-            Form_pg_attribute attr = tupdesc->attrs[i];
-        #endif
+        Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
 		if (attr->attisdropped) continue;
 
@@ -385,11 +382,7 @@ byteArrayToBoolArray(bits8 *data, int data_len, int len, bool **booldata, int bo
 	for (i = 0, j = 0, k = 7; i < boollen; i++)
 	{
 		/* Ignore dropped attributes. */
-        #if PG_VERSION_NUM >= 120000
-            Form_pg_attribute attr = &tupdesc->attrs[i];
-        #else
-            Form_pg_attribute attr = tupdesc->attrs[i];
-        #endif
+        Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
 		if (attr->attisdropped)
 		{
@@ -429,11 +422,7 @@ verifyExternalTableDefinition(int16 ncolumns_remote, AttrNumber nvalidcolumns, A
 	/* Extract Column Type and check against External Table definition */
 	for (i = 0; i < ncolumns; i++)
 	{
-        #if PG_VERSION_NUM >= 120000
-            Form_pg_attribute attr = &tupdesc->attrs[i];
-        #else
-            Form_pg_attribute attr = tupdesc->attrs[i];
-        #endif
+        Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
 		/* Ignore dropped attributes. */
 		if (attr->attisdropped) continue;
@@ -503,11 +492,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	nvalidcolumns = 0;
 	for (i = 0; i < ncolumns; i++)
 	{
-        #if PG_VERSION_NUM >= 120000
-            Form_pg_attribute attr = &tupdesc->attrs[i];
-        #else
-            Form_pg_attribute attr = tupdesc->attrs[i];
-        #endif
+        Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
             if (!attr->attisdropped)
                 nvalidcolumns++;
@@ -534,11 +519,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 		/* setup the text/binary input function */
 		for (i = 0; i < ncolumns; i++)
 		{
-            #if PG_VERSION_NUM >= 120000
-                Form_pg_attribute attr = &tupdesc->attrs[i];
-            #else
-                Form_pg_attribute attr = tupdesc->attrs[i];
-            #endif
+            Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
 			Oid			type = attr->atttypid;
 			bool		isvarlena;
@@ -596,11 +577,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	 */
 	for (i = 0; i < ncolumns; i++)
 	{
-        #if PG_VERSION_NUM >= 120000
-            Form_pg_attribute attr = &tupdesc->attrs[i];
-        #else
-            Form_pg_attribute attr = tupdesc->attrs[i];
-        #endif
+        Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
 		/* Ignore dropped attributes. */
 		if (attr->attisdropped) continue;
@@ -686,11 +663,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	/* Write col type for columns that have not been dropped */
 	for (i = 0; i < ncolumns; i++)
 	{
-        #if PG_VERSION_NUM >= 120000
-            Form_pg_attribute attr = &tupdesc->attrs[i];
-        #else
-            Form_pg_attribute attr = tupdesc->attrs[i];
-        #endif
+        Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
 		/* Ignore dropped attributes. */
 		if (!attr->attisdropped)
@@ -707,11 +680,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	/* Column Value */
 	for (i = 0; i < ncolumns; i++)
 	{
-        #if PG_VERSION_NUM >= 120000
-            Form_pg_attribute attr = &tupdesc->attrs[i];
-        #else
-            Form_pg_attribute attr = tupdesc->attrs[i];
-        #endif
+        Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
 		/* Ignore dropped attributes and null values. */
 		if (!attr->attisdropped && !myData->nulls[i])
@@ -773,11 +742,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	/* Get the number of valid columns, excluding dropped columns */
 	for (i = 0; i < ncolumns; i++)
 	{
-        #if PG_VERSION_NUM >= 120000
-            Form_pg_attribute attr = &tupdesc->attrs[i];
-        #else
-            Form_pg_attribute attr = tupdesc->attrs[i];
-        #endif
+        Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
             if (!attr->attisdropped)
                 nvalidcolumns++;
@@ -802,11 +767,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 
 		for (i = 0; i < ncolumns; i++)
 		{
-                #if PG_VERSION_NUM >= 120000
-                    Form_pg_attribute attr = &tupdesc->attrs[i];
-                #else
-                    Form_pg_attribute attr = tupdesc->attrs[i];
-                #endif
+                Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
                     Oid type = attr->atttypid;
 
@@ -924,11 +885,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	/* extract column value */
 	for (i = 0; i < ncolumns; i++)
 	{
-        #if PG_VERSION_NUM >= 120000
-            Form_pg_attribute attr = &tupdesc->attrs[i];
-        #else
-            Form_pg_attribute attr = tupdesc->attrs[i];
-        #endif
+	    Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
 		/* Ignore dropped attributes. */
 		if (attr->attisdropped) continue;
@@ -1031,5 +988,19 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	tuple = heap_form_tuple(tupdesc, myData->values, myData->nulls);
 	FORMATTER_SET_TUPLE(fcinfo, tuple);
 	FORMATTER_RETURN_TUPLE(tuple);
+}
+
+static inline Form_pg_attribute
+getAttributeFromTupleDesc(TupleDesc tupdesc, int index)
+{
+    Form_pg_attribute attr;
+    #if PG_VERSION_NUM >= 120000
+         attr = &tupdesc->attrs[index];
+    #else
+         attr = tupdesc->attrs[index];
+    #endif
+
+    return attr;
+
 }
 
