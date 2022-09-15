@@ -44,11 +44,11 @@ public class ParquetUtilities {
         if (val == null) {
             return null;
         }
-        val = val.replaceAll("\\s", "");
         String[] splits = pgUtilities.splitArray(val);
         List<Object> data = new ArrayList<>(splits.length);
         for (String split : splits) {
             try {
+                split = split.trim();
                 data.add(decodeString(split, schemaType));
             } catch (NumberFormatException | PxfRuntimeException e) {
                 String hint = createErrorHintFromValue(StringUtils.startsWith(split, "["), val);
