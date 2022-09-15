@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.4.1 (09/15/2022)
+
+### Bug Fixes:
+
+- [#858](https://github.com/greenplum-db/pxf/pull/858) Add JsonProtocolHandler to use HdfsFileFragmenter for multi-line JSON
+
 ## 6.4.0 (08/15/2022)
 
 ### Enhancements:
