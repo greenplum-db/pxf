@@ -182,6 +182,32 @@ steps:
   waitFor:
     - gpdb7-centos7-test-pxf-image-cache
 
+# Greenplum 7 Rhel 8 Image
+- name: 'gcr.io/cloud-builders/docker'
+  id: gpdb7-rhel8-test-pxf-image-cache
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      mkdir -p /workspace/build
+      docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rhel8-test-pxf:latest || exit 0
+  waitFor: ['-']
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: gpdb7-rhel8-test-pxf-image
+  args:
+    - 'build'
+    - '--build-arg=BASE_IMAGE=${_PRIVATE_BASE_IMAGE_REPOSITORY}/gpdb7-rhel8-test:latest'
+    - '--build-arg=GINKGO_VERSION=${_GINKGO_VERSION}'
+    - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rhel8-test-pxf:$COMMIT_SHA'
+    - '--cache-from'
+    - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rhel8-test-pxf:latest'
+    - '-f'
+    - 'concourse/docker/pxf-dev-base/gpdb7/rhel8/Dockerfile'
+    - '/workspace/build/'
+  waitFor:
+    - gpdb7-rhel8-test-pxf-image-cache
+
 # Greenplum 7 Ubuntu 18.04 Image
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb7-ubuntu18.04-test-pxf-image-cache
@@ -221,4 +247,5 @@ images:
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-oel7-test-pxf:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-centos7-test-pxf:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rhel8-test-pxf:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-ubuntu18.04-test-pxf:$COMMIT_SHA'

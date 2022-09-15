@@ -25,6 +25,7 @@ digraph pxf_container_image_flow {
         style=dashed
         node [shape=box3d fillcolor="#2aa198" style=filled fontcolor=white]
         gp6_rhel8_latest[label="gpdb6-rhel8-test:latest"]
+        gp7_rhel8_latest[label="gpdb7-rhel8-test:latest"]
     }
 
     # PXF Cloudbuild & Dockerfiles
@@ -39,6 +40,7 @@ digraph pxf_container_image_flow {
         gp6_ubuntu18_dockerfile[label="gpdb6/ubuntu18.04"]
         gp6_oel7_dockerfile[label="gpdb6/oel7"]
         gp7_centos7_dockerfile[label="gpdb7/centos7"]
+        gp7_rhel8_dockerfile[label="gpdb7/rhel8"]
         gp7_ubuntu18_dockerfile[label="gpdb7/ubuntu18.04"]
 
     }
@@ -69,6 +71,7 @@ digraph pxf_container_image_flow {
             gp6_ubuntu18_pxf_sha[label="gpdb6-ubuntu18.04-test-pxf:$COMMIT_SHA"]
             gp6_oel7_pxf_sha[label="gpdb6-oel7-test-pxf:$COMMIT_SHA"]
             gp7_centos7_pxf_sha[label="gpdb7-centos7-test-pxf:$COMMIT_SHA"]
+            gp7_rhel8_pxf_sha[label="gpdb7-rhel8-test-pxf:$COMMIT_SHA"]
             gp7_ubuntu18_pxf_sha[label="gpdb7-ubuntu18.04-test-pxf:$COMMIT_SHA"]
 
             gp5_centos7_pxf_latest[label="gpdb5-centos7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
@@ -77,6 +80,7 @@ digraph pxf_container_image_flow {
             gp6_ubuntu18_pxf_latest[label="gpdb6-ubuntu18.04-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp6_oel7_pxf_latest[label="gpdb6-oel7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp7_centos7_pxf_latest[label="gpdb7-centos7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
+            gp7_rhel8_pxf_latest[label="gpdb7-rhel8-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp7_ubuntu18_pxf_latest[label="gpdb7-ubuntu18.04-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
         }
 
@@ -159,6 +163,10 @@ digraph pxf_container_image_flow {
     gp7_centos7_dockerfile -> gp7_centos7_pxf_sha[label="CloudBuild"]
     gp7_centos7_pxf_sha -> gp7_centos7_pxf_latest[label="tag (concourse pipeline)"]
 
+    gp7_rhel8_latest -> gp7_rhel8_dockerfile
+    gp7_rhel8_dockerfile -> gp7_rhel8_pxf_sha[label="CloudBuild"]
+    gp7_rhel8_pxf_sha -> gp7_rhel8_pxf_latest[label="tag (concourse pipeline)"]
+
     gp7_ubuntu18_latest -> gp7_ubuntu18_dockerfile
     gp7_ubuntu18_dockerfile -> gp7_ubuntu18_pxf_sha[label="CloudBuild"]
     gp7_ubuntu18_pxf_sha -> gp7_ubuntu18_pxf_latest[label="tag (concourse pipeline)"]
@@ -202,6 +210,10 @@ digraph pxf_container_image_flow {
 
     gp7_centos7_pxf_latest -> build
     gp7_centos7_pxf_latest -> pr
+
+    gp7_rhel8_pxf_latest -> certification
+    gp7_rhel8_pxf_latest -> build
+    gp7_rhel8_pxf_latest -> pr
 
     gp7_ubuntu18_pxf_latest -> build
     gp7_ubuntu18_pxf_latest -> pr
