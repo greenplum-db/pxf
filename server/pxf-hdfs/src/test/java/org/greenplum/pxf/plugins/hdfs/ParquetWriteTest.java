@@ -1006,7 +1006,6 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         // write parquet array with TEXT values of a and b, repeated i + 1 times
-        //todo: skip null element
         for (int i = 0; i < 10; i++) {
             List<String> textList = null;
             if (i != 9) {
@@ -1082,9 +1081,9 @@ public class ParquetWriteTest {
     //TODO
     @Test
     public void testWriteDateArray() throws Exception {
-        String path = temp + "/out/int/";
+        String path = temp + "/out/date_array/";
 
-        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+        columnDescriptors.add(new ColumnDescriptor("date_array", DataType.DATEARRAY.getOID(), 0, "datearray", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123472");
@@ -1093,6 +1092,78 @@ public class ParquetWriteTest {
         accessor.afterPropertiesSet();
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+
+        // write parquet file with DATE from 2020-08-01 to 2020-08-10
+        // physical type is int32
+        for (int i = 0; i < 10; i++) {
+            List<String> dateList = null;
+            if (i != 9) {
+                dateList = new ArrayList<>();
+                String date = String.format("2020-08-%02d", i + 1);
+                dateList.add(null);
+                dateList.add(date);
+                dateList.add(date);
+            }
+            List<OneField> record = Collections.singletonList(new OneField(DataType.DATE.getOID(), dateList));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
+
+        accessor.closeForWrite();
+
+        // Validate write
+        Path expectedFile = new Path(HcfsType.FILE.getUriForWrite(context) + ".snappy.parquet");
+        assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
+
+        MessageType schema = validateFooter(expectedFile);
+
+        ParquetReader<Group> fileReader = ParquetReader.builder(new GroupReadSupport(), expectedFile)
+                .withConf(configuration)
+                .build();
+
+        for (int i = 0; i < 10; i++) {
+            Type outerType = schema.getType(0);
+            assertNotNull(outerType.getLogicalTypeAnnotation());
+            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
+
+            // get the outer group
+            Group outerGroup = fileReader.read();
+
+            if (i != 9) {
+                // if the array is not a null array, the outer group should only have one field
+                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+
+                // get the repeated list group
+                Group repeatedGroup = outerGroup.getGroup(0, 0);
+                Type repeatedType = outerType.asGroupType().getType(0);
+                //repeated group must use "repeated" keyword
+                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
+                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
+                assertEquals(3, repetitionCount);
+
+                for (int j = 0; j < repetitionCount; j++) {
+                    Group elementGroup = repeatedGroup.getGroup(0, j);
+                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
+                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
+                        continue;
+                    }
+                    // only one  element in the repeated list, the repetition count should be 1
+                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
+                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
+                    // Physical type is INT32, logical type is DATE
+                    assertEquals(PrimitiveType.PrimitiveTypeName.INT32, elementType.asPrimitiveType().getPrimitiveTypeName());
+                    assertTrue(elementType.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation);
+
+                    int epoch = elementGroup.getInteger(0, 0);
+                    assertEquals(18475 + i, epoch);
+                }
+            } else {
+                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+            }
+        }
+        fileReader.close();
     }
 
     @Test
@@ -1373,9 +1444,9 @@ public class ParquetWriteTest {
     //TODO
     @Test
     public void testWriteByteaArray() throws Exception {
-        String path = temp + "/out/int/";
+        String path = temp + "/out/bytea_array/";
 
-        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+        columnDescriptors.add(new ColumnDescriptor("bytea_array", DataType.BYTEAARRAY.getOID(), 0, "byteaArray", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123477");
