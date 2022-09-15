@@ -1078,7 +1078,6 @@ public class ParquetWriteTest {
         fileReader.close();
     }
 
-    //TODO
     @Test
     public void testWriteDateArray() throws Exception {
         String path = temp + "/out/date_array/";
@@ -1340,7 +1339,6 @@ public class ParquetWriteTest {
         fileReader.close();
     }
 
-    //TODO
     @Test
     public void testWriteTimestampArray() throws Exception {
         String path = temp + "/out/timestamp_array/";
@@ -1366,6 +1364,7 @@ public class ParquetWriteTest {
                 Instant timestamp = Instant.parse(String.format("2020-08-%02dT04:00:05Z", i + 1)); // UTC
                 ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
                 String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2020-08-%02dT04:00:05Z" in PST
+                tsList.add(localTimestampString);
                 tsList.add(localTimestampString);
             }
             List<OneField> record = Collections.singletonList(new OneField(DataType.TIMESTAMP.getOID(), tsList));

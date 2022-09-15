@@ -282,7 +282,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                         }
                         break;
                     case INT96:
-                        String timestamp = (String) vals.get(i);
+                        String timestamp = ParquetTypeConverter.bytesToTimestamp(((Binary) vals.get(i)).getBytes());
                         if (TIMESTAMP_PATTERN.matcher(timestamp).find()) {
                             // Note: this conversion convert type "timestamp with time zone" will lose timezone information
                             // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
