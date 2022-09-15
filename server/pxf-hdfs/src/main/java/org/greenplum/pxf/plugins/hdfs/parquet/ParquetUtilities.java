@@ -44,7 +44,7 @@ public class ParquetUtilities {
         if (val == null) {
             return null;
         }
-        val=val.replaceAll("\\s","");
+        val = val.replaceAll("\\s", "");
         String[] splits = pgUtilities.splitArray(val);
         List<Object> data = new ArrayList<>(splits.length);
         for (String split : splits) {
@@ -75,10 +75,12 @@ public class ParquetUtilities {
             case BOOLEAN:
                 return pgUtilities.parseBoolLiteral(val);
             case INT32:
-                if( schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation &&
-                        ((LogicalTypeAnnotation.IntLogicalTypeAnnotation) schemaType.getLogicalTypeAnnotation()).getBitWidth() ==16){
+                if (schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+                    return ParquetTypeConverter.getDaysFromEpochFromDateString(val);
+                } else if (schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation &&
+                        ((LogicalTypeAnnotation.IntLogicalTypeAnnotation) schemaType.getLogicalTypeAnnotation()).getBitWidth() == 16) {
                     return Short.parseShort(val);
-                }else{
+                } else {
                     return Integer.parseInt(val);
                 }
             case INT64:

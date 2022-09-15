@@ -541,6 +541,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                             .optionalElement(PrimitiveTypeName.BINARY)
                             .as(stringType());
                     break;
+                case DATEARRAY:
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.INT32)
+                            .as(dateType());
+                    break;
                 default:
                     throw new UnsupportedTypeException(
                             String.format("Type %d is not supported", columnTypeCode));
