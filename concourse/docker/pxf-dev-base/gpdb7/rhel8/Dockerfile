@@ -26,7 +26,6 @@ RUN curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERS
     && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
     && rm -f /tmp/apache-maven.tar.gz \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
-    && yum install -y java-11-openjdk-devel && yum clean all \
     && /usr/bin/pip2 install paramiko --no-cache-dir
 
 # create rsa key for the root user
