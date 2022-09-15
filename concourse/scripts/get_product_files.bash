@@ -68,12 +68,18 @@ for ((i = 0; i < ${#product_files[@]}; i++)); do
 
 	if [[ -z "${id}" ]]; then
 		echo "Did not find '${file}' in product files for GPDB '${gpdb_version}'"
-		os_regex='^.*rhel8.*$'
-		if [[ $file =~ ${os_regex} ]]; then
-			echo "RHEL 8 artifact unavailable for the given GPDB version. Keeping existing rpm: $(find ${product_dirs[$i]}/ -name *rhel8*.rpm)"
-			continue
+		rhel_regex='^.*rhel7.*$'
+		ubuntu_regex='^.*ubuntu18.*$'
+		if [[ $file =~ ${ubuntu_regex} ]]; then
+			existing_file=$(find ${product_dirs[$i]}/ -name *ubuntu18*.rpm)
+		elif [[ $file =~ ${rhel_regex} ]]; then
+			existing_file=$(find ${product_dirs[$i]}/ -name *el7*.rpm)
+		else
+			existing_file=$(find ${product_dirs[$i]}/ -name *el8*.rpm)
 		fi
-		exit 1
+
+		echo "Keeping existing file: ${existing_file}"
+		continue
 	fi
 	echo "Cleaning ${product_dirs[$i]} and downloading ${file} with id ${id} to ${product_dirs[$i]}..."
 	rm -f "${product_dirs[$i]}"/*.{rpm,deb}
