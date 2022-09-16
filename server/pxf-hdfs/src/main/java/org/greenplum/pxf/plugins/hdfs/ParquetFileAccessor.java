@@ -452,7 +452,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
             Types.PrimitiveBuilder<PrimitiveType> primitiveBuilder = null;
             Types.BaseListBuilder.ElementBuilder<GroupType, Types.ListBuilder<GroupType>> listBuilder = null;
-
             switch (DataType.get(columnTypeCode)) {
                 case BOOLEAN:
                     primitiveBuilder = Types.optional(PrimitiveTypeName.BOOLEAN);
@@ -533,6 +532,20 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 case FLOAT8ARRAY:
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.DOUBLE);
+                    break;
+                case NUMERICARRAY:
+                    columnTypeModifiers = column.columnTypeModifiers();
+                    precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
+                    scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
+
+                    if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
+                        precision = columnTypeModifiers[0];
+                        scale = columnTypeModifiers[1];
+                    }
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
+                            .length(PRECISION_TO_BYTE_COUNT[precision - 1])
+                            .as(DecimalLogicalTypeAnnotation.decimalType(scale, precision));
                     break;
                 case VARCHARARRAY:
                 case BPCHARARRAY:
