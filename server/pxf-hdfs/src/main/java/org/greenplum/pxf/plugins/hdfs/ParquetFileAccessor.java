@@ -508,6 +508,14 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     primitiveBuilder = Types.optional(PrimitiveTypeName.BINARY)
                             .as(stringType());
                     break;
+                case BOOLARRAY:
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.BOOLEAN);
+                    break;
+                case BYTEAARRAY:
+                    listBuilder = Types.optionalList()
+                            .optionalElement(PrimitiveTypeName.BINARY);
+                    break;
                 case INT2ARRAY:
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.INT32)
@@ -521,10 +529,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.INT64);
                     break;
-                case BOOLARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.BOOLEAN);
-                    break;
+
                 case FLOAT4ARRAY:
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.FLOAT);
