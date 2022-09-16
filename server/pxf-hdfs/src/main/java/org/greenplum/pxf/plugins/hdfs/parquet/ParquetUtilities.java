@@ -99,6 +99,7 @@ public class ParquetUtilities {
                     return ParquetTypeConverter.getBinaryFromTimestamp(timestamp);
                 }
             case FIXED_LEN_BYTE_ARRAY:
+                return val;
             default:
                 throw new PxfRuntimeException(String.format("type: %s is not supported", primitiveTypeName));
         }

@@ -1874,9 +1874,9 @@ public class ParquetWriteTest {
     //TODO
     @Test
     public void testWriteNumericArray() throws Exception {
-        String path = temp + "/out/int/";
+        String path = temp + "/out/numeric_array/";
 
-        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+        columnDescriptors.add(new ColumnDescriptor("numeric_array", DataType.NUMERICARRAY.getOID(), 0, "numericarray", new Integer[]{38, 18}));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123482");
@@ -1885,6 +1885,97 @@ public class ParquetWriteTest {
         accessor.afterPropertiesSet();
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+
+        String[] values = new String[]{
+                "12345678901234567890.123456789012345678",
+                "22.2345",
+                "333.34567",
+                "4444.456789",
+                "55555.5678901",
+                "666666.67890123",
+                "7777777.789012345",
+                "88888888.8901234567",
+                "999999999.90123456789"
+        };
+        for (int i = 0; i < 10; i++) {
+            List<String> numericList = null;
+            if (i != 9) {
+                numericList = new ArrayList<>();
+                numericList.add(null);
+                numericList.add(values[i]);
+                numericList.add(values[i]);
+            }
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERICARRAY.getOID(), numericList));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
+
+        accessor.closeForWrite();
+
+        // Validate write
+        Path expectedFile = new Path(HcfsType.FILE.getUriForWrite(context) + ".snappy.parquet");
+        assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
+
+        MessageType schema = validateFooter(expectedFile);
+
+        ParquetReader<Group> fileReader = ParquetReader.builder(new GroupReadSupport(), expectedFile)
+                .withConf(configuration)
+                .build();
+
+        BigDecimal[] expectedResults = new BigDecimal[]{
+                new BigDecimal("12345678901234567890.123456789012345678"),
+                new BigDecimal("22.234500000000000000"),
+                new BigDecimal("333.345670000000000000"),
+                new BigDecimal("4444.456789000000000000"),
+                new BigDecimal("55555.567890100000000000"),
+                new BigDecimal("666666.678901230000000000"),
+                new BigDecimal("7777777.789012345000000000"),
+                new BigDecimal("88888888.890123456700000000"),
+                new BigDecimal("999999999.901234567890000000")
+        };
+
+        for (int i = 0; i < 10; i++) {
+            Type outerType = schema.getType(0);
+            assertNotNull(outerType.getLogicalTypeAnnotation());
+            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
+
+            // get the outer group
+            Group outerGroup = fileReader.read();
+
+            if (i != 9) {
+                // if the array is not a null array, the outer group should only have one field
+                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+
+                // get the repeated list group
+                Group repeatedGroup = outerGroup.getGroup(0, 0);
+                Type repeatedType = outerType.asGroupType().getType(0);
+                //repeated group must use "repeated" keyword
+                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
+                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
+                assertEquals(3, repetitionCount);
+
+                for (int j = 0; j < repetitionCount; j++) {
+                    Group elementGroup = repeatedGroup.getGroup(0, j);
+                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
+                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
+                        continue;
+                    }
+                    // only one  element in the repeated list, the repetition count should be 1
+                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
+                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
+                    // Physical type is FIXED_LEN_BYTE_ARRAY
+                    assertEquals(PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, elementType.asPrimitiveType().getPrimitiveTypeName());
+                    assertTrue(elementType.getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation);
+
+                    assertEquals(expectedResults[i], new BigDecimal(new BigInteger(elementGroup.getBinary(0, 0).getBytes()), 18));
+                }
+            } else {
+                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+            }
+        }
+        fileReader.close();
     }
 
     //TODO
