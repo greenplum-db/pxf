@@ -71,7 +71,12 @@ public class ParquetUtilities {
         PrimitiveType.PrimitiveTypeName primitiveTypeName = schemaType.asPrimitiveType().getPrimitiveTypeName();
         switch (primitiveTypeName) {
             case BINARY:
-                return pgUtilities.parseByteaLiteral(val);
+                if (schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
+                    return pgUtilities.parseByteaLiteral(val);
+                } else {
+                    return val;
+                }
+
             case BOOLEAN:
                 return pgUtilities.parseBoolLiteral(val);
             case INT32:
