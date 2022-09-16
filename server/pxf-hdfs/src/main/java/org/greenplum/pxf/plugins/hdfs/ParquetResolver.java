@@ -295,6 +295,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     case BINARY:
                         if (elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
                             repeatedGroup.add(0, Charset.forName("UTF-8").decode((ByteBuffer) vals.get(i)).toString());
+                        } else {
+                            repeatedGroup.add(0, Binary.fromReusedByteArray((byte[]) vals.get(i)));
                         }
                         break;
                     case INT96:
