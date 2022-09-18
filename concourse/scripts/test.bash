@@ -79,6 +79,12 @@ function run_pxf_automation() {
 	if [[ ${USE_FDW} == "true" ]]; then
 		extension_name="pxf_fdw"
 	fi
+
+	#TODO: remove once exttable tests with GP7 are set
+	if [[ ${GROUP} == fdw_gpdb_schedule ]]; then
+		extension_name="pxf_fdw"
+	fi
+
 	su gpadmin -c "
 		source '${GPHOME}/greenplum_path.sh' &&
 		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION ${extension_name}'
