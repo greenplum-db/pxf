@@ -398,7 +398,7 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	// pi_varNumbers is not available anymore in the postgters code
 	// https://doxygen.postgresql.org/structProjectionInfo.html
 	//int				*varNumbers = projInfo->pi_varNumbers;
-#if PG_VERSION_NUM < 120000
+#if PG_VERSION_NUM < 120000 // This will work for 6.x and lower versions of GPDB
     int				*varNumbers = projInfo->pi_varNumbers;
     List *targetList = projInfo->pi_targetlist;
 #else
@@ -470,14 +470,18 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 #endif
 
 	number = numTargetList +
-#if PG_VERSION_NUM >= 90400 && PG_VERSION_NUM < 120000
-		// FIXME: Commenting this out for compilation success
-		// pi_numSimpleVars is not available anymore in the postgters 12 code
-		// https://doxygen.postgresql.org/structProjectionInfo.html
-		projInfo->pi_numSimpleVars +
-#else
-		numSimpleVars +
+#if PG_VERSION_NUM < 120000
+
+    #if PG_VERSION_NUM >= 90400
+            // FIXME: Commenting this out for compilation success
+            // pi_numSimpleVars is not available anymore in the postgters 12 code
+            // https://doxygen.postgresql.org/structProjectionInfo.html
+            projInfo->pi_numSimpleVars +
+    #else
+            numSimpleVars +
+    #endif
 #endif
+
 		list_length(qualsAttributes);
 	if (number == 0)
 		return;
@@ -488,10 +492,16 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	pg_ltoa(number, long_number);
 	churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
 
-#if PG_VERSION_NUM >=90400
-	/* FIXME: commenting out to get compile to work */
-	//for (i = 0; i < projInfo->pi_numSimpleVars; i++)
-	for (i = 0; i < projInfo->pi_numSimpleVars; i++)
+
+#if PG_VERSION_NUM >= 90400
+
+    #if PG_VERSION_NUM >= 120000
+        for (i = 0; i < sizeof(targetList) ; i++)
+    #else
+        /* FIXME: commenting out to get compile to work */
+        //for (i = 0; i < projInfo->pi_numSimpleVars; i++)
+        for (i = 0; i < projInfo->pi_numSimpleVars; i++)
+    #endif
 #else
 	for (i = 0; varNumbers && i < numSimpleVars; i++)
 #endif
