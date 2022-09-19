@@ -1,0 +1,6 @@
+{"id": 1, "context": "simple string", "value": "hello"}
+{"id": 2, "context": "simple string with space", "value": "hello world"}
+{"id": 3, "context": "simple string with double quote", "value": "hello \"world\""}
+{"id": 4, "context": "NUL-byte in middle of string", "value": "hello\u0000world"}
+{"id": 5, "context": "NUL-byte at the beginning of string", "value": "\u0000hello world"}
+{"id": 6, "context": "NUL-byte at the end of string", "value": "hello world\u0000"}

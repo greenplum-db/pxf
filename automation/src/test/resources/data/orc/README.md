@@ -103,3 +103,10 @@ If desired, you can copy down the CSV file by running the following command:
 mv "./orc_multidim_list_types/000000_0" "./${CSV_FILENAME}"
 ```
 
+## Generate the orc_null_in_string.orc file
+
+To generate this file, you will need to download a copy of the ORC Tools uber jar: <https://search.maven.org/remotecontent?filepath=org/apache/orc/orc-tools/1.8.0/orc-tools-1.8.0-uber.jar>
+
+```shell
+java -jar orc-tools-1.8.0-uber.jar convert --schema 'struct<id:int,desc:string,value:string>' --output orc_null_in_string.orc orc_null_in_string.json
+```

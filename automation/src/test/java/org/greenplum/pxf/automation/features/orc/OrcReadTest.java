@@ -13,6 +13,7 @@ public class OrcReadTest extends BaseFeature {
     private static final String ORC_PRIMITIVE_TYPES_UNORDERED_SUBSET = "orc_types_unordered_subset.orc";
     private static final String ORC_LIST_TYPES = "orc_list_types.orc";
     private static final String ORC_MULTIDIM_LIST_TYPES = "orc_multidim_list_types.orc";
+    private static final String ORC_NULL_IN_STRING = "orc_null_in_string.orc";
 
     private static final String[] ORC_TABLE_COLUMNS = {
             "id      integer",
@@ -73,6 +74,12 @@ public class OrcReadTest extends BaseFeature {
             "varchar_arr  text[]"
     };
 
+    private static final String[] ORC_NULL_IN_STRING_COLUMNS = new String[]{
+            "id      int",
+            "context text",
+            "value   text"
+    };
+
     private String hdfsPath;
     private ProtocolEnum protocol;
 
@@ -87,6 +94,7 @@ public class OrcReadTest extends BaseFeature {
         hdfs.copyFromLocal(resourcePath + ORC_PRIMITIVE_TYPES_UNORDERED_SUBSET, hdfsPath + ORC_PRIMITIVE_TYPES_UNORDERED_SUBSET);
         hdfs.copyFromLocal(resourcePath + ORC_LIST_TYPES, hdfsPath + ORC_LIST_TYPES);
         hdfs.copyFromLocal(resourcePath + ORC_MULTIDIM_LIST_TYPES, hdfsPath + ORC_MULTIDIM_LIST_TYPES);
+        hdfs.copyFromLocal(resourcePath + ORC_NULL_IN_STRING, hdfsPath + ORC_NULL_IN_STRING);
 
         prepareReadableExternalTable(PXF_ORC_TABLE, ORC_TABLE_COLUMNS, hdfsPath + ORC_PRIMITIVE_TYPES);
     }
@@ -144,6 +152,12 @@ public class OrcReadTest extends BaseFeature {
     public void orcReadMultiDimensionalLists() throws Exception {
         prepareReadableExternalTable("pxf_orc_multidim_list_types", ORC_LIST_TYPES_TABLE_COLUMNS, hdfsPath + ORC_MULTIDIM_LIST_TYPES);
         runTincTest("pxf.features.orc.read.multidim_list_types.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcReadStringsContainingNullByte() throws Exception {
+        prepareReadableExternalTable("pxf_orc_null_in_string", ORC_NULL_IN_STRING_COLUMNS, hdfsPath + ORC_NULL_IN_STRING);
+        runTincTest("pxf.features.orc.read.null_in_string.runTest");
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path) throws Exception {

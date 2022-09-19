@@ -894,19 +894,24 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 				 * Read string value from data_buf and convert it to internal representation
 				 *
 				 * PXF service should send all strings with a terminating nul-byte, so we can
-				 * determine the length of the string and compare it with the length that PXF
-				 * service computed and sent. Since we've checked that outlen[i] is no larger
-				 * than the number of bytes left for this tuple in data_buf, we use it as max
-				 * number of bytes to scan.
+				 * determine the number of bytes that the input function will read and compare
+				 * it with the length that the PXF service computed and sent. Since we've
+				 * checked that outlen[i] is no larger than the number of bytes left for this
+				 * tuple in data_buf, we use it as max number of bytes to scan in the call to
+				 * strnlen
 				 */
 				size_t actual_len = strnlen(data_buf + bufidx, myData->outlen[i]);
 
-				/* outlen[i] includes the terminating nul-byte */
-				if (actual_len != myData->outlen[i] - 1)
-					ereport(FATAL,
-							(errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-									errmsg("data for column %d of row %d has invalid length", i + 1, myData->lineno),
-									errdetail("expected column %d to have length %d, actual length is %ld", i + 1, myData->outlen[i] - 1, actual_len)));
+				/*
+				 * Compare the length as returned by strnlen with the length as determined by
+				 * the PXF service. If the source data includes ASCII NUL-byte in the string,
+				 * then these two values will not match. It's possible that this will result
+				 * in the Postgres input function truncating/mis-reading the value. Rather
+				 * than treat this as an error here, we log a debug message.
+				 */
+				if (actual_len != myData->outlen[i]-1)
+					ereport(DEBUG1,
+							(errmsg("expected column %d of row %d to have length %d, actual length is %ld", i+1, myData->lineno, myData->outlen[i]-1, actual_len)));
 
 				myData->values[i] = InputFunctionCall(iofunc,
 													  data_buf + bufidx,

@@ -1,0 +1,13 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for reading strings contain NUL-byte from ORC files
+SELECT * FROM pxf_orc_null_in_string ORDER BY id;
+ id |               context               |     value
+----+-------------------------------------+---------------
+  1 | simple string                       | hello
+  2 | simple string with space            | hello world
+  3 | simple string with double quote     | hello "world"
+  4 | NUL-byte in middle of string        | hello
+  5 | NUL-byte at the beginning of string |
+  6 | NUL-byte at the end of string       | hello world
+(6 rows)
