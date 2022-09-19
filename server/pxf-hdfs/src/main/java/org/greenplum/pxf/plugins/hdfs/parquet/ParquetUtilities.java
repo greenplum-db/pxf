@@ -72,9 +72,9 @@ public class ParquetUtilities {
         switch (primitiveTypeName) {
             case BINARY:
                 if (schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
-                    return pgUtilities.parseByteaLiteral(val);
-                } else {
                     return val;
+                } else {
+                    return pgUtilities.parseByteaLiteral(val);
                 }
 
             case BOOLEAN:

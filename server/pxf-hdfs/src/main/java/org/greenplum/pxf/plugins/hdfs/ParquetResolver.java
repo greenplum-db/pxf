@@ -43,7 +43,7 @@ import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -294,9 +294,12 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                         break;
                     case BINARY:
                         if (elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
-                            repeatedGroup.add(0, Charset.forName("UTF-8").decode((ByteBuffer) vals.get(i)).toString());
+                            repeatedGroup.add(0, (String)vals.get(i));
                         } else {
-                            repeatedGroup.add(0, Binary.fromReusedByteArray((byte[]) vals.get(i)));
+                            byte[] oriBytes= ((ByteBuffer)vals.get(i)).array();
+                            int limit=((ByteBuffer)vals.get(i)).limit();
+                            byte[] bytes= Arrays.copyOf(oriBytes, limit);
+                            repeatedGroup.add(0, Binary.fromReusedByteArray(bytes));
                         }
                         break;
                     case INT96:
