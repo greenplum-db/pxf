@@ -27,6 +27,7 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -1515,12 +1516,11 @@ public class ParquetWriteTest {
 
     }
 
-    //TODO
     @Test
     public void testWriteByteaArray() throws Exception {
         String path = temp + "/out/bytea_array/";
 
-        columnDescriptors.add(new ColumnDescriptor("binary_array", DataType.BYTEAARRAY.getOID(), 0, "byteaArray", null));
+        columnDescriptors.add(new ColumnDescriptor("bytea_array", DataType.BYTEAARRAY.getOID(), 0, "byteaArray", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123477");
@@ -1533,14 +1533,17 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         for (int i = 0; i < 10; i++) {
-            List<byte[]> byteaList = null;
+            List<String> byteaList = null;
             if (i != 9) {
                 byteaList = new ArrayList<>();
                 byte[] value = Binary.fromString(StringUtils.repeat("a", i + 1)).getBytes();
                 byteaList.add(null);
-                byteaList.add(value);
-                byteaList.add(value);
+                StringBuilder sb=new StringBuilder();
+                Utilities.byteArrayToOctalString(value,sb);
+                byteaList.add(sb.toString());
+                byteaList.add(sb.toString());
             }
+
             List<OneField> record = Collections.singletonList(new OneField(DataType.BYTEAARRAY.getOID(), byteaList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
