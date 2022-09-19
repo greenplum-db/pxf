@@ -22,14 +22,14 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: PXF Version ${{ github.ref }}
           body: |
-            ## 6.4.1 (09/16/2022)
+            ## 6.4.2 (09/19/2022)
 
             ### Enhancements:
 
 
             ### Bug Fixes:
 
-            - [#858](https://github.com/greenplum-db/pxf/pull/858) Add JsonProtocolHandler to use HdfsFileFragmenter for multi-line JSON
+            - [#870](https://github.com/greenplum-db/pxf/pull/870) Relax the requirement that C string length matches Java string length
 
           draft: false
           prerelease: false

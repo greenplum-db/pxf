@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.4.2 (09/19/2022)
+
+### Bug Fixes:
+
+- [#870](https://github.com/greenplum-db/pxf/pull/870) Relax the requirement that C string length matches Java string length
+
 ## 6.4.1 (09/16/2022)
 
 ### Bug Fixes:
