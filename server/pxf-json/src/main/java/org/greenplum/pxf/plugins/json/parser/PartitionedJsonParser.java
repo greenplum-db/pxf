@@ -89,7 +89,6 @@ public class PartitionedJsonParser {
 		this.objectStack = new ArrayList<Integer>();
 
 		currentObject.append(START_BRACE);
-
 	}
 	/**
 	 * @param c character to parse
@@ -169,27 +168,11 @@ public class PartitionedJsonParser {
 		return false;
 	}
 
+	public JsonLexerState getLexerState() {
+		return lexer.getState();
+	}
+
 	/**
 	 * @return Returns the number of bytes read from the stream.
 	 */
-	public long getBytesRead() {
-		bytesRead += countBytesInReadChars();
-		return bytesRead;
-	}
-
-	public void trackUncountedCharsReadFromStream(int c) {
-		if (c != EOF) {
-			uncountedCharsReadFromStream.append((char) c);
-			if (uncountedCharsReadFromStream.length() == CHARS_READ_LIMIT) {
-				bytesRead += countBytesInReadChars();
-			}
-		}
-	}
-
-	private int countBytesInReadChars() {
-		int length = uncountedCharsReadFromStream.toString().getBytes(StandardCharsets.UTF_8).length;
-		uncountedCharsReadFromStream.setLength(0);
-
-		return length;
-	}
 }

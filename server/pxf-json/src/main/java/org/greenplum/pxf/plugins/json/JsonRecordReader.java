@@ -32,6 +32,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.RecordReader;
+import org.greenplum.pxf.plugins.json.parser.JsonLexer;
 import org.greenplum.pxf.plugins.json.parser.PartitionedJsonParser;
 
 import java.io.IOException;
@@ -61,9 +62,11 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private PartitionedJsonParser parser;
     private LineRecordReader lineRecordReader;
     private StringBuffer currentLineBuffer;
+    private Text currentLine;
     private JobConf conf;
     private final Path file;
     private int currentBufferIndex;
+    private boolean inNextSplit = false;
 
     private static final char BACKSLASH = '\\';
     private static final char QUOTE = '\"';
@@ -105,6 +108,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         this.conf = conf;
         lineRecordReader =  new LineRecordReader(conf, split);
         parser = new PartitionedJsonParser(jsonMemberName);
+        currentLine = new Text();
         this.pos = start;
     }
 
@@ -114,59 +118,56 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     @Override
     public boolean next(LongWritable key, Text value) throws IOException {
 
-        while (pos < end) {
+        while (!inNextSplit) { // split level. if out of split, then return false
             int i;
             // object to pass in for streaming
             Text jsonObject = new Text();
             boolean completedObject = false;
             // scan to first start brace object.
             boolean foundBeginObject = scanToFirstBeginObject();
+
+            if (!foundBeginObject) {
+                return false;
+            }
             // found an object, so we will either return a completed object or be mid-object
-            if (foundBeginObject) {
-                // found a start brace so begin a new json object
-                parser.startNewJsonObject();
 
-                // read through the file until the object is completed
-                while ((i = readNextChar()) > EOF && !completedObject) {
-                    char c = (char) i;
-                    completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
+            // found a start brace so begin a new json object
+            parser.startNewJsonObject();
 
-                    if (completedObject) {
-                        // we have a completed object
-                        String json = jsonObject.toString();
-                        pos = start + parser.getBytesRead();
+            // read through the file until the object is completed
+            while ((i = readNextChar()) > EOF && !completedObject) { // in the split, create the object
+                char c = (char) i;
+                completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
 
-                        long jsonStart = pos - json.getBytes(StandardCharsets.UTF_8).length;
+                if (completedObject) {
+                    // we have a completed object
+                    String json = jsonObject.toString();
 
-                        // if the "begin-object" position is after the end of our split, we should ignore it
-                        if (jsonStart >= end) {
-                            return false;
-                        }
-
-                        if (json.length() > maxObjectLength) {
-                            LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + jsonStart);
-                        } else {
-                            key.set(jsonStart);
-                            value.set(json);
-                            return true;
-                        }
-                        return true;
-                    } else if (!completedObject && pos >= end) {
-                        // we have items in the list but the last one is incomplete so we pull in the next split
-                        // and continue reading until end of object
-                        getNextSplit();
-                        // continue the while loop to complete the object
-                        continue;
+                    if (json.length() > maxObjectLength) {
+                        LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
                     } else {
-                        // if we don't have a completed item and we aren't at the end of the split
-                        // we should just continue to read
-                        continue;
+                        key.set(pos);
+                        value.set(json);
+                        return true;
                     }
+                    return true;
+                } else if (pos > end) {
+                    // we have items in the list but the last one is incomplete so we pull in the next split
+                    // and continue reading until end of object
+
+                    // only get the next split if
+                    if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
+                        LOG.debug("JSON object incomplete, moving onto next split to finish");
+                        getNextSplit();
+                    }
+                    // continue the while loop to complete the object
+                    continue;
+                } else {
+                    // if we don't have a completed item and we aren't at the end of the split
+                    // we should just continue to read
+                    continue;
                 }
             }
-            // begin object never found
-            // don't move onto next split here
-            return false;
         }
 
         return false;
@@ -216,30 +217,34 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     }
 
     private int readNextChar() throws IOException {
-        Text currentLine = new Text();
         boolean getNext = true;
         // if we are at the end of the buffer, refresh
         if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
             getNext = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
-            currentLineBuffer = new StringBuffer(currentLine.toString());
-            currentBufferIndex = 0;
+            pos = lineRecordReader.getPos();
+            if (getNext) {
+                currentLineBuffer = new StringBuffer(currentLine.toString());
+                currentBufferIndex = 0;
+                // linerecordreader returns false in 2 cases, handle both:
+            } else if (lineRecordReader.getPos() < end) {
+                // 1) if length of line is 0
+                return readNextChar();
+            } else {
+                // 2) returns false if done with split
+                return END_OF_SPLIT;
+            }
         }
-        if (!getNext || currentLine == null) {
-            return END_OF_SPLIT;
-        }
-        // its possible for the json object to have an empty line
-        if (currentLineBuffer.length() > 0) {
-            char c = currentLineBuffer.charAt(currentBufferIndex);
-            currentBufferIndex++;
-            parser.trackUncountedCharsReadFromStream(c);
 
-            return c;
-        } else {
-            return readNextChar();
-        }
+        char c = currentLineBuffer.charAt(currentBufferIndex);
+        currentBufferIndex++;
+
+        return c;
+
     }
 
     private boolean scanToFirstBeginObject() throws IOException {
+        // "ke{y" : {"val\"ue"
+        // assumes each line is a valid json line
         // seek until we hit the first begin-object
         boolean inString = false;
         int i;
@@ -263,5 +268,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         // and goes until the end of the file
         FileSplit nextSplit = new FileSplit(file, pos, Long.MAX_VALUE, (String[]) null);
         lineRecordReader = new LineRecordReader(conf, nextSplit);
+        inNextSplit = true;
     }
 }
