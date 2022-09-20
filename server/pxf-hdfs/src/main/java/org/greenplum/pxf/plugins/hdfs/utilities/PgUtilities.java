@@ -145,9 +145,6 @@ public class PgUtilities {
         if (StringUtils.equals(str, "NULL")) {
             return null;
         }
-        if (str.length() == 0) {
-            return "";
-        }
 
         int beginIndx = 0;
         int endIndex = str.length();
@@ -235,9 +232,9 @@ public class PgUtilities {
      * @throws {@link PxfRuntimeException} if the input is not a valid text format Postgres boolean
      */
     public boolean parseBoolLiteral(final String value) {
-        if (StringUtils.equals(value, "t") || StringUtils.equals(value, "true")) {
+        if (StringUtils.equals(value, "t")) {
             return true;
-        } else if (StringUtils.equals(value, "f") || StringUtils.equals(value, "false")) {
+        } else if (StringUtils.equals(value, "f")) {
             return false;
         }
 
