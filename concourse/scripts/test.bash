@@ -323,12 +323,11 @@ function _main() {
 
 	# Run tests
 	if [[ -n ${GROUP} ]]; then
-	  run_pxf_automation
-#		if [[ $PG_REGRESS == true ]]; then
-#			run_pg_regress
-#		else
-#			run_pxf_automation
-#		fi
+		if [[ $PG_REGRESS == true ]]; then
+			run_pg_regress
+		else
+			run_pxf_automation
+		fi
 	fi
 }
 
