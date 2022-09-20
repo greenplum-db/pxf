@@ -41,6 +41,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -1538,8 +1539,8 @@ public class ParquetWriteTest {
                 byteaList = new ArrayList<>();
                 byte[] value = Binary.fromString(StringUtils.repeat("a", i + 1)).getBytes();
                 byteaList.add(null);
-                StringBuilder sb=new StringBuilder();
-                Utilities.byteArrayToOctalString(value,sb);
+                StringBuilder sb = new StringBuilder();
+                Utilities.byteArrayToOctalString(value, sb);
                 byteaList.add(sb.toString());
                 byteaList.add(sb.toString());
             }
@@ -2070,8 +2071,14 @@ public class ParquetWriteTest {
         columnDescriptors.add(new ColumnDescriptor("tm", DataType.TIMESTAMP.getOID(), 2, "timestamp", null));
         columnDescriptors.add(new ColumnDescriptor("bin", DataType.BYTEA.getOID(), 3, "bytea", null));
         columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 4, "text", null));
+        columnDescriptors.add(new ColumnDescriptor("int_arr", DataType.INT4ARRAY.getOID(), 5, "int_arr", null));
+        columnDescriptors.add(new ColumnDescriptor("float_arr", DataType.FLOAT4ARRAY.getOID(), 6, "float_arr", null));
+        columnDescriptors.add(new ColumnDescriptor("tm_arr", DataType.TIMESTAMPARRAY.getOID(), 7, "timestamp_arr", null));
+        columnDescriptors.add(new ColumnDescriptor("bin_arr", DataType.BYTEAARRAY.getOID(), 8, "bytea_arr", null));
+        columnDescriptors.add(new ColumnDescriptor("str_arr", DataType.TEXTARRAY.getOID(), 9, "text_arr", null));
 
         context.setDataSource(path);
+
         context.setTransactionId("XID-XYZ-123483");
 
         accessor.setRequestContext(context);
@@ -2084,6 +2091,7 @@ public class ParquetWriteTest {
         // write parquet file with bigint values
         for (int i = 0; i < 3; i++) {
             List<OneField> record = new ArrayList<>();
+            List<Object> list = new ArrayList<>();
             record.add(new OneField(DataType.NUMERIC.getOID(), String.format("%d.%d", (i + 1), (i + 2))));
 
             String s = StringUtils.repeat("d", i % 3);
@@ -2094,10 +2102,35 @@ public class ParquetWriteTest {
             String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2020-08-%02dT04:00:05Z" in PST
             record.add(new OneField(DataType.TIMESTAMP.getOID(), localTimestampString));
 
-            byte[] value = Binary.fromString(StringUtils.repeat("e", i + 1)).getBytes();
-            record.add(new OneField(DataType.BYTEA.getOID(), value));
+            byte[] bytes = Binary.fromString(StringUtils.repeat("e", i + 1)).getBytes();
+            record.add(new OneField(DataType.BYTEA.getOID(), bytes));
 
-            record.add(new OneField(DataType.TEXT.getOID(), StringUtils.repeat("f", i + 1)));
+
+            String text = StringUtils.repeat("f", i + 1);
+            record.add(new OneField(DataType.TEXT.getOID(), text));
+
+            list = new ArrayList<>();
+            list.addAll(Arrays.asList(new Integer[]{i, i, i}));
+            record.add(new OneField(DataType.INT4ARRAY.getOID(), list));
+
+            list = new ArrayList<>();
+            list.addAll(Arrays.asList(new Float[]{i + 0.01F, i + 0.01F, i + 0.01F}));
+            record.add(new OneField(DataType.FLOAT4ARRAY.getOID(), list));
+
+            list = new ArrayList<>();
+            list.addAll(Arrays.asList(new String[]{localTimestampString, localTimestampString, localTimestampString}));
+            record.add(new OneField(DataType.TIMESTAMPARRAY.getOID(), list));
+
+            StringBuilder sb = new StringBuilder();
+            Utilities.byteArrayToOctalString(bytes, sb);
+            list = new ArrayList<>();
+            list.addAll(Arrays.asList(new String[]{sb.toString(), sb.toString(), sb.toString()}));
+            record.add(new OneField(DataType.BYTEAARRAY.getOID(), list));
+
+            list = new ArrayList<>();
+            list.addAll(Arrays.asList(new String[]{text, text, text}));
+            record.add(new OneField(DataType.TEXTARRAY.getOID(), list));
+
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -2108,14 +2141,14 @@ public class ParquetWriteTest {
         Path expectedFile = new Path(HcfsType.FILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
-        MessageType schema = validateFooter(expectedFile, 5, 3);
+        MessageType schema = validateFooter(expectedFile, 10, 3);
 
         ParquetReader<Group> fileReader = ParquetReader.builder(new GroupReadSupport(), expectedFile)
                 .withConf(configuration)
                 .build();
 
         assertNotNull(schema.getColumns());
-        assertEquals(5, schema.getColumns().size());
+        assertEquals(10, schema.getColumns().size());
         assertEquals(PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, schema.getType(0).asPrimitiveType().getPrimitiveTypeName());
         assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation); //numeric
         assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, schema.getType(1).asPrimitiveType().getPrimitiveTypeName());
@@ -2126,6 +2159,13 @@ public class ParquetWriteTest {
         assertNull(schema.getType(3).getLogicalTypeAnnotation()); //bytea
         assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, schema.getType(4).asPrimitiveType().getPrimitiveTypeName());
         assertTrue(schema.getType(4).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation); //text
+
+        assertComplexType(schema.asGroupType().getType(5), 3, PrimitiveType.PrimitiveTypeName.INT32, null);//int_arr
+        assertComplexType(schema.asGroupType().getType(6), 3, PrimitiveType.PrimitiveTypeName.FLOAT, null);//float_arr
+        assertComplexType(schema.asGroupType().getType(7), 3, PrimitiveType.PrimitiveTypeName.INT96, null);//tm_arr
+        assertComplexType(schema.asGroupType().getType(8), 3, PrimitiveType.PrimitiveTypeName.BINARY, null);//bytea_arr
+        assertComplexType(schema.asGroupType().getType(9), 3, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());//text_arr
+
         Group row0 = fileReader.read();
         Group row1 = fileReader.read();
         Group row2 = fileReader.read();
@@ -2158,9 +2198,82 @@ public class ParquetWriteTest {
         assertEquals("f", row0.getString(4, 0));
         assertEquals("ff", row1.getString(4, 0));
         assertEquals("fff", row2.getString(4, 0));
+
+
+        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, new Integer(0));
+        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, new Integer(1));
+        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, new Integer(2));
+
+        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, new Float(0.01F));
+        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, new Float(1.01F));
+        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, new Float(2.01F));
+
+        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.INT96, 7, 3, null, localTimestampString0);
+        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.INT96, 7, 3, null, localTimestampString1);
+        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.INT96, 7, 3, null, localTimestampString2);
+
+        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 8, 3, null, Binary.fromString("e"));
+        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 8, 3, null, Binary.fromString("ee"));
+        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 8, 3, null, Binary.fromString("eee"));
+
+        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 9, 3, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), "f");
+        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 9, 3, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), "ff");
+        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 9, 3, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), "fff");
+
         assertNull(fileReader.read());
         fileReader.close();
     }
+
+    private void assertComplexElement(Group outerGroup, PrimitiveType.PrimitiveTypeName elementTypeName, int index, int repetitionCount, LogicalTypeAnnotation logicalTypeAnnotation, Object expectedValue) {
+        // get the repeated list group
+        Group repeatedGroup = outerGroup.getGroup(index, 0);
+
+        for (int j = 0; j < repetitionCount; j++) {
+            Group elementGroup = repeatedGroup.getGroup(0, j);
+
+            // only one  element in the repeated list, the repetition count should be 1
+            assertEquals(1, elementGroup.getFieldRepetitionCount(0));
+            switch (elementTypeName) {
+                case INT32:
+                    assertEquals((Integer) expectedValue, elementGroup.getInteger(0, 0));
+                    break;
+                case INT96:
+                    assertEquals(expectedValue, bytesToTimestamp(elementGroup.getInt96(0, 0).getBytes()));
+                    break;
+                case FLOAT:
+                    assertEquals((Float) expectedValue, elementGroup.getFloat(0, 0));
+                    break;
+                case BINARY:
+                    if (logicalTypeAnnotation != null) {
+                        Binary binary = elementGroup.getBinary(0, 0);
+                        String str = binary.toStringUsingUTF8();
+                        assertEquals((String) expectedValue, elementGroup.getBinary(0, 0).toStringUsingUTF8());
+                    } else {
+                        assertEquals((Binary) expectedValue, elementGroup.getBinary(0, 0));
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+        }
+    }
+
+    private void assertComplexType(Type outerType, int repetitionCount, PrimitiveType.PrimitiveTypeName expectedElementTypeName, LogicalTypeAnnotation logicalTypeAnnotation) {
+        assertNotNull(outerType.getLogicalTypeAnnotation());
+        assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
+        Type repeatedType = outerType.asGroupType().getType(0);
+        //repeated group must use "repeated" keyword
+        assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
+        for (int j = 0; j < repetitionCount; j++) {
+            // only one  element in the repeated list, the repetition count should be 1
+            Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
+            // Physical type is binary, logical type is String
+            assertEquals(expectedElementTypeName, elementType.asPrimitiveType().getPrimitiveTypeName());
+            assertEquals(elementType.getLogicalTypeAnnotation(), logicalTypeAnnotation);
+        }
+    }
+
 
     private MessageType validateFooter(Path parquetFile) throws IOException {
         return validateFooter(parquetFile, 1, 10);
