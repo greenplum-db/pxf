@@ -76,9 +76,9 @@ public class ParquetUtilities {
                 } else {
                     return pgUtilities.parseByteaLiteral(val);
                 }
-
             case BOOLEAN:
-                return pgUtilities.parseBoolLiteral(val);
+                //parquet bool val is "true" or "false" but pgUtilities only accept "t" or "f"
+                return pgUtilities.parseBoolLiteral(val.substring(0,1));
             case INT32:
                 if (schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
                     return ParquetTypeConverter.getDaysFromEpochFromDateString(val);
