@@ -259,7 +259,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         //Get the element type
         Type elementType = repeatedType.getType(0).asPrimitiveType();
         //parse parquet values into a postgres Object list
-        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(), elementType);
+        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.asPrimitiveType().getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
         Group arrayGroup = new SimpleGroup(listType);
 
         for (int i = 0; i < vals.size(); i++) {
