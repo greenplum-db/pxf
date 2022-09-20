@@ -35,11 +35,12 @@ public class ParquetUtilities {
     /**
      *
      * @param val
-     * @param schemaType
+     * @param primitiveTypeName
+     * @param logicalTypeAnnotation
      * @return
      */
-    public List<Object> parsePostgresArray(String val, Type schemaType) {
-        LOG.trace("schema type={}, value={}", schemaType, val);
+    public List<Object> parsePostgresArray(String val, PrimitiveType.PrimitiveTypeName primitiveTypeName, LogicalTypeAnnotation logicalTypeAnnotation) {
+        LOG.trace("schema type={}, value={}", primitiveTypeName, val);
 
         if (val == null) {
             return null;
@@ -48,30 +49,29 @@ public class ParquetUtilities {
         List<Object> data = new ArrayList<>(splits.length);
         for (String split : splits) {
             try {
-                split = split.trim();
-                data.add(decodeString(split, schemaType));
+                data.add(decodeString(split, primitiveTypeName,logicalTypeAnnotation));
             } catch (NumberFormatException | PxfRuntimeException e) {
-                String hint = createErrorHintFromValue(StringUtils.startsWith(split, "["), val);
-                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, schemaType), hint, e);
+                String hint = createErrorHintFromValue(StringUtils.startsWith(split, "{"), val);
+                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, primitiveTypeName), hint, e);
             }
         }
         return data;
     }
 
     /**
-     * parse a string base off the parquet primitive type
-     * @param val a string representation of the value
-     * @param schemaType parquet schema type
-     * @return a java representation of the value for the given valType
+     *
+     * @param val
+     * @param primitiveTypeName
+     * @param logicalTypeAnnotation
+     * @return
      */
-    private Object decodeString(String val, Type schemaType) {
+    private Object decodeString(String val, PrimitiveType.PrimitiveTypeName primitiveTypeName, LogicalTypeAnnotation logicalTypeAnnotation) {
         if (val == null || val.equals("null")) {
             return null;
         }
-        PrimitiveType.PrimitiveTypeName primitiveTypeName = schemaType.asPrimitiveType().getPrimitiveTypeName();
         switch (primitiveTypeName) {
             case BINARY:
-                if (schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
+                if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
                     return val;
                 } else {
                     return pgUtilities.parseByteaLiteral(val);
@@ -80,10 +80,10 @@ public class ParquetUtilities {
                 //parquet bool val is "true" or "false" but pgUtilities only accept "t" or "f"
                 return pgUtilities.parseBoolLiteral(val.substring(0,1));
             case INT32:
-                if (schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+                if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
                     return ParquetTypeConverter.getDaysFromEpochFromDateString(val);
-                } else if (schemaType.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation &&
-                        ((LogicalTypeAnnotation.IntLogicalTypeAnnotation) schemaType.getLogicalTypeAnnotation()).getBitWidth() == 16) {
+                } else if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation &&
+                        ((LogicalTypeAnnotation.IntLogicalTypeAnnotation) logicalTypeAnnotation).getBitWidth() == 16) {
                     return Short.parseShort(val);
                 } else {
                     return Integer.parseInt(val);
