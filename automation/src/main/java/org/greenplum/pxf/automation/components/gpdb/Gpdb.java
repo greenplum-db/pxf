@@ -12,9 +12,7 @@ import org.springframework.util.Assert;
 import java.io.File;
 import java.sql.ResultSet;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * GPDB system object, defines functionality for GPDB Data Base.
