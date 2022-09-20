@@ -33,7 +33,6 @@ public class ParquetUtilities {
     }
 
     /**
-     *
      * @param val
      * @param primitiveTypeName
      * @param logicalTypeAnnotation
@@ -49,7 +48,7 @@ public class ParquetUtilities {
         List<Object> data = new ArrayList<>(splits.length);
         for (String split : splits) {
             try {
-                data.add(decodeString(split, primitiveTypeName,logicalTypeAnnotation));
+                data.add(decodeString(split, primitiveTypeName, logicalTypeAnnotation));
             } catch (NumberFormatException | PxfRuntimeException e) {
                 String hint = createErrorHintFromValue(StringUtils.startsWith(split, "{"), val);
                 throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, primitiveTypeName), hint, e);
@@ -59,7 +58,6 @@ public class ParquetUtilities {
     }
 
     /**
-     *
      * @param val
      * @param primitiveTypeName
      * @param logicalTypeAnnotation
@@ -77,8 +75,7 @@ public class ParquetUtilities {
                     return pgUtilities.parseByteaLiteral(val);
                 }
             case BOOLEAN:
-                //parquet bool val is "true" or "false" but pgUtilities only accept "t" or "f"
-                return pgUtilities.parseBoolLiteral(val.substring(0,1));
+                return pgUtilities.parseBoolLiteral(val);
             case INT32:
                 if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
                     return ParquetTypeConverter.getDaysFromEpochFromDateString(val);
@@ -111,14 +108,13 @@ public class ParquetUtilities {
     }
 
     /**
-     *
      * @param isMultiDimensional
      * @param val
      * @return
      */
     private String createErrorHintFromValue(boolean isMultiDimensional, String val) {
         if (isMultiDimensional) {
-            return "Column value \"" + val + "\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing ORC files.";
+            return "Column value \"" + val + "\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.";
         } else {
             return "Unexpected state since PXF generated the ORC schema.";
         }
