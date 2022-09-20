@@ -298,11 +298,11 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                         break;
                     case BINARY:
                         if (elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
-                            repeatedGroup.add(0, (String)vals.get(i));
+                            repeatedGroup.add(0, (String) vals.get(i));
                         } else {
-                            byte[] oriBytes= ((ByteBuffer)vals.get(i)).array();
-                            int limit=((ByteBuffer)vals.get(i)).limit();
-                            byte[] bytes= Arrays.copyOf(oriBytes, limit);
+                            byte[] oriBytes = ((ByteBuffer) vals.get(i)).array();
+                            int limit = ((ByteBuffer) vals.get(i)).limit();
+                            byte[] bytes = Arrays.copyOf(oriBytes, limit);
                             repeatedGroup.add(0, Binary.fromReusedByteArray(bytes));
                         }
                         break;
