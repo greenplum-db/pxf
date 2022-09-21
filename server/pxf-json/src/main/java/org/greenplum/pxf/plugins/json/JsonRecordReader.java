@@ -135,7 +135,22 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             parser.startNewJsonObject();
 
             // read through the file until the object is completed
-            while ((i = readNextChar()) > EOF && !completedObject) { // in the split, create the object
+            while ((i = readNextChar()) != EOF) { // in the split, create the object
+                if (i == END_OF_SPLIT) {
+                    if (!completedObject) {
+                        if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
+                            LOG.debug("JSON object incomplete, moving onto next split to finish");
+                            getNextSplit();
+                            // continue the while loop to complete the object
+                            continue;
+                        }
+                        // if the line isn't finished but you aren't at the end of the split, continue
+                    } else {
+                        // you're at the end of the split, return false
+                        return false;
+                    }
+                }
+
                 char c = (char) i;
                 completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
 
@@ -151,17 +166,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                         return true;
                     }
                     return true;
-                } else if (pos > end) {
-                    // we have items in the list but the last one is incomplete so we pull in the next split
-                    // and continue reading until end of object
-
-                    // only get the next split if
-                    if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
-                        LOG.debug("JSON object incomplete, moving onto next split to finish");
-                        getNextSplit();
-                    }
-                    // continue the while loop to complete the object
-                    continue;
                 } else {
                     // if we don't have a completed item and we aren't at the end of the split
                     // we should just continue to read
@@ -266,7 +270,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private void getNextSplit() throws IOException {
         // we need to move into the next split, so create one that starts at the current pos
         // and goes until the end of the file
-        FileSplit nextSplit = new FileSplit(file, pos, Long.MAX_VALUE, (String[]) null);
+        FileSplit nextSplit = new FileSplit(file, pos, Long.MAX_VALUE - pos, (String[]) null);
         lineRecordReader = new LineRecordReader(conf, nextSplit);
         inNextSplit = true;
     }
