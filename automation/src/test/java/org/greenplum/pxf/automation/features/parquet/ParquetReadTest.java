@@ -3,13 +3,13 @@ package org.greenplum.pxf.automation.features.parquet;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
+import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 import java.io.File;
 
 public class ParquetReadTest extends BaseFeature {
-    private String hdfsPath;
     private static final String NUMERIC_TABLE = "numeric_precision";
     private static final String NUMERIC_UNDEFINED_PRECISION_TABLE = "numeric_undefined_precision";
     private static final String PXF_PARQUET_TABLE = "pxf_parquet_primitive_types";
@@ -37,6 +37,7 @@ public class ParquetReadTest extends BaseFeature {
             "c1    CHAR(3)",
             "bin   BYTEA"
     };
+
     private static final String[] PARQUET_TYPES_COLUMNS = new String[]{
             "id      integer",
             "name    text",
@@ -56,6 +57,7 @@ public class ParquetReadTest extends BaseFeature {
             "dec3    numeric(13,5)",
             "num1    integer"
     };
+
     private static final String[] PARQUET_TABLE_DECIMAL_COLUMNS = new String[]{
             "description   TEXT",
             "a             DECIMAL(5,  2)",
@@ -67,9 +69,11 @@ public class ParquetReadTest extends BaseFeature {
             "g             DECIMAL(38, 10)",
             "h             DECIMAL(38, 38)"
     };
+
     private static final String[] UNDEFINED_PRECISION_NUMERIC = new String[]{
             "description   text",
             "value         numeric"};
+
     private static final String[] PARQUET_TABLE_COLUMNS_SUBSET = new String[]{
             "s1    TEXT",
             "n1    INTEGER",
@@ -79,6 +83,7 @@ public class ParquetReadTest extends BaseFeature {
             "vc1   VARCHAR(5)",
             "bin   BYTEA"
     };
+
     // parquet LIST data are generated using HIVE, but HIVE doesn't support TIMESTAMP for parquet LIST
     private static final String[] PARQUET_LIST_TABLE_COLUMNS = new String[]{
             "id                   INTEGER",
@@ -95,11 +100,13 @@ public class ParquetReadTest extends BaseFeature {
             "date_arr             DATE[]",
             "numeric_arr          NUMERIC[]",
     };
+
     // parquet TIMESTAMP LIST data generated using Spark
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = new String[]{
             "id            INTEGER",
             "tm_arr        TIMESTAMP[]",
     };
+    private String hdfsPath;
     private ProtocolEnum protocol;
 
     @Override
