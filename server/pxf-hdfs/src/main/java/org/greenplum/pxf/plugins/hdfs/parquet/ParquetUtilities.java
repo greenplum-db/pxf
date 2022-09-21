@@ -10,6 +10,7 @@ import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +50,7 @@ public class ParquetUtilities {
         for (String split : splits) {
             try {
                 data.add(decodeString(split, primitiveTypeName, logicalTypeAnnotation));
-            } catch (NumberFormatException | PxfRuntimeException e) {
+            } catch (NumberFormatException | PxfRuntimeException | DateTimeParseException e) {
                 String hint = createErrorHintFromValue(StringUtils.startsWith(split, "{"), val);
                 throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, primitiveTypeName), hint, e);
             }
