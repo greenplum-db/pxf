@@ -50,6 +50,9 @@ function inflate_dependencies() {
 	if [[ -f regression-tools/regression-tools.tar.gz ]]; then
 		tarballs+=(regression-tools/regression-tools.tar.gz)
 	fi
+
+	# when running automation against GP7, we need python2 dependencies shipped with gp6 to make Tinc work
+	# if required, these libraries will be fetched by a CI pipeline under gp6-python-libs directory
 	if [[ -f gp6-python-libs/gp6-python-libs.tar.gz ]]; then
 		tarballs+=(gp6-python-libs/gp6-python-libs.tar.gz)
 	fi

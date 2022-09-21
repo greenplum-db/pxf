@@ -695,5 +695,4 @@ public class BridgeOutputBuilderTest {
             throw new IOException("not implemented");
         }
     }
-
 }

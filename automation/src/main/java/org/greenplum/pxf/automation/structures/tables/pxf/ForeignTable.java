@@ -138,12 +138,8 @@ public class ForeignTable extends WritableExternalTable {
 
     private String getFormatOption() {
         // FDW format option is a second part of profile
-        if (getProfile() == null) {
-            // TODO: what will we do with tests that set F/A/R directly without a profile ?
-            throw new IllegalStateException("Cannot create foreign table when profile is not specified");
-        }
+        String[] profileParts = getProfileParts();
         String format;
-        String[] profileParts = getProfile().split(":");
         if (profileParts.length == 1) {
             format = profileParts[0].toLowerCase();
             if (format.equals("hive") || format.equals("hbase") || format.equals("jdbc") ) {
@@ -176,11 +172,7 @@ public class ForeignTable extends WritableExternalTable {
 
     private String getProtocol() {
         // FDW protocol is a second part of profile
-        if (getProfile() == null) {
-            // TODO: what will we do with tests that set F/A/R directly without a profile ?
-            throw new IllegalStateException("Cannot create foreign table when profile is not specified");
-        }
-        String[] profileParts = getProfile().split(":");
+        String[] profileParts = getProfileParts();
         String protocol = profileParts[0].toLowerCase();
 
         // special case: one-word old-style compound profiles of HiveOrc and similar Hive* or Hdfs*
@@ -199,8 +191,14 @@ public class ForeignTable extends WritableExternalTable {
                 protocol = "hdfs";
             }
         }
-
         return protocol;
     }
 
+    private String[] getProfileParts() {
+        if (getProfile() == null) {
+            // TODO: what will we do with tests that set F/A/R directly without a profile ?
+            throw new IllegalStateException("Cannot create foreign table when profile is not specified");
+        }
+        return getProfile().split(":");
+    }
 }
