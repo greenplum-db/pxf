@@ -165,7 +165,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                         value.set(json);
                         return true;
                     }
-                    return true;
                 } else {
                     // if we don't have a completed item and we aren't at the end of the split
                     // we should just continue to read
@@ -221,20 +220,11 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     }
 
     private int readNextChar() throws IOException {
-        boolean getNext = true;
+        boolean endOfSplit = true;
         // if we are at the end of the buffer, refresh
         if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
-            getNext = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
-            pos = lineRecordReader.getPos();
-            if (getNext) {
-                currentLineBuffer = new StringBuffer(currentLine.toString());
-                currentBufferIndex = 0;
-                // linerecordreader returns false in 2 cases, handle both:
-            } else if (lineRecordReader.getPos() < end) {
-                // 1) if length of line is 0
-                return readNextChar();
-            } else {
-                // 2) returns false if done with split
+            endOfSplit = getNextLine();
+            if (endOfSplit) {
                 return END_OF_SPLIT;
             }
         }
@@ -273,5 +263,26 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         FileSplit nextSplit = new FileSplit(file, pos, Long.MAX_VALUE - pos, (String[]) null);
         lineRecordReader = new LineRecordReader(conf, nextSplit);
         inNextSplit = true;
+    }
+
+    private boolean getNextLine() throws IOException {
+        boolean getNext = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
+        pos = lineRecordReader.getPos();
+        if (getNext) {
+            currentLineBuffer = new StringBuffer(currentLine.toString());
+            currentBufferIndex = 0;
+            // if we get a line but it is an empty line with only \n char, read the next char
+            if (currentLine.getLength() == 0) {
+                getNextLine();
+            }
+            // linerecordreader returns false in 2 cases, handle both:
+        } else if (lineRecordReader.getPos() < end) {
+            // 1) if length of line is 0
+            getNextLine();
+        } else {
+            // 2) returns false if done with split
+            return true;
+        }
+        return false;
     }
 }
