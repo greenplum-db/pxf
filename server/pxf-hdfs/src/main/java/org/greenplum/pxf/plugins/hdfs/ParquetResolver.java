@@ -263,33 +263,34 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         Group arrayGroup = new SimpleGroup(listType);
 
         for (int i = 0; i < vals.size(); i++) {
+            Object value=vals.get(i);
             Group repeatedGroup = new SimpleGroup(repeatedType);
             if (vals.get(i) != null) {
                 switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
                     case INT32:
                         if (elementType.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
-                            repeatedGroup.add(0, (Integer) vals.get(i));
+                            repeatedGroup.add(0, (Integer) value);
                         } else if (elementType.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
                                 ((IntLogicalTypeAnnotation) elementType.getLogicalTypeAnnotation()).getBitWidth() == 16) {
-                            repeatedGroup.add(0, (Short) vals.get(i));
+                            repeatedGroup.add(0, (Short) value);
                         } else {
-                            repeatedGroup.add(0, (Integer) vals.get(i));
+                            repeatedGroup.add(0, (Integer) value);
                         }
                         break;
                     case INT64:
-                        repeatedGroup.add(0, (Long) vals.get(i));
+                        repeatedGroup.add(0, (Long) value);
                         break;
                     case BOOLEAN:
-                        repeatedGroup.add(0, (Boolean) vals.get(i));
+                        repeatedGroup.add(0, (Boolean) value);
                         break;
                     case FLOAT:
-                        repeatedGroup.add(0, (Float) vals.get(i));
+                        repeatedGroup.add(0, (Float) value);
                         break;
                     case DOUBLE:
-                        repeatedGroup.add(0, (Double) vals.get(i));
+                        repeatedGroup.add(0, (Double) value);
                         break;
                     case FIXED_LEN_BYTE_ARRAY:
-                        byte[] fixedLenByteArray = getFixedLenByteArray((String) vals.get(i), elementType);
+                        byte[] fixedLenByteArray = getFixedLenByteArray((String) value, elementType);
                         if (fixedLenByteArray != null) {
                             repeatedGroup.add(index, Binary.fromReusedByteArray(fixedLenByteArray));
                         } else {
@@ -298,16 +299,17 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                         break;
                     case BINARY:
                         if (elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
-                            repeatedGroup.add(0, (String) vals.get(i));
+                            repeatedGroup.add(0, (String) value);
                         } else {
-                            byte[] oriBytes = ((ByteBuffer) vals.get(i)).array();
-                            int limit = ((ByteBuffer) vals.get(i)).limit();
+                            // TODO: try to figure out a way not to create a copied array in the range [0,limit]
+                            byte[] oriBytes = ((ByteBuffer) value).array();
+                            int limit = ((ByteBuffer) value).limit();
                             byte[] bytes = Arrays.copyOf(oriBytes, limit);
                             repeatedGroup.add(0, Binary.fromReusedByteArray(bytes));
                         }
                         break;
                     case INT96:
-                        String timestamp = ParquetTypeConverter.bytesToTimestamp(((Binary) vals.get(i)).getBytes());
+                        String timestamp = ParquetTypeConverter.bytesToTimestamp(((Binary) value).getBytes());
                         if (TIMESTAMP_PATTERN.matcher(timestamp).find()) {
                             // Note: this conversion convert type "timestamp with time zone" will lose timezone information
                             // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
