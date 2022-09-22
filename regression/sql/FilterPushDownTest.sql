@@ -6,6 +6,12 @@
 -- Check that the filter is being pushed down. We create an external table
 -- that returns the filter being sent from the C-side
 
+create table tb_test_t(id serial primary key,  v_text text, v_bool bool);
+insert into tb_test_t(v_text, v_bool) select v::text, false from generate_series(1, 20) v;
+CREATE EXTERNAL TABLE tb_test_t_pxf(id int,  v_text text, v_bool bool) LOCATION('pxf://public.tb_test_t?PROFILE=JDBC&JDBC_DRIVER=org.postgresql.Driver&DB_URL=jdbc:postgresql://localhost:5432/gpadmin&USER=gpadmin') FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
+explain analyze select v_text from tb_test_t_pxf where v_text = '5' and  v_bool = false ;
+select v_text from tb_test_t_pxf where v_text = '5' and  v_bool = false ;
+
 DROP EXTERNAL TABLE IF EXISTS test_filter CASCADE;
 
 CREATE EXTERNAL TABLE test_filter (t0 text, a1 integer, b2 boolean, filterValue text)

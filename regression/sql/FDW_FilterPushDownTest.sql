@@ -6,6 +6,12 @@
 -- Check that the filter is being pushed down. We create an external table
 -- that returns the filter being sent from the C-side
 
+CREATE SERVER loopback FOREIGN DATA WRAPPER jdbc_pxf_fdw OPTIONS (jdbc_driver 'org.postgresql.Driver', db_url 'jdbc:postgresql://localhost:5432/gpadmin');
+CREATE USER MAPPING FOR CURRENT_USER SERVER loopback;
+CREATE FOREIGN TABLE foreign_tb_test (id int,  v_text text, v_bool bool) SERVER loopback OPTIONS ( resource 'public.tb_test_t' );
+explain analyze select v_text from foreign_tb_test where v_text = '5' and  v_bool = false ;
+select v_text from foreign_tb_test where v_text = '5' and  v_bool = false ;
+
 CREATE FOREIGN DATA WRAPPER pxf_filter_push_down_fdw
     HANDLER pxf_fdw_handler
     VALIDATOR pxf_fdw_validator
