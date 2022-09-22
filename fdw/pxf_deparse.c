@@ -73,5 +73,6 @@ classifyConditions(PlannerInfo *root,
 
 		/* for now, just assume that all WHERE clauses are OK on remote */
 		*remote_conds = lappend(*remote_conds, ri);
+		*local_conds = lappend(*local_conds, ri);
 	}
 }

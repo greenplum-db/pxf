@@ -1427,6 +1427,12 @@ extractPxfAttributes(List *quals, bool *qualsAreSupported)
 					append_attr_from_var((Var *) expr->arg, attributes);
 				break;
 			}
+			case T_Var:
+			{
+				attributes        =
+					append_attr_from_var((Var*) node, attributes);
+				break;
+			}
 			default:
 			{
 				/*

@@ -3,6 +3,29 @@
 -----------------------------------------------------
 -- Check that the filter is being pushed down. We create an external table
 -- that returns the filter being sent from the C-side
+CREATE SERVER loopback FOREIGN DATA WRAPPER jdbc_pxf_fdw OPTIONS (jdbc_driver 'org.postgresql.Driver', db_url 'jdbc:postgresql://localhost:5432/gpadmin');
+CREATE USER MAPPING FOR CURRENT_USER SERVER loopback;
+CREATE FOREIGN TABLE foreign_tb_test (id int,  v_text text, v_bool bool) SERVER loopback OPTIONS ( resource 'public.tb_test_t' );
+explain analyze select v_text from foreign_tb_test where v_text = '5' and  v_bool = false ;
+                                                             QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------
+ Gather Motion 3:1  (slice1; segments: 3)  (cost=50000.00..50000.00 rows=1000 width=32) (actual time=25.552..25.554 rows=1 loops=1)
+   ->  Foreign Scan on foreign_tb_test  (cost=50000.00..50000.00 rows=334 width=32) (actual time=0.369..0.371 rows=1 loops=1)
+         Filter: ((NOT v_bool) AND (v_text = '5'::text))
+ Planning time: 3.438 ms
+   (slice0)    Executor memory: 59K bytes.
+   (slice1)    Executor memory: 111K bytes avg x 3 workers, 138K bytes max (seg1).
+ Memory used:  128000kB
+ Optimizer: Postgres query optimizer
+ Execution time: 25.723 ms
+(9 rows)
+
+select v_text from foreign_tb_test where v_text = '5' and  v_bool = false ;
+ v_text 
+--------
+ 5
+(1 row)
+
 CREATE FOREIGN DATA WRAPPER pxf_filter_push_down_fdw
     HANDLER pxf_fdw_handler
     VALIDATOR pxf_fdw_validator

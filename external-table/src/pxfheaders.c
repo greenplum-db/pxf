@@ -374,7 +374,6 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	int			   i;
 	int			   dropped_count;
 	int			   number;
-	int			   numTargetList;
 #if PG_VERSION_NUM < 90400
 	int			   numSimpleVars;
 #endif
@@ -385,7 +384,7 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	TupleDesc		tupdesc;
 
 	initStringInfo(&formatter);
-	numTargetList = 0;
+	number = 0;
 
 #if PG_VERSION_NUM >= 90400
 	/*
@@ -421,7 +420,7 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 			{
 				add_projection_index_header(headers,
 											formatter, attno - 1, long_number);
-				numTargetList++;
+				number++;
 			}
 		}
 
@@ -434,21 +433,7 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	}
 #endif
 
-	number = numTargetList +
-#if PG_VERSION_NUM >= 90400
-		projInfo->pi_numSimpleVars +
-#else
-		numSimpleVars +
-#endif
-		list_length(qualsAttributes);
-	if (number == 0)
-		return;
-
 	attrs_used = NULL;
-
-	/* Convert the number of projection columns to a string */
-	pg_ltoa(number, long_number);
-	churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
 
 #if PG_VERSION_NUM >= 90400
 	for (i = 0; i < projInfo->pi_numSimpleVars; i++)
@@ -492,7 +477,15 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 			/* Shift the column index by the running dropped_count */
 			add_projection_index_header(headers, formatter,
 										i - 1 - dropped_count, long_number);
+			number++;
 		}
+	}
+
+	if (number != 0)
+	{
+		/* Convert the number of projection columns to a string */
+		pg_ltoa(number, long_number);
+		churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
 	}
 
 	list_free(qualsAttributes);
