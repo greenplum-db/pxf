@@ -42,13 +42,9 @@ import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
 public class PartitionedJsonParser {
 
 	private static final char START_BRACE = '{';
-	private static final int EOF = -1;
-	private static final int CHARS_READ_LIMIT = 8192;
 	private final JsonLexer lexer;
-	private long bytesRead = 0;
-
-	private final StringBuilder uncountedCharsReadFromStream;
 	private String memberName;
+
 	private MemberSearchState memberState;
 	private StringBuilder currentObject;
 	private StringBuilder currentString;
@@ -60,7 +56,6 @@ public class PartitionedJsonParser {
 	public PartitionedJsonParser(String memberName) {
 		this.lexer = new JsonLexer();
 
-		this.uncountedCharsReadFromStream = new StringBuilder(CHARS_READ_LIMIT);
 		this.memberName = memberName;
 		this.memberState = MemberSearchState.SEARCHING;
 
@@ -83,6 +78,8 @@ public class PartitionedJsonParser {
 
 	public void startNewJsonObject() {
 		lexer.setState(JsonLexerState.BEGIN_OBJECT);
+		this.memberState = MemberSearchState.SEARCHING;
+
 		this.objectCount = 0;
 		this.currentObject = new StringBuilder();
 		this.currentString = new StringBuilder();
