@@ -32,7 +32,6 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.RecordReader;
-import org.greenplum.pxf.plugins.json.parser.JsonLexer;
 import org.greenplum.pxf.plugins.json.parser.PartitionedJsonParser;
 
 import java.io.IOException;
@@ -61,11 +60,10 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private InputStream is;
     private PartitionedJsonParser parser;
     private LineRecordReader lineRecordReader;
-    private StringBuffer currentLineBuffer;
     private Text currentLine;
     private JobConf conf;
     private final Path file;
-    private int currentBufferIndex;
+    private int currentLineIndex = Integer.MAX_VALUE;
     private boolean inNextSplit = false;
 
     private static final char BACKSLASH = '\\';
@@ -73,6 +71,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private static final char START_BRACE = '{';
     private static final int EOF = -1;
     private static final int END_OF_SPLIT = -2;
+    private final byte[] newLine = "\n".getBytes(StandardCharsets.UTF_8);
 
     /**
      * Create new multi-line json object reader.
@@ -138,7 +137,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             while ((i = readNextChar()) != EOF) { // in the split, create the object
                 if (i == END_OF_SPLIT) {
                     if (!completedObject) {
-                        if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
+                        if (currentLineIndex >= currentLine.getLength()) {
                             LOG.debug("JSON object incomplete, moving onto next split to finish");
                             getNextSplit();
                             // continue the while loop to complete the object
@@ -160,6 +159,13 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
                     if (json.length() > maxObjectLength) {
                         LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
+                        // skipping this object so find the next one
+                        if (!scanToFirstBeginObject()) {
+                            return false;
+                        }
+
+                        // found a start brace so begin a new json object
+                        parser.startNewJsonObject();
                     } else {
                         key.set(pos);
                         value.set(json);
@@ -220,17 +226,17 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     }
 
     private int readNextChar() throws IOException {
-        boolean endOfSplit = true;
+        boolean endOfSplit;
         // if we are at the end of the buffer, refresh
-        if (currentLineBuffer == null || currentBufferIndex >= currentLineBuffer.length()) {
+        if (currentLineIndex >= currentLine.getLength()) {
             endOfSplit = getNextLine();
             if (endOfSplit) {
                 return END_OF_SPLIT;
             }
         }
 
-        char c = currentLineBuffer.charAt(currentBufferIndex);
-        currentBufferIndex++;
+        int c = currentLine.charAt(currentLineIndex);
+        currentLineIndex++;
 
         return c;
 
@@ -251,6 +257,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             } else if (c == QUOTE) {
                 inString = !inString;
             } else if (c == START_BRACE && !inString) {
+                LOG.debug("Found JSON begin object");
                 return true;
             }
         }
@@ -266,21 +273,14 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     }
 
     private boolean getNextLine() throws IOException {
+        currentLine.clear();
         boolean getNext = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
         pos = lineRecordReader.getPos();
         if (getNext) {
-            currentLineBuffer = new StringBuffer(currentLine.toString());
-            currentBufferIndex = 0;
-            // if we get a line but it is an empty line with only \n char, read the next char
-            if (currentLine.getLength() == 0) {
-                getNextLine();
-            }
-            // linerecordreader returns false in 2 cases, handle both:
-        } else if (lineRecordReader.getPos() < end) {
-            // 1) if length of line is 0
-            getNextLine();
+            // lineRecordReader removes the \n when it does the read, we want to keep it in
+            currentLine.append(newLine, 0, newLine.length);
+            currentLineIndex = 0;
         } else {
-            // 2) returns false if done with split
             return true;
         }
         return false;
