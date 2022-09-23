@@ -86,6 +86,7 @@ public class PartitionedJsonParser {
 		this.objectStack = new ArrayList<Integer>();
 
 		currentObject.append(START_BRACE);
+		objectStack.add(0);
 	}
 	/**
 	 * @param c character to parse
