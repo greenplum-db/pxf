@@ -134,47 +134,29 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             parser.startNewJsonObject();
 
             // read through the file until the object is completed
-            while ((i = readNextChar()) != EOF) { // in the split, create the object
+            while ((i = readNextChar()) != EOF && !completedObject) { // in the split, create the object
                 if (i == END_OF_SPLIT) {
-                    if (!completedObject) {
-                        if (currentLineIndex >= currentLine.getLength()) {
+                    if (currentLineIndex >= currentLine.getLength()) {
                             LOG.debug("JSON object incomplete, moving onto next split to finish");
                             getNextSplit();
                             // continue the while loop to complete the object
                             continue;
-                        }
-                        // if the line isn't finished but you aren't at the end of the split, continue
-                    } else {
-                        // you're at the end of the split, return false
-                        return false;
                     }
                 }
 
                 char c = (char) i;
                 completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
+            }
 
-                if (completedObject) {
-                    // we have a completed object
-                    String json = jsonObject.toString();
+            if (completedObject) {
+                String json = jsonObject.toString();
 
-                    if (json.length() > maxObjectLength) {
-                        LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
-                        // skipping this object so find the next one
-                        if (!scanToFirstBeginObject()) {
-                            return false;
-                        }
-
-                        // found a start brace so begin a new json object
-                        parser.startNewJsonObject();
-                    } else {
-                        key.set(pos);
-                        value.set(json);
-                        return true;
-                    }
+                if (json.length() > maxObjectLength) {
+                    LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
                 } else {
-                    // if we don't have a completed item and we aren't at the end of the split
-                    // we should just continue to read
-                    continue;
+                    key.set(pos);
+                    value.set(json);
+                    return true;
                 }
             }
         }
