@@ -226,11 +226,11 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     }
 
     private int readNextChar() throws IOException {
-        boolean endOfSplit;
+        boolean getNext;
         // if we are at the end of the buffer, refresh
         if (currentLineIndex >= currentLine.getLength()) {
-            endOfSplit = getNextLine();
-            if (endOfSplit) {
+            getNext = getNextLine();
+            if (!getNext) {
                 return END_OF_SPLIT;
             }
         }
@@ -280,9 +280,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             // lineRecordReader removes the \n when it does the read, we want to keep it in
             currentLine.append(newLine, 0, newLine.length);
             currentLineIndex = 0;
-        } else {
-            return true;
         }
-        return false;
+        return getNext;
     }
 }
