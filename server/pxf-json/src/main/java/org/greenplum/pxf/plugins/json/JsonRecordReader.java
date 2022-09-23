@@ -63,6 +63,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private Text currentLine;
     private JobConf conf;
     private final Path file;
+    private StringBuffer currentLineBuffer;
     private int currentLineIndex = Integer.MAX_VALUE;
     private boolean inNextSplit = false;
 
@@ -136,7 +137,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             // read through the file until the object is completed
             while ((i = readNextChar()) != EOF && !completedObject) { // in the split, create the object
                 if (i == END_OF_SPLIT) {
-                    if (currentLineIndex >= currentLine.getLength()) {
+                    if (currentLineBuffer == null || currentLineIndex >= currentLineBuffer.length()) {
                             LOG.debug("JSON object incomplete, moving onto next split to finish");
                             getNextSplit();
                             // continue the while loop to complete the object
@@ -210,14 +211,14 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private int readNextChar() throws IOException {
         boolean getNext;
         // if we are at the end of the buffer, refresh
-        if (currentLineIndex >= currentLine.getLength()) {
+        if (currentLineBuffer == null || currentLineIndex >= currentLineBuffer.length()) {
             getNext = getNextLine();
             if (!getNext) {
                 return END_OF_SPLIT;
             }
         }
 
-        int c = currentLine.charAt(currentLineIndex);
+        int c = currentLineBuffer.charAt(currentLineIndex);
         currentLineIndex++;
 
         return c;
@@ -261,6 +262,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         if (getNext) {
             // lineRecordReader removes the \n when it does the read, we want to keep it in
             currentLine.append(newLine, 0, newLine.length);
+            currentLineBuffer = new StringBuffer(currentLine.toString());
             currentLineIndex = 0;
         }
         return getNext;
