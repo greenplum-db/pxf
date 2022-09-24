@@ -5,7 +5,7 @@ folder-prefix: perf
 perf-scale: "10"
 
 enable-impersonation-multinode: true
-pxf-jvm-opts: "-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heap_dump -Xmx2g -Xms1g"
+pxf-jvm-opts: "-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heap_dump -Xmx8g -Xms8g"
 perf-ccp-reap-minutes: 120
 
 perf-gpdb-number-of-nodes: 4
@@ -26,9 +26,9 @@ perf-trigger-stop: 12:40 PM
 perf-benchmark-concurrency: 10
 perf-benchmark-hadoop: true
 perf-benchmark-adl: false
-perf-benchmark-s3: true
-perf-benchmark-s3-extension: true
-perf-benchmark-gcs: false
+perf-benchmark-s3: false
+perf-benchmark-s3-extension: false
+perf-benchmark-gcs: true
 perf-benchmark-gphdfs: false
 perf-benchmark-wasb: false
 perf-sleep-before-destroy: 10
