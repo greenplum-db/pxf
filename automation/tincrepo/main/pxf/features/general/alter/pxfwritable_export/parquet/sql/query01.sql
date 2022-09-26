@@ -1,8 +1,8 @@
 -- @description query01 test altering table, dropping columns during write
 -- start_matchsubs
 --
--- m/ALTER/
--- s/ALTER EXTERNAL TABLE/ALTER FOREIGN TABLE/g
+-- m/ALTER FOREIGN TABLE/
+-- s/ALTER FOREIGN TABLE/ALTER EXTERNAL TABLE/g
 --
 -- end_matchsubs
 

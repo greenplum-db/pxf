@@ -1,5 +1,12 @@
 -- @description query01 test altering table, dropping columns and then adding them back
-
+--
+-- start_matchsubs
+--
+-- m/ALTER FOREIGN TABLE/
+-- s/ALTER FOREIGN TABLE/ALTER EXTERNAL TABLE/g
+--
+-- end_matchsubs
+--
 -- sets the date style and bytea output to the expected by the tests
 SET datestyle='ISO, MDY';
 SET bytea_output='escape';

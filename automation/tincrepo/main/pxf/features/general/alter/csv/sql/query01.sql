@@ -13,8 +13,8 @@
 -- m/ERROR/
 -- s/ERROR:  invalid input syntax for integer: "1.0"/ERROR:  invalid input syntax for type integer: "1.0"/g
 --
--- m/ALTER/
--- s/ALTER EXTERNAL TABLE/ALTER FOREIGN TABLE/g
+-- m/ALTER FOREIGN TABLE/
+-- s/ALTER FOREIGN TABLE/ALTER EXTERNAL TABLE/g
 --
 -- m/pxf:\/\/(.*)\/pxf_automation_data/
 -- s/pxf:\/\/.*alter-tests.*/pxf:\/\/pxf_automation_data?PROFILE=*:text/
