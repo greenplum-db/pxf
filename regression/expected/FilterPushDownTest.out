@@ -3,29 +3,6 @@
 -----------------------------------------------------
 -- Check that the filter is being pushed down. We create an external table
 -- that returns the filter being sent from the C-side
-create table tb_test_t(id serial primary key,  v_text text, v_bool bool);
-insert into tb_test_t(v_text, v_bool) select v::text, false from generate_series(1, 20) v;
-CREATE EXTERNAL TABLE tb_test_t_pxf(id int,  v_text text, v_bool bool) LOCATION('pxf://public.tb_test_t?PROFILE=JDBC&JDBC_DRIVER=org.postgresql.Driver&DB_URL=jdbc:postgresql://localhost:5432/gpadmin&USER=gpadmin') FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
-explain analyze select v_text from tb_test_t_pxf where v_text = '5' and  v_bool = false ;
-                                                          QUERY PLAN
--------------------------------------------------------------------------------------------------------------------------------
- Gather Motion 3:1  (slice1; segments: 3)  (cost=0.00..469.21 rows=237038 width=8) (actual time=12.759..12.760 rows=1 loops=1)
-   ->  External Scan on tb_test_t_pxf  (cost=0.00..462.14 rows=79013 width=8) (actual time=12.051..12.079 rows=1 loops=1)
-         Filter: ((v_text = '5'::text) AND (NOT v_bool))
- Planning time: 6.030 ms
-   (slice0)    Executor memory: 132K bytes.
-   (slice1)    Executor memory: 130K bytes avg x 3 workers, 130K bytes max (seg0).
- Memory used:  128000kB
- Optimizer: Pivotal Optimizer (GPORCA)
- Execution time: 13.066 ms
-(9 rows)
-
-select v_text from tb_test_t_pxf where v_text = '5' and  v_bool = false ;
- v_text 
---------
- 5
-(1 row)
-
 DROP EXTERNAL TABLE IF EXISTS test_filter CASCADE;
 CREATE EXTERNAL TABLE test_filter (t0 text, a1 integer, b2 boolean, filterValue text)
     LOCATION (E'pxf://dummy_path?FRAGMENTER=org.greenplum.pxf.diagnostic.FilterVerifyFragmenter&ACCESSOR=org.greenplum.pxf.diagnostic.UserDataVerifyAccessor&RESOLVER=org.greenplum.pxf.plugins.hdfs.StringPassResolver')
@@ -67,6 +44,13 @@ SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
  H  |  7 | f  | a2c16s4dtrueo0l2
  J  |  9 | f  | a2c16s4dtrueo0l2
 (5 rows)
+
+SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
+ t0 | a1 |          filtervalue
+----+----+-------------------------------
+ B  |  1 | a2c16s4dtrueo0l2a1c23s1d5o1l0
+ D  |  3 | a2c16s4dtrueo0l2a1c23s1d5o1l0
+(2 rows)
 
 SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |                 filtervalue                 
@@ -122,6 +106,13 @@ SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
  H  |  7 | f  | a2c16s4dtrueo0l2
  J  |  9 | f  | a2c16s4dtrueo0l2
 (5 rows)
+
+SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
+ t0 | a1 |          filtervalue
+----+----+-------------------------------
+ B  |  1 | a1c23s1d5o1a2c16s4dtrueo0l2l0
+ D  |  3 | a1c23s1d5o1a2c16s4dtrueo0l2l0
+(2 rows)
 
 SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |                 filtervalue                 
@@ -197,6 +188,13 @@ SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
  J  |  9 | f  | a2c16s4dtrueo0l2
 (5 rows)
 
+SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
+ t0 | a1 |          filtervalue
+----+----+-------------------------------
+ B  |  1 | a2c16s4dtrueo0l2a1c23s1d5o1l0
+ D  |  3 | a2c16s4dtrueo0l2a1c23s1d5o1l0
+(2 rows)
+
 SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |                 filtervalue                 
 ----+----+----+---------------------------------------------
@@ -251,6 +249,13 @@ SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
  H  |  7 | f  | a2c16s4dtrueo0l2
  J  |  9 | f  | a2c16s4dtrueo0l2
 (5 rows)
+
+SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
+ t0 | a1 |          filtervalue
+----+----+-------------------------------
+ B  |  1 | a2c16s4dtrueo0l2a1c23s1d5o1l0
+ D  |  3 | a2c16s4dtrueo0l2a1c23s1d5o1l0
+(2 rows)
 
 SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |                 filtervalue                 

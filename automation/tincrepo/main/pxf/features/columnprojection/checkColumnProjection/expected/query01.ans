@@ -56,9 +56,40 @@ SELECT colprojvalue FROM test_column_projection ORDER BY t0;
  t0|colprojvalue
 (10 rows)
 
--- Column Projection is not supported for boolean?
--- SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
---
+SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|b2|colprojvalue
+ C  | t0|b2|colprojvalue
+ E  | t0|b2|colprojvalue
+ G  | t0|b2|colprojvalue
+ I  | t0|b2|colprojvalue
+(5 rows)
+
+SELECT t0, a1, colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+ t0 | a1 |     colprojvalue
+----+----+-----------------------
+ B  |  1 | t0|a1|b2|colprojvalue
+ D  |  3 | t0|a1|b2|colprojvalue
+(2 rows)
+
+SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+       sqrt       |     colprojvalue
+------------------+-----------------------
+                1 | t0|a1|b2|colprojvalue
+ 1.73205080756888 | t0|a1|b2|colprojvalue
+(2 rows)
+
+SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
+       sqrt       |     colprojvalue
+------------------+-----------------------
+                1 | t0|a1|b2|colprojvalue
+ 1.73205080756888 | t0|a1|b2|colprojvalue
+ 2.23606797749979 | t0|a1|b2|colprojvalue
+ 2.64575131106459 | t0|a1|b2|colprojvalue
+                3 | t0|a1|b2|colprojvalue
+(5 rows)
+
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
  t0 |    colprojvalue
 ----+--------------------
@@ -196,9 +227,40 @@ SELECT colprojvalue FROM test_column_projection ORDER BY t0;
  t0|colprojvalue
 (10 rows)
 
--- Column Projection is not supported for boolean?
--- SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
---
+SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|b2|colprojvalue
+ C  | t0|b2|colprojvalue
+ E  | t0|b2|colprojvalue
+ G  | t0|b2|colprojvalue
+ I  | t0|b2|colprojvalue
+(5 rows)
+
+SELECT t0, a1, colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+ t0 | a1 |     colprojvalue
+----+----+-----------------------
+ B  |  1 | t0|a1|b2|colprojvalue
+ D  |  3 | t0|a1|b2|colprojvalue
+(2 rows)
+
+SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+       sqrt       |     colprojvalue
+------------------+-----------------------
+                1 | t0|a1|b2|colprojvalue
+ 1.73205080756888 | t0|a1|b2|colprojvalue
+(2 rows)
+
+SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
+       sqrt       |     colprojvalue
+------------------+-----------------------
+                1 | t0|a1|b2|colprojvalue
+ 1.73205080756888 | t0|a1|b2|colprojvalue
+ 2.23606797749979 | t0|a1|b2|colprojvalue
+ 2.64575131106459 | t0|a1|b2|colprojvalue
+                3 | t0|a1|b2|colprojvalue
+(5 rows)
+
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
  t0 |    colprojvalue
 ----+--------------------

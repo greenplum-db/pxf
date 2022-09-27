@@ -13,9 +13,14 @@ SELECT t0, colprojvalue FROM test_column_projection ORDER BY t0;
 
 SELECT colprojvalue FROM test_column_projection ORDER BY t0;
 
--- Column Projection is not supported for boolean?
--- SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
---
+SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
+
+SELECT t0, a1, colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+
+SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+
+SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
+
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 <= 5 ORDER BY t0;
@@ -41,9 +46,14 @@ SELECT t0, colprojvalue FROM test_column_projection ORDER BY t0;
 
 SELECT colprojvalue FROM test_column_projection ORDER BY t0;
 
--- Column Projection is not supported for boolean?
--- SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
---
+SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
+
+SELECT t0, a1, colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+
+SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+
+SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
+
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 <= 5 ORDER BY t0;

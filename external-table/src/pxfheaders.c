@@ -384,6 +384,7 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	TupleDesc		tupdesc;
 
 	initStringInfo(&formatter);
+	attrs_used = NULL;
 	number = 0;
 
 #if PG_VERSION_NUM >= 90400
@@ -418,9 +419,9 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 			int attno = lfirst_int(lc1);
 			if (attno > InvalidAttrNumber)
 			{
-				add_projection_index_header(headers,
-											formatter, attno - 1, long_number);
-				number++;
+				attrs_used =
+					bms_add_member(attrs_used,
+									attno - FirstLowInvalidHeapAttributeNumber);
 			}
 		}
 
@@ -433,7 +434,6 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	}
 #endif
 
-	attrs_used = NULL;
 
 #if PG_VERSION_NUM >= 90400
 	for (i = 0; i < projInfo->pi_numSimpleVars; i++)
