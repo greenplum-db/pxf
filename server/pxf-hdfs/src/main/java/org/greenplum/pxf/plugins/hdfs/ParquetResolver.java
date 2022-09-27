@@ -292,9 +292,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     case FIXED_LEN_BYTE_ARRAY:
                         byte[] fixedLenByteArray = getFixedLenByteArray((String) value, elementType);
                         if (fixedLenByteArray != null) {
-                            repeatedGroup.add(index, Binary.fromReusedByteArray(fixedLenByteArray));
-                        } else {
-                            return;
+                            repeatedGroup.add(0, Binary.fromReusedByteArray(fixedLenByteArray));
                         }
                         break;
                     case BINARY:

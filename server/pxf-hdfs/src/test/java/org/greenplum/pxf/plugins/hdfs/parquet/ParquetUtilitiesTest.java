@@ -32,7 +32,7 @@ public class ParquetUtilitiesTest {
     @Test
     public void testParsePostgresArrayIntegerArray() {
         // parquet SHORT is signed INT32 with INT annotation
-        List<Object> result = parquetUtilities.parsePostgresArray("{1,2,3}", PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.IntLogicalTypeAnnotation.stringType());
+        List<Object> result = parquetUtilities.parsePostgresArray("{1,2,-3}", PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.IntLogicalTypeAnnotation.stringType());
         assertIterableEquals(Arrays.asList(1, 2, -3), result);
 
         // parquet INT is INT32 with no annotation
@@ -179,7 +179,7 @@ public class ParquetUtilitiesTest {
         // as we currently do not support writing multi-dimensional arrays
         String value = "{{1.01,2.01},{3.01,4.01}}";
 
-        Exception exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.FLOAT, null));
+        Exception exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.DOUBLE, null));
         assertEquals("Error parsing array element: {1.01,2.01} was not of expected type DOUBLE", exception.getMessage());
         assertEquals("Column value \"{{1.01,2.01},{3.01,4.01}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", ((PxfRuntimeException) exception).getHint());
     }
