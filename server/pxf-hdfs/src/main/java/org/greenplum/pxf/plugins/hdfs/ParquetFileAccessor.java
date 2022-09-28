@@ -564,8 +564,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                             .optionalElement(PrimitiveTypeName.INT32)
                             .as(dateType());
                     break;
-                case TIMESTAMP_WITH_TIMEZONE_ARRAY:
                 case TIMESTAMPARRAY:
+                case TIMESTAMP_WITH_TIMEZONE_ARRAY:
                     listBuilder = Types.optionalList()
                             .optionalElement(PrimitiveTypeName.INT96);
                     break;
