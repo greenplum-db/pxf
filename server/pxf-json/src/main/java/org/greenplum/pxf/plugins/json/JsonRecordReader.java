@@ -73,6 +73,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private static final int EOF = -1;
     private static final int END_OF_SPLIT = -2;
     private final byte[] newLine = "\n".getBytes(StandardCharsets.UTF_8);
+    private final byte[] newLineCarriageReturn = "\n\r".getBytes(StandardCharsets.UTF_8);
 
     /**
      * Create new multi-line json object reader.
@@ -257,11 +258,20 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
     private boolean getNextLine() throws IOException {
         currentLine.clear();
+        long currentPos = pos;
         boolean getNext = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
         pos = lineRecordReader.getPos();
         if (getNext) {
-            // lineRecordReader removes the \n when it does the read, we want to keep it in
-            currentLine.append(newLine, 0, newLine.length);
+            // lineRecordReader removes the new lines, carriage returns, etc when it does the read
+            // we want to track that delta so we know the proper size of the line that was returned
+            long delta = pos - currentPos - currentLine.getLength();
+            if (delta == 2) {
+                // lineRecordReader removes the \n when it does the read, we want to keep it in
+                currentLine.append(newLineCarriageReturn, 0, newLineCarriageReturn.length);
+            }
+            if (delta == 1) {
+                currentLine.append(newLine, 0, newLine.length);
+            }
             currentLineBuffer = new StringBuffer(currentLine.toString());
             currentLineIndex = 0;
         }
