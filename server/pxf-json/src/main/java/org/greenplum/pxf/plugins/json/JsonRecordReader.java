@@ -240,7 +240,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             } else if (c == QUOTE) {
                 inString = !inString;
             } else if (c == START_BRACE && !inString) {
-                LOG.debug("Found JSON begin object");
                 return true;
             }
         }
