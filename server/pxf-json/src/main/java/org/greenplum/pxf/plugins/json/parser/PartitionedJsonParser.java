@@ -69,7 +69,9 @@ public class PartitionedJsonParser {
 
 		SEARCHING,
 
-		IN_MATCHING_OBJECT
+		IN_MATCHING_OBJECT,
+
+		STRING_NOT_FOUND
 	}
 
 	private static final EnumSet<JsonLexerState> inStringStates = EnumSet.of(JsonLexerState.INSIDE_STRING,
@@ -127,6 +129,8 @@ public class PartitionedJsonParser {
 				}
 				if (objectStack.size() == 0) {
 					currentObject.setLength(0);
+					memberState = MemberSearchState.STRING_NOT_FOUND;
+					return true;
 				}
 			}
 			break;
@@ -163,6 +167,10 @@ public class PartitionedJsonParser {
 		}
 
 		return false;
+	}
+
+	public boolean foundObjectWithIdentifier() {
+		return !(memberState == MemberSearchState.STRING_NOT_FOUND);
 	}
 
 	/**

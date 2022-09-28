@@ -40,7 +40,7 @@ public class JsonRecordReaderTest {
         context = new RequestContext();
         context.setConfiguration(new Configuration());
 
-        jobConf = new JobConf(context.getConfiguration(), PartitionedJsonParserNoSeekTest.class);
+        jobConf = new JobConf(context.getConfiguration());
         jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüstömerstätüs");
         file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/input.json").toURI());
         context.setDataSource(file.getPath());

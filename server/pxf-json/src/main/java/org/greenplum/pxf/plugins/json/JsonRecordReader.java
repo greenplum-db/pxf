@@ -150,7 +150,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
             }
 
-            if (completedObject) {
+            if (completedObject && parser.foundObjectWithIdentifier()) {
                 String json = jsonObject.toString();
 
                 if (json.length() > maxObjectLength) {
