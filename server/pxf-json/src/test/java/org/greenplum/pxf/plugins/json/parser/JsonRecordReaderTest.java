@@ -257,7 +257,7 @@ public class JsonRecordReaderTest {
 
     @Test
     public void testMemberNotAtTopLevel() throws URISyntaxException, IOException {
-
+        jobConf.set(RECORD_MEMBER_IDENTIFIER, "name");
         file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/complex_input.json").toURI());
         path = new Path(file.getPath());
         fileSplit = new FileSplit(path, 0, 1000, hosts);
@@ -277,6 +277,27 @@ public class JsonRecordReaderTest {
         assertEquals(2, recordCount);
     }
 
+    @Test
+    public void testSpecialCharsInJson() throws URISyntaxException, IOException {
+        jobConf.set(RECORD_MEMBER_IDENTIFIER, "name");
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/special_chars.json").toURI());
+        path = new Path(file.getPath());
+        fileSplit = new FileSplit(path, 0, 1000, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+
+        assertEquals(0, jsonRecordReader.getPos());
+
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+        while (jsonRecordReader.next(key, data)) {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        //cüstömerstätüs identifier will retrieve 2 records
+        assertEquals(2, recordCount);
+    }
     @Test
     public void testSplitBeforeMemberName() throws URISyntaxException, IOException {
         // If the Split After the BEGIN_OBJECT ( i.e. { ), we expect the record reader to skip over this object entirely.
