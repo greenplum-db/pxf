@@ -20,7 +20,6 @@ package org.greenplum.pxf.plugins.json.parser;
  */
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -164,10 +163,6 @@ public class PartitionedJsonParser {
 		}
 
 		return false;
-	}
-
-	public JsonLexerState getLexerState() {
-		return lexer.getState();
 	}
 
 	/**
