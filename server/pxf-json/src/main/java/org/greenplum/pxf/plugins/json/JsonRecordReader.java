@@ -237,7 +237,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             // if the current value is a backslash, then ignore the next value as it's an escaped char
             if (c == BACKSLASH) {
                 readNextChar();
-                break;
             } else if (c == QUOTE) {
                 inString = !inString;
             } else if (c == START_BRACE && !inString) {
