@@ -107,7 +107,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             is = fileIn;
         }
         this.conf = conf;
-        lineRecordReader =  new LineRecordReader(conf, split);
+        lineRecordReader =  new LineRecordReader(is, start, end, conf);
         parser = new PartitionedJsonParser(jsonMemberName);
         currentLine = new Text();
         this.pos = start;
