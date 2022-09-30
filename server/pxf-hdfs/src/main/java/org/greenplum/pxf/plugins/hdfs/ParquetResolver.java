@@ -132,45 +132,52 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         if (field.val == null)
             return;
         if (type.isPrimitive()) {
-            fillPrimitiveGroup(index, field, group, type);
+            fillPrimitiveGroup(index, field, group, type, true);
         } else {
             fillComplexGroup(index, field, group, type);
         }
     }
 
+    private void fillPrimitiveGroup(int index, OneField field, Group group, Type type, boolean isPrimitive) throws IOException {
+        Object value = field.val;
 
-    private void fillPrimitiveGroup(int index, OneField field, Group group, Type type) throws IOException {
-        if (field.val == null)
+        if (value == null)
             return;
         switch (type.asPrimitiveType().getPrimitiveTypeName()) {
             case BINARY:
-                if (type.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation)
-                    group.add(index, (String) field.val);
-                else
-                    group.add(index, Binary.fromReusedByteArray((byte[]) field.val));
+                if (type.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
+                    group.add(index, (String) value);
+                } else if (isPrimitive) {
+                    group.add(index, Binary.fromReusedByteArray((byte[]) value));
+                } else {
+                    byte[] oriBytes = ((ByteBuffer) value).array();
+                    int limit = ((ByteBuffer) value).limit();
+                    byte[] bytes = Arrays.copyOf(oriBytes, limit);
+                    group.add(0, Binary.fromReusedByteArray(bytes));
+                }
                 break;
             case INT32:
                 if (type.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
-                    String dateString = (String) field.val;
+                    String dateString = (String) value;
                     group.add(index, ParquetTypeConverter.getDaysFromEpochFromDateString(dateString));
                 } else if (type.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
                         ((IntLogicalTypeAnnotation) type.getLogicalTypeAnnotation()).getBitWidth() == 16) {
-                    group.add(index, (Short) field.val);
+                    group.add(index, (Short) value);
                 } else {
-                    group.add(index, (Integer) field.val);
+                    group.add(index, (Integer) value);
                 }
                 break;
             case INT64:
-                group.add(index, (Long) field.val);
+                group.add(index, (Long) value);
                 break;
             case DOUBLE:
-                group.add(index, (Double) field.val);
+                group.add(index, (Double) value);
                 break;
             case FLOAT:
-                group.add(index, (Float) field.val);
+                group.add(index, (Float) value);
                 break;
             case FIXED_LEN_BYTE_ARRAY:
-                byte[] fixedLenByteArray = getFixedLenByteArray((String) field.val, type);
+                byte[] fixedLenByteArray = getFixedLenByteArray((String) value, type);
                 if (fixedLenByteArray != null) {
                     group.add(index, Binary.fromReusedByteArray(fixedLenByteArray));
                 } else {
@@ -178,7 +185,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 }
                 break;
             case INT96:  // SQL standard timestamp string value with or without time zone literals: https://www.postgresql.org/docs/9.4/datatype-datetime.html
-                String timestamp = (String) field.val;
+                String timestamp = (String) value;
                 if (TIMESTAMP_PATTERN.matcher(timestamp).find()) {
                     // Note: this conversion convert type "timestamp with time zone" will lose timezone information
                     // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
@@ -188,7 +195,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 }
                 break;
             case BOOLEAN:
-                group.add(index, (Boolean) field.val);
+                group.add(index, (Boolean) value);
                 break;
             default:
                 throw new UnsupportedTypeException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
@@ -245,7 +252,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 fillListGroup(index, field, group, type);
                 break;
             default:
-                throw new IOException("Not supported type " + type.asGroupType().getName());
+                throw new IOException("Not supported list type " + type.asGroupType().getName());
         }
     }
 
@@ -263,68 +270,13 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         Group arrayGroup = new SimpleGroup(listType);
 
         for (int i = 0; i < vals.size(); i++) {
-            Object value=vals.get(i);
+            Object value = vals.get(i);
             Group repeatedGroup = new SimpleGroup(repeatedType);
-            if (vals.get(i) != null) {
-                switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
-                    case INT32:
-                        if (elementType.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
-                            repeatedGroup.add(0, (Integer) value);
-                        } else if (elementType.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
-                                ((IntLogicalTypeAnnotation) elementType.getLogicalTypeAnnotation()).getBitWidth() == 16) {
-                            repeatedGroup.add(0, (Short) value);
-                        } else {
-                            repeatedGroup.add(0, (Integer) value);
-                        }
-                        break;
-                    case INT64:
-                        repeatedGroup.add(0, (Long) value);
-                        break;
-                    case BOOLEAN:
-                        repeatedGroup.add(0, (Boolean) value);
-                        break;
-                    case FLOAT:
-                        repeatedGroup.add(0, (Float) value);
-                        break;
-                    case DOUBLE:
-                        repeatedGroup.add(0, (Double) value);
-                        break;
-                    case FIXED_LEN_BYTE_ARRAY:
-                        byte[] fixedLenByteArray = getFixedLenByteArray((String) value, elementType);
-                        if (fixedLenByteArray != null) {
-                            repeatedGroup.add(0, Binary.fromReusedByteArray(fixedLenByteArray));
-                        }
-                        break;
-                    case BINARY:
-                        if (elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
-                            repeatedGroup.add(0, (String) value);
-                        } else {
-                            // TODO: try to figure out a way not to create a copied array in the range [0,limit]
-                            byte[] oriBytes = ((ByteBuffer) value).array();
-                            int limit = ((ByteBuffer) value).limit();
-                            byte[] bytes = Arrays.copyOf(oriBytes, limit);
-                            repeatedGroup.add(0, Binary.fromReusedByteArray(bytes));
-                        }
-                        break;
-                    case INT96:
-                        String timestamp = ParquetTypeConverter.bytesToTimestamp(((Binary) value).getBytes());
-                        if (TIMESTAMP_PATTERN.matcher(timestamp).find()) {
-                            // Note: this conversion convert type "timestamp with time zone" will lose timezone information
-                            // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
-                            repeatedGroup.add(0, ParquetTypeConverter.getBinaryFromTimestampWithTimeZone(timestamp));
-                        } else {
-                            repeatedGroup.add(0, ParquetTypeConverter.getBinaryFromTimestamp(timestamp));
-                        }
-                        break;
-                    default:
-                        throw new IOException("Not supported type " + elementType.asPrimitiveType().getPrimitiveTypeName());
-                }
-            }
+            fillPrimitiveGroup(0, new OneField(0, value), repeatedGroup, elementType, false);
             // if the current element is a null, add an empty repeated group into array group
             arrayGroup.add(0, repeatedGroup);
         }
         group.add(index, arrayGroup);
-
     }
 
     // Set schema from context if null
