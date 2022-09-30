@@ -202,6 +202,42 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }
     }
 
+    private void fillComplexGroup(int index, OneField field, Group group, Type type) throws IOException {
+        if (field.val == null)
+            return;
+
+        switch (type.asGroupType().getOriginalType()) {
+            case LIST:
+                fillListGroup(index, field, group, type);
+                break;
+            default:
+                throw new IOException("Not supported complex type " + type.asGroupType().getName());
+        }
+    }
+
+    private void fillListGroup(int index, OneField field, Group group, Type type) throws IOException {
+        if (field.val == null)
+            return;
+        //Get the LIST group type and schema
+        GroupType listType = type.asGroupType();
+        //Get the repeated list group type and schema
+        GroupType repeatedType = listType.getType(0).asGroupType();
+        //Get the element type
+        Type elementType = repeatedType.getType(0).asPrimitiveType();
+        //parse parquet values into a postgres Object list
+        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.asPrimitiveType().getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
+        Group arrayGroup = new SimpleGroup(listType);
+
+        for (int i = 0; i < vals.size(); i++) {
+            Object value = vals.get(i);
+            Group repeatedGroup = new SimpleGroup(repeatedType);
+            fillPrimitiveGroup(0, new OneField(0, value), repeatedGroup, elementType, false);
+            // if the current element is a null, add an empty repeated group into array group
+            arrayGroup.add(0, repeatedGroup);
+        }
+        group.add(index, arrayGroup);
+    }
+
     private byte[] getFixedLenByteArray(String value, Type type) {
         // From org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
         DecimalLogicalTypeAnnotation typeAnnotation = (DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
@@ -241,42 +277,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             return tgt;
         }
         // end -- org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
-    }
-
-    private void fillComplexGroup(int index, OneField field, Group group, Type type) throws IOException {
-        if (field.val == null)
-            return;
-
-        switch (type.asGroupType().getOriginalType()) {
-            case LIST:
-                fillListGroup(index, field, group, type);
-                break;
-            default:
-                throw new IOException("Not supported list type " + type.asGroupType().getName());
-        }
-    }
-
-    private void fillListGroup(int index, OneField field, Group group, Type type) throws IOException {
-        if (field.val == null)
-            return;
-        //Get the LIST group type and schema
-        GroupType listType = type.asGroupType();
-        //Get the repeated list group type and schema
-        GroupType repeatedType = listType.getType(0).asGroupType();
-        //Get the element type
-        Type elementType = repeatedType.getType(0).asPrimitiveType();
-        //parse parquet values into a postgres Object list
-        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.asPrimitiveType().getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
-        Group arrayGroup = new SimpleGroup(listType);
-
-        for (int i = 0; i < vals.size(); i++) {
-            Object value = vals.get(i);
-            Group repeatedGroup = new SimpleGroup(repeatedType);
-            fillPrimitiveGroup(0, new OneField(0, value), repeatedGroup, elementType, false);
-            // if the current element is a null, add an empty repeated group into array group
-            arrayGroup.add(0, repeatedGroup);
-        }
-        group.add(index, arrayGroup);
     }
 
     // Set schema from context if null
