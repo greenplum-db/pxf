@@ -79,7 +79,7 @@ public class ParquetUtilities {
                 return pgUtilities.parseBoolLiteral(val);
             case INT32:
                 if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
-                    return ParquetTypeConverter.getDaysFromEpochFromDateString(val);
+                    return val;
                 } else if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation &&
                         ((LogicalTypeAnnotation.IntLogicalTypeAnnotation) logicalTypeAnnotation).getBitWidth() == 16) {
                     return Short.parseShort(val);
@@ -93,14 +93,6 @@ public class ParquetUtilities {
             case FLOAT:
                 return Float.parseFloat(val);
             case INT96:
-                String timestamp = val;
-                if (TIMESTAMP_PATTERN.matcher(timestamp).find()) {
-                    // Note: this conversion convert type "timestamp with time zone" will lose timezone information
-                    // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
-                    return ParquetTypeConverter.getBinaryFromTimestampWithTimeZone(timestamp);
-                } else {
-                    return ParquetTypeConverter.getBinaryFromTimestamp(timestamp);
-                }
             case FIXED_LEN_BYTE_ARRAY:
                 return val;
             default:
