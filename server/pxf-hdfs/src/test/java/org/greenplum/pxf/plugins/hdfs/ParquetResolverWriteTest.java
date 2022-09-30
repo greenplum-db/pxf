@@ -28,6 +28,8 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -67,6 +69,8 @@ public class ParquetResolverWriteTest {
     private Resolver resolver;
     private RequestContext context;
     private Configuration configuration;
+    private PgUtilities pgUtilities = new PgUtilities();
+    private PgArrayBuilder pgArrayBuilder=null;
 
     protected List<ColumnDescriptor> columnDescriptors;
 
@@ -926,14 +930,18 @@ public class ParquetResolverWriteTest {
 
         // write parquet file with int array values
         for (int i = 0; i < 10; i++) {
-            List<Integer> intList = null;
+            List<OneField> record;
             if (i != 9) {
-                intList = new ArrayList<>();
-                intList.add(null);
-                intList.add(i);
-                intList.add(i);
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement(String.valueOf(i));
+                pgArrayBuilder.addElement(String.valueOf(i));
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), intList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1010,14 +1018,18 @@ public class ParquetResolverWriteTest {
 
         // write parquet array with TEXT values of a and b, repeated i + 1 times
         for (int i = 0; i < 10; i++) {
-            List<String> textList = null;
+            List<OneField> record;
             if (i != 9) {
-                textList = new ArrayList<>();
-                textList.add(null);
-                textList.add(StringUtils.repeat("a", i + 1));
-                textList.add(StringUtils.repeat("b", i + 1));
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement(StringUtils.repeat("a", i + 1));
+                pgArrayBuilder.addElement(StringUtils.repeat("a", i + 1));
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.TEXTARRAY.getOID(), textList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1068,11 +1080,8 @@ public class ParquetResolverWriteTest {
                     assertTrue(elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
                     Binary binary = elementGroup.getBinary(0, 0);
                     String str = binary.toStringUsingUTF8();
-                    if (j % 2 == 1) {
-                        assertEquals(StringUtils.repeat("a", i + 1), str);
-                    } else {
-                        assertEquals(StringUtils.repeat("b", i + 1), str);
-                    }
+                    assertEquals(StringUtils.repeat("a", i + 1), str);
+
                 }
             } else {
                 assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
@@ -1100,15 +1109,19 @@ public class ParquetResolverWriteTest {
         // write parquet file with DATE from 2020-08-01 to 2020-08-10
         // physical type is int32
         for (int i = 0; i < 10; i++) {
-            List<String> dateList = null;
+            List<OneField> record;
             if (i != 9) {
-                dateList = new ArrayList<>();
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
                 String date = String.format("2020-08-%02d", i + 1);
-                dateList.add(null);
-                dateList.add(date);
-                dateList.add(date);
+                pgArrayBuilder.addElement(date);
+                pgArrayBuilder.addElement(date);
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.DATE.getOID(), dateList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1186,14 +1199,18 @@ public class ParquetResolverWriteTest {
 
         // write parquet file with double array values
         for (int i = 0; i < 10; i++) {
-            List<Double> doubleList = null;
+            List<OneField> record;
             if (i != 9) {
-                doubleList = new ArrayList<>();
-                doubleList.add(null);
-                doubleList.add((double) i * 1.01);
-                doubleList.add((double) i * 1.01);
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement(String.valueOf((double) i * 1.01));
+                pgArrayBuilder.addElement(String.valueOf((double) i * 1.01));
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.FLOAT8ARRAY.getOID(), doubleList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1268,20 +1285,24 @@ public class ParquetResolverWriteTest {
 
         assertTrue(accessor.openForWrite());
 
+
         // write parquet file with boolean array values
-        Boolean b = true;
+
         for (int i = 0; i < 10; i++) {
-            List<Boolean> boolList = null;
+            List<OneField> record;
             if (i != 9) {
-                boolList = new ArrayList<>();
-                boolList.add(null);
-                boolList.add(b);
-                boolList.add(b);
+                pgArrayBuilder = new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement("t");
+                pgArrayBuilder.addElement("f");
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.BOOLARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.BOOLARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.BOOLARRAY.getOID(), boolList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
-            b ^= true;
         }
 
         accessor.closeForWrite();
@@ -1327,9 +1348,9 @@ public class ParquetResolverWriteTest {
                     assertEquals(PrimitiveType.PrimitiveTypeName.BOOLEAN, elementType.asPrimitiveType().getPrimitiveTypeName());
                     assertNull(elementType.getLogicalTypeAnnotation());
                     Boolean res = elementGroup.getBoolean(0, 0);
-                    if (i % 2 == 0) {
+                    if (j % 3 == 1) {
                         assertTrue(res);
-                    } else if (i % 2 == 1) {
+                    } else if (j % 3 == 2) {
                         assertFalse(res);
                     }
                 }
@@ -1360,17 +1381,21 @@ public class ParquetResolverWriteTest {
 
         // write parquet file with timestamp values
         for (int i = 0; i < 10; i++) {
-            List<String> tsList = null;
+            List<OneField> record;
             if (i != 9) {
-                tsList = new ArrayList<>();
-                tsList.add(null);
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
                 Instant timestamp = Instant.parse(String.format("2020-08-%02dT04:00:05Z", i + 1)); // UTC
                 ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-                String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2020-08-%02dT04:00:05Z" in PST
-                tsList.add(localTimestampString);
-                tsList.add(localTimestampString);
+                String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                pgArrayBuilder.addElement(localTimestampString);
+                pgArrayBuilder.addElement(localTimestampString);
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.TIMESTAMP.getOID(), tsList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1451,15 +1476,19 @@ public class ParquetResolverWriteTest {
 
         // write parquet file with int array values
         for (int i = 0; i < 10; i++) {
-            List<Long> bigIntList = null;
+            List<OneField> record;
             if (i != 9) {
-                bigIntList = new ArrayList<>();
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
                 long value = (long) Integer.MAX_VALUE + i;
-                bigIntList.add(null);
-                bigIntList.add(value);
-                bigIntList.add(value);
+                pgArrayBuilder.addElement(String.valueOf(value));
+                pgArrayBuilder.addElement(String.valueOf(value));
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.INT8ARRAY.getOID(), bigIntList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1535,18 +1564,21 @@ public class ParquetResolverWriteTest {
         assertTrue(accessor.openForWrite());
 
         for (int i = 0; i < 10; i++) {
-            List<String> byteaList = null;
+            List<OneField> record;
             if (i != 9) {
-                byteaList = new ArrayList<>();
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
                 byte[] value = Binary.fromString(StringUtils.repeat("a", i + 1)).getBytes();
-                byteaList.add(null);
                 StringBuilder sb = new StringBuilder();
                 Utilities.byteArrayToOctalString(value, sb);
-                byteaList.add(sb.toString());
-                byteaList.add(sb.toString());
+                pgArrayBuilder.addElement(sb.toString());
+                pgArrayBuilder.addElement(sb.toString());
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-
-            List<OneField> record = Collections.singletonList(new OneField(DataType.BYTEAARRAY.getOID(), byteaList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1607,7 +1639,11 @@ public class ParquetResolverWriteTest {
                     // Physical type is binary
                     assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, elementType.asPrimitiveType().getPrimitiveTypeName());
                     assertNull(elementType.getLogicalTypeAnnotation());
-
+                    byte[] value = expectedResults[i].getBytes();
+                    StringBuilder sb = new StringBuilder();
+                    Utilities.byteArrayToOctalString(value, sb);
+                    String expectedString=sb.toString();
+                    Binary actualBinary=elementGroup.getBinary(0, 0);
                     assertEquals(expectedResults[i], elementGroup.getBinary(0, 0));
 
                 }
@@ -1637,14 +1673,18 @@ public class ParquetResolverWriteTest {
 
         // write parquet file with int array values
         for (int i = 0; i < 10; i++) {
-            List<Integer> smallIntList = null;
+            List<OneField> record;
             if (i != 9) {
-                smallIntList = new ArrayList<>();
-                smallIntList.add(null);
-                smallIntList.add(i);
-                smallIntList.add(i);
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement(String.valueOf(i));
+                pgArrayBuilder.addElement(String.valueOf(i));
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.INT2ARRAY.getOID(), smallIntList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1720,14 +1760,18 @@ public class ParquetResolverWriteTest {
 
         // write parquet file with double array values
         for (int i = 0; i < 10; i++) {
-            List<Float> floatList = null;
+            List<OneField> record;
             if (i != 9) {
-                floatList = new ArrayList<>();
-                floatList.add(null);
-                floatList.add(i * 1.01F);
-                floatList.add(i * 1.01F);
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement(String.valueOf(i * 1.01F));
+                pgArrayBuilder.addElement(String.valueOf(i * 1.01F));
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.FLOAT4ARRAY.getOID(), floatList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1803,15 +1847,19 @@ public class ParquetResolverWriteTest {
 
         // write parquet file with char values
         for (int i = 0; i < 10; i++) {
-            List<String> bpcharList = null;
+            List<OneField> record;
             if (i != 9) {
-                bpcharList = new ArrayList<>();
-                bpcharList.add(null);
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
                 String s = StringUtils.repeat("b", i % 5);
-                bpcharList.add(s);
-                bpcharList.add(s);
+                pgArrayBuilder.addElement(s);
+                pgArrayBuilder.addElement(s);
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.VARCHARARRAY.getOID(), bpcharList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1889,15 +1937,19 @@ public class ParquetResolverWriteTest {
 
         // write parquet file with char values
         for (int i = 0; i < 10; i++) {
-            List<String> bpcharList = null;
+            List<OneField> record;
             if (i != 9) {
-                bpcharList = new ArrayList<>();
-                bpcharList.add(null);
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
                 String s = StringUtils.repeat("c", i % 3);
-                bpcharList.add(s);
-                bpcharList.add(s);
+                pgArrayBuilder.addElement(s);
+                pgArrayBuilder.addElement(s);
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.BPCHARARRAY.getOID(), bpcharList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -1985,14 +2037,18 @@ public class ParquetResolverWriteTest {
                 "999999999.90123456789"
         };
         for (int i = 0; i < 10; i++) {
-            List<String> numericList = null;
+            List<OneField> record;
             if (i != 9) {
-                numericList = new ArrayList<>();
-                numericList.add(null);
-                numericList.add(values[i]);
-                numericList.add(values[i]);
+                pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+                pgArrayBuilder.startArray();
+                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement(values[i]);
+                pgArrayBuilder.addElement(values[i]);
+                pgArrayBuilder.endArray();
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            }else{
+                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
             }
-            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERICARRAY.getOID(), numericList));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -2063,7 +2119,6 @@ public class ParquetResolverWriteTest {
         fileReader.close();
     }
 
-    //TODO
     @Test
     public void testWriteMultipleTypes() throws Exception {
         String path = temp + "/out/multiple/";
@@ -2092,7 +2147,6 @@ public class ParquetResolverWriteTest {
         // write parquet file with bigint values
         for (int i = 0; i < 3; i++) {
             List<OneField> record = new ArrayList<>();
-            List<Object> list = new ArrayList<>();
             record.add(new OneField(DataType.NUMERIC.getOID(), String.format("%d.%d", (i + 1), (i + 2))));
 
             String s = StringUtils.repeat("d", i % 3);
@@ -2110,27 +2164,47 @@ public class ParquetResolverWriteTest {
             String text = StringUtils.repeat("f", i + 1);
             record.add(new OneField(DataType.TEXT.getOID(), text));
 
-            list = new ArrayList<>();
-            list.addAll(Arrays.asList(new Integer[]{i, i, i}));
-            record.add(new OneField(DataType.INT4ARRAY.getOID(), list));
+            pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+            pgArrayBuilder.startArray();
+            pgArrayBuilder.addElement(String.valueOf(i));
+            pgArrayBuilder.addElement(String.valueOf(i));
+            pgArrayBuilder.addElement(String.valueOf(i));
+            pgArrayBuilder.endArray();
+            record.add(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
 
-            list = new ArrayList<>();
-            list.addAll(Arrays.asList(new Float[]{i + 0.01F, i + 0.01F, i + 0.01F}));
-            record.add(new OneField(DataType.FLOAT4ARRAY.getOID(), list));
+            pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+            pgArrayBuilder.startArray();
+            pgArrayBuilder.addElement(String.valueOf(i + 0.01F));
+            pgArrayBuilder.addElement(String.valueOf(i + 0.01F));
+            pgArrayBuilder.addElement(String.valueOf(i + 0.01F));
+            pgArrayBuilder.endArray();
+            record.add(new OneField(DataType.FLOAT4ARRAY.getOID(), pgArrayBuilder.toString()));
 
-            list = new ArrayList<>();
-            list.addAll(Arrays.asList(new String[]{localTimestampString, localTimestampString, localTimestampString}));
-            record.add(new OneField(DataType.TIMESTAMPARRAY.getOID(), list));
+            pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+            pgArrayBuilder.startArray();
+            pgArrayBuilder.addElement(localTimestampString);
+            pgArrayBuilder.addElement(localTimestampString);
+            pgArrayBuilder.addElement(localTimestampString);
+            pgArrayBuilder.endArray();
+            record.add(new OneField(DataType.TIMESTAMPARRAY.getOID(), pgArrayBuilder));
 
             StringBuilder sb = new StringBuilder();
             Utilities.byteArrayToOctalString(bytes, sb);
-            list = new ArrayList<>();
-            list.addAll(Arrays.asList(new String[]{sb.toString(), sb.toString(), sb.toString()}));
-            record.add(new OneField(DataType.BYTEAARRAY.getOID(), list));
+            pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+            pgArrayBuilder.startArray();
+            pgArrayBuilder.addElement(sb.toString());
+            pgArrayBuilder.addElement(sb.toString());
+            pgArrayBuilder.addElement(sb.toString());
+            pgArrayBuilder.endArray();
+            record.add(new OneField(DataType.BYTEAARRAY.getOID(), pgArrayBuilder.toString()));
 
-            list = new ArrayList<>();
-            list.addAll(Arrays.asList(new String[]{text, text, text}));
-            record.add(new OneField(DataType.TEXTARRAY.getOID(), list));
+            pgArrayBuilder=new PgArrayBuilder(pgUtilities);
+            pgArrayBuilder.startArray();
+            pgArrayBuilder.addElement(text);
+            pgArrayBuilder.addElement(text);
+            pgArrayBuilder.addElement(text);
+            pgArrayBuilder.endArray();
+            record.add(new OneField(DataType.TEXTARRAY.getOID(), pgArrayBuilder.toString()));
 
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
