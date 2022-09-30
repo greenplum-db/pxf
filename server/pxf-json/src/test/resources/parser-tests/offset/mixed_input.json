@@ -5,5 +5,6 @@
 {"employee-count":"20000", "year": "2022", "address": "PA", "zip": "12321"},
 {"cüstömerstätüs":"invälid","name": "₡¥", "year": "2022", "address": "𑀓exas", "zip": "12345"},
 {"customerstatus":"välid","name": "हिमांशु", "year": "1234", "address": "Same ₡i𑀓y", "zip": "00010"},
+{"company-name":"VMware","name": "हिमांशु", "year": "1234", "address": "anöther city", "zip": "00010"},
 {"cüstömerstätüs":"välid","name": "你好", "year": "2033", "address": "0𑀓a", "zip": "19348"}
 ]
