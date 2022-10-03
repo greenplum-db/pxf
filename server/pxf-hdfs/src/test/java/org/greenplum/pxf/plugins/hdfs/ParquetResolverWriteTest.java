@@ -1568,15 +1568,13 @@ public class ParquetResolverWriteTest {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
                 pgArrayBuilder.addElement("null");
-                byte[] value = Binary.fromString(StringUtils.repeat("a", i + 1)).getBytes();
-                StringBuilder sb = new StringBuilder();
-                Utilities.byteArrayToOctalString(value, sb);
-                pgArrayBuilder.addElement(sb.toString());
-                pgArrayBuilder.addElement(sb.toString());
+                String value = StringUtils.repeat("a", i + 1);
+                pgArrayBuilder.addElement(value);
+                pgArrayBuilder.addElement(value);
                 pgArrayBuilder.endArray();
-                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+                record = Collections.singletonList(new OneField(DataType.BYTEAARRAY.getOID(), pgArrayBuilder.toString()));
             }else{
-                record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), null));
+                record = Collections.singletonList(new OneField(DataType.BYTEAARRAY.getOID(), null));
             }
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
@@ -2187,13 +2185,11 @@ public class ParquetResolverWriteTest {
             pgArrayBuilder.endArray();
             record.add(new OneField(DataType.TIMESTAMPARRAY.getOID(), pgArrayBuilder));
 
-            StringBuilder sb = new StringBuilder();
-            Utilities.byteArrayToOctalString(bytes, sb);
             pgArrayBuilder=new PgArrayBuilder(pgUtilities);
             pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement(sb.toString());
-            pgArrayBuilder.addElement(sb.toString());
-            pgArrayBuilder.addElement(sb.toString());
+            pgArrayBuilder.addElement(StringUtils.repeat("e", i + 1));
+            pgArrayBuilder.addElement(StringUtils.repeat("e", i + 1));
+            pgArrayBuilder.addElement(StringUtils.repeat("e", i + 1));
             pgArrayBuilder.endArray();
             record.add(new OneField(DataType.BYTEAARRAY.getOID(), pgArrayBuilder.toString()));
 

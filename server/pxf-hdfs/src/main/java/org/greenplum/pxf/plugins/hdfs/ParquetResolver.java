@@ -144,12 +144,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 if (type.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
                     group.add(index, (String) value);
                 } else if (isPrimitive) {
+                    byte[] bytes=(byte[]) value;
                     group.add(index, Binary.fromReusedByteArray((byte[]) value));
                 } else {
-                    byte[] oriBytes = ((ByteBuffer) value).array();
-                    int limit = ((ByteBuffer) value).limit();
-                    byte[] bytes = Arrays.copyOf(oriBytes, limit);
-                    group.add(0, Binary.fromReusedByteArray(bytes));
+                    group.add(index, Binary.fromReusedByteArray(((ByteBuffer) value).array(),0,((ByteBuffer) value).limit()));
                 }
                 break;
             case INT32:
@@ -207,7 +205,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 fillListGroup(index, field, group, type);
                 break;
             default:
-                throw new IOException("Not supported complex type " + type.asGroupType().getName());
+                throw new IOException("Not supported complex type " + type.asGroupType().getOriginalType());
         }
     }
 
