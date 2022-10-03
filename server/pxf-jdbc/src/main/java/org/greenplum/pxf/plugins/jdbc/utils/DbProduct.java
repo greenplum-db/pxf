@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.jdbc.utils;
  * under the License.
  */
 
+import org.greenplum.pxf.plugins.jdbc.utils.oracle.OracleJdbcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +59,7 @@ public enum DbProduct {
 
         @Override
         public String buildSessionQuery(String key, String value) {
-            return String.format("ALTER SESSION SET %s = %s", key, value);
+            return OracleJdbcUtils.buildSessionQuery(key, value);
         }
     },
 
