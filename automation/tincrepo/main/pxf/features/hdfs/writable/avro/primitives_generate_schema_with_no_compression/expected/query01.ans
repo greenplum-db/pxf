@@ -5,6 +5,8 @@
 -- # create a match/subs
 --
 -- end_matchsubs
+SET extra_float_digits=0;
+SET
 SELECT * from writable_avro_primitive_no_compression_readable ORDER BY type_int;
  type_int | type_smallint |   type_long    | type_float | type_double  | type_string |  type_bytes   | type_boolean |      type_char       |       type_varchar        
 ----------+---------------+----------------+------------+--------------+-------------+---------------+--------------+----------------------+---------------------------

@@ -1,5 +1,5 @@
 -- @description query03 for JDBC Hive query with date filter
-SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER BY n1;
+SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER BY n1, s1;
           s1          | n1 |     dt
 ----------------------+----+------------
  row1                 |  1 | 2015-03-06
@@ -13,8 +13,7 @@ SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER B
  row9                 |  9 | 2015-03-06
  row10                | 10 | 2015-03-06
  row11                | 11 | 2015-03-06
- row24_char_null      | 11 | 2015-03-06
- row23_varchar_null   | 11 | 2015-03-06
+ row12_text_null      | 11 | 2015-03-06
  row14_double_null    | 11 | 2015-03-06
  row16_timestamp_null | 11 | 2015-03-06
  row17_real_null      | 11 | 2015-03-06
@@ -22,7 +21,8 @@ SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER B
  row19_bool_null      | 11 | 2015-03-06
  row20_tinyint_null   | 11 | 2015-03-06
  row21_smallint_null  | 11 | 2015-03-06
- row12_text_null      | 11 | 2015-03-06
+ row23_varchar_null   | 11 | 2015-03-06
+ row24_char_null      | 11 | 2015-03-06
  row15_decimal_null   | 12 | 2015-03-06
  row13_int_null       |    | 2015-03-06
 (23 rows)
