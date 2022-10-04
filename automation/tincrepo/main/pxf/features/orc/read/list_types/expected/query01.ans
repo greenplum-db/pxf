@@ -5,6 +5,8 @@
 Null display is "NIL".
 SET bytea_output=hex;
 SET
+SET extra_float_digits=0;
+SET
 SELECT * FROM pxf_orc_list_types ORDER BY id;
  id |  bool_arr  |   int2_arr   |         int_arr          |          int8_arr          |      float_arr       |     float8_arr     |                                  text_arr                                   |         bytea_arr         |               char_arr                |              varchar_arr
 ----+------------+--------------+--------------------------+----------------------------+----------------------+--------------------+-----------------------------------------------------------------------------+---------------------------+---------------------------------------+---------------------------------------

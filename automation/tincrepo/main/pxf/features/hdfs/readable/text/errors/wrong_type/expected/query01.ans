@@ -5,6 +5,9 @@
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/
 --
+-- m/ERROR/
+-- s/ERROR:  invalid input syntax for integer: "joker"/ERROR:  invalid input syntax for type integer: "joker"/g
+--
 -- m/pxf:\/\/(.*),/
 -- s/pxf:\/\/.*,/pxf:\/\/location,/
 --

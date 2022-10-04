@@ -1,4 +1,7 @@
 -- @description query01 for JDBC Hive writable query
+SET extra_float_digits=0;
+SET
+
 SELECT * FROM pxf_jdbc_hive_readable ORDER BY t1;
  t1 | t2 | num1 | dub1 | r | bg | b | tn | sml | vc1 | c1
 ----+----+------+------+---+----+---+----+-----+-----+----
