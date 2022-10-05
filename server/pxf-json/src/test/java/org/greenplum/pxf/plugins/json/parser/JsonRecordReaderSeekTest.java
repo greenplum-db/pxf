@@ -39,12 +39,12 @@
 //import static org.junit.jupiter.api.Assertions.assertNull;
 //import static org.junit.jupiter.api.Assertions.assertTrue;
 //
-//public class PartitionedJsonParserSeekTest {
+//public class JsonRecordReaderSeekTest {
 //
-//    private static final Log LOG = LogFactory.getLog(PartitionedJsonParserSeekTest.class);
+//    private static final Log LOG = LogFactory.getLog(JsonRecordReaderSeekTest.class);
 //
 //    @Test
-//    public void testNoSeek() throws IOException {
+//    public void testSeek() throws IOException {
 //        File testsDir = new File("src/test/resources/parser-tests/seek");
 //        File[] dirs = testsDir.listFiles();
 //
@@ -61,24 +61,24 @@
 //            seekToStart(jsonInputStream);
 //            PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream, new LineRecordReader(jsonInputStream, 0,jsonFile.length(), 10000));
 //
-//            File[] jsonOjbectFiles = jsonFile.getParentFile().listFiles(new FilenameFilter() {
+//            File[] jsonObjectFiles = jsonFile.getParentFile().listFiles(new FilenameFilter() {
 //                public boolean accept(File file, String s) {
 //                    return s.contains("expected");
 //                }
 //            });
 //
-//            Arrays.sort(jsonOjbectFiles, new Comparator<File>() {
+//            Arrays.sort(jsonObjectFiles, new Comparator<File>() {
 //                public int compare(File file, File file1) {
 //                    return file.compareTo(file1);
 //                }
 //            });
 //
-//            if (jsonOjbectFiles.length == 0) {
+//            if (jsonObjectFiles.length == 0) {
 //                String result = parser.nextObjectContainingMember("name");
 //                assertNull(result, "File " + jsonFile.getAbsolutePath() + " got result '" + result + "'");
 //                LOG.info("File " + jsonFile.getAbsolutePath() + " passed");
 //            } else {
-//                for (File jsonObjectFile : jsonOjbectFiles) {
+//                for (File jsonObjectFile : jsonObjectFiles) {
 //                    String expected = trimWhitespaces(FileUtils.readFileToString(jsonObjectFile, Charset.defaultCharset()));
 //                    String result = parser.nextObjectContainingMember("name");
 //                    assertNotNull(jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName(), result);

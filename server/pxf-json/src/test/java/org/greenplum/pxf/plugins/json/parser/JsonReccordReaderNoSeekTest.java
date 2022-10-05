@@ -36,9 +36,9 @@
 //import static org.junit.jupiter.api.Assertions.assertEquals;
 //import static org.junit.jupiter.api.Assertions.assertNotNull;
 //
-//public class PartitionedJsonParserNoSeekTest {
+//public class JsonRecordReaderNoSeekTest {
 //
-//    private static final Log LOG = LogFactory.getLog(PartitionedJsonParserNoSeekTest.class);
+//    private static final Log LOG = LogFactory.getLog(JsonRecordReaderNoSeekTest.class);
 //
 //    @Test
 //    public void testNoSeek() throws IOException {
