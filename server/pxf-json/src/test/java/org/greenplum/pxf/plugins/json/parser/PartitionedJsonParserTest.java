@@ -23,13 +23,6 @@ package org.greenplum.pxf.plugins.json.parser;
 import org.apache.hadoop.io.Text;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,6 +33,7 @@ public class PartitionedJsonParserTest {
     public void testFoundIdentifier() {
 
         PartitionedJsonParser parser = new PartitionedJsonParser("name");
+        // start the json object, handles starting bracket
         parser.startNewJsonObject();
 
         Text result = new Text();
@@ -56,185 +50,129 @@ public class PartitionedJsonParserTest {
     }
 
     @Test
-    public void testSimpleMatchingIdentifier() throws URISyntaxException, IOException {
-
-        
-        File file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/simple.json").toURI());
-
-        InputStreamReader jsonStreamReader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+    public void testSimpleMatchingIdentifier() {
 
         PartitionedJsonParser parser = new PartitionedJsonParser("name");
+        // start the json object, handles starting bracket
+        parser.startNewJsonObject();
 
-        int i;
         Text result = new Text();
         boolean completed = false;
-        int count = 0;
-        while (!completed && (i = jsonStreamReader.read()) != -1) {
-            char ch = (char) i;
-            if (ch == '{') {
-                // assert first character is open bracket for this test
-                assertEquals(0, count);
-                parser.startNewJsonObject();
-            }
-            else {
-                completed = parser.buildNextObjectContainingMember(ch, result);
-            }
-            count++;
+        // if a json object has been started, give this input
+        String jsonContents = "\"name\": \"äää\", \"year\": \"2022\", \"cüstömerstätüs\":\"välid\",\"address\": \"söme city\", \"zip\": \"95051\"}";
+
+        for (int i = 0; i < jsonContents.length(); i++) {
+            char ch = jsonContents.charAt(i);
+            completed = parser.buildNextObjectContainingMember(ch, result);
         }
 
         assertTrue(completed);
         assertTrue(parser.foundObjectWithIdentifier());
         assertEquals(105, result.getLength());
         assertEquals("{\"name\": \"äää\", \"year\": \"2022\", \"cüstömerstätüs\":\"välid\",\"address\": \"söme city\", \"zip\": \"95051\"}", result.toString());
-
-        jsonStreamReader.close();
     }
 
     @Test
-    public void testSimpleNoMatchingIdentifier() throws URISyntaxException, IOException {
-
-        File file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/simple.json").toURI());
-
-        InputStreamReader jsonStreamReader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+    public void testSimpleNoMatchingIdentifier()  {
 
         PartitionedJsonParser parser = new PartitionedJsonParser("customer status");
+        // start the json object, handles starting bracket
+        parser.startNewJsonObject();
 
-        int i;
         Text result = new Text();
         boolean completed = false;
-        int count = 0;
-        while (!completed && (i = jsonStreamReader.read()) != -1) {
-            char ch = (char) i;
-            if (ch == '{') {
-                // assert first character is open bracket for this test
-                assertEquals(0, count);
-                parser.startNewJsonObject();
-            }
-            else {
-                completed = parser.buildNextObjectContainingMember(ch, result);
-            }
-            count++;
+        // if a json object has been started, give this input
+        String jsonContents = "\"name\": \"äää\", \"year\": \"2022\", \"cüstömerstätüs\":\"välid\",\"address\": \"söme city\", \"zip\": \"95051\"}";
+
+        for (int i = 0; i < jsonContents.length(); i++) {
+            char ch = jsonContents.charAt(i);
+            completed = parser.buildNextObjectContainingMember(ch, result);
         }
 
         assertTrue(completed);
         assertFalse(parser.foundObjectWithIdentifier());
         // result should be empty
         assertEquals(0, result.getLength());
-
-        jsonStreamReader.close();
     }
 
     @Test
-    public void testEmptyJson() throws URISyntaxException, IOException {
-
-        File file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/empty_input.json").toURI());
-
-        InputStreamReader jsonStreamReader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+    public void testEmptyJson() {
 
         PartitionedJsonParser parser = new PartitionedJsonParser("name");
+        // start the json object, handles starting bracket
+        parser.startNewJsonObject();
 
-        int i;
         Text result = new Text();
         boolean completed = false;
-        int count = 0;
-        while (!completed && (i = jsonStreamReader.read()) != -1) {
-            char ch = (char) i;
-            if (ch == '{') {
-                // assert first character is open bracket for this test
-                assertEquals(0, count);
-                parser.startNewJsonObject();
-            }
-            else {
-                completed = parser.buildNextObjectContainingMember(ch, result);
-            }
-            count++;
+        // if a json object has been started, give this input
+        String jsonContents = "}";
+
+        for (int i = 0; i < jsonContents.length(); i++) {
+            char ch = jsonContents.charAt(i);
+            completed = parser.buildNextObjectContainingMember(ch, result);
         }
 
         assertTrue(completed);
         assertFalse(parser.foundObjectWithIdentifier());
         assertEquals(0, result.getLength());
-
-        jsonStreamReader.close();
     }
 
 
     @Test
-    public void testNestedMatchingIdentifier() throws URISyntaxException, IOException {
-
-        File file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/complex_input.json").toURI());
-
-        InputStreamReader jsonStreamReader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+    public void testNestedMatchingIdentifier() {
 
         PartitionedJsonParser parser = new PartitionedJsonParser("year");
+        // start the json object, handles starting bracket
+        parser.startNewJsonObject();
 
-        // read the first json object
-        int i;
+        int count = 0;
         Text result = new Text();
         boolean completed = false;
-        int count = 0;
-        while (!completed && (i = jsonStreamReader.read()) != -1) {
-            char ch = (char) i;
-            if (ch == '{' & count < 10) {
-                // assert first character is open bracket for this test
-                // `[\n  {` makes it the 5th element (index starts at 0, so value here should be 5)
-                // we only care about the first bracket, the parser should handle the rest which is what we want to check
-                assertEquals(4, count);
-                parser.startNewJsonObject();
+        // if a json object has been started, give this input
+        String jsonContents =
+                "  \"name\": \"äää\",\n" +
+                "  \"customerdata\":\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"cüstömerstätüs\": \"välid\",\n" +
+                "      \"year\": \"2022\",\n" +
+                "      \"address\": \"söme city\",\n" +
+                "      \"zip\": \"95051\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+        
+        for (int i = 0; i < jsonContents.length(); i++) {
+            if (completed) {
+                // if the object is completed, then let's break and finish
+                break;
             }
-            else {
-                completed = parser.buildNextObjectContainingMember(ch, result);
-            }
+            char ch = jsonContents.charAt(i);
+            completed = parser.buildNextObjectContainingMember(ch, result);
             count++;
         }
 
-        // should have read the following 47 bytes
-        // [\n
-        //   {\n
-        //     "name": "äää",\n
-        //     "customerdata": [\n
+        // should have read the following 41 bytes
+        // `  "name": "äää",\n`
+        // `  "customerdata":\n`
+        // `  [\n`
         // before finding the object with the identifier
-        assertEquals(176, count);
+        assertEquals(156, count);
+        // theres should be some remaining chars that we did not read because we found the end of the object
+        // `\n` from after the curly bracket
+        // `  ]\n`
+        // `}`
+        assertEquals(6, jsonContents.length() - count);
         assertTrue(completed);
         assertTrue(parser.foundObjectWithIdentifier());
-        assertEquals(129, result.getLength());
+        assertEquals(119, result.getLength());
         // should only be the inner object containing the identifier with the same spacing and newlines
         assertEquals("{\n" +
-                "        \"cüstömerstätüs\": \"välid\",\n" +
-                "        \"year\": \"2022\",\n" +
-                "        \"address\": \"söme city\",\n" +
-                "        \"zip\": \"95051\"\n" +
-                "      }", result.toString());
+                "      \"cüstömerstätüs\": \"välid\",\n" +
+                "      \"year\": \"2022\",\n" +
+                "      \"address\": \"söme city\",\n" +
+                "      \"zip\": \"95051\"\n" +
+                "    }", result.toString());
 
-        // continue reading the stream for the second json object
-        completed = false;
-        count = 0;
-        while (!completed && (i = jsonStreamReader.read()) != -1) {
-            char ch = (char) i;
-            if (ch == '{' & count < 5) {
-                // assert first character is open bracket for this test
-                // `[\n  {` makes it the 5th element (index starts at 0, so value here should be 5)
-                // we only care about the first bracket, the parser should handle the rest which is what we want to check
-                assertEquals(2, count);
-                parser.startNewJsonObject();
-            }
-            else {
-                completed = parser.buildNextObjectContainingMember(ch, result);
-            }
-            count++;
-        }
-
-        assertTrue(completed);
-        assertTrue(parser.foundObjectWithIdentifier());
-        assertEquals(139, result.getLength());
-        // should only be the entire second object containing the identifier with the same spacing and newlines
-        assertEquals("  {\n" +
-                "    \"cüstömerstätüs\": \"välid\",\n" +
-                "    \"name\": \"你好\",\n" +
-                "    \"year\": \"2033\",\n" +
-                "    \"address\": \"0\uD804\uDC13a\",\n" +
-                "    \"zip\": \"19348\"\n" +
-                "  }", result.toString());
-
-        jsonStreamReader.close();
     }
 }
