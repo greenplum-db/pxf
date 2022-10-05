@@ -117,7 +117,6 @@ public class PartitionedJsonParserTest {
         assertEquals(0, result.getLength());
     }
 
-
     @Test
     public void testNestedMatchingIdentifier() {
 
@@ -141,7 +140,7 @@ public class PartitionedJsonParserTest {
                 "    }\n" +
                 "  ]\n" +
                 "}";
-        
+
         for (int i = 0; i < jsonContents.length(); i++) {
             if (completed) {
                 // if the object is completed, then let's break and finish
@@ -173,6 +172,28 @@ public class PartitionedJsonParserTest {
                 "      \"address\": \"söme city\",\n" +
                 "      \"zip\": \"95051\"\n" +
                 "    }", result.toString());
+    }
 
+    @Test
+    public void testStringNotMemberString() {
+
+        PartitionedJsonParser parser = new PartitionedJsonParser("year");
+        // start the json object, handles starting bracket
+        parser.startNewJsonObject();
+
+        Text result = new Text();
+        boolean completed = false;
+        // if a json object has been started, give this input
+        String jsonContents = "\"notes\": \"the year we lived\"}";
+
+        for (int i = 0; i < jsonContents.length(); i++) {
+            char ch = jsonContents.charAt(i);
+            completed = parser.buildNextObjectContainingMember(ch, result);
+        }
+
+        assertTrue(completed);
+        assertFalse(parser.foundObjectWithIdentifier());
+        // identifier not found
+        assertEquals(0, result.getLength());
     }
 }
