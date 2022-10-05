@@ -47,9 +47,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class JsonRecordReaderSeekTest {
+public class JsonRecordReaderSeekNoSeekTest {
 
-    private static final Log LOG = LogFactory.getLog(JsonRecordReaderSeekTest.class);
+    private static final Log LOG = LogFactory.getLog(JsonRecordReaderSeekNoSeekTest.class);
     private static final String RECORD_MEMBER_IDENTIFIER = "json.input.format.record.identifier";
     private JobConf jobConf;
     private String[] hosts = null;
@@ -68,17 +68,44 @@ public class JsonRecordReaderSeekTest {
         File testsDir = new File("src/test/resources/parser-tests/seek");
         File[] dirs = testsDir.listFiles();
 
+
         for (File jsonDir : dirs) {
-            runTest(jsonDir);
+            File childFile = new File(jsonDir, "input.json");
+
+            File[] jsonObjectFiles = jsonDir.listFiles(new FilenameFilter() {
+                public boolean accept(File file, String s) {
+                    return s.contains("expected");
+                }
+            });
+            runTest(childFile, jsonObjectFiles, true);
         }
     }
 
-    public void runTest(final File jsonDir) throws IOException {
 
-        File jsonFile = new File(jsonDir, "input.json");
-        int start;
-        try (InputStream jsonInputStream = new FileInputStream(jsonFile)) {
-            start = seekToStart(jsonInputStream);
+    @Test
+    public void testNoSeek() throws IOException {
+        File testsDir = new File("src/test/resources/parser-tests/noseek");
+        File[] dirs = testsDir.listFiles();
+
+        for (File jsonFile : dirs) {
+
+            File[] jsonObjectFiles = jsonFile.getParentFile().listFiles(new FilenameFilter() {
+                public boolean accept(File file, String s) {
+                    return s.contains(jsonFile.getName()) && s.contains("expected");
+                }
+            });
+            runTest(jsonFile, jsonObjectFiles, false);
+        }
+    }
+
+    public void runTest(final File jsonFile, File[] jsonObjectFiles, boolean seek) throws IOException {
+
+        int start = 0;
+        if (seek) {
+            try (InputStream jsonInputStream = new FileInputStream(jsonFile)) {
+                start = seekToStart(jsonInputStream);
+            }
+
         }
 
         Path path = new Path(jsonFile.getPath());
@@ -87,18 +114,7 @@ public class JsonRecordReaderSeekTest {
         LongWritable key = new LongWritable();
         Text data = new Text();
 
-        File[] jsonObjectFiles = jsonFile.getParentFile().listFiles(new FilenameFilter() {
-            public boolean accept(File file, String s) {
-                return s.contains("expected");
-            }
-        });
-
-        Arrays.sort(jsonObjectFiles, new Comparator<File>() {
-            public int compare(File file, File file1) {
-                return file.compareTo(file1);
-            }
-        });
-
+        Arrays.sort(jsonObjectFiles);
         if (jsonObjectFiles.length == 0) {
             jsonRecordReader.next(key, data);
             String result = data.getLength() == 0 ? null : data.toString();
