@@ -28,9 +28,9 @@ WORKING_DIR="$(pwd)"
 cd "$(dirname "$0")" || exit 1
 script_file=$(pwd)/$(basename "$0")
 while [[ -L "$script_file" ]]; do
-  script_file=$(readlink "$script_file")
-  cd "$(dirname "$script_file")" || exit 1
-  script_file=$(pwd)/$(basename "$script_file")
+    script_file=$(readlink "$script_file")
+    cd "$(dirname "$script_file")" || exit 1
+    script_file=$(pwd)/$(basename "$script_file")
 done
 
 parent_script_dir="$( (cd "$( dirname "${script_file}" )/.." && pwd -P) )"
@@ -78,38 +78,41 @@ jarfile="${PXF_HOME}/application/pxf-app-_PXF_VERSION_.jar"
 pid_file="${PXF_RUNDIR}/${identity}.pid"
 
 # ANSI Colors
-echoRed() { echo $'\e[0;31m'"$1"$'\e[0m'; }
-echoGreen() { echo $'\e[0;32m'"$1"$'\e[0m'; }
-echoYellow() { echo $'\e[0;33m'"$1"$'\e[0m'; }
+function echoRed() {
+    echo $'\e[0;31m'"$1"$'\e[0m';
+    }
 
-function validate_user()
-{
+function echoGreen() {
+    echo $'\e[0;32m'"$1"$'\e[0m';
+}
+
+function echoYellow() {
+    echo $'\e[0;33m'"$1"$'\e[0m';
+}
+
+function validate_user() {
     [[ $EUID == 0 ]] && fail 'Cannot run as root user'
 }
 
-function checkPermissions()
-{
+function checkPermissions() {
     touch "$pid_file" &> /dev/null || { echoRed "ERROR: Operation not permitted (cannot access pid file: '$pid_file')"; return 4; }
     [[ -d "$PXF_LOGDIR" ]] || { echoRed "ERROR: Operation not permitted (log directory does not exist: '$PXF_LOGDIR')"; return 4; }
 }
 
-function checkJavaHome()
-{
+function checkJavaHome() {
     # Find Java
     [[ -x ${JAVA_HOME}/bin/java ]] || fail "\$JAVA_HOME=$JAVA_HOME is invalid. Set \$JAVA_HOME in your environment before running PXF commands."
     javaexe="$JAVA_HOME/bin/java"
 }
 
 # print error message and return with error code
-function fail()
-{
+function fail() {
     echoRed "ERROR: $1"
     exit 1
 }
 
 # print error message and provide a hint
-function failWithHint()
-{
+function failWithHint() {
     echoRed    "ERROR: $1"
     echoYellow "HINT:  $2"
     exit 1
@@ -119,8 +122,7 @@ function failWithHint()
 # waitForSpringBoot waits for spring boot to finish loading
 # for given attempts number.
 #
-function waitForSpringBoot()
-{
+function waitForSpringBoot() {
     attempts=0
     max_attempts=$1 # number of attempts to connect
     echo_after_attempts=$2 # only start echoing after this number of attempts
@@ -146,8 +148,7 @@ function waitForSpringBoot()
 # checkWebapp checks if PXF is up for $1 attempts and then
 # verifies PXF webapp is functional
 #
-function checkWebapp()
-{
+function checkWebapp() {
     waitForSpringBoot "$1" "$2" || return 1
 
     curlResponse=$($curl -s "http://localhost:${PXF_PORT}/actuator/health")
@@ -157,14 +158,12 @@ function checkWebapp()
 }
 
 # determines whether the application is running
-function isRunning()
-{
+function isRunning() {
     ps -o pid,command -p "$1" | grep 'pxf-app' &> /dev/null
 }
 
 # creates the runtime directory structure inside $PXF_BASE
-function createPxfBaseDirectories()
-{
+function createPxfBaseDirectories() {
     install -m 744 -d "${PXF_BASE}/conf"
     install -m 744 -d "${PXF_BASE}/lib"
     install -m 744 -d "${PXF_BASE}/lib/native"
@@ -176,24 +175,21 @@ function createPxfBaseDirectories()
 }
 
 # copies configuration files inside $PXF_BASE
-function copyConfigurationFilesToPxfBase()
-{
+function copyConfigurationFilesToPxfBase() {
     cp -Lv "${PXF_HOME}/conf/pxf-application.properties" "${PXF_BASE}/conf"
     cp -Lv "${PXF_HOME}/conf/pxf-env.sh"                 "${PXF_BASE}/conf"
     cp -Lv "${PXF_HOME}/conf/pxf-log4j2.xml"             "${PXF_BASE}/conf"
     cp -Lv "${PXF_HOME}/conf/pxf-profiles.xml"           "${PXF_BASE}/conf"
 }
 
-function validate_system()
-{
+function validate_system() {
     # validate curl
     if ! curl=$(command -v curl); then
         fail 'curl is not installed, please install'
     fi
 }
 
-function printUsage()
-{
+function printUsage() {
     local normal bold
     normal=$(tput sgr0)
     bold=$(tput bold)
@@ -208,8 +204,7 @@ function printUsage()
 }
 
 # doHelp handles the help command
-function doHelp()
-{
+function doHelp() {
     local normal bold
     normal=$(tput sgr0)
     bold=$(tput bold)
@@ -240,16 +235,14 @@ function doHelp()
     exit 0
 }
 
-function promptUser()
-{
+function promptUser() {
     echoGreen "$1"
     read -r answer
     [[ $answer == y || $answer == Y ]]
 }
 
 # doReset handles the reset command
-function doReset()
-{
+function doReset() {
     echoYellow '*****************************************************************************'
     echoYellow '* DEPRECATION NOTICE:'
     echoYellow '* The "pxf [cluster] reset" command is deprecated and will be removed'
@@ -257,8 +250,7 @@ function doReset()
     echoYellow '*****************************************************************************'
 }
 
-function installExternalTableExtension()
-{
+function installExternalTableExtension() {
     if [[ -d ${parent_script_dir}/gpextable ]]; then
         if [[ -z "${GPHOME}" ]]; then
             echoYellow 'WARNING: environment variable GPHOME is not set, skipping install of Greenplum External Table PXF Extension'
@@ -287,8 +279,7 @@ function installExternalTableExtension()
 }
 
 # doInit handles the init command
-function doInit()
-{
+function doInit() {
     echoYellow '*****************************************************************************'
     echoYellow '* DEPRECATION NOTICE:'
     echoYellow '* The "pxf [cluster] init" command is deprecated and will be removed'
@@ -302,8 +293,7 @@ function doInit()
 }
 
 # doPrepare prepares PXF_BASE outside of PXF_HOME
-function doPrepare()
-{
+function doPrepare() {
     # FILE1 -ef FILE2  True if file1 is a hard link to file2.
     [[ ! $PXF_HOME -ef $PXF_BASE ]] || failWithHint "'pxf [cluster] prepare' requires a \$PXF_BASE value different from your PXF installation directory." "Use 'PXF_BASE=<YOUR_PXF_BASE_DIRECTORY> pxf [cluster] prepare'."
 
@@ -324,14 +314,12 @@ function doPrepare()
 }
 
 # run the migration script on a shell with minimal environment variables loaded
-function migrateMergeConfiguration()
-{
+function migrateMergeConfiguration() {
     env -i "$BASH" -c "PXF_HOME=$PXF_HOME PXF_BASE=$PXF_BASE PXF_CONF=$PXF_CONF $PXF_HOME/bin/merge-pxf-config.sh"
 }
 
 # doMigrate migrates old configurations of PXF to a Spring Boot based configuration of PXF
-function doMigrate()
-{
+function doMigrate() {
     # Validate PXF_CONF
     [[ -n "$PXF_CONF" ]] || failWithHint "The \$PXF_CONF environment variable is not specified. Specify the \$PXF_CONF location of your old PXF installation" "Use 'PXF_CONF=<YOUR_PXF_CONF_DIRECTORY> [PXF_BASE=<YOUR_PXF_BASE_DIRECTORY>] pxf [cluster] migrate'."
 
@@ -374,15 +362,13 @@ function doMigrate()
 # after start, uses checkWebapp to verify the PXF webapp was loaded
 # successfully
 #
-function doStart()
-{
+function doStart() {
     checkJavaHome
     warnUserEnvScript
     do_start
 }
 
-function do_start()
-{
+function do_start() {
     if [[ -f "$pid_file" ]]; then
         pid=$(cat "$pid_file")
         isRunning "$pid" && { echoYellow "PXF is already running [pid=$pid]"; return 0; }
@@ -427,8 +413,7 @@ function do_start()
 # the -force flag is passed to catalina.sh to enable force-stopping
 # the JVM
 #
-function doStop()
-{
+function doStop() {
     checkJavaHome
     warnUserEnvScript
 
@@ -442,15 +427,15 @@ function doStop()
 
     # first try endpoint (assume it might be disabled)
     if $curl --max-time 5 --silent -X POST "localhost:$PXF_PORT/actuator/shutdown" | grep "Shutting down, bye..." > /dev/null; then
-      for i in $(seq 1 $STOP_WAIT_TIME); do
-        if isRunning "$pid"; then
-          sleep 1
-        else
-          echoGreen "PXF stopped [pid=$pid]"
-          rm -f $pid_file
-          return 0
-        fi
-      done
+        for i in $(seq 1 $STOP_WAIT_TIME); do
+            if isRunning "$pid"; then
+                sleep 1
+            else
+                echoGreen "PXF stopped [pid=$pid]"
+                rm -f $pid_file
+                return 0
+            fi
+        done
     fi
 
     # second try a nice kill and if that doesn't work force kill
@@ -458,23 +443,21 @@ function doStop()
     rm -f $pid_file
 }
 
-function do_stop()
-{
-  local killcmd=(kill)
-  [[ $3 == -f ]] && killcmd+=(-9)
-  killcmd+=("$1")
-  "${killcmd[@]}" &> /dev/null || { echoRed "Unable to terminate process $1"; return 1; }
-  for i in $(seq 1 $STOP_WAIT_TIME); do
-    isRunning "$1" || { echoGreen "PXF stopped [$1]"; rm -f "$2"; return 0; }
-    [[ $i -eq STOP_WAIT_TIME/2 ]] && "${killcmd[@]}" &> /dev/null
-    sleep 1
-  done
-  echoRed "Unable to terminate process $1";
-  return 1;
+function do_stop() {
+    local killcmd=(kill)
+    [[ $3 == -f ]] && killcmd+=(-9)
+    killcmd+=("$1")
+    "${killcmd[@]}" &> /dev/null || { echoRed "Unable to terminate process $1"; return 1; }
+    for i in $(seq 1 $STOP_WAIT_TIME); do
+        isRunning "$1" || { echoGreen "PXF stopped [$1]"; rm -f "$2"; return 0; }
+        [[ $i -eq STOP_WAIT_TIME/2 ]] && "${killcmd[@]}" &> /dev/null
+        sleep 1
+    done
+    echoRed "Unable to terminate process $1"
+    return 1
 }
 
-function doStatus()
-{
+function doStatus() {
     checkJavaHome
     warnUserEnvScript
     checkWebapp 1 0 || return 1
@@ -482,8 +465,7 @@ function doStatus()
     return 0
 }
 
-function doSync()
-{
+function doSync() {
     local target_host=$1
     if [[ -z $target_host ]]; then
         fail 'A destination hostname must be provided'
@@ -492,8 +474,7 @@ function doSync()
     rsync -az${DELETE:+ --delete} -e "ssh -o StrictHostKeyChecking=no" "$PXF_BASE"/{conf,lib,servers} "${target_host}:$PXF_BASE"
 }
 
-function doCluster()
-{
+function doCluster() {
     local cmd=$2
     # Go CLI handles unset PXF_BASE when appropriate
     if [[ ${cmd} != init ]] && [[ ${cmd} != prepare ]]; then
@@ -502,10 +483,9 @@ function doCluster()
     "${parent_script_dir}/bin/pxf-cli" "$@"
 }
 
-function warnUserEnvScript()
-{
-   local user_env_script=${PXF_BASE}/conf/pxf-env.sh
-   [[ -f $user_env_script ]] || echoYellow "WARNING: failed to find ${user_env_script}, default parameters will be used"
+function warnUserEnvScript() {
+    local user_env_script=${PXF_BASE}/conf/pxf-env.sh
+    [[ -f $user_env_script ]] || echoYellow "WARNING: failed to find ${user_env_script}, default parameters will be used"
 }
 
 pxf_script_command=$1
