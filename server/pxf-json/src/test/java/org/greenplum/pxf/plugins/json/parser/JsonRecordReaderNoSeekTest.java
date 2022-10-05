@@ -34,22 +34,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
-public class JsonRecordReaderSeekTest {
+public class JsonRecordReaderNoSeekTest {
 
-    private static final Log LOG = LogFactory.getLog(JsonRecordReaderSeekTest.class);
+    private static final Log LOG = LogFactory.getLog(JsonRecordReaderNoSeekTest.class);
     private static final String RECORD_MEMBER_IDENTIFIER = "json.input.format.record.identifier";
     private JobConf jobConf;
     private String[] hosts = null;
@@ -64,73 +59,41 @@ public class JsonRecordReaderSeekTest {
     }
 
     @Test
-    public void testSeek() throws IOException {
-        File testsDir = new File("src/test/resources/parser-tests/seek");
-        File[] dirs = testsDir.listFiles();
+    public void testNoSeek() throws IOException {
+        File testsDir = new File("src/test/resources/parser-tests/noseek");
+        File[] jsonFiles = testsDir.listFiles(new FilenameFilter() {
+            public boolean accept(File file, String s) {
+                return s.endsWith(".json") && !s.contains("expected");
+            }
+        });
 
-        for (File jsonDir : dirs) {
-            runTest(jsonDir);
+        for (File jsonFile : jsonFiles) {
+            runTest(jsonFile);
         }
     }
 
-    public void runTest(final File jsonDir) throws IOException {
-
-        File jsonFile = new File(jsonDir, "input.json");
-        int start;
-        try (InputStream jsonInputStream = new FileInputStream(jsonFile)) {
-            start = seekToStart(jsonInputStream);
-        }
-
+    public void runTest(final File jsonFile) throws IOException {
         Path path = new Path(jsonFile.getPath());
-        FileSplit fileSplit = new FileSplit(path, start, 2000, hosts);
+        FileSplit fileSplit = new FileSplit(path, 0, 1000, hosts);
         JsonRecordReader jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
         LongWritable key = new LongWritable();
         Text data = new Text();
 
         File[] jsonObjectFiles = jsonFile.getParentFile().listFiles(new FilenameFilter() {
             public boolean accept(File file, String s) {
-                return s.contains("expected");
+                return s.contains(jsonFile.getName()) && s.contains("expected");
             }
         });
-
-        Arrays.sort(jsonObjectFiles, new Comparator<File>() {
-            public int compare(File file, File file1) {
-                return file.compareTo(file1);
-            }
-        });
-
-        if (jsonObjectFiles.length == 0) {
+        Arrays.sort(jsonObjectFiles);
+        for (File jsonObjectFile : jsonObjectFiles) {
+            String expected = trimWhitespaces(FileUtils.readFileToString(jsonObjectFile, Charset.defaultCharset()));
             jsonRecordReader.next(key, data);
             String result = data.getLength() == 0 ? null : data.toString();
-            assertNull(result, "File " + jsonFile.getAbsolutePath() + " got result '" + result + "'");
-            LOG.info("File " + jsonFile.getAbsolutePath() + " passed");
-        } else {
-            for (File jsonObjectFile : jsonObjectFiles) {
-                String expected = trimWhitespaces(FileUtils.readFileToString(jsonObjectFile, Charset.defaultCharset()));
-                jsonRecordReader.next(key, data);
-                String result = data.getLength() == 0 ? null : data.toString();
-                assertNotNull(result, jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
-                assertEquals(expected, trimWhitespaces(result), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
-                LOG.info("File " + jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName() + " passed");
-            }
+            assertNotNull(result, jsonFile.getName() + "/" + jsonObjectFile.getName());
+            assertEquals(expected, trimWhitespaces(result), jsonFile.getName() + "/" + jsonObjectFile.getName());
+            LOG.info("File " + jsonFile.getName() + "/" + jsonObjectFile.getName() + " passed");
         }
-    }
 
-    public int seekToStart(InputStream jsonInputStream) throws IOException {
-        int count = 0;
-        // pop off characters until we see <SEEK>
-        StringBuilder sb = new StringBuilder();
-        int i;
-        while ((i = jsonInputStream.read()) != -1) {
-            count++;
-            sb.append((char) i);
-
-            if (sb.toString().endsWith("<SEEK>")) {
-                return count;
-            }
-        }
-        fail();
-        return 0;
     }
 
     public String trimWhitespaces(String s) {
