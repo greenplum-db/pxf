@@ -709,6 +709,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
         </plugins>
+        <handler>org.greenplum.pxf.plugins.json.JsonProtocolHandler</handler>
     </profile>
     <profile>
         <name>hdfs:json</name>
@@ -723,6 +724,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
         </plugins>
+        <handler>org.greenplum.pxf.plugins.json.JsonProtocolHandler</handler>
     </profile>
     <profile>
         <name>s3:json</name>
@@ -757,6 +759,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
         </plugins>
+        <handler>org.greenplum.pxf.plugins.json.JsonProtocolHandler</handler>
         <protocol>adl</protocol>
     </profile>
     <profile>
@@ -772,6 +775,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
         </plugins>
+        <handler>org.greenplum.pxf.plugins.json.JsonProtocolHandler</handler>
         <protocol>wasbs</protocol>
     </profile>
     <profile>
@@ -787,6 +791,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
         </plugins>
+        <handler>org.greenplum.pxf.plugins.json.JsonProtocolHandler</handler>
         <protocol>gs</protocol>
     </profile>
     <profile>
@@ -802,6 +807,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
         </plugins>
+        <handler>org.greenplum.pxf.plugins.json.JsonProtocolHandler</handler>
     </profile>
 
     <!-- ==================== SEQUENCE FILE PROFILES ==================== -->
