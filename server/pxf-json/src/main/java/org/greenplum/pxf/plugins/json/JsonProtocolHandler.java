@@ -1,5 +1,6 @@
 package org.greenplum.pxf.plugins.json;
 
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ public class JsonProtocolHandler implements ProtocolHandler {
     @Override
     public String getFragmenterClassName(RequestContext context) {
         String fragmenter = context.getFragmenter(); // default to fragmenter defined by the profile
-        if (useMultilineJson(context)) {
+        if (useMultilineJson(context) && !useParallelRead(context)) {
             fragmenter = HCFS_FILE_FRAGMENTER;
         }
         LOG.debug("Determined to use {} fragmenter", fragmenter);
@@ -33,6 +34,11 @@ public class JsonProtocolHandler implements ProtocolHandler {
     @Override
     public String getResolverClassName(RequestContext context) {
         return context.getResolver();
+    }
+
+    public boolean useParallelRead(RequestContext context) {
+        Configuration conf = context.getConfiguration();
+        return conf.getBoolean("pxf.json.read.useParallelRead", true);
     }
 
     public boolean useMultilineJson(RequestContext context) {

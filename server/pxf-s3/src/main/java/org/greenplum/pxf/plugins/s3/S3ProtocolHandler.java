@@ -2,6 +2,7 @@ package org.greenplum.pxf.plugins.s3;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -55,7 +56,7 @@ public class S3ProtocolHandler implements ProtocolHandler {
     @Override
     public String getFragmenterClassName(RequestContext context) {
         String fragmenter = context.getFragmenter(); // default to fragmenter defined by the profile
-        if (useS3Select(context) || useMultilineJson(context)) {
+        if (useS3Select(context) || (useMultilineJson(context) && !useParallelRead(context))) {
             fragmenter = HCFS_FILE_FRAGMENTER;
         }
         LOG.debug("Determined to use {} fragmenter", fragmenter);
@@ -128,6 +129,10 @@ public class S3ProtocolHandler implements ProtocolHandler {
         }
     }
 
+    public boolean useParallelRead(RequestContext context) {
+        Configuration conf = context.getConfiguration();
+        return conf.getBoolean("pxf.json.read.useParallelRead", true);
+    }
     public boolean useMultilineJson(RequestContext context) {
         return isNotEmpty(context.getOption("identifier"));
     }

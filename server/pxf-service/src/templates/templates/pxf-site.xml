@@ -84,4 +84,12 @@
         </description>
     </property>
 
+    <property>
+        <name>pxf.json.read.useParallelRead</name>
+        <value>true</value>
+        <description>
+            Specifies whether the PXF JSON reader should split files for parallel read.
+            If set to false, the PXF JSON reader will read one file per fragment.
+        </description>
+    </property>
 </configuration>
