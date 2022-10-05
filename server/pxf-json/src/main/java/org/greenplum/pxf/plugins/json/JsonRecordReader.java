@@ -35,7 +35,6 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.greenplum.pxf.plugins.json.parser.PartitionedJsonParser;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -56,6 +55,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private long start;
     private long pos;
     private long end;
+    private String[] hosts;
     private int maxObjectLength;
     private PartitionedJsonParser parser;
     private LineRecordReader lineRecordReader;
@@ -89,6 +89,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         start = split.getStart();
         end = start + split.getLength();
         file = split.getPath();
+        hosts = split.getLocations();
         compressionCodecs = new CompressionCodecFactory(conf);
         final CompressionCodec codec = compressionCodecs.getCodec(file);
 
@@ -98,7 +99,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         if (codec != null) {
             start = 0;
             end = Long.MAX_VALUE;
-            FileSplit codecSplit = new FileSplit(file, start, Long.MAX_VALUE, split.getLocations());
+            FileSplit codecSplit = new FileSplit(file, start, Long.MAX_VALUE, hosts);
             lineRecordReader =  new LineRecordReader(conf, codecSplit);
         } else {
             lineRecordReader =  new LineRecordReader(conf, split);
@@ -247,7 +248,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         lineRecordReader.close();
         // we need to move into the next split, so create one that starts at the current pos
         // and goes until the end of the file
-        FileSplit nextSplit = new FileSplit(file, pos, Long.MAX_VALUE - pos, (String[]) null);
+        FileSplit nextSplit = new FileSplit(file, pos, Long.MAX_VALUE - pos, hosts);
         lineRecordReader = new LineRecordReader(conf, nextSplit);
         inNextSplit = true;
     }
