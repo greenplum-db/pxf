@@ -57,7 +57,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private long pos;
     private long end;
     private int maxObjectLength;
-    private InputStream is;
     private PartitionedJsonParser parser;
     private LineRecordReader lineRecordReader;
     private Text currentLine;
@@ -97,17 +96,14 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         FileSystem fs = file.getFileSystem(conf);
         FSDataInputStream fileIn = fs.open(split.getPath());
         if (codec != null) {
-            is = codec.createInputStream(fileIn);
             start = 0;
             end = Long.MAX_VALUE;
+            FileSplit codecSplit = new FileSplit(file, start, Long.MAX_VALUE, split.getLocations());
+            lineRecordReader =  new LineRecordReader(conf, codecSplit);
         } else {
-            if (start != 0) {
-                fileIn.seek(start);
-            }
-            is = fileIn;
+            lineRecordReader =  new LineRecordReader(conf, split);
         }
         this.conf = conf;
-        lineRecordReader =  new LineRecordReader(conf, split);
         parser = new PartitionedJsonParser(jsonMemberName);
         currentLine = new Text();
         this.pos = start;
@@ -192,8 +188,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
      */
     @Override
     public synchronized void close() throws IOException {
-        if (is != null) {
-            is.close();
+        if (lineRecordReader != null) {
+            lineRecordReader.close();
         }
     }
 
@@ -247,6 +243,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     }
 
     private void getNextSplit() throws IOException {
+        // close the old lineRecordReader
+        lineRecordReader.close();
         // we need to move into the next split, so create one that starts at the current pos
         // and goes until the end of the file
         FileSplit nextSplit = new FileSplit(file, pos, Long.MAX_VALUE - pos, (String[]) null);
