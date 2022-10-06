@@ -20,6 +20,7 @@ package org.greenplum.pxf.service;
  */
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -52,6 +53,7 @@ public class FragmenterService {
     private final BasePluginFactory pluginFactory;
     private final FragmenterCacheFactory fragmenterCacheFactory;
     private final GSSFailureHandler failureHandler;
+    private static final String HCFS_FILE_FRAGMENTER = "org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter";
 
     public FragmenterService(FragmenterCacheFactory fragmenterCacheFactory,
                              BasePluginFactory pluginFactory,
@@ -196,6 +198,10 @@ public class FragmenterService {
      * @return the fragmenter initialized with the request context
      */
     private Fragmenter getFragmenter(RequestContext context) {
+        boolean useParallelRead = context.getConfiguration().getBoolean("pxf.json.read.useParallelRead", true);
+        if (StringUtils.equalsIgnoreCase(context.getFormat(), "json") && StringUtils.isNotEmpty(context.getOption("identifier")) && !useParallelRead) {
+            context.setFragmenter(HCFS_FILE_FRAGMENTER);
+        }
         return pluginFactory.getPlugin(context, context.getFragmenter());
     }
 

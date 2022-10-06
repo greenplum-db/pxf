@@ -61,8 +61,6 @@ public class S3ProtocolHandlerTest {
     private static final String[] EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER = {DEFAULT_RESOLVER, STRING_PASS_RESOLVER, STRING_PASS_RESOLVER, STRING_PASS_RESOLVER, DEFAULT_RESOLVER};
     private static final String[] EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER = {DEFAULT_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, DEFAULT_FRAGMENTER};
 
-    private static final String[] EXPECTED_FRAGMENTER_MULTILINE = {FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER};
-
     private S3ProtocolHandler handler;
     private RequestContext context;
 
@@ -439,7 +437,9 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_OFF);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_OFF);
-        verifyFragmenters(context, EXPECTED_FRAGMENTER_MULTILINE);
+        String[] EXPECTED_FRAGMENTERS = EXPECTED_FRAGMENTER_TEXT_OFF.clone();
+        EXPECTED_FRAGMENTERS[3] = FILE_FRAGMENTER; // index 3 is json
+        verifyFragmenters(context, EXPECTED_FRAGMENTERS);
     }
 
     @Test
@@ -451,6 +451,22 @@ public class S3ProtocolHandlerTest {
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_ON);
         verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_ON);
+    }
+
+    @Test
+    public void testTextIdentifierNoParallelReadAndSelectOn() {
+        // s3 options should override multiline json fragmenter option
+        context.addOption("S3_SELECT", "on");
+        context.addOption("IDENTIFIER", "c1");
+        Configuration conf = new Configuration();
+        conf.setBoolean("pxf.json.read.useParallelRead", false);
+        context.setConfiguration(conf);
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_ON);
+        String[] EXPECTED_FRAGMENTERS = EXPECTED_FRAGMENTER_TEXT_ON.clone();
+        EXPECTED_FRAGMENTERS[3] = FILE_FRAGMENTER; // index 3 is json
+        verifyFragmenters(context, EXPECTED_FRAGMENTERS);
     }
 
     @Test
@@ -467,7 +483,6 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextIdentifierNoParallelReadAndSelectAuto() {
-        // s3 options should override multiline json fragmenter option
         context.addOption("S3_SELECT", "auto");
         context.addOption("IDENTIFIER", "c1");
         Configuration conf = new Configuration();
@@ -476,7 +491,9 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);
-        verifyFragmenters(context, EXPECTED_FRAGMENTER_MULTILINE);
+        String[] EXPECTED_FRAGMENTERS = EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT.clone();
+        EXPECTED_FRAGMENTERS[3] = FILE_FRAGMENTER; // index 3 is json
+        verifyFragmenters(context, EXPECTED_FRAGMENTERS);
     }
 
     private void verifyFragmenters(RequestContext context, String[] expected) {

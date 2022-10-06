@@ -56,9 +56,10 @@ public class S3ProtocolHandler implements ProtocolHandler {
     @Override
     public String getFragmenterClassName(RequestContext context) {
         String fragmenter = context.getFragmenter(); // default to fragmenter defined by the profile
-        if (useS3Select(context) || (useMultilineJson(context) && !useParallelRead(context))) {
+        if (useS3Select(context) || useFileReadForMultilineJson(context)) {
             fragmenter = HCFS_FILE_FRAGMENTER;
         }
+
         LOG.debug("Determined to use {} fragmenter", fragmenter);
         return fragmenter;
     }
@@ -129,12 +130,11 @@ public class S3ProtocolHandler implements ProtocolHandler {
         }
     }
 
-    public boolean useParallelRead(RequestContext context) {
+    public boolean useFileReadForMultilineJson(RequestContext context) {
+        boolean JsonFormat = StringUtils.equalsIgnoreCase("JSON", context.getFormat());
         Configuration conf = context.getConfiguration();
-        return conf.getBoolean("pxf.json.read.useParallelRead", true);
-    }
-    public boolean useMultilineJson(RequestContext context) {
-        return isNotEmpty(context.getOption("identifier"));
+        boolean useParallelRead = conf != null ? conf.getBoolean("pxf.json.read.useParallelRead", true) : true;
+        return JsonFormat && isNotEmpty(context.getOption("identifier")) && !useParallelRead;
     }
 
     /**
