@@ -132,8 +132,7 @@ public class S3ProtocolHandler implements ProtocolHandler {
 
     public boolean useFileReadForMultilineJson(RequestContext context) {
         boolean JsonFormat = StringUtils.equalsIgnoreCase("JSON", context.getFormat());
-        Configuration conf = context.getConfiguration();
-        boolean useParallelRead = conf != null ? conf.getBoolean("pxf.json.read.useParallelRead", true) : true;
+        boolean useParallelRead = context.getOption("use_parallel_read", true);
         return JsonFormat && isNotEmpty(context.getOption("identifier")) && !useParallelRead;
     }
 

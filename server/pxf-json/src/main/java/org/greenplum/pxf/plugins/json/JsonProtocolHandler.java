@@ -37,8 +37,7 @@ public class JsonProtocolHandler implements ProtocolHandler {
     }
 
     public boolean useParallelRead(RequestContext context) {
-        Configuration conf = context.getConfiguration();
-        return conf != null ? conf.getBoolean("pxf.json.read.useParallelRead", true) : true;
+        return context.getOption("use_parallel_read", true);
     }
 
     public boolean useMultilineJson(RequestContext context) {

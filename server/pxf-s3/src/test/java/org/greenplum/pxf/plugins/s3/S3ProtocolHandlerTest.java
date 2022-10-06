@@ -71,7 +71,6 @@ public class S3ProtocolHandlerTest {
         context.setFragmenter("default-fragmenter");
         context.setAccessor("default-accessor");
         context.setResolver("default-resolver");
-        context.setConfiguration(new Configuration());
         List<ColumnDescriptor> columns = new ArrayList<>();
         columns.add(new ColumnDescriptor("c1", 1, 0, "INT", null, true)); // actual args do not matter
         columns.add(new ColumnDescriptor("c2", 2, 0, "INT", null, true)); // actual args do not matter
@@ -431,9 +430,7 @@ public class S3ProtocolHandlerTest {
     public void testTextIdentifierNoParallelReadAndSelectOff() {
         context.addOption("S3_SELECT", "off");
         context.addOption("IDENTIFIER", "c1");
-        Configuration conf = new Configuration();
-        conf.setBoolean("pxf.json.read.useParallelRead", false);
-        context.setConfiguration(conf);
+        context.addOption("USE_PARALLEL_READ", "false");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_OFF);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_OFF);
@@ -458,9 +455,7 @@ public class S3ProtocolHandlerTest {
         // s3 options should override multiline json fragmenter option
         context.addOption("S3_SELECT", "on");
         context.addOption("IDENTIFIER", "c1");
-        Configuration conf = new Configuration();
-        conf.setBoolean("pxf.json.read.useParallelRead", false);
-        context.setConfiguration(conf);
+        context.addOption("USE_PARALLEL_READ", "false");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_ON);
@@ -485,9 +480,7 @@ public class S3ProtocolHandlerTest {
     public void testTextIdentifierNoParallelReadAndSelectAuto() {
         context.addOption("S3_SELECT", "auto");
         context.addOption("IDENTIFIER", "c1");
-        Configuration conf = new Configuration();
-        conf.setBoolean("pxf.json.read.useParallelRead", false);
-        context.setConfiguration(conf);
+        context.addOption("USE_PARALLEL_READ", "false");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);

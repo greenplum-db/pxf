@@ -27,7 +27,6 @@ public class JsonProtocolHandlerTest {
         context.setFragmenter("default-fragmenter");
         context.setAccessor("default-accessor");
         context.setResolver("default-resolver");
-        context.setConfiguration(new Configuration());
         List<ColumnDescriptor> columns = new ArrayList<>();
         columns.add(new ColumnDescriptor("c1", 1, 0, "INT", null, true)); // actual args do not matter
         columns.add(new ColumnDescriptor("c2", 2, 0, "INT", null, true)); // actual args do not matter
@@ -59,10 +58,8 @@ public class JsonProtocolHandlerTest {
 
     @Test
     public void testWithIdentifierUseFileFragmenter() {
-        Configuration conf = new Configuration();
-        conf.setBoolean("pxf.json.read.useParallelRead", false);
-        context.setConfiguration(conf);
         context.addOption("IDENTIFIER", "c1");
+        context.addOption("USE_PARALLEL_READ", "false");
         assertEquals(FILE_FRAGMENTER, handler.getFragmenterClassName(context));
         assertEquals(DEFAULT_ACCESSOR, handler.getAccessorClassName(context));
         assertEquals(DEFAULT_RESOLVER, handler.getResolverClassName(context));

@@ -198,10 +198,6 @@ public class FragmenterService {
      * @return the fragmenter initialized with the request context
      */
     private Fragmenter getFragmenter(RequestContext context) {
-        boolean useParallelRead = context.getConfiguration().getBoolean("pxf.json.read.useParallelRead", true);
-        if (StringUtils.equalsIgnoreCase(context.getFormat(), "json") && StringUtils.isNotEmpty(context.getOption("identifier")) && !useParallelRead) {
-            context.setFragmenter(HCFS_FILE_FRAGMENTER);
-        }
         return pluginFactory.getPlugin(context, context.getFragmenter());
     }
 
