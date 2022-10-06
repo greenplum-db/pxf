@@ -447,143 +447,164 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 context.getSegmentId(), columns);
         List<Type> fields = new ArrayList<>();
         for (ColumnDescriptor column : columns) {
-            String columnName = column.columnName();
             int columnTypeCode = column.columnTypeCode();
+            DataType dataType = DataType.get(columnTypeCode);
 
-            Types.PrimitiveBuilder<PrimitiveType> primitiveBuilder = null;
-            Types.BaseListBuilder.ElementBuilder<GroupType, Types.ListBuilder<GroupType>> listBuilder = null;
-            switch (DataType.get(columnTypeCode)) {
-                case BOOLEAN:
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.BOOLEAN);
-                    break;
-                case BYTEA:
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.BINARY);
-                    break;
-                case BIGINT:
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT64);
-                    break;
-                case SMALLINT:
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT32)
-                            .as(intType(16, true));
-                    break;
-                case INTEGER:
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT32);
-                    break;
-                case REAL:
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.FLOAT);
-                    break;
-                case FLOAT8:
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.DOUBLE);
-                    break;
-                case NUMERIC:
-                    Integer[] columnTypeModifiers = column.columnTypeModifiers();
-                    int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
-                    int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
-
-                    if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
-                        precision = columnTypeModifiers[0];
-                        scale = columnTypeModifiers[1];
-                    }
-                    primitiveBuilder = Types
-                            .optional(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
-                            .length(PRECISION_TO_BYTE_COUNT[precision - 1])
-                            .as(DecimalLogicalTypeAnnotation.decimalType(scale, precision));
-                    break;
-                case TIMESTAMP:
-                case TIMESTAMP_WITH_TIME_ZONE:
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT96);
-                    break;
-                case DATE:
-                    // DATE is used to for a logical date type, without a time
-                    // of day. It must annotate an int32 that stores the number
-                    // of days from the Unix epoch, 1 January 1970. The sort
-                    // order used for DATE is signed.
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.INT32)
-                            .as(dateType());
-                    break;
-                case TIME:
-                case VARCHAR:
-                case BPCHAR:
-                case TEXT:
-                    primitiveBuilder = Types.optional(PrimitiveTypeName.BINARY)
-                            .as(stringType());
-                    break;
-                case BOOLARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.BOOLEAN);
-                    break;
-                case BYTEAARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.BINARY);
-                    break;
-                case INT2ARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT32)
-                            .as(intType(16, true));
-                    break;
-                case INT4ARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT32);
-                    break;
-                case INT8ARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT64);
-                    break;
-
-                case FLOAT4ARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.FLOAT);
-                    break;
-                case FLOAT8ARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.DOUBLE);
-                    break;
-                case NUMERICARRAY:
-                    columnTypeModifiers = column.columnTypeModifiers();
-                    precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
-                    scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
-
-                    if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
-                        precision = columnTypeModifiers[0];
-                        scale = columnTypeModifiers[1];
-                    }
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
-                            .length(PRECISION_TO_BYTE_COUNT[precision - 1])
-                            .as(DecimalLogicalTypeAnnotation.decimalType(scale, precision));
-                    break;
-                case VARCHARARRAY:
-                case BPCHARARRAY:
-                case TEXTARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.BINARY)
-                            .as(stringType());
-                    break;
-                case DATEARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT32)
-                            .as(dateType());
-                    break;
-                case TIMESTAMPARRAY:
-                case TIMESTAMP_WITH_TIMEZONE_ARRAY:
-                    listBuilder = Types.optionalList()
-                            .optionalElement(PrimitiveTypeName.INT96);
-                    break;
-                default:
-                    throw new UnsupportedTypeException(
-                            String.format("Type %d is not supported", columnTypeCode));
-            }
-
-            if (primitiveBuilder != null) {
-                fields.add(primitiveBuilder.named(columnName));
-            }
-
-            if (listBuilder != null) {
-                fields.add(listBuilder.named(columnName));
+            if (dataType.isArrayType()) {
+                generateParquetListSchema(column, fields);
+            } else {
+                generateParquetPrimitiveSchema(column, fields);
             }
         }
         return new MessageType("hive_schema", fields);
     }
+
+    private void generateParquetPrimitiveSchema(ColumnDescriptor column, List<Type> fields) {
+        DataType dataType = column.getDataType();
+        int columnTypeCode = column.columnTypeCode();
+        String columnName = column.columnName();
+
+        Types.PrimitiveBuilder<PrimitiveType> builder;
+
+        switch (dataType) {
+            case BOOLEAN:
+                builder = Types.optional(PrimitiveTypeName.BOOLEAN);
+                break;
+            case BYTEA:
+                builder = Types.optional(PrimitiveTypeName.BINARY);
+                break;
+            case BIGINT:
+                builder = Types.optional(PrimitiveTypeName.INT64);
+                break;
+            case SMALLINT:
+                builder = Types.optional(PrimitiveTypeName.INT32)
+                        .as(intType(16, true));
+                break;
+            case INTEGER:
+                builder = Types.optional(PrimitiveTypeName.INT32);
+                break;
+            case REAL:
+                builder = Types.optional(PrimitiveTypeName.FLOAT);
+                break;
+            case FLOAT8:
+                builder = Types.optional(PrimitiveTypeName.DOUBLE);
+                break;
+            case NUMERIC:
+                Integer[] columnTypeModifiers = column.columnTypeModifiers();
+                int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
+                int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
+
+                if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
+                    precision = columnTypeModifiers[0];
+                    scale = columnTypeModifiers[1];
+                }
+                builder = Types
+                        .optional(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
+                        .length(PRECISION_TO_BYTE_COUNT[precision - 1])
+                        .as(DecimalLogicalTypeAnnotation.decimalType(scale, precision));
+                break;
+            case TIMESTAMP:
+            case TIMESTAMP_WITH_TIME_ZONE:
+                builder = Types.optional(PrimitiveTypeName.INT96);
+                break;
+            case DATE:
+                // DATE is used to for a logical date type, without a time
+                // of day. It must annotate an int32 that stores the number
+                // of days from the Unix epoch, 1 January 1970. The sort
+                // order used for DATE is signed.
+                builder = Types.optional(PrimitiveTypeName.INT32)
+                        .as(dateType());
+                break;
+            case TIME:
+            case VARCHAR:
+            case BPCHAR:
+            case TEXT:
+                builder = Types.optional(PrimitiveTypeName.BINARY)
+                        .as(stringType());
+                break;
+            default:
+                throw new UnsupportedTypeException(
+                        String.format("Type %d is not supported", columnTypeCode));
+        }
+        fields.add(builder.named(columnName));
+    }
+
+
+    private void generateParquetListSchema(ColumnDescriptor column, List<Type> fields) {
+        DataType dataType = column.getDataType();
+        int columnTypeCode = column.columnTypeCode();
+        String columnName = column.columnName();
+
+        Types.BaseListBuilder.ElementBuilder<GroupType, Types.ListBuilder<GroupType>> builder;
+
+        switch (dataType) {
+            case BOOLARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.BOOLEAN);
+                break;
+            case BYTEAARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.BINARY);
+                break;
+            case INT2ARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.INT32)
+                        .as(intType(16, true));
+                break;
+            case INT4ARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.INT32);
+                break;
+            case INT8ARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.INT64);
+                break;
+
+            case FLOAT4ARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.FLOAT);
+                break;
+            case FLOAT8ARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.DOUBLE);
+                break;
+            case NUMERICARRAY:
+                Integer[] columnTypeModifiers = column.columnTypeModifiers();
+                int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
+                int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
+                if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
+                    precision = columnTypeModifiers[0];
+                    scale = columnTypeModifiers[1];
+                }
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
+                        .length(PRECISION_TO_BYTE_COUNT[precision - 1])
+                        .as(DecimalLogicalTypeAnnotation.decimalType(scale, precision));
+                break;
+            case VARCHARARRAY:
+            case BPCHARARRAY:
+            case TEXTARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.BINARY)
+                        .as(stringType());
+                break;
+            case DATEARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.INT32)
+                        .as(dateType());
+                break;
+            case TIMESTAMPARRAY:
+            case TIMESTAMP_WITH_TIMEZONE_ARRAY:
+                builder = Types.optionalList()
+                        .optionalElement(PrimitiveTypeName.INT96);
+                break;
+            default:
+                throw new UnsupportedTypeException(
+                        String.format("Type %d is not supported", columnTypeCode));
+        }
+        fields.add(builder.named(columnName));
+    }
+
 
     /**
      * Returns the {@link CompressionCodecName} for the given name, or default if name is null
