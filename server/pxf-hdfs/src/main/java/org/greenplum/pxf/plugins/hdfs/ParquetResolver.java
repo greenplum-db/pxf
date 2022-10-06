@@ -27,6 +27,7 @@ import org.apache.parquet.example.data.simple.SimpleGroup;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.GroupType;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
@@ -43,7 +44,6 @@ import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -128,15 +128,13 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         if (field.val == null)
             return;
         if (type.isPrimitive()) {
-            fillPrimitiveGroup(index, field, group, type, true);
+            fillPrimitiveGroup(index, field.val, group, type, true);
         } else {
             fillComplexGroup(index, field, group, type);
         }
     }
 
-    private void fillPrimitiveGroup(int index, OneField field, Group group, Type type, boolean isPrimitive) throws IOException {
-        Object value = field.val;
-
+    private void fillPrimitiveGroup(int index, Object value, Group group, Type type, boolean isPrimitive) throws IOException {
         if (value == null)
             return;
         switch (type.asPrimitiveType().getPrimitiveTypeName()) {
@@ -172,11 +170,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 break;
             case FIXED_LEN_BYTE_ARRAY:
                 byte[] fixedLenByteArray = getFixedLenByteArray((String) value, type);
-                if (fixedLenByteArray != null) {
-                    group.add(index, Binary.fromReusedByteArray(fixedLenByteArray));
-                } else {
+                if (fixedLenByteArray == null) {
                     return;
                 }
+                group.add(index, Binary.fromReusedByteArray(fixedLenByteArray));
                 break;
             case INT96:  // SQL standard timestamp string value with or without time zone literals: https://www.postgresql.org/docs/9.4/datatype-datetime.html
                 String timestamp = (String) value;
@@ -200,33 +197,35 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         if (field.val == null)
             return;
 
-        switch (type.asGroupType().getOriginalType()) {
-            case LIST:
-                fillListGroup(index, field, group, type);
-                break;
-            default:
-                throw new IOException("Not supported complex type " + type.asGroupType().getOriginalType());
+        if(type.asGroupType().getOriginalType() != LogicalTypeAnnotation.listType().toOriginalType()){
+            throw new IOException("Not supported complex type " + type.asGroupType().getOriginalType());
         }
+        fillListGroup(index, field, group, type);
     }
 
     private void fillListGroup(int index, OneField field, Group group, Type type) throws IOException {
         if (field.val == null)
             return;
-        //Get the LIST group type and schema
+
+        /*
+         * https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
+         * Parquet LIST must always annotate a 3-level structure:
+         * <list-repetition> group <name> (LIST) {
+         *   repeated group list {
+         *     <element-repetition> <element-type> element;
+         *   }
+         * }
+         */
         GroupType listType = type.asGroupType();
-        //Get the repeated list group type and schema
         GroupType repeatedType = listType.getType(0).asGroupType();
-        //Get the element type
         Type elementType = repeatedType.getType(0).asPrimitiveType();
-        //parse parquet values into a postgres Object list
+        // Decode Postgres String representation of an array into a list of Objects of the required element type
         List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.asPrimitiveType().getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
         Group arrayGroup = new SimpleGroup(listType);
 
-        for (int i = 0; i < vals.size(); i++) {
-            Object value = vals.get(i);
+        for (Object value : vals) {
             Group repeatedGroup = new SimpleGroup(repeatedType);
-            fillPrimitiveGroup(0, new OneField(0, value), repeatedGroup, elementType, false);
-            // if the current element is a null, add an empty repeated group into array group
+            fillPrimitiveGroup(0, value, repeatedGroup, elementType, false);
             arrayGroup.add(0, repeatedGroup);
         }
         group.add(index, arrayGroup);
@@ -259,17 +258,17 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         if (precToBytes == decimalBytes.length) {
             // No padding needed.
             return decimalBytes;
-        } else {
-            byte[] tgt = new byte[precToBytes];
-            if (hiveDecimal.signum() == -1) {
-                // For negative number, initializing bits to 1
-                for (int i = 0; i < precToBytes; i++) {
-                    tgt[i] |= 0xFF;
-                }
-            }
-            System.arraycopy(decimalBytes, 0, tgt, precToBytes - decimalBytes.length, decimalBytes.length); // Padding leading zeroes/ones.
-            return tgt;
         }
+
+        byte[] tgt = new byte[precToBytes];
+        if (hiveDecimal.signum() == -1) {
+            // For negative number, initializing bits to 1
+            for (int i = 0; i < precToBytes; i++) {
+                tgt[i] |= 0xFF;
+            }
+        }
+        System.arraycopy(decimalBytes, 0, tgt, precToBytes - decimalBytes.length, decimalBytes.length); // Padding leading zeroes/ones.
+        return tgt;
         // end -- org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
     }
 
