@@ -73,6 +73,72 @@ public class PartitionedJsonParserTest {
     }
 
     @Test
+    public void testSimpleMatchingIdentifierExtraCarriageReturns() {
+
+        PartitionedJsonParser parser = new PartitionedJsonParser("name");
+        // start the json object, handles starting bracket
+        parser.startNewJsonObject();
+
+        Text result = new Text();
+        boolean completed = false;
+        // if a json object has been started, give this input
+        String jsonContents = "\"name\": \"äää\"\r\r\n," +
+                "\"year\": \"2022\",\r\r\n" +
+                "\"cüstömerstätüs\":\"välid\",\r\r\n" +
+                "\"address\": \"söme city\",\r\r\n" +
+                "\"zip\": \"95051\"\r\r\n" +
+                "}";
+
+        for (int i = 0; i < jsonContents.length(); i++) {
+            char ch = jsonContents.charAt(i);
+            completed = parser.buildNextObjectContainingMember(ch, result);
+        }
+
+        assertTrue(completed);
+        assertTrue(parser.foundObjectWithIdentifier());
+        assertEquals(117, result.getLength());
+        assertEquals("{\"name\": \"äää\"\r\r\n," +
+                "\"year\": \"2022\",\r\r\n" +
+                "\"cüstömerstätüs\":\"välid\",\r\r\n" +
+                "\"address\": \"söme city\",\r\r\n" +
+                "\"zip\": \"95051\"\r\r\n" +
+                "}", result.toString());
+    }
+
+    @Test
+    public void testSimpleMatchingIdentifierMixedCarriageReturns() {
+
+        PartitionedJsonParser parser = new PartitionedJsonParser("name");
+        // start the json object, handles starting bracket
+        parser.startNewJsonObject();
+
+        Text result = new Text();
+        boolean completed = false;
+        // if a json object has been started, give this input
+        String jsonContents = "\"name\": \"äää\"\n," +
+                "\"year\": \"2022\",\r\r" +
+                "\"cüstömerstätüs\":\"välid\",\r\n" +
+                "\"address\": \"söme city\",\r\r\n" +
+                "\"zip\": \"95051\"" +
+                "}";
+
+        for (int i = 0; i < jsonContents.length(); i++) {
+            char ch = jsonContents.charAt(i);
+            completed = parser.buildNextObjectContainingMember(ch, result);
+        }
+
+        assertTrue(completed);
+        assertTrue(parser.foundObjectWithIdentifier());
+        assertEquals(110, result.getLength());
+        assertEquals("{\"name\": \"äää\"\n," +
+                "\"year\": \"2022\",\r\r" +
+                "\"cüstömerstätüs\":\"välid\",\r\n" +
+                "\"address\": \"söme city\",\r\r\n" +
+                "\"zip\": \"95051\"" +
+                "}", result.toString());
+    }
+
+    @Test
     public void testSimpleNoMatchingIdentifier()  {
 
         PartitionedJsonParser parser = new PartitionedJsonParser("customer status");
