@@ -86,7 +86,46 @@ public class ParquetReadTest extends BaseFeature {
             "bin   BYTEA"
     };
 
+
+    private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS = {
+            "id                   INTEGER",
+            "bool_arr             BOOLEAN[]", // DataType.BOOLARRAY
+//            "bytea_arr            BYTEA[]"      , // DataType.BYTEAARRAY
+            "bigint_arr           BIGINT[]", // DataType.INT8ARRAY
+            "smallint_arr         SMALLINT[]", // DataType.INT2ARRAY
+            "int_arr              INTEGER[]", // DataType.INT4ARRAY
+            "text_arr             TEXT[]", // DataType.TEXTARRAY
+            "real_arr             REAL[]", // DataType.FLOAT4ARRAY
+            "double_arr           FLOAT[]", // DataType.FLOAT8ARRAY
+            "char_arr             CHAR(7)[]", // DataType.BPCHARARRAY
+            "varchar_arr          VARCHAR(8)[]", // DataType.VARCHARARRAY
+            "varchar_arr_nolimit  VARCHAR[]", // DataType.VARCHARARRAY with no length limit
+            "date_arr             DATE[]", // DataType.DATEARRAY
+//            "timestamp_arr        TIMESTAMP[]"  , // DataType.TIMESTAMPARRAY
+//            "timestamptz_arr      TIMESTAMPTZ[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
+            "numeric_arr          NUMERIC[]", // DataType.NUMERICARRAY
+    };
+
+    private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = {
+            "id                   integer",
+            "bool_arr             array<boolean>", // DataType.BOOLARRAY
+//            "bytea_arr            array<binary>"      , // DataType.BYTEAARRAY  // not correct
+            "bigint_arr           array<bigint>", // DataType.INT8ARRAY
+            "smallint_arr         array<smallint>", // DataType.INT2ARRAY
+            "int_arr              array<int>", // DataType.INT4ARRAY
+            "text_arr             array<string>", // DataType.TEXTARRAY
+            "real_arr             array<float>", // DataType.FLOAT4ARRAY
+            "double_arr            array<double>", // DataType.FLOAT8ARRAY
+            "char_arr             array<char(7)>", // DataType.BPCHARARRAY
+            "varchar_arr          array<varchar(8)>", // DataType.VARCHARARRAY
+            "varchar_arr_nolimit  array<varchar(65535)>", // DataType.VARCHARARRAY with no length limit, varchar length must be in the range [1, 65535]
+            "date_arr             array<date>", // DataType.DATEARRAY
+//            "timestamp_arr        array<timestamp>"  , // DataType.TIMESTAMPARRAY
+//           "timestamptz_arr      timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
+            "numeric_arr          array<decimal(38,18)>", // DataType.NUMERICARRAY
+    };
     private ProtocolEnum protocol;
+
 
     @Override
     public void beforeClass() throws Exception {
