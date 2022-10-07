@@ -59,6 +59,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private int maxObjectLength;
     private PartitionedJsonParser parser;
     private LineRecordReader lineRecordReader;
+    private long linePos;
     private Text currentLine;
     private JobConf conf;
     private final Path file;
@@ -108,6 +109,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         parser = new PartitionedJsonParser(jsonMemberName);
         currentLine = new Text();
         this.pos = start;
+        this.linePos = start;
     }
 
     /*
@@ -147,9 +149,11 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
             }
 
+            long unreadChars = currentLineBuffer.length() - currentLineIndex - 1;
+            pos = linePos - unreadChars;
+
             if (completedObject && parser.foundObjectWithIdentifier()) {
                 String json = jsonObject.toString();
-
                 if (json.length() > maxObjectLength) {
                     LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
                 } else {
@@ -255,13 +259,13 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
     private boolean getNextLine() throws IOException {
         currentLine.clear();
-        long currentPos = pos;
+        long currentPos = lineRecordReader.getPos();
         boolean getNext = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
-        pos = lineRecordReader.getPos();
+        linePos = lineRecordReader.getPos();
         if (getNext) {
             // lineRecordReader removes the new lines, carriage returns, etc when it does the read
             // we want to track that delta so we know the proper size of the line that was returned
-            long delta = pos - currentPos - currentLine.getLength();
+            long delta = linePos - currentPos - currentLine.getLength();
             if (delta == 2) {
                 // lineRecordReader removes the \n when it does the read, we want to keep it in
                 currentLine.append(newLineCarriageReturn, 0, newLineCarriageReturn.length);
