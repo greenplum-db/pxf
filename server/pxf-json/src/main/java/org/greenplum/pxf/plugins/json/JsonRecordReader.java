@@ -246,9 +246,9 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private void getNextSplit() throws IOException {
         // close the old lineRecordReader
         lineRecordReader.close();
-        // we need to move into the next split, so create one that starts at the current pos
+        // we need to move into the next split, so create one that starts at the end of the current split
         // and goes until the end of the file
-        FileSplit nextSplit = new FileSplit(file, pos, Long.MAX_VALUE - pos, hosts);
+        FileSplit nextSplit = new FileSplit(file, end, Long.MAX_VALUE - end, hosts);
         lineRecordReader = new LineRecordReader(conf, nextSplit);
         inNextSplit = true;
     }
