@@ -11,6 +11,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.json.JsonRecordReader;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -335,6 +336,7 @@ public class JsonRecordReaderTest {
         assertEquals(558, jsonRecordReader.getPos());
     }
 
+    @Disabled
     @Test
     public void testStraddleSplit() throws URISyntaxException, IOException {
 
