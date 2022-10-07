@@ -235,6 +235,175 @@ public class JsonRecordReaderTest {
     }
 
     @Test
+    public void testAllOnOneLineSmallSplit() throws URISyntaxException, IOException {
+
+        // search for a non-matching member in the file
+        jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüstömerstätüs");
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/all_on_one_line.json").toURI());
+        path = new Path(file.getPath());
+        fileSplit = new FileSplit(path, 0, 50, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+        while (jsonRecordReader.next(key, data)) {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(5, recordCount);
+
+        assertFalse(jsonRecordReader.next(key, data));
+        // This will return count of all the bytes read to finish the object for that split
+        assertEquals(551, jsonRecordReader.getPos());
+    }
+
+    @Test
+    public void testMultipleObjectsPerLineSmallSplit() throws URISyntaxException, IOException {
+
+        // each record is about 100 char
+        // search for a non-matching member in the file
+        jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüstömerstätüs");
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/multiple_object_per_line.json").toURI());
+        path = new Path(file.getPath());
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+
+        // split 1
+        fileSplit = new FileSplit(path, 0, 100, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data))   {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(2, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        // expected to go into next split to finish the second object
+        assertEquals(220, jsonRecordReader.getPos());
+
+        // split 2
+        fileSplit = new FileSplit(path, 100, 100, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data))   {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        // there should be no change because split 1 took care of all of split 2
+        assertEquals(2, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        // expected to go into next split to finish the second object
+        assertEquals(220, jsonRecordReader.getPos());
+
+        // split 3
+        fileSplit = new FileSplit(path, 200, 100, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data))   {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(4, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        assertEquals(454, jsonRecordReader.getPos());
+
+        // split 4
+        fileSplit = new FileSplit(path, 300, 100, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data))   {
+            assertNotNull(data);
+            recordCount++;
+        }
+        // there should be no change because split 3 took care of all of split 4
+        assertEquals(4, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        assertEquals(454, jsonRecordReader.getPos());
+
+        // split 5
+        fileSplit = new FileSplit(path, 400, 100, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data))   {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(5, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        assertEquals(558, jsonRecordReader.getPos());
+    }
+
+    @Test
+    public void testStraddleSplit() throws URISyntaxException, IOException {
+
+        // each record is about 100 char
+        // line 1 has half a record
+        // line 2 has the remaining half, and a full record
+        // line 3 has half a record
+        // line 4 has remaining half, a full record, and another half
+        // line 5 has the last half record
+        // search for a non-matching member in the file
+        jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüstömerstätüs");
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/straddle_split.json").toURI());
+        path = new Path(file.getPath());
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+
+        // split 1 (read line 1, should read into split 2 to finish the object as well as read the second object in the line)
+        fileSplit = new FileSplit(path, 0, 50, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data))   {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(2, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        // expected to go into next split to finish the second object
+        assertEquals(220, jsonRecordReader.getPos());
+
+        // split 2 and 3 (length duplicated) - should have been as part of split 1
+        fileSplit = new FileSplit(path, 50, 100, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data))   {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(2, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        // expected to go into next split to finish the second object
+        assertEquals(220, jsonRecordReader.getPos());
+
+        // split 4 (read line 3, should read into split 5, 6 to finish the object as well as read the second object in the line and third objects)
+        fileSplit = new FileSplit(path, 150, 50, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data))   {
+            assertNotNull(data);
+            recordCount++;
+        }
+
+        assertEquals(5, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        assertEquals(557, jsonRecordReader.getPos());
+
+        // split 4 - end should read nothing
+        fileSplit = new FileSplit(path, 300, 300, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data))   {
+            assertNotNull(data);
+            recordCount++;
+        }
+        // there should be no change because split 4 took care of the rest of the file
+        assertEquals(5, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        assertEquals(557, jsonRecordReader.getPos());
+    }
+
+    @Test
     public void testContainsCarriageReturnAndNewLines() throws URISyntaxException, IOException {
 
         jobConf.set(RECORD_MEMBER_IDENTIFIER, "name");
