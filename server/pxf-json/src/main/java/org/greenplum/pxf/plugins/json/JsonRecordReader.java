@@ -117,7 +117,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     public boolean next(LongWritable key, Text value) throws IOException {
 
         while (!inNextSplit) { // split level. if out of split, then return false
-            int i;
+            int i = Integer.MAX_VALUE;
             // object to pass in for streaming
             Text jsonObject = new Text();
             boolean completedObject = false;
@@ -133,7 +133,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             parser.startNewJsonObject();
 
             // read through the file until the object is completed
-            while ((i = readNextChar()) != EOF && !completedObject) { // in the split, create the object
+            while (!completedObject && (i = readNextChar()) != EOF) { // in the split, create the object
                 if (i == END_OF_SPLIT) {
                     if (currentLineBuffer == null || currentLineIndex >= currentLineBuffer.length()) {
                             LOG.debug("JSON object incomplete, moving onto next split to finish");
@@ -268,6 +268,10 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             }
             if (delta == 1) {
                 currentLine.append(newLine, 0, newLine.length);
+            }
+            if (delta >= 3) {
+                LOG.debug("Read some additional characters that were not parsed in the line.");
+                throw new IOException("WHAT");
             }
             currentLineBuffer = new StringBuffer(currentLine.toString());
             currentLineIndex = 0;
