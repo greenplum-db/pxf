@@ -932,7 +932,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 pgArrayBuilder.addElement(String.valueOf(i));
                 pgArrayBuilder.addElement(String.valueOf(i));
                 pgArrayBuilder.endArray();
@@ -1020,7 +1020,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 pgArrayBuilder.addElement(StringUtils.repeat("a", i + 1));
                 pgArrayBuilder.addElement(StringUtils.repeat("a", i + 1));
                 pgArrayBuilder.endArray();
@@ -1111,7 +1111,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 String date = String.format("2020-08-%02d", i + 1);
                 pgArrayBuilder.addElement(date);
                 pgArrayBuilder.addElement(date);
@@ -1201,7 +1201,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 pgArrayBuilder.addElement(String.valueOf((double) i * 1.01));
                 pgArrayBuilder.addElement(String.valueOf((double) i * 1.01));
                 pgArrayBuilder.endArray();
@@ -1291,7 +1291,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder = new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 pgArrayBuilder.addElement("t");
                 pgArrayBuilder.addElement("f");
                 pgArrayBuilder.endArray();
@@ -1383,7 +1383,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 Instant timestamp = Instant.parse(String.format("2020-08-%02dT04:00:05Z", i + 1)); // UTC
                 ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
                 String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -1478,7 +1478,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 long value = (long) Integer.MAX_VALUE + i;
                 pgArrayBuilder.addElement(String.valueOf(value));
                 pgArrayBuilder.addElement(String.valueOf(value));
@@ -1566,7 +1566,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 String value = StringUtils.repeat("a", i + 1);
                 pgArrayBuilder.addElement(value);
                 pgArrayBuilder.addElement(value);
@@ -1673,7 +1673,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 pgArrayBuilder.addElement(String.valueOf(i));
                 pgArrayBuilder.addElement(String.valueOf(i));
                 pgArrayBuilder.endArray();
@@ -1760,7 +1760,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 pgArrayBuilder.addElement(String.valueOf(i * 1.01F));
                 pgArrayBuilder.addElement(String.valueOf(i * 1.01F));
                 pgArrayBuilder.endArray();
@@ -1847,7 +1847,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 String s = StringUtils.repeat("b", i % 5);
                 pgArrayBuilder.addElement(s);
                 pgArrayBuilder.addElement(s);
@@ -1937,7 +1937,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 String s = StringUtils.repeat("c", i % 3);
                 pgArrayBuilder.addElement(s);
                 pgArrayBuilder.addElement(s);
@@ -2037,7 +2037,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 pgArrayBuilder.addElement(values[i]);
                 pgArrayBuilder.addElement(values[i]);
                 pgArrayBuilder.endArray();
@@ -2269,13 +2269,13 @@ public class ParquetResolverWriteTest {
         assertEquals("fff", row2.getString(4, 0));
 
 
-        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, new Integer(0));
-        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, new Integer(1));
-        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, new Integer(2));
+        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, 0);
+        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, 1);
+        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, 2);
 
-        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, new Float(0.01F));
-        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, new Float(1.01F));
-        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, new Float(2.01F));
+        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, 0.01F);
+        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, 1.01F);
+        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, 2.01F);
 
         assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.INT96, 7, 3, null, localTimestampString0);
         assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.INT96, 7, 3, null, localTimestampString1);
@@ -2371,7 +2371,7 @@ public class ParquetResolverWriteTest {
             if (i != 9) {
                 pgArrayBuilder=new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement("null");
+                pgArrayBuilder.addElement((String) null);
                 Instant timestamp = Instant.parse("2020-06-28T11:30:00Z"); // UTC
                 ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
                 String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX"));// 2020-06-28 04:30:00-07:00

@@ -32,8 +32,8 @@ public class ParquetUtilitiesTest {
     @Test
     public void testParsePostgresArrayIntegerArray() {
         // parquet SHORT is signed INT32 with INT annotation
-        List<Object> result = parquetUtilities.parsePostgresArray("{1,2,-3}", PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.IntLogicalTypeAnnotation.stringType());
-        assertIterableEquals(Arrays.asList(1, 2, -3), result);
+        List<Object> result = parquetUtilities.parsePostgresArray("{1,2,-3}", PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.IntLogicalTypeAnnotation.IntLogicalTypeAnnotation.intType(16,true));
+        assertIterableEquals(Arrays.asList((short) 1, (short) 2, (short) -3), result);
 
         // parquet INT is INT32 with no annotation
         result = parquetUtilities.parsePostgresArray("{1,2,3}", PrimitiveType.PrimitiveTypeName.INT32, null);
@@ -70,6 +70,26 @@ public class ParquetUtilitiesTest {
         assertIterableEquals(Arrays.asList("fizz", "buzz", "fizzbuzz"), result);
     }
 
+    @Test
+    public void testParsePostgresArrayDateArray() {
+        // parquet date is an INT64 primitive type with String annotation
+        String value = "{\"1985-01-01\",\"1990-04-30\"}";
+
+        List<Object> result = parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.dateType());
+        assertIterableEquals(Arrays.asList("1985-01-01", "1990-04-30"), result);
+    }
+
+    @Test
+    public void testParsePostgresArrayTimestampArray() {
+        // test the underlying decode string: we expect it to fail and the failure to be caught by parsePostgresArray
+        // as we currently do not support writing multi-dimensional arrays
+        String value = "{\"2013-07-13 21:00:05-07\",\"2013-07-13 21:00:05-07\"}";
+
+        // nothing is thrown here because we don't decode strings and check for multi-dimensional-ness. This check is done later
+        List<Object> result = parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.INT96, null);
+        assertEquals(2, result.size());
+        assertEquals(Arrays.asList("2013-07-13 21:00:05-07","2013-07-13 21:00:05-07"), result);
+    }
     @Test
     public void testParsePostgresArrayByteaArrayEscapeOutput() {
         // parquet bytea is a BINARY with no annotation
@@ -166,11 +186,11 @@ public class ParquetUtilitiesTest {
     public void testParsePostgresArrayMultiDimensionalArrayFloat() {
         // test the underlying decode string: we expect it to fail and the failure to be caught by parsePostgresArray
         // as we currently do not support writing multi-dimensional arrays
-        String value = "{{1F,2F},{3F,4F}}";
+        String value = "{{1.1,2.1},{3.1,4.1}}";
 
         Exception exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.FLOAT, null));
-        assertEquals("Error parsing array element: {1F,2F} was not of expected type FLOAT", exception.getMessage());
-        assertEquals("Column value \"{{1F,2F},{3F,4F}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", ((PxfRuntimeException) exception).getHint());
+        assertEquals("Error parsing array element: {1.1,2.1} was not of expected type FLOAT", exception.getMessage());
+        assertEquals("Column value \"{{1.1,2.1},{3.1,4.1}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", ((PxfRuntimeException) exception).getHint());
     }
 
     @Test
@@ -212,10 +232,10 @@ public class ParquetUtilitiesTest {
         // as we currently do not support writing multi-dimensional arrays
         String value = "{{\"1985-01-01\", \"1990-04-30\"},{\"1995-08-14\", \"2020-12-05\"}}";
 
-        Exception exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.dateType()));
-        assertEquals("Error parsing array element: {\"1985-01-01\", \"1990-04-30\"} was not of expected type INT32", exception.getMessage());
-        assertEquals("Column value \"{{\"1985-01-01\", \"1990-04-30\"},{\"1995-08-14\", \"2020-12-05\"}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", ((PxfRuntimeException) exception).getHint());
-
+        // nothing is thrown here because we don't decode strings and check for multi-dimensional-ness. This check is done later
+        List<Object> result = parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.dateType());
+        assertEquals(2, result.size());
+        assertEquals(Arrays.asList("{\"1985-01-01\", \"1990-04-30\"}", "{\"1995-08-14\", \"2020-12-05\"}"), result);
     }
 
     @Test
@@ -224,9 +244,10 @@ public class ParquetUtilitiesTest {
         // as we currently do not support writing multi-dimensional arrays
         String value = "{{\"2013-07-13 21:00:05-07\"},{\"2013-07-13 21:00:05-07\"}}";
 
-        Exception exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.INT96, LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MICROS)));
-        assertEquals("Error parsing array element: {\"2013-07-13 21:00:05-07\"} was not of expected type INT96", exception.getMessage());
-        assertEquals("Column value \"{{\"2013-07-13 21:00:05-07\"},{\"2013-07-13 21:00:05-07\"}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", ((PxfRuntimeException) exception).getHint());
+        // nothing is thrown here because we don't decode strings and check for multi-dimensional-ness. This check is done later
+        List<Object> result = parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.INT96, null);
+        assertEquals(2, result.size());
+        assertEquals(Arrays.asList("{\"2013-07-13 21:00:05-07\"}","{\"2013-07-13 21:00:05-07\"}"), result);
     }
 
     @Test
@@ -238,6 +259,6 @@ public class ParquetUtilitiesTest {
         // nothing is thrown here because we don't decode strings and check for multi-dimensional-ness. This check is done later
         List<Object> result = parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, null);
         assertEquals(2, result.size());
-        assertEquals(Arrays.asList("{\"1.11\",\"2.22\"}, {\"3.33\",\"4.44\"}").toString(), result.toString());
+        assertEquals(Arrays.asList("{\"1.11\",\"2.22\"}", "{\"3.33\",\"4.44\"}").toString(), result.toString());
     }
 }
