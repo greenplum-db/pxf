@@ -61,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ParquetResolverWriteTest {
+public class ParquetWriteTest {
 
     private Accessor accessor;
     private Resolver resolver;
