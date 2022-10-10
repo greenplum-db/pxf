@@ -3,32 +3,6 @@
 -- @description query01 for PXF Hive ORC vectorized with repeating data cases
 \pset null 'NIL'
 Null display is "NIL".
-\d pxf_hive_orc_vectorize_repeating_no_nulls
-External table "public.pxf_hive_orc_vectorize_repeating_no_nulls"
- Column |         Type         | Modifiers
---------+----------------------+-----------
- t1     | text                 |
- t2     | text                 |
- num1   | integer              |
- dub1   | double precision     |
- dec1   | numeric              |
- r      | real                 |
- bg     | bigint               |
- b      | boolean              |
- tn     | smallint             |
- sml    | smallint             |
- dt     | date                 |
- vc1    | character varying(5) |
- c1     | character(3)         |
- bin    | bytea                |
-Type: readable
-Encoding: UTF8
-Format type: custom
-Format options: formatter 'pxfwritable_import'
-External options: {}
-External location: pxf://hive_types_all_columns_repeating_no_nulls_orc?PROFILE=hive:orc&VECTORIZE=true
-Execute on: all segments
-
 SELECT * FROM pxf_hive_orc_vectorize_repeating_no_nulls ORDER BY t1;
   t1  |  t2  | num1 | dub1 |  dec1   |  r  |    bg    | b | tn | sml |     dt     | vc1  | c1  | bin
 ------+------+------+------+---------+-----+----------+---+----+-----+------------+------+-----+-----
@@ -43,32 +17,6 @@ SELECT * FROM pxf_hive_orc_vectorize_repeating_no_nulls ORDER BY t1;
  col1 | col2 |    1 |    6 | 1.23456 | 7.7 | 23456789 | f |  1 |  10 | 2015-03-06 | abcd | abc | 1
  col1 | col2 |    1 |    6 | 1.23456 | 7.7 | 23456789 | f |  1 |  10 | 2015-03-06 | abcd | abc | 1
 (10 rows)
-
-\d pxf_hive_orc_vectorize_repeating_nulls
-External table "public.pxf_hive_orc_vectorize_repeating_nulls"
- Column |         Type         | Modifiers
---------+----------------------+-----------
- t1     | text                 |
- t2     | text                 |
- num1   | integer              |
- dub1   | double precision     |
- dec1   | numeric              |
- r      | real                 |
- bg     | bigint               |
- b      | boolean              |
- tn     | smallint             |
- sml    | smallint             |
- dt     | date                 |
- vc1    | character varying(5) |
- c1     | character(3)         |
- bin    | bytea                |
-Type: readable
-Encoding: UTF8
-Format type: custom
-Format options: formatter 'pxfwritable_import'
-External options: {}
-External location: pxf://hive_types_all_columns_repeating_nulls_orc?PROFILE=hive:orc&VECTORIZE=true
-Execute on: all segments
 
 SELECT * FROM pxf_hive_orc_vectorize_repeating_nulls ORDER BY t1;
  t1  | t2  | num1 | dub1 | dec1 |  r  | bg  |  b  | tn  | sml | dt  | vc1 | c1  | bin
