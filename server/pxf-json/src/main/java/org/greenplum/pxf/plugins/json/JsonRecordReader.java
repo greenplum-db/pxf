@@ -127,10 +127,12 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             boolean foundBeginObject = scanToFirstBeginObject();
 
             if (!foundBeginObject) {
+                // if we've read all the way to the end and didn't find something, update the pos and move on
+                pos = linePos;
                 return false;
             }
-            // found an object, so we will either return a completed object or be mid-object
 
+            // found an object, so we will either return a completed object or be mid-object
             // found a start brace so begin a new json object
             parser.startNewJsonObject();
 
@@ -149,8 +151,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
             }
 
-            long unreadChars = currentLineBuffer.length() - currentLineIndex - 1;
-            pos = linePos - unreadChars;
+            long unreadCharsInBuffer = currentLineBuffer.length() - currentLineIndex;
+            pos = linePos - unreadCharsInBuffer;
 
             if (completedObject && parser.foundObjectWithIdentifier()) {
                 String json = jsonObject.toString();

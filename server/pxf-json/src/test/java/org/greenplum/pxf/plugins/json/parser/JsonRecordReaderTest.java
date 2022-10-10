@@ -93,9 +93,9 @@ public class JsonRecordReaderTest {
         // it discards the previous read data but keeps track of the bytes read.
 
         // since we read the entire line to get the position, we will include whatever newline/carriage return characters that were read
-        assertEquals(186, jsonRecordReader.getPos() - start);
+        assertEquals(184, jsonRecordReader.getPos() - start);
 
-        // The second record started with in the first split boundry so it will read the full second record.
+        // The second record started with in the first split boundary so it will read the full second record.
         assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"yī\", \"year\": \"2020\", \"address\": \"anöther city\", \"zip\": \"12345\"}", data.toString());
     }
 
@@ -276,7 +276,7 @@ public class JsonRecordReaderTest {
         // split 1
         fileSplit = new FileSplit(path, 0, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
@@ -289,7 +289,7 @@ public class JsonRecordReaderTest {
         // split 2
         fileSplit = new FileSplit(path, 100, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
@@ -300,7 +300,7 @@ public class JsonRecordReaderTest {
         // split 3
         fileSplit = new FileSplit(path, 200, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
@@ -312,7 +312,7 @@ public class JsonRecordReaderTest {
         // split 4
         fileSplit = new FileSplit(path, 300, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
@@ -322,13 +322,25 @@ public class JsonRecordReaderTest {
         // split 5
         fileSplit = new FileSplit(path, 400, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
 
         assertEquals(5, recordCount);
         assertFalse(jsonRecordReader.next(key, data));
+        assertEquals(558, jsonRecordReader.getPos());
+
+        // split 6
+        fileSplit = new FileSplit(path, 500, 100, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data)) {
+            assertNotNull(data);
+            recordCount++;
+        }
+        assertEquals(5, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        /// no objects found, but reads \n and ending bracket
         assertEquals(559, jsonRecordReader.getPos());
     }
 
@@ -336,14 +348,13 @@ public class JsonRecordReaderTest {
     public void testStraddleSplitSmallSplitSize() throws URISyntaxException, IOException {
 
         // each record is about 100 char
-        // line 1 is open array bracket - 2 bytes
-        // line 2 has half a record - 69 bytes
-        // line 3 has the remaining half, and a full record -- 224 bytes
-        // line 4 has half a record -- 292 bytes
-        // line 5 has remaining half, a full record, and another half -- 511 bytes
-        // line 6 has the last half record -- 565 bytes
-        // line 7 is closing array bracket -- 567 bytes
-        // search for a non-matching member in the file
+        //   2 line 1 is open array bracket - 2 bytes
+        //  69 line 2 has half a record - 67 bytes
+        // 224 line 3 has the remaining half, and a full record -- 155 bytes
+        // 292 line 4 has half a record -- 68 bytes
+        // 511 line 5 has remaining half, a full record, and another half -- 219 bytes
+        // 566 line 6 has the last half record -- 55 bytes
+        // 567 line 7 is closing array bracket -- 1 bytes
         jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüstömerstätüs");
         file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/straddle_split.json").toURI());
         path = new Path(file.getPath());
@@ -354,7 +365,7 @@ public class JsonRecordReaderTest {
         // split 1 (starts line 1 continues into line 2, should read into line 3 to finish the object)
         fileSplit = new FileSplit(path, 0, 50, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
@@ -362,12 +373,12 @@ public class JsonRecordReaderTest {
         assertEquals(1, recordCount);
         assertFalse(jsonRecordReader.next(key, data));
         // reads the full second line... even if it doesn't use the full line
-        assertEquals(121, jsonRecordReader.getPos());
+        assertEquals(120, jsonRecordReader.getPos());
 
         // split 2 (starts mid line 2 continues into line 3, skip incomplete object and read full object)
         fileSplit = new FileSplit(path, 50, 50, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
@@ -375,12 +386,12 @@ public class JsonRecordReaderTest {
         assertEquals(2, recordCount);
         assertFalse(jsonRecordReader.next(key, data));
         // expected to go into next split to finish the second object
-        assertEquals(223, jsonRecordReader.getPos());
+        assertEquals(224, jsonRecordReader.getPos());
 
         // split 3 (starts mid line 3) no change
         fileSplit = new FileSplit(path, 100, 50, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
@@ -389,7 +400,7 @@ public class JsonRecordReaderTest {
         // split 4 (starts mid line 3) no change
         fileSplit = new FileSplit(path, 150, 50, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
@@ -398,22 +409,39 @@ public class JsonRecordReaderTest {
         // split 5 (starts mid line 3, reads into line 4)
         fileSplit = new FileSplit(path, 200, 50, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
         assertEquals(3, recordCount);
         assertFalse(jsonRecordReader.next(key, data));
-        assertEquals(367, jsonRecordReader.getPos());
+        assertEquals(366, jsonRecordReader.getPos());
 
-        // split 6 (starts mid line 4, split continues into line 5, reads until end of file)
+        // split 6 (starts mid line 4, split continues into line 5,)
         fileSplit = new FileSplit(path, 250, 50, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
-        // there should be no change because split 4 took care of the rest of the file
+        // there should be no change because split 6 took care of the rest of the file
+        assertEquals(5, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        // finished reading the object but not necessarily the file
+        assertEquals(565, jsonRecordReader.getPos());
+
+        // split 7 - 12 should have no new records to count
+        for (int start=300; start<600; start+=50) {
+            fileSplit = new FileSplit(path, start, 50, hosts);
+            jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+            while (jsonRecordReader.next(key, data)) {
+                assertNotNull(data);
+                recordCount++;
+            }
+            assertEquals(5, recordCount);
+            assertFalse(jsonRecordReader.next(key, data));
+        }
+
         assertEquals(5, recordCount);
         assertFalse(jsonRecordReader.next(key, data));
         assertEquals(567, jsonRecordReader.getPos());
@@ -441,19 +469,19 @@ public class JsonRecordReaderTest {
         // split 1 (starts line 1, ends mid line 3 in second object)
         fileSplit = new FileSplit(path, 0, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
 
         assertEquals(2, recordCount);
         assertFalse(jsonRecordReader.next(key, data));
-        assertEquals(223, jsonRecordReader.getPos());
+        assertEquals(224, jsonRecordReader.getPos());
 
         // split 2 (starts mid line 3) no change
         fileSplit = new FileSplit(path, 100, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
@@ -462,23 +490,39 @@ public class JsonRecordReaderTest {
         // split 3 (starts mid line 3, reads into line 4 reads until end of file)
         fileSplit = new FileSplit(path, 200, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
         assertEquals(5, recordCount);
         assertFalse(jsonRecordReader.next(key, data));
-        assertEquals(567, jsonRecordReader.getPos());
+        assertEquals(565, jsonRecordReader.getPos());
 
         // split 4 (starts mid line 4, reads until end of file)
         fileSplit = new FileSplit(path, 300, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
-        while (jsonRecordReader.next(key, data))   {
+        while (jsonRecordReader.next(key, data)) {
+            assertNotNull(data);
+            recordCount++;
+        }
+        // split 5 (starts mid line 4, reads until end of file)
+        fileSplit = new FileSplit(path, 400, 100, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data)) {
+            assertNotNull(data);
+            recordCount++;
+        }
+        // split 6 (starts mid line 4, reads until end of file)
+        fileSplit = new FileSplit(path, 500, 100, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        while (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
             recordCount++;
         }
         // there should be no change because split 3 took care of the rest of the file
         assertEquals(5, recordCount);
+        assertFalse(jsonRecordReader.next(key, data));
+        assertEquals(567, jsonRecordReader.getPos());
     }
 
     @Test
