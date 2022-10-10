@@ -64,17 +64,8 @@ public class ParquetWriteTest extends BaseFeature {
     };
     private static final String[] UNDEFINED_PRECISION_NUMERIC = new String[]{
             "description   text",
-            "value         numeric"};
-    private static final String[] PARQUET_TABLE_COLUMNS_SUBSET = new String[]{
-            "s1    TEXT",
-            "n1    INTEGER",
-            "d1    DOUBLE PRECISION",
-            "f     REAL",
-            "b     BOOLEAN",
-            "vc1   VARCHAR(5)",
-            "bin   BYTEA"
+            "value         numeric"
     };
-
 
     // HIVE Parquet array vectorization read currently doesn't support TIMESTAMP and INTERVAL_DAY_TIME
     //https://github.com/apache/hive/blob/master/ql/src/java/org/apache/hadoop/hive/ql/io/parquet/vector/VectorizedParquetRecordReader.java
@@ -134,8 +125,6 @@ public class ParquetWriteTest extends BaseFeature {
 //            "timestamptz_arr      TIMESTAMPTZ[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
             "numeric_arr          NUMERIC[]"    , // DataType.NUMERICARRAY
     };
-
-    private static final boolean[] NO_NULLS = new boolean[PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS.length - 1];
 
     private String hdfsPath;
     private ProtocolEnum protocol;
