@@ -562,33 +562,35 @@ add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
 	int			   number;
 	int			   numTargetList;
 	char			long_number[sizeof(int32) * 8];
-	//int				*varNumbers = projInfo->pi_varNumbers;
+    // In versions < 120000, projInfo->pi_varNumbers contains atttribute numbers of SimpleVars
+    // Since,this pi_varNumbers doesn't exist in PG12 and above, we can add the attribute numbers by
+    // iterating on the Simple vars.
+	int				varNumbers[sizeof(int32) * 8];
 	Bitmapset		*attrs_used;
 	StringInfoData	formatter;
 	TupleDesc		tupdesc;
-    ExprEvalStep step;
 	initStringInfo(&formatter);
 	numTargetList = 0;
 
 	 List *targetList = (List *) projInfo->pi_state.expr;
      int  numSimpleVars = 0;
 
-#if PG_VERSION_NUM >= 90400
-
 	int numNonSimpleVars = 0;
 
+    // TODO Re-evaluate this logic and may be we don't need numNonSimpleVars
 	 for (int i = 0; i < projInfo->pi_state.steps_len; i++)
      {
-             step = projInfo->pi_state.steps[i];
-             if (step.opcode == EEOP_ASSIGN_INNER_VAR ||
-                     step.opcode == EEOP_ASSIGN_OUTER_VAR ||
-                     step.opcode == EEOP_ASSIGN_SCAN_VAR)
+         ExprEvalStep *step = &projInfo->pi_state.steps[i];
+         ExprEvalOp	opcode = ExecEvalStepOp(&projInfo->pi_state, step);
+             if ( opcode == EEOP_ASSIGN_INNER_VAR ||
+                     opcode == EEOP_ASSIGN_OUTER_VAR ||
+                     opcode == EEOP_ASSIGN_SCAN_VAR)
                      numSimpleVars++;
-             else if (step.opcode == EEOP_ASSIGN_TMP_MAKE_RO ||
-                              step.opcode == EEOP_ASSIGN_TMP)
+             else if (opcode == EEOP_ASSIGN_TMP_MAKE_RO ||
+                        opcode == EEOP_ASSIGN_TMP)
                      numNonSimpleVars++;
      }
-      int * varNumbers = &numNonSimpleVars;
+
 	/*
 	 * Non-simpleVars are added to the targetlist
 	 * we use expression_tree_walker to access attrno information
@@ -596,15 +598,7 @@ add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
 	 */
 	if (targetList)
 	{
-#else
 
-	if (numNonSimpleVars > 0)
-	{
-		/*
-		 * When there are not just simple Vars we need to
-		 * walk the tree to get attnums
-		 */
-#endif
 		List     *l = lappend_int(NIL, 0);
 		ListCell *lc1;
 
@@ -614,6 +608,7 @@ add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
             add_attnums_from_targetList( (Node *) gstate, l);
 		}
 
+        int i=0;
 		foreach(lc1, l)
 		{
 			int attno = lfirst_int(lc1);
@@ -622,6 +617,8 @@ add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
 				add_projection_index_header(headers,
 											formatter, attno - 1, long_number);
 				numTargetList++;
+                varNumbers[i] = attno;
+                i++;
 			}
 		}
 
@@ -638,11 +635,11 @@ add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
 	pg_ltoa(number, long_number);
 	churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
 
-    for (i = 0; varNumbers && i < numSimpleVars ; i++)
+    for (i = 0;varNumbers && i < numSimpleVars ; i++)
 	{
 		attrs_used =
 			bms_add_member(attrs_used,
-						 varNumbers[i] - FirstLowInvalidHeapAttributeNumber);
+                           varNumbers[i] - FirstLowInvalidHeapAttributeNumber);
 	}
 
 	ListCell *attribute = NULL;
