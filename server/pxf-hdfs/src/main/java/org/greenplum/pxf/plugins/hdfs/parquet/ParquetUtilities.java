@@ -65,7 +65,7 @@ public class ParquetUtilities {
      * @return
      */
     private Object decodeString(String val, PrimitiveType.PrimitiveTypeName primitiveTypeName, LogicalTypeAnnotation logicalTypeAnnotation) {
-        if (val == null || val.equals("null")) {
+        if (val == null) {
             return null;
         }
         switch (primitiveTypeName) {
