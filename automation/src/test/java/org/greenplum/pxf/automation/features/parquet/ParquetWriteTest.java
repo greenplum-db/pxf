@@ -89,19 +89,19 @@ public class ParquetWriteTest extends BaseFeature {
     };
 
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = {
-            "id                   integer"      ,
-            "bool_arr             array<boolean>"    , // DataType.BOOLARRAY
+            "id                   integer"                  ,
+            "bool_arr             array<boolean>"           , // DataType.BOOLARRAY
 //            "bytea_arr            array<binary>"      , // DataType.BYTEAARRAY  // not correct
-            "bigint_arr           array<bigint>"     , // DataType.INT8ARRAY
-            "smallint_arr         array<smallint>"   , // DataType.INT2ARRAY
-            "int_arr              array<int>"    , // DataType.INT4ARRAY
-            "text_arr             array<string>"       , // DataType.TEXTARRAY
-            "real_arr             array<float>"       , // DataType.FLOAT4ARRAY
-            "double_arr            array<double>"      , // DataType.FLOAT8ARRAY
-            "char_arr             array<char(7)>"    , // DataType.BPCHARARRAY
-            "varchar_arr          array<varchar(8)>" , // DataType.VARCHARARRAY
+            "bigint_arr           array<bigint>"            , // DataType.INT8ARRAY
+            "smallint_arr         array<smallint>"          , // DataType.INT2ARRAY
+            "int_arr              array<int>"               , // DataType.INT4ARRAY
+            "text_arr             array<string>"            , // DataType.TEXTARRAY
+            "real_arr             array<float>"             , // DataType.FLOAT4ARRAY
+            "double_arr            array<double>"           , // DataType.FLOAT8ARRAY
+            "char_arr             array<char(7)>"           , // DataType.BPCHARARRAY
+            "varchar_arr          array<varchar(8)>"        , // DataType.VARCHARARRAY
             "varchar_arr_nolimit  array<varchar(65535)>"    , // DataType.VARCHARARRAY with no length limit, varchar length must be in the range [1, 65535]
-            "date_arr             array<date>"       , // DataType.DATEARRAY
+            "date_arr             array<date>"              , // DataType.DATEARRAY
 //            "timestamp_arr        array<timestamp>"  , // DataType.TIMESTAMPARRAY
 //           "timestamptz_arr      timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
             "numeric_arr          array<decimal(38,18)>"    , // DataType.NUMERICARRAY
@@ -199,7 +199,7 @@ public class ParquetWriteTest extends BaseFeature {
         prepareWritableExternalTable(gpdbTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS, fullTestPath, null);
         insertArrayDataWithoutNulls(gpdbTableName, 33);
 
-        // load the data into hive to check that PXF-written ORC files can be read by other data
+        // load the data into hive to check that PXF-written Parquet files can be read by other data
         String hiveExternalTableName=gpdbTableName+"_external";
         hiveTable = new HiveExternalTable(hiveExternalTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE, "hdfs:/" + fullTestPath);
         hiveTable.setStoredAs("PARQUET");
@@ -228,7 +228,7 @@ public class ParquetWriteTest extends BaseFeature {
         hive.runQuery("DROP TABLE IF EXISTS " + hiveTable.getFullName() + "_ctas");
         hive.runQuery(ctasHiveQuery);
 
-        // use the Hive JDBC profile to avoid using the PXF ORC reader implementation
+        // use the Hive JDBC profile to avoid using the PXF Parquet reader implementation
         String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
         ExternalTable exHiveJdbcTable = TableFactory.getPxfJdbcReadableTable(
                 gpdbTableName + "_readable", PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE,
@@ -257,33 +257,6 @@ public class ParquetWriteTest extends BaseFeature {
         runWritePrimitiveScenario("pxf_parquet_write_primitives_gzip_classname", "pxf_parquet_read_primitives_gzip_classname", PARQUET_WRITE_PRIMITIVES_GZIP_CLASSNAME, new String[]{"COMPRESSION_CODEC=org.apache.hadoop.io.compress.GzipCodec"});
     }
 
-    private void runWritePrimitiveScenario(String writeTableName, String readTableName,
-                                           String filename, String[] userParameters) throws Exception {
-        prepareWritableExternalTable(writeTableName,
-                PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + filename, userParameters);
-        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT s1, s2, n1, d1, dc1, tm, " +
-                "f, bg, b, tn, vc1, sml, c1, bin FROM " + PXF_PARQUET_TABLE);
-
-        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
-            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
-            sleep(10000);
-            List<String> files = hdfs.list(hdfsPath + filename);
-            for (String file : files) {
-                // make sure the file is available, saw flakes on Cloud that listed files were not available
-                int attempts = 0;
-                while (!hdfs.doesFileExist(file) && attempts++ < 20) {
-                    sleep(1000);
-                }
-            }
-        }
-        prepareReadableExternalTable(readTableName,
-                PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + filename);
-        gpdb.runQuery("CREATE OR REPLACE VIEW parquet_view AS SELECT s1, s2, n1, d1, dc1, " +
-                "CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm, " +
-                "f, bg, b, tn, sml, vc1, c1, bin FROM " + readTableName);
-
-        runTincTest("pxf.features.parquet.primitive_types.runTest");
-    }
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteUndefinedPrecisionNumeric() throws Exception {
 
@@ -322,6 +295,34 @@ public class ParquetWriteTest extends BaseFeature {
         runTincTest("pxf.features.parquet.decimal.numeric.runTest");
     }
 
+    private void runWritePrimitiveScenario(String writeTableName, String readTableName,
+                                           String filename, String[] userParameters) throws Exception {
+        prepareWritableExternalTable(writeTableName,
+                PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + filename, userParameters);
+        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT s1, s2, n1, d1, dc1, tm, " +
+                "f, bg, b, tn, vc1, sml, c1, bin FROM " + PXF_PARQUET_TABLE);
+
+        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
+            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+            sleep(10000);
+            List<String> files = hdfs.list(hdfsPath + filename);
+            for (String file : files) {
+                // make sure the file is available, saw flakes on Cloud that listed files were not available
+                int attempts = 0;
+                while (!hdfs.doesFileExist(file) && attempts++ < 20) {
+                    sleep(1000);
+                }
+            }
+        }
+        prepareReadableExternalTable(readTableName,
+                PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + filename);
+        gpdb.runQuery("CREATE OR REPLACE VIEW parquet_view AS SELECT s1, s2, n1, d1, dc1, " +
+                "CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm, " +
+                "f, bg, b, tn, sml, vc1, c1, bin FROM " + readTableName);
+
+        runTincTest("pxf.features.parquet.primitive_types.runTest");
+    }
+
     private void prepareReadableExternalTable(String name, String[] fields, String path) throws Exception {
         exTable = new ReadableExternalTable(name, fields,
                 protocol.getExternalTablePath(hdfs.getBasePath(), path), "custom");
@@ -341,7 +342,8 @@ public class ParquetWriteTest extends BaseFeature {
         createTable(exTable);
     }
     private void insertArrayDataWithoutNulls(String exTable, int numRows) throws Exception {
-        String insertStatement = "INSERT INTO " + exTable + " VALUES ";
+        StringBuilder insertStatement = new StringBuilder();
+        insertStatement.append("INSERT INTO " + exTable + " VALUES ");
         for (int i = 0; i < numRows; i++) {
             StringJoiner statementBuilder = new StringJoiner(",", "(", ")")
                     .add(String.valueOf(i))    // always not-null row index, column index starts with 0 after it
@@ -360,8 +362,8 @@ public class ParquetWriteTest extends BaseFeature {
 //                    .add(String.format("'{\"2013-07-13 21:00:05.%03d456\"}'", i % 1000))           // DataType.TIMESTAMPARRAY
                     .add(String.format("'{12345678900000.00000%s}'", i))                           // DataType.NUMERICARRAY
                     ;
-            insertStatement += statementBuilder.toString().concat((i < (numRows - 1)) ? "," : ";");
+            insertStatement.append(statementBuilder.toString().concat((i < (numRows - 1)) ? "," : ";"));
         }
-        gpdb.runQuery(insertStatement);
+        gpdb.runQuery(insertStatement.toString());
     }
 }
