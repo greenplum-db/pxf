@@ -81,7 +81,6 @@ public class JsonRecordReaderSeekNoSeekTest {
         }
     }
 
-
     @Test
     public void testNoSeek() throws IOException {
         File testsDir = new File("src/test/resources/parser-tests/noseek");

@@ -1,6 +1,5 @@
 package org.greenplum.pxf.plugins.json;
 
-import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;

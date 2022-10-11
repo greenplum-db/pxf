@@ -204,10 +204,13 @@ public class JsonRecordReaderTest {
 
         key = createKey();
         data = createValue();
+        int recordCount = 0;
         if (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
+            recordCount++;
         }
 
+        assertEquals(0, recordCount);
         assertFalse(jsonRecordReader.next(key, data));
         // This will return count of all the bytes in the file
         assertEquals(553, jsonRecordReader.getPos());
@@ -227,10 +230,13 @@ public class JsonRecordReaderTest {
 
         key = createKey();
         data = createValue();
+        int recordCount = 0;
         if (jsonRecordReader.next(key, data)) {
             assertNotNull(data);
+            recordCount++;
         }
 
+        assertEquals(0, recordCount);
         assertFalse(jsonRecordReader.next(key, data));
         // This will return count of all the bytes read to finish the object for that split
         assertEquals(109, jsonRecordReader.getPos());
@@ -282,6 +288,8 @@ public class JsonRecordReaderTest {
         }
 
         assertEquals(2, recordCount);
+        // the second record should be the following
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"yī\", \"year\": \"2020\", \"address\": \"anöther city\", \"zip\": \"12345\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
         // expected to go into next split to finish the second object
         assertEquals(220, jsonRecordReader.getPos());
@@ -306,6 +314,7 @@ public class JsonRecordReaderTest {
         }
 
         assertEquals(4, recordCount);
+        assertEquals("{\"cüstömerstätüs\":\"välid\",\"name\": \"हिमांशु\", \"year\": \"1234\", \"address\": \"Same ₡i\uD804\uDC13y\", \"zip\": \"00010\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
         assertEquals(454, jsonRecordReader.getPos());
 
@@ -328,6 +337,8 @@ public class JsonRecordReaderTest {
         }
 
         assertEquals(5, recordCount);
+        // the last record should be the following:
+        assertEquals("{\"cüstömerstätüs\":\"välid\",\"name\": \"你好\", \"year\": \"2033\", \"address\": \"0\uD804\uDC13a\", \"zip\": \"19348\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
         assertEquals(558, jsonRecordReader.getPos());
 
@@ -371,6 +382,8 @@ public class JsonRecordReaderTest {
         }
 
         assertEquals(1, recordCount);
+        assertEquals("{\"cüstömerstätüs\":\"välid\",\"name\": \"äää\", \"year\": \"2022\",\n" +
+                "    \"address\": \"söme city\", \"zip\": \"95051\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
         // reads the full second line... even if it doesn't use the full line
         assertEquals(120, jsonRecordReader.getPos());
@@ -384,6 +397,7 @@ public class JsonRecordReaderTest {
         }
 
         assertEquals(2, recordCount);
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"yī\", \"year\": \"2020\", \"address\": \"anöther city\", \"zip\": \"12345\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
         // expected to go into next split to finish the second object
         assertEquals(224, jsonRecordReader.getPos());
@@ -414,6 +428,8 @@ public class JsonRecordReaderTest {
             recordCount++;
         }
         assertEquals(3, recordCount);
+        assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"₡¥\", \"year\": \"2022\",\n" +
+                "    \"address\": \"\uD804\uDC13exas\", \"zip\": \"12345\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
         assertEquals(366, jsonRecordReader.getPos());
 
@@ -426,6 +442,9 @@ public class JsonRecordReaderTest {
         }
         // there should be no change because split 6 took care of the rest of the file
         assertEquals(5, recordCount);
+        // the last record should be the following:
+        assertEquals("{\"cüstömerstätüs\":\"välid\",\"name\": \"你好\",\n" +
+                "  \"year\": \"2033\", \"address\": \"0\uD804\uDC13a\", \"zip\": \"19348\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
         // finished reading the object but not necessarily the file
         assertEquals(565, jsonRecordReader.getPos());

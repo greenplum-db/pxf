@@ -1,6 +1,5 @@
 package org.greenplum.pxf.plugins.s3;
 
-import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;

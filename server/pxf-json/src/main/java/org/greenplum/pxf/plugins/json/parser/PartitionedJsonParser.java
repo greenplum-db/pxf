@@ -24,11 +24,8 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
-
 
 /**
  * A simple parser that can support reading JSON objects from a random point in JSON text. It reads from the supplied
@@ -49,8 +46,6 @@ public class PartitionedJsonParser {
 	private StringBuilder currentString;
 	private int objectCount;
 	private List<Integer> objectStack;
-
-	private static final Log LOG = LogFactory.getLog(PartitionedJsonParser.class);
 
 	public PartitionedJsonParser(String memberName) {
 		this.lexer = new JsonLexer();

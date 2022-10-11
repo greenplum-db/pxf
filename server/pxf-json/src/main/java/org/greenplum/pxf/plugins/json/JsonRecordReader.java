@@ -72,8 +72,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private static final char START_BRACE = '{';
     private static final int EOF = -1;
     private static final int END_OF_SPLIT = -2;
-    private final byte[] newLine = "\n".getBytes(StandardCharsets.UTF_8);
-    private final byte[] newLineCarriageReturn = "\n\r".getBytes(StandardCharsets.UTF_8);
+    private final byte[] NEW_LINE = "\n".getBytes(StandardCharsets.UTF_8);
+    private final byte[] CARRIAGERETURN_NEWLINE = "\r\n".getBytes(StandardCharsets.UTF_8);
 
     /**
      * Create new multi-line json object reader.
@@ -292,10 +292,10 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             long delta = linePos - currentPos - currentLine.getLength();
             // append the removed chars back for proper accounting
             if (delta == 2) {
-                currentLine.append(newLineCarriageReturn, 0, newLineCarriageReturn.length);
+                currentLine.append(CARRIAGERETURN_NEWLINE, 0, CARRIAGERETURN_NEWLINE.length);
             }
             if (delta == 1) {
-                currentLine.append(newLine, 0, newLine.length);
+                currentLine.append(NEW_LINE, 0, NEW_LINE.length);
             }
             if (delta >= 3) {
                 LOG.debug("LineRecordReader removed more characters than expected");
