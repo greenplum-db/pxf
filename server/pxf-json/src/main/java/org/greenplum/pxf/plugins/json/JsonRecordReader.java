@@ -119,7 +119,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     public boolean next(LongWritable key, Text value) throws IOException {
 
         while (!inNextSplit) { // split level. if out of split, then return false
-            int i = Integer.MAX_VALUE;
+            int i;
             // object to pass in for streaming
             Text jsonObject = new Text();
             boolean completedObject = false;
@@ -151,6 +151,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
             }
 
+            // we've completed an object but there might still be things in the buffer. Calculate the proper
+            // position of the JsonRecordReader
             long unreadCharsInBuffer = currentLineBuffer.length() - currentLineIndex;
             pos = linePos - unreadCharsInBuffer;
 
@@ -212,6 +214,11 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         }
     }
 
+    /**
+     * Reads the next character in the buffer. It will pull the next line as necessary
+     * @return the int value of a character
+     * @throws IOException
+     */
     private int readNextChar() throws IOException {
         boolean getNext;
         // if we are at the end of the buffer, refresh
@@ -229,8 +236,12 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
     }
 
+    /**
+     * Read through the characters until we hit starting bracket that indicates the start of a JSON object
+     * @return true when an open bracket '{' is found, false otherwise
+     * @throws IOException
+     */
     private boolean scanToFirstBeginObject() throws IOException {
-        // "ke{y" : {"val\"ue"
         // assumes each line is a valid json line
         // seek until we hit the first begin-object
         boolean inString = false;
@@ -249,6 +260,12 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         return false;
     }
 
+    /**
+     * This function allows JsonRecordReader to go into the next split to finish a JSON object.
+     *   Closes the current LineRecordReader and opens a new one that starts at the end of the current split
+     *  The end of the new split is set to Long.MAX
+     * @throws IOException
+     */
     private void getNextSplit() throws IOException {
         // close the old lineRecordReader
         lineRecordReader.close();
@@ -259,25 +276,29 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         inNextSplit = true;
     }
 
+    /**
+     * Reads the next line of the file in to begin parsing the characters
+     * @return
+     * @throws IOException
+     */
     private boolean getNextLine() throws IOException {
         currentLine.clear();
         long currentPos = lineRecordReader.getPos();
         boolean getNext = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
         linePos = lineRecordReader.getPos();
         if (getNext) {
-            // lineRecordReader removes the new lines, carriage returns, etc when it does the read
+            // lineRecordReader removes the new lines and carriage returns when it does the read
             // we want to track that delta so we know the proper size of the line that was returned
             long delta = linePos - currentPos - currentLine.getLength();
+            // append the removed chars back for proper accounting
             if (delta == 2) {
-                // lineRecordReader removes the \n when it does the read, we want to keep it in
                 currentLine.append(newLineCarriageReturn, 0, newLineCarriageReturn.length);
             }
             if (delta == 1) {
                 currentLine.append(newLine, 0, newLine.length);
             }
             if (delta >= 3) {
-                LOG.debug("Read some additional characters that were not parsed in the line.");
-                throw new IOException("WHAT");
+                LOG.debug("LineRecordReader removed more characters than expected");
             }
             currentLineBuffer = new StringBuffer(currentLine.toString());
             currentLineIndex = 0;
