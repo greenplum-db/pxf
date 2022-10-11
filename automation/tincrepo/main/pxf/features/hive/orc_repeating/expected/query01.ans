@@ -1,9 +1,6 @@
 -- start_ignore
 -- end_ignore
 -- @description query01 for PXF Hive ORC vectorized with repeating data cases
--- start_matchsubs
---
--- end_matchsubs
 
 \pset null 'NIL'
 Null display is "NIL".
