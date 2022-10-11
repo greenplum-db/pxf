@@ -7,3 +7,11 @@ SELECT * from jsontest_missing_identifier ORDER BY id;
  Fri Jun 07 22:45:02 +0000 2013 | 343136547123646465 | text2 | patronusdeadly   |                      |                            |                           
  Fri Jun 07 22:45:02 +0000 2013 | 343136547136233472 | text3 | NoSecrets_Vagas  |                      |                            |                           
 (3 rows)
+
+SELECT * from jsontest_missing_identifier_filefrag ORDER BY id;
+           created_at           |         id         | text  | user.screen_name | entities.hashtags[0] | coordinates.coordinates[0] | coordinates.coordinates[1]
+--------------------------------+--------------------+-------+------------------+----------------------+----------------------------+----------------------------
+ Fri Jun 07 22:45:02 +0000 2013 | 343136547115253761 | text1 | SpreadButter     | tweetCongress        |                            |
+ Fri Jun 07 22:45:02 +0000 2013 | 343136547123646465 | text2 | patronusdeadly   |                      |                            |
+ Fri Jun 07 22:45:02 +0000 2013 | 343136547136233472 | text3 | NoSecrets_Vagas  |                      |                            |
+(3 rows)

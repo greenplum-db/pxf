@@ -19,3 +19,9 @@ FROM jsontest_malformed_record
 ORDER BY id;
 ERROR:  extra data after last expected column
 CONTEXT:  External table jsontest_malformed_record, pxf://pxf_automation_data/tweets-broken.json?PROFILE=json&IDENTIFIER=created_at: ",,,,,,,"error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma t..."
+
+SELECT *
+FROM jsontest_malformed_record_filefrag
+ORDER BY id;
+ERROR:  extra data after last expected column
+CONTEXT:  External table jsontest_malformed_record_filefrag, pxf://pxf_automation_data/tweets-broken.json?PROFILE=json&IDENTIFIER=created_at&USE_PARALLEL_READ=false: ",,,,,,,"error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma t..."

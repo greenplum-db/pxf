@@ -17,3 +17,7 @@
 SELECT *
 FROM jsontest_malformed_record
 ORDER BY id;
+
+SELECT *
+FROM jsontest_malformed_record_filefrag
+ORDER BY id;

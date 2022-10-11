@@ -187,6 +187,12 @@ public class JsonTest extends BaseFeature {
         prepareExternalTable("jsontest_pretty_print", TWEETS_FIELDS, hdfsPath + FILENAME_PRETTY_PRINT + SUFFIX_JSON, "custom");
         exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
         gpdb.createTableAndVerify(exTable);
+
+        prepareExternalTable("jsontest_pretty_print_filefrag", TWEETS_FIELDS, hdfsPath + FILENAME_PRETTY_PRINT + SUFFIX_JSON, "custom");
+        exTable.setUserParameters(new String[]{
+                "IDENTIFIER=created_at",
+                "USE_PARALLEL_READ=false"});
+        gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.pretty_print.runTest");
     }
@@ -202,6 +208,12 @@ public class JsonTest extends BaseFeature {
         prepareExternalTable("jsontest_missing_identifier", TWEETS_FIELDS, hdfsPath + FILENAME_PRETTY_PRINT_W_DELETE + SUFFIX_JSON, "custom");
         exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
         gpdb.createTableAndVerify(exTable);
+
+        prepareExternalTable("jsontest_missing_identifier_filefrag", TWEETS_FIELDS, hdfsPath + FILENAME_PRETTY_PRINT_W_DELETE + SUFFIX_JSON, "custom");
+        exTable.setUserParameters(new String[]{
+                "IDENTIFIER=created_at",
+                "USE_PARALLEL_READ=false"});
+        gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.missing_identifier.runTest");
     }
@@ -215,6 +227,13 @@ public class JsonTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void exceedsMaxSize() throws Exception {
         prepareExternalTable("jsontest_max_size", TWEETS_FIELDS, hdfsPath + FILENAME_PRETTY_PRINT + SUFFIX_JSON, "custom");
+        exTable.setUserParameters(new String[]{
+                "IDENTIFIER=created_at",
+                "MAXLENGTH=566",
+                "USE_PARALLEL_READ=false"});
+        gpdb.createTableAndVerify(exTable);
+
+        prepareExternalTable("jsontest_max_size_filefrag", TWEETS_FIELDS, hdfsPath + FILENAME_PRETTY_PRINT + SUFFIX_JSON, "custom");
         exTable.setUserParameters(new String[]{
                 "IDENTIFIER=created_at",
                 "MAXLENGTH=566"});
@@ -235,6 +254,12 @@ public class JsonTest extends BaseFeature {
         prepareExternalTable("jsontest_malformed_record", TWEETS_FIELDS, hdfsPath + FILENAME_BROKEN + SUFFIX_JSON, "custom");
         exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
         gpdb.createTableAndVerify(exTable);
+
+        prepareExternalTable("jsontest_malformed_record_filefrag", TWEETS_FIELDS, hdfsPath + FILENAME_BROKEN + SUFFIX_JSON, "custom");
+        exTable.setUserParameters(new String[]{
+                "IDENTIFIER=created_at",
+                "USE_PARALLEL_READ=false"});
+        gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.malformed_record.runTest");
     }
@@ -250,6 +275,12 @@ public class JsonTest extends BaseFeature {
     public void malformedRecordWithCsvWireFormat() throws Exception {
         prepareExternalTable("jsontest_malformed_record", TWEETS_FIELDS, hdfsPath + FILENAME_BROKEN + SUFFIX_JSON, "CSV");
         exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
+        gpdb.createTableAndVerify(exTable);
+
+        prepareExternalTable("jsontest_malformed_record_filefrag", TWEETS_FIELDS, hdfsPath + FILENAME_BROKEN + SUFFIX_JSON, "CSV");
+        exTable.setUserParameters(new String[]{
+                "IDENTIFIER=created_at",
+                "USE_PARALLEL_READ=false"});
         gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.malformed_record_csv.runTest");
@@ -268,6 +299,14 @@ public class JsonTest extends BaseFeature {
         exTable.setSegmentRejectLimit(2);
         exTable.setErrorTable("true");
         gpdb.createTableAndVerify(exTable);
+
+        prepareExternalTable("jsontest_malformed_record_with_reject_limit", TWEETS_FIELDS, hdfsPath + FILENAME_BROKEN + SUFFIX_JSON, "custom");
+        exTable.setUserParameters(new String[]{
+                "IDENTIFIER=created_at",
+                "USE_PARALLEL_READ=false"});
+        exTable.setSegmentRejectLimit(2);
+        exTable.setErrorTable("true");
+        gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.malformed_record_with_reject_limit.runTest");
     }
@@ -282,6 +321,14 @@ public class JsonTest extends BaseFeature {
     public void malformedRecordWithRejectLimitWithCsvWireFormat() throws Exception {
         prepareExternalTable("jsontest_malformed_record_with_reject_limit", TWEETS_FIELDS, hdfsPath + FILENAME_BROKEN + SUFFIX_JSON, "CSV");
         exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
+        exTable.setSegmentRejectLimit(2);
+        exTable.setErrorTable("true");
+        gpdb.createTableAndVerify(exTable);
+
+        prepareExternalTable("jsontest_malformed_record_with_reject_limit_filefrag", TWEETS_FIELDS, hdfsPath + FILENAME_BROKEN + SUFFIX_JSON, "CSV");
+        exTable.setUserParameters(new String[]{
+                "IDENTIFIER=created_at",
+                "USE_PARALLEL_READ=false"});
         exTable.setSegmentRejectLimit(2);
         exTable.setErrorTable("true");
         gpdb.createTableAndVerify(exTable);
