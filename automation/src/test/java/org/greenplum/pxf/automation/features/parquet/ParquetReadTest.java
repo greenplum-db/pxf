@@ -23,6 +23,8 @@ public class ParquetReadTest extends BaseFeature {
     private static final String UNDEFINED_PRECISION_NUMERIC_FILENAME = "undefined_precision_numeric.csv";
     private static final String NUMERIC_FILENAME = "numeric_with_precision.csv";
 
+    private static final String PARQUET_LIST_FILE = "parquet_list_types.parquet";
+
     private static final String[] PARQUET_TABLE_COLUMNS = new String[]{
             "s1    TEXT",
             "s2    TEXT",
@@ -86,44 +88,31 @@ public class ParquetReadTest extends BaseFeature {
             "bin   BYTEA"
     };
 
-
-    private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS = {
-            "id                   INTEGER",
-            "bool_arr             BOOLEAN[]", // DataType.BOOLARRAY
-//            "bytea_arr            BYTEA[]"      , // DataType.BYTEAARRAY
-            "bigint_arr           BIGINT[]", // DataType.INT8ARRAY
-            "smallint_arr         SMALLINT[]", // DataType.INT2ARRAY
-            "int_arr              INTEGER[]", // DataType.INT4ARRAY
-            "text_arr             TEXT[]", // DataType.TEXTARRAY
-            "real_arr             REAL[]", // DataType.FLOAT4ARRAY
-            "double_arr           FLOAT[]", // DataType.FLOAT8ARRAY
-            "char_arr             CHAR(7)[]", // DataType.BPCHARARRAY
-            "varchar_arr          VARCHAR(8)[]", // DataType.VARCHARARRAY
-            "varchar_arr_nolimit  VARCHAR[]", // DataType.VARCHARARRAY with no length limit
-            "date_arr             DATE[]", // DataType.DATEARRAY
-//            "timestamp_arr        TIMESTAMP[]"  , // DataType.TIMESTAMPARRAY
-//            "timestamptz_arr      TIMESTAMPTZ[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
-            "numeric_arr          NUMERIC[]", // DataType.NUMERICARRAY
+    // parquet LIST data are generated using HIVE, but HIVE doesn't support TIMESTAMP for parquet LIST
+    private static final String[] PARQUET_LIST_TABLE_COLUMNS = {
+            "id                   INTEGER"      ,
+            "bool_arr             BOOLEAN[]"    , // DataType.BOOLARRAY
+            "smallint_arr         SMALLINT[]"   , // DataType.INT2ARRAY
+            "int_arr              INTEGER[]"    , // DataType.INT4ARRAY
+            "bigint_arr           BIGINT[]"     , // DataType.INT8ARRAY
+            "real_arr             REAL[]"       , // DataType.FLOAT4ARRAY
+            "double_arr           FLOAT[]"      , // DataType.FLOAT8ARRAY
+            "text_arr             TEXT[]"       , // DataType.TEXTARRAY
+            "bytea_arr            BYTEA[]"      , // DataType.BYTEAARRAY
+            "char_arr             CHAR(7)[]"    , // DataType.BPCHARARRAY
+            "varchar_arr          VARCHAR(8)[]" , // DataType.VARCHARARRAY
+            "date_arr             DATE[]"       , // DataType.DATEARRAY
+            "numeric_arr          NUMERIC[]"    , // DataType.NUMERICARRAY
+//            "varchar_arr_nolimit  VARCHAR[]"    , // DataType.VARCHARARRAY with no length limit
     };
 
-    private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = {
-            "id                   integer",
-            "bool_arr             array<boolean>", // DataType.BOOLARRAY
-//            "bytea_arr            array<binary>"      , // DataType.BYTEAARRAY  // not correct
-            "bigint_arr           array<bigint>", // DataType.INT8ARRAY
-            "smallint_arr         array<smallint>", // DataType.INT2ARRAY
-            "int_arr              array<int>", // DataType.INT4ARRAY
-            "text_arr             array<string>", // DataType.TEXTARRAY
-            "real_arr             array<float>", // DataType.FLOAT4ARRAY
-            "double_arr            array<double>", // DataType.FLOAT8ARRAY
-            "char_arr             array<char(7)>", // DataType.BPCHARARRAY
-            "varchar_arr          array<varchar(8)>", // DataType.VARCHARARRAY
-            "varchar_arr_nolimit  array<varchar(65535)>", // DataType.VARCHARARRAY with no length limit, varchar length must be in the range [1, 65535]
-            "date_arr             array<date>", // DataType.DATEARRAY
-//            "timestamp_arr        array<timestamp>"  , // DataType.TIMESTAMPARRAY
-//           "timestamptz_arr      timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
-            "numeric_arr          array<decimal(38,18)>", // DataType.NUMERICARRAY
+    // parquet TIMESTAMP LIST data generated using Spark
+    private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
+            "id                   INTEGER"      ,
+            "timestamp_arr        TIMESTAMP[]"  , // DataType.TIMESTAMPARRAY
+            "timestamptz_arr      TIMESTAMPTZ[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
     };
+
     private ProtocolEnum protocol;
 
 
@@ -193,6 +182,12 @@ public class ParquetReadTest extends BaseFeature {
         runTincTest("pxf.features.parquet.pushdown.runTest");
     }
 
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void parquetReadListGeneratedByHive() throws Exception {
+        prepareReadableExternalTable("pxf_parquet_read_list",
+                PARQUET_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_NUMERIC_FILE);
+//        runTincTest("pxf.features.parquet.decimal.numeric.runTest");
+    }
     private void prepareReadableExternalTable(String name, String[] fields, String path) throws Exception {
         exTable = TableFactory.getPxfHcfsReadableTable(name, fields, path, hdfs.getBasePath(), "parquet");
         createTable(exTable);
