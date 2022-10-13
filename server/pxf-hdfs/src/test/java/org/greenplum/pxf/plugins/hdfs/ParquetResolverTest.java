@@ -521,6 +521,69 @@ public class ParquetResolverTest {
 
     }
 
+    @Test
+    public void testGetFields_List() throws IOException {
+        schema = getParquetSchemaForListTypes(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL, true);
+        // schema has changed, set metadata again
+        context.setMetadata(schema);
+        context.setTupleDescription(getListColumnDescriptorsFromSchema(schema));
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        List<Group> groups = readParquetFile("parquet_list_types.parquet", 6, schema);
+        assertEquals(6, groups.size());
+
+        List<OneField> fields = assertRow(groups, 0, 13);
+//        //s1 : "row1" : TEXT
+//        assertField(fields, 0, "row1", DataType.TEXT);
+//        assertField(fields, 1, "s_6", DataType.TEXT);
+//        assertField(fields, 2, 1, DataType.INTEGER);
+//        assertField(fields, 3, 6.0d, DataType.FLOAT8);
+//        assertField(fields, 4, BigDecimal.valueOf(1234560000000000000L, 18), DataType.NUMERIC);
+//        assertField(fields, 5, localTimestampString, DataType.TIMESTAMP);
+//        assertField(fields, 6, 7.7f, DataType.REAL);
+//        assertField(fields, 7, 23456789L, DataType.BIGINT);
+//        assertField(fields, 8, false, DataType.BOOLEAN);
+//        assertField(fields, 9, (short) 1, DataType.SMALLINT);
+//        assertField(fields, 10, (short) 10, DataType.SMALLINT);
+//        assertField(fields, 11, "abcd", DataType.TEXT);
+//        assertField(fields, 12, "abc", DataType.TEXT);
+//        assertField(fields, 13, new byte[]{(byte) 49}, DataType.BYTEA); // 49 is the ascii code for '1'
+//        // Parquet only stores the Timestamp (timezone information was lost)
+//        assertField(fields, 14, localTimestampString, DataType.TIMESTAMP);
+//        // Parquet only stores the Timestamp (timezone information was lost)
+//        assertField(fields, 15, localTimestampString, DataType.TIMESTAMP);
+//
+//        // test nulls
+//        fields = assertRow(groups, 11, 16);
+//        assertField(fields, 1, null, DataType.TEXT);
+//        fields = assertRow(groups, 12, 16);
+//        assertField(fields, 2, null, DataType.INTEGER);
+//        fields = assertRow(groups, 13, 16);
+//        assertField(fields, 3, null, DataType.FLOAT8);
+//        fields = assertRow(groups, 14, 16);
+//        assertField(fields, 4, null, DataType.NUMERIC);
+//        fields = assertRow(groups, 15, 16);
+//        assertField(fields, 5, null, DataType.TIMESTAMP);
+//        fields = assertRow(groups, 16, 16);
+//        assertField(fields, 6, null, DataType.REAL);
+//        fields = assertRow(groups, 17, 16);
+//        assertField(fields, 7, null, DataType.BIGINT);
+//        fields = assertRow(groups, 18, 16);
+//        assertField(fields, 8, null, DataType.BOOLEAN);
+//        fields = assertRow(groups, 19, 16);
+//        assertField(fields, 9, null, DataType.SMALLINT);
+//        fields = assertRow(groups, 20, 16);
+//        assertField(fields, 10, null, DataType.SMALLINT);
+//        fields = assertRow(groups, 22, 16);
+//        assertField(fields, 11, null, DataType.TEXT);
+//        fields = assertRow(groups, 23, 16);
+//        assertField(fields, 12, null, DataType.TEXT);
+//        fields = assertRow(groups, 24, 16);
+//        assertField(fields, 13, null, DataType.BYTEA);
+    }
+
+
     private List<OneField> assertRow(List<Group> groups, int desiredRow, int numFields) {
         OneRow row = new OneRow(groups.get(desiredRow)); // get row
         List<OneField> fields = resolver.getFields(row);
@@ -566,6 +629,42 @@ public class ParquetResolverTest {
     }
 
     @SuppressWarnings("deprecation")
+    private MessageType getParquetSchemaForListTypes(Type.Repetition groupRepetition, Type.Repetition elementRepetition, boolean readCase) {
+        List<Type> fields = new ArrayList<>();
+
+        fields.add(new PrimitiveType(elementRepetition, PrimitiveTypeName.INT32, "id", null));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BOOLEAN, 0, "bool_arr", null));
+        // if it is read case, we generate the data using hive, which support tiny type, doesn't support small int type?
+        org.apache.parquet.schema.OriginalType tinyType = readCase ? OriginalType.INT_8 : OriginalType.INT_16;
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.INT32, 0, "smallint_arr", tinyType));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.INT32, 0, "int_arr", null));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.INT64, 0, "bigint_arr", null));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.FLOAT, 0, "real_arr", null));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.DOUBLE, 0, "double_arr", null));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "text_arr", OriginalType.UTF8));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "bytea_arr", null));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "char_arr", OriginalType.UTF8));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "varchar_arr", OriginalType.UTF8));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.INT32, 0, "date_arr", OriginalType.DATE));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, 16, "numeric_arr", OriginalType.DECIMAL));
+
+        return new MessageType("hive_schema", fields);
+    }
+
+    @SuppressWarnings("deprecation")
+    private GroupType generateListSchema(Type.Repetition groupRepetition, Type.Repetition elementRepetition, PrimitiveTypeName primitiveTypeName, int length, String listName, OriginalType originalType) {
+        PrimitiveType elementType;
+        if (originalType == OriginalType.DECIMAL) {
+            elementType = new PrimitiveType(elementRepetition, primitiveTypeName, length, "array_element", originalType, new org.apache.parquet.schema.DecimalMetadata(38, 18), null);
+        } else {
+            elementType = new PrimitiveType(elementRepetition, primitiveTypeName, "array_element", originalType);
+        }
+        GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "bag", elementType);
+        GroupType groupType = new GroupType(groupRepetition, listName, repeatedGroupType);
+        return groupType;
+    }
+
+    @SuppressWarnings("deprecation")
     private List<Group> readParquetFile(String file, long expectedSize, MessageType schema) throws IOException {
         List<Group> result = new ArrayList<>();
         String parquetFile = Objects.requireNonNull(getClass().getClassLoader().getResource("parquet/" + file)).getPath();
@@ -591,6 +690,21 @@ public class ParquetResolverTest {
                 .stream()
                 .map(f -> {
                     ParquetTypeConverter converter = ParquetTypeConverter.from(f.asPrimitiveType());
+                    return new ColumnDescriptor(f.getName(), converter.getDataType(f).getOID(), 1, "", new Integer[]{});
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<ColumnDescriptor> getListColumnDescriptorsFromSchema(MessageType schema) {
+        return schema.getFields()
+                .stream()
+                .map(f -> {
+                    ParquetTypeConverter converter;
+                    if (f.getName().equals("id")) {
+                        converter = ParquetTypeConverter.from(f.asPrimitiveType());
+                    } else {
+                        converter = ParquetTypeConverter.from(f.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType());
+                    }
                     return new ColumnDescriptor(f.getName(), converter.getDataType(f).getOID(), 1, "", new Integer[]{});
                 })
                 .collect(Collectors.toList());
