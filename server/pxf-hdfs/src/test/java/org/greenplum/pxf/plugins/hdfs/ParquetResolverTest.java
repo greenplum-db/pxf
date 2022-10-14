@@ -660,7 +660,7 @@ public class ParquetResolverTest {
             elementType = new PrimitiveType(elementRepetition, primitiveTypeName, "array_element", originalType);
         }
         GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "bag", elementType);
-        GroupType groupType = new GroupType(groupRepetition, listName, repeatedGroupType);
+        GroupType groupType = new GroupType(groupRepetition, listName, OriginalType.LIST, repeatedGroupType);
         return groupType;
     }
 

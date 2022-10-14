@@ -12,6 +12,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -219,11 +220,77 @@ public enum ParquetTypeConverter {
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
             jsonNode.add(group.getBoolean(columnIndex, repeatIndex));
         }
+    },
+
+    LIST {
+        @Override
+        public DataType getDataType(Type type) {
+            try{
+                PrimitiveType elementType=type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
+                LogicalTypeAnnotation originalType= elementType.getLogicalTypeAnnotation();
+                switch (elementType.getPrimitiveTypeName()){
+                    case INT64:
+                        return DataType.INT8ARRAY;
+                    case INT32:
+                        if (originalType instanceof DateLogicalTypeAnnotation) {
+                            return DataType.DATEARRAY;
+                        } else if (originalType instanceof DecimalLogicalTypeAnnotation) {
+                            return DataType.NUMERICARRAY;
+                        } else if (originalType instanceof IntLogicalTypeAnnotation) {
+                            IntLogicalTypeAnnotation intType = (IntLogicalTypeAnnotation) originalType;
+                            if (intType.getBitWidth() == 8 || intType.getBitWidth() == 16) {
+                                return DataType.INT2ARRAY;
+                            }
+                        }
+                        return DataType.INT4ARRAY;
+                    case BOOLEAN:
+                        return DataType.BOOLARRAY;
+                    case BINARY:
+                        if (originalType == null) {
+                            return DataType.BYTEAARRAY;
+                        } else if (originalType instanceof DateLogicalTypeAnnotation) {
+                            return DataType.DATEARRAY;
+                        } else if (originalType instanceof TimestampLogicalTypeAnnotation) {
+                            return DataType.TIMESTAMPARRAY;
+                        } else {
+                            return DataType.TEXTARRAY;
+                        }
+                    case FLOAT:
+                        return DataType.FLOAT4ARRAY;
+                    case DOUBLE:
+                        return DataType.FLOAT8ARRAY;
+                    case INT96:
+                        return DataType.TIMESTAMPARRAY;
+                    case FIXED_LEN_BYTE_ARRAY:
+                        return DataType.NUMERICARRAY;
+                    default:
+                        throw new IOException("Not supported type " + elementType.getPrimitiveTypeName());
+                }
+            } catch (IOException e){
+
+            }
+
+            return null;
+        }
+
+        @Override
+        public Object getValue(Group group, int columnIndex, int repeatIndex, Type type) {
+            return group.getBoolean(columnIndex, repeatIndex);
+        }
+
+        @Override
+        public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
+            jsonNode.add(group.getBoolean(columnIndex, repeatIndex));
+        }
     };
 
 
     public static ParquetTypeConverter from(PrimitiveType primitiveType) {
         return valueOf(primitiveType.getPrimitiveTypeName().name());
+    }
+
+    public static ParquetTypeConverter from(Type type){
+        return valueOf(type.asGroupType().getOriginalType().name());
     }
 
 

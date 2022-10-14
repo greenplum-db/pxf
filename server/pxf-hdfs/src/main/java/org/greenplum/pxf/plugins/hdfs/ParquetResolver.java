@@ -25,6 +25,7 @@ import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.io.api.Binary;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
@@ -77,12 +78,19 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             OneField oneField;
             if (!columnDescriptor.isProjected()) {
                 oneField = new OneField(columnDescriptor.columnTypeCode(), null);
-            } else if (schema.getType(columnIndex).isPrimitive()) {
-                oneField = resolvePrimitive(group, columnIndex, schema.getType(columnIndex), 0);
-                columnIndex++;
             } else {
-                throw new UnsupportedOperationException("Parquet complex type support is not yet available.");
+                oneField=resolveGroup(group, columnIndex, schema.getType(columnIndex), 0);
+                columnIndex++;
             }
+//            else if (schema.getType(columnIndex).isPrimitive()) {
+//                oneField = resolvePrimitive(group, columnIndex, schema.getType(columnIndex), 0);
+//                columnIndex++;
+//            } else if (schema.getType(columnIndex).getOriginalType() == OriginalType.LIST){
+//                oneField = resolveList(group, columnIndex, schema.getType(columnIndex), 0);
+//                columnIndex++;
+//            }else{
+//                throw new UnsupportedOperationException("Other Parquet complex type supports are not yet available.");
+//            }
             output.add(oneField);
         }
         return output;
@@ -218,6 +226,16 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }
     }
 
+    private OneField resolveGroup(Group group, int columnIndex, Type type, int level){
+        if(type.isPrimitive()){
+            return resolvePrimitive(group, columnIndex, type, level);
+        }
+        if(type.asGroupType().getOriginalType()== LogicalTypeAnnotation.listType().toOriginalType()){
+            return resolveList(group, columnIndex, type, level);
+        }
+        throw new UnsupportedOperationException("Other Parquet complex type supports are not yet available.");
+    }
+
     private OneField resolvePrimitive(Group group, int columnIndex, Type type, int level) {
 
         OneField field = new OneField();
@@ -253,6 +271,14 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             // level > 0 and type != REPEATED -- primitive type as a member of complex group -- NOT YET SUPPORTED
             throw new UnsupportedOperationException("Parquet complex type support is not yet available.");
         }
+        return field;
+    }
+
+    private OneField resolveList(Group group, int columnIndex, Type type, int level) {
+        OneField field = new OneField();
+        // get type converter based on the primitive type
+        ParquetTypeConverter converter = ParquetTypeConverter.from(type.asGroupType());
+
         return field;
     }
 
