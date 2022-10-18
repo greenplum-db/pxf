@@ -17,7 +17,6 @@ import org.apache.parquet.pig.convert.DecimalUtils;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.GroupType;
-import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.greenplum.pxf.api.OneField;
@@ -689,32 +688,32 @@ public class ParquetResolverTest {
         fields.add(new PrimitiveType(elementRepetition, PrimitiveTypeName.INT32, "id", null));
         fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BOOLEAN, 0, "bool_arr", null));
         // if it is read case, we generate the data using hive, which support tiny type, doesn't support small int type?
-        org.apache.parquet.schema.OriginalType tinyType = readCase ? OriginalType.INT_8 : OriginalType.INT_16;
+        org.apache.parquet.schema.OriginalType tinyType = readCase ? org.apache.parquet.schema.OriginalType.INT_8 : org.apache.parquet.schema.OriginalType.INT_16;
         fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.INT32, 0, "smallint_arr", tinyType));
         fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.INT32, 0, "int_arr", null));
         fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.INT64, 0, "bigint_arr", null));
         fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.FLOAT, 0, "real_arr", null));
         fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.DOUBLE, 0, "double_arr", null));
-        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "text_arr", OriginalType.UTF8));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "text_arr", org.apache.parquet.schema.OriginalType.UTF8));
         fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "bytea_arr", null));
-        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "char_arr", OriginalType.UTF8));
-        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "varchar_arr", OriginalType.UTF8));
-        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.INT32, 0, "date_arr", OriginalType.DATE));
-        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, 16, "numeric_arr", OriginalType.DECIMAL));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "char_arr", org.apache.parquet.schema.OriginalType.UTF8));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.BINARY, 0, "varchar_arr", org.apache.parquet.schema.OriginalType.UTF8));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.INT32, 0, "date_arr", org.apache.parquet.schema.OriginalType.DATE));
+        fields.add(generateListSchema(groupRepetition, elementRepetition, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, 16, "numeric_arr", org.apache.parquet.schema.OriginalType.DECIMAL));
 
         return new MessageType("hive_schema", fields);
     }
 
     @SuppressWarnings("deprecation")
-    private GroupType generateListSchema(Type.Repetition groupRepetition, Type.Repetition elementRepetition, PrimitiveTypeName primitiveTypeName, int length, String listName, OriginalType originalType) {
+    private GroupType generateListSchema(Type.Repetition groupRepetition, Type.Repetition elementRepetition, PrimitiveTypeName primitiveTypeName, int length, String listName, org.apache.parquet.schema.OriginalType originalType) {
         PrimitiveType elementType;
-        if (originalType == OriginalType.DECIMAL) {
+        if (originalType == org.apache.parquet.schema.OriginalType.DECIMAL) {
             elementType = new PrimitiveType(elementRepetition, primitiveTypeName, length, "array_element", originalType, new org.apache.parquet.schema.DecimalMetadata(38, 18), null);
         } else {
             elementType = new PrimitiveType(elementRepetition, primitiveTypeName, "array_element", originalType);
         }
         GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "bag", elementType);
-        GroupType groupType = new GroupType(groupRepetition, listName, OriginalType.LIST, repeatedGroupType);
+        GroupType groupType = new GroupType(groupRepetition, listName, org.apache.parquet.schema.OriginalType.LIST, repeatedGroupType);
         return groupType;
     }
 

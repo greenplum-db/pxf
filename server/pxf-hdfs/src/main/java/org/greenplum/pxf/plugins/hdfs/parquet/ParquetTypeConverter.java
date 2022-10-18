@@ -6,6 +6,7 @@ import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.io.DataType;
@@ -286,28 +287,20 @@ public enum ParquetTypeConverter {
     };
 
 
-    public static ParquetTypeConverter from(PrimitiveType primitiveType) {
-        return valueOf(primitiveType.getPrimitiveTypeName().name());
-    }
-
-    public static ParquetTypeConverter from(Type type){
-        return valueOf(type.asGroupType().getOriginalType().name());
-    }
-
-
-    // ********** PUBLIC INTERFACE **********
-    public abstract DataType getDataType(Type type);
-
-    public abstract Object getValue(Group group, int columnIndex, int repeatIndex, Type type);
-
-    public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
-
     private static final int SECOND_IN_MICROS = 1000 * 1000;
     private static final long JULIAN_EPOCH_OFFSET_DAYS = 2440588L;
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
     private static final long MICROS_IN_DAY = 24 * 3600 * 1000 * 1000L;
     private static final long NANOS_IN_MICROS = 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ParquetTypeConverter.class);
+
+    public static ParquetTypeConverter from(PrimitiveType primitiveType) {
+        return valueOf(primitiveType.getPrimitiveTypeName().name());
+    }
+
+    public static ParquetTypeConverter from(GroupType type) {
+        return valueOf(type.getOriginalType().name());
+    }
 
     // Convert parquet byte array to java timestamp IN LOCAL SERVER'S TIME ZONE
     public static String bytesToTimestamp(byte[] bytes) {
@@ -377,4 +370,11 @@ public enum ParquetTypeConverter {
     private static BigDecimal bigDecimalFromLong(DecimalLogicalTypeAnnotation decimalType, long value) {
         return new BigDecimal(BigInteger.valueOf(value), decimalType.getScale());
     }
+
+    // ********** PUBLIC INTERFACE **********
+    public abstract DataType getDataType(Type type);
+
+    public abstract Object getValue(Group group, int columnIndex, int repeatIndex, Type type);
+
+    public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
 }

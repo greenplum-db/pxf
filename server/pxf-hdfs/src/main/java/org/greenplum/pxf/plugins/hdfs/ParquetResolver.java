@@ -231,7 +231,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             return resolvePrimitive(group, columnIndex, type, level);
         }
         if (type.asGroupType().getOriginalType() == LogicalTypeAnnotation.listType().toOriginalType()) {
-            return resolveList(group, columnIndex, type, level);
+            return resolveList(group, columnIndex, type);
         }
         throw new UnsupportedOperationException("Other Parquet complex type supports are not yet available.");
     }
@@ -276,9 +276,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         return field;
     }
 
-    private OneField resolveList(Group group, int columnIndex, Type type, int level) {
+    private OneField resolveList(Group group, int columnIndex, Type type) {
         OneField field = new OneField();
-        // get type converter based on the primitive type
+        // get type converter based on the LIST type
         ParquetTypeConverter converter = ParquetTypeConverter.from(type.asGroupType());
         field.type = converter.getDataType(type).getOID();
         int repetitionCount = group.getFieldRepetitionCount(columnIndex);
