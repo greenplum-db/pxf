@@ -522,7 +522,7 @@ public class ParquetResolverTest {
     }
 
     @Test
-    public void testGetFields_List() throws IOException {
+    public void testGetFields_List() throws IOException, ParseException {
         schema = getParquetSchemaForListTypes(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL, true);
         // schema has changed, set metadata again
         context.setMetadata(schema);
@@ -530,29 +530,40 @@ public class ParquetResolverTest {
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
 
-        List<Group> groups = readParquetFile("parquet_list_types.parquet", 6, schema);
-        assertEquals(6, groups.size());
+        List<Group> groups = readParquetFile("parquet_list_types_without_null.parquet", 2, schema);
+        assertEquals(2, groups.size());
 
         List<OneField> fields = assertRow(groups, 0, 13);
-//        //s1 : "row1" : TEXT
-//        assertField(fields, 0, "row1", DataType.TEXT);
-//        assertField(fields, 1, "s_6", DataType.TEXT);
-//        assertField(fields, 2, 1, DataType.INTEGER);
-//        assertField(fields, 3, 6.0d, DataType.FLOAT8);
-//        assertField(fields, 4, BigDecimal.valueOf(1234560000000000000L, 18), DataType.NUMERIC);
-//        assertField(fields, 5, localTimestampString, DataType.TIMESTAMP);
-//        assertField(fields, 6, 7.7f, DataType.REAL);
-//        assertField(fields, 7, 23456789L, DataType.BIGINT);
-//        assertField(fields, 8, false, DataType.BOOLEAN);
-//        assertField(fields, 9, (short) 1, DataType.SMALLINT);
-//        assertField(fields, 10, (short) 10, DataType.SMALLINT);
-//        assertField(fields, 11, "abcd", DataType.TEXT);
-//        assertField(fields, 12, "abc", DataType.TEXT);
-//        assertField(fields, 13, new byte[]{(byte) 49}, DataType.BYTEA); // 49 is the ascii code for '1'
-//        // Parquet only stores the Timestamp (timezone information was lost)
-//        assertField(fields, 14, localTimestampString, DataType.TIMESTAMP);
-//        // Parquet only stores the Timestamp (timezone information was lost)
-//        assertField(fields, 15, localTimestampString, DataType.TIMESTAMP);
+        // id=1
+        assertField(fields, 0, 1, DataType.INTEGER);
+        assertField(fields, 1, new Boolean[]{true}, DataType.BOOLARRAY);
+        assertField(fields, 2, new Short[]{50}, DataType.INT2ARRAY);
+        assertField(fields, 3, new Integer[]{1}, DataType.INT4ARRAY);
+        assertField(fields, 4, new Long[]{1L}, DataType.INT8ARRAY);
+        assertField(fields, 5, new Float[]{(float) 1.11}, DataType.FLOAT4ARRAY);
+        assertField(fields, 6, new Double[]{1.7E308}, DataType.FLOAT8ARRAY);
+        assertField(fields, 7, new String[]{"this is a test string"}, DataType.TEXTARRAY);
+        assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(new byte[]{(byte) 222, (byte) 173, (byte) 190, (byte) 239})}, DataType.BYTEAARRAY);
+        assertField(fields, 9, new String[]{"hello"}, DataType.BPCHARARRAY);
+        assertField(fields, 10, new String[]{"hello"}, DataType.VARCHARARRAY);
+        assertField(fields, 11, new Date[]{new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07")}, DataType.DATEARRAY);
+        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
+
+        // id=4
+        fields = assertRow(groups, 1, 13);
+        assertField(fields, 0, 2, DataType.INTEGER);
+        assertField(fields, 1, new Boolean[]{false, true, true, false}, DataType.BOOLARRAY);
+        assertField(fields, 2, new Short[]{-128, 96}, DataType.INT2ARRAY);
+        assertField(fields, 3, new Integer[]{2, 3}, DataType.INT4ARRAY);
+        assertField(fields, 4, new Long[]{-9223372036854775808L, 223372036854775808L}, DataType.INT8ARRAY);
+        assertField(fields, 5, new Float[]{(float) -1.23456984E5, (float) 123456.984}, DataType.FLOAT4ARRAY);
+        assertField(fields, 6, new Double[]{1.0, -9.99E1}, DataType.FLOAT8ARRAY);
+        assertField(fields, 7, new String[]{"this is a string with \"special\" characters", "this is a string without"}, DataType.TEXTARRAY);
+        assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(new byte[]{(byte) 222, (byte) 173, (byte) 190, (byte) 239}), Binary.fromReusedByteArray(new byte[]{(byte) 173, (byte) 190, (byte) 239})}, DataType.BYTEAARRAY);
+        assertField(fields, 9, new String[]{"this is exactly", " fifteen chars."}, DataType.BPCHARARRAY);
+        assertField(fields, 10, new String[]{"this is exactly", " fifteen chars."}, DataType.VARCHARARRAY);
+        assertField(fields, 11, new Date[]{new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07"), new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-08")}, DataType.DATEARRAY);
+        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18), BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
 //
 //        // test nulls
 //        fields = assertRow(groups, 11, 16);
@@ -592,13 +603,80 @@ public class ParquetResolverTest {
     }
 
     private void assertField(List<OneField> fields, int index, Object value, DataType type) {
-        assertEquals(type.getOID(), fields.get(index).type);
+        if (type.getOID() == DataType.BPCHARARRAY.getOID() || type.getOID() == DataType.VARCHARARRAY.getOID()) {
+            assertEquals(DataType.TEXTARRAY.getOID(), fields.get(index).type);
+        } else {
+            assertEquals(type.getOID(), fields.get(index).type);
+        }
+
         if (type == DataType.BYTEA) {
             assertArrayEquals((byte[]) value, (byte[]) fields.get(index).val);
+        } else if (type.isArrayType()) {
+            assertList((Object[]) value, (Group) fields.get(index).val);
         } else {
             assertEquals(value, fields.get(index).val);
         }
     }
+
+    private void assertList(Object[] values, Group repeatedGroup) {
+        int repetitionCount = repeatedGroup.getFieldRepetitionCount(0);
+        assertEquals(repetitionCount, values.length);
+
+        for (int i = 0; i < repetitionCount; i++) {
+            Group elementGroup = repeatedGroup.asGroup().getGroup(0, i);
+            Type elementType = elementGroup.getType().getType(0);
+            LogicalTypeAnnotation logicalTypeAnnotation = elementType.getLogicalTypeAnnotation();
+            Object value = values[i];
+            switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
+                case INT64:
+                    assertEquals(value, elementGroup.getLong(0, 0));
+                    break;
+                case INT32:
+                    if (elementGroup.asGroup().getType().getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+                        assertEquals((String) value, elementGroup.getString(0, 0));
+                    } else if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                        assertEquals(value, elementGroup.getInteger(0, 0));
+                    } else if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
+                        LogicalTypeAnnotation.IntLogicalTypeAnnotation intLogicalTypeAnnotation = (LogicalTypeAnnotation.IntLogicalTypeAnnotation) logicalTypeAnnotation;
+                        if (intLogicalTypeAnnotation.getBitWidth() == 8 || intLogicalTypeAnnotation.getBitWidth() == 16) {
+                            assertEquals(value, (short) elementGroup.getInteger(0, 0));
+                        }
+                    }
+                    break;
+                case BOOLEAN:
+                    assertEquals(value, elementGroup.getBoolean(0, 0));
+                    break;
+                case BINARY:
+                    if (logicalTypeAnnotation == null) {
+                        assertEquals(value, elementGroup.getBinary(0, 0));
+                    } else {
+                        assertEquals(value, elementGroup.getString(0, 0));
+                    }
+                    break;
+                case FLOAT:
+                    assertEquals(value, elementGroup.getFloat(0, 0));
+                    break;
+                case DOUBLE:
+                    assertEquals(value, elementGroup.getDouble(0, 0));
+                    break;
+                case INT96:
+                    assertEquals(value, elementGroup.getInt96(0, 0));
+                    break;
+                case FIXED_LEN_BYTE_ARRAY:
+                    int scale = ((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logicalTypeAnnotation).getScale();
+                    assertEquals(value, new BigDecimal(new BigInteger(elementGroup.getBinary(0, 0).getBytes()), scale));
+                    break;
+                default:
+                    try {
+                        throw new IOException("Not supported type " + elementType.asPrimitiveType().getPrimitiveTypeName());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+            }
+        }
+
+    }
+
 
     @SuppressWarnings("deprecation")
     private MessageType getParquetSchemaForPrimitiveTypes(Type.Repetition repetition, boolean readCase) {

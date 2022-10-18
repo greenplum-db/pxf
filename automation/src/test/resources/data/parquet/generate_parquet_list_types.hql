@@ -25,7 +25,6 @@ DROP TABLE IF EXISTS foo;
 CREATE TEMPORARY TABLE foo (a int);
 INSERT INTO foo VALUES (1);
 
-
 INSERT INTO parquet_list_types_tmp SELECT 1, collect_list(boolean(null)), array(tinyint(50)), array(1), array(bigint(1)), array(float(null)), array(double(1.7e308)), array('this is a test string'), array(cast(null as binary)), array(cast('hello' as char(15))), array(cast('hello' as varchar(15))), array(cast('2022-10-07' as date)), array(cast(123.45 as decimal(38,18))) FROM foo;
 
 INSERT INTO parquet_list_types_tmp SELECT 2, array(false, true, boolean(1), boolean(0)), collect_list(tinyint(null)), array(2,3), array(bigint(null)), collect_list(float(null)), array(double(1.0)), array('this is a string with "special" characters', 'this is a string without'), collect_list(binary(null)), array(cast('this is exactly' as char(15)), cast(' fifteen chars.' as char(15))), array(cast('this is exactly' as varchar(15)), cast(' fifteen chars.' as varchar(15))), array(cast('2022-10-07' as date)), array(cast(123.45 as decimal(38,18))) FROM foo;

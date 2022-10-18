@@ -79,7 +79,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             if (!columnDescriptor.isProjected()) {
                 oneField = new OneField(columnDescriptor.columnTypeCode(), null);
             } else {
-                oneField=resolveGroup(group, columnIndex, schema.getType(columnIndex), 0);
+                oneField = resolveGroup(group, columnIndex, schema.getType(columnIndex), 0);
                 columnIndex++;
             }
 //            else if (schema.getType(columnIndex).isPrimitive()) {
@@ -226,11 +226,11 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }
     }
 
-    private OneField resolveGroup(Group group, int columnIndex, Type type, int level){
-        if(type.isPrimitive()){
+    private OneField resolveGroup(Group group, int columnIndex, Type type, int level) {
+        if (type.isPrimitive()) {
             return resolvePrimitive(group, columnIndex, type, level);
         }
-        if(type.asGroupType().getOriginalType()== LogicalTypeAnnotation.listType().toOriginalType()){
+        if (type.asGroupType().getOriginalType() == LogicalTypeAnnotation.listType().toOriginalType()) {
             return resolveList(group, columnIndex, type, level);
         }
         throw new UnsupportedOperationException("Other Parquet complex type supports are not yet available.");
@@ -250,6 +250,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             field.type = converter.getDataType(type).getOID();
             field.val = repetitionCount == 0 ? null : converter.getValue(group, columnIndex, 0, type);
         } else if (type.getRepetition() == REPEATED) {
+            // todo: do we still need this condition? For LIST, the inner most element repetition must be required or optional, maybe for primitive types, the repetition should also must be required or optional?
+            // https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#:~:text=The%20element%20field%20encodes%20the%20list%27s%20element%20type%20and%20repetition.%20Element%20repetition%20must%20be%20required%20or%20optional.
             // repeated primitive at any level will convert into JSON
             ArrayNode jsonArray = mapper.createArrayNode();
             for (int repeatIndex = 0; repeatIndex < repetitionCount; repeatIndex++) {
@@ -278,7 +280,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         OneField field = new OneField();
         // get type converter based on the primitive type
         ParquetTypeConverter converter = ParquetTypeConverter.from(type.asGroupType());
-
+        field.type = converter.getDataType(type).getOID();
+        int repetitionCount = group.getFieldRepetitionCount(columnIndex);
+        field.val = repetitionCount == 0 ? null : converter.getValue(group, columnIndex, 0, type);
         return field;
     }
 
