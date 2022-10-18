@@ -86,12 +86,17 @@ To build PXF, you must have:
     export GOPATH=$HOME/go
     export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
     ```
+   For the new M1 Apple Macs, add the following to your path instead
+   ```
+   export PATH=$PATH:/opt/homebrew/bin/go/bin:$GOPATH/bin
+   ```
 
     Once you have installed Go, you will need the `ginkgo` tool which runs Go tests,
     respectively. Assuming `go` is on your `PATH`, you can run:
     ```
-    go get github.com/onsi/ginkgo/ginkgo
+    go install github.com/onsi/ginkgo/ginkgo@v1.16.5
     ```
+   * NOTE: You are required to list the version. For now, keep it stable at v1.16.5 which is what we use for the concourse images.
 
 5. cURL (7.29 or later):
 
