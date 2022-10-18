@@ -16,7 +16,10 @@ import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.pig.convert.DecimalUtils;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.GroupType;
+import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.Type;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
@@ -28,6 +31,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -36,10 +41,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Date;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
+import static org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.bytesToTimestamp;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -526,7 +533,7 @@ public class ParquetResolverTest {
         schema = getParquetSchemaForListTypes(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL, true);
         // schema has changed, set metadata again
         context.setMetadata(schema);
-        context.setTupleDescription(getListColumnDescriptorsFromSchema(schema));
+        context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
 
@@ -534,7 +541,6 @@ public class ParquetResolverTest {
         assertEquals(2, groups.size());
 
         List<OneField> fields = assertRow(groups, 0, 13);
-        // id=1
         assertField(fields, 0, 1, DataType.INTEGER);
         assertField(fields, 1, new Boolean[]{true}, DataType.BOOLARRAY);
         assertField(fields, 2, new Short[]{50}, DataType.INT2ARRAY);
@@ -549,7 +555,6 @@ public class ParquetResolverTest {
         assertField(fields, 11, new Date[]{new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07")}, DataType.DATEARRAY);
         assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
 
-        // id=4
         fields = assertRow(groups, 1, 13);
         assertField(fields, 0, 2, DataType.INTEGER);
         assertField(fields, 1, new Boolean[]{false, true, true, false}, DataType.BOOLARRAY);
@@ -564,34 +569,6 @@ public class ParquetResolverTest {
         assertField(fields, 10, new String[]{"this is exactly", " fifteen chars."}, DataType.VARCHARARRAY);
         assertField(fields, 11, new Date[]{new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07"), new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-08")}, DataType.DATEARRAY);
         assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18), BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
-//
-//        // test nulls
-//        fields = assertRow(groups, 11, 16);
-//        assertField(fields, 1, null, DataType.TEXT);
-//        fields = assertRow(groups, 12, 16);
-//        assertField(fields, 2, null, DataType.INTEGER);
-//        fields = assertRow(groups, 13, 16);
-//        assertField(fields, 3, null, DataType.FLOAT8);
-//        fields = assertRow(groups, 14, 16);
-//        assertField(fields, 4, null, DataType.NUMERIC);
-//        fields = assertRow(groups, 15, 16);
-//        assertField(fields, 5, null, DataType.TIMESTAMP);
-//        fields = assertRow(groups, 16, 16);
-//        assertField(fields, 6, null, DataType.REAL);
-//        fields = assertRow(groups, 17, 16);
-//        assertField(fields, 7, null, DataType.BIGINT);
-//        fields = assertRow(groups, 18, 16);
-//        assertField(fields, 8, null, DataType.BOOLEAN);
-//        fields = assertRow(groups, 19, 16);
-//        assertField(fields, 9, null, DataType.SMALLINT);
-//        fields = assertRow(groups, 20, 16);
-//        assertField(fields, 10, null, DataType.SMALLINT);
-//        fields = assertRow(groups, 22, 16);
-//        assertField(fields, 11, null, DataType.TEXT);
-//        fields = assertRow(groups, 23, 16);
-//        assertField(fields, 12, null, DataType.TEXT);
-//        fields = assertRow(groups, 24, 16);
-//        assertField(fields, 13, null, DataType.BYTEA);
     }
 
 
@@ -627,15 +604,14 @@ public class ParquetResolverTest {
             Type elementType = elementGroup.getType().getType(0);
             LogicalTypeAnnotation logicalTypeAnnotation = elementType.getLogicalTypeAnnotation();
             Object value = values[i];
+
             switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
                 case INT64:
                     assertEquals(value, elementGroup.getLong(0, 0));
                     break;
                 case INT32:
                     if (elementGroup.asGroup().getType().getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
-                        assertEquals((String) value, elementGroup.getString(0, 0));
-                    } else if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-                        assertEquals(value, elementGroup.getInteger(0, 0));
+                        assertEquals(value, elementGroup.getString(0, 0));
                     } else if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
                         LogicalTypeAnnotation.IntLogicalTypeAnnotation intLogicalTypeAnnotation = (LogicalTypeAnnotation.IntLogicalTypeAnnotation) logicalTypeAnnotation;
                         if (intLogicalTypeAnnotation.getBitWidth() == 8 || intLogicalTypeAnnotation.getBitWidth() == 16) {
@@ -647,10 +623,10 @@ public class ParquetResolverTest {
                     assertEquals(value, elementGroup.getBoolean(0, 0));
                     break;
                 case BINARY:
-                    if (logicalTypeAnnotation == null) {
-                        assertEquals(value, elementGroup.getBinary(0, 0));
-                    } else {
+                    if (logicalTypeAnnotation != null) {
                         assertEquals(value, elementGroup.getString(0, 0));
+                    } else {
+                        assertEquals(value, elementGroup.getBinary(0, 0));
                     }
                     break;
                 case FLOAT:
@@ -660,11 +636,12 @@ public class ParquetResolverTest {
                     assertEquals(value, elementGroup.getDouble(0, 0));
                     break;
                 case INT96:
-                    assertEquals(value, elementGroup.getInt96(0, 0));
+                    assertEquals(value, bytesToTimestamp(elementGroup.getInt96(0, 0).getBytes()));
                     break;
                 case FIXED_LEN_BYTE_ARRAY:
+                    int precision = ((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logicalTypeAnnotation).getPrecision();
                     int scale = ((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logicalTypeAnnotation).getScale();
-                    assertEquals(value, new BigDecimal(new BigInteger(elementGroup.getBinary(0, 0).getBytes()), scale));
+                    assertEquals(value, DecimalUtils.binaryToDecimal(elementGroup.getBinary(0, 0), precision, scale));
                     break;
                 default:
                     try {
@@ -676,7 +653,6 @@ public class ParquetResolverTest {
         }
 
     }
-
 
     @SuppressWarnings("deprecation")
     private MessageType getParquetSchemaForPrimitiveTypes(Type.Repetition repetition, boolean readCase) {
@@ -767,26 +743,13 @@ public class ParquetResolverTest {
         return schema.getFields()
                 .stream()
                 .map(f -> {
-                    ParquetTypeConverter converter = ParquetTypeConverter.from(f.asPrimitiveType());
+                    PrimitiveType primitiveType = f.isPrimitive() ? f.asPrimitiveType() : f.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
+                    ParquetTypeConverter converter = ParquetTypeConverter.from(primitiveType);
                     return new ColumnDescriptor(f.getName(), converter.getDataType(f).getOID(), 1, "", new Integer[]{});
                 })
                 .collect(Collectors.toList());
     }
 
-    private List<ColumnDescriptor> getListColumnDescriptorsFromSchema(MessageType schema) {
-        return schema.getFields()
-                .stream()
-                .map(f -> {
-                    ParquetTypeConverter converter;
-                    if (f.getName().equals("id")) {
-                        converter = ParquetTypeConverter.from(f.asPrimitiveType());
-                    } else {
-                        converter = ParquetTypeConverter.from(f.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType());
-                    }
-                    return new ColumnDescriptor(f.getName(), converter.getDataType(f).getOID(), 1, "", new Integer[]{});
-                })
-                .collect(Collectors.toList());
-    }
 
     private MessageType buildReadSchema(MessageType originalSchema) {
         List<Type> originalFields = originalSchema.getFields();
