@@ -440,7 +440,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     }
 
     /**
-     * Generate parquet schema using column descriptors
+     * Generate parquet schema for all the supported types using column descriptors
+     *
+     * @param columns
+     * @return the generated parquet schema used for write
      */
     private MessageType generateParquetSchema(List<ColumnDescriptor> columns) {
         LOG.debug("{}-{}: Generating parquet schema for write using {}", context.getTransactionId(),
@@ -450,16 +453,24 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             int columnTypeCode = column.columnTypeCode();
             DataType dataType = DataType.get(columnTypeCode);
 
+            Type generatedType;
             if (dataType.isArrayType()) {
-                generateParquetListSchema(column, fields);
+                generatedType = generateParquetListSchemaType(column);
             } else {
-                generateParquetPrimitiveSchema(column, fields);
+                generatedType = generateParquetPrimitiveSchemaType(column);
             }
+            fields.add(generatedType);
         }
         return new MessageType("hive_schema", fields);
     }
 
-    private void generateParquetPrimitiveSchema(ColumnDescriptor column, List<Type> fields) {
+    /**
+     * Generate parquet schema type for primitive types only
+     *
+     * @param column
+     * @return the generated schema type for parquet primitive types only
+     */
+    private Type generateParquetPrimitiveSchemaType(ColumnDescriptor column) {
         DataType dataType = column.getDataType();
         int columnTypeCode = column.columnTypeCode();
         String columnName = column.columnName();
@@ -526,11 +537,16 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 throw new UnsupportedTypeException(
                         String.format("Type %d is not supported", columnTypeCode));
         }
-        fields.add(builder.named(columnName));
+        return builder.named(columnName);
     }
 
-
-    private void generateParquetListSchema(ColumnDescriptor column, List<Type> fields) {
+    /**
+     * Generate parquet schema for parquet List type only
+     *
+     * @param column
+     * @return the generated schema type for parquet List types only
+     */
+    private Type generateParquetListSchemaType(ColumnDescriptor column) {
         DataType dataType = column.getDataType();
         int columnTypeCode = column.columnTypeCode();
         String columnName = column.columnName();
@@ -559,7 +575,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 builder = Types.optionalList()
                         .optionalElement(PrimitiveTypeName.INT64);
                 break;
-
             case FLOAT4ARRAY:
                 builder = Types.optionalList()
                         .optionalElement(PrimitiveTypeName.FLOAT);
@@ -599,12 +614,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                         .optionalElement(PrimitiveTypeName.INT96);
                 break;
             default:
-                throw new UnsupportedTypeException(
-                        String.format("Type %d is not supported", columnTypeCode));
+                throw new UnsupportedTypeException(String.format("Type %d is not supported", columnTypeCode));
         }
-        fields.add(builder.named(columnName));
+        return builder.named(columnName);
     }
-
 
     /**
      * Returns the {@link CompressionCodecName} for the given name, or default if name is null
