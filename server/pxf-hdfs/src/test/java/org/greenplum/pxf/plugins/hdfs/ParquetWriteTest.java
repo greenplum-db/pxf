@@ -940,48 +940,23 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
 
-            // get the outer group
-            Group outerGroup = fileReader.read();
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    assertEquals(PrimitiveType.PrimitiveTypeName.INT32, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertNull(elementType.getLogicalTypeAnnotation());
-                    Integer res = elementGroup.getInteger(0, 0);
-                    assertEquals(i, res);
-                }
-            } else {// the last row is a null array
-                // if the array is a null array, the outer group should have no field
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
             }
-
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = Integer.parseInt(values[i]);
+                }
+            }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT32, null);
         fileReader.close();
 
     }
+
 
     @Test
     public void testWriteTextArray() throws Exception {
@@ -1014,47 +989,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    // Physical type is binary, logical type is String
-                    assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertTrue(elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
-                    Binary binary = elementGroup.getBinary(0, 0);
-                    String str = binary.toStringUsingUTF8();
-                    assertEquals(StringUtils.repeat("a", i + 1), str);
-
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
+            }
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = values[i];
                 }
-            } else {
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
             }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());
+
         fileReader.close();
     }
 
@@ -1094,46 +1041,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    // Physical type is INT32, logical type is DATE
-                    assertEquals(PrimitiveType.PrimitiveTypeName.INT32, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertTrue(elementType.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation);
-
-                    int epoch = elementGroup.getInteger(0, 0);
-                    assertEquals(18475 + i, epoch);
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
+            }
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = 18475 + i;
                 }
-            } else {
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
             }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.DateLogicalTypeAnnotation.dateType());
+
         fileReader.close();
     }
 
@@ -1170,45 +1090,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    assertEquals(PrimitiveType.PrimitiveTypeName.DOUBLE, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertNull(elementType.getLogicalTypeAnnotation());
-                    Double res = elementGroup.getDouble(0, 0);
-                    assertEquals(i * 1.01, res, 0.001);
-                }
-            } else {// the last row is a null array
-                // if the array is a null array, the outer group should have no field
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
             }
-
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = Double.parseDouble(values[i]);
+                }
+            }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.DOUBLE, null);
+
         fileReader.close();
 
     }
@@ -1244,49 +1138,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    assertEquals(PrimitiveType.PrimitiveTypeName.BOOLEAN, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertNull(elementType.getLogicalTypeAnnotation());
-                    Boolean res = elementGroup.getBoolean(0, 0);
-                    if (j % 3 == 1) {
-                        assertTrue(res);
-                    } else if (j % 3 == 2) {
-                        assertFalse(res);
-                    }
-                }
-            } else {// the last row is a null array
-                // if the array is a null array, the outer group should have no field
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
             }
-
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = Boolean.parseBoolean(values[i]);
+                }
+            }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BOOLEAN, null);
+
         fileReader.close();
     }
 
@@ -1321,49 +1185,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    // Physical type is INT96
-                    assertEquals(PrimitiveType.PrimitiveTypeName.INT96, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertNull(elementType.getLogicalTypeAnnotation());
-
-                    Instant timestamp = Instant.parse(String.format("2020-08-%02dT04:00:05Z", i + 1)); // UTC
-                    ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-                    String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2020-08-%02dT04:00:05Z" in PST
-
-                    assertEquals(localTimestampString, bytesToTimestamp(elementGroup.getInt96(0, 0).getBytes()));
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
+            }
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = values[i];
                 }
-            } else {
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
             }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT96, null);
+
         fileReader.close();
     }
 
@@ -1401,45 +1235,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    assertEquals(PrimitiveType.PrimitiveTypeName.INT64, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertNull(elementType.getLogicalTypeAnnotation());
-                    Long res = elementGroup.getLong(0, 0);
-                    assertEquals((long) Integer.MAX_VALUE + i, res);
-                }
-            } else {// the last row is a null array
-                // if the array is a null array, the outer group should have no field
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
             }
-
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = Long.parseLong(values[i]);
+                }
+            }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT64, null);
+
         fileReader.close();
 
     }
@@ -1486,52 +1294,21 @@ public class ParquetWriteTest {
                 Binary.fromString("aaaaaaa"),
                 Binary.fromString("aaaaaaaa"),
                 Binary.fromString("aaaaaaaaa"),
+                null
         };
-
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    // Physical type is binary
-                    assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertNull(elementType.getLogicalTypeAnnotation());
-                    byte[] value = expectedResults[i].getBytes();
-                    StringBuilder sb = new StringBuilder();
-                    Utilities.byteArrayToOctalString(value, sb);
-                    String expectedString = sb.toString();
-                    Binary actualBinary = elementGroup.getBinary(0, 0);
-                    assertEquals(expectedResults[i], elementGroup.getBinary(0, 0));
-
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
+            }
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = expectedResults[i];
                 }
-            } else {
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
             }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BINARY, null);
+
         fileReader.close();
     }
 
@@ -1566,45 +1343,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    assertEquals(PrimitiveType.PrimitiveTypeName.INT32, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertEquals(LogicalTypeAnnotation.intType(16, true), elementType.getLogicalTypeAnnotation());
-                    Integer res = elementGroup.getInteger(0, 0);
-                    assertEquals(i, res);
-                }
-            } else {// the last row is a null array
-                // if the array is a null array, the outer group should have no field
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
             }
-
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = Short.parseShort(values[i]);
+                }
+            }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.intType(16, true));
+
         fileReader.close();
     }
 
@@ -1642,45 +1393,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    assertEquals(PrimitiveType.PrimitiveTypeName.FLOAT, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertNull(elementType.getLogicalTypeAnnotation());
-                    Float res = elementGroup.getFloat(0, 0);
-                    assertEquals(i * 1.01F, res, 0.01);
-                }
-            } else {// the last row is a null array
-                // if the array is a null array, the outer group should have no field
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
             }
-
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = Float.parseFloat(values[i]);
+                }
+            }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.FLOAT, null);
+
         fileReader.close();
     }
 
@@ -1715,47 +1440,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    // Physical type is binary, logical type is String
-                    assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertTrue(elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
-
-                    Binary binary = elementGroup.getBinary(0, 0);
-                    String str = binary.toStringUsingUTF8();
-                    assertEquals(StringUtils.repeat("b", i % 5), str);
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
+            }
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = values[i];
                 }
-            } else {
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
             }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());
+
         fileReader.close();
     }
 
@@ -1790,47 +1487,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    // Physical type is binary, logical type is String
-                    assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertTrue(elementType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
-
-                    Binary binary = elementGroup.getBinary(0, 0);
-                    String str = binary.toStringUsingUTF8();
-                    assertEquals(StringUtils.repeat("c", i % 3), str);
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
+            }
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = values[i];
                 }
-            } else {
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
             }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());
+
         fileReader.close();
     }
 
@@ -1859,7 +1528,8 @@ public class ParquetWriteTest {
                 "666666.67890123",
                 "7777777.789012345",
                 "88888888.8901234567",
-                "999999999.90123456789"
+                "999999999.90123456789",
+                null
         };
         prepareParquetArrayData(DataType.NUMERICARRAY.getOID(), values, resolver, accessor);
 
@@ -1886,46 +1556,19 @@ public class ParquetWriteTest {
                 new BigDecimal("88888888.890123456700000000"),
                 new BigDecimal("999999999.901234567890000000")
         };
-
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    // Physical type is FIXED_LEN_BYTE_ARRAY
-                    assertEquals(PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertTrue(elementType.getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation);
-
-                    assertEquals(expectedResults[i], new BigDecimal(new BigInteger(elementGroup.getBinary(0, 0).getBytes()), 18));
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
+            }
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = expectedResults[i];
                 }
-            } else {
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
             }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, LogicalTypeAnnotation.DecimalLogicalTypeAnnotation.decimalType(18, 38));
+
         fileReader.close();
     }
 
@@ -1973,9 +1616,10 @@ public class ParquetWriteTest {
             String text = StringUtils.repeat("f", i + 1);
             record.add(new OneField(DataType.TEXT.getOID(), text));
 
+
             pgArrayBuilder = new PgArrayBuilder(pgUtilities);
             pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement(String.valueOf(i));
+            pgArrayBuilder.addElement((String) null);
             pgArrayBuilder.addElement(String.valueOf(i));
             pgArrayBuilder.addElement(String.valueOf(i));
             pgArrayBuilder.endArray();
@@ -1983,7 +1627,7 @@ public class ParquetWriteTest {
 
             pgArrayBuilder = new PgArrayBuilder(pgUtilities);
             pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement(String.valueOf(i + 0.01F));
+            pgArrayBuilder.addElement((String) null);
             pgArrayBuilder.addElement(String.valueOf(i + 0.01F));
             pgArrayBuilder.addElement(String.valueOf(i + 0.01F));
             pgArrayBuilder.endArray();
@@ -1991,7 +1635,7 @@ public class ParquetWriteTest {
 
             pgArrayBuilder = new PgArrayBuilder(pgUtilities);
             pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement(localTimestampString);
+            pgArrayBuilder.addElement((String) null);
             pgArrayBuilder.addElement(localTimestampString);
             pgArrayBuilder.addElement(localTimestampString);
             pgArrayBuilder.endArray();
@@ -1999,7 +1643,7 @@ public class ParquetWriteTest {
 
             pgArrayBuilder = new PgArrayBuilder(pgUtilities);
             pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement(StringUtils.repeat("e", i + 1));
+            pgArrayBuilder.addElement((String) null);
             pgArrayBuilder.addElement(StringUtils.repeat("e", i + 1));
             pgArrayBuilder.addElement(StringUtils.repeat("e", i + 1));
             pgArrayBuilder.endArray();
@@ -2007,7 +1651,7 @@ public class ParquetWriteTest {
 
             pgArrayBuilder = new PgArrayBuilder(pgUtilities);
             pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement(text);
+            pgArrayBuilder.addElement((String) null);
             pgArrayBuilder.addElement(text);
             pgArrayBuilder.addElement(text);
             pgArrayBuilder.endArray();
@@ -2042,11 +1686,11 @@ public class ParquetWriteTest {
         assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, schema.getType(4).asPrimitiveType().getPrimitiveTypeName());
         assertTrue(schema.getType(4).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation); //text
 
-        assertComplexType(schema.asGroupType().getType(5), 3, PrimitiveType.PrimitiveTypeName.INT32, null);//int_arr
-        assertComplexType(schema.asGroupType().getType(6), 3, PrimitiveType.PrimitiveTypeName.FLOAT, null);//float_arr
-        assertComplexType(schema.asGroupType().getType(7), 3, PrimitiveType.PrimitiveTypeName.INT96, null);//tm_arr
-        assertComplexType(schema.asGroupType().getType(8), 3, PrimitiveType.PrimitiveTypeName.BINARY, null);//bytea_arr
-        assertComplexType(schema.asGroupType().getType(9), 3, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());//text_arr
+        assertListElementType(schema.asGroupType().getType(5).asGroupType().getType(0), 3, PrimitiveType.PrimitiveTypeName.INT32, null);//int_arr
+        assertListElementType(schema.asGroupType().getType(6).asGroupType().getType(0), 3, PrimitiveType.PrimitiveTypeName.FLOAT, null);//float_arr
+        assertListElementType(schema.asGroupType().getType(7).asGroupType().getType(0), 3, PrimitiveType.PrimitiveTypeName.INT96, null);//tm_arr
+        assertListElementType(schema.asGroupType().getType(8).asGroupType().getType(0), 3, PrimitiveType.PrimitiveTypeName.BINARY, null);//bytea_arr
+        assertListElementType(schema.asGroupType().getType(9).asGroupType().getType(0), 3, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());//text_arr
 
         Group row0 = fileReader.read();
         Group row1 = fileReader.read();
@@ -2082,25 +1726,25 @@ public class ParquetWriteTest {
         assertEquals("fff", row2.getString(4, 0));
 
 
-        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, 0);
-        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, 1);
-        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.INT32, 5, 3, null, 2);
+        assertListElementValue(row0.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, new Object[]{0});
+        assertListElementValue(row1.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, new Object[]{1});
+        assertListElementValue(row2.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, new Object[]{2});
 
-        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, 0.01F);
-        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, 1.01F);
-        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.FLOAT, 6, 3, null, 2.01F);
+        assertListElementValue(row0.asGroup().getGroup(6, 0), 1, PrimitiveType.PrimitiveTypeName.FLOAT, null, new Object[]{(float) 0.01});
+        assertListElementValue(row1.asGroup().getGroup(6, 0), 1, PrimitiveType.PrimitiveTypeName.FLOAT, null, new Object[]{(float) 1.01});
+        assertListElementValue(row2.asGroup().getGroup(6, 0), 1, PrimitiveType.PrimitiveTypeName.FLOAT, null, new Object[]{(float) 2.01});
 
-        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.INT96, 7, 3, null, localTimestampString0);
-        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.INT96, 7, 3, null, localTimestampString1);
-        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.INT96, 7, 3, null, localTimestampString2);
+        assertListElementValue(row0.asGroup().getGroup(7, 0), 1, PrimitiveType.PrimitiveTypeName.INT96, null, new Object[]{localTimestampString0});
+        assertListElementValue(row1.asGroup().getGroup(7, 0), 1, PrimitiveType.PrimitiveTypeName.INT96, null, new Object[]{localTimestampString1});
+        assertListElementValue(row2.asGroup().getGroup(7, 0), 1, PrimitiveType.PrimitiveTypeName.INT96, null, new Object[]{localTimestampString2});
 
-        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 8, 3, null, Binary.fromString("e"));
-        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 8, 3, null, Binary.fromString("ee"));
-        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 8, 3, null, Binary.fromString("eee"));
+        assertListElementValue(row0.asGroup().getGroup(8, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, null, new Object[]{Binary.fromString("e")});
+        assertListElementValue(row1.asGroup().getGroup(8, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, null, new Object[]{Binary.fromString("ee")});
+        assertListElementValue(row2.asGroup().getGroup(8, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, null, new Object[]{Binary.fromString("eee")});
 
-        assertComplexElement(row0.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 9, 3, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), "f");
-        assertComplexElement(row1.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 9, 3, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), "ff");
-        assertComplexElement(row2.asGroup(), PrimitiveType.PrimitiveTypeName.BINARY, 9, 3, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), "fff");
+        assertListElementValue(row0.asGroup().getGroup(9, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), new Object[]{"f"});
+        assertListElementValue(row1.asGroup().getGroup(9, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), new Object[]{"ff"});
+        assertListElementValue(row2.asGroup().getGroup(9, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), new Object[]{"fff"});
 
         assertNull(fileReader.read());
         fileReader.close();
@@ -2178,25 +1822,6 @@ public class ParquetWriteTest {
 
         String[] values = generateLocalTimestampStrings();
         prepareParquetArrayData(DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), values, resolver, accessor);
-        for (int i = 0; i < 10; i++) {
-            List<OneField> record;
-            if (i != 9) {
-                pgArrayBuilder = new PgArrayBuilder(pgUtilities);
-                pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement((String) null);
-                Instant timestamp = Instant.parse(String.format("2020-08-%02dT04:00:05Z", i + 1)); // UTC
-                ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-                String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX"));// 2020-06-28 04:30:00-07:00
-                pgArrayBuilder.addElement(localTimestampString);
-                pgArrayBuilder.addElement(localTimestampString);
-                pgArrayBuilder.endArray();
-                record = Collections.singletonList(new OneField(DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), pgArrayBuilder.toString()));
-            } else {
-                record = Collections.singletonList(new OneField(DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), null));
-            }
-            OneRow rowToWrite = resolver.setFields(record);
-            assertTrue(accessor.writeNextObject(rowToWrite));
-        }
 
         accessor.closeForWrite();
 
@@ -2210,101 +1835,22 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        for (int i = 0; i < 10; i++) {
-            Type outerType = schema.getType(0);
-            assertNotNull(outerType.getLogicalTypeAnnotation());
-            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-
-            // get the outer group
-            Group outerGroup = fileReader.read();
-
-            if (i != 9) {
-                // if the array is not a null array, the outer group should only have one field
-                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
-
-                // get the repeated list group
-                Group repeatedGroup = outerGroup.getGroup(0, 0);
-                Type repeatedType = outerType.asGroupType().getType(0);
-                //repeated group must use "repeated" keyword
-                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
-                assertEquals(3, repetitionCount);
-
-                for (int j = 0; j < repetitionCount; j++) {
-                    Group elementGroup = repeatedGroup.getGroup(0, j);
-                    if (j == 0) {// have a null element in the repeated list, the repetition count should be 0
-                        assertEquals(0, elementGroup.getFieldRepetitionCount(0));
-                        continue;
-                    }
-                    // only one  element in the repeated list, the repetition count should be 1
-                    assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-                    Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-                    // Physical type is INT96
-                    assertEquals(PrimitiveType.PrimitiveTypeName.INT96, elementType.asPrimitiveType().getPrimitiveTypeName());
-                    assertNull(elementType.getLogicalTypeAnnotation());
-
-                    Instant timestamp = Instant.parse("2020-06-28T11:30:00Z"); // UTC
-                    ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-                    //parquet doesn't keep timezone information
-                    String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // 2020-06-28 04:30:00
-                    assertEquals(localTimestampString, bytesToTimestamp(elementGroup.getInt96(0, 0).getBytes()));
+        Object[][] expectedValues = new Object[values.length][3];
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                continue;
+            }
+            for (int j = 0; j < 3; j++) {
+                if (j != 0) {
+                    expectedValues[i][j] = values[i];
                 }
-            } else {
-                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
             }
         }
+        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT96, null);
+
         fileReader.close();
     }
 
-    private void assertComplexElement(Group outerGroup, PrimitiveType.PrimitiveTypeName elementTypeName, int index, int repetitionCount, LogicalTypeAnnotation logicalTypeAnnotation, Object expectedValue) {
-        // get the repeated list group
-        Group repeatedGroup = outerGroup.getGroup(index, 0);
-
-        for (int j = 0; j < repetitionCount; j++) {
-            Group elementGroup = repeatedGroup.getGroup(0, j);
-
-            // only one  element in the repeated list, the repetition count should be 1
-            assertEquals(1, elementGroup.getFieldRepetitionCount(0));
-            switch (elementTypeName) {
-                case INT32:
-                    assertEquals((Integer) expectedValue, elementGroup.getInteger(0, 0));
-                    break;
-                case INT96:
-                    assertEquals(expectedValue, bytesToTimestamp(elementGroup.getInt96(0, 0).getBytes()));
-                    break;
-                case FLOAT:
-                    assertEquals((Float) expectedValue, elementGroup.getFloat(0, 0));
-                    break;
-                case BINARY:
-                    if (logicalTypeAnnotation != null) {
-                        Binary binary = elementGroup.getBinary(0, 0);
-                        String str = binary.toStringUsingUTF8();
-                        assertEquals((String) expectedValue, elementGroup.getBinary(0, 0).toStringUsingUTF8());
-                    } else {
-                        assertEquals((Binary) expectedValue, elementGroup.getBinary(0, 0));
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-        }
-    }
-
-    private void assertComplexType(Type outerType, int repetitionCount, PrimitiveType.PrimitiveTypeName expectedElementTypeName, LogicalTypeAnnotation logicalTypeAnnotation) {
-        assertNotNull(outerType.getLogicalTypeAnnotation());
-        assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-        Type repeatedType = outerType.asGroupType().getType(0);
-        //repeated group must use "repeated" keyword
-        assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
-        for (int j = 0; j < repetitionCount; j++) {
-            // only one  element in the repeated list, the repetition count should be 1
-            Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
-            // Physical type is binary, logical type is String
-            assertEquals(expectedElementTypeName, elementType.asPrimitiveType().getPrimitiveTypeName());
-            assertEquals(elementType.getLogicalTypeAnnotation(), logicalTypeAnnotation);
-        }
-    }
 
     private MessageType validateFooter(Path parquetFile) throws IOException {
         return validateFooter(parquetFile, 1, 10);
@@ -2336,9 +1882,9 @@ public class ParquetWriteTest {
 
     // all the inserted values pxf gets from greenplum are converted into String along with their datatype.
     private void prepareParquetArrayData(int oid, String[] values, Resolver resolver, Accessor accessor) throws Exception {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < values.length; i++) {
             List<OneField> record;
-            if (i != 9) {
+            if (i != values.length - 1) {
                 pgArrayBuilder = new PgArrayBuilder(pgUtilities);
                 pgArrayBuilder.startArray();
                 pgArrayBuilder.addElement((String) null);
@@ -2364,5 +1910,90 @@ public class ParquetWriteTest {
             }
         }
         return localTimestampStrings;
+    }
+
+    private void assertList(Type outerType, ParquetReader<Group> fileReader, Object[][] expectedValues, PrimitiveType.PrimitiveTypeName elementTypeName, LogicalTypeAnnotation logicalTypeAnnotation) throws IOException {
+        for (int i = 0; i < expectedValues.length; i++) {
+            assertNotNull(outerType.getLogicalTypeAnnotation());
+            assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
+
+            Group outerGroup = fileReader.read();
+            if (i != expectedValues.length - 1) {
+                // if the array is not a null array, the outer group should only have one field
+                assertEquals(1, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+
+                // get the repeated list group
+                Group repeatedGroup = outerGroup.getGroup(0, 0);
+                Type repeatedType = outerType.asGroupType().getType(0);
+                //repeated group must use "repeated" keyword
+                assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
+                int repetitionCount = repeatedGroup.getFieldRepetitionCount(repeatedType.asGroupType().getName());
+                assertEquals(3, repetitionCount);
+                assertListElementType(outerType.asGroupType().getType(0), repetitionCount, elementTypeName, logicalTypeAnnotation);
+                assertListElementValue(outerGroup.getGroup(0, 0), repetitionCount, elementTypeName, logicalTypeAnnotation, expectedValues[i]);
+            } else {
+                // if the array is a null array, the outer group should have no field
+                assertEquals(0, outerGroup.getFieldRepetitionCount(outerType.asGroupType().getName()));
+            }
+
+        }
+    }
+
+    private void assertListElementValue(Group repeatedGroup, int repetitionCount, PrimitiveType.PrimitiveTypeName elementTypeName, LogicalTypeAnnotation logicalTypeAnnotation, Object[] expectedValues) {
+        for (int j = 0; j < repetitionCount; j++) {
+            Group elementGroup = repeatedGroup.getGroup(0, j);
+            // the first element is null, so repetitonCount should be 0
+            if (j == 0) {
+                assertEquals(0, elementGroup.getFieldRepetitionCount(0));
+                continue;
+            }
+            // only one  element in the repeated list, the repetition count should be 1
+            assertEquals(1, elementGroup.getFieldRepetitionCount(0));
+            switch (elementTypeName) {
+                case INT32:
+                    if (logicalTypeAnnotation != null && logicalTypeAnnotation.toOriginalType() == LogicalTypeAnnotation.IntLogicalTypeAnnotation.intType(16, true).toOriginalType()) {
+                        assertEquals((short) expectedValues[j], (short) elementGroup.getInteger(0, 0));
+                    } else {
+                        assertEquals((Integer) expectedValues[j], elementGroup.getInteger(0, 0));
+                    }
+                    break;
+                case INT96:
+                    assertEquals(expectedValues[j], bytesToTimestamp(elementGroup.getInt96(0, 0).getBytes()));
+                    break;
+                case FLOAT:
+                    assertEquals((Float) expectedValues[j], elementGroup.getFloat(0, 0));
+                    break;
+                case BINARY:
+                    if (logicalTypeAnnotation != null) {
+                        Binary binary = elementGroup.getBinary(0, 0);
+                        String str = binary.toStringUsingUTF8();
+                        assertEquals(expectedValues[j], elementGroup.getBinary(0, 0).toStringUsingUTF8());
+                    } else {
+                        assertEquals((Binary) expectedValues[j], elementGroup.getBinary(0, 0));
+                    }
+                    break;
+                case FIXED_LEN_BYTE_ARRAY:
+                    assertEquals(expectedValues[j], new BigDecimal(new BigInteger(elementGroup.getBinary(0, 0).getBytes()), 18));
+                    break;
+                default:
+                    break;
+            }
+
+        }
+    }
+
+    private void assertListElementType(Type repeatedType, int repetitionCount, PrimitiveType.PrimitiveTypeName expectedElementTypeName, LogicalTypeAnnotation logicalTypeAnnotation) {
+//        assertNotNull(outerType.getLogicalTypeAnnotation());
+//        assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
+//        Type repeatedType = outerType.asGroupType().getType(0);
+        //repeated group must use "repeated" keyword
+        assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
+        for (int j = 0; j < repetitionCount; j++) {
+            // only one  element in the repeated list, the repetition count should be 1
+            Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
+            // Physical type is binary, logical type is String
+            assertEquals(expectedElementTypeName, elementType.asPrimitiveType().getPrimitiveTypeName());
+            assertEquals(elementType.getLogicalTypeAnnotation(), logicalTypeAnnotation);
+        }
     }
 }
