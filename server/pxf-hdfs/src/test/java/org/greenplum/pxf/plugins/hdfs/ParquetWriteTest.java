@@ -27,7 +27,6 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.junit.jupiter.api.BeforeEach;
