@@ -570,6 +570,35 @@ public class ParquetResolverTest {
         assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18), BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
     }
 
+    @Test
+    public void testGetFields_List_Nulls() throws IOException, ParseException {
+        schema = getParquetSchemaForListTypes(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL, true);
+        // schema has changed, set metadata again
+        context.setMetadata(schema);
+        context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        List<Group> groups = readParquetFile("parquet_list_types.parquet", 6, schema);
+        assertEquals(6, groups.size());
+
+        List<OneField> fields = assertRow(groups, 3, 13);
+        assertField(fields, 0, 4, DataType.INTEGER);
+        assertField(fields, 1, new Boolean[]{null}, DataType.BOOLARRAY);
+        assertField(fields, 2, new Short[]{10,20}, DataType.INT2ARRAY);
+        assertField(fields, 3, new Integer[]{7,null,8}, DataType.INT4ARRAY);
+        assertField(fields, 4, new Long[]{-9223372036854775808L,0L}, DataType.INT8ARRAY);
+        assertField(fields, 5, new Float[]{(float) 2.3,(float) 4.5}, DataType.FLOAT4ARRAY);
+        assertField(fields, 6, new Double[]{null}, DataType.FLOAT8ARRAY);
+        assertField(fields, 7, new String[]{null, ""}, DataType.TEXTARRAY);
+        assertField(fields, 8, new Binary[]{null}, DataType.BYTEAARRAY);
+        assertField(fields, 9, new String[]{null}, DataType.BPCHARARRAY);
+        assertField(fields, 10, new String[]{null}, DataType.VARCHARARRAY);
+        assertField(fields, 11, new Date[]{new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07"),new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07"),null}, DataType.DATEARRAY);
+        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234500000000000000L, 18)}, DataType.NUMERICARRAY);
+
+    }
+
 
     private List<OneField> assertRow(List<Group> groups, int desiredRow, int numFields) {
         OneRow row = new OneRow(groups.get(desiredRow)); // get row
