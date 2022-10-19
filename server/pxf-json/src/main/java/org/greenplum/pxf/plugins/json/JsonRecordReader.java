@@ -59,11 +59,15 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private int maxObjectLength;
     private PartitionedJsonParser parser;
     private LineRecordReader lineRecordReader;
+    // position of the underlying lineRecordReader
     private long linePos;
+    // line that was read in by the line record reader
     private Text currentLine;
     private JobConf conf;
     private final Path file;
+    // this is the current line in buffer form
     private StringBuffer currentLineBuffer;
+    // index where the JsonRecordReader has read to in the currentLineBuffer
     private int currentLineIndex = Integer.MAX_VALUE;
     private boolean inNextSplit = false;
 
@@ -119,36 +123,36 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     public boolean next(LongWritable key, Text value) throws IOException {
 
         while (!inNextSplit) { // split level. if out of split, then return false
-            int i;
-            // object to pass in for streaming
-            Text jsonObject = new Text();
-            boolean completedObject = false;
             // scan to first start brace object.
-            boolean foundBeginObject = scanToFirstBeginObject();
-
+            boolean foundBeginObject = scanToNextJsonBeginObject();
             if (!foundBeginObject) {
-                // if we've read all the way to the end and didn't find something, update the pos and move on
+                // if we've scanned the entire file and didn't find anything,
+                // then the position of the JsonRecordReader should match the lineRecordReader
                 pos = linePos;
                 return false;
             }
 
-            // found an object, so we will either return a completed object or be mid-object
             // found a start brace so begin a new json object
             parser.startNewJsonObject();
 
             // read through the file until the object is completed
-            while (!completedObject && (i = readNextChar()) != EOF) { // in the split, create the object
-                if (i == END_OF_SPLIT) {
-                    if (currentLineBuffer == null || currentLineIndex >= currentLineBuffer.length()) {
-                            LOG.debug("JSON object incomplete, moving onto next split to finish");
-                            getNextSplit();
-                            // continue the while loop to complete the object
-                            continue;
-                    }
+            int i;
+            boolean isObjectComplete = false;
+            // object to pass in for streaming
+            Text jsonObject = new Text();
+            while (!isObjectComplete && (i = readNextChar()) != EOF) {
+                // if the currentLineBuffer is null, nothing has been read yet, so we need to read the next line
+                // if the currentLineIndex is greater than the length,  we are at the end of the buffer, read the next line
+                // however, if we are at the end of the split, then we need to get the next split before we can read the line
+                if (i == END_OF_SPLIT && (currentLineBuffer == null || currentLineIndex >= currentLineBuffer.length())) {
+                    LOG.debug("JSON object incomplete, moving onto next split to finish");
+                    getNextSplit();
+                    // continue the while loop to complete the object
+                    continue;
                 }
 
                 char c = (char) i;
-                completedObject = parser.buildNextObjectContainingMember(c, jsonObject);
+                isObjectComplete = parser.buildNextObjectContainingMember(c, jsonObject);
             }
 
             // we've completed an object but there might still be things in the buffer. Calculate the proper
@@ -156,12 +160,13 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             long unreadCharsInBuffer = currentLineBuffer.length() - currentLineIndex;
             pos = linePos - unreadCharsInBuffer;
 
-            if (completedObject && parser.foundObjectWithIdentifier()) {
+            if (isObjectComplete && parser.foundObjectWithIdentifier()) {
                 String json = jsonObject.toString();
                 if (json.length() > maxObjectLength) {
                     LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
                 } else {
-                    key.set(pos);
+                    // the key is set to beginning of the json object
+                    key.set(pos - json.length());
                     value.set(json);
                     return true;
                 }
@@ -220,11 +225,10 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
      * @throws IOException
      */
     private int readNextChar() throws IOException {
-        boolean getNext;
-        // if we are at the end of the buffer, refresh
+        // if the currentLineBuffer is null, nothing has been read yet, so we need to read the next line
+        // if the currentLineIndex is greater than the length,  we are at the end of the buffer, read the next line
         if (currentLineBuffer == null || currentLineIndex >= currentLineBuffer.length()) {
-            getNext = getNextLine();
-            if (!getNext) {
+            if (!getNextLine()) {
                 return END_OF_SPLIT;
             }
         }
@@ -241,11 +245,12 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
      * @return true when an open bracket '{' is found, false otherwise
      * @throws IOException
      */
-    private boolean scanToFirstBeginObject() throws IOException {
+    private boolean scanToNextJsonBeginObject() throws IOException {
         // assumes each line is a valid json line
         // seek until we hit the first begin-object
         boolean inString = false;
         int i;
+        // since we have not yet found a starting object, exit if either EOF (-1) or END_OF_SPLIT (-2)
         while ((i = readNextChar()) > EOF) {
             char c = (char) i;
             // if the current value is a backslash, then ignore the next value as it's an escaped char
@@ -284,25 +289,23 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private boolean getNextLine() throws IOException {
         currentLine.clear();
         long currentPos = lineRecordReader.getPos();
-        boolean getNext = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
+        boolean didReturnLine = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
         linePos = lineRecordReader.getPos();
-        if (getNext) {
+        if (didReturnLine) {
             // lineRecordReader removes the new lines and carriage returns when it does the read
             // we want to track that delta so we know the proper size of the line that was returned
             long delta = linePos - currentPos - currentLine.getLength();
             // append the removed chars back for proper accounting
             if (delta == 2) {
                 currentLine.append(CARRIAGERETURN_NEWLINE, 0, CARRIAGERETURN_NEWLINE.length);
-            }
-            if (delta == 1) {
+            } else if (delta == 1) {
                 currentLine.append(NEW_LINE, 0, NEW_LINE.length);
-            }
-            if (delta >= 3) {
+            } else {
                 LOG.debug("LineRecordReader removed more characters than expected");
             }
             currentLineBuffer = new StringBuffer(currentLine.toString());
             currentLineIndex = 0;
         }
-        return getNext;
+        return didReturnLine;
     }
 }
