@@ -19,16 +19,14 @@ package org.greenplum.pxf.plugins.json.parser;
  * under the License.
  */
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-import org.apache.hadoop.io.Text;
 import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
 
 /**
- * A simple parser that can support reading JSON objects from a random point in JSON text. It reads from the supplied
+ * A simple parser that builds up a JSON object from the supplied char fed in. that can support reading JSON objects from a random point in JSON text. It reads from the supplied
  * stream (which is assumed to be positioned at any arbitrary position inside some JSON text) until it finds the first
  * JSON begin-object "{". From this point on it will keep reading JSON objects until it finds one containing a member
  * string that the user supplies.
@@ -43,9 +41,10 @@ public class PartitionedJsonParser {
 
 	private MemberSearchState memberState;
 	private StringBuilder currentObject;
-	private StringBuilder currentString;
+	private StringBuilder currentStringLiteral;
 	private int objectCount;
 	private List<Integer> objectStack;
+	private boolean isCompletedObject;
 
 	public PartitionedJsonParser(String memberName) {
 		this.lexer = new JsonLexer();
@@ -55,7 +54,8 @@ public class PartitionedJsonParser {
 
 		this.objectCount = 0;
 		this.currentObject = new StringBuilder();
-		this.currentString = new StringBuilder();
+		this.currentStringLiteral = new StringBuilder();
+		this.isCompletedObject = false;
 
 		this.objectStack = new ArrayList<Integer>();
 	}
@@ -78,8 +78,9 @@ public class PartitionedJsonParser {
 
 		this.objectCount = 0;
 		this.currentObject = new StringBuilder();
-		this.currentString = new StringBuilder();
+		this.currentStringLiteral = new StringBuilder();
 		this.objectStack = new ArrayList<Integer>();
+		this.isCompletedObject = false;
 
 		currentObject.append(START_BRACE);
 		objectStack.add(0);
@@ -87,11 +88,10 @@ public class PartitionedJsonParser {
 	/**
 	 * @param c character to parse
 	 *            Indicates the member name used to determine the encapsulating object to return.
-	 * @return Returns next json object that contains a member attribute with name: memberName. Returns null if no such
-	 *         object is found or the end of the stream is reached.
-	 * @throws IOException IOException when stream reading
+	 * @return true  if the JSON object has been completed. The completed JSON object will be returned in the `jsonObject` Text parameter
+	 *         false if the JSON object is not yet complete. the `jsonObject` Text object will be empty.
 	 */
-	public boolean buildNextObjectContainingMember(char c, Text jsonObject) {
+	public boolean buildNextObjectContainingMember(char c) {
 		lexer.lex(c);
 
 		currentObject.append(c);
@@ -100,16 +100,16 @@ public class PartitionedJsonParser {
 		case SEARCHING:
 			if (lexer.getState() == JsonLexerState.BEGIN_STRING) {
 				// we found the start of a string, so reset our string buffer
-				currentString.setLength(0);
+				currentStringLiteral.setLength(0);
 			} else if (inStringStates.contains(lexer.getState())) {
 				// we're still inside a string, so keep appending to our buffer
-				currentString.append(c);
-			} else if (lexer.getState() == JsonLexerState.END_STRING && memberName.equals(currentString.toString())) {
+				currentStringLiteral.append(c);
+			} else if (lexer.getState() == JsonLexerState.END_STRING && memberName.equals(currentStringLiteral.toString())) {
 
 				if (objectStack.size() > 0) {
 					// we hit the end of the string and it matched the member name (yay)
 					memberState = MemberSearchState.FOUND_STRING_NAME;
-					currentString.setLength(0);
+					currentStringLiteral.setLength(0);
 				}
 			} else if (lexer.getState() == JsonLexerState.BEGIN_OBJECT) {
 				// we are searching and found a '{', so we reset the current object string
@@ -123,9 +123,11 @@ public class PartitionedJsonParser {
 					objectStack.remove(objectStack.size() - 1);
 				}
 				if (objectStack.size() == 0) {
+					// we found a '}' at the same level as the first '{' and nothing was found
 					currentObject.setLength(0);
 					memberState = MemberSearchState.STRING_NOT_FOUND;
-					return true;
+					isCompletedObject = true;
+					break;
 				}
 			}
 			break;
@@ -154,21 +156,29 @@ public class PartitionedJsonParser {
 				objectCount--;
 				if (objectCount < 0) {
 					// we're done! we reached an "}" which is at the same level as the member we found
-					jsonObject.set(currentObject.toString());
-					return true;
+					isCompletedObject = true;
+					break;
 				}
 			}
 			break;
 		}
 
-		return false;
-	}
-
-	public boolean foundObjectWithIdentifier() {
-		return !(memberState == MemberSearchState.STRING_NOT_FOUND);
+		return isCompletedObject;
 	}
 
 	/**
-	 * @return Returns the number of bytes read from the stream.
+	 * If the object is complete, return it otherwise return empty string
+	 * @return the completed JSON object
 	 */
+	public String getCompletedObject() {
+		if (isCompletedObject) {
+			return currentObject.toString();
+		} else {
+			return "";
+		}
+	}
+
+	public boolean foundObjectWithIdentifier() {
+		return memberState == MemberSearchState.FOUND_STRING_NAME || memberState == MemberSearchState.IN_MATCHING_OBJECT;
+	}
 }

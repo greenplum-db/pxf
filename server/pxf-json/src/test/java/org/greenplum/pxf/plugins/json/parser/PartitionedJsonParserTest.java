@@ -36,17 +36,17 @@ public class PartitionedJsonParserTest {
         // start the json object, handles starting bracket
         parser.startNewJsonObject();
 
-        Text result = new Text();
         boolean completed = false;
         String jsonContents = "\"name\"";
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch, result);
+            completed = parser.buildNextObjectContainingMember(ch);
         }
 
+        String result = parser.getCompletedObject();
         assertFalse(completed);
         assertTrue(parser.foundObjectWithIdentifier());
-        assertEquals(0, result.getLength());
+        assertEquals(0, result.getBytes().length);
     }
 
     @Test
@@ -56,20 +56,20 @@ public class PartitionedJsonParserTest {
         // start the json object, handles starting bracket
         parser.startNewJsonObject();
 
-        Text result = new Text();
         boolean completed = false;
         // if a json object has been started, give this input
         String jsonContents = "\"name\": \"äää\", \"year\": \"2022\", \"cüstömerstätüs\":\"välid\",\"address\": \"söme city\", \"zip\": \"95051\"}";
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch, result);
+            completed = parser.buildNextObjectContainingMember(ch);
         }
 
+        String result = parser.getCompletedObject();
         assertTrue(completed);
         assertTrue(parser.foundObjectWithIdentifier());
-        assertEquals(105, result.getLength());
-        assertEquals("{\"name\": \"äää\", \"year\": \"2022\", \"cüstömerstätüs\":\"välid\",\"address\": \"söme city\", \"zip\": \"95051\"}", result.toString());
+        assertEquals(105, result.getBytes().length);
+        assertEquals("{\"name\": \"äää\", \"year\": \"2022\", \"cüstömerstätüs\":\"välid\",\"address\": \"söme city\", \"zip\": \"95051\"}", result);
     }
 
     @Test
@@ -79,7 +79,6 @@ public class PartitionedJsonParserTest {
         // start the json object, handles starting bracket
         parser.startNewJsonObject();
 
-        Text result = new Text();
         boolean completed = false;
         // if a json object has been started, give this input
         String jsonContents = "\"name\": \"äää\"\r\r\n," +
@@ -91,18 +90,19 @@ public class PartitionedJsonParserTest {
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch, result);
+            completed = parser.buildNextObjectContainingMember(ch);
         }
 
+        String result = parser.getCompletedObject();
         assertTrue(completed);
         assertTrue(parser.foundObjectWithIdentifier());
-        assertEquals(117, result.getLength());
+        assertEquals(117, result.getBytes().length);
         assertEquals("{\"name\": \"äää\"\r\r\n," +
                 "\"year\": \"2022\",\r\r\n" +
                 "\"cüstömerstätüs\":\"välid\",\r\r\n" +
                 "\"address\": \"söme city\",\r\r\n" +
                 "\"zip\": \"95051\"\r\r\n" +
-                "}", result.toString());
+                "}", result);
     }
 
     @Test
@@ -112,7 +112,6 @@ public class PartitionedJsonParserTest {
         // start the json object, handles starting bracket
         parser.startNewJsonObject();
 
-        Text result = new Text();
         boolean completed = false;
         // if a json object has been started, give this input
         String jsonContents = "\"name\": \"äää\"\n," +
@@ -124,18 +123,19 @@ public class PartitionedJsonParserTest {
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch, result);
+            completed = parser.buildNextObjectContainingMember(ch);
         }
 
+        String result = parser.getCompletedObject();
         assertTrue(completed);
         assertTrue(parser.foundObjectWithIdentifier());
-        assertEquals(110, result.getLength());
+        assertEquals(110, result.getBytes().length);
         assertEquals("{\"name\": \"äää\"\n," +
                 "\"year\": \"2022\",\r\r" +
                 "\"cüstömerstätüs\":\"välid\",\r\n" +
                 "\"address\": \"söme city\",\r\r\n" +
                 "\"zip\": \"95051\"" +
-                "}", result.toString());
+                "}", result);
     }
 
     @Test
@@ -145,20 +145,20 @@ public class PartitionedJsonParserTest {
         // start the json object, handles starting bracket
         parser.startNewJsonObject();
 
-        Text result = new Text();
         boolean completed = false;
         // if a json object has been started, give this input
         String jsonContents = "\"name\": \"äää\", \"year\": \"2022\", \"cüstömerstätüs\":\"välid\",\"address\": \"söme city\", \"zip\": \"95051\"}";
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch, result);
+            completed = parser.buildNextObjectContainingMember(ch);
         }
 
+        String result = parser.getCompletedObject();
         assertTrue(completed);
         assertFalse(parser.foundObjectWithIdentifier());
         // result should be empty
-        assertEquals(0, result.getLength());
+        assertEquals(0, result.getBytes().length);
     }
 
     @Test
@@ -168,19 +168,19 @@ public class PartitionedJsonParserTest {
         // start the json object, handles starting bracket
         parser.startNewJsonObject();
 
-        Text result = new Text();
         boolean completed = false;
         // if a json object has been started, give this input
         String jsonContents = "}";
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch, result);
+            completed = parser.buildNextObjectContainingMember(ch);
         }
 
+        String result = parser.getCompletedObject();
         assertTrue(completed);
         assertFalse(parser.foundObjectWithIdentifier());
-        assertEquals(0, result.getLength());
+        assertEquals(0, result.getBytes().length);
     }
 
     @Test
@@ -191,7 +191,6 @@ public class PartitionedJsonParserTest {
         parser.startNewJsonObject();
 
         int count = 0;
-        Text result = new Text();
         boolean completed = false;
         // if a json object has been started, give this input
         String jsonContents =
@@ -213,10 +212,11 @@ public class PartitionedJsonParserTest {
                 break;
             }
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch, result);
+            completed = parser.buildNextObjectContainingMember(ch);
             count++;
         }
 
+        String result = parser.getCompletedObject();
         // should have read the following 41 bytes
         // `  "name": "äää",\n`
         // `  "customerdata":\n`
@@ -230,14 +230,14 @@ public class PartitionedJsonParserTest {
         assertEquals(6, jsonContents.length() - count);
         assertTrue(completed);
         assertTrue(parser.foundObjectWithIdentifier());
-        assertEquals(119, result.getLength());
+        assertEquals(119, result.getBytes().length);
         // should only be the inner object containing the identifier with the same spacing and newlines
         assertEquals("{\n" +
                 "      \"cüstömerstätüs\": \"välid\",\n" +
                 "      \"year\": \"2022\",\n" +
                 "      \"address\": \"söme city\",\n" +
                 "      \"zip\": \"95051\"\n" +
-                "    }", result.toString());
+                "    }", result);
     }
 
     @Test
@@ -247,19 +247,19 @@ public class PartitionedJsonParserTest {
         // start the json object, handles starting bracket
         parser.startNewJsonObject();
 
-        Text result = new Text();
         boolean completed = false;
         // if a json object has been started, give this input
         String jsonContents = "\"notes\": \"the year we lived\"}";
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch, result);
+            completed = parser.buildNextObjectContainingMember(ch);
         }
 
+        String result = parser.getCompletedObject();
         assertTrue(completed);
         assertFalse(parser.foundObjectWithIdentifier());
         // identifier not found
-        assertEquals(0, result.getLength());
+        assertEquals(0, result.getBytes().length);
     }
 }

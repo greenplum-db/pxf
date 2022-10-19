@@ -139,7 +139,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             int i;
             boolean isObjectComplete = false;
             // object to pass in for streaming
-            Text jsonObject = new Text();
             while (!isObjectComplete && (i = readNextChar()) != EOF) {
                 // if the currentLineBuffer is null, nothing has been read yet, so we need to read the next line
                 // if the currentLineIndex is greater than the length,  we are at the end of the buffer, read the next line
@@ -152,7 +151,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 }
 
                 char c = (char) i;
-                isObjectComplete = parser.buildNextObjectContainingMember(c, jsonObject);
+                isObjectComplete = parser.buildNextObjectContainingMember(c);
             }
 
             // we've completed an object but there might still be things in the buffer. Calculate the proper
@@ -161,8 +160,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             pos = linePos - unreadCharsInBuffer;
 
             if (isObjectComplete && parser.foundObjectWithIdentifier()) {
-                String json = jsonObject.toString();
-                if (json.length() > maxObjectLength) {
+                String json = parser.getCompletedObject();
+                if (json.getBytes().length > maxObjectLength) {
                     LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
                 } else {
                     // the key is set to beginning of the json object
