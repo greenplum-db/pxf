@@ -60,7 +60,7 @@ The `pxf-env.sh` file exposes these PXF JVM configuration properties:
 | [PXF_LOGDIR](cfg_logging.html#cfglogdir)   | The PXF log directory. | $PXF_BASE/logs |
 | PXF_RUNDIR   | The PXF run directory. | $PXF_BASE/run |
 | [PXF_JVM_OPTS](cfg_mem.html#pxf-heapcfg)  | The default options for the PXF Java virtual machine. | -Xmx2g -Xms1g |
-| [PXF_OOM_KILL](cfg_mem.html#pxf-cfgoom)  | Activate/deactivate PXF auto-kill on OutOfMemoryError (OOM). | true (activated) |
+| [PXF_OOM_KILL](cfg_mem.html#pxf-cfgoom)  | Activate/deactivate PXF auto-termination on OutOfMemoryError (OOM). | true (activated) |
 | [PXF_OOM_DUMP_PATH](cfg_mem.html#pxf-cfgoom)  | The absolute path to the dump file that PXF generates on OOM. | No dump file (empty) |
 | [PXF_LOADER_PATH](reg_jar_depend.html)  | Additional directories and JARs for PXF to class-load. | (empty) |
 | [LD_LIBRARY_PATH](reg_jar_depend.html)  | Additional directories and native libraries for PXF to load. | (empty) |

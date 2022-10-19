@@ -2,7 +2,7 @@
 title: Memory and Threading
 ---
 
-Because a single PXF Service (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This becomes more evident under concurrent workloads or with queries against large files. You may run into situations where a query hangs or fails due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to [auto-kill the server](#pxf-cfgoom-autokill) (activated by default) or [dump the Java heap](#pxf-cfgoom-heapdump) when it detects an out of memory condition.
+Because a single PXF Service (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This becomes more evident under concurrent workloads or with queries against large files. You may run into situations where a query hangs or fails due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to [auto-terminate the server](#pxf-cfgoom-autoterm) (activated by default) or [dump the Java heap](#pxf-cfgoom-heapdump) when it detects an out of memory condition.
 
 
 ## <a id="pxf-heapcfg"></a>Increasing the JVM Memory for PXF
@@ -50,14 +50,14 @@ java.lang.OutOfMemoryError: Java heap space
 
 You can configure the PXF JVM to activate/deactivate the following actions when it detects an OOM condition:
 
-- Auto-kill the PXF Service (activated by default).
+- Auto-terminate the PXF Service (activated by default).
 - Dump the Java heap (deactivated by default).
 
-### <a id="pxf-cfgoom-autokill"></a>Auto-Killing the PXF Server
+### <a id="pxf-cfgoom-autoterm"></a>Auto-Terminating the PXF Server
 
-By default, PXF is configured such that when the PXF JVM detects an out of memory condition on a Greenplum host, it automatically runs a script that kills the PXF Service running on the host. The `PXF_OOM_KILL` environment variable in the `$PXF_BASE/conf/pxf-env.sh` configuration file governs this auto-kill behavior.
+By default, PXF is configured such that when the PXF JVM detects an out of memory condition on a Greenplum host, it automatically runs a script that terminates the PXF Service running on the host. The `PXF_OOM_KILL` environment variable in the `$PXF_BASE/conf/pxf-env.sh` configuration file governs this auto-terminate behavior.
 
-When auto-kill is activated and the PXF JVM detects an OOM condition and kills the PXF Service on the host:
+When auto-terminate is activated and the PXF JVM detects an OOM condition and terminates the PXF Service on the host:
 
 - PXF logs the following messages to `$PXF_LOGDIR/pxf-oom.log` on the segment host:
 
@@ -94,7 +94,7 @@ Refer to the configuration [procedure](#pxf-cfgoom_proc) below for the instructi
 
 #### <a id="pxf-cfgoom_proc"></a>Procedure
 
-Auto-kill of the PXF Service on OOM is deactivated by default. Heap dump generation on OOM is deactivated by default. To configure one or both of these properties, perform the following procedure:
+Auto-termination of the PXF Service on OOM is deactivated by default. Heap dump generation on OOM is deactivated by default. To configure one or both of these properties, perform the following procedure:
 
 1. Log in to your Greenplum Database master host:
 
@@ -108,7 +108,7 @@ Auto-kill of the PXF Service on OOM is deactivated by default. Heap dump generat
     gpadmin@gpmaster$ vi $PXF_BASE/conf/pxf-env.sh
     ```
 
-3. If you want to configure (i.e. turn off, or turn back on) auto-kill of the PXF Service on OOM, locate the `PXF_OOM_KILL` property in the `pxf-env.sh` file. If the setting is commented out, uncomment it, and then update the value. For example, to turn off this behavior, set the value to `false`:
+3. If you want to configure (i.e. turn off, or turn back on) auto-termination of the PXF Service on OOM, locate the `PXF_OOM_KILL` property in the `pxf-env.sh` file. If the setting is commented out, uncomment it, and then update the value. For example, to turn off this behavior, set the value to `false`:
 
     ``` shell
     export PXF_OOM_KILL=false
