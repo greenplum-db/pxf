@@ -154,7 +154,7 @@ Perform the following procedure on your Greenplum Database cluster to create a P
     (2 rows)
     ```
 
-    When you execute this query, PXF requests and retrieves query results for only the `city` and `total` columns, reducing the amount of data sent back to Greenplum Database.
+    When you run this query, PXF requests and retrieves query results for only the `city` and `total` columns, reducing the amount of data sent back to Greenplum Database.
 
 4. Provide additional filters and aggregations to filter the `total` in PostgreSQL:
 
@@ -170,5 +170,5 @@ Perform the following procedure on your Greenplum Database cluster to create a P
     (2 rows)
     ```
 
-    In this example, PXF will add the `WHERE` filter to the subquery. This filter is pushed to and executed on the remote database system, reducing the amount of data that PXF sends back to Greenplum Database. The `GROUP BY` aggregation, however, is not pushed to the remote and is performed by Greenplum.
+    In this example, PXF will add the `WHERE` filter to the subquery. This filter is pushed to and run on the remote database system, reducing the amount of data that PXF sends back to Greenplum Database. The `GROUP BY` aggregation, however, is not pushed to the remote and is performed by Greenplum.
 

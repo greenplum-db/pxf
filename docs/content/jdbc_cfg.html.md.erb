@@ -25,7 +25,7 @@ PXF is bundled with the `postgresql-42.4.1.jar` JAR file. If you require a diffe
 
 When you configure the PXF JDBC Connector, you add at least one named PXF server configuration for the connector as described in [Configuring PXF Servers](cfg_server.html). You can also configure one or more statically-defined queries to run against the remote SQL database.
 
-PXF provides a template configuration file for the JDBC Connector. This server template configuration file, located in `<PXF_INSTALL_DIR>/templates/jdbc-site.xml`, identifies properties that you can configure to establish a connection to the external SQL database. The template also includes optional properties that you can set before executing query or insert commands in the external database session.
+PXF provides a template configuration file for the JDBC Connector. This server template configuration file, located in `<PXF_INSTALL_DIR>/templates/jdbc-site.xml`, identifies properties that you can configure to establish a connection to the external SQL database. The template also includes optional properties that you can set before running query or insert commands in the external database session.
 
 The required properties in the `jdbc-site.xml` server template file follow:
 
@@ -61,7 +61,7 @@ Ensure that the JDBC driver for the external SQL database supports any connectio
 
 ### <a id="conntransiso"></a>Connection Transaction Isolation Property
 
-The SQL standard defines four transaction isolation levels. The level that you specify for a given connection to an external SQL database determines how and when the changes made by one transaction executed on the connection are visible to another.
+The SQL standard defines four transaction isolation levels. The level that you specify for a given connection to an external SQL database determines how and when the changes made by one transaction run on the connection are visible to another.
 
 The PXF JDBC Connector exposes an optional server configuration property named `jdbc.connection.transactionIsolation` that enables you to specify the transaction isolation level. PXF sets the level (`setTransactionIsolation()`) just after establishing the connection to the external SQL database.
 
@@ -88,13 +88,13 @@ Different SQL databases support different transaction isolation levels. Ensure t
 
 ### <a id="stateprop"></a>Statement-Level Properties
 
-The PXF JDBC Connector executes a query or insert command on an external SQL database table in a *statement*. The Connector exposes properties that enable you to configure certain aspects of the statement before the command is executed in the external database. The Connector supports the following statement-level properties:
+The PXF JDBC Connector runs a query or insert command on an external SQL database table in a *statement*. The Connector exposes properties that enable you to configure certain aspects of the statement before the command is run in the external database. The Connector supports the following statement-level properties:
 
 | Property       | Description                                | Value |
 |----------------|--------------------------------------------|-------|
 | jdbc.statement.batchSize | The number of rows to write to the external database table in a batch. | The number of rows. The default write batch size is 100. |
 | jdbc.statement.fetchSize | The number of rows to fetch/buffer when reading from the external database table. | The number of rows. The default read fetch size for MySQL is `-2147483648` (`Integer.MIN_VALUE`). The default read fetch size for all other databases is 1000. |
-| jdbc.statement.queryTimeout | The amount of time (in seconds) the JDBC driver waits for a statement to execute. This timeout applies to statements created for both read and write operations. | The timeout duration in seconds. The default wait time is unlimited. |
+| jdbc.statement.queryTimeout | The amount of time (in seconds) the JDBC driver waits for a statement to run. This timeout applies to statements created for both read and write operations. | The timeout duration in seconds. The default wait time is unlimited. |
 
 PXF uses the default value for any statement-level property that you do not explicitly configure.
 
@@ -121,13 +121,13 @@ The PXF `jdbc.read.prepared-statement` property governs the use of `PreparedStat
 
 ### <a id="sessprop"></a>Session-Level Properties
 
-To set session-level properties, add the `jdbc.session.property.<SPROP_NAME>` property to `jdbc-site.xml`. PXF will `SET` these properties in the external database before executing a query.
+To set session-level properties, add the `jdbc.session.property.<SPROP_NAME>` property to `jdbc-site.xml`. PXF will `SET` these properties in the external database before running a query.
 
  Replace `<SPROP_NAME>` with the session property name and specify its value:
 
 | Property       | Description                                | Value |
 |----------------|--------------------------------------------|-------|
-| jdbc.session.property.\<SPROP_NAME\> | The name of a session property (\<SPROP_NAME\>) to set before query execution. | The value of the \<SPROP_NAME\> property. |
+| jdbc.session.property.\<SPROP_NAME\> | The name of a session property (\<SPROP_NAME\>) to set before running the query. | The value of the \<SPROP_NAME\> property. |
 
 **Note**: The PXF JDBC Connector passes both the session property name and property value to the external SQL database exactly as specified in the `jdbc-site.xml` server configuration file. To limit the potential threat of SQL injection, the Connector rejects any property name or value that contains the `;`, `\n`, `\b`, or `\0` characters.
 

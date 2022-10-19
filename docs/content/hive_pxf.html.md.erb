@@ -932,7 +932,7 @@ In Hive, any query that filters on the partition column omits data in the defaul
 hive> SELECT * FROM sales WHERE xdate IS null;
 ```
 
-However, if you map this Hive table to a PXF external table in Greenplum Database, all default partition values are translated into actual NULL values. In Greenplum Database, executing the same query against the PXF external table returns row 4 as the result, because the filter matches the NULL value.
+However, if you map this Hive table to a PXF external table in Greenplum Database, all default partition values are translated into actual NULL values. In Greenplum Database, running the same query against the PXF external table returns row 4 as the result, because the filter matches the NULL value.
 
-Keep this behavior in mind when you execute `IS NULL` queries on Hive partitioned tables.
+Keep this behavior in mind when you run `IS NULL` queries on Hive partitioned tables.
 

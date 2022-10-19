@@ -30,7 +30,7 @@ SHOW gp_external_enable_filter_pushdown;
 SET gp_external_enable_filter_pushdown TO 'on';
 ```
 
-**Note:** Some external data sources do not support filter pushdown. Also, filter pushdown may not be supported with certain data types or operators. If a query accesses a data source that does not support filter push-down for the query constraints, the query is instead executed without filter pushdown (the data is filtered after it is transferred to Greenplum Database).
+**Note:** Some external data sources do not support filter pushdown. Also, filter pushdown may not be supported with certain data types or operators. If a query accesses a data source that does not support filter push-down for the query constraints, the query is instead run without filter pushdown (the data is filtered after it is transferred to Greenplum Database).
 
 PXF filter pushdown can be used with these data types (connector- and profile-specific):
 
