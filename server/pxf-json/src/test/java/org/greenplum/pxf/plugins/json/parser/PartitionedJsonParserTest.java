@@ -20,7 +20,6 @@ package org.greenplum.pxf.plugins.json.parser;
  */
 
 
-import org.apache.hadoop.io.Text;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,7 +39,7 @@ public class PartitionedJsonParserTest {
         String jsonContents = "\"name\"";
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch);
+            completed = parser.parse(ch);
         }
 
         String result = parser.getCompletedObject();
@@ -62,7 +61,7 @@ public class PartitionedJsonParserTest {
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch);
+            completed = parser.parse(ch);
         }
 
         String result = parser.getCompletedObject();
@@ -90,7 +89,7 @@ public class PartitionedJsonParserTest {
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch);
+            completed = parser.parse(ch);
         }
 
         String result = parser.getCompletedObject();
@@ -123,7 +122,7 @@ public class PartitionedJsonParserTest {
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch);
+            completed = parser.parse(ch);
         }
 
         String result = parser.getCompletedObject();
@@ -151,7 +150,7 @@ public class PartitionedJsonParserTest {
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch);
+            completed = parser.parse(ch);
         }
 
         String result = parser.getCompletedObject();
@@ -174,7 +173,7 @@ public class PartitionedJsonParserTest {
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch);
+            completed = parser.parse(ch);
         }
 
         String result = parser.getCompletedObject();
@@ -212,7 +211,7 @@ public class PartitionedJsonParserTest {
                 break;
             }
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch);
+            completed = parser.parse(ch);
             count++;
         }
 
@@ -253,7 +252,7 @@ public class PartitionedJsonParserTest {
 
         for (int i = 0; i < jsonContents.length(); i++) {
             char ch = jsonContents.charAt(i);
-            completed = parser.buildNextObjectContainingMember(ch);
+            completed = parser.parse(ch);
         }
 
         String result = parser.getCompletedObject();

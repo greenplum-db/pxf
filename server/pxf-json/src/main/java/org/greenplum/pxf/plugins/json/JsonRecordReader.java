@@ -78,6 +78,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private static final int END_OF_SPLIT = -2;
     private final byte[] NEW_LINE = "\n".getBytes(StandardCharsets.UTF_8);
     private final byte[] CARRIAGERETURN_NEWLINE = "\r\n".getBytes(StandardCharsets.UTF_8);
+    private final LongWritable key;
 
     /**
      * Create new multi-line json object reader.
@@ -114,6 +115,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         currentLine = new Text();
         this.pos = start;
         this.linePos = start;
+        this.key = lineRecordReader.createKey();
     }
 
     /*
@@ -151,7 +153,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 }
 
                 char c = (char) i;
-                isObjectComplete = parser.buildNextObjectContainingMember(c);
+                isObjectComplete = parser.parse(c);
             }
 
             // we've completed an object but there might still be things in the buffer. Calculate the proper
@@ -288,7 +290,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private boolean getNextLine() throws IOException {
         currentLine.clear();
         long currentPos = lineRecordReader.getPos();
-        boolean didReturnLine = lineRecordReader.next(lineRecordReader.createKey(), currentLine);
+        boolean didReturnLine = lineRecordReader.next(key, currentLine);
         linePos = lineRecordReader.getPos();
         if (didReturnLine) {
             // lineRecordReader removes the new lines and carriage returns when it does the read

@@ -26,11 +26,13 @@ import java.util.List;
 import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
 
 /**
- * A simple parser that builds up a JSON object from the supplied char fed in. that can support reading JSON objects from a random point in JSON text. It reads from the supplied
- * stream (which is assumed to be positioned at any arbitrary position inside some JSON text) until it finds the first
- * JSON begin-object "{". From this point on it will keep reading JSON objects until it finds one containing a member
- * string that the user supplies.
- * &lt;p/&gt;
+ * A simple parser that builds up a JSON object from the supplied char fed in. The parser searches for the JSON
+ * object containing the member string that the user supplies.
+ *
+ * It tracks and builds up the JSON object as it does this search. This code assumes that the user has found the first
+ * JSON begin-object "{". It will return only the object containing the member string. For example, if there is a nested
+ * JSON object and the member string is in the nested object, the parser will only return the nested object.
+ *
  * It is not recommended to use this with JSON text where individual JSON objects that can be large (MB's or larger).
  */
 public class PartitionedJsonParser {
@@ -88,10 +90,9 @@ public class PartitionedJsonParser {
 	/**
 	 * @param c character to parse
 	 *            Indicates the member name used to determine the encapsulating object to return.
-	 * @return true  if the JSON object has been completed. The completed JSON object will be returned in the `jsonObject` Text parameter
-	 *         false if the JSON object is not yet complete. the `jsonObject` Text object will be empty.
+	 * @return true  if the JSON object has been completed, false otherwise
 	 */
-	public boolean buildNextObjectContainingMember(char c) {
+	public boolean parse(char c) {
 		lexer.lex(c);
 
 		currentObject.append(c);
@@ -171,11 +172,7 @@ public class PartitionedJsonParser {
 	 * @return the completed JSON object
 	 */
 	public String getCompletedObject() {
-		if (isCompletedObject) {
-			return currentObject.toString();
-		} else {
-			return "";
-		}
+		return isCompletedObject ? currentObject.toString() : "";
 	}
 
 	public boolean foundObjectWithIdentifier() {
