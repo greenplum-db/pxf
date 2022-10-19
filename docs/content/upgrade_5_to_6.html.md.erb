@@ -118,10 +118,10 @@ After you install the new version of PXF, perform the following procedure:
     1. The `pxf.service.user.name` property in the `pxf-site.xml` template file is now commented out by default. Keep this in mind when you configure new PXF servers.
     2. The default value for the `jdbc.pool.property.maximumPoolSize` property is now `15`. If you have previously configured a JDBC server and want that server to use the new default value, you must manually change the property value in the server's `jdbc-site.xml` file.
     3. PXF 5.16 disallows specifying relative paths and environment variables in the `CREATE EXTERNAL TABLE` `LOCATION` clause file path. If you previously created any external tables that specified a relative path or environment variable, you must drop each external table, and then re-create it without these constructs.
-    4. Filter pushdown is enabled by default for queries on external tables that specify the `Hive`, `HiveRC`, or `HiveORC` profiles (named `hive`, `hive:rc`, and `hive:orc` in PXF version 6.x). If you have previously created an external table that specifies one of these profiles and queries are failing with PXF v5.16+, you can disable filter pushdown at the external table-level or at the server level:
+    4. Filter pushdown is deactivated by default for queries on external tables that specify the `Hive`, `HiveRC`, or `HiveORC` profiles (named `hive`, `hive:rc`, and `hive:orc` in PXF version 6.x). If you have previously created an external table that specifies one of these profiles and queries are failing with PXF v5.16+, you can deactivate filter pushdown at the external table-level or at the server level:
 
         1. (External table) Drop the external table and re-create it, specifying the `&PPD=false` option in the `LOCATION` clause.
-        2. (Server) If you do not want to recreate the external table, you can disable filter pushdown *for all* `Hive*` (named as described [here](access_hdfs.html#hadoop_connectors) in PXF version 6.x) *profile queries using the server* by setting the `pxf.ppd.hive` property in the `pxf-site.xml` file to `false`:
+        2. (Server) If you do not want to recreate the external table, you can deactivate filter pushdown *for all* `Hive*` (named as described [here](access_hdfs.html#hadoop_connectors) in PXF version 6.x) *profile queries using the server* by setting the `pxf.ppd.hive` property in the `pxf-site.xml` file to `false`:
 
             ``` pre
             <property>

@@ -202,7 +202,7 @@ Hive connector-specific keywords and values used in the Greenplum Database [CREA
 | \<hive&#8209;table&#8209;name\>    | The name of the Hive table. |
 | PROFILE=\<profile_name\>    | `<profile_name>` must specify one of the values `hive`, `hive:text`, `hive:rc`, or `hive:orc`. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
-| PPD=\<boolean\>    | Enable or disable predicate pushdown for all queries on this table; this option applies only to the `hive`, `hive:orc`, and `hive:rc` profiles, and overrides a `pxf.ppd.hive` property setting in the \<server_name\> configuration. |
+| PPD=\<boolean\>    | Activate or deactivate predicate pushdown for all queries on this table; this option applies only to the `hive`, `hive:orc`, and `hive:rc` profiles, and overrides a `pxf.ppd.hive` property setting in the \<server_name\> configuration. |
 | VECTORIZE=\<boolean\>    | When `PROFILE=hive:orc`, a Boolean value that specifies whether or not PXF uses vectorized query execution when accessing the underlying ORC files. The default value is `false`, does not use vectorized query execution. |
 | FORMAT (`hive` and `hive:orc` profiles)   | The `FORMAT` clause must specify `'CUSTOM'`. The `CUSTOM` format requires the built-in `pxfwritable_import` `formatter`.   |
 | FORMAT (`hive:text` and `hive:rc` profiles) | The `FORMAT` clause must specify `TEXT`. Specify the single ascii character field delimiter in the `delimiter='<delim>'` formatting option. |

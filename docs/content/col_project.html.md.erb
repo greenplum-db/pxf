@@ -20,7 +20,7 @@ Column projection is automatically enabled for the `pxf` external table protocol
 | Azure Blob Storage | Azure Object Store Connector | wasbs:orc, wasbs:parquet |
 | Azure Data Lake | Azure Object Store Connector | adl:orc, adl:parquet |
 
-**Note:** PXF may disable column projection in cases where it cannot successfully serialize a query filter; for example, when the `WHERE` clause resolves to a `boolean` type.
+**Note:** PXF may deactivate column projection in cases where it cannot successfully serialize a query filter; for example, when the `WHERE` clause resolves to a `boolean` type.
 
 To summarize, all of the following criteria must be met for column projection to occur:
 

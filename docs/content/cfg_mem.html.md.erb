@@ -2,7 +2,7 @@
 title: Memory and Threading
 ---
 
-Because a single PXF Service (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This becomes more evident under concurrent workloads or with queries against large files. You may run into situations where a query hangs or fails due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to [auto-kill the server](#pxf-cfgoom-autokill) (enabled by default) or [dump the Java heap](#pxf-cfgoom-heapdump) when it detects an out of memory condition.
+Because a single PXF Service (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This becomes more evident under concurrent workloads or with queries against large files. You may run into situations where a query hangs or fails due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to [auto-kill the server](#pxf-cfgoom-autokill) (activated by default) or [dump the Java heap](#pxf-cfgoom-heapdump) when it detects an out of memory condition.
 
 
 ## <a id="pxf-heapcfg"></a>Increasing the JVM Memory for PXF
@@ -48,16 +48,16 @@ In an out of memory (OOM) situation, PXF returns the following error in response
 java.lang.OutOfMemoryError: Java heap space
 ```
 
-You can configure the PXF JVM to enable/disable the following actions when it detects an OOM condition:
+You can configure the PXF JVM to activate/deactivate the following actions when it detects an OOM condition:
 
-- Auto-kill the PXF Service (enabled by default).
-- Dump the Java heap (disabled by default).
+- Auto-kill the PXF Service (activated by default).
+- Dump the Java heap (deactivated by default).
 
 ### <a id="pxf-cfgoom-autokill"></a>Auto-Killing the PXF Server
 
 By default, PXF is configured such that when the PXF JVM detects an out of memory condition on a Greenplum host, it automatically runs a script that kills the PXF Service running on the host. The `PXF_OOM_KILL` environment variable in the `$PXF_BASE/conf/pxf-env.sh` configuration file governs this auto-kill behavior.
 
-When auto-kill is enabled and the PXF JVM detects an OOM condition and kills the PXF Service on the host:
+When auto-kill is activated and the PXF JVM detects an OOM condition and kills the PXF Service on the host:
 
 - PXF logs the following messages to `$PXF_LOGDIR/pxf-oom.log` on the segment host:
 
@@ -75,26 +75,26 @@ When auto-kill is enabled and the PXF JVM detects an OOM condition and kills the
 
 **When the PXF Service on a host is shut down in this manner, you must explicitly restart the PXF Service on the host.** See the [pxf](ref/pxf.html) reference page for more information on the `pxf start` command.
 
-Refer to the configuration [procedure](#pxf-cfgoom_proc) below for the instructions to disable/enable this PXF configuration property.
+Refer to the configuration [procedure](#pxf-cfgoom_proc) below for the instructions to deactivate/activate this PXF configuration property.
  
 ### <a id="pxf-cfgoom-heapdump"></a>Dumping the Java Heap
 
 In an out of memory situation, it may be useful to capture the Java heap dump to help determine what factors contributed to the resource exhaustion. You can configure PXF to write the heap dump to a file when it detects an OOM condition by setting the `PXF_OOM_DUMP_PATH` environment variable in the `$PXF_BASE/conf/pxf-env.sh` configuration file. By default, PXF does not dump the Java heap on OOM.
 
-If you choose to enable the heap dump on OOM, you must set `PXF_OOM_DUMP_PATH` to the absolute path to a file or directory:
+If you choose to activate the heap dump on OOM, you must set `PXF_OOM_DUMP_PATH` to the absolute path to a file or directory:
 
 - If you specify a directory, the PXF JVM writes the heap dump to the file `<directory>/java_pid<pid>.hprof`, where `<pid>` identifies the process ID of the PXF Service instance. The PXF JVM writes a new file to the directory every time the JVM goes OOM.
 - If you specify a file and the file does not exist, the PXF JVM writes the heap dump to the file when it detects an OOM. If the file already exists, the JVM will not dump the heap.
 
 Ensure that the `gpadmin` user has write access to the dump file or directory.
 
-**Note**: Heap dump files are often rather large. If you enable heap dump on OOM for PXF and specify a directory for `PXF_OOM_DUMP_PATH`, multiple OOMs will generate multiple files in the directory and could potentially consume a large amount of disk space. If you specify a file for `PXF_OOM_DUMP_PATH`, disk usage is constant when the file name does not change. You must rename the dump file or configure a different `PXF_OOM_DUMP_PATH` to generate subsequent heap dumps.
+**Note**: Heap dump files are often rather large. If you activate heap dump on OOM for PXF and specify a directory for `PXF_OOM_DUMP_PATH`, multiple OOMs will generate multiple files in the directory and could potentially consume a large amount of disk space. If you specify a file for `PXF_OOM_DUMP_PATH`, disk usage is constant when the file name does not change. You must rename the dump file or configure a different `PXF_OOM_DUMP_PATH` to generate subsequent heap dumps.
 
-Refer to the configuration [procedure](#pxf-cfgoom_proc) below for the instructions to enable/disable this PXF configuration property.
+Refer to the configuration [procedure](#pxf-cfgoom_proc) below for the instructions to activate/deactivate this PXF configuration property.
 
 #### <a id="pxf-cfgoom_proc"></a>Procedure
 
-Auto-kill of the PXF Service on OOM is enabled by default. Heap dump generation on OOM is disabled by default. To configure one or both of these properties, perform the following procedure:
+Auto-kill of the PXF Service on OOM is deactivated by default. Heap dump generation on OOM is deactivated by default. To configure one or both of these properties, perform the following procedure:
 
 1. Log in to your Greenplum Database master host:
 

@@ -98,11 +98,11 @@ You include JDBC connector custom options in the `LOCATION` URI, prefacing each 
 
 | Option Name   | Operation | Description
 |---------------|------------|--------|
-| BATCH_SIZE | Write | Integer that identifies the number of `INSERT` operations to batch to the external SQL database. Write batching is enabled by default; the default value is 100. |
-| FETCH_SIZE | Read | Integer that identifies the number of rows to buffer when reading from an external SQL database. Read row batching is enabled by default. The default read fetch size for MySQL is `-2147483648` (`Integer.MIN_VALUE`). The default read fetch size for all other databases is 1000. |
+| BATCH_SIZE | Write | Integer that identifies the number of `INSERT` operations to batch to the external SQL database. Write batching is activated by default; the default value is 100. |
+| FETCH_SIZE | Read | Integer that identifies the number of rows to buffer when reading from an external SQL database. Read row batching is activated by default. The default read fetch size for MySQL is `-2147483648` (`Integer.MIN_VALUE`). The default read fetch size for all other databases is 1000. |
 | QUERY_TIMEOUT | Read/Write | Integer that identifies the amount of time (in seconds) that the JDBC driver waits for a statement to execute. The default wait time is infinite. |
-| POOL_SIZE | Write | Enable thread pooling on `INSERT` operations and identify the number of threads in the pool. Thread pooling is disabled by default. |
-| PARTITION_BY | Read | Enables read partitioning. The partition column, \<column-name\>:\<column-type\>. You may specify only one partition column. The JDBC connector supports `date`, `int`, and `enum` \<column-type\> values, where `int` represents any JDBC integral type. If you do not identify a `PARTITION_BY` column, a single PXF instance services the read request. |
+| POOL_SIZE | Write | Activate thread pooling on `INSERT` operations and identify the number of threads in the pool. Thread pooling is deactivated by default. |
+| PARTITION_BY | Read | Activates read partitioning. The partition column, \<column-name\>:\<column-type\>. You may specify only one partition column. The JDBC connector supports `date`, `int`, and `enum` \<column-type\> values, where `int` represents any JDBC integral type. If you do not identify a `PARTITION_BY` column, a single PXF instance services the read request. |
 | RANGE | Read | Required when `PARTITION_BY` is specified. The query range; used as a hint to aid the creation of partitions. The `RANGE` format is dependent upon the data type of the partition column. When the partition column is an `enum` type, `RANGE` must specify a list of values, \<value\>:\<value\>[:\<value\>[...]], each of which forms its own fragment. If the partition column is an `int` or `date` type, `RANGE` must specify \<start-value\>:\<end-value\> and represents the interval from \<start-value\> through \<end-value\>, inclusive. The `RANGE` for an `int` partition column may span any 64-bit signed integer values. If the partition column is a `date` type, use the `yyyy-MM-dd` date format. |
 | INTERVAL | Read | Required when `PARTITION_BY` is specified and of the `int`, `bigint`, or `date` type. The interval, \<interval-value\>[:\<interval-unit\>], of one fragment. Used with `RANGE` as a hint to aid the creation of partitions. Specify the size of the fragment in \<interval-value\>. If the partition column is a `date` type, use the \<interval-unit\> to specify `year`, `month`, or `day`. PXF ignores `INTERVAL` when the `PARTITION_BY` column is of the `enum` type. |
 | QUOTE_COLUMNS | Read | Controls whether PXF should quote column names when constructing an SQL query to the external database. Specify `true` to force PXF to quote all column names; PXF does not quote column names if any other value is provided. If `QUOTE_COLUMNS` is not specified (the default), PXF automatically quotes *all* column names in the query when *any* column name:<br>- includes special characters, or <br>- is mixed case and the external database does not support unquoted mixed case identifiers. |
@@ -112,9 +112,9 @@ You include JDBC connector custom options in the `LOCATION` URI, prefacing each 
 
 *When the JDBC driver of the external SQL database supports it*, batching of `INSERT` operations may significantly increase performance.
 
-Write batching is enabled by default, and the default batch size is 100. To disable batching or to modify the default batch size value, create the PXF external table with a `BATCH_SIZE` setting:
+Write batching is activated by default, and the default batch size is 100. To deactivate batching or to modify the default batch size value, create the PXF external table with a `BATCH_SIZE` setting:
 
-- `BATCH_SIZE=0` or `BATCH_SIZE=1` - disables batching
+- `BATCH_SIZE=0` or `BATCH_SIZE=1` - deactivates batching
 - `BATCH_SIZE=(n>1)` - sets the `BATCH_SIZE` to `n`
 
 When the external database JDBC driver does not support batching, the behaviour of the PXF JDBC connector depends on the `BATCH_SIZE` setting as follows:
@@ -130,7 +130,7 @@ By default, the PXF JDBC connector automatically batches the rows it fetches fro
 FETCH_SIZE=5000
 ```
 
-If the external database JDBC driver does not support batching on read, you must explicitly disable read row batching by setting `FETCH_SIZE=0`.
+If the external database JDBC driver does not support batching on read, you must explicitly deactivate read row batching by setting `FETCH_SIZE=0`.
 
 #### <a id="threadpool"></a>Thread Pooling (Write)
 
@@ -140,15 +140,15 @@ Consider using batching together with a thread pool. When used together, each th
 
 The JDBC connector returns an error when any thread in the thread pool fails. Be aware that if an `INSERT` operation fails, some data may be written to the external database table.
 
-To disable or enable a thread pool and set the pool size, create the PXF external table with a `POOL_SIZE` setting as follows:
+To deactivate or activate a thread pool and set the pool size, create the PXF external table with a `POOL_SIZE` setting as follows:
 
 - `POOL_SIZE=(n<1)` - thread pool size is the number of CPUs in the system
-- `POOL_SIZE=1` - disable thread pooling
+- `POOL_SIZE=1` - deactivate thread pooling
 - `POOL_SIZE=(n>1)`- set the `POOL_SIZE` to `n`
 
 #### <a id="partitioning"></a>Partitioning (Read)
 
-The PXF JDBC connector supports simultaneous read access from PXF instances running on multiple Greenplum Database hosts to an external SQL table. This feature is referred to as partitioning. Read partitioning is not enabled by default. To enable read partitioning, set the `PARTITION_BY`, `RANGE`, and `INTERVAL` custom options when you create the PXF external table.
+The PXF JDBC connector supports simultaneous read access from PXF instances running on multiple Greenplum Database hosts to an external SQL table. This feature is referred to as partitioning. Read partitioning is not activated by default. To activate read partitioning, set the `PARTITION_BY`, `RANGE`, and `INTERVAL` custom options when you create the PXF external table.
 
 PXF uses the `RANGE` and `INTERVAL` values and the `PARTITON_BY` column that you specify to assign specific data rows in the external table to PXF instances running on the Greenplum Database segment hosts. This column selection is specific to PXF processing, and has no relationship to a partition column that you may have specified for the table in the external SQL database.
 
@@ -162,7 +162,7 @@ Example JDBC \<custom-option\> substrings that identify partitioning parameters:
 &PARTITION_BY=color:enum&RANGE=red:yellow:blue
 ```
 
-When you enable partitioning, the PXF JDBC connector splits a `SELECT` query into multiple subqueries that retrieve a subset of the data, each of which is called a fragment. The JDBC connector automatically adds extra query constraints (`WHERE` expressions) to each fragment to guarantee that every tuple of data is retrieved from the external database exactly once.
+When you activate partitioning, the PXF JDBC connector splits a `SELECT` query into multiple subqueries that retrieve a subset of the data, each of which is called a fragment. The JDBC connector automatically adds extra query constraints (`WHERE` expressions) to each fragment to guarantee that every tuple of data is retrieved from the external database exactly once.
 
 For example, when a user queries a PXF external table created with a `LOCATION` clause that specifies `&PARTITION_BY=id:int&RANGE=1:5&INTERVAL=2`, PXF generates 5 fragments: two according to the partition settings and up to three implicitly generated fragments. The constraints associated with each fragment are as follows:
 

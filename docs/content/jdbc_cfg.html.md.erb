@@ -150,9 +150,9 @@ The PXF JDBC Connector uses JDBC connection pooling implemented by [HikariCP](ht
 
 One or more connection pools may exist for a given server configuration, and user access to different external tables specifying the same server may share a connection pool.
 
-**Note**: If you have enabled JDBC user impersonation in a server configuration, the JDBC Connector creates a separate connection pool for each Greenplum Database user that accesses any external table specifying that server configuration.
+**Note**: If you have activated JDBC user impersonation in a server configuration, the JDBC Connector creates a separate connection pool for each Greenplum Database user that accesses any external table specifying that server configuration.
 
-The `jdbc.pool.enabled` property governs JDBC connection pooling for a server configuration. Connection pooling is enabled by default. To disable JDBC connection pooling for a server configuration, set the property to false:
+The `jdbc.pool.enabled` property governs JDBC connection pooling for a server configuration. Connection pooling is activated by default. To deactive JDBC connection pooling for a server configuration, set the property to false:
 
 ``` xml
 <property>
@@ -161,7 +161,7 @@ The `jdbc.pool.enabled` property governs JDBC connection pooling for a server co
 </property>
 ```
 
-If you disable JDBC connection pooling for a server configuration, PXF does not reuse JDBC connections for that server. PXF creates a connection to the remote database for every partition of a query, and closes the connection when the query for that partition completes.
+If you deactive JDBC connection pooling for a server configuration, PXF does not reuse JDBC connections for that server. PXF creates a connection to the remote database for every partition of a query, and closes the connection when the query for that partition completes.
 
 PXF exposes connection pooling properties that you can configure in a JDBC server definition. These properties are named with the `jdbc.pool.property.` prefix and *apply to each PXF JVM*. The JDBC Connector automatically sets the following connection pool properties and default values:
 
@@ -193,18 +193,18 @@ In practice, you may choose to set `maximumPoolSize` to a lower value, since the
 
 ## <a id="jdbcimpers"></a>JDBC User Impersonation
 
-The PXF JDBC Connector uses the `jdbc.user` setting or information in the `jdbc.url` to determine the identity of the user to connect to the external data store. When PXF JDBC user impersonation is disabled (the default), the behavior of the JDBC Connector is further dependent upon the external data store. For example, if you are using the JDBC Connector to access Hive, the Connector uses the settings of certain Hive authentication and impersonation properties to determine the user. You may be required to provide a `jdbc.user` setting, or add properties to the `jdbc.url` setting in the server `jdbc-site.xml` file. Refer to [Configuring Hive Access via the JDBC Connector](hive_jdbc_cfg.html) for more information on this procedure.
+The PXF JDBC Connector uses the `jdbc.user` setting or information in the `jdbc.url` to determine the identity of the user to connect to the external data store. When PXF JDBC user impersonation is deactivated (the default), the behavior of the JDBC Connector is further dependent upon the external data store. For example, if you are using the JDBC Connector to access Hive, the Connector uses the settings of certain Hive authentication and impersonation properties to determine the user. You may be required to provide a `jdbc.user` setting, or add properties to the `jdbc.url` setting in the server `jdbc-site.xml` file. Refer to [Configuring Hive Access via the JDBC Connector](hive_jdbc_cfg.html) for more information on this procedure.
 
-When you enable PXF JDBC user impersonation, the PXF JDBC Connector accesses the external data store on behalf of a Greenplum Database end user. The Connector uses the name of the Greenplum Database user that accesses the PXF external table to try to connect to the external data store.
+When you activate PXF JDBC user impersonation, the PXF JDBC Connector accesses the external data store on behalf of a Greenplum Database end user. The Connector uses the name of the Greenplum Database user that accesses the PXF external table to try to connect to the external data store.
 
-When you enable JDBC user impersonation for a PXF server, PXF overrides the value of a `jdbc.user` property setting defined in either `jdbc-site.xml` or `<greenplum_user_name>-user.xml`, or specified in the external table DDL, with the Greenplum Database user name. For user impersonation to work effectively when the external data store requires passwords to authenticate connecting users, you must specify the `jdbc.password` setting for each user that can be impersonated in that user's `<greenplum_user_name>-user.xml` property override file. Refer to [Configuring a PXF User](cfg_server.html#usercfg) for more information about per-server, per-Greenplum-user configuration.
+When you activate JDBC user impersonation for a PXF server, PXF overrides the value of a `jdbc.user` property setting defined in either `jdbc-site.xml` or `<greenplum_user_name>-user.xml`, or specified in the external table DDL, with the Greenplum Database user name. For user impersonation to work effectively when the external data store requires passwords to authenticate connecting users, you must specify the `jdbc.password` setting for each user that can be impersonated in that user's `<greenplum_user_name>-user.xml` property override file. Refer to [Configuring a PXF User](cfg_server.html#usercfg) for more information about per-server, per-Greenplum-user configuration.
 
 The `pxf.service.user.impersonation` property in the `jdbc-site.xml` configuration file governs JDBC user impersonation.
 
 
 ### <a id="jdbc-impers-cfg"></a>Example Configuration Procedure
 
-By default, PXF JDBC user impersonation is disabled.  Perform the following procedure to turn PXF user impersonation on or off for a JDBC server configuration.
+By default, PXF JDBC user impersonation is deactivated.  Perform the following procedure to turn PXF user impersonation on or off for a JDBC server configuration.
 
 1. Log in to your Greenplum Database master host as the administrative user:
 
@@ -273,7 +273,7 @@ With this configuration, PXF `SET`s the DB2 `session_user` variable to the curre
 
 ### <a id="sessauth_conpool"></a>Session Authorization Considerations for Connection Pooling
 
-When PXF performs session authorization on your behalf and JDBC connection pooling is enabled (the default), you may choose to set the `jdbc.pool.qualifier` property. Setting this property instructs PXF to include the property value in the criteria that it uses to create and reuse connection pools. In practice, you would not set this to a fixed value, but rather to a value that changes based on the user/session/transaction, etc. When you set this property to `${pxf.session.user}`, PXF includes the Greenplum Database user name in the criteria that it uses to create and re-use connection pools. The default setting is no qualifier.
+When PXF performs session authorization on your behalf and JDBC connection pooling is activated (the default), you may choose to set the `jdbc.pool.qualifier` property. Setting this property instructs PXF to include the property value in the criteria that it uses to create and reuse connection pools. In practice, you would not set this to a fixed value, but rather to a value that changes based on the user/session/transaction, etc. When you set this property to `${pxf.session.user}`, PXF includes the Greenplum Database user name in the criteria that it uses to create and re-use connection pools. The default setting is no qualifier.
 
 To make use of this feature, add or uncomment the following property block in `jdbc-site.xml` to prompt PXF to include the Greenplum user name in connection pool creation/reuse criteria:
 
