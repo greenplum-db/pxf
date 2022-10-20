@@ -30,8 +30,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -40,7 +38,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Date;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -50,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -528,7 +526,7 @@ public class ParquetResolverTest {
     }
 
     @Test
-    public void testGetFields_List() throws IOException, ParseException {
+    public void testGetFields_List() throws IOException {
         schema = getParquetSchemaForListTypes(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL, true);
         // schema has changed, set metadata again
         context.setMetadata(schema);
@@ -551,7 +549,7 @@ public class ParquetResolverTest {
         assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(new byte[]{(byte) 222, (byte) 173, (byte) 190, (byte) 239})}, DataType.BYTEAARRAY);
         assertField(fields, 9, new String[]{"hello"}, DataType.BPCHARARRAY);
         assertField(fields, 10, new String[]{"hello"}, DataType.VARCHARARRAY);
-        assertField(fields, 11, new Date[]{new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07")}, DataType.DATEARRAY);
+        assertField(fields, 11, new String[]{"2022-10-07"}, DataType.DATEARRAY);
         assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
 
         fields = assertRow(groups, 1, 13);
@@ -566,12 +564,12 @@ public class ParquetResolverTest {
         assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(new byte[]{(byte) 222, (byte) 173, (byte) 190, (byte) 239}), Binary.fromReusedByteArray(new byte[]{(byte) 173, (byte) 190, (byte) 239})}, DataType.BYTEAARRAY);
         assertField(fields, 9, new String[]{"this is exactly", " fifteen chars."}, DataType.BPCHARARRAY);
         assertField(fields, 10, new String[]{"this is exactly", " fifteen chars."}, DataType.VARCHARARRAY);
-        assertField(fields, 11, new Date[]{new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07"), new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-08")}, DataType.DATEARRAY);
+        assertField(fields, 11, new String[]{"2022-10-07", "2022-10-08"}, DataType.DATEARRAY);
         assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18), BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
     }
 
     @Test
-    public void testGetFields_List_Nulls() throws IOException, ParseException {
+    public void testGetFields_List_Nulls() throws IOException{
         schema = getParquetSchemaForListTypes(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL, true);
         // schema has changed, set metadata again
         context.setMetadata(schema);
@@ -584,19 +582,18 @@ public class ParquetResolverTest {
 
         List<OneField> fields = assertRow(groups, 3, 13);
         assertField(fields, 0, 4, DataType.INTEGER);
-        assertField(fields, 1, new Boolean[]{null}, DataType.BOOLARRAY);
-        assertField(fields, 2, new Short[]{10,20}, DataType.INT2ARRAY);
-        assertField(fields, 3, new Integer[]{7,null,8}, DataType.INT4ARRAY);
-        assertField(fields, 4, new Long[]{-9223372036854775808L,0L}, DataType.INT8ARRAY);
-        assertField(fields, 5, new Float[]{(float) 2.3,(float) 4.5}, DataType.FLOAT4ARRAY);
-        assertField(fields, 6, new Double[]{null}, DataType.FLOAT8ARRAY);
+        assertField(fields, 1, null, DataType.BOOLARRAY);
+        assertField(fields, 2, new Short[]{10, 20}, DataType.INT2ARRAY);
+        assertField(fields, 3, new Integer[]{7, null, 8}, DataType.INT4ARRAY);
+        assertField(fields, 4, new Long[]{-9223372036854775808L, 0L}, DataType.INT8ARRAY);
+        assertField(fields, 5, new Float[]{(float) 2.3, (float) 4.5}, DataType.FLOAT4ARRAY);
+        assertField(fields, 6, null, DataType.FLOAT8ARRAY);
         assertField(fields, 7, new String[]{null, ""}, DataType.TEXTARRAY);
-        assertField(fields, 8, new Binary[]{null}, DataType.BYTEAARRAY);
-        assertField(fields, 9, new String[]{null}, DataType.BPCHARARRAY);
-        assertField(fields, 10, new String[]{null}, DataType.VARCHARARRAY);
-        assertField(fields, 11, new Date[]{new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07"),new SimpleDateFormat("yyyy-MM-dd").parse("2022-10-07"),null}, DataType.DATEARRAY);
+        assertField(fields, 8, new Binary[]{null, Binary.fromReusedByteArray(new byte[]{(byte) 92, (byte) 34})}, DataType.BYTEAARRAY);
+        assertField(fields, 9, null, DataType.BPCHARARRAY);
+        assertField(fields, 10, null, DataType.VARCHARARRAY);
+        assertField(fields, 11, new String[]{"2022-10-07", "2022-10-07", null}, DataType.DATEARRAY);
         assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234500000000000000L, 18)}, DataType.NUMERICARRAY);
-
     }
 
 
@@ -614,7 +611,9 @@ public class ParquetResolverTest {
             assertEquals(type.getOID(), fields.get(index).type);
         }
 
-        if (type == DataType.BYTEA) {
+        if (value == null) {
+            assertNull(fields.get(index).val);
+        } else if (type == DataType.BYTEA) {
             assertArrayEquals((byte[]) value, (byte[]) fields.get(index).val);
         } else if (type.isArrayType()) {
             assertList((Object[]) value, (Group) fields.get(index).val);
@@ -632,19 +631,24 @@ public class ParquetResolverTest {
             Type elementType = elementGroup.getType().getType(0);
             LogicalTypeAnnotation logicalTypeAnnotation = elementType.getLogicalTypeAnnotation();
             Object value = values[i];
-
+            if (value == null) {
+                assertEquals(0, elementGroup.getFieldRepetitionCount(0));
+                continue;
+            }
             switch (elementType.asPrimitiveType().getPrimitiveTypeName()) {
                 case INT64:
                     assertEquals(value, elementGroup.getLong(0, 0));
                     break;
                 case INT32:
-                    if (elementGroup.asGroup().getType().getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
-                        assertEquals(value, elementGroup.getString(0, 0));
+                    if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+                        assertEquals(ParquetTypeConverter.getDaysFromEpochFromDateString((String) value), elementGroup.getInteger(0, 0));
                     } else if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
                         LogicalTypeAnnotation.IntLogicalTypeAnnotation intLogicalTypeAnnotation = (LogicalTypeAnnotation.IntLogicalTypeAnnotation) logicalTypeAnnotation;
                         if (intLogicalTypeAnnotation.getBitWidth() == 8 || intLogicalTypeAnnotation.getBitWidth() == 16) {
                             assertEquals(value, (short) elementGroup.getInteger(0, 0));
                         }
+                    } else {
+                        assertEquals(value, elementGroup.getInteger(0, 0));
                     }
                     break;
                 case BOOLEAN:
@@ -679,7 +683,6 @@ public class ParquetResolverTest {
                     }
             }
         }
-
     }
 
     @SuppressWarnings("deprecation")
@@ -742,8 +745,7 @@ public class ParquetResolverTest {
             elementType = new PrimitiveType(elementRepetition, primitiveTypeName, "array_element", originalType);
         }
         GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "bag", elementType);
-        GroupType groupType = new GroupType(groupRepetition, listName, org.apache.parquet.schema.OriginalType.LIST, repeatedGroupType);
-        return groupType;
+        return new GroupType(groupRepetition, listName, org.apache.parquet.schema.OriginalType.LIST, repeatedGroupType);
     }
 
     @SuppressWarnings("deprecation")
