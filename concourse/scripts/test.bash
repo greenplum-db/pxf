@@ -239,13 +239,6 @@ function _main() {
 		install_gpdb_package
 	fi
 
-HEADER_FILE_GP7=pxf_gp7_headerfile
-if [[ ${GP_VER} -ge 7 ]]; then
-  mkdir ${GPHOME}/include/postgresql/server/extension/gp_exttable_fdw
-  cp ${HEADER_FILE_GP7}/extaccess.h  ${GPHOME}/include/postgresql/server/extension/gp_exttable_fdw
-fi
-
-
 	# Install PXF
 	if [[ -d pxf_package ]]; then
 		# forward compatibility pipeline works with PXF rpms, not rpm tarballs
@@ -319,15 +312,12 @@ fi
 
 	inflate_dependencies
 
-  # TODO : Conflict with Alex's PR need to remove later.
-  # To run Tinc against GP7 we need to modify PYTHONPATH in $GPHOME/greenplum_path.sh since Tinc calls that script
-  # we will set PYTHONPATH to point to the set of python libs compiled with Python2 for GP6
-  if [[ ${GP_VER} == 7 ]]; then
-    local gp6_python_libs=~gpadmin/python
-    echo "export PYTHONPATH=${gp6_python_libs}" >> /usr/local/greenplum-db/greenplum_path.sh
-  fi
-
-
+	# To run Tinc against GP7 we need to modify PYTHONPATH in $GPHOME/greenplum_path.sh since Tinc calls that script
+	# we will set PYTHONPATH to point to the set of python libs compiled with Python2 for GP6
+	if [[ ${GP_VER} == 7 ]]; then
+	  local gp6_python_libs=~gpadmin/python
+	  echo "export PYTHONPATH=${gp6_python_libs}" >> /usr/local/greenplum-db/greenplum_path.sh
+	fi
 
 	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src
 
