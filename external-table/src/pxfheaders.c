@@ -32,8 +32,6 @@
 #include "nodes/makefuncs.h"
 #include "cdb/cdbvars.h"
 
-
-
 /* helper function declarations */
 static void add_alignment_size_httpheader(CHURL_HEADERS headers);
 static void add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel);
@@ -85,19 +83,19 @@ build_http_headers(PxfInputData *input)
 
 		churl_headers_append(headers, "X-GP-FORMAT", format);
 
-		/* Parse fmtOptString here */
-		if (fmttype_is_text(exttbl->fmtcode) || fmttype_is_csv(exttbl->fmtcode))
-		{
+    /* Parse fmtOptString here */
+    if (fmttype_is_text(exttbl->fmtcode) || fmttype_is_csv(exttbl->fmtcode))
+    {
 #if PG_VERSION_NUM >= 120000
-			copyFmtOpts = exttbl->options;
+      copyFmtOpts = exttbl->options;
 #else
-			copyFmtOpts = parseCopyFormatString(rel, exttbl->fmtopts, exttbl->fmtcode);
+      copyFmtOpts = parseCopyFormatString(rel, exttbl->fmtopts, exttbl->fmtcode);
 #endif
-		}
+    }
 
 #if PG_VERSION_NUM >= 120000
-		/* pass external table's encoding to copy's options */
-		copyFmtOpts = lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(exttbl->encoding)), -1));
+    /* pass external table's encoding to copy's options */
+    copyFmtOpts = lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(exttbl->encoding)), -1));
 #else
         copyFmtOpts = appendCopyEncodingOption(copyFmtOpts, exttbl->encoding);
 #endif
@@ -124,28 +122,28 @@ build_http_headers(PxfInputData *input)
 		relnamespace = GetNamespaceName(RelationGetNamespace(rel));
 	}
 
-	if (proj_info != NULL)
-	{
-		bool qualsAreSupported = true;
-		List *qualsAttributes =
-				 extractPxfAttributes(input->quals, &qualsAreSupported);
-		/* projection information is incomplete if columns from WHERE clause wasn't extracted */
-		/* if any of expressions in WHERE clause is not supported - do not send any projection information at all*/
-		if (qualsAreSupported &&
-			(qualsAttributes != NIL || list_length(input->quals) == 0))
-		{
-		   #if PG_VERSION_NUM >= 120000
-		        add_projection_desc_httpheader_pg12(headers, proj_info, qualsAttributes, rel);
-		   #else
-			    add_projection_desc_httpheader_pg94(headers, proj_info, qualsAttributes, rel);
-		   #endif
-		}
-		else
-		{
-			elog(DEBUG2,
-				 "Query will not be optimized to use projection information");
-		}
-	}
+  if (proj_info != NULL)
+  {
+    bool qualsAreSupported = true;
+    List *qualsAttributes =
+         extractPxfAttributes(input->quals, &qualsAreSupported);
+    /* projection information is incomplete if columns from WHERE clause wasn't extracted */
+    /* if any of expressions in WHERE clause is not supported - do not send any projection information at all*/
+    if (qualsAreSupported &&
+      (qualsAttributes != NIL || list_length(input->quals) == 0))
+    {
+       #if PG_VERSION_NUM >= 120000
+            add_projection_desc_httpheader_pg12(headers, proj_info, qualsAttributes, rel);
+       #else
+          add_projection_desc_httpheader_pg94(headers, proj_info, qualsAttributes, rel);
+       #endif
+    }
+    else
+    {
+      elog(DEBUG2,
+         "Query will not be optimized to use projection information");
+    }
+  }
 
 	/* GP cluster configuration */
 	external_set_env_vars(&ev, gphduri->uri, false, NULL, NULL, false, 0);
@@ -251,9 +249,9 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 	/* Get tuple description itself */
 	tuple = RelationGetDescr(rel);
 
-	/* Iterate attributes */
-	for (i = 0, attrIx = 0; i < tuple->natts; ++i)
-	{
+  /* Iterate attributes */
+  for (i = 0, attrIx = 0; i < tuple->natts; ++i)
+  {
         #if PG_VERSION_NUM >= 120000
             FormData_pg_attribute *attribute = &tuple->attrs[i];
         #else
@@ -396,16 +394,13 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 #if PG_VERSION_NUM < 120000
 static void
 add_projection_desc_httpheader_pg94(CHURL_HEADERS headers,
-							   ProjectionInfo *projInfo,
-							   List *qualsAttributes,
-							   Relation rel)
+                 ProjectionInfo *projInfo,
+                 List *qualsAttributes,
+                 Relation rel)
 {
 	int			   i;
 	int			   dropped_count;
 	int			   number;
-#if PG_VERSION_NUM < 90400
-	int			   numSimpleVars;
-	int			   numTargetList;
 #if PG_VERSION_NUM < 90400
 	int			   numSimpleVars;
 #endif
@@ -418,8 +413,6 @@ add_projection_desc_httpheader_pg94(CHURL_HEADERS headers,
 	initStringInfo(&formatter);
 	attrs_used = NULL;
 	number = 0;
-
-	numTargetList = 0;
 
 #if PG_VERSION_NUM >= 90400
 	/*
@@ -468,21 +461,6 @@ add_projection_desc_httpheader_pg94(CHURL_HEADERS headers,
 	}
 #endif
 
-	number = numTargetList +
-#if PG_VERSION_NUM >= 90400
-		projInfo->pi_numSimpleVars +
-#else
-		numSimpleVars +
-#endif
-		list_length(qualsAttributes);
-	if (number == 0)
-		return;
-
-	attrs_used = NULL;
-
-	/* Convert the number of projection columns to a string */
-	pg_ltoa(number, long_number);
-	churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
 
 #if PG_VERSION_NUM >= 90400
 	for (i = 0; i < projInfo->pi_numSimpleVars; i++)
@@ -526,7 +504,15 @@ add_projection_desc_httpheader_pg94(CHURL_HEADERS headers,
 			/* Shift the column index by the running dropped_count */
 			add_projection_index_header(headers, formatter,
 										i - 1 - dropped_count, long_number);
+			number++;
 		}
+	}
+
+	if (number != 0)
+	{
+		/* Convert the number of projection columns to a string */
+		pg_ltoa(number, long_number);
+		churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
 	}
 
 	list_free(qualsAttributes);
@@ -553,35 +539,35 @@ add_projection_desc_httpheader_pg94(CHURL_HEADERS headers,
 #if PG_VERSION_NUM >= 120000
 static void
 add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
-							   ProjectionInfo *projInfo,
-							   List *qualsAttributes,
-							   Relation rel)
+                 ProjectionInfo *projInfo,
+                 List *qualsAttributes,
+                 Relation rel)
 {
-	int			   i;
-	int			   dropped_count;
-	int			   number;
-	int			   numTargetList;
-	char			long_number[sizeof(int32) * 8];
+  int        i;
+  int        dropped_count;
+  int        number;
+  int        numTargetList;
+  char      long_number[sizeof(int32) * 8];
     // In versions < 120000, projInfo->pi_varNumbers contains atttribute numbers of SimpleVars
     // Since,this pi_varNumbers doesn't exist in PG12 and above, we can add the attribute numbers by
     // iterating on the Simple vars.
-	int				varNumbers[sizeof(int32) * 8];
-	Bitmapset		*attrs_used;
-	StringInfoData	formatter;
-	TupleDesc		tupdesc;
-	initStringInfo(&formatter);
-	numTargetList = 0;
+  int       varNumbers[sizeof(int32) * 8];
+  Bitmapset   *attrs_used;
+  StringInfoData  formatter;
+  TupleDesc   tupdesc;
+  initStringInfo(&formatter);
+  numTargetList = 0;
 
-	 List *targetList = (List *) projInfo->pi_state.expr;
+   List *targetList = (List *) projInfo->pi_state.expr;
      int  numSimpleVars = 0;
 
-	int numNonSimpleVars = 0;
+  int numNonSimpleVars = 0;
 
     // TODO Re-evaluate this logic and may be we don't need numNonSimpleVars
-	 for (int i = 0; i < projInfo->pi_state.steps_len; i++)
+   for (int i = 0; i < projInfo->pi_state.steps_len; i++)
      {
          ExprEvalStep *step = &projInfo->pi_state.steps[i];
-         ExprEvalOp	opcode = ExecEvalStepOp(&projInfo->pi_state, step);
+         ExprEvalOp opcode = ExecEvalStepOp(&projInfo->pi_state, step);
              if ( opcode == EEOP_ASSIGN_INNER_VAR ||
                      opcode == EEOP_ASSIGN_OUTER_VAR ||
                      opcode == EEOP_ASSIGN_SCAN_VAR)
@@ -591,82 +577,82 @@ add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
                      numNonSimpleVars++;
      }
 
-	/*
-	 * Non-simpleVars are added to the targetlist
-	 * we use expression_tree_walker to access attrno information
-	 * we do it through a helper function add_attnums_from_targetList
-	 */
-	if (targetList)
-	{
+  /*
+   * Non-simpleVars are added to the targetlist
+   * we use expression_tree_walker to access attrno information
+   * we do it through a helper function add_attnums_from_targetList
+   */
+  if (targetList)
+  {
 
-		List     *l = lappend_int(NIL, 0);
-		ListCell *lc1;
+    List     *l = lappend_int(NIL, 0);
+    ListCell *lc1;
 
-		foreach(lc1, targetList)
-		{
-			ExprState *gstate = (ExprState *) lfirst(lc1);
+    foreach(lc1, targetList)
+    {
+      ExprState *gstate = (ExprState *) lfirst(lc1);
             add_attnums_from_targetList( (Node *) gstate, l);
-		}
+    }
 
         int i=0;
-		foreach(lc1, l)
-		{
-			int attno = lfirst_int(lc1);
-			if (attno > InvalidAttrNumber)
-			{
-				add_projection_index_header(headers,
-											formatter, attno - 1, long_number);
-				numTargetList++;
+    foreach(lc1, l)
+    {
+      int attno = lfirst_int(lc1);
+      if (attno > InvalidAttrNumber)
+      {
+        add_projection_index_header(headers,
+                      formatter, attno - 1, long_number);
+        numTargetList++;
                 varNumbers[i] = attno;
                 i++;
-			}
-		}
+      }
+    }
 
-		list_free(l);
-	}
+    list_free(l);
+  }
 
-	number = numTargetList + numSimpleVars + list_length(qualsAttributes);
-	if (number == 0)
-		return;
+  number = numTargetList + numSimpleVars + list_length(qualsAttributes);
+  if (number == 0)
+    return;
 
-	attrs_used = NULL;
+  attrs_used = NULL;
 
-	/* Convert the number of projection columns to a string */
-	pg_ltoa(number, long_number);
-	churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
+  /* Convert the number of projection columns to a string */
+  pg_ltoa(number, long_number);
+  churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
 
     for (i = 0;varNumbers && i < numSimpleVars ; i++)
-	{
-		attrs_used =
-			bms_add_member(attrs_used,
+  {
+    attrs_used =
+      bms_add_member(attrs_used,
                            varNumbers[i] - FirstLowInvalidHeapAttributeNumber);
-	}
+  }
 
-	ListCell *attribute = NULL;
+  ListCell *attribute = NULL;
 
-	/*
-	 * AttrNumbers coming from quals
-	 */
-	foreach(attribute, qualsAttributes)
-	{
-		AttrNumber attrNumber = (AttrNumber) lfirst_int(attribute);
-		attrs_used =
-			bms_add_member(attrs_used,
-						 attrNumber + 1 - FirstLowInvalidHeapAttributeNumber);
-	}
+  /*
+   * AttrNumbers coming from quals
+   */
+  foreach(attribute, qualsAttributes)
+  {
+    AttrNumber attrNumber = (AttrNumber) lfirst_int(attribute);
+    attrs_used =
+      bms_add_member(attrs_used,
+             attrNumber + 1 - FirstLowInvalidHeapAttributeNumber);
+  }
 
-	tupdesc = RelationGetDescr(rel);
-	dropped_count = 0;
+  tupdesc = RelationGetDescr(rel);
+  dropped_count = 0;
 
-	for (i = 1; i <= tupdesc->natts; i++)
-	{
-		/* Ignore dropped attributes. */
-		if (tupdesc->attrs[i - 1].attisdropped)
-		{
-			/* keep a counter of the number of dropped attributes */
-			dropped_count++;
-			continue;
-		}
+  for (i = 1; i <= tupdesc->natts; i++)
+  {
+    /* Ignore dropped attributes. */
+    if (tupdesc->attrs[i - 1].attisdropped)
+    {
+      /* keep a counter of the number of dropped attributes */
+      dropped_count++;
+      continue;
+    }
 
 		if (bms_is_member(i - FirstLowInvalidHeapAttributeNumber, attrs_used))
 		{
@@ -684,9 +670,9 @@ add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
 		churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
 	}
 
-	list_free(qualsAttributes);
-	pfree(formatter.data);
-	bms_free(attrs_used);
+  list_free(qualsAttributes);
+  pfree(formatter.data);
+  bms_free(attrs_used);
 }
 #endif
 
