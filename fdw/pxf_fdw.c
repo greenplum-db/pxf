@@ -89,6 +89,8 @@ static int	pxfIsForeignRelUpdatable(Relation rel);
 static void InitCopyState(PxfFdwScanState *pxfsstate);
 static void InitCopyStateForModify(PxfFdwModifyState *pxfmstate);
 static CopyState BeginCopyTo(Relation forrel, List *options);
+static void PxfBeginScanErrorCallback(void *arg);
+static void PxfCopyFromErrorCallback(void *arg);
 
 /*
  * Foreign-data wrapper handler functions:
@@ -179,6 +181,12 @@ enum FdwScanPrivateIndex
 	/* Integer list of attribute numbers retrieved by the SELECT */
 	FdwScanPrivateRetrievedAttrs
 };
+
+/*
+ * Error token embedded in the data sent by PXF as part of an error row
+ */
+static char *const PXF_ERROR_TOKEN = "PXFERRMSG> ";
+static size_t PXF_ERROR_TOKEN_SIZE = strlen(PXF_ERROR_TOKEN);
 
 /*
  * GetForeignRelSize
@@ -415,10 +423,20 @@ pxfBeginForeignScan(ForeignScanState *node, int eflags)
 	pxfsstate->relation = relation;
 	pxfsstate->retrieved_attrs = retrieved_attrs;
 
+    /* Set up callback to identify error foreign relation. */
+    ErrorContextCallback errcallback;
+    errcallback.callback = PxfBeginScanErrorCallback;
+    errcallback.arg = (void *) relation;
+    errcallback.previous = error_context_stack;
+    error_context_stack = &errcallback;
+
 	InitCopyState(pxfsstate);
 	node->fdw_state = (void *) pxfsstate;
 
-	elog(DEBUG5, "pxf_fdw: pxfBeginForeignScan ends on segment: %d", PXF_SEGMENT_ID);
+    /* Restore the previous error callback */
+    error_context_stack = errcallback.previous;
+
+    elog(DEBUG5, "pxf_fdw: pxfBeginForeignScan ends on segment: %d", PXF_SEGMENT_ID);
 }
 
 /*
@@ -440,8 +458,8 @@ pxfIterateForeignScan(ForeignScanState *node)
 	bool		found;
 
 	/* Set up callback to identify error line number. */
-	errcallback.callback = CopyFromErrorCallback;
-	errcallback.arg = (void *) pxfsstate->cstate;
+	errcallback.callback = PxfCopyFromErrorCallback;
+	errcallback.arg = (void *) pxfsstate;
 	errcallback.previous = error_context_stack;
 	error_context_stack = &errcallback;
 
@@ -827,7 +845,7 @@ InitCopyStateForModify(PxfFdwModifyState *pxfmstate)
 }
 
 /*
- * Set up CopyState for writing to an foreign table.
+ * Set up CopyState for writing to a foreign table.
  */
 static CopyState
 BeginCopyTo(Relation forrel, List *options)
@@ -857,4 +875,125 @@ BeginCopyTo(Relation forrel, List *options)
 														cstate->enc_conversion_proc);
 
 	return cstate;
+}
+
+/*
+ * PXF specific error context callback for "begin foreign scan" operation.
+ * It replaces the "COPY" term in the error message context with
+ * the "Foreign table" term and provides the name of the foreign table
+ */
+static void
+PxfBeginScanErrorCallback(void *arg) {
+    Relation relation = (Relation) arg;
+    if (relation) {
+        errcontext("Foreign table %s", RelationGetRelationName(relation));
+        return;
+    }
+}
+
+/*
+ * PXF specific error context callback for "iterate foreign scan" operation.
+ * It is copied from copy.c handler for COPY FROM operation and replaces
+ * the "COPY" term in the error message context with the "Foreign table" term.
+ * It also replaces the error message form COPY stack with the one sent by PXF
+ * if it detects that PXF provided the error token in an extra column of an error row.
+ *
+ * The argument for the error context must be PxfFdwScanState.
+ */
+void
+PxfCopyFromErrorCallback(void *arg)
+{
+    PxfFdwScanState *pxfsstate = (PxfFdwScanState *) arg;
+    CopyState	cstate = pxfsstate->cstate;
+    char		curlineno_str[32];
+
+    snprintf(curlineno_str, sizeof(curlineno_str), UINT64_FORMAT,
+             cstate->cur_lineno);
+
+    if (cstate->binary)
+    {
+        /* can't usefully display the data */
+        if (cstate->cur_attname)
+            errcontext("Foreign table %s, record %s of %s, column %s",
+                       cstate->cur_relname, curlineno_str, pxfsstate->options->resource,
+                       cstate->cur_attname);
+        else
+            errcontext("Foreign table %s, record %s of %s",
+                       cstate->cur_relname, curlineno_str, pxfsstate->options->resource);
+    }
+    else
+    {
+        if (cstate->cur_attname && cstate->cur_attval)
+        {
+            /* error is relevant to a particular column */
+            char	   *attval;
+
+            attval = limit_printout_length(cstate->cur_attval);
+            errcontext("Foreign table %s, record %s of %s, column %s: \"%s\"",
+                       cstate->cur_relname, curlineno_str, pxfsstate->options->resource,
+                       cstate->cur_attname, attval);
+            pfree(attval);
+        }
+        else if (cstate->cur_attname)
+        {
+            /* error is relevant to a particular column, value is NULL */
+            errcontext("Foreign table %s, record %s of %s, column %s: null input",
+                       cstate->cur_relname, curlineno_str, pxfsstate->options->resource,
+                       cstate->cur_attname);
+        }
+        else
+        {
+            /*
+             * PXF specific addition: for CSV transfer PXF communicates an error
+             * during processing by emitting an "error" line that has no values
+             * for all columns and has an additional column that contains a marker
+             * token and an actual error message in the format
+             * ",, ... ,,PXFERRMSG> <actual message>"
+             * The copy code fails to parse it with the message
+             * "extra data after last expected column" that we want to change to
+             * contain the actual error message reported by PXF
+             */
+            char *token_index = strnstr(cstate->line_buf.data, PXF_ERROR_TOKEN, cstate->line_buf.len);
+            if (token_index != NULL) {
+                /* token was found, get the actual message and set it as the main error message */
+                errmsg("%s", token_index + PXF_ERROR_TOKEN_SIZE);
+                errcontext("Foreign table %s, record %s of %s",
+                           cstate->cur_relname, curlineno_str, pxfsstate->options->resource);
+            }
+            /*
+             * Error is relevant to a particular line.
+             *
+             * If line_buf still contains the correct line, and it's already
+             * transcoded, print it. If it's still in a foreign encoding, it's
+             * quite likely that the error is precisely a failure to do
+             * encoding conversion (ie, bad data). We dare not try to convert
+             * it, and at present there's no way to regurgitate it without
+             * conversion. So we have to punt and just report the line number.
+             */
+            else if (cstate->line_buf_valid &&
+                (cstate->line_buf_converted || !cstate->need_transcoding))
+            {
+                char	   *lineval;
+
+                lineval = limit_printout_length(cstate->line_buf.data);
+                //truncateEolStr(line_buf, cstate->eol_type); <-- this is done in GP6, but not in GP7 ?
+                errcontext("Foreign table %s, record %s of %s: \"%s\"",
+                           cstate->cur_relname, curlineno_str, pxfsstate->options->resource, lineval);
+                pfree(lineval);
+            }
+            else
+            {
+                /*
+                 * Here, the line buffer is still in a foreign encoding,
+                 * and indeed it's quite likely that the error is precisely
+                 * a failure to do encoding conversion (ie, bad data).	We
+                 * dare not try to convert it, and at present there's no way
+                 * to regurgitate it without conversion.  So we have to punt
+                 * and just report the line number.
+                 */
+                errcontext("Foreign table %s, record %s of %s",
+                           cstate->cur_relname, curlineno_str, pxfsstate->options->resource);
+            }
+        }
+    }
 }

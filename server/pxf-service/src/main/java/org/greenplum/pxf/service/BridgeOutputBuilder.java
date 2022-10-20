@@ -62,6 +62,7 @@ public class BridgeOutputBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(BridgeOutputBuilder.class);
 
     private static final byte DELIM = 10; /* (byte)'\n'; */
+    public static final String PXF_ERROR_TOKEN = "PXFERRMSG> ";
     private final Charset databaseEncoding;
     private final String newLine;
     private final byte[] newLineBytes;
@@ -131,11 +132,11 @@ public class BridgeOutputBuilder {
             return errorRecord;
         } else {
             // Serialize error text into CSV
-            // We create a row with an extra column containing the error information
+            // We create a row with an extra column containing the error token (used by FDW) and error information
             LOG.error(ex.getMessage(), ex);
             return new Text(
                     StringUtils.repeat(String.valueOf(greenplumCSV.getDelimiter()), columnDescriptors.size()) +
-                            greenplumCSV.toCsvField(ex.getMessage(), true, true, true) +
+                            greenplumCSV.toCsvField(PXF_ERROR_TOKEN + ex.getMessage(), true, true, true) +
                             newLine);
         }
     }

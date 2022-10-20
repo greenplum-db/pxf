@@ -19,6 +19,7 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
@@ -44,6 +45,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -161,6 +164,13 @@ public class BridgeOutputBuilderTest {
                 + "\n";
     }
 
+    private String getExpectedSerializedErrorString() {
+        return IntStream.range(0, 16)
+                        .mapToObj(i->StringUtils.EMPTY)
+                        .collect(Collectors.joining(","))
+                        + ",PXFERRMSG> test message\n";
+    }
+
     private void assertPrimitiveTypesInGPDBWritable(List<Writable> outputQueue) throws GPDBWritable.TypeMismatchException {
         assertNotNull(outputQueue);
         assertEquals(1, outputQueue.size());
@@ -191,6 +201,13 @@ public class BridgeOutputBuilderTest {
         assertTrue(outputQueue.get(0) instanceof Text);
         outputQueue.get(0).write(dos);
         assertEquals(getExpectedSerializedString(), new String(dos.getOutput(), StandardCharsets.UTF_8));
+    }
+
+    private void assertPrimitiveTypesErrorInText(Writable output) throws IOException {
+        assertNotNull(output);
+        assertTrue(output instanceof Text);
+        output.write(dos);
+        assertEquals(getExpectedSerializedErrorString(), new String(dos.getOutput(), StandardCharsets.UTF_8));
     }
 
     // ---------- Serializing into GPDBWritable format ----------
@@ -282,6 +299,12 @@ public class BridgeOutputBuilderTest {
         outputQueue.get(0).write(dos);
         assertEquals("0,0.0,0.0,0,0,true,\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",,HELLO\n",
                 new String(dos.getOutput(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testGetErrorOutputForText() throws Exception {
+        Exception e = new Exception("test message");
+        assertPrimitiveTypesErrorInText(getBridgeOutputBuilder(OutputFormat.TEXT).getErrorOutput(e));
     }
 
     @Test
