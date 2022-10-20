@@ -13,9 +13,9 @@ inputs:
   optional: true
 - name: ambari_env_files
   optional: true
-- name: pxf_gp7_headerfile
+- name: gp6-python-libs
   optional: true
-- name: gp6-python-libs # TODO : Conflict with Alex's PR need to remove later.
+- name: pxf_gp7_headerfile
   optional: true
 - name: pxf_fdw_tarball
   optional: true
@@ -37,6 +37,7 @@ params:
   RUN_JDK_VERSION: 8
   PROTOCOL:
   PG_REGRESS:
+  USE_FDW: false
 
 run:
   path: pxf_src/concourse/scripts/test.bash
