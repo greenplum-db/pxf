@@ -25,7 +25,7 @@ With the explosion of data stores and cloud services, data now resides across ma
 
 The diagram below describes a data source that tracks monthly sales across many years. Real-time operational data is stored in MySQL. Data subject to analytic and business intelligence operations is stored in Greenplum Database. The rarely accessed, archival data resides in AWS S3.
 
-<img src="graphics/datatemp.png" class="image" width="630" alt="centered image"/>
+![Operational Data Location Example](graphics/datatemp.png "Operational Data Location Example")
 
 When multiple, related data sets exist in external systems, it is often more efficient to join data sets remotely and return only the results, rather than negotiate the time and storage requirements of performing a rather expensive full data load operation. The *Greenplum Platform Extension Framework (PXF)*, a Greenplum extension that provides parallel, high throughput data access and federated query processing, provides this capability.
 

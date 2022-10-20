@@ -77,7 +77,7 @@ accesses Hadoop as the Greenplum user.
 
 This is the default configuration for a Hadoop PXF server.
 
-<img alt="Accessing Hadoop as the Greenplum User Proxied by the Kerberos Principal" src="graphics/impersonation_cases/impersonation-case-1-kerberos.png" class="image" />
+![Accessing Hadoop as the Greenplum User Proxied by the Kerberos Principal](graphics/impersonation_cases/impersonation-case-1-kerberos.png "Accessing Hadoop as the Greenplum User Proxied by the Kerberos Principal")
 
 The following table identifies the impersonation and service user settings, and the PXF and Hadoop configuration required for this use case:
 
@@ -89,7 +89,7 @@ The following table identifies the impersonation and service user settings, and 
 
 In this configuration, PXF uses Kerberos constrained delegation to request and obtain a ticket on behalf of the Greenplum user, and uses the ticket to access Hadoop.
 
-<img alt="Accessing Hadoop using Kerberos Constrained Delegation" src="graphics/impersonation_cases/impersonation-case-kcd.png" class="image" />
+![Accessing Hadoop using Kerberos Constrained Delegation](graphics/impersonation_cases/impersonation-case-kcd.png "Accessing Hadoop using Kerberos Constrained Delegation")
 
 The following table identifies the impersonation and service user settings, and the PXF and directory service configuration required for this use case; no Hadoop configuration is required:
 
@@ -102,7 +102,7 @@ The following table identifies the impersonation and service user settings, and 
 In this configuration, PXF accesses Hadoop as the Kerberos principal. A query initiated by
 any Greenplum user appears on the Hadoop side as originating from the Kerberos principal.
 
-<img alt="Accessing Hadoop as the Kerberos Principal" src="graphics/impersonation_cases/impersonation-case-2-kerberos.png" class="image" />
+![Accessing Hadoop as the Kerberos Principal](graphics/impersonation_cases/impersonation-case-2-kerberos.png "Accessing Hadoop as the Kerberos Principal")
 
 The following table identifies the impersonation and service user settings, and the PXF and Hadoop configuration required for this use case:
 
@@ -118,7 +118,7 @@ In this configuration, PXF accesses Hadoop as a \<custom> user (for example, `hi
 The Kerberos principal is the Hadoop proxy user. A query initiated by any Greenplum
 user appears on the Hadoop side as originating from the \<custom> user.
 
-<img alt="Accessing Hadoop as a custom User" src="graphics/impersonation_cases/impersonation-case-3-kerberos.png" class="image" />
+![Accessing Hadoop as a custom User](graphics/impersonation_cases/impersonation-case-3-kerberos.png "Accessing Hadoop as a custom User")
 
 The following table identifies the impersonation and service user settings, and the PXF and Hadoop configuration required for this use case:
 
