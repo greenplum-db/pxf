@@ -75,19 +75,9 @@ function run_pxf_automation() {
 	chmod a+w pxf_src/automation /singlecluster || true
 	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
 
-	local extension_name="pxf"
-	if [[ ${USE_FDW} == "true" ]]; then
-		extension_name="pxf_fdw"
-	fi
-
-	#TODO: remove once exttable tests with GP7 are set
-	if [[ ${GROUP} == fdw_gpdb_schedule ]]; then
-		extension_name="pxf_fdw"
-	fi
-
 	su gpadmin -c "
 		source '${GPHOME}/greenplum_path.sh' &&
-		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION ${extension_name}'
+		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION PXF'
 	"
 	# prepare certification output directory
 	mkdir -p certification
@@ -103,7 +93,6 @@ function run_pxf_automation() {
 		export GPHD_ROOT=${GPHD_ROOT}
 		export PXF_HOME=${PXF_HOME}
 		export PGPORT=${PGPORT}
-		export USE_FDW=${USE_FDW}
 
 		cd pxf_src/automation
 		time make GROUP=${GROUP} test
@@ -239,6 +228,13 @@ function _main() {
 		install_gpdb_package
 	fi
 
+HEADER_FILE_GP7=pxf_gp7_headerfile
+if [[ ${GP_VER} -ge 7 ]]; then
+  mkdir ${GPHOME}/include/postgresql/server/extension/gp_exttable_fdw
+  cp ${HEADER_FILE_GP7}/extaccess.h  ${GPHOME}/include/postgresql/server/extension/gp_exttable_fdw
+fi
+
+
 	# Install PXF
 	if [[ -d pxf_package ]]; then
 		# forward compatibility pipeline works with PXF rpms, not rpm tarballs
@@ -312,12 +308,15 @@ function _main() {
 
 	inflate_dependencies
 
-	# To run Tinc against GP7 we need to modify PYTHONPATH in $GPHOME/greenplum_path.sh since Tinc calls that script
-	# we will set PYTHONPATH to point to the set of python libs compiled with Python2 for GP6
-	if [[ ${GP_VER} == 7 ]]; then
-	  local gp6_python_libs=~gpadmin/python
-	  echo "export PYTHONPATH=${gp6_python_libs}" >> /usr/local/greenplum-db/greenplum_path.sh
-	fi
+  # TODO : Conflict with Alex's PR need to remove later.
+  # To run Tinc against GP7 we need to modify PYTHONPATH in $GPHOME/greenplum_path.sh since Tinc calls that script
+  # we will set PYTHONPATH to point to the set of python libs compiled with Python2 for GP6
+  if [[ ${GP_VER} == 7 ]]; then
+    local gp6_python_libs=~gpadmin/python
+    echo "export PYTHONPATH=${gp6_python_libs}" >> /usr/local/greenplum-db/greenplum_path.sh
+  fi
+
+
 
 	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src
 
