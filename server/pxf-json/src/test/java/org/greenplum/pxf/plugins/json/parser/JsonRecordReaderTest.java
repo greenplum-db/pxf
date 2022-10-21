@@ -48,12 +48,12 @@ public class JsonRecordReaderTest {
     }
 
     @Test
-    public void testWithCodec() throws URISyntaxException, IOException {
+    public void testWithCodecSmallFile() throws URISyntaxException, IOException {
 
+        // The BZip2Codec is a Splittable compression codec
         file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/input.json.bz2").toURI());
         path = new Path(file.getPath());
-        // This file split will be ignored since the codec is involved
-        fileSplit = new FileSplit(path, 100, 200, hosts);
+        fileSplit = new FileSplit(path, 0, 50, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
         assertEquals(0, jsonRecordReader.getPos());
         key = createKey();
@@ -65,6 +65,24 @@ public class JsonRecordReaderTest {
         assertEquals(5, recordCount);
     }
 
+    @Test
+    public void testWithCodecLargeFile() throws URISyntaxException, IOException {
+
+        // The BZip2Codec is a Splittable compression codec
+        file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/big_data.json.bz2").toURI());
+        path = new Path(file.getPath());
+        // This file split should not be ignored
+        // the length is relative to the uncompressed file so pick something large
+        fileSplit = new FileSplit(path, 1000, 20000, hosts);
+        jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
+        key = createKey();
+        data = createValue();
+        int recordCount = 0;
+        while (jsonRecordReader.next(key, data)) {
+            recordCount++;
+        }
+        assertEquals(8251, recordCount);
+    }
     @Test
     /**
      *  Here the record overlaps between Split-1 and Split-2.

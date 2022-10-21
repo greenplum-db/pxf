@@ -51,7 +51,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     public static final String RECORD_MAX_LENGTH = "multilinejsonrecordreader.maxlength";
     private static final Log LOG = LogFactory.getLog(JsonRecordReader.class);
     private final String jsonMemberName;
-    private CompressionCodecFactory compressionCodecs = null;
     private long start;
     private long pos;
     private long end;
@@ -96,20 +95,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         end = start + split.getLength();
         file = split.getPath();
         hosts = split.getLocations();
-        compressionCodecs = new CompressionCodecFactory(conf);
-        final CompressionCodec codec = compressionCodecs.getCodec(file);
-
-        // openForWrite the file and seek to the start of the split
-        FileSystem fs = file.getFileSystem(conf);
-        FSDataInputStream fileIn = fs.open(split.getPath());
-        if (codec != null) {
-            start = 0;
-            end = Long.MAX_VALUE;
-            FileSplit codecSplit = new FileSplit(file, start, Long.MAX_VALUE, hosts);
-            lineRecordReader =  new LineRecordReader(conf, codecSplit);
-        } else {
-            lineRecordReader =  new LineRecordReader(conf, split);
-        }
+        lineRecordReader =  new LineRecordReader(conf, split);
         this.conf = conf;
         parser = new PartitionedJsonParser(jsonMemberName);
         currentLine = new Text();
