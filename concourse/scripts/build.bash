@@ -77,9 +77,8 @@ function package_pxf_fdw() {
         make -C '${PWD}/pxf_src/fdw' stage
     "
     # get the filename of previously built main PXF tarball to use its full name as a suffix
-    local pxf_main_tarball, pxf_fdw_tarball
-    pxf_tarball="$(ls pxf_src/build/${DIST_DIR}/pxf-*.tar.gz | xargs -n 1 basename)"
-    pxf_fdw_tarball="pxf_src/build/${DIST_DIR}/pxf-fdw${pxf_tarball#pxf}"
+    local pxf_tarball=$(ls pxf_src/build/${DIST_DIR}/pxf-*.tar.gz | xargs -n 1 basename)
+    local pxf_fdw_tarball="pxf_src/build/${DIST_DIR}/pxf-fdw${pxf_tarball#pxf}"
 
     # build the tarball and copy it to the output directory
     ls -al pxf_src/fdw/build/stage
