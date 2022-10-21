@@ -42,6 +42,12 @@ PG_MODULE_MAGIC;
 
 #define DEFAULT_PXF_FDW_STARTUP_COST   50000
 
+/*
+ * Error token embedded in the data sent by PXF as part of an error row
+ */
+#define PXF_ERROR_TOKEN "PXFERRMSG> "
+#define PXF_ERROR_TOKEN_SIZE strlen(PXF_ERROR_TOKEN)
+
 extern Datum pxf_fdw_handler(PG_FUNCTION_ARGS);
 
 /*
@@ -181,12 +187,6 @@ enum FdwScanPrivateIndex
 	/* Integer list of attribute numbers retrieved by the SELECT */
 	FdwScanPrivateRetrievedAttrs
 };
-
-/*
- * Error token embedded in the data sent by PXF as part of an error row
- */
-static char *const PXF_ERROR_TOKEN = "PXFERRMSG> ";
-static size_t PXF_ERROR_TOKEN_SIZE = strlen(PXF_ERROR_TOKEN);
 
 /*
  * GetForeignRelSize
@@ -953,7 +953,7 @@ PxfCopyFromErrorCallback(void *arg)
              * "extra data after last expected column" that we want to change to
              * contain the actual error message reported by PXF
              */
-            char *token_index = strnstr(cstate->line_buf.data, PXF_ERROR_TOKEN, cstate->line_buf.len);
+            char *token_index = strstr(cstate->line_buf.data, PXF_ERROR_TOKEN);
             if (token_index != NULL) {
                 /* token was found, get the actual message and set it as the main error message */
                 errmsg("%s", token_index + PXF_ERROR_TOKEN_SIZE);
