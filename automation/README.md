@@ -22,7 +22,7 @@ Newer operating systems such as MacOS 12+ and Debian's openssh-server package (1
 You can check the supported algorithms with
 
 ```bash
-sudo sshd -T | grep 'kexalgorithms'
+sudo sshd -T | grep 'kexalgorithms' | grep -e diffie-hellman-group-exchange-sha1 -e diffie-hellman-group14-sha1 -e diffie-hellman-group1-sha1
 ```
 
 The following algorithms _must_ be included:
@@ -45,6 +45,7 @@ EOF
 
 Then restart sshd based on your OS.
 For MacOS, either run in terminal
+
 ```shell
 sudo launchctl unload /System/Library/LaunchDaemons/ssh.plist
 sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
@@ -83,10 +84,13 @@ This is problematic because:
 - `pip` is not available as a system package anymore (confirmed on Ubuntu 20.04)
 
 If pip is already installed then run:
+
 ```bash
 python2 -m pip install --user paramiko
 ```
+
 If the above fails because of OpenSSL errors on the M1 Apple Mac, please set the following before rerunning the pip command.
+
 ```bash
 export LDFLAGS='-L/opt/homebrew/lib -L/opt/homebrew/opt/openssl@1.1/lib'
 export CPPFLAGS='-I/opt/homebrew/include -I/opt/homebrew/opt/openssl@1.1/include'

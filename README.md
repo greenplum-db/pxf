@@ -82,21 +82,23 @@ To build PXF, you must have:
     To install Go on CentOS, `sudo yum install go`. For other platforms, see the [Go downloads page](https://golang.org/dl/).
 
     Make sure to export your `GOPATH` and add go to your `PATH`. For example:
-    ```
+    ```shell
     export GOPATH=$HOME/go
     export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
     ```
+
    For the new M1 Apple Macs, add the following to your path instead
-   ```
+   ```shell
    export PATH=$PATH:/opt/homebrew/bin/go/bin:$GOPATH/bin
    ```
 
     Once you have installed Go, you will need the `ginkgo` tool which runs Go tests,
     respectively. Assuming `go` is on your `PATH`, you can run:
-    ```
+    ```shell
     go install github.com/onsi/ginkgo/ginkgo@v1.16.5
     ```
-   * NOTE: You are required to list the version. For now, keep it stable at v1.16.5 which is what we use for the concourse images.
+
+   * NOTE: You are required to list the version. For now, keep it stable at v1.16.5 which is what we use for the concourse images. See `concourse/docker/pxf-dev-base/cloudbuild.yml` for the default values.
 
 5. cURL (7.29 or later):
 
