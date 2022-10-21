@@ -1,9 +1,11 @@
 package annotations;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 
 /**
  * Annotation for marking Test cases that fail when run against PXF FDW.
@@ -12,6 +14,6 @@ import static java.lang.annotation.ElementType.METHOD;
  * (e.g. those exericisng features of external tables that are not supported wth FDW).
  */
 @Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
-@Target({ METHOD })
+@Target({ METHOD, TYPE })
 public @interface FailsWithFDW {
 }

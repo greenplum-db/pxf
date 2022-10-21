@@ -53,4 +53,16 @@ s/Check the PXF logs located in the.*/Check the PXF logs located in the 'logs-di
 m/HINT:  .*/
 s/.*//g
 
+# rename DETAIL (from GP5) to CONTEXT (in GP6+)
+m/DETAIL/
+s/DETAIL/CONTEXT/
+
+# treat foreign table error messages as if they were from external table
+m/Foreign table.*/
+s/Foreign table/External table/
+
+# ignore new context information about record number and FDW resource
+m/.*, record \d+ of.*/
+s/, record \d+ of.*//
+
 -- end_matchsubs

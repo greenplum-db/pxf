@@ -4,8 +4,9 @@
 --
 -- # create a match/subs
 --
--- m/DETAIL/
--- s/DETAIL/CONTEXT/
+-- # FDW in CSV mode will fail during parsing on C side twith the below error
+-- m/invalid input syntax for type date: .*/
+-- s/invalid input syntax for type date: .*/For field dob schema requires type DATE but input record has type INTEGER/
 --
 -- end_matchsubs
 select * from logical_incorrect_schema_test;

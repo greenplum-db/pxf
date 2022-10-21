@@ -22,6 +22,7 @@ import java.io.File;
  * See <a href="https://testrail.greenplum.com/index.php?/suites/view/1099">HDFS
  * Readable - Avro</a>
  */
+@WorksWithFDW
 public class HdfsReadableAvroTest extends BaseFeature {
 
     private String hdfsPath;
@@ -148,7 +149,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroSimple() throws Exception {
         prepareReadableTable("avrotest_simple", new String[]{"name text", "age int"}, hdfsPath + avroSimpleFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
@@ -163,7 +163,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroSupportedPrimitives() throws Exception {
         prepareReadableTable("avrotest_supported_primitive_types", new String[]{
                 "type_int      int",
@@ -184,7 +183,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroArrays() throws Exception {
         prepareReadableTable("avrotest_arrays", AVRO_ARRAYS_AS_TEXT_FIELDS, hdfsPath + avroArrayFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
@@ -202,7 +200,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroComplex() throws Exception {
         prepareReadableTable("avrotest_complex", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
@@ -211,7 +208,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroComplexTextFormat() throws Exception {
         prepareReadableTable("avrotest_complex_text", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         exTable.setFormatter(null);
@@ -222,7 +218,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroComplexCsvFormat() throws Exception {
         prepareReadableTable("avrotest_complex_csv", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         exTable.setFormatter(null);
@@ -233,7 +228,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroLogicalTypes() throws Exception {
         prepareReadableTable("avro_logical_types", new String[]{
                 "uid                    uuid",
@@ -252,7 +246,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroLogicalDecimalTypes() throws Exception {
         prepareReadableTable("avro_logical_decimal_types", new String[]{
               "decNum1   decimal",
@@ -268,7 +261,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void arrayOfLogicalTypes() throws Exception {
         prepareReadableTable("array_of_logical_types", new String[]{
             "type_uid                    uuid[]",
@@ -287,7 +279,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @FailsWithFDW
     public void logicalIncorrectSchemaTest() throws Exception {
         prepareReadableTable("logical_incorrect_schema_test", new String[]{
             "dob    date " },
@@ -306,7 +297,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroComplexReadSchemaFromHcfs() throws Exception {
         hdfs.copyFromLocal(resourcePath + complexAvroFile, hdfsPath + "schema/" + complexAvroFile);
         prepareReadableTable("avrotest_complex", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
@@ -323,7 +313,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroComplexReadSchemaFromSegmentHosts() throws Exception {
         prepareReadableTable("avrotest_complex", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         String schemaPath = remotePublicStage + "/" + complexAvroFile;
@@ -339,7 +328,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroNull() throws Exception {
         prepareReadableTable("avrotest_null", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
@@ -353,7 +341,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroComplexNull() throws Exception {
         prepareReadableTable("avrotest_complex_null", new String[]{
                 "sourcetimestamp              bigint",
@@ -393,7 +380,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroInSequenceFileArrays() throws Exception {
         prepareReadableTable("avro_in_seq_arrays", AVRO_SEQUENCE_FILE_FIELDS, hdfsPath + avroInSequenceArraysFileName);
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":AvroSequenceFile");
@@ -409,7 +395,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroFileNameWithSpaces() throws Exception {
         prepareReadableTable("avro_in_seq_arrays", AVRO_SEQUENCE_FILE_FIELDS, hdfsPath + avroInSequenceArraysFileName);
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":AvroSequenceFile");
@@ -427,7 +412,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroFileNameWithSpacesOnHcfs() throws Exception {
         hdfs.copyFromLocal(resourcePath + avroInSequenceArraysSchemaFileWithSpaces, hdfsPath + avroInSequenceArraysSchemaFileWithSpaces);
         prepareReadableTable("avro_in_seq_arrays", AVRO_SEQUENCE_FILE_FIELDS, hdfsPath + avroInSequenceArraysFileName);
@@ -445,7 +429,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroMultiFiles() throws Exception {
         String schemaName = resourcePath + avroInSequenceArraysSchemaFile;
 
@@ -476,7 +459,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @WorksWithFDW
     public void avroCodecs() throws Exception {
         String schemaName = resourcePath + avroInSequenceArraysSchemaFile;
         Table dataTable = new Table("dataTable", null);
@@ -503,7 +485,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @FailsWithFDW
     public void extraField() throws Exception {
         prepareReadableTable("avro_extra_field", new String[]{
                 "name text",
@@ -521,7 +502,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @FailsWithFDW
     public void missingField() throws Exception {
         prepareReadableTable("avro_missing_field",
                 new String[]{"name text"},
@@ -537,7 +517,6 @@ public class HdfsReadableAvroTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    @FailsWithFDW
     public void noSchemaFile() throws Exception {
         prepareReadableTable("avro_in_seq_no_schema", AVRO_SEQUENCE_FILE_FIELDS, hdfsPath + avroInSequenceArraysFileName);
 

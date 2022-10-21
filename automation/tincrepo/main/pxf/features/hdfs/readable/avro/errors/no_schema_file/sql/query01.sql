@@ -16,5 +16,8 @@
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/
 --
+-- m/Foreign table/
+-- s/Foreign table/External table/
+--
 -- end_matchsubs
 SELECT * from avro_in_seq_no_schema;
