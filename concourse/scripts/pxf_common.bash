@@ -302,6 +302,14 @@ function install_pxf_tarball() {
 	tar -xzf "${tarball_dir}/"pxf-*.tar.gz -C /tmp
 	/tmp/pxf*/install_component
 	chown -R gpadmin:gpadmin "${PXF_HOME}"
+
+	# install separately built PXF FDW extension if it is available on the inputs
+	if [[ -d pxf_fdw_tarball ]]; then
+		tar -xzf pxf_fdw_tarball/pxf-fdw-*.tar.gz -C /tmp
+		/usr/bin/install -c -m 755 /tmp/pxf_fdw.so "${GPHOME}/lib/postgresql/pxf_fdw.so"
+		/usr/bin/install -c -m 644 /tmp/pxf_fdw.control "${GPHOME}/share/postgresql/extension/"
+		/usr/bin/install -c -m 644 /tmp/pxf_fdw*.sql "${GPHOME}/share/postgresql/extension/"
+	fi
 }
 
 function install_pxf_package() {

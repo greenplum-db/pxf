@@ -15,6 +15,8 @@ inputs:
   optional: true
 - name: gp6-python-libs
   optional: true
+- name: pxf_fdw_tarball
+  optional: true
 
 params:
   ACCESS_KEY_ID:

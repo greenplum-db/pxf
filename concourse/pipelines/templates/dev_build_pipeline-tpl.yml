@@ -330,6 +330,14 @@ resources:
     bucket: ((ud/pxf/common/build-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
+
+- name: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-fdw-gp[[gp_ver]].el8.tar.gz
 {% set gp_ver = None %}
 
 {% for gp_ver in range(6, 8) %}
@@ -534,6 +542,11 @@ jobs:
   - put: pxf_gp[[gp_ver]]_tarball_rhel8
     params:
       file: dist/pxf-gp[[gp_ver]]-*.el8.tar.gz
+{% if gp_ver == 6 %}
+  - put: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
+    params:
+      file: dist/pxf-fdw-gp[[gp_ver]]-*.el8.tar.gz
+{% endif %}
 
 - name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
   plan:
@@ -544,6 +557,11 @@ jobs:
       - get: pxf_tarball
         resource: pxf_gp[[gp_ver]]_tarball_rhel8
         passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+{% if gp_ver == 6 %}
+      - get: pxf_fdw_tarball
+        resource: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
+        passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+{% endif %}
       - get: gpdb_package
         resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
         passed: [Build PXF-GP[[gp_ver]] on RHEL8]
@@ -570,7 +588,7 @@ jobs:
 {% set gp_ver = None %}
 
 ## ---------- FDW RHEL 8 Swimlane ----------
-{% set gp_ver = 7 %}
+{% for gp_ver in range(6, 8) %}
 - name: Test PXF-FDW-GP[[gp_ver]]-HDP2 on RHEL8
   plan:
   - in_parallel:
@@ -583,7 +601,9 @@ jobs:
       - get: gpdb_package
         resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
         passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+{% if gp_ver == 7 %}
       - get: gp6-python-libs
+{% endif %}
       - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
         passed: [Build PXF-GP[[gp_ver]] on RHEL8]
       - get: pxf-automation-dependencies
@@ -598,6 +618,7 @@ jobs:
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       USE_FDW: true
+{% endfor %}
 {% set gp_ver = None %}
 
 ## ---------- Extended Tests ----------

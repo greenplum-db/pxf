@@ -60,6 +60,33 @@ function package_pxf() {
     cp pxf_src/build/${DIST_DIR}/pxf-*.tar.gz dist
 }
 
+function package_pxf_fdw() {
+    # verify contents
+    if [[ -f /etc/redhat-release ]]; then
+        DIST_DIR=distrpm
+    elif [[ -f /etc/debian_version ]]; then
+        DIST_DIR=distdeb
+    else
+        echo "Unsupported operating system '$(source /etc/os-release && echo "${PRETTY_NAME}")'. Exiting..."
+        exit 1
+    fi
+
+    # build PXF FDW extension separately
+    bash -c "
+        source ~/.pxfrc
+        make -C '${PWD}/pxf_src/fdw' stage
+    "
+    # get the filename of previously built main PXF tarball to use its full name as a suffix
+    local pxf_main_tarball, pxf_fdw_tarball
+    pxf_tarball="$(ls pxf_src/build/${DIST_DIR}/pxf-*.tar.gz | xargs -n 1 basename)"
+    pxf_fdw_tarball="pxf_src/build/${DIST_DIR}/pxf-fdw${pxf_tarball#pxf}"
+
+    # build the tarball and copy it to the output directory
+    ls -al pxf_src/fdw/build/stage
+    tar -cvzf "${pxf_fdw_tarball}" -C pxf_src/fdw/build/stage .
+    cp pxf_src/build/${DIST_DIR}/pxf-fdw-*.tar.gz dist
+}
+
 install_gpdb
 # installation of GPDB from RPM/DEB doesn't ensure that the installation location will match the version
 # given in the gpdb_package, so set the GPHOME after installation
@@ -67,3 +94,7 @@ GPHOME=$(find /usr/local/ -name "greenplum-db-${GPDB_VERSION}*")
 inflate_dependencies
 compile_pxf
 package_pxf
+# package FDW extension for GP6 separately for downstream testing as it is not shipped
+if [[ ${GPDB_VERSION%%.*} == 6 ]]; then
+    package_pxf_fdw
+fi
