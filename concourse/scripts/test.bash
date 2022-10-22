@@ -224,6 +224,7 @@ function _main() {
 
 	# Ping is called by gpinitsystem, which must be run by gpadmin
 	chmod u+s /bin/ping
+	chmod a+rwx /tmp
 
 	if [[ ${HADOOP_CLIENT} == MAPR ]]; then
 		# start mapr services before installing GPDB

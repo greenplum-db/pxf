@@ -557,11 +557,6 @@ jobs:
       - get: pxf_tarball
         resource: pxf_gp[[gp_ver]]_tarball_rhel8
         passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-{% if gp_ver == 6 %}
-      - get: pxf_fdw_tarball
-        resource: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
-        passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-{% endif %}
       - get: gpdb_package
         resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
         passed: [Build PXF-GP[[gp_ver]] on RHEL8]
@@ -598,6 +593,11 @@ jobs:
       - get: pxf_tarball
         resource: pxf_gp[[gp_ver]]_tarball_rhel8
         passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+{% if gp_ver == 6 %}
+      - get: pxf_fdw_tarball
+        resource: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
+        passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+{% endif %}
       - get: gpdb_package
         resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
         passed: [Build PXF-GP[[gp_ver]] on RHEL8]
