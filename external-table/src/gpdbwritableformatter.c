@@ -124,6 +124,15 @@ appendStringInfoFill(StringInfo str, int occurrences, char ch)
 }
 #endif
 
+#define ENSURE_BUF_LEN(buf_len, buf_idx, len_wanted) \
+	do { \
+		if (unlikely((buf_len) - (buf_idx) < (len_wanted) || (len_wanted < 0))) { \
+			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION), \
+			                errmsg("unexpected input data lenl buf_len=%d, buf_idx=%d, len_wanted=%d", \
+			                       (buf_len), (buf_idx), (len_wanted)))); \
+		} \
+	} while (0)
+
 /*
  * Write a int4 to the buffer
  */
@@ -140,10 +149,11 @@ appendIntToBuffer(StringInfo buf, int val)
  * it will return the int value and increase the offset
  */
 static int
-readIntFromBuffer(char *buffer, int *offset)
+readIntFromBuffer(char *buffer, int buf_len, int *offset)
 {
 	uint32		n32;
 
+	ENSURE_BUF_LEN(buf_len, *offset, 4);
 	memcpy(&n32, &buffer[*offset], sizeof(int));
 	*offset += 4;
 	return ntohl(n32);
@@ -165,10 +175,11 @@ appendInt2ToBuffer(StringInfo buf, uint16 val)
  * it will return the int value and increase the offset
  */
 static uint16
-readInt2FromBuffer(char *buffer, int *offset)
+readInt2FromBuffer(char *buffer, int buf_len, int *offset)
 {
 	uint16		n16;
 
+	ENSURE_BUF_LEN(buf_len, *offset, 2);
 	memcpy(&n16, &buffer[*offset], sizeof(uint16));
 	*offset += 2;
 	return ntohs(n16);
@@ -191,10 +202,11 @@ appendInt1ToBuffer(StringInfo buf, uint8 val)
  * it will return the int value and increase the offset
  */
 static uint8
-readInt1FromBuffer(char *buffer, int *offset)
+readInt1FromBuffer(char *buffer, int buf_len, int *offset)
 {
 	uint8		n8;
 
+	ENSURE_BUF_LEN(buf_len, *offset, 1);
 	memcpy(&n8, &buffer[*offset], sizeof(uint8));
 	*offset += 1;
 	return n8;
@@ -375,7 +387,8 @@ byteArrayToBoolArray(bits8 *data, int len, bool **booldata, int boollen, TupleDe
  * Verify external table definition matches to input data columns
  */
 static void
-verifyExternalTableDefinition(int16 ncolumns_remote, AttrNumber nvalidcolumns, AttrNumber ncolumns, TupleDesc tupdesc, char *data_buf, int *bufidx)
+verifyExternalTableDefinition(int16 ncolumns_remote, AttrNumber nvalidcolumns, AttrNumber ncolumns, TupleDesc tupdesc,
+                              char *data_buf, int data_len, int *bufidx)
 {
 	int			   i;
 	StringInfoData errMsg;
@@ -398,7 +411,7 @@ verifyExternalTableDefinition(int16 ncolumns_remote, AttrNumber nvalidcolumns, A
 
 		input_type = 0;
 		defined_type = tupdesc->attrs[i]->atttypid;
-		enumType = readInt1FromBuffer(data_buf, bufidx);
+		enumType = readInt1FromBuffer(data_buf, data_len, bufidx);
 
 		/* Convert enumType to type oid */
 		input_type = getTypeOidFromJavaEnumOrdinal(enumType);
@@ -776,7 +789,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
 	}
 
-	tuplelen = readIntFromBuffer(data_buf, &bufidx);
+	tuplelen = readIntFromBuffer(data_buf, data_len, &bufidx);
 
 	/* Now, make sure we've received the entire tuple */
 	if (remaining < tuplelen)
@@ -801,28 +814,31 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	oldcontext = MemoryContextSwitchTo(per_row_ctx);
 
 	/* extract the version, error and column count */
-	version = readInt2FromBuffer(data_buf, &bufidx);
+	version = readInt2FromBuffer(data_buf, data_len, &bufidx);
 
 	if ((version != GPDBWRITABLE_VERSION) && (version != GPDBWRITABLE_PREV_VERSION))
 		ereport(ERROR, (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 						errmsg("cannot import data version %d", version)));
 
 	if (version == GPDBWRITABLE_VERSION)
-		error_flag = readInt1FromBuffer(data_buf, &bufidx);
+		error_flag = readInt1FromBuffer(data_buf, data_len, &bufidx);
 
-	if (error_flag)
+	if (error_flag) {
+		bufidx += ERR_COL_OFFSET;
 		ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-						errmsg("%s", data_buf + bufidx + ERR_COL_OFFSET)));
+		                errmsg("%.*s", data_len - bufidx, data_buf + bufidx)));
+	}
 
-	ncolumns_remote = readInt2FromBuffer(data_buf, &bufidx);
+	ncolumns_remote = readInt2FromBuffer(data_buf, data_len, &bufidx);
 
-	verifyExternalTableDefinition(ncolumns_remote, nvalidcolumns, ncolumns, tupdesc, data_buf, &bufidx);
+	verifyExternalTableDefinition(ncolumns_remote, nvalidcolumns, ncolumns, tupdesc, data_buf, data_len, &bufidx);
 
 	/* Extract null bit array */
 	{
 		int			nullByteLen = getNullByteArraySize(ncolumns_remote);
 		bits8	   *nullByteArray = (bits8 *) (data_buf + bufidx);
 
+		ENSURE_BUF_LEN(data_len, bufidx, nullByteLen);
 		bufidx += nullByteLen;
 		byteArrayToBoolArray(nullByteArray, nullByteLen, &myData->nulls, ncolumns, tupdesc);
 	}
@@ -850,7 +866,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 			if (isVariableLength(attr->atttypid))
 			{
 				bufidx = INTALIGN(bufidx);
-				myData->outlen[i] = readIntFromBuffer(data_buf, &bufidx);
+				myData->outlen[i] = readIntFromBuffer(data_buf, data_len, &bufidx);
 			}
 
 			/*
@@ -937,3 +953,4 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	FORMATTER_SET_TUPLE(fcinfo, tuple);
 	FORMATTER_RETURN_TUPLE(tuple);
 }
+
