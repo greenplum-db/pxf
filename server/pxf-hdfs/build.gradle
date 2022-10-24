@@ -31,8 +31,6 @@ dependencies {
     implementation("org.slf4j:slf4j-api")
 
     implementation("org.apache.avro:avro-mapred")                    { transitive = false }
-    implementation("com.fasterxml.jackson.core:jackson-core")        { transitive = false }
-    implementation("com.fasterxml.jackson.core:jackson-annotations") { transitive = false }
     implementation("org.apache.hadoop:hadoop-yarn-api")              { transitive = false } // Kerberos dependency
     implementation("org.apache.hadoop:hadoop-yarn-client")           { transitive = false } // Kerberos dependency
     implementation("org.apache.hadoop:hadoop-common")                { transitive = false }
