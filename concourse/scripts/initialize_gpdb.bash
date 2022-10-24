@@ -22,6 +22,7 @@ sed -e "s/MASTER_HOSTNAME=mdw/MASTER_HOSTNAME=\$(hostname -f)/g" \
 chmod +w ~gpadmin/gpconfigs/gpinitsystem_config
 
 #Script to start segments and create directories.
+ls -al /tmp
 hostname -f >/tmp/hosts.txt
 
 # gpinitsystem fails in concourse environment without this "ping" workaround. "[FATAL]:-Unknown host..."
