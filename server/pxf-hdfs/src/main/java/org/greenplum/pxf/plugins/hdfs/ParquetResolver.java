@@ -128,59 +128,76 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         return new OneRow(null, group);
     }
 
+    /**
+     * Fill the index-th group based on the Greenplum data type and value string provided by {@link OneField} field
+     *
+     * @param index The index we are going to fill data at
+     * @param field The index-th field which provides Greenplum data type and String value of record[index]
+     * @param group The outermost group for the {@link OneRow} parquet schema and data we are going to construct
+     * @param type  The parquet schema type of record[index]
+     * @throws IOException
+     */
     private void fillGroup(int index, OneField field, Group group, Type type) throws IOException {
         if (field.val == null)
             return;
         if (type.isPrimitive()) {
             fillPrimitiveGroup(index, field.val, group, type, true);
         } else {
-            fillComplexGroup(index, field, group, type);
+            fillListGroup(index, field.val, group, type);
         }
     }
 
-    private void fillPrimitiveGroup(int index, Object value, Group group, Type type, boolean isPrimitive) throws IOException {
-        if (value == null)
-            return;
+    /**
+     * Fill the index-th primitive group based on the Greenplum data type and value string provided by {@link OneField} field
+     * This primitive group could be an actual primitive group or the innermost primitive group of a List group
+     *
+     * @param index       The index we are going to fill data at
+     * @param fieldValue  The String value of record[index]
+     * @param group       The out most group for the {@link OneRow} parquet schema and data we are going to construct
+     * @param type        The parquet schema type of record[index]
+     * @param isPrimitive Whether record[index] is a Primitive type or it is a recursive call to construct List type
+     * @throws IOException
+     */
+    private void fillPrimitiveGroup(int index, Object fieldValue, Group group, Type type, boolean isPrimitive) throws IOException {
         switch (type.asPrimitiveType().getPrimitiveTypeName()) {
             case BINARY:
                 if (type.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
-                    group.add(index, (String) value);
+                    group.add(index, (String) fieldValue);
                 } else if (isPrimitive) {
-                    byte[] bytes=(byte[]) value;
-                    group.add(index, Binary.fromReusedByteArray((byte[]) value));
+                    group.add(index, Binary.fromReusedByteArray((byte[]) fieldValue));
                 } else {
-                    group.add(index, Binary.fromReusedByteArray(((ByteBuffer) value).array(),0,((ByteBuffer) value).limit()));
+                    group.add(index, Binary.fromReusedByteArray(((ByteBuffer) fieldValue).array(), 0, ((ByteBuffer) fieldValue).limit()));
                 }
                 break;
             case INT32:
                 if (type.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
-                    String dateString = (String) value;
+                    String dateString = (String) fieldValue;
                     group.add(index, ParquetTypeConverter.getDaysFromEpochFromDateString(dateString));
                 } else if (type.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
                         ((IntLogicalTypeAnnotation) type.getLogicalTypeAnnotation()).getBitWidth() == 16) {
-                    group.add(index, (Short) value);
+                    group.add(index, (Short) fieldValue);
                 } else {
-                    group.add(index, (Integer) value);
+                    group.add(index, (Integer) fieldValue);
                 }
                 break;
             case INT64:
-                group.add(index, (Long) value);
+                group.add(index, (Long) fieldValue);
                 break;
             case DOUBLE:
-                group.add(index, (Double) value);
+                group.add(index, (Double) fieldValue);
                 break;
             case FLOAT:
-                group.add(index, (Float) value);
+                group.add(index, (Float) fieldValue);
                 break;
             case FIXED_LEN_BYTE_ARRAY:
-                byte[] fixedLenByteArray = getFixedLenByteArray((String) value, type);
+                byte[] fixedLenByteArray = getFixedLenByteArray((String) fieldValue, type);
                 if (fixedLenByteArray == null) {
                     return;
                 }
                 group.add(index, Binary.fromReusedByteArray(fixedLenByteArray));
                 break;
             case INT96:  // SQL standard timestamp string value with or without time zone literals: https://www.postgresql.org/docs/9.4/datatype-datetime.html
-                String timestamp = (String) value;
+                String timestamp = (String) fieldValue;
                 if (TIMESTAMP_PATTERN.matcher(timestamp).find()) {
                     // Note: this conversion convert type "timestamp with time zone" will lose timezone information
                     // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
@@ -190,26 +207,27 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 }
                 break;
             case BOOLEAN:
-                group.add(index, (Boolean) value);
+                group.add(index, (Boolean) fieldValue);
                 break;
             default:
                 throw new UnsupportedTypeException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
         }
     }
 
-    private void fillComplexGroup(int index, OneField field, Group group, Type type) throws IOException {
-        if (field.val == null)
-            return;
-
-        if(type.asGroupType().getOriginalType() != LogicalTypeAnnotation.listType().toOriginalType()){
+    /**
+     * Fill the index-th List group based on the Greenplum data type and value string provided by {@link OneField} field
+     * It will call the fillPrimitiveGroup to fill the innermost primitive group
+     *
+     * @param index The index we are going to fill data at
+     * @param fieldValue The String value of record[index]
+     * @param group The out most group for the {@link OneRow} parquet schema and data we are going to construct
+     * @param type The parquet schema type of record[index]
+     * @throws IOException
+     */
+    private void fillListGroup(int index, Object fieldValue, Group group, Type type) throws IOException {
+        if (type.asGroupType().getOriginalType() != LogicalTypeAnnotation.listType().toOriginalType()) {
             throw new IOException("Not supported complex type " + type.asGroupType().getOriginalType());
         }
-        fillListGroup(index, field, group, type);
-    }
-
-    private void fillListGroup(int index, OneField field, Group group, Type type) throws IOException {
-        if (field.val == null)
-            return;
 
         /*
          * https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
@@ -224,7 +242,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         GroupType repeatedType = listType.getType(0).asGroupType();
         Type elementType = repeatedType.getType(0).asPrimitiveType();
         // Decode Postgres String representation of an array into a list of Objects of the required element type
-        List<Object> vals = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.asPrimitiveType().getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
+        List<Object> vals = parquetUtilities.parsePostgresArray(fieldValue.toString(), elementType.asPrimitiveType().getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
         Group arrayGroup = new SimpleGroup(listType);
 
         for (Object value : vals) {
