@@ -294,11 +294,10 @@ public enum ParquetTypeConverter {
     private static final long NANOS_IN_MICROS = 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ParquetTypeConverter.class);
 
-    public static ParquetTypeConverter from(PrimitiveType primitiveType) {
-        return valueOf(primitiveType.getPrimitiveTypeName().name());
-    }
-
-    public static ParquetTypeConverter from(GroupType type) {
+    public static ParquetTypeConverter from(Type type) {
+        if (type.isPrimitive()) {
+            return valueOf(type.asPrimitiveType().getPrimitiveTypeName().name());
+        }
         return valueOf(type.getOriginalType().name());
     }
 
