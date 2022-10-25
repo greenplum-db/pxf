@@ -79,18 +79,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             if (!columnDescriptor.isProjected()) {
                 oneField = new OneField(columnDescriptor.columnTypeCode(), null);
             } else {
-                oneField = resolveGroup(group, columnIndex, schema.getType(columnIndex), 0);
+                oneField = resolveGroup(group, columnIndex, schema.getType(columnIndex));
                 columnIndex++;
             }
-//            else if (schema.getType(columnIndex).isPrimitive()) {
-//                oneField = resolvePrimitive(group, columnIndex, schema.getType(columnIndex), 0);
-//                columnIndex++;
-//            } else if (schema.getType(columnIndex).getOriginalType() == OriginalType.LIST){
-//                oneField = resolveList(group, columnIndex, schema.getType(columnIndex), 0);
-//                columnIndex++;
-//            }else{
-//                throw new UnsupportedOperationException("Other Parquet complex type supports are not yet available.");
-//            }
             output.add(oneField);
         }
         return output;
@@ -226,9 +217,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }
     }
 
-    private OneField resolveGroup(Group group, int columnIndex, Type type, int level) {
+    private OneField resolveGroup(Group group, int columnIndex, Type type) {
         if (type.isPrimitive()) {
-            return resolvePrimitive(group, columnIndex, type, level);
+            return resolvePrimitive(group, columnIndex, type);
         }
         if (type.asGroupType().getOriginalType() == LogicalTypeAnnotation.listType().toOriginalType()) {
             return resolveList(group, columnIndex, type);
@@ -236,42 +227,39 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         throw new UnsupportedOperationException("Other Parquet complex type supports are not yet available.");
     }
 
-    private OneField resolvePrimitive(Group group, int columnIndex, Type type, int level) {
+    private OneField resolvePrimitive(Group group, int columnIndex, Type type) {
+        // Not sure anyone would use repeated primitive type
+        if (type.getRepetition() == REPEATED) {
+            return resolveRepeatedPrimitive(group, columnIndex, type);
+        }
 
+        OneField field = new OneField();
+        ParquetTypeConverter converter = ParquetTypeConverter.from(type.asPrimitiveType());
+        // determine how many values for the primitive are present in the column, should be 0 or 1.
+        int repetitionCount = group.getFieldRepetitionCount(columnIndex);
+        field.type = converter.getDataType(type).getOID();
+        field.val = repetitionCount == 0 ? null : converter.getValue(group, columnIndex, 0, type);
+        return field;
+    }
+
+    @Deprecated
+    private OneField resolveRepeatedPrimitive(Group group, int columnIndex, Type type) {
         OneField field = new OneField();
         // get type converter based on the primitive type
         ParquetTypeConverter converter = ParquetTypeConverter.from(type.asPrimitiveType());
-
         // determine how many values for the primitive are present in the column
         int repetitionCount = group.getFieldRepetitionCount(columnIndex);
 
-        // at the top level (top field), non-repeated primitives will convert to typed OneField
-        if (level == 0 && type.getRepetition() != REPEATED) {
-            field.type = converter.getDataType(type).getOID();
-            field.val = repetitionCount == 0 ? null : converter.getValue(group, columnIndex, 0, type);
-        } else if (type.getRepetition() == REPEATED) {
-            // todo: do we still need this condition? For LIST, the inner most element repetition must be required or optional, maybe for primitive types, the repetition should also must be required or optional?
-            // https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#:~:text=The%20element%20field%20encodes%20the%20list%27s%20element%20type%20and%20repetition.%20Element%20repetition%20must%20be%20required%20or%20optional.
-            // repeated primitive at any level will convert into JSON
-            ArrayNode jsonArray = mapper.createArrayNode();
-            for (int repeatIndex = 0; repeatIndex < repetitionCount; repeatIndex++) {
-                converter.addValueToJsonArray(group, columnIndex, repeatIndex, type, jsonArray);
-            }
-            // but will become a string only at top level
-            if (level == 0) {
-                field.type = DataType.TEXT.getOID();
-                try {
-                    field.val = mapper.writeValueAsString(jsonArray);
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to serialize repeated parquet type " + type.asPrimitiveType().getName(), e);
-                }
-            } else {
-                // just return the array node within OneField container
-                field.val = jsonArray;
-            }
-        } else {
-            // level > 0 and type != REPEATED -- primitive type as a member of complex group -- NOT YET SUPPORTED
-            throw new UnsupportedOperationException("Parquet complex type support is not yet available.");
+        // repeated primitive will be converted into JSON
+        ArrayNode jsonArray = mapper.createArrayNode();
+        for (int repeatIndex = 0; repeatIndex < repetitionCount; repeatIndex++) {
+            converter.addValueToJsonArray(group, columnIndex, repeatIndex, type, jsonArray);
+        }
+        field.type = DataType.TEXT.getOID();
+        try {
+            field.val = mapper.writeValueAsString(jsonArray);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize repeated parquet type " + type.asPrimitiveType().getName(), e);
         }
         return field;
     }
