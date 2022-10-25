@@ -648,7 +648,7 @@ public class ParquetResolverTest {
 
     @Test
     public void testGetFields_Timestamp_List_Nulls() throws IOException {
-        schema = getParquetSchemaForTimestampListTypeGeneratedBySpark();
+        schema = getParquetSchemaForTimestampListType(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL);
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
