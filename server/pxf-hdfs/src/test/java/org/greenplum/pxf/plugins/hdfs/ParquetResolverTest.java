@@ -527,7 +527,7 @@ public class ParquetResolverTest {
 
     @Test
     public void testGetFields_List() throws IOException {
-        schema = getParquetSchemaForListTypes(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL, true);
+        schema = getParquetSchemaForListTypesGeneratedByHive();
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
@@ -570,7 +570,7 @@ public class ParquetResolverTest {
 
     @Test
     public void testGetFields_List_Nulls() throws IOException {
-        schema = getParquetSchemaForListTypes(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL, true);
+        schema = getParquetSchemaForListTypesGeneratedByHive();
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
@@ -598,7 +598,7 @@ public class ParquetResolverTest {
 
     @Test
     public void testGetFields_Timestamp_List_Nulls() throws IOException {
-        schema = getParquetSchemaForTimestampListType(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL);
+        schema = getParquetSchemaForTimestampListTypeGeneratedBySpark();
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
@@ -747,13 +747,15 @@ public class ParquetResolverTest {
     }
 
     @SuppressWarnings("deprecation")
-    private MessageType getParquetSchemaForListTypes(Type.Repetition groupRepetition, Type.Repetition elementRepetition, boolean readCase) {
+    private MessageType getParquetSchemaForListTypesGeneratedByHive() {
         List<Type> fields = new ArrayList<>();
 
+        Type.Repetition groupRepetition = Type.Repetition.OPTIONAL;
+        Type.Repetition elementRepetition = Type.Repetition.OPTIONAL;
         fields.add(new PrimitiveType(elementRepetition, PrimitiveTypeName.INT32, "id", null));
         fields.add(generateListSchema(groupRepetition, "bag", elementRepetition, "array_element", PrimitiveTypeName.BOOLEAN, 0, "bool_arr", null));
         // if it is read case, we generate the data using hive, which support tiny type, doesn't support small int type?
-        org.apache.parquet.schema.OriginalType tinyType = readCase ? org.apache.parquet.schema.OriginalType.INT_8 : org.apache.parquet.schema.OriginalType.INT_16;
+        org.apache.parquet.schema.OriginalType tinyType = org.apache.parquet.schema.OriginalType.INT_8;
         fields.add(generateListSchema(groupRepetition, "bag", elementRepetition, "array_element", PrimitiveTypeName.INT32, 0, "smallint_arr", tinyType));
         fields.add(generateListSchema(groupRepetition, "bag", elementRepetition, "array_element", PrimitiveTypeName.INT32, 0, "int_arr", null));
         fields.add(generateListSchema(groupRepetition, "bag", elementRepetition, "array_element", PrimitiveTypeName.INT64, 0, "bigint_arr", null));
@@ -770,10 +772,10 @@ public class ParquetResolverTest {
     }
 
     @SuppressWarnings("deprecation")
-    private MessageType getParquetSchemaForTimestampListType(Type.Repetition groupRepetition, Type.Repetition elementRepetition) {
+    private MessageType getParquetSchemaForTimestampListTypeGeneratedBySpark() {
         List<Type> fields = new ArrayList<>();
         fields.add(new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveTypeName.INT32, "id", null));
-        fields.add(generateListSchema(groupRepetition, "list", elementRepetition, "element", PrimitiveTypeName.INT96, 0, "tm_arr", null));
+        fields.add(generateListSchema(Type.Repetition.OPTIONAL, "list", Type.Repetition.OPTIONAL, "element", PrimitiveTypeName.INT96, 0, "tm_arr", null));
         return new MessageType("hive_schema", fields);
     }
 
