@@ -60,10 +60,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
     private final PgUtilities pgUtilities = new PgUtilities();
     private final ObjectMapper mapper = new ObjectMapper();
+    private final ParquetUtilities parquetUtilities = new ParquetUtilities(pgUtilities);
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
     private List<ColumnDescriptor> columnDescriptors;
-    private ParquetUtilities parquetUtilities = new ParquetUtilities(pgUtilities);
 
     @Override
     public void afterPropertiesSet() {
@@ -131,7 +131,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      * @param field The index-th field which provides Greenplum data type and String value of record[index]
      * @param group The outermost group for the {@link OneRow} parquet schema and data we are going to construct
      * @param type  The parquet schema type of record[index]
-     * @throws IOException
+     * @throws IOException if fill the index-th group from the field failed
      */
     private void fillGroup(int index, OneField field, Group group, Type type) throws IOException {
         if (field.val == null)
@@ -152,7 +152,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      * @param group       The out most group for the {@link OneRow} parquet schema and data we are going to construct
      * @param type        The parquet schema type of record[index]
      * @param isPrimitive Whether record[index] is a Primitive type or it is a recursive call to construct List type
-     * @throws IOException
+     * @throws IOException if fill the index-th group from the field failed
      */
     private void fillPrimitiveGroup(int index, Object fieldValue, Group group, Type type, boolean isPrimitive) throws IOException {
         switch (type.asPrimitiveType().getPrimitiveTypeName()) {
@@ -214,11 +214,11 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      * Fill the index-th List group based on the Greenplum data type and value string provided by {@link OneField} field
      * It will call the fillPrimitiveGroup to fill the innermost primitive group
      *
-     * @param index The index we are going to fill data at
+     * @param index      The index we are going to fill data at
      * @param fieldValue The String value of record[index]
-     * @param group The out most group for the {@link OneRow} parquet schema and data we are going to construct
-     * @param type The parquet schema type of record[index]
-     * @throws IOException
+     * @param group      The out most group for the {@link OneRow} parquet schema and data we are going to construct
+     * @param type       The parquet schema type of record[index]
+     * @throws IOException if fill the index-th group from the field failed
      */
     private void fillListGroup(int index, Object fieldValue, Group group, Type type) throws IOException {
         if (type.asGroupType().getOriginalType() != LogicalTypeAnnotation.listType().toOriginalType()) {
@@ -243,7 +243,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
         for (Object value : vals) {
             Group repeatedGroup = new SimpleGroup(repeatedType);
-            fillPrimitiveGroup(0, value, repeatedGroup, elementType, false);
+            // If current element is null, directly add repeatedGroup into group
+            if (value != null) {
+                fillPrimitiveGroup(0, value, repeatedGroup, elementType, false);
+            }
             arrayGroup.add(0, repeatedGroup);
         }
         group.add(index, arrayGroup);
