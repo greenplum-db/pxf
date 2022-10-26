@@ -59,6 +59,7 @@ public class JsonRecordReaderTest {
         key = createKey();
         data = createValue();
         int recordCount = 0;
+        // BZip2Codec has base block size of 100000 so we would read all 5 records in 1 go
         while (jsonRecordReader.next(key, data)) {
             recordCount++;
         }
@@ -404,7 +405,7 @@ public class JsonRecordReaderTest {
                 "    \"address\": \"söme city\", \"zip\": \"95051\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
         // reads the full second line... even if it doesn't use the full line
-        assertEquals(120, jsonRecordReader.getPos());
+        assertEquals(113, jsonRecordReader.getPos());
 
         // split 2 (starts mid line 2 continues into line 3, skip incomplete object and read full object)
         fileSplit = new FileSplit(path, 50, 50, hosts);
@@ -449,7 +450,7 @@ public class JsonRecordReaderTest {
         assertEquals("{\"cüstömerstätüs\":\"invälid\",\"name\": \"₡¥\", \"year\": \"2022\",\n" +
                 "    \"address\": \"\uD804\uDC13exas\", \"zip\": \"12345\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
-        assertEquals(366, jsonRecordReader.getPos());
+        assertEquals(334, jsonRecordReader.getPos());
 
         // split 6 (starts mid line 4, split continues into line 5,)
         fileSplit = new FileSplit(path, 250, 50, hosts);

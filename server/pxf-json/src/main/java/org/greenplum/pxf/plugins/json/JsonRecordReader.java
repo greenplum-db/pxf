@@ -144,7 +144,9 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
             // we've completed an object but there might still be things in the buffer. Calculate the proper
             // position of the JsonRecordReader
-            long unreadCharsInBuffer = currentLineBuffer.length() - currentLineIndex;
+            long totalChars = currentLineBuffer.toString().getBytes().length;
+            long readChars = currentLineBuffer.substring(0, currentLineIndex).getBytes().length;
+            long unreadCharsInBuffer = totalChars - readChars;
             pos = linePos - unreadCharsInBuffer;
 
             if (isObjectComplete && parser.foundObjectWithIdentifier()) {
@@ -276,6 +278,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private boolean getNextLine() throws IOException {
         currentLine.clear();
         long currentPos = lineRecordReader.getPos();
+        // use lineRecordReader which internally will handle splits for us: will return false when the split ends
         boolean didReturnLine = lineRecordReader.next(key, currentLine);
         linePos = lineRecordReader.getPos();
         if (didReturnLine) {
