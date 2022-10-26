@@ -71,7 +71,7 @@ public class ParquetWriteTest {
     private Resolver resolver;
     private RequestContext context;
     private Configuration configuration;
-    private PgUtilities pgUtilities = new PgUtilities();
+    private final PgUtilities pgUtilities = new PgUtilities();
     private PgArrayBuilder pgArrayBuilder = null;
 
     @BeforeEach
@@ -1964,11 +1964,9 @@ public class ParquetWriteTest {
                     break;
                 case BINARY:
                     if (logicalTypeAnnotation != null) {
-                        Binary binary = elementGroup.getBinary(0, 0);
-                        String str = binary.toStringUsingUTF8();
                         assertEquals(expectedValues[j], elementGroup.getBinary(0, 0).toStringUsingUTF8());
                     } else {
-                        assertEquals((Binary) expectedValues[j], elementGroup.getBinary(0, 0));
+                        assertEquals(expectedValues[j], elementGroup.getBinary(0, 0));
                     }
                     break;
                 case FIXED_LEN_BYTE_ARRAY:
@@ -1982,13 +1980,9 @@ public class ParquetWriteTest {
     }
 
     private void assertListElementType(Type repeatedType, int repetitionCount, PrimitiveType.PrimitiveTypeName expectedElementTypeName, LogicalTypeAnnotation logicalTypeAnnotation) {
-//        assertNotNull(outerType.getLogicalTypeAnnotation());
-//        assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
-//        Type repeatedType = outerType.asGroupType().getType(0);
         //repeated group must use "repeated" keyword
         assertEquals(Type.Repetition.REPEATED, repeatedType.getRepetition());
         for (int j = 0; j < repetitionCount; j++) {
-            // only one  element in the repeated list, the repetition count should be 1
             Type elementType = repeatedType.asGroupType().getType(0).asPrimitiveType();
             // Physical type is binary, logical type is String
             assertEquals(expectedElementTypeName, elementType.asPrimitiveType().getPrimitiveTypeName());
