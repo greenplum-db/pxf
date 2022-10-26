@@ -927,7 +927,7 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = new String[]{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-        prepareParquetArrayData(DataType.INT4ARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.INT4ARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -957,7 +957,6 @@ public class ParquetWriteTest {
 
     }
 
-
     @Test
     public void testWriteTextArray() throws Exception {
         String path = temp + "/out/text_array/";
@@ -975,7 +974,7 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = new String[]{"a", "aa", "aaa", "aaaa", "aaaaa", "aaaaaa", "aaaaaaa", "aaaaaaaa", "aaaaaaaaa", "aaaaaaaaaa"};
-        prepareParquetArrayData(DataType.TEXTARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.TEXTARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1027,7 +1026,7 @@ public class ParquetWriteTest {
                 String.format("2020-08-%02d", 3), String.format("2020-08-%02d", 4), String.format("2020-08-%02d", 5),
                 String.format("2020-08-%02d", 6), String.format("2020-08-%02d", 7), String.format("2020-08-%02d", 8),
                 String.format("2020-08-%02d", 9), String.format("2020-08-%02d", 10)};
-        prepareParquetArrayData(DataType.DATEARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.DATEARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1077,7 +1076,7 @@ public class ParquetWriteTest {
                 String.valueOf(2.02), String.valueOf(3.03), String.valueOf(4.04),
                 String.valueOf(5.05), String.valueOf(6.06), String.valueOf(7.07),
                 String.valueOf(8.08), String.valueOf(9.09)};
-        prepareParquetArrayData(DataType.FLOAT8ARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.FLOAT8ARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1124,7 +1123,7 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = new String[]{"t", "f", "t", "f", "t", "f", "t", "f", "t", "f"};
-        prepareParquetArrayData(DataType.BOOLARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.BOOLARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1171,7 +1170,7 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = generateLocalTimestampStrings();
-        prepareParquetArrayData(DataType.TIMESTAMPARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.TIMESTAMPARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1222,7 +1221,7 @@ public class ParquetWriteTest {
                 String.valueOf((long) Integer.MAX_VALUE + 4), String.valueOf((long) Integer.MAX_VALUE + 5),
                 String.valueOf((long) Integer.MAX_VALUE + 6), String.valueOf((long) Integer.MAX_VALUE + 7),
                 String.valueOf((long) Integer.MAX_VALUE + 8), String.valueOf((long) Integer.MAX_VALUE + 9)};
-        prepareParquetArrayData(DataType.INT8ARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.INT8ARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1270,7 +1269,7 @@ public class ParquetWriteTest {
 
         // write parquet file with bytea array values
         String[] values = new String[]{"a", "aa", "aaa", "aaaa", "aaaaa", "aaaaaa", "aaaaaaa", "aaaaaaaa", "aaaaaaaaa", "aaaaaaaaaa"};
-        prepareParquetArrayData(DataType.BYTEAARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.BYTEAARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1330,7 +1329,7 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = new String[]{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-        prepareParquetArrayData(DataType.INT2ARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.INT2ARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1380,7 +1379,7 @@ public class ParquetWriteTest {
                 String.valueOf((float) 4.04), String.valueOf((float) 5.05),
                 String.valueOf((float) 6.06), String.valueOf((float) 7.07),
                 String.valueOf((float) 8.08), String.valueOf((float) 9.09)};
-        prepareParquetArrayData(DataType.FLOAT4ARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.FLOAT4ARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1426,7 +1425,7 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = new String[]{"", "b", "bb", "bbb", "bbbb", "", "b", "bb", "bbb", "bbbb"};
-        prepareParquetArrayData(DataType.VARCHARARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.VARCHARARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1473,7 +1472,7 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = new String[]{"", "c", "cc", "", "c", "cc", "", "c", "cc", ""};
-        prepareParquetArrayData(DataType.BPCHARARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.BPCHARARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1531,7 +1530,7 @@ public class ParquetWriteTest {
                 "999999999.90123456789",
                 null
         };
-        prepareParquetArrayData(DataType.NUMERICARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.NUMERICARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1725,7 +1724,6 @@ public class ParquetWriteTest {
         assertEquals("ff", row1.getString(4, 0));
         assertEquals("fff", row2.getString(4, 0));
 
-
         assertListElementValue(row0.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, new Object[]{0});
         assertListElementValue(row1.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, new Object[]{1});
         assertListElementValue(row2.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, new Object[]{2});
@@ -1821,7 +1819,7 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = generateLocalTimestampStrings();
-        prepareParquetArrayData(DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), values, resolver, accessor);
+        insertParquetArrayData(DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
 
@@ -1850,7 +1848,6 @@ public class ParquetWriteTest {
 
         fileReader.close();
     }
-
 
     private MessageType validateFooter(Path parquetFile) throws IOException {
         return validateFooter(parquetFile, 1, 10);
@@ -1881,7 +1878,7 @@ public class ParquetWriteTest {
     }
 
     // all the inserted values pxf gets from greenplum are converted into String along with their datatype.
-    private void prepareParquetArrayData(int oid, String[] values, Resolver resolver, Accessor accessor) throws Exception {
+    private void insertParquetArrayData(int oid, String[] values, Resolver resolver, Accessor accessor) throws Exception {
         for (int i = 0; i < values.length; i++) {
             List<OneField> record;
             if (i != values.length - 1) {
