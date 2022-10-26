@@ -1,10 +1,12 @@
 package org.greenplum.pxf.automation.features.avro;
 
+import annotations.FailsWithFDW;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
+import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
@@ -22,6 +24,7 @@ import java.util.Objects;
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;
 
+@FailsWithFDW
 public class HdfsWritableAvroTest extends BaseFeature {
 
     private ReadableExternalTable readableExternalTable;
@@ -478,24 +481,12 @@ public class HdfsWritableAvroTest extends BaseFeature {
     }
 
     private void prepareWritableExternalTable(String name, String[] fields, String path) {
-        exTable = new WritableExternalTable(name + "_writable",
-                fields,
-                protocol.getExternalTablePath(hdfs.getBasePath(), path),
-                "custom");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        exTable.setFormatter("pxfwritable_export");
-        exTable.setProfile(protocol.value() + ":avro");
+        exTable = TableFactory.getPxfHcfsWritableTable(name + "_writable",
+                fields, path, hdfs.getBasePath(), "avro");
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path) {
-        readableExternalTable = new ReadableExternalTable(name + "_readable",
-                fields,
-                protocol.getExternalTablePath(hdfs.getBasePath(), path),
-                "custom");
-        readableExternalTable.setHost(pxfHost);
-        readableExternalTable.setPort(pxfPort);
-        readableExternalTable.setFormatter("pxfwritable_import");
-        readableExternalTable.setProfile(protocol.value() + ":avro");
+        readableExternalTable = TableFactory.getPxfHcfsReadableTable(name + "_readable",
+                fields, path, hdfs.getBasePath(),"avro");
     }
 }

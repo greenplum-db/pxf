@@ -196,6 +196,16 @@ public abstract class TableFactory {
         return exTable;
     }
 
+    public static ReadableExternalTable getPxfReadableTestTextTable(String name,
+                                                                    String[] fields,
+                                                                    String path,
+                                                                    String delimiter) {
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, path, "Text");
+        exTable.setProfile("test:text");
+        exTable.setDelimiter(delimiter);
+        return exTable;
+    }
+
     /**
      * Prepares PXF Readable External Table for Simple Text data, using
      * "HdfsTextSimple" profile
@@ -211,7 +221,6 @@ public abstract class TableFactory {
                                                                 String[] fields,
                                                                 String path,
                                                                 String delimiter) {
-
         ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, path, "Text");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(delimiter);

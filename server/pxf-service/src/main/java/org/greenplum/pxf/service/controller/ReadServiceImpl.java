@@ -190,13 +190,22 @@ public class ReadServiceImpl extends BaseServiceImpl<OperationStats> implements 
     private void updateProfile(RequestContext context, String profile) {
         context.setProfile(profile);
         PluginConf pluginConf = context.getPluginConf();
+
         Map<String, String> pluginMap = pluginConf.getPlugins(profile);
-        context.setAccessor(pluginMap.get("ACCESSOR"));
-        context.setResolver(pluginMap.get("RESOLVER"));
+        if (pluginMap != null) {
+            context.setAccessor(pluginMap.get("ACCESSOR"));
+            context.setResolver(pluginMap.get("RESOLVER"));
+        }
 
         String handlerClassName = pluginConf.getHandler(profile);
-        Utilities.updatePlugins(context, handlerClassName);
-        context.setProfileScheme(pluginConf.getProtocol(profile));
+        if (handlerClassName != null) {
+            Utilities.updatePlugins(context, handlerClassName);
+        }
+
+        String profileProtocol = pluginConf.getProtocol(profile);
+        if (profileProtocol != null) {
+            context.setProfileScheme(profileProtocol);
+        }
     }
 
 }

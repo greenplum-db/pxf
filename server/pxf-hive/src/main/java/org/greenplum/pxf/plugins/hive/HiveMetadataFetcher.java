@@ -144,7 +144,8 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
     private OutputFormat getOutputFormat(String inputFormat, boolean hasComplexTypes) throws Exception {
         InputFormat<?, ?> fformat = hiveUtilities.makeInputFormat(inputFormat, jobConf);
         String profile = ProfileFactory.get(fformat, hasComplexTypes);
-        String outputFormatClassName = context.getPluginConf().getPlugins(profile).get("OUTPUTFORMAT");
+        Map<String, String> plugins = context.getPluginConf().getPlugins(profile);
+        String outputFormatClassName = plugins != null ? plugins.get("OUTPUTFORMAT") : null;
         return OutputFormat.getOutputFormat(outputFormatClassName);
     }
 

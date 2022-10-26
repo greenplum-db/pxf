@@ -58,6 +58,16 @@ public class ProfilesConfTest {
     }
 
     @Test
+    public void undefinedDynamicProfile() {
+        String profileName = "test:foo";
+        ProfilesConf profilesConf = getProfilesConfWithTestDynamicRegex("undefinedProfile");
+        assertNull(profilesConf.getHandler(profileName));
+        assertNull(profilesConf.getOptionMappings(profileName));
+        assertNull(profilesConf.getPlugins(profileName));
+        assertNull(profilesConf.getProtocol(profileName));
+    }
+
+    @Test
     public void testUndefinedProfileWhenGettingProtocol() {
         ProfilesConf profilesConf = getProfilesConf("undefinedProfile");
 
@@ -194,6 +204,12 @@ public class ProfilesConfTest {
 
     private ProfilesConf getProfilesConf(String testCase) {
         return new ProfilesConf(String.format("profile/%s/pxf-profiles-default.xml", testCase),
-                String.format("profile/%s/pxf-profiles.xml", testCase));
+                String.format("profile/%s/pxf-profiles.xml", testCase), null);
     }
+
+    private ProfilesConf getProfilesConfWithTestDynamicRegex(String testCase) {
+        return new ProfilesConf(String.format("profile/%s/pxf-profiles-default.xml", testCase),
+                String.format("profile/%s/pxf-profiles.xml", testCase), "test:.*");
+    }
+
 }

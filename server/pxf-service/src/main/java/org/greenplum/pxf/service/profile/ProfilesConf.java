@@ -20,9 +20,12 @@ package org.greenplum.pxf.service.profile;
  */
 
 
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBContext;
@@ -34,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import static org.greenplum.pxf.service.profile.ProfileConfException.MessageFormat.NO_PLUGINS_IN_PROFILE_DEF;
 import static org.greenplum.pxf.service.profile.ProfileConfException.MessageFormat.NO_PROFILE_DEF;
@@ -54,17 +58,19 @@ public class ProfilesConf implements PluginConf {
 
     // maps a profileName --> Profile object
     private Map<String, Profile> profilesMap;
+    private Pattern dynamicProfilePattern;
 
     /**
      * Constructs the ProfilesConf enum singleton instance.
      * <p/>
      * External profiles take precedence over the internal ones and override them.
      */
-    private ProfilesConf() {
-        this(INTERNAL_PROFILES, EXTERNAL_PROFILES);
+    @Autowired
+    public ProfilesConf( @Value( "${pxf.profile.dynamic.regex}" ) String dynamicProfilesRegex) {
+        this(INTERNAL_PROFILES, EXTERNAL_PROFILES, dynamicProfilesRegex);
     }
 
-    ProfilesConf(String internalProfilesFilename, String externalProfilesFilename) {
+    ProfilesConf(String internalProfilesFilename, String externalProfilesFilename, String dynamicProfilesRegex) {
         this.profilesMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         this.externalProfilesFilename = externalProfilesFilename;
 
@@ -73,12 +79,17 @@ public class ProfilesConf implements PluginConf {
         if (profilesMap.isEmpty()) {
             throw new ProfileConfException(PROFILES_FILE_NOT_FOUND, externalProfilesFilename);
         }
+        if (StringUtils.isNotBlank(dynamicProfilesRegex)) {
+            dynamicProfilePattern = Pattern.compile(dynamicProfilesRegex);
+            LOG.info("PXF profiles dynamic regex: {}", dynamicProfilesRegex);
+        }
         LOG.info("PXF profiles loaded: {}", profilesMap.keySet());
     }
 
     @Override
     public Map<String, String> getOptionMappings(String profileName) {
-        return getProfile(profileName).getOptionsMap();
+        Profile profile = getProfile(profileName);
+        return profile != null ? profile.getOptionsMap() : null;
     }
 
     /**
@@ -92,6 +103,9 @@ public class ProfilesConf implements PluginConf {
     @Override
     public Map<String, String> getPlugins(String profileName) {
         Profile profile = getProfile(profileName);
+        if (profile == null) {
+            return null;
+        }
         Map<String, String> result = profile.getPluginsMap();
         if (result.isEmpty()) {
             throw new ProfileConfException(NO_PLUGINS_IN_PROFILE_DEF, profileName, externalProfilesFilename);
@@ -101,20 +115,26 @@ public class ProfilesConf implements PluginConf {
 
     @Override
     public String getProtocol(String profileName) {
-        return getProfile(profileName).getProtocol();
+        Profile profile = getProfile(profileName);
+        return profile != null ? profile.getProtocol() : null;
     }
 
     @Override
     public String getHandler(String profileName) {
-        return getProfile(profileName).getHandler();
+        Profile profile = getProfile(profileName);
+        return profile != null ? profile.getHandler() : null;
     }
 
     private Profile getProfile(String profileName) {
         Profile profile = profilesMap.get(profileName);
-        if (profile == null) {
+        if (profile == null && !isDynamicProfile(profileName)) {
             throw new ProfileConfException(NO_PROFILE_DEF, profileName, externalProfilesFilename);
         }
         return profile;
+    }
+
+    private boolean isDynamicProfile(String profileName) {
+        return dynamicProfilePattern != null && dynamicProfilePattern.matcher(profileName).matches();
     }
 
     private void loadConf(String fileName, boolean isMandatory) {

@@ -302,11 +302,12 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
             // if user passed accessor+fragmenter+resolver - use them
             profile = ProfileFactory.get(fformat, hasComplexTypes, userProfile);
         }
-        String fragmenterForProfile;
+        String fragmenterForProfile = context.getFragmenter();
         if (profile != null) {
-            fragmenterForProfile = context.getPluginConf().getPlugins(profile).get("FRAGMENTER");
-        } else {
-            fragmenterForProfile = context.getFragmenter();
+            Map<String, String> plugins = context.getPluginConf().getPlugins(profile);
+            if (plugins != null) {
+                fragmenterForProfile = plugins.get("FRAGMENTER");
+            }
         }
 
         FileInputFormat.setInputPaths(jobConf, new Path(tablePartition.storageDesc.getLocation()));

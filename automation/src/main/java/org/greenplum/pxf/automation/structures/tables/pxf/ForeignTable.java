@@ -44,34 +44,33 @@ public class ForeignTable extends WritableExternalTable {
         // foreign tables do not have locations, parameters go into options
         // path (resource option for FDW) should always be present
         StringBuilder builder = new StringBuilder(" OPTIONS (");
-        appendOption(builder,"resource", getPath(), true);
+        appendOption(builder,"resource", getPath(), true, true);
 
         String formatOption = getFormatOption();
         if (formatOption != null) {
             appendOption(builder, "format", formatOption);
         }
 
+        // process F/A/R as options, they are used in tests to test column projection / predicate pushdown
+        if (getFragmenter() != null) {
+            appendOption(builder, "fragmenter", getFragmenter());
+        }
+        if (getAccessor() != null) {
+            appendOption(builder, "accessor", getAccessor());
+        }
+        if (getResolver() != null) {
+            appendOption(builder, "resolver", getResolver());
+        }
+
         // process copy options
         if (getDelimiter() != null) {
             // if Escape character, no need for "'"
-            String parsedDelimiter = getDelimiter();
-            /*
-            if (!parsedDelimiter.startsWith("E")) {
-                parsedDelimiter = "'" + parsedDelimiter + "'";
-            }
-            */
-            appendOption(builder, "delimiter", parsedDelimiter);
+            appendOption(builder,"delimiter", getDelimiter(), false, !getDelimiter().startsWith("E"));
         }
 
         if (getEscape() != null) {
             // if Escape character, no need for "'"
-            String parsedEscapeCharacter = getEscape();
-            /*
-            if (!parsedEscapeCharacter.startsWith("E")) {
-                parsedEscapeCharacter = "'" + parsedEscapeCharacter + "'";
-            }
-            */
-            appendOption(builder, "escape", parsedEscapeCharacter);
+            appendOption(builder,"delimiter", getEscape(), false, !getEscape().startsWith("E"));
         }
 
         if (getNewLine() != null) {
@@ -123,17 +122,22 @@ public class ForeignTable extends WritableExternalTable {
     }
 
     private void appendOption(StringBuilder builder, String optionName, String optionValue) {
-        appendOption(builder, optionName, optionValue, false);
+        appendOption(builder, optionName, optionValue, false, true);
     }
 
-    private void appendOption(StringBuilder builder, String optionName, String optionValue, boolean first) {
+    private void appendQuotedOption(StringBuilder builder, String optionName, String optionValue) {
+        appendOption(builder, optionName, optionValue, false, false);
+    }
+
+    private void appendOption(StringBuilder builder, String optionName, String optionValue, boolean first, boolean needQuoting) {
         if (!first) {
             builder.append(", ");
         }
         builder.append(optionName)
-                .append(" '")
-                .append(optionValue)
-                .append("'");
+               .append(" ")
+               .append(needQuoting ? "'" : "")
+               .append(optionValue)
+               .append(needQuoting ? "'" : "");
     }
 
     private String getFormatOption() {

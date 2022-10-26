@@ -80,6 +80,7 @@ public class Gpdb extends DbSystemObject {
 		createExtension(extensionName, true);
 
 		if (FDWUtils.useFDW) {
+			createTestFDW(true);
 			createForeignServers(true);
 		}
 
@@ -148,6 +149,13 @@ public class Gpdb extends DbSystemObject {
 		runQuery("CREATE EXTENSION IF NOT EXISTS " + extensionName, ignoreFail, false);
 	}
 
+	private void createTestFDW(boolean ignoreFail) throws Exception {
+		runQuery("DROP FOREIGN DATA WRAPPER IF EXISTS test_pxf_fdw CASCADE", ignoreFail, false);
+		runQuery("CREATE FOREIGN DATA WRAPPER test_pxf_fdw HANDLER pxf_fdw_handler " +
+				 "VALIDATOR pxf_fdw_validator OPTIONS (protocol 'test', mpp_execute 'all segments')",
+				ignoreFail, false);
+	}
+
 	private void createForeignServers(boolean ignoreFail) throws Exception {
 		List<String> servers = Lists.newArrayList(
 		"default_hdfs",
@@ -162,7 +170,8 @@ public class Gpdb extends DbSystemObject {
 		"s3_s3",
 		"hdfs-non-secure_hdfs",
 		"hdfs-secure_hdfs",
-		"hdfs-ipa_hdfs");
+		"hdfs-ipa_hdfs",
+		"default_test");
 
 		for (String server : servers) {
 			String foreignServerName = server.replace("-", "_");
