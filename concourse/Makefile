@@ -17,7 +17,7 @@ PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS          ?= 10
 NUM_GPDB6_VERSIONS          ?=  9
 REDHAT_MAJOR_VERSION        ?= 7
-FLY_CMD                      = /usr/local/bin/fly
+FLY_CMD                     ?= fly
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
 EMAIL                       ?= true
@@ -211,7 +211,7 @@ set-pivnet-pipeline:
 
 .PHONY: singlecluster
 singlecluster:
-	fly -t ud set-pipeline \
+	$(FLY_CMD) -t ud set-pipeline \
 		-c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
 		-v pxf-git-branch=master -p pxf-singlecluster
 
