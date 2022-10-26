@@ -305,8 +305,8 @@ function install_pxf_tarball() {
 
 	# install separately built PXF FDW extension if it is available on the inputs
 	if [[ -d pxf_fdw_tarball ]]; then
-		ls -al /tmp
 		tar -xzf pxf_fdw_tarball/pxf-fdw-*.tar.gz -C /tmp
+		chmod 755 /tmp
 		ls -al /tmp
 		/usr/bin/install -c -m 755 /tmp/pxf_fdw.so "${GPHOME}/lib/postgresql/pxf_fdw.so"
 		/usr/bin/install -c -m 644 /tmp/pxf_fdw.control "${GPHOME}/share/postgresql/extension/"
@@ -514,7 +514,7 @@ function configure_pxf_server() {
 	fi
 
 	# add property to allow dynamic test: profiles that are used when testing against FDW
-	echo "pxf.profile.dynamic.regex=test:.*" >> "${BASE_DIR}/conf/pxf-application.properties"
+	echo -e "\npxf.profile.dynamic.regex=test:.*" >> "${BASE_DIR}/conf/pxf-application.properties"
 }
 
 function configure_hdfs_client_for_s3() {

@@ -263,9 +263,6 @@ function _main() {
 		fi
 	fi
 
-	ls -al /tmp
-	chmod a+rwx /tmp
-	ls -al /tmp
 	# initialize GPDB as gpadmin user
 	su gpadmin -c "${CWDIR}/initialize_gpdb.bash"
 
