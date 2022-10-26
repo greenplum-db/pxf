@@ -122,7 +122,7 @@ public class PgUtilities {
 
         String[] subStrings = new String[posList.size() - 1];
         for (int i = 0; i < posList.size() - 1; i++) {
-            subStrings[i] = unescapeArrayElement(new String(value, posList.get(i) + 1, posList.get(i+1) - posList.get(i) - 1));
+            subStrings[i] = unescapeArrayElement(new String(value, posList.get(i) + 1, posList.get(i + 1) - posList.get(i) - 1));
         }
         return subStrings;
 
