@@ -42,9 +42,8 @@ public class PgUtilities {
 
     /**
      * Split the outer-most Postgres array into its constituent elements using the default delimiter
-     * <p>
-     * Re-used from GPHDFS, commit 3b0bfdc169
      *
+     * Re-used from GPHDFS, commit 3b0bfdc169
      * @param str string with a Postgres array
      * @return array of strings for each element
      */
@@ -68,9 +67,8 @@ public class PgUtilities {
 
     /**
      * Split the outer-most Postgres array into its constituent elements
-     * <p>
-     * Re-used from GPHDFS, commit 3b0bfdc169
      *
+     * Re-used from GPHDFS, commit 3b0bfdc169
      * @param value     string with a Postgres array
      * @param delimiter character separating array elements in value
      * @return array of strings for each element
@@ -132,10 +130,9 @@ public class PgUtilities {
 
     /**
      * Returns a <code>String</code> for an unescaped Postgres array element.
-     * <p>
+     *
      * If the value is enclosed in double quotes, they are removed. Backslash-escaped double quotes and backslashes
      * embedded in the string will unescaped.
-     *
      * @param str
      * @return string representing Postgres array
      */
@@ -160,14 +157,13 @@ public class PgUtilities {
 
     /**
      * Escapes the characters in a <code>String</code> using Postgres array element rules.
-     * <p>
+     *
      * Puts double quotes around element values if they are empty strings, contain curly braces, delimiter
      * characters, double quotes, backslashes, or white space, or match the word NULL. Double quotes and
      * backslashes embedded in the string will be backslash-escaped
-     * <p>
+     *
      * We cannot use StringEscapeUtils.escapeJava() because it will escape characters like `\t` which Postgres does not
      * do for array elements.
-     *
      * @param str String to escape values in, may be null
      * @return String with escaped values
      */
@@ -214,7 +210,6 @@ public class PgUtilities {
 
     /**
      * Converts a byte buffer into a String containing Postgres bytea hex format.
-     *
      * @param data a byte buffer to convert to bytea hex format
      * @return a string containing Postgres bytea hex format
      */
@@ -224,7 +219,6 @@ public class PgUtilities {
 
     /**
      * Converts a Postgres boolean from text format ("t" or "f") to Java boolean
-     *
      * @param value string containing a valid Postgres boolean in text format
      * @return Java boolean
      * @throws {@link PxfRuntimeException} if the input is not a valid text format Postgres boolean
@@ -241,7 +235,6 @@ public class PgUtilities {
 
     /**
      * Parses a text format element from of a bytea in either escape or hex output
-     *
      * @param value string to be parsed
      * @return byte buffer containing the sequence of bytes represented by the input
      */
@@ -255,7 +248,6 @@ public class PgUtilities {
 
     /**
      * Parses a hex output text format element of bytea
-     *
      * @param value string to be parsed
      * @return byte buffer containing the sequence of bytes represented by the input
      * @throws {@link PxfRuntimeException} if input is invalid/malformed
@@ -270,11 +262,11 @@ public class PgUtilities {
 
     /**
      * Parses an escape output text format element from a bytea array
-     * <p>
+     *
      * > The "escape" format is the traditional PostgreSQL format for the bytea type.It takes the approach of
      * > representing a binary string as a sequence of ASCII characters, while converting those bytes that cannot
      * > be represented as an ASCII character into special escape sequences.
-     * <p>
+     *
      * from: https://www.postgresql.org/docs/9.4/datatype-binary.html
      *
      * @param value string to be parsed
@@ -311,9 +303,8 @@ public class PgUtilities {
 
     /**
      * Parses the string argument as an unsigned byte in the radix specified by the second argument.
-     * <p>
-     * Note that we cannot use [@code Byte.parseByte} because it parses a _signed_ byte.
      *
+     * Note that we cannot use [@code Byte.parseByte} because it parses a _signed_ byte.
      * @param s     the String containing the byte representation to be parsed
      * @param radix the radix to be used while parsing s
      * @return the byte value represented by the string argument in the specified radix
