@@ -306,7 +306,7 @@ function install_pxf_tarball() {
 	# install separately built PXF FDW extension if it is available on the inputs
 	if [[ -d pxf_fdw_tarball ]]; then
 		tar -xzf pxf_fdw_tarball/pxf-fdw-*.tar.gz -C /tmp
-		chmod 755 /tmp
+		chmod 777 /tmp
 		ls -al /tmp
 		/usr/bin/install -c -m 755 /tmp/pxf_fdw.so "${GPHOME}/lib/postgresql/pxf_fdw.so"
 		/usr/bin/install -c -m 644 /tmp/pxf_fdw.control "${GPHOME}/share/postgresql/extension/"
