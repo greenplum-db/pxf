@@ -101,6 +101,10 @@ You include JDBC connector custom options in the `LOCATION` URI, prefacing each 
 | BATCH_SIZE | Write | Integer that identifies the number of `INSERT` operations to batch to the external SQL database. Write batching is enabled by default; the default value is 100. |
 | FETCH_SIZE | Read | Integer that identifies the number of rows to buffer when reading from an external SQL database. Read row batching is enabled by default. The default read fetch size for MySQL is `-2147483648` (`Integer.MIN_VALUE`). The default read fetch size for all other databases is 1000. |
 | QUERY_TIMEOUT | Read/Write | Integer that identifies the amount of time (in seconds) that the JDBC driver waits for a statement to execute. The default wait time is infinite. |
+| CONNECTION_POOL_MAXIMUM_SIZE | Read/Write | Integer that identifies maximum connection pool size. |
+| CONNECTION_POOL_CONNECTION_TIMEOUT | Read/Write | Integer that identifies connection pool connection timeout. |
+| CONNECTION_POOL_IDLE_TIMEOUT | Read/Write | Integer that identifies connection pool idle timeout. |
+| CONNECTION_POOL_MINIMUM_IDLE | Read/Write | Integer that identifies connection pool minimum number of idle connections. |
 | POOL_SIZE | Write | Enable thread pooling on `INSERT` operations and identify the number of threads in the pool. Thread pooling is disabled by default. |
 | PARTITION_BY | Read | Enables read partitioning. The partition column, \<column-name\>:\<column-type\>. You may specify only one partition column. The JDBC connector supports `date`, `int`, and `enum` \<column-type\> values, where `int` represents any JDBC integral type. If you do not identify a `PARTITION_BY` column, a single PXF instance services the read request. |
 | RANGE | Read | Required when `PARTITION_BY` is specified. The query range; used as a hint to aid the creation of partitions. The `RANGE` format is dependent upon the data type of the partition column. When the partition column is an `enum` type, `RANGE` must specify a list of values, \<value\>:\<value\>[:\<value\>[...]], each of which forms its own fragment. If the partition column is an `int` or `date` type, `RANGE` must specify \<start-value\>:\<end-value\> and represents the interval from \<start-value\> through \<end-value\>, inclusive. The `RANGE` for an `int` partition column may span any 64-bit signed integer values. If the partition column is a `date` type, use the `yyyy-MM-dd` date format. |
@@ -145,6 +149,8 @@ To disable or enable a thread pool and set the pool size, create the PXF externa
 - `POOL_SIZE=(n<1)` - thread pool size is the number of CPUs in the system
 - `POOL_SIZE=1` - disable thread pooling
 - `POOL_SIZE=(n>1)`- set the `POOL_SIZE` to `n`
+
+JDBC offers connection pooling that is configured in `jdbc-site.xml`. However pool settings can by overriden by `CONNECTION_POOL_MAXIMUM_SIZE`, `CONNECTION_POOL_CONNECTION_TIMEOUT`, `CONNECTION_POOL_IDLE_TIMEOUT` and `CONNECTION_POOL_MINIMUM_IDLE`. Keep in mind that different settings will create distinct pool. E.g. if one URI uses  `CONNECTION_POOL_MAXIMUM_SIZE == 1` and other URI uses `CONNECTION_POOL_MAXIMUM_SIZE == 2` there will be 2 separate pools with total maximum number of connections 3.
 
 #### <a id="partitioning"></a>Partitioning (Read)
 
@@ -244,6 +250,10 @@ You can override certain properties in a JDBC server configuration for a specifi
 | BATCH_SIZE | jdbc.statement.batchSize |
 | FETCH_SIZE | jdbc.statement.fetchSize |
 | QUERY_TIMEOUT | jdbc.statement.queryTimeout |
+| CONNECTION_POOL_MAXIMUM_SIZE | jdbc.pool.property.maximumPoolSize |
+| CONNECTION_POOL_CONNECTION_TIMEOUT | jdbc.pool.property.connectionTimeout |
+| CONNECTION_POOL_IDLE_TIMEOUT | jdbc.pool.property.idleTimeout |
+| CONNECTION_POOL_MINIMUM_IDLE | jdbc.pool.property.minimumIdle |
 
 Example JDBC connection strings specified via custom options:
 

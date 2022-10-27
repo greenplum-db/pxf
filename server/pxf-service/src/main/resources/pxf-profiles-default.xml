@@ -43,6 +43,10 @@ under the License.
             <mapping option="batch_size" property="jdbc.statement.batchSize"/>
             <mapping option="fetch_size" property="jdbc.statement.fetchSize"/>
             <mapping option="query_timeout" property="jdbc.statement.queryTimeout"/>
+            <mapping option="connection_pool_maximum_size" property="jdbc.pool.property.maximumPoolSize"/>
+            <mapping option="connection_pool_connection_timeout" property="jdbc.pool.property.connectionTimeout"/>
+            <mapping option="connection_pool_idle_timeout" property="jdbc.pool.property.idleTimeout"/>
+            <mapping option="connection_pool_minimum_idle" property="jdbc.pool.property.minimumIdle"/>
         </optionMappings>
     </profile>
 
