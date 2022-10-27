@@ -96,7 +96,7 @@ After you install the new version of PXF, perform the following procedure:
     4. Filter pushdown is activated by default for queries on external tables that specify the `Hive`, `HiveRC`, or `HiveORC` profiles. If you have previously created an external table that specifies one of these profiles and queries are failing with PXF v5.16+, you can deactivate filter pushdown at the external table-level or at the server level:
 
         1. (External table) Drop the external table and re-create it, specifying the `&PPD=false` option in the `LOCATION` clause.
-        2. (Server) If you do not want to recreate the external table, you can ddeactivate filter pushdown *for all* `Hive*` *profile queries using the server* by setting the `pxf.ppd.hive` property in the `pxf-site.xml` file to `false`:
+        2. (Server) If you do not want to recreate the external table, you can deactivate filter pushdown *for all* `Hive*` *profile queries using the server* by setting the `pxf.ppd.hive` property in the `pxf-site.xml` file to `false`:
 
             ``` pre
             <property>
