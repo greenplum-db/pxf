@@ -893,11 +893,11 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 			 */
 			if (myData->outlen[i] < 0 || (tupleEndIdx - bufidx) < myData->outlen[i])
 				ereport(FATAL,
-						(errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-						 errmsg("data for column %d of row %d has invalid length",
-								i + 1, myData->lineno),
-						 errdetail("total length for tuple is %d bytes, length for column %d is %d bytes",
-								   tuplelen, i + 1, myData->outlen[i])));
+				        (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+				         errmsg("data for column %d of row %d has invalid length",
+				                i + 1, myData->lineno),
+				         errdetail("total length for tuple is %d bytes, remaining bytes is %d, length for column %d is %d bytes",
+				                   tuplelen, tupleEndIdx - bufidx, i + 1, myData->outlen[i])));
 
 			if (isBinaryFormatType(attr->atttypid))
 			{
