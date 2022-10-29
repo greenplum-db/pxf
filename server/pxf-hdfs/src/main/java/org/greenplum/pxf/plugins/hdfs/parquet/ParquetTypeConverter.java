@@ -6,10 +6,11 @@ import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
-import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -276,13 +277,100 @@ public enum ParquetTypeConverter {
 
         @Override
         public Object getValue(Group group, int columnIndex, int repeatIndex, Type type) {
-            return group.getGroup(columnIndex, repeatIndex);
+            PgUtilities pgUtilities = new PgUtilities();
+            PgArrayBuilder pgArrayBuilder = new PgArrayBuilder(pgUtilities);
+            pgArrayBuilder.startArray();
+
+            Group listGroup = group.getGroup(columnIndex, repeatIndex);
+            int repetitionCount = listGroup.getFieldRepetitionCount(0);
+            for (int i = 0; i < repetitionCount; i++) {
+                Group repeatedGroup = listGroup.getGroup(0, i);
+                if (repeatedGroup.getFieldRepetitionCount(0) == 0) {
+                    pgArrayBuilder.addElement((String) null);
+                } else {
+                    PrimitiveType elementType = type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
+                    switch (elementType.getPrimitiveTypeName()) {
+                        case INT64:
+                            pgArrayBuilder.addElement(String.valueOf(INT64.getValue(repeatedGroup, 0, 0, elementType)));
+                            break;
+                        case INT32:
+                            pgArrayBuilder.addElement(String.valueOf(INT32.getValue(repeatedGroup, 0, 0, elementType)));
+                            break;
+                        case BOOLEAN:
+                            pgArrayBuilder.addElement(String.valueOf(BOOLEAN.getValue(repeatedGroup, 0, 0, elementType)));
+                            break;
+                        case BINARY:
+                            if (elementType.getLogicalTypeAnnotation() == null) {
+                                ByteBuffer byteBuffer = ByteBuffer.wrap(repeatedGroup.getBinary(0, 0).getBytes());
+                                pgArrayBuilder.addElementNoEscaping(pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
+                            } else {
+                                pgArrayBuilder.addElement(String.valueOf(BINARY.getValue(repeatedGroup, 0, 0, elementType)));
+                            }
+                            break;
+                        case FLOAT:
+                            pgArrayBuilder.addElement(String.valueOf(FLOAT.getValue(repeatedGroup, 0, 0, elementType)));
+                            break;
+                        case DOUBLE:
+                            pgArrayBuilder.addElement(String.valueOf(DOUBLE.getValue(repeatedGroup, 0, 0, elementType)));
+                            break;
+                        case INT96:
+                            pgArrayBuilder.addElement(String.valueOf(INT96.getValue(repeatedGroup, 0, 0, elementType)));
+                            break;
+                        case FIXED_LEN_BYTE_ARRAY:
+                            pgArrayBuilder.addElement(String.valueOf(FIXED_LEN_BYTE_ARRAY.getValue(repeatedGroup, 0, 0, elementType)));
+                            break;
+                    }
+                }
+            }
+            pgArrayBuilder.endArray();
+            return pgArrayBuilder.toString();
         }
 
         //todo: what should be the format of converting a List to json array?
         @Override
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
-//            jsonNode.add(group.Group(columnIndex, repeatIndex));
+            final PgUtilities pgUtilities=new PgUtilities();
+            Group listGroup = group.getGroup(columnIndex, repeatIndex);
+            int repetitionCount = listGroup.getFieldRepetitionCount(0);
+            for (int i = 0; i < repetitionCount; i++) {
+                Group repeatedGroup = listGroup.getGroup(0, i);
+                if (repeatedGroup.getFieldRepetitionCount(0) == 0) {
+                    jsonNode.add((String) null);
+                } else {
+                    PrimitiveType elementType = type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
+                    switch (elementType.getPrimitiveTypeName()) {
+                        case INT64:
+                            INT64.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            break;
+                        case INT32:
+                            INT32.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            break;
+                        case BOOLEAN:
+                            BOOLEAN.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            break;
+                        case BINARY:
+                            if (elementType.getLogicalTypeAnnotation() == null) {
+                                ByteBuffer byteBuffer = ByteBuffer.wrap(repeatedGroup.getBinary(0, 0).getBytes());
+                                jsonNode.add(pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
+                            } else {
+                                BINARY.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            }
+                            break;
+                        case FLOAT:
+                            FLOAT.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            break;
+                        case DOUBLE:
+                            DOUBLE.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            break;
+                        case INT96:
+                            INT96.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            break;
+                        case FIXED_LEN_BYTE_ARRAY:
+                           FIXED_LEN_BYTE_ARRAY.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            break;
+                    }
+                }
+            }
         }
     };
 

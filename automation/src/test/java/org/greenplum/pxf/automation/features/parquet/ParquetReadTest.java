@@ -22,8 +22,8 @@ public class ParquetReadTest extends BaseFeature {
     private static final String PARQUET_NUMERIC_FILE = "numeric.parquet";
     private static final String UNDEFINED_PRECISION_NUMERIC_FILENAME = "undefined_precision_numeric.csv";
     private static final String NUMERIC_FILENAME = "numeric_with_precision.csv";
-
     private static final String PARQUET_LIST_FILE = "parquet_list_types.parquet";
+    private static final String PARQUET_TIMESTAMP_LIST_TYPE_FILE="parquet_timestamp_list_type.parquet";
 
     private static final String[] PARQUET_TABLE_COLUMNS = new String[]{
             "s1    TEXT",
@@ -99,8 +99,8 @@ public class ParquetReadTest extends BaseFeature {
             "double_arr           FLOAT[]"      , // DataType.FLOAT8ARRAY
             "text_arr             TEXT[]"       , // DataType.TEXTARRAY
             "bytea_arr            BYTEA[]"      , // DataType.BYTEAARRAY
-            "char_arr             CHAR(7)[]"    , // DataType.BPCHARARRAY
-            "varchar_arr          VARCHAR(8)[]" , // DataType.VARCHARARRAY
+            "char_arr             CHAR(15)[]"    , // DataType.BPCHARARRAY
+            "varchar_arr          VARCHAR(15)[]" , // DataType.VARCHARARRAY
             "date_arr             DATE[]"       , // DataType.DATEARRAY
             "numeric_arr          NUMERIC[]"    , // DataType.NUMERICARRAY
 //            "varchar_arr_nolimit  VARCHAR[]"    , // DataType.VARCHARARRAY with no length limit
@@ -108,9 +108,8 @@ public class ParquetReadTest extends BaseFeature {
 
     // parquet TIMESTAMP LIST data generated using Spark
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
-            "id                   INTEGER"      ,
-            "timestamp_arr        TIMESTAMP[]"  , // DataType.TIMESTAMPARRAY
-            "timestamptz_arr      TIMESTAMPTZ[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
+            "id            INTEGER"      ,
+            "tm_arr        TIMESTAMP[]"  , // DataType.TIMESTAMPARRAY
     };
 
     private ProtocolEnum protocol;
@@ -127,6 +126,8 @@ public class ParquetReadTest extends BaseFeature {
         hdfs.copyFromLocal(resourcePath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE, hdfsPath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE);
         hdfs.copyFromLocal(resourcePath + PARQUET_NUMERIC_FILE, hdfsPath + PARQUET_NUMERIC_FILE);
         hdfs.copyFromLocal(resourcePath + PARQUET_TYPES, hdfsPath + PARQUET_TYPES);
+        hdfs.copyFromLocal(resourcePath + PARQUET_LIST_FILE, hdfsPath+PARQUET_LIST_FILE);
+        hdfs.copyFromLocal(resourcePath+PARQUET_TIMESTAMP_LIST_TYPE_FILE, hdfsPath+PARQUET_TIMESTAMP_LIST_TYPE_FILE);
 
         Table gpdbUndefinedPrecisionNumericTable = new Table(NUMERIC_UNDEFINED_PRECISION_TABLE, UNDEFINED_PRECISION_NUMERIC);
         gpdbUndefinedPrecisionNumericTable.setDistributionFields(new String[]{"description"});
@@ -145,7 +146,6 @@ public class ParquetReadTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetReadPrimitives() throws Exception {
-
         gpdb.runQuery("CREATE OR REPLACE VIEW parquet_view AS SELECT s1, s2, n1, d1, dc1, " +
                 "CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm, " +
                 "f, bg, b, tn, sml, vc1, c1, bin FROM " + PXF_PARQUET_TABLE);
@@ -184,9 +184,8 @@ public class ParquetReadTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetReadListGeneratedByHive() throws Exception {
-        prepareReadableExternalTable("pxf_parquet_read_list",
-                PARQUET_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_NUMERIC_FILE);
-//        runTincTest("pxf.features.parquet.decimal.numeric.runTest");
+        prepareReadableExternalTable("pxf_parquet_list_types", PARQUET_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_LIST_FILE);
+        runTincTest("pxf.features.parquet.list.runTest");
     }
     private void prepareReadableExternalTable(String name, String[] fields, String path) throws Exception {
         exTable = TableFactory.getPxfHcfsReadableTable(name, fields, path, hdfs.getBasePath(), "parquet");
