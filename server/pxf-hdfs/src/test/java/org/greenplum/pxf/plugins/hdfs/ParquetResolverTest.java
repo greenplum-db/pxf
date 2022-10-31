@@ -647,7 +647,7 @@ public class ParquetResolverTest {
     }
 
     @Test
-    public void testGetFields_List_With_Projectioon() throws IOException {
+    public void testGetFields_List_With_Projection() throws IOException {
         schema = getParquetSchemaForListTypesGeneratedByHive();
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
         // set odd columns to be not projected, their values will become null
