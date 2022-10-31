@@ -1,5 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.NanoTime;
@@ -271,7 +272,6 @@ public enum ParquetTypeConverter {
             } catch (IOException e) {
                 LOG.error(e.getMessage());
             }
-
             return null;
         }
 
@@ -329,7 +329,10 @@ public enum ParquetTypeConverter {
         //todo: what should be the format of converting a List to json array?
         @Override
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
-            final PgUtilities pgUtilities=new PgUtilities();
+            final ObjectMapper mapper = new ObjectMapper();
+            ArrayNode innerJsonNode = mapper.createArrayNode();
+
+            final PgUtilities pgUtilities = new PgUtilities();
             Group listGroup = group.getGroup(columnIndex, repeatIndex);
             int repetitionCount = listGroup.getFieldRepetitionCount(0);
             for (int i = 0; i < repetitionCount; i++) {
@@ -340,37 +343,38 @@ public enum ParquetTypeConverter {
                     PrimitiveType elementType = type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
                     switch (elementType.getPrimitiveTypeName()) {
                         case INT64:
-                            INT64.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            INT64.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
                             break;
                         case INT32:
-                            INT32.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            INT32.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
                             break;
                         case BOOLEAN:
-                            BOOLEAN.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            BOOLEAN.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
                             break;
                         case BINARY:
                             if (elementType.getLogicalTypeAnnotation() == null) {
                                 ByteBuffer byteBuffer = ByteBuffer.wrap(repeatedGroup.getBinary(0, 0).getBytes());
-                                jsonNode.add(pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
+                                innerJsonNode.add(pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
                             } else {
-                                BINARY.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                                BINARY.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
                             }
                             break;
                         case FLOAT:
-                            FLOAT.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            FLOAT.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
                             break;
                         case DOUBLE:
-                            DOUBLE.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            DOUBLE.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
                             break;
                         case INT96:
-                            INT96.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            INT96.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
                             break;
                         case FIXED_LEN_BYTE_ARRAY:
-                           FIXED_LEN_BYTE_ARRAY.addValueToJsonArray(repeatedGroup,0,0, elementType,jsonNode);
+                            FIXED_LEN_BYTE_ARRAY.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
                             break;
                     }
                 }
             }
+            jsonNode.add(innerJsonNode);
         }
     };
 

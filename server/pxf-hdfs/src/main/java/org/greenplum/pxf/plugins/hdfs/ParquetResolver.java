@@ -233,13 +233,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             return resolveRepeatedPrimitive(group, columnIndex, type);
         }
 
-        OneField field = new OneField();
         ParquetTypeConverter converter = ParquetTypeConverter.from(type.asPrimitiveType());
-        // determine how many values for the primitive are present in the column, should be 0 or 1.
-        int repetitionCount = group.getFieldRepetitionCount(columnIndex);
-        field.type = converter.getDataType(type).getOID();
-        field.val = repetitionCount == 0 ? null : converter.getValue(group, columnIndex, 0, type);
-        return field;
+        return resolveField(group, columnIndex, type, converter);
     }
 
     @Deprecated
@@ -265,11 +260,15 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     }
 
     private OneField resolveList(Group group, int columnIndex, Type type) {
-        OneField field = new OneField();
-        // get type converter based on the LIST type
         ParquetTypeConverter converter = ParquetTypeConverter.from(type.asGroupType());
-        field.type = converter.getDataType(type).getOID();
+        return resolveField(group, columnIndex, type, converter);
+    }
+
+    private OneField resolveField(Group group, int columnIndex, Type type, ParquetTypeConverter converter) {
+        OneField field = new OneField();
+        // determine how many values for the primitive are present in the column, should be 0 or 1.
         int repetitionCount = group.getFieldRepetitionCount(columnIndex);
+        field.type = converter.getDataType(type).getOID();
         field.val = repetitionCount == 0 ? null : converter.getValue(group, columnIndex, 0, type);
         return field;
     }
