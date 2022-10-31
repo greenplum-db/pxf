@@ -15,9 +15,3 @@ SELECT * FROM pxf_parquet_list_types ORDER BY id;
   5 | {t,f}      | NIL          | {}                       | {NULL,9223372036854775807} | {6.7,-8,NULL}        | NIL                | NIL                                                                         | {"\\x5c5c5c",NULL}        | {"specials \\ \"   "}                 | {"specials \\ \""}                    | NIL                          | {1.234500000000000000}
   6 | {t,f,NULL} | {0,127,-128} | {2147483647,-2147483648} | {1,NULL,300}               | {1e-14}              | {NULL,8.431,-1.56} | {"this is a test string with \\ and \"",NULL}                               | {"\\x313233","\\x343536"} | {"test string    ",NULL}              | {"test string",NULL}                  | {2022-10-07,2012-01-01}      | {1.234500000000000000}
   (6 rows)
-
--- SELECT id, bool_arr[1], int2_arr[2], int_arr[1], int8_arr[2], float_arr[1], float8_arr[1], text_arr[1], bytea_arr[1], char_arr[1], varchar_arr[1] FROM pxf_orc_list_types ORDER BY id;
---
--- SET bytea_output=escape;
---
--- SELECT bytea_arr FROM pxf_orc_list_types ORDER BY id;

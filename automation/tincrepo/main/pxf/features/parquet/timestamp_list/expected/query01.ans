@@ -1,0 +1,17 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for Parquet Timestamp List data type. Timestamp stored in Parquet is UTC time. Greenplum would read it out in PST time
+SET bytea_output=hex;
+SET
+\pset null 'NIL'
+Null display is "NIL".
+SELECT * FROM pxf_parquet_timestamp_list_type ORDER BY id;
+ id |                               tm_arr
+----+---------------------------------------------------------------------
+  1 | {"2022-10-05 11:30:00","2022-10-06 12:30:00","2022-10-07 13:30:00"}
+  2 | {"2022-10-05 11:30:00","2022-10-05 11:30:00","2022-10-07 13:30:00"}
+  3 | {NULL,"2022-10-05 11:30:00","2022-10-05 11:30:00"}
+  4 | {NULL}
+  5 | {}
+  6 | NIL
+(6 rows)
