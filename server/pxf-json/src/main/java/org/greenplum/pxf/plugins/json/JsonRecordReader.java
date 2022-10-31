@@ -21,13 +21,9 @@ package org.greenplum.pxf.plugins.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
@@ -59,7 +55,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private PartitionedJsonParser parser;
     private LineRecordReader lineRecordReader;
     // position of the underlying lineRecordReader
-    private long linePos;
+    private long filePos;
     // line that was read in by the line record reader
     private Text currentLine;
     private JobConf conf;
@@ -100,7 +96,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         parser = new PartitionedJsonParser(jsonMemberName);
         currentLine = new Text();
         this.pos = start;
-        this.linePos = start;
+        this.filePos = start;
         this.key = lineRecordReader.createKey();
     }
 
@@ -114,9 +110,9 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             // scan to first start brace object.
             boolean foundBeginObject = scanToNextJsonBeginObject();
             if (!foundBeginObject) {
-                // if we've scanned the entire file and didn't find anything,
+                // if we've scanned the entire file/split and didn't find anything,
                 // then the position of the JsonRecordReader should match the lineRecordReader
-                pos = linePos;
+                pos = filePos;
                 return false;
             }
 
@@ -144,10 +140,14 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
             // we've completed an object but there might still be things in the buffer. Calculate the proper
             // position of the JsonRecordReader
-            long totalChars = currentLineBuffer.toString().getBytes().length;
-            long readChars = currentLineBuffer.substring(0, currentLineIndex).getBytes().length;
-            long unreadCharsInBuffer = totalChars - readChars;
-            pos = linePos - unreadCharsInBuffer;
+            if (currentLineBuffer != null) {
+                long totalChars = currentLineBuffer.toString().getBytes().length;
+                long readChars = currentLineBuffer.substring(0, currentLineIndex).getBytes().length;
+                long unreadCharsInBuffer = totalChars - readChars;
+                pos = filePos - unreadCharsInBuffer;
+            } else {
+                pos = filePos;
+            }
 
             if (isObjectComplete && parser.foundObjectWithIdentifier()) {
                 String json = parser.getCompletedObject();
@@ -280,11 +280,11 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         long currentPos = lineRecordReader.getPos();
         // use lineRecordReader which internally will handle splits for us: will return false when the split ends
         boolean didReturnLine = lineRecordReader.next(key, currentLine);
-        linePos = lineRecordReader.getPos();
+        filePos = lineRecordReader.getPos();
         if (didReturnLine) {
             // lineRecordReader removes the new lines and carriage returns when it does the read
             // we want to track that delta so we know the proper size of the line that was returned
-            long delta = linePos - currentPos - currentLine.getLength();
+            long delta = filePos - currentPos - currentLine.getLength();
             // append the removed chars back for proper accounting
             if (delta == 2) {
                 currentLine.append(CARRIAGERETURN_NEWLINE, 0, CARRIAGERETURN_NEWLINE.length);

@@ -35,16 +35,13 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class JsonRecordReaderSeekNoSeekTest {
@@ -72,11 +69,8 @@ public class JsonRecordReaderSeekNoSeekTest {
         for (File jsonDir : dirs) {
             File childFile = new File(jsonDir, "input.json");
 
-            File[] jsonObjectFiles = jsonDir.listFiles(new FilenameFilter() {
-                public boolean accept(File file, String s) {
-                    return s.contains("expected");
-                }
-            });
+            File[] jsonObjectFiles = jsonDir.listFiles((file, s) ->
+                    s.contains("expected"));
             runTest(childFile, jsonObjectFiles, true);
         }
     }
@@ -88,11 +82,8 @@ public class JsonRecordReaderSeekNoSeekTest {
 
         for (File jsonFile : dirs) {
 
-            File[] jsonObjectFiles = jsonFile.getParentFile().listFiles(new FilenameFilter() {
-                public boolean accept(File file, String s) {
-                    return s.contains(jsonFile.getName()) && s.contains("expected");
-                }
-            });
+            File[] jsonObjectFiles = jsonFile.getParentFile().listFiles((file, s) ->
+                    s.contains(jsonFile.getName()) && s.contains("expected"));
             runTest(jsonFile, jsonObjectFiles, false);
         }
     }
@@ -116,16 +107,14 @@ public class JsonRecordReaderSeekNoSeekTest {
         Arrays.sort(jsonObjectFiles);
         if (jsonObjectFiles.length == 0) {
             jsonRecordReader.next(key, data);
-            String result = data.getLength() == 0 ? null : data.toString();
-            assertNull(result, "File " + jsonFile.getAbsolutePath() + " got result '" + result + "'");
+            assertEquals(0, data.getLength(), "File " + jsonFile.getAbsolutePath() + " got result '" + data.toString() + "'");
             LOG.info("File " + jsonFile.getAbsolutePath() + " passed");
         } else {
             for (File jsonObjectFile : jsonObjectFiles) {
                 String expected = trimWhitespaces(FileUtils.readFileToString(jsonObjectFile, Charset.defaultCharset()));
                 jsonRecordReader.next(key, data);
-                String result = data.getLength() == 0 ? null : data.toString();
-                assertNotNull(result, jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
-                assertEquals(expected, trimWhitespaces(result), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
+                assertNotEquals(0, data.getLength(), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
+                assertEquals(expected, trimWhitespaces(data.toString()), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
                 LOG.info("File " + jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName() + " passed");
             }
         }
