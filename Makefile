@@ -22,13 +22,15 @@ default: all
 
 .PHONY: all external-table fdw cli server install install-server stage tar rpm rpm-tar deb deb-tar clean test it help
 
-all: external-table cli server
+all: external-table cli server fdw
 
 external-table:
 	make -C external-table
 
 fdw:
+ifneq ($(FDW_SUPPORT),)
 	make -C fdw
+endif
 
 cli:
 	make -C cli/go/src/pxf-cli
@@ -44,7 +46,7 @@ clean:
 
 test:
 ifneq ($(FDW_SUPPORT),)
-	make -C fdw installcheck
+	make -C fdw test
 endif
 	make -C cli/go/src/pxf-cli test
 	make -C server test
