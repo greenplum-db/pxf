@@ -129,13 +129,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             LOG.info("Original query has filter, but it was not propagated to PXF");
         }
 
-
-        //TODO Params does not have this property set at all
-        // Since this DATA-ENCODING is null so putting a check here for now but this needs more investigation
-
-        if(params.get("X-GP-DATA-ENCODING") != null ) {
-            context.setDataEncoding(charsetUtils.forName(params.removeProperty("DATA-ENCODING")));
-        }
+        context.setDataEncoding(charsetUtils.forName(params.removeProperty("DATA-ENCODING")));
         context.setDatabaseEncoding(charsetUtils.forName(params.removeProperty("DATABASE-ENCODING")));
 
         context.setFragmenter(params.removeUserProperty("FRAGMENTER"));
