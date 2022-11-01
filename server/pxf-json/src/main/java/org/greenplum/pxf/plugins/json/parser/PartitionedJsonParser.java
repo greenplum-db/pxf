@@ -175,6 +175,10 @@ public class PartitionedJsonParser {
 		return isCompletedObject ? currentObject.toString() : "";
 	}
 
+	/**
+	 * Regardless of whether the JSON object is complete, return true if a matching identifier was found.
+	 * @return If the object contains the member, return true
+	 */
 	public boolean foundObjectWithIdentifier() {
 		return memberState == MemberSearchState.FOUND_STRING_NAME || memberState == MemberSearchState.IN_MATCHING_OBJECT;
 	}

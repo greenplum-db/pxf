@@ -99,7 +99,8 @@ public class JsonRecordReaderSeekNoSeekTest {
         }
 
         Path path = new Path(jsonFile.getPath());
-        FileSplit fileSplit = new FileSplit(path, start, 2000, hosts);
+        // for these tests, each file should be its own split so let the length be the size of the file
+        FileSplit fileSplit = new FileSplit(path, start, jsonFile.length(), hosts);
         JsonRecordReader jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
         LongWritable key = new LongWritable();
         Text data = new Text();
@@ -111,10 +112,10 @@ public class JsonRecordReaderSeekNoSeekTest {
             LOG.info("File " + jsonFile.getAbsolutePath() + " passed");
         } else {
             for (File jsonObjectFile : jsonObjectFiles) {
-                String expected = trimWhitespaces(FileUtils.readFileToString(jsonObjectFile, Charset.defaultCharset()));
+                String expected = normalizeWhitespaces(FileUtils.readFileToString(jsonObjectFile, Charset.defaultCharset()));
                 jsonRecordReader.next(key, data);
                 assertNotEquals(0, data.getLength(), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
-                assertEquals(expected, trimWhitespaces(data.toString()), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
+                assertEquals(expected, normalizeWhitespaces(data.toString()), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
                 LOG.info("File " + jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName() + " passed");
             }
         }
@@ -137,7 +138,7 @@ public class JsonRecordReaderSeekNoSeekTest {
         return 0;
     }
 
-    public String trimWhitespaces(String s) {
+    public String normalizeWhitespaces(String s) {
         return s.replaceAll("[\\n\\t\\r \\t]+", " ").trim();
     }
 }

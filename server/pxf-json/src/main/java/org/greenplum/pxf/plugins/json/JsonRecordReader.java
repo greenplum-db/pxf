@@ -151,11 +151,12 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
             if (isObjectComplete && parser.foundObjectWithIdentifier()) {
                 String json = parser.getCompletedObject();
-                if (json.getBytes().length > maxObjectLength) {
+                long jsonLength = json.getBytes().length;
+                if (jsonLength > maxObjectLength) {
                     LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
                 } else {
                     // the key is set to beginning of the json object
-                    key.set(pos - json.length());
+                    key.set(pos - jsonLength);
                     value.set(json);
                     return true;
                 }
@@ -272,7 +273,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
     /**
      * Reads the next line of the file in to begin parsing the characters
-     * @return
+     * @return true if a line was read, false otherwise. False means that we have reached the end of the split
      * @throws IOException
      */
     private boolean getNextLine() throws IOException {
@@ -283,7 +284,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         filePos = lineRecordReader.getPos();
         if (didReturnLine) {
             // lineRecordReader removes the new lines and carriage returns when it does the read
-            // we want to track that delta so we know the proper size of the line that was returned
+            // we want to track that delta, so we know the proper size of the line that was returned
             long delta = filePos - currentPos - currentLine.getLength();
             // append the removed chars back for proper accounting
             if (delta == 2) {
@@ -291,7 +292,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             } else if (delta == 1) {
                 currentLine.append(NEW_LINE, 0, NEW_LINE.length);
             } else {
-                LOG.debug("LineRecordReader removed more characters than expected");
+                LOG.warn("LineRecordReader removed more characters than expected while parsing a JSON file.");
             }
             currentLineBuffer = new StringBuffer(currentLine.toString());
             currentLineIndex = 0;
