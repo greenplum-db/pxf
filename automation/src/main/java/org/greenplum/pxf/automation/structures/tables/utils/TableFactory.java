@@ -228,6 +228,27 @@ public abstract class TableFactory {
     }
 
     /**
+     * Prepares PXF Readable External Table for CSV data, using
+     * "HdfsTextSimple" profile
+     *
+     * @param name
+     * @param fields
+     * @param path
+     * @param delimiter
+     * @return PXF Readable External Table using "HdfsTextSimple" profile and
+     *         "CSV" format.
+     */
+    public static ReadableExternalTable getPxfReadableCSVTable(String name,
+                                                               String[] fields,
+                                                               String path,
+                                                               String delimiter) {
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, path, "CSV");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":csv");
+        exTable.setDelimiter(delimiter);
+        return exTable;
+    }
+
+    /**
      * Prepares PXF Writable External Table for Simple Text data, using
      * "HdfsTextSimple" profile
      *

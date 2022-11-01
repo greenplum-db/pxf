@@ -12,7 +12,13 @@
 -- s/CONTEXT:\s*Last error was/GP_IGNORE:/
 --
 -- m/pxf:\/\/(.*),/
--- s/pxf:\/\/.*,/pxf:\/\/location,/
+-- s/pxf:\/\/.*,/pxf-location,/
+--
+-- m/pxf_automation_data/
+-- s/of .*,/of pxf-location,/
+--
+-- m/column num:/
+-- s/column num:.*/column num/
 --
 -- end_matchsubs
 

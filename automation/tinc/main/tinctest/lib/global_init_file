@@ -61,8 +61,12 @@ s/DETAIL/CONTEXT/
 m/Foreign table.*/
 s/Foreign table/External table/
 
-# ignore new context information about record number and FDW resource
-m/.*, record \d+ of.*/
-s/, record \d+ of.*//
+# rename record (FDW) to line (exttable)
+m/, record \d+ of/
+s/, record/, line/
+
+# syntax mismatch error is different between exttable with GP6 and fdw with GP7
+m/invalid input syntax for type/
+s/invalid input syntax for type/invalid input syntax for/
 
 -- end_matchsubs

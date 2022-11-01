@@ -83,19 +83,14 @@ public class ForeignTable extends WritableExternalTable {
             appendOption(builder, "encoding", getEncoding());
         }
 
-        // TODO: are these really "copy options" ? copy.c does not have to seem to have them
-        /*
         if (getErrorTable() != null) {
-            appendOption(builder, "log errors", getEncoding());
-            createStatment += " LOG ERRORS";
+            appendOption(builder, "log_errors", "true");
         }
 
         if (getSegmentRejectLimit() > 0) {
-            createStatment += " SEGMENT REJECT LIMIT "
-                    + getSegmentRejectLimit() + " "
-                    + getSegmentRejectLimitType();
+            appendOption(builder, "reject_limit", String.valueOf(getSegmentRejectLimit()));
+            appendOption(builder, "reject_limit_type", getSegmentRejectLimitType().toLowerCase());
         }
-        */
 
         // process user options, some might actually belong to Foreign Server, but eventually they all will be
         // combined in a single set, so the net result is the same, other than testing option precedence rules

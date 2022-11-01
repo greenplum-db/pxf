@@ -8,6 +8,9 @@
 -- m/pxf:\/\/(.*),/
 -- s/pxf:\/\/.*,/pxf:\/\/location,/
 --
+-- m/, line 51 of/
+-- s/, line 51 of.*//
+--
 -- end_matchsubs
 
 SELECT * FROM bad_text ORDER BY num ASC;

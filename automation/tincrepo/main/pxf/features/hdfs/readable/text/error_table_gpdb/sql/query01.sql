@@ -4,7 +4,10 @@
 --
 -- # create a match/subs
 -- m/pxf:\/\/(.*)\|/
--- s/pxf:\/\/.*\|/pxf:\/\/location |/
+-- s/pxf:\/\/.*\/data/pxf-location/
+--
+-- m/\|.*\/data/
+-- s/\|.*\/data/\|pxf-location/
 --
 -- end_matchsubs
 

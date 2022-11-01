@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.features.hdfs;
 
+import annotations.WorksWithFDW;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.compress.BZip2Codec;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
@@ -32,6 +33,7 @@ import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEM
  * https://testrail.greenplum.com/index.php?/suites/view/1099 in
  * "HDFS Readable - Text/CSV" section.
  */
+@WorksWithFDW
 public class HdfsReadableTextTest extends BaseFeature {
 
     private static final String SUFFIX_CLASS = ".class";
@@ -92,7 +94,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         dataTable = new Table("dataTable", null);
         FileFormatsUtils.prepareData(new CustomTextPreparer(), 100, dataTable);
         // default definition of external table
-        exTable = new ReadableExternalTable("pxf_hdfs_small_data",
+        exTable = TableFactory.getPxfReadableTextTable("pxf_hdfs_small_data",
                 new String[]{
                         "s1 text",
                         "s2 text",
@@ -117,10 +119,7 @@ public class HdfsReadableTextTest extends BaseFeature {
                         "n16 int",
                         "n17 int"},
                 protocol.getExternalTablePath(hdfs.getBasePath(), hdfsFilePath),
-                "TEXT");
-
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
+                ",");
     }
 
     /**
@@ -133,7 +132,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
         exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
-        exTable.setDelimiter(",");
+        exTable.setProfile("test:text"); // set dynamic test: profile that will be ignored
         // create external table
         gpdb.createTableAndVerify(exTable);
         // write data to HDFS
@@ -151,6 +150,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
         exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        exTable.setProfile("test:csv"); // set dynamic test: profile that will be ignored
         exTable.setFormat("CSV");
         // create external table
         gpdb.createTableAndVerify(exTable);
@@ -169,7 +169,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readCsvUsingProfile() throws Exception {
         // set profile and format
-        exTable.setProfile(protocol.value() + ":text");
+        exTable.setProfile(protocol.value() + ":csv");
         exTable.setFormat("CSV");
         // create external table
         gpdb.createTableAndVerify(exTable);
@@ -231,11 +231,8 @@ public class HdfsReadableTextTest extends BaseFeature {
         }
 
         exTable =
-                TableFactory.getPxfReadableTextTable("pxf_hdfs_small_data_bzip2", SMALL_DATA_FIELDS,
+                TableFactory.getPxfReadableCSVTable("pxf_hdfs_small_data_bzip2", SMALL_DATA_FIELDS,
                         protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory()) + "/bzip2/", ",");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        exTable.setFormat("CSV");
         gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hdfs.readable.text.bzip2.runTest");
@@ -282,20 +279,19 @@ public class HdfsReadableTextTest extends BaseFeature {
         // copy local file to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsPath);
         // define and create external table
-        exTable = new ReadableExternalTable("pxf_multi_csv", new String[]{
+        exTable = TableFactory.getPxfReadableCSVTable("pxf_multi_csv", new String[]{
                 "num1 int",
                 "word text",
                 "num2 int"},
-                protocol.getExternalTablePath(hdfs.getBasePath(), locationPath), "CSV");
+                protocol.getExternalTablePath(hdfs.getBasePath(), locationPath), ",");
         if (useProfile) {
             exTable.setProfile(protocol.value() + ":text:multi");
         } else {
+            exTable.setProfile("test:csv"); // set dynamic test: profile that will be ignored
             exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
             exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor");
             exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         }
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
         gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.text.multiblocked_csv_data.runTest");
@@ -341,16 +337,14 @@ public class HdfsReadableTextTest extends BaseFeature {
         hdfs.copyFromLocal(localDataResourcesFolder + "/csv/multi_line_csv_with_header.csv", hdfs_dir);
 
         // define and create external table
-        exTable = new ReadableExternalTable("pxf_multi_csv_with_header", new String[]{
+        exTable = TableFactory.getPxfReadableCSVTable("pxf_multi_csv_with_header", new String[]{
                 "num1 int",
                 "word text",
                 "num2 int"},
-                protocol.getExternalTablePath(hdfs.getBasePath(), hdfs_dir), "CSV");
+                protocol.getExternalTablePath(hdfs.getBasePath(), hdfs_dir), ",");
 
         exTable.setProfile(protocol.value() + ":text:multi");
 
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
         exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=1"});
         gpdb.createTableAndVerify(exTable);
         // Verify results
@@ -369,13 +363,11 @@ public class HdfsReadableTextTest extends BaseFeature {
         hdfs.copyFromLocal(localDataResourcesFolder + "/csv/multi_line_csv_with_header.csv", hdfs_dir);
 
         // define and create external table
-        exTable = new ReadableExternalTable("pxf_file_as_row_with_header", new String[]{
+        exTable = TableFactory.getPxfReadableCSVTable("pxf_file_as_row_with_header", new String[]{
                 "data text"},
-                protocol.getExternalTablePath(hdfs.getBasePath(), hdfs_dir), "CSV");
+                protocol.getExternalTablePath(hdfs.getBasePath(), hdfs_dir), ",");
 
         exTable.setProfile(protocol.value() + ":text:multi");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
         exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=1","FILE_AS_ROW=true"});
         gpdb.createTableAndVerify(exTable);
         // Verify results
@@ -707,10 +699,10 @@ public class HdfsReadableTextTest extends BaseFeature {
         String path = hdfs.getWorkingDirectory() + "/unterminated_quoted_field";
         hdfs.writeTableToFile(path, smallDataTable, ",");
 
-        prepareReadableTable("unterminated_quoted_field", SMALL_DATA_FIELDS, path, exTable.getFormat());
+        prepareReadableTable("unterminated_quoted_field", SMALL_DATA_FIELDS, path, "csv");
         exTable.setSegmentRejectLimit(10);
         exTable.setDelimiter(",");
-        exTable.setFormat("csv");
+        exTable.setProfile(protocol.value() + ":csv");
 
         gpdb.createTableAndVerify(exTable);
         runTincTest("pxf.features.hdfs.readable.text.errors.unterminated_quoted_field.runTest");
@@ -744,6 +736,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
         exTable.setAccessor(testPackage + throwOn10000Accessor);
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        exTable.setProfile("test:text"); // set dynamic test: profile that will be ignored
         exTable.setDelimiter(",");
 
         gpdb.createTableAndVerify(exTable);
