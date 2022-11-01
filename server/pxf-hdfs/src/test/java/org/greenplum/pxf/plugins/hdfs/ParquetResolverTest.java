@@ -660,13 +660,28 @@ public class ParquetResolverTest {
         List<Group> groups = readParquetFile("parquet_timestamp_list_type.parquet", 6, schema);
         assertEquals(6, groups.size());
 
+        // for test cases that test conversions against server's time zone
+        Instant timestamp1 = Instant.parse("2022-10-05T18:30:00Z"); // UTC
+        Instant timestamp2 = Instant.parse("2022-10-06T19:30:00Z"); // UTC
+        Instant timestamp3 = Instant.parse("2022-10-07T20:30:00Z"); // UTC
+        ZonedDateTime localTime1 = timestamp1.atZone(ZoneId.systemDefault());
+        ZonedDateTime localTime2 = timestamp2.atZone(ZoneId.systemDefault());
+        ZonedDateTime localTime3 = timestamp3.atZone(ZoneId.systemDefault());
+        String localTimestampString1 = localTime1.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
+        String localTimestampString2 = localTime2.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
+        String localTimestampString3 = localTime3.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
+
         List<OneField> fields = assertRow(groups, 0, 2);
         assertField(fields, 0, 1, DataType.INTEGER);
-        assertField(fields, 1, new String[]{"2022-10-05 11:30:00", "2022-10-06 12:30:00", "2022-10-07 13:30:00"}, DataType.TIMESTAMPARRAY);
+        assertField(fields, 1, new String[]{localTimestampString1, localTimestampString2, localTimestampString3}, DataType.TIMESTAMPARRAY);
+
+        fields = assertRow(groups, 1, 2);
+        assertField(fields, 0, 2, DataType.INTEGER);
+        assertField(fields, 1, new String[]{localTimestampString1, localTimestampString1, localTimestampString3}, DataType.TIMESTAMPARRAY);
 
         fields = assertRow(groups, 2, 2);
         assertField(fields, 0, 3, DataType.INTEGER);
-        assertField(fields, 1, new String[]{null, "2022-10-05 11:30:00", "2022-10-05 11:30:00"}, DataType.TIMESTAMPARRAY);
+        assertField(fields, 1, new String[]{null, localTimestampString1, localTimestampString1}, DataType.TIMESTAMPARRAY);
 
         fields = assertRow(groups, 3, 2);
         assertField(fields, 0, 4, DataType.INTEGER);
