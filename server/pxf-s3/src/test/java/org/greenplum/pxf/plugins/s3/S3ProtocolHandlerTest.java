@@ -429,7 +429,7 @@ public class S3ProtocolHandlerTest {
     public void testTextIdentifierNoParallelReadAndSelectOff() {
         context.addOption("S3_SELECT", "off");
         context.addOption("IDENTIFIER", "c1");
-        context.addOption("USE_PARALLEL_READ", "false");
+        context.addOption("SPLIT_BY_FILE", "true");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_OFF);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_OFF);
@@ -454,7 +454,7 @@ public class S3ProtocolHandlerTest {
         // s3 options should override multiline json fragmenter option
         context.addOption("S3_SELECT", "on");
         context.addOption("IDENTIFIER", "c1");
-        context.addOption("USE_PARALLEL_READ", "false");
+        context.addOption("SPLIT_BY_FILE", "true");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_ON);
@@ -479,7 +479,7 @@ public class S3ProtocolHandlerTest {
     public void testTextIdentifierNoParallelReadAndSelectAuto() {
         context.addOption("S3_SELECT", "auto");
         context.addOption("IDENTIFIER", "c1");
-        context.addOption("USE_PARALLEL_READ", "false");
+        context.addOption("SPLIT_BY_FILE", "true");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);
