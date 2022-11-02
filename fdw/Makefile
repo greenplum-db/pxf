@@ -36,4 +36,5 @@ stage: pxf_fdw.so
 clean-all: clean
 	rm -rf build
 
+.PHONY: test
 test: install installcheck
