@@ -770,8 +770,7 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
             assertNull(fieldList.get(1).val, "Row " + row);
         }
         if (columnDescriptors.get(2).isProjected() && COL3[row] != null) {
-            //TODO: revert it back to just Data Object
-            assertEquals(Date.valueOf(COL3[row]).toString(), fieldList.get(2).val.toString(), "Row " + row);
+            assertEquals(Date.valueOf(COL3[row]), fieldList.get(2).val, "Row " + row);
         } else {
             assertNull(fieldList.get(2).val, "Row " + row);
         }
