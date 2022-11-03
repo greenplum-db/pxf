@@ -1,7 +1,7 @@
 # Contributing
 
 We warmly welcome and appreciate contributions from the community!
-By participating you agree to the [code of conduct](https://github.com/greenplum-db/pxf/blob/master/CODE-OF-CONDUCT.md).
+By participating you agree to the [code of conduct](https://github.com/greenplum-db/pxf/blob/main/CODE-OF-CONDUCT.md).
 To contribute:
 
 - Sign our [Contributor License Agreement](https://cla.pivotal.io/sign/greenplum).
@@ -20,7 +20,7 @@ To contribute:
 
     - Follow similar coding styles as found throughout the code base.
 
-    - Rebase with master often to stay in sync with upstream.
+    - Rebase with main often to stay in sync with upstream.
 
     - Add appropriate unit and automation tests.
 
@@ -38,7 +38,7 @@ To contribute:
         git commit --squash <commit SHA>
         ```    
 
-    - Once the PR is approved, project committers will merge it to master
+    - Once the PR is approved, project committers will merge it to main
       branch according to the product release schedule. They might further
       squash the commits in the PR if they deem necessary.
 

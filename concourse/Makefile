@@ -63,7 +63,7 @@ set-build-pipeline:
 		--pipeline=$(BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--var=pxf-git-branch=master \
+		--var=pxf-git-branch=main \
 		--var=pxf-build-bucket-prefix=prod \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
@@ -138,7 +138,7 @@ set-hadoop-cluster-cleaner:
 		--check-creds \
 		--pipeline=hadoop-cluster-cleaner \
 		--config=pipelines/hadoop-cluster-cleaner.yml \
-		--var=pxf-git-branch=master \
+		--var=pxf-git-branch=main \
 		${FLY_OPTIONS_NON-INTERACTIVE} || echo "pipelines/hadoop-cluster-cleaner.yml has errors"
 
 	@echo "using the following command to unpause the pipeline"
@@ -213,7 +213,7 @@ set-pivnet-pipeline:
 singlecluster:
 	fly -t ud set-pipeline \
 		-c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
-		-v pxf-git-branch=master -p pxf-singlecluster
+		-v pxf-git-branch=main -p pxf-singlecluster
 
 # ============================= PERFORMANCE PIPELINE TARGETS =============================
 
