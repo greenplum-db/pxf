@@ -93,7 +93,7 @@ resources:
   type: git
   icon: github-circle
   source:
-    branch: master
+    branch: main
     uri: ((ud/pxf/common/git-remote))
     tag_filter: ((pxf-tag))
 

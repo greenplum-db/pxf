@@ -62,7 +62,7 @@ resources:
     # of PXF (currently 6.2.0) because of an upstream change in
     # greenplum_path.sh. The upstream change only impacts PXF's CI code and
     # not the product's functionality. Until the next release of PXF is tagged
-    # this pipeline should be pointed at the master branch and have the pxf_src
+    # this pipeline should be pointed at the main branch and have the pxf_src
     # resource pinned to the commit with the fixed CI code. After the next
     # release, this should be reverted back to using a tag_filter.
     # TODO: revert this change and unpin resouce in UI.

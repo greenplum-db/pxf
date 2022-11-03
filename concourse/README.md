@@ -1,6 +1,6 @@
 # Concourse pipeline deployment
 To facilitate pipeline maintenance, a Python utility 'deploy`
-is used to generate the different pipelines for PXF master,
+is used to generate the different pipelines for PXF main,
 PXF 5x and release pipelines. It also allows the generation
 of acceptance and custom pipelines for developers to use.
 
@@ -11,7 +11,7 @@ be embedded to further manipulate the generated pipeline.
 
 # Deploy the `pxf-build` (release) pipeline
 
-To deploy the build pipeline for PXF, make sure PXF master branch is currently checked-out and run this command:
+To deploy the build pipeline for PXF, make sure PXF main branch is currently checked-out and run this command:
 
 ```shell script
 make -C "${HOME}/workspace/pxf/concourse" build
@@ -19,7 +19,7 @@ make -C "${HOME}/workspace/pxf/concourse" build
 
 # Deploy the `pxf-certification` (release) pipeline
 
-To deploy the certifcation pipeline (forward compatibility) for PXF, make sure PXF master branch is currently checked-out and run this command:
+To deploy the certifcation pipeline (forward compatibility) for PXF, make sure PXF main branch is currently checked-out and run this command:
 
 ```shell script
 make -C "${HOME}/workspace/pxf/concourse" certification
@@ -56,7 +56,7 @@ make SCALE=10 -C "${HOME}/workspace/pxf/concourse" perf
 ```
 
 You can deploy a development version of the perf pipeline by substituting the name
-of your development branch into `pxf-git-branch=master`. Also, make sure to change
+of your development branch into `pxf-git-branch=main`. Also, make sure to change
 the name of your development pipeline (i.e. `-p dev:<YOUR-PIPELINE>`).
 
 50G Performance pipeline:

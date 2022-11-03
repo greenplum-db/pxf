@@ -39,7 +39,7 @@ database_" section).
 
 
 ### Install PXF Server
-Please refer to [PXF Development](https://github.com/greenplum-db/pxf/blob/master/README.md) for instructions to setup PXF.
+Please refer to [PXF Development](https://github.com/greenplum-db/pxf/blob/main/README.md) for instructions to setup PXF.
 You will need one PXF server agent per Segment host.
 
 ### Create and use PXF external table
