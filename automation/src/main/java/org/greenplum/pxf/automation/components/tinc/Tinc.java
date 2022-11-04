@@ -59,10 +59,10 @@ public class Tinc extends ShellSystemObject {
 		if (discover) {
 			// get in path and run discover
 			runCommand("cd " + tincTestPath);
-			runCommand("tinc.py discover .");
+			runCommand("python2 ${TINCHOME}/tinc.py discover .");
 		} else {
 			// run only current test
-			runCommand("tinc.py " + tincTestPath);
+			runCommand("python2 ${TINCHOME}/tinc.py " + tincTestPath);
 		}
 
 		ReportUtils.stopLevel(report);

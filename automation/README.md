@@ -50,17 +50,19 @@ For MacOS, either run in terminal
 sudo launchctl unload /System/Library/LaunchDaemons/ssh.plist
 sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
 ```
+
 or go to System Preferences > Sharing and toggle `Remote Login`
 
 For Linux, run
+
 ```shell
-sudo systemctl restart sshd
+sudo systemctl reload ssh
 ```
 
 Recheck the support algorithms before proceeding
 
 ```bash
-sudo sshd -T | grep 'kexalgorithms'
+sudo sshd -T | grep 'kexalgorithms' | grep -e diffie-hellman-group-exchange-sha1 -e diffie-hellman-group14-sha1 -e diffie-hellman-group1-sha1
 ```
 
 In addition to updating the `sshd_config`, you must have an RSA key for the local system ([you're not still using RSA keys for SSH are you?][ssh-ed25519])
