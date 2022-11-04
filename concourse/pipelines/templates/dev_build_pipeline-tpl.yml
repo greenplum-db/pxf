@@ -60,12 +60,12 @@ anchors:
     put: slack-alert
     params:
       text: |
-        <((ud/pxf/common/concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went red :blob_slightly_frowning_face:
+        <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went red :blob_slightly_frowning_face:
   on_success:
     put: slack-alert
     params:
       text: |
-        <((ud/pxf/common/concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went green! :smile:
+        <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went green! :smile:
 {% endif %}
 
 ## ======================================================================
@@ -250,7 +250,7 @@ resources:
 - name: slack-alert
   type: slack-notification
   source:
-    url: (([[user]]-slack-integration-webhook))
+    url: ((ud-pipeline-bot-[[user]]-webhook))
 {% endif %}
 
 ## ---------- Product Packages ----------

@@ -20,7 +20,6 @@ REDHAT_MAJOR_VERSION        ?= 7
 FLY_CMD                     ?= fly
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
-EMAIL                       ?= true
 SLACK                       ?= true
 # below are dev-build specific vars
 MULTINODE                   ?= false
@@ -53,7 +52,6 @@ set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		environment=prod \
-		email_notification=$(EMAIL) \
 		slack_notification=$(SLACK) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
@@ -75,7 +73,6 @@ set-dev-release-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		environment=dev \
-		email_notification=false \
 		slack_notification=false \
 		git_branch=$(BRANCH) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
@@ -125,7 +122,6 @@ set-dev-build-pipeline:
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--var=pxf-git-branch=${BRANCH} \
-		--var=slack-integration-webhook-url=$${SLACK_INTEGRATION_WEBHOOK_URL} \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:

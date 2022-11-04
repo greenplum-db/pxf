@@ -12,10 +12,6 @@ outputs:
   - name: pxf_artifacts
 
 params:
-  ATC_EXTERNAL_URL:
-  BUILD_PIPELINE_NAME:
-  BUILD_JOB_NAME:
-  BUILD_NAME:
   PXF_OSL_FILE_PREFIX:
   PXF_ODP_FILE_PREFIX:
   PXF_SLACK_CHANNEL_NAME:
@@ -25,4 +21,4 @@ params:
   RELENG_ODP_DROP_URL:
 
 run:
-  path: pxf_src/concourse/scripts/generate_releng_email.bash
+  path: pxf_src/concourse/scripts/generate_slack_message.bash
