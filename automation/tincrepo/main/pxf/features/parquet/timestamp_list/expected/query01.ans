@@ -1,17 +1,27 @@
 -- start_ignore
 -- end_ignore
--- @description query01 for Parquet Timestamp List data type. Timestamp stored in Parquet is UTC time. Greenplum would read it out in PST time
+-- @description query01 for Parquet Timestamp List data type. Timestamp stored in Parquet is UTC time. Extract every timestamp first then convert them into PDT time
 SET bytea_output=hex;
 SET
 \pset null 'NIL'
 Null display is "NIL".
-SELECT * FROM pxf_parquet_timestamp_list_type ORDER BY id;
- id |                               tm_arr
-----+---------------------------------------------------------------------
-  1 | {"2022-10-05 18:30:00","2022-10-06 19:30:00","2022-10-07 20:30:00"}
-  2 | {"2022-10-05 18:30:00","2022-10-05 18:30:00","2022-10-07 20:30:00"}
-  3 | {NULL,"2022-10-05 18:30:00","2022-10-05 18:30:00"}
-  4 | {NULL}
-  5 | {}
-  6 | NIL
+CREATE OR REPLACE VIEW parquet_timestamp_list_breakdown_view AS
+    SELECT id, tm_arr[1] tm_arr_elem1, tm_arr[2] tm_arr_elem2, tm_arr[3] tm_arr_elem3 FROM pxf_parquet_timestamp_list_type;
+CREATE VIEW
+CREATE OR REPLACE VIEW parquet_timestamp_list_PDT_view AS
+    SELECT id,
+           CAST(tm_arr_elem1 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm_arr_elem1,
+           CAST(tm_arr_elem2 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm_arr_elem2,
+           CAST(tm_arr_elem3 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm_arr_elem3 FROM parquet_timestamp_list_breakdown_view;
+CREATE VIEW
+SELECT * FROM parquet_timestamp_list_PDT_view;
+ id |    tm_arr_elem1     |    tm_arr_elem2     |    tm_arr_elem3
+----+---------------------+---------------------+---------------------
+  1 | 2022-10-05 11:30:00 | 2022-10-06 12:30:00 | 2022-10-07 13:30:00
+  2 | 2022-10-05 11:30:00 | 2022-10-05 11:30:00 | 2022-10-07 13:30:00
+  3 | NIL                 | 2022-10-05 11:30:00 | 2022-10-05 11:30:00
+  4 | NIL                 | NIL                 | NIL
+  5 | NIL                 | NIL                 | NIL
+  6 | NIL                 | NIL                 | NIL
 (6 rows)
+
