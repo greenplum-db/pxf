@@ -1,6 +1,132 @@
-# Generate Parquet Timestamp List Using Spark for Testing
+# Generate Parquet files for testing
 
-Since Hive doesn't support Timestamp for Parquet List type, we generate parquet timestamp array dataset using Spark to test our read functionality.
+These instructions will help you generate the Parquet files required for testing.
+The files are pre-generated, but if you want to generate these files again,
+follow the instructions below.
+
+## Requirements
+
+- Hadoop CLI commands
+- Hive version 2.3+
+- Spark
+
+## Generate the parquet_types.parquet file using Hive
+
+Identify your HDFS and HIVE commands. Identify the Hive warehouse path where
+table data gets stored. Identify your data filenames, for example:
+
+```shell
+export HDFS_CMD=$(which hdfs)
+export HIVE_CMD=$(which hive)
+export HIVE_WAREHOUSE_PATH=/hive/warehouse/parquet_types
+export HQL_FILENAME=generate_parquet_types.hql
+export PARQUET_FILENAME=parquet_types.parquet
+```
+
+Finally, run the script to generate the `parquet_types.parquet` file:
+
+```shell script
+./generate_parquet_types.bash
+```
+
+The `parquet_types.parquet` file will be copied to the directory where you ran the
+script.
+
+## Generate the numeric.parquet file using Hive
+
+Identify your HDFS and HIVE commands. Identify the Hive warehouse path where
+table data gets stored. Identify your data filenames, for example:
+
+```shell script
+export HDFS_CMD=$(which hdfs)
+export HIVE_CMD=$(which hive)
+export HIVE_WAREHOUSE_PATH=/hive/warehouse/precision_numeric_parquet
+export CSV_FILENAME=numeric_with_precision.csv
+export HQL_FILENAME=generate_precision_numeric_parquet.hql
+export PARQUET_FILENAME=numeric.parquet
+```
+
+Finally, run the script to generate the `numeric.parquet` file:
+
+```shell script
+./generate_precision_numeric_parquet.bash
+```
+
+The `numeric.parquet` file will be copied to the directory where you ran the
+script.
+
+## Generate the undefined_precision_numeric.parquet file using Hive
+
+Identify your HDFS and HIVE commands. Identify the Hive warehouse path where
+table data gets stored. Identify your data filenames, for example:
+
+```shell script
+export HDFS_CMD=$(which hdfs)
+export HIVE_CMD=$(which hive)
+export HIVE_WAREHOUSE_PATH=/hive/warehouse/undefined_precision_numeric_parquet
+export CSV_FILENAME=undefined_precision_numeric.csv
+export HQL_FILENAME=generate_undefined_precision_numeric_parquet.hql
+export PARQUET_FILENAME=undefined_precision_numeric.parquet
+```
+
+Finally, run the script to generate the `undefined_precision_numeric.parquet` file:
+
+```shell script
+./generate_undefined_precision_numeric_parquet.bash
+```
+
+The `undefined_precision_numeric.parquet` file will be copied to the directory where you ran the
+script.
+
+## Generate the parquet_list_types.parquet file using Hive
+
+Identify your HDFS and HIVE commands. Identify the Hive warehouse path where
+table data gets stored. Identify your data filenames, for example:
+
+```shell script
+export HDFS_CMD=$(which hdfs)
+export HIVE_CMD=$(which hive)
+export HIVE_WAREHOUSE_PATH=/hive/warehouse/parquet_list_types
+export HQL_FILENAME=generate_parquet_list_types.hql
+export PARQUET_FILENAME=parquet_list_types.parquet
+```
+
+Finally, run the script to generate the `parquet_list_types.parquet` file:
+
+```shell script
+./generate_parquet_list_types.bash
+```
+
+The `parquet_list_types.parquet` file will be copied to the directory where you ran the
+script.
+
+## Generate the parquet_list_types_without_null.parquet file using Hive
+
+Identify your HDFS and HIVE commands. Identify the Hive warehouse path where
+table data gets stored. Identify your data filenames, for example:
+
+```shell script
+export HDFS_CMD=$(which hdfs)
+export HIVE_CMD=$(which hive)
+export HIVE_WAREHOUSE_PATH=/hive/warehouse/parquet_list_types_without_null
+export HQL_FILENAME=generate_parquet_list_types_without_null.hql
+export PARQUET_FILENAME=parquet_list_types_without_null.parquet
+```
+
+Finally, run the script to generate the `parquet_list_types_without_null.parquet` file:
+
+```shell script
+./generate_parquet_list_types_without_null.bash
+```
+
+The `parquet_list_types_without_null.parquet` file will be copied to the directory where you ran the
+script.
+
+## Generate the parquet_timestamp_list_type.parquet file using Spark
+
+According to the latest version of [Hive](https://github.com/apache/hive/blob/4e4e39c471094567dcdfd9840edbd99d7eafc230/ql/src/java/org/apache/hadoop/hive/ql/io/parquet/vector/VectorizedParquetRecordReader.java#L578),
+Hive doesn't support TIMESTAMP LIST. Therefore, we use Spark to generate TIMESTAMP LIST dataset. Note that the input timestamps are in 
+local time zone, and Parquet will store them in UTC time zone.
 
 ```shell
 import org.apache.spark.sql.types._
@@ -22,5 +148,5 @@ root
  |-- tm_arr: array (nullable = true)
  |    |-- element: timestamp (containsNull = true)
  # write data into a single parquet file
-scala> df2.repartition(1).write.parquet("~/workspace/spark/parquet-files/timestamp_array_with_null.parquet")
+scala> df2.repartition(1).write.parquet("~/workspace/pxf/automation/src/test/resources/data/parquet/parquet_timestamp_list_type.parquet")
 ```
