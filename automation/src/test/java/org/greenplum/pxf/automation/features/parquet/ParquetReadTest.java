@@ -6,7 +6,6 @@ import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
-
 import java.io.File;
 
 public class ParquetReadTest extends BaseFeature {

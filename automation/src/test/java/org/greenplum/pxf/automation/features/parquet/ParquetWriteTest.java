@@ -14,8 +14,6 @@ import static java.lang.Thread.sleep;
 
 public class ParquetWriteTest extends BaseFeature {
 
-    private String hdfsPath;
-
     private static final String NUMERIC_TABLE = "numeric_precision";
     private static final String NUMERIC_UNDEFINED_PRECISION_TABLE = "numeric_undefined_precision";
     private static final String PXF_PARQUET_TABLE = "pxf_parquet_primitive_types";
@@ -30,7 +28,6 @@ public class ParquetWriteTest extends BaseFeature {
     private static final String PARQUET_NUMERIC_FILE = "numeric.parquet";
     private static final String UNDEFINED_PRECISION_NUMERIC_FILENAME = "undefined_precision_numeric.csv";
     private static final String NUMERIC_FILENAME = "numeric_with_precision.csv";
-
     private static final String[] PARQUET_TABLE_COLUMNS = new String[]{
             "s1    TEXT",
             "s2    TEXT",
@@ -47,7 +44,6 @@ public class ParquetWriteTest extends BaseFeature {
             "c1    CHAR(3)",
             "bin   BYTEA"
     };
-
     private static final String[] PARQUET_TABLE_DECIMAL_COLUMNS = new String[]{
             "description   TEXT",
             "a             DECIMAL(5,  2)",
@@ -59,11 +55,9 @@ public class ParquetWriteTest extends BaseFeature {
             "g             DECIMAL(38, 10)",
             "h             DECIMAL(38, 38)"
     };
-
     private static final String[] UNDEFINED_PRECISION_NUMERIC = new String[]{
             "description   text",
             "value         numeric"};
-
     private static final String[] PARQUET_TABLE_COLUMNS_SUBSET = new String[]{
             "s1    TEXT",
             "n1    INTEGER",
@@ -73,7 +67,7 @@ public class ParquetWriteTest extends BaseFeature {
             "vc1   VARCHAR(5)",
             "bin   BYTEA"
     };
-
+    private String hdfsPath;
     private ProtocolEnum protocol;
 
     @Override
@@ -215,4 +209,3 @@ public class ParquetWriteTest extends BaseFeature {
         createTable(exTable);
     }
 }
-
