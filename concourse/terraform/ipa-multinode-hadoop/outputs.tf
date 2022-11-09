@@ -7,6 +7,7 @@ output "ssh_config" {
   })
   sensitive = true
 }
+
 output "ansible_inventory" {
   value = templatefile("${path.module}/templates/inventory.ini.tpl", {
     ipa = google_compute_instance.ipa
