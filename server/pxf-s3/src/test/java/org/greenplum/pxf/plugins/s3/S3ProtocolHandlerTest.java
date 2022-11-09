@@ -426,9 +426,8 @@ public class S3ProtocolHandlerTest {
     }
 
     @Test
-    public void testTextIdentifierNoParallelReadAndSelectOff() {
+    public void testTextSplitByFileAndSelectOff() {
         context.addOption("S3_SELECT", "off");
-        context.addOption("IDENTIFIER", "c1");
         context.addOption("SPLIT_BY_FILE", "true");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_OFF);
@@ -450,10 +449,9 @@ public class S3ProtocolHandlerTest {
     }
 
     @Test
-    public void testTextIdentifierNoParallelReadAndSelectOn() {
+    public void testSplitByFileAndSelectOn() {
         // s3 options should override multiline json fragmenter option
         context.addOption("S3_SELECT", "on");
-        context.addOption("IDENTIFIER", "c1");
         context.addOption("SPLIT_BY_FILE", "true");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
@@ -462,7 +460,6 @@ public class S3ProtocolHandlerTest {
         EXPECTED_FRAGMENTERS[3] = FILE_FRAGMENTER; // index 3 is json
         verifyFragmenters(context, EXPECTED_FRAGMENTERS);
     }
-
     @Test
     public void testTextIdentifierAndSelectAuto() {
         // s3 options should override multiline json fragmenter option
@@ -474,11 +471,9 @@ public class S3ProtocolHandlerTest {
         verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT);
     }
 
-
     @Test
-    public void testTextIdentifierNoParallelReadAndSelectAuto() {
+    public void testTextSplitByFileAndSelectAuto() {
         context.addOption("S3_SELECT", "auto");
-        context.addOption("IDENTIFIER", "c1");
         context.addOption("SPLIT_BY_FILE", "true");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);

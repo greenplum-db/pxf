@@ -55,7 +55,7 @@ public class S3ProtocolHandler implements ProtocolHandler {
     @Override
     public String getFragmenterClassName(RequestContext context) {
         String fragmenter = context.getFragmenter(); // default to fragmenter defined by the profile
-        if (useS3Select(context) || useFileReadForMultilineJson(context)) {
+        if (useS3Select(context) || useFileReadForJson(context)) {
             fragmenter = HCFS_FILE_FRAGMENTER;
         }
 
@@ -129,10 +129,10 @@ public class S3ProtocolHandler implements ProtocolHandler {
         }
     }
 
-    public boolean useFileReadForMultilineJson(RequestContext context) {
+    public boolean useFileReadForJson(RequestContext context) {
         boolean JsonFormat = StringUtils.equalsIgnoreCase("JSON", context.getFormat());
         boolean splitByFile = context.getOption("split_by_file", false);
-        return JsonFormat && isNotEmpty(context.getOption("identifier")) && splitByFile;
+        return JsonFormat && splitByFile;
     }
 
     /**

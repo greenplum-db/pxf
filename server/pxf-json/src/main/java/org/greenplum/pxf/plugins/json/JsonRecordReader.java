@@ -50,7 +50,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private long start;
     private long pos;
     private long end;
-    private String[] hosts;
     private int maxObjectLength;
     private PartitionedJsonParser parser;
     private LineRecordReader lineRecordReader;
@@ -90,7 +89,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         start = split.getStart();
         end = start + split.getLength();
         file = split.getPath();
-        hosts = split.getLocations();
         lineRecordReader =  new LineRecordReader(conf, split);
         this.conf = conf;
         parser = new PartitionedJsonParser(jsonMemberName);
@@ -127,7 +125,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 // if the currentLineBuffer is null, nothing has been read yet, so we need to read the next line
                 // if the currentLineIndex is greater than the length,  we are at the end of the buffer, read the next line
                 // however, if we are at the end of the split, then we need to get the next split before we can read the line
-                if (i == END_OF_SPLIT && (currentLineBuffer == null || currentLineIndex >= currentLineBuffer.length())) {
+                if (i == END_OF_SPLIT) {
                     LOG.debug("JSON object incomplete, moving onto next split to finish");
                     getNextSplit();
                     // continue the while loop to complete the object
@@ -140,14 +138,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
             // we've completed an object but there might still be things in the buffer. Calculate the proper
             // position of the JsonRecordReader
-            if (currentLineBuffer != null) {
-                long totalChars = currentLineBuffer.toString().getBytes().length;
-                long readChars = currentLineBuffer.substring(0, currentLineIndex).getBytes().length;
-                long unreadCharsInBuffer = totalChars - readChars;
-                pos = filePos - unreadCharsInBuffer;
-            } else {
-                pos = filePos;
-            }
+            updatePos();
 
             if (isObjectComplete && parser.foundObjectWithIdentifier()) {
                 String json = parser.getCompletedObject();
@@ -209,6 +200,16 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         }
     }
 
+    private void updatePos() {
+        if (currentLineBuffer != null) {
+            long totalBytes = currentLineBuffer.toString().getBytes(StandardCharsets.UTF_8).length;
+            long readBytes = currentLineBuffer.substring(0, currentLineIndex).getBytes(StandardCharsets.UTF_8).length;
+            long unreadBytesInBuffer = totalBytes - readBytes;
+            pos = filePos - unreadBytesInBuffer;
+        } else {
+            pos = filePos;
+        }
+    }
     /**
      * Reads the next character in the buffer. It will pull the next line as necessary
      * @return the int value of a character
@@ -266,7 +267,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         lineRecordReader.close();
         // we need to move into the next split, so create one that starts at the end of the current split
         // and goes until the end of the file
-        FileSplit nextSplit = new FileSplit(file, end, Long.MAX_VALUE - end, hosts);
+        FileSplit nextSplit = new FileSplit(file, end, Long.MAX_VALUE - end, (String[]) null);
         lineRecordReader = new LineRecordReader(conf, nextSplit);
         inNextSplit = true;
     }

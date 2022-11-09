@@ -18,7 +18,7 @@ public class JsonProtocolHandler implements ProtocolHandler {
     @Override
     public String getFragmenterClassName(RequestContext context) {
         String fragmenter = context.getFragmenter(); // default to fragmenter defined by the profile
-        if (useMultilineJson(context) && splitByFile(context)) {
+        if (splitByFile(context)) {
             fragmenter = HCFS_FILE_FRAGMENTER;
         }
         LOG.debug("Determined to use {} fragmenter", fragmenter);
@@ -37,9 +37,5 @@ public class JsonProtocolHandler implements ProtocolHandler {
 
     public boolean splitByFile(RequestContext context) {
         return context.getOption("split_by_file", false);
-    }
-
-    public boolean useMultilineJson(RequestContext context) {
-        return isNotEmpty(context.getOption("identifier"));
     }
 }

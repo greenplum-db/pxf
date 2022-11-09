@@ -63,4 +63,12 @@ public class JsonProtocolHandlerTest {
         assertEquals(DEFAULT_ACCESSOR, handler.getAccessorClassName(context));
         assertEquals(DEFAULT_RESOLVER, handler.getResolverClassName(context));
     }
+
+    @Test
+    public void testUseFileFragmenter() {
+        context.addOption("SPLIT_BY_FILE", "true");
+        assertEquals(FILE_FRAGMENTER, handler.getFragmenterClassName(context));
+        assertEquals(DEFAULT_ACCESSOR, handler.getAccessorClassName(context));
+        assertEquals(DEFAULT_RESOLVER, handler.getResolverClassName(context));
+    }
 }
