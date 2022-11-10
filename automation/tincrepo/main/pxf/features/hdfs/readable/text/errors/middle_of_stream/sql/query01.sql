@@ -5,8 +5,8 @@
 -- m/(ERROR|WARNING):.*'\d+\.\d+\.\d+\.\d+:\d+'.*/
 -- s/'\d+\.\d+\.\d+\.\d+:\d+'/'SOME_IP:SOME_PORT'/
 --
--- m/DETAIL:  \n/
--- s/DETAIL:  \n/DETAIL:  /
+-- m/CONTEXT:  \n/
+-- s/CONTEXT:  \n/CONTEXT:  /
 --
 -- m/External table error_on_10000/
 -- s/.*External table error_on_10000.*/CONTEXT:  External table error_on_10000/
