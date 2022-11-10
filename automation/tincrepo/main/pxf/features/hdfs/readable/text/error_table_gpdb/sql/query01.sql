@@ -4,7 +4,7 @@
 --
 -- # create a match/subs
 -- m/pxf:\/\/(.*)\|/
--- s/pxf:\/\/.*\/data/pxf-location/
+-- s/pxf:\/\/.*data\?PROFILE=hdfs:text/pxf-location/
 --
 -- m/\|.*\/data/
 -- s/\|.*\/data/\|pxf-location/
