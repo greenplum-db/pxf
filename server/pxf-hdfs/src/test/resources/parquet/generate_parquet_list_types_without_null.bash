@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-# Run this command to generate the parquet_list_types.parquet file
+# Run this command to generate the parquet_list_types_without_null.parquet file
 SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 HDFS_CMD=${HDFS_CMD:-~/workspace/singlecluster-HDP3/bin/hdfs}
 HIVE_CMD=${HIVE_CMD:-~/workspace/singlecluster-HDP3/bin/hive}

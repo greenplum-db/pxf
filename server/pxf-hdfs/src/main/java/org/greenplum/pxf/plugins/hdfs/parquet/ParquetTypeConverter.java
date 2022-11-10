@@ -274,6 +274,7 @@ public enum ParquetTypeConverter {
             return pgArrayBuilder.toString();
         }
 
+        //todo: what should be the format of converting a List to json array?
         @Override
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
             String complexTypeName = type.asGroupType().getOriginalType() == null ?
