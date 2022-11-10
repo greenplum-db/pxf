@@ -90,6 +90,23 @@ public enum DataType {
         TIMESTAMPARRAY.typeElem = TIMESTAMP;
         TIMESTAMP_WITH_TIMEZONE_ARRAY.typeElem = TIMESTAMP_WITH_TIME_ZONE;
 
+        SMALLINT.typeArray = INT2ARRAY;
+        INTEGER.typeArray = INT4ARRAY;
+        BIGINT.typeArray = INT8ARRAY;
+        BOOLEAN.typeArray = BOOLARRAY;
+        TEXT.typeArray = TEXTARRAY;
+        REAL.typeArray = FLOAT4ARRAY;
+        FLOAT8.typeArray = FLOAT8ARRAY;
+        BYTEA.typeArray = BYTEAARRAY;
+        BPCHAR.typeArray = BPCHARARRAY;
+        VARCHAR.typeArray = VARCHARARRAY;
+        DATE.typeArray = DATEARRAY;
+        UUID.typeArray = UUIDARRAY;
+        NUMERIC.typeArray = NUMERICARRAY;
+        TIME.typeArray = TIMEARRAY;
+        TIMESTAMP.typeArray = TIMESTAMPARRAY;
+        TIMESTAMP_WITH_TIME_ZONE.typeArray = TIMESTAMP_WITH_TIMEZONE_ARRAY;
+
         DataType[] allTypes = DataType.values();
         OID_ARRAY = new int[allTypes.length];
         DATA_TYPES = new DataType[allTypes.length];
@@ -104,6 +121,7 @@ public enum DataType {
 
     private final int OID;
     private DataType typeElem;
+    private DataType typeArray;
 
     DataType(int OID) {
         this.OID = OID;
@@ -158,4 +176,6 @@ public enum DataType {
     public DataType getTypeElem() {
         return typeElem;
     }
+
+    public DataType getTypeArray() { return typeArray; }
 }

@@ -1,6 +1,5 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.NanoTime;
@@ -9,12 +8,12 @@ import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.GreenplumDateTime;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -67,6 +66,17 @@ public enum ParquetTypeConverter {
                 return group.getBinary(columnIndex, repeatIndex).getBytes();
             } else {
                 return group.getString(columnIndex, repeatIndex);
+            }
+        }
+
+        @Override
+        public void addValueToArray(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType, PgArrayBuilder pgArrayBuilder) {
+            Object value = getValue(group, 0, 0, primitiveType);
+            if (primitiveType.getLogicalTypeAnnotation() == null) {
+                ByteBuffer byteBuffer = ByteBuffer.wrap((byte[]) value);
+                pgArrayBuilder.addElementNoEscaping(pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
+            } else {
+                pgArrayBuilder.addElement(String.valueOf(value));
             }
         }
     },
@@ -227,56 +237,15 @@ public enum ParquetTypeConverter {
     LIST {
         @Override
         public DataType getDataType(Type type) {
-            try {
-                PrimitiveType elementType = type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
-                LogicalTypeAnnotation logicalTypeAnnotation = elementType.getLogicalTypeAnnotation();
-                switch (elementType.getPrimitiveTypeName()) {
-                    case INT64:
-                        return DataType.INT8ARRAY;
-                    case INT32:
-                        if (logicalTypeAnnotation instanceof DateLogicalTypeAnnotation) {
-                            return DataType.DATEARRAY;
-                        } else if (logicalTypeAnnotation instanceof DecimalLogicalTypeAnnotation) {
-                            return DataType.NUMERICARRAY;
-                        } else if (logicalTypeAnnotation instanceof IntLogicalTypeAnnotation) {
-                            IntLogicalTypeAnnotation intLogicalTypeAnnotation = (IntLogicalTypeAnnotation) logicalTypeAnnotation;
-                            if (intLogicalTypeAnnotation.getBitWidth() == 8 || intLogicalTypeAnnotation.getBitWidth() == 16) {
-                                return DataType.INT2ARRAY;
-                            }
-                        }
-                        return DataType.INT4ARRAY;
-                    case BOOLEAN:
-                        return DataType.BOOLARRAY;
-                    case BINARY:
-                        if (logicalTypeAnnotation == null) {
-                            return DataType.BYTEAARRAY;
-                        } else if (logicalTypeAnnotation instanceof DateLogicalTypeAnnotation) {
-                            return DataType.DATEARRAY;
-                        } else if (logicalTypeAnnotation instanceof TimestampLogicalTypeAnnotation) {
-                            return DataType.TIMESTAMPARRAY;
-                        } else {
-                            return DataType.TEXTARRAY;
-                        }
-                    case FLOAT:
-                        return DataType.FLOAT4ARRAY;
-                    case DOUBLE:
-                        return DataType.FLOAT8ARRAY;
-                    case INT96:
-                        return DataType.TIMESTAMPARRAY;
-                    case FIXED_LEN_BYTE_ARRAY:
-                        return DataType.NUMERICARRAY;
-                    default:
-                        throw new IOException("Not supported type " + elementType.getPrimitiveTypeName());
-                }
-            } catch (IOException e) {
-                LOG.error(e.getMessage());
+            Type elementType = type.asGroupType().getType(0).asGroupType().getType(0);
+            if (!elementType.isPrimitive()) {
+                throw new PxfRuntimeException(String.format("List of %s is not supported.", elementType.getOriginalType()));
             }
-            return null;
+            return from(elementType).getArrayDataType(elementType);
         }
 
         @Override
         public Object getValue(Group group, int columnIndex, int repeatIndex, Type type) {
-            PgUtilities pgUtilities = new PgUtilities();
             PgArrayBuilder pgArrayBuilder = new PgArrayBuilder(pgUtilities);
             pgArrayBuilder.startArray();
 
@@ -288,108 +257,42 @@ public enum ParquetTypeConverter {
                     pgArrayBuilder.addElement((String) null);
                 } else {
                     PrimitiveType elementType = type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
-                    switch (elementType.getPrimitiveTypeName()) {
-                        case INT64:
-                            pgArrayBuilder.addElement(String.valueOf(INT64.getValue(repeatedGroup, 0, 0, elementType)));
-                            break;
-                        case INT32:
-                            pgArrayBuilder.addElement(String.valueOf(INT32.getValue(repeatedGroup, 0, 0, elementType)));
-                            break;
-                        case BOOLEAN:
-                            pgArrayBuilder.addElement(String.valueOf(BOOLEAN.getValue(repeatedGroup, 0, 0, elementType)));
-                            break;
-                        case BINARY:
-                            if (elementType.getLogicalTypeAnnotation() == null) {
-                                ByteBuffer byteBuffer = ByteBuffer.wrap(repeatedGroup.getBinary(0, 0).getBytes());
-                                pgArrayBuilder.addElementNoEscaping(pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
-                            } else {
-                                pgArrayBuilder.addElement(String.valueOf(BINARY.getValue(repeatedGroup, 0, 0, elementType)));
-                            }
-                            break;
-                        case FLOAT:
-                            pgArrayBuilder.addElement(String.valueOf(FLOAT.getValue(repeatedGroup, 0, 0, elementType)));
-                            break;
-                        case DOUBLE:
-                            pgArrayBuilder.addElement(String.valueOf(DOUBLE.getValue(repeatedGroup, 0, 0, elementType)));
-                            break;
-                        case INT96:
-                            pgArrayBuilder.addElement(String.valueOf(INT96.getValue(repeatedGroup, 0, 0, elementType)));
-                            break;
-                        case FIXED_LEN_BYTE_ARRAY:
-                            pgArrayBuilder.addElement(String.valueOf(FIXED_LEN_BYTE_ARRAY.getValue(repeatedGroup, 0, 0, elementType)));
-                            break;
-                    }
+                    from(elementType).addValueToArray(repeatedGroup, 0, 0, elementType, pgArrayBuilder);
                 }
             }
             pgArrayBuilder.endArray();
             return pgArrayBuilder.toString();
         }
 
-        //todo: what should be the format of converting a List to json array?
         @Override
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
-            final ObjectMapper mapper = new ObjectMapper();
-            ArrayNode innerJsonNode = mapper.createArrayNode();
-
-            final PgUtilities pgUtilities = new PgUtilities();
-            Group listGroup = group.getGroup(columnIndex, repeatIndex);
-            int repetitionCount = listGroup.getFieldRepetitionCount(0);
-            for (int i = 0; i < repetitionCount; i++) {
-                Group repeatedGroup = listGroup.getGroup(0, i);
-                if (repeatedGroup.getFieldRepetitionCount(0) == 0) {
-                    jsonNode.add((String) null);
-                } else {
-                    PrimitiveType elementType = type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
-                    switch (elementType.getPrimitiveTypeName()) {
-                        case INT64:
-                            INT64.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
-                            break;
-                        case INT32:
-                            INT32.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
-                            break;
-                        case BOOLEAN:
-                            BOOLEAN.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
-                            break;
-                        case BINARY:
-                            if (elementType.getLogicalTypeAnnotation() == null) {
-                                ByteBuffer byteBuffer = ByteBuffer.wrap(repeatedGroup.getBinary(0, 0).getBytes());
-                                innerJsonNode.add(pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
-                            } else {
-                                BINARY.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
-                            }
-                            break;
-                        case FLOAT:
-                            FLOAT.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
-                            break;
-                        case DOUBLE:
-                            DOUBLE.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
-                            break;
-                        case INT96:
-                            INT96.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
-                            break;
-                        case FIXED_LEN_BYTE_ARRAY:
-                            FIXED_LEN_BYTE_ARRAY.addValueToJsonArray(repeatedGroup, 0, 0, elementType, innerJsonNode);
-                            break;
-                    }
-                }
-            }
-            jsonNode.add(innerJsonNode);
+            throw new PxfRuntimeException(String.format("Parquet complex type %s is not supported", type.asGroupType().getOriginalType().name()));
         }
     };
-
 
     private static final int SECOND_IN_MICROS = 1000 * 1000;
     private static final long JULIAN_EPOCH_OFFSET_DAYS = 2440588L;
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
     private static final long MICROS_IN_DAY = 24 * 3600 * 1000 * 1000L;
     private static final long NANOS_IN_MICROS = 1000;
+    private static final PgUtilities pgUtilities = new PgUtilities();
     private static final Logger LOG = LoggerFactory.getLogger(ParquetTypeConverter.class);
 
+    /**
+     * Retrieve corresponding ENUM value according to the input parquet type
+     *
+     * @param type is the input parquet type
+     * @return a {@link ParquetTypeConverter} containing the ENUM value
+     */
     public static ParquetTypeConverter from(Type type) {
         if (type.isPrimitive()) {
             return valueOf(type.asPrimitiveType().getPrimitiveTypeName().name());
         }
-        return valueOf(type.getOriginalType().name());
+        try {
+            return valueOf(type.getOriginalType().name());
+        } catch (IllegalArgumentException e) {
+            throw new PxfRuntimeException(String.format("Complex type %s is not supported", type.getOriginalType().name()), e);
+        }
     }
 
     // Convert parquet byte array to java timestamp IN LOCAL SERVER'S TIME ZONE
@@ -467,4 +370,13 @@ public enum ParquetTypeConverter {
     public abstract Object getValue(Group group, int columnIndex, int repeatIndex, Type type);
 
     public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
+
+    public DataType getArrayDataType(Type type) {
+        return getDataType(type).getTypeArray();
+    }
+
+    public void addValueToArray(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType, PgArrayBuilder pgArrayBuilder) {
+        pgArrayBuilder.addElement(String.valueOf(getValue(group, columnIndex, repeatIndex, primitiveType)));
+    }
+
 }

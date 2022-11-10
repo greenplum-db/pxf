@@ -18,10 +18,7 @@ varchar_arr          array<varchar(15)>,
 date_arr             array<date>,
 numeric_arr          array<decimal(38,18)>
 )
-ROW FORMAT
-DELIMITED FIELDS TERMINATED BY ','
-STORED AS TEXTFILE
-LOCATION '/tmp/parquet_types/csv_list';
+STORED AS TEXTFILE;
 
 DROP TABLE IF EXISTS foo;
 

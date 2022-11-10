@@ -491,7 +491,7 @@ public class ParquetResolverTest {
         List<OneField> fields = assertRow(groups, 0, 16);
 
         assertField(fields, 0, "[\"row1-1\",\"row1-2\"]", DataType.TEXT);
-        assertField(fields, 1, "[]", DataType.TEXT);
+        assertField(fields, 1, null, DataType.TEXT);
         assertField(fields, 2, "[1,2,3]", DataType.TEXT);
         assertField(fields, 3, "[6.0,-16.34]", DataType.TEXT);
         assertField(fields, 4, "[123456.789012345987654321]", DataType.TEXT); // scale fixed to 18 in schema

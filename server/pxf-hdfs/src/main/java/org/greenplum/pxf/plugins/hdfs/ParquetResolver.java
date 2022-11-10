@@ -25,7 +25,6 @@ import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.io.api.Binary;
-import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
@@ -36,7 +35,6 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,11 +51,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     // used to distinguish string pattern between type "timestamp" ("2019-03-14 14:10:28")
     // and type "timestamp with time zone" ("2019-03-14 14:10:28+07:30")
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
-
+    private final ObjectMapper mapper = new ObjectMapper();
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
     private List<ColumnDescriptor> columnDescriptors;
-    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void afterPropertiesSet() {
@@ -79,7 +76,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             if (!columnDescriptor.isProjected()) {
                 oneField = new OneField(columnDescriptor.columnTypeCode(), null);
             } else {
-                oneField = resolveGroup(group, columnIndex, schema.getType(columnIndex));
+                oneField = resolveField(group, columnIndex, schema.getType(columnIndex));
                 columnIndex++;
             }
             output.add(oneField);
@@ -217,60 +214,39 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }
     }
 
-    private OneField resolveGroup(Group group, int columnIndex, Type type) {
-        if (type.isPrimitive()) {
-            return resolvePrimitive(group, columnIndex, type);
-        }
-        if (type.asGroupType().getOriginalType() == LogicalTypeAnnotation.listType().toOriginalType()) {
-            return resolveList(group, columnIndex, type);
-        }
-        throw new UnsupportedOperationException("Other Parquet complex type supports are not yet available.");
-    }
-
-    private OneField resolvePrimitive(Group group, int columnIndex, Type type) {
-        // Not sure anyone would use repeated primitive type
-        if (type.getRepetition() == REPEATED) {
-            return resolveRepeatedPrimitive(group, columnIndex, type);
-        }
-
-        ParquetTypeConverter converter = ParquetTypeConverter.from(type.asPrimitiveType());
-        return resolveField(group, columnIndex, type, converter);
-    }
-
-    @Deprecated
-    private OneField resolveRepeatedPrimitive(Group group, int columnIndex, Type type) {
+    /**
+     * Resolve the Parquet data at the columnIndex in the Group into a field
+     *
+     * @param group       contains parquet schema and data of a {@link OneRow}
+     * @param columnIndex is the column of the row we want to resolve
+     * @param type        can be GroupType or PrimitiveType
+     * @return a field containing Greenplum data type and data
+     */
+    private OneField resolveField(Group group, int columnIndex, Type type) {
         OneField field = new OneField();
-        // get type converter based on the primitive type
-        ParquetTypeConverter converter = ParquetTypeConverter.from(type.asPrimitiveType());
-        // determine how many values for the primitive are present in the column
+        // get type converter based on the field type
+        ParquetTypeConverter converter = ParquetTypeConverter.from(type);
+        // determine how many values for the field are present in the column
         int repetitionCount = group.getFieldRepetitionCount(columnIndex);
-
-        // repeated primitive will be converted into JSON
-        ArrayNode jsonArray = mapper.createArrayNode();
-        for (int repeatIndex = 0; repeatIndex < repetitionCount; repeatIndex++) {
-            converter.addValueToJsonArray(group, columnIndex, repeatIndex, type, jsonArray);
-        }
-        field.type = DataType.TEXT.getOID();
-        try {
-            field.val = mapper.writeValueAsString(jsonArray);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize repeated parquet type " + type.asPrimitiveType().getName(), e);
+        if (repetitionCount == 0) {
+            field.type = converter.getDataType(type).getOID();
+            field.val = null;
+        } else if (type.getRepetition() != REPEATED) {
+            field.type = converter.getDataType(type).getOID();
+            field.val = converter.getValue(group, columnIndex, 0, type);
+        } else {
+            // repeated primitive will be converted into JSON
+            ArrayNode jsonArray = mapper.createArrayNode();
+            for (int repeatIndex = 0; repeatIndex < repetitionCount; repeatIndex++) {
+                converter.addValueToJsonArray(group, columnIndex, repeatIndex, type, jsonArray);
+            }
+            field.type = DataType.TEXT.getOID();
+            try {
+                field.val = mapper.writeValueAsString(jsonArray);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to serialize repeated parquet type " + type.asPrimitiveType().getName(), e);
+            }
         }
         return field;
     }
-
-    private OneField resolveList(Group group, int columnIndex, Type type) {
-        ParquetTypeConverter converter = ParquetTypeConverter.from(type.asGroupType());
-        return resolveField(group, columnIndex, type, converter);
-    }
-
-    private OneField resolveField(Group group, int columnIndex, Type type, ParquetTypeConverter converter) {
-        OneField field = new OneField();
-        // determine how many values for the primitive are present in the column, should be 0 or 1.
-        int repetitionCount = group.getFieldRepetitionCount(columnIndex);
-        field.type = converter.getDataType(type).getOID();
-        field.val = repetitionCount == 0 ? null : converter.getValue(group, columnIndex, 0, type);
-        return field;
-    }
-
 }
