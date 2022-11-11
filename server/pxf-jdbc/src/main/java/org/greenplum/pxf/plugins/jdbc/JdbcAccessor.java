@@ -22,7 +22,6 @@ package org.greenplum.pxf.plugins.jdbc;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.security.SecureLogin;
@@ -36,12 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -101,8 +95,18 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         if (statementRead != null && !statementRead.isClosed()) {
             return true;
         }
-
         Connection connection = super.getConnection();
+        try {
+            return openForReadInner(connection);
+        } catch (Throwable e) {
+            if (statementRead == null) {
+                JdbcBasePlugin.closeConnection(connection);
+            }
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private boolean openForReadInner(Connection connection) throws SQLException {
         SQLQueryBuilder sqlQueryBuilder = new SQLQueryBuilder(context, connection.getMetaData(), getQueryText());
 
         // Build SELECT query
@@ -225,7 +229,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         return true;
     }
 
-     /**
+    /**
      * writeNextObject() implementation
      * <p>
      * If batchSize is not 0 or 1, add a tuple to the batch of statementWrite

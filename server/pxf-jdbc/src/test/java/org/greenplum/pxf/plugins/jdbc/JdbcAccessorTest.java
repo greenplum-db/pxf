@@ -82,7 +82,7 @@ public class JdbcAccessorTest {
         context.setDataSource("query:foo");
         accessor.setRequestContext(context);
         accessor.afterPropertiesSet();
-        Exception e = assertThrows(IllegalStateException.class,
+        Exception e = assertThrows(RuntimeException.class,
                 () -> accessor.openForRead());
         assertEquals("No server configuration directory found for server unknown", e.getMessage());
     }
