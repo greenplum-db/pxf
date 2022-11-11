@@ -19,9 +19,9 @@ package org.greenplum.pxf.plugins.json.parser;
  * under the License.
  */
 
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
 import java.util.EnumSet;
-import java.util.List;
 
 import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
 
@@ -45,21 +45,22 @@ public class PartitionedJsonParser {
 	private StringBuilder currentObject;
 	private StringBuilder currentStringLiteral;
 	private int objectCount;
-	private List<Integer> objectStack;
+	private ArrayDeque<Integer> objectStack;
 	private boolean isCompletedObject;
-
+	// track the average size of JSON objects produced to avoid extraneous buffer copies
+	private int averageObjectSize;
+	private int numObjectsRead;
 	public PartitionedJsonParser(String memberName) {
 		this.lexer = new JsonLexer();
 
 		this.memberName = memberName;
 		this.memberState = MemberSearchState.SEARCHING;
 
-		this.objectCount = 0;
-		this.currentObject = new StringBuilder();
-		this.currentStringLiteral = new StringBuilder();
-		this.isCompletedObject = false;
+		// set the capacity for average json object size somewhat large to start
+		this.averageObjectSize = 4132;
+		this.numObjectsRead = 0;
 
-		this.objectStack = new ArrayList<Integer>();
+		this.objectStack = new ArrayDeque<>();
 	}
 	private enum MemberSearchState {
 		FOUND_STRING_NAME,
@@ -79,13 +80,14 @@ public class PartitionedJsonParser {
 		this.memberState = MemberSearchState.SEARCHING;
 
 		this.objectCount = 0;
-		this.currentObject = new StringBuilder();
-		this.currentStringLiteral = new StringBuilder();
-		this.objectStack = new ArrayList<Integer>();
+		this.currentObject = new StringBuilder(averageObjectSize);
+		// as this variable only holds a json key or json value, it can be relatively small.
+		this.currentStringLiteral = new StringBuilder(32);
+		this.objectStack = new ArrayDeque<>();
 		this.isCompletedObject = false;
 
 		currentObject.append(START_BRACE);
-		objectStack.add(0);
+		objectStack.push(0);
 	}
 	/**
 	 * @param c character to parse
@@ -107,27 +109,29 @@ public class PartitionedJsonParser {
 				currentStringLiteral.append(c);
 			} else if (lexer.getState() == JsonLexerState.END_STRING && memberName.equals(currentStringLiteral.toString())) {
 
-				if (objectStack.size() > 0) {
+				if (!objectStack.isEmpty()) {
 					// we hit the end of the string and it matched the member name (yay)
 					memberState = MemberSearchState.FOUND_STRING_NAME;
 					currentStringLiteral.setLength(0);
 				}
 			} else if (lexer.getState() == JsonLexerState.BEGIN_OBJECT) {
 				// we are searching and found a '{', so we reset the current object string
-				if (objectStack.size() == 0) {
+				if (objectStack.isEmpty()) {
 					currentObject.setLength(0);
 					currentObject.append(START_BRACE);
 				}
-				objectStack.add(currentObject.length() - 1);
+				objectStack.push(currentObject.length() - 1);
 			} else if (lexer.getState() == JsonLexerState.END_OBJECT) {
-				if (objectStack.size() > 0) {
-					objectStack.remove(objectStack.size() - 1);
+				if (!objectStack.isEmpty()) {
+					objectStack.pop();
 				}
-				if (objectStack.size() == 0) {
+				if (objectStack.isEmpty()) {
 					// we found a '}' at the same level as the first '{' and nothing was found
 					currentObject.setLength(0);
 					memberState = MemberSearchState.STRING_NOT_FOUND;
 					isCompletedObject = true;
+					numObjectsRead++;
+					updateAverageJsonObjectSize();
 					break;
 				}
 			}
@@ -141,7 +145,7 @@ public class PartitionedJsonParser {
 					objectCount = 0;
 
 					if (objectStack.size() > 1) {
-						currentObject.delete(0, objectStack.get(objectStack.size() - 1));
+						currentObject.delete(0, objectStack.peek());
 					}
 					objectStack.clear();
 				} else {
@@ -158,6 +162,8 @@ public class PartitionedJsonParser {
 				if (objectCount < 0) {
 					// we're done! we reached an "}" which is at the same level as the member we found
 					isCompletedObject = true;
+					numObjectsRead++;
+					updateAverageJsonObjectSize();
 					break;
 				}
 			}
@@ -181,5 +187,16 @@ public class PartitionedJsonParser {
 	 */
 	public boolean foundObjectWithIdentifier() {
 		return memberState == MemberSearchState.FOUND_STRING_NAME || memberState == MemberSearchState.IN_MATCHING_OBJECT;
+	}
+
+	private void updateAverageJsonObjectSize() {
+		int currentObjectSize = this.currentObject.toString().getBytes(StandardCharsets.UTF_8).length;
+		if (numObjectsRead == 1) {
+			averageObjectSize = currentObjectSize;
+		} else {
+			// recalculate the average: (averageObjectSize*(numObjectsRead - 1) + currentObjectSize) / numObjectsRead
+			//                        = averageObjectSize + (currentObjectSize - averageObjectSize) / numObjectsRead
+			averageObjectSize += (currentObjectSize - averageObjectSize)/numObjectsRead;
+		}
 	}
 }
