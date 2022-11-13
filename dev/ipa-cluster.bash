@@ -164,11 +164,18 @@ function generate_keystores() {
     done
 }
 
-# setup ssh_config with host alias, users, and identity files
+# setup ssh ipa_config with host alias, users, and identity files
 function setup_ssh_config() {
     mkdir -p ~/.ssh
-    jq <"${metadata_path}" -r '.ssh_config.value' >>~/.ssh/config
+
+    [ ! -f ~/.ssh/config ] && touch ~/.ssh/config
+
+    # If necessary, update ~/.ssh/config file with Include directive
+    grep -qxF 'Include "ipa_config"' ~/.ssh/config || echo 'Include "ipa_config"' >> ~/.ssh/config
+
+    jq <"${metadata_path}" -r '.ssh_config.value'  >~/.ssh/ipa_config
     jq <"${metadata_path}" -r '.private_key.value' >~/.ssh/ipa_"${cluster_name}"_rsa
+
     chmod 0600 ~/.ssh/ipa_"${cluster_name}"_rsa
     ssh-keygen -y -f ~/.ssh/ipa_"${cluster_name}"_rsa >~/.ssh/ipa_"${cluster_name}"_rsa.pub
 }
