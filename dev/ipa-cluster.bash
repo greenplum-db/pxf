@@ -135,9 +135,9 @@ function terraform_destroy() {
 
 # cleanup ansible artifacts that might exist from previous runs
 function cleanup_existing_artifacts() {
-    rm "${ansible_play_path}"/*.p12
-    rm "${ansible_play_path}"/inventory.ini
-    rm "${ansible_play_path}"/config.yml
+    rm -f "${ansible_play_path}"/*.p12
+    rm -f "${ansible_play_path}"/inventory.ini
+    rm -f "${ansible_play_path}"/config.yml
 }
 
 function generate_keystores() {
