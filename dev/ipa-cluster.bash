@@ -73,7 +73,7 @@ function check_pre_requisites() {
 }
 
 function create_firewall_resource() {
-    local my_ip=$(curl ifconfig.co)
+    local my_ip=$(curl -s ifconfig.co)
     cat << EOF > "${terraform_dir}"/local-firewall.tf
 resource "google_compute_firewall" "$USER-access" {
   name    = "$USER-access"
