@@ -232,6 +232,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             field.type = converter.getDataType(type).getOID();
             field.val = null;
         } else if (type.getRepetition() != REPEATED) {
+            // here the repetition count can only be 1
             field.type = converter.getDataType(type).getOID();
             field.val = converter.getValue(group, columnIndex, 0, type);
         } else {

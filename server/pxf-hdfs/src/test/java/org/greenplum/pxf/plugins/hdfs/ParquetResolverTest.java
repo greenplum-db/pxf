@@ -667,9 +667,9 @@ public class ParquetResolverTest {
         ZonedDateTime localTime1 = timestamp1.atZone(ZoneId.systemDefault());
         ZonedDateTime localTime2 = timestamp2.atZone(ZoneId.systemDefault());
         ZonedDateTime localTime3 = timestamp3.atZone(ZoneId.systemDefault());
-        String localTimestampString1 = localTime1.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
-        String localTimestampString2 = localTime2.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
-        String localTimestampString3 = localTime3.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
+        String localTimestampString1 = localTime1.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String localTimestampString2 = localTime2.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String localTimestampString3 = localTime3.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         List<OneField> fields = assertRow(groups, 0, 2);
         assertField(fields, 0, 1, DataType.INTEGER);
@@ -777,7 +777,6 @@ public class ParquetResolverTest {
         Type.Repetition elementRepetition = Type.Repetition.OPTIONAL;
         fields.add(new PrimitiveType(elementRepetition, PrimitiveTypeName.INT32, "id", null));
         fields.add(generateListSchema(groupRepetition, "bag", elementRepetition, "array_element", PrimitiveTypeName.BOOLEAN, 0, "bool_arr", null));
-        // if it is read case, we generate the data using hive, which support tiny type, doesn't support small int type?
         org.apache.parquet.schema.OriginalType tinyType = org.apache.parquet.schema.OriginalType.INT_8;
         fields.add(generateListSchema(groupRepetition, "bag", elementRepetition, "array_element", PrimitiveTypeName.INT32, 0, "smallint_arr", tinyType));
         fields.add(generateListSchema(groupRepetition, "bag", elementRepetition, "array_element", PrimitiveTypeName.INT32, 0, "int_arr", null));

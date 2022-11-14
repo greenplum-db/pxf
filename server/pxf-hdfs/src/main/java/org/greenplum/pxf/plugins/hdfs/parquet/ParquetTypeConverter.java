@@ -71,7 +71,7 @@ public enum ParquetTypeConverter {
 
         @Override
         public void addValueToArray(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType, PgArrayBuilder pgArrayBuilder) {
-            Object value = getValue(group, 0, 0, primitiveType);
+            Object value = getValue(group, columnIndex, repeatIndex, primitiveType);
             if (primitiveType.getLogicalTypeAnnotation() == null) {
                 ByteBuffer byteBuffer = ByteBuffer.wrap((byte[]) value);
                 pgArrayBuilder.addElementNoEscaping(pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
@@ -239,7 +239,7 @@ public enum ParquetTypeConverter {
         public DataType getDataType(Type type) {
             Type elementType = type.asGroupType().getType(0).asGroupType().getType(0);
             if (!elementType.isPrimitive()) {
-                throw new PxfRuntimeException(String.format("List of %s is not supported.", elementType.getOriginalType()));
+                throw new PxfRuntimeException(String.format("List of type %s is not supported.", elementType.getOriginalType().name()));
             }
             return from(elementType).getArrayDataType(elementType);
         }
@@ -252,12 +252,13 @@ public enum ParquetTypeConverter {
             Group listGroup = group.getGroup(columnIndex, repeatIndex);
             int repetitionCount = listGroup.getFieldRepetitionCount(0);
             for (int i = 0; i < repetitionCount; i++) {
-                Group repeatedGroup = listGroup.getGroup(0, i);
-                if (repeatedGroup.getFieldRepetitionCount(0) == 0) {
+                Group elementGroup = listGroup.getGroup(0, i);
+                if (elementGroup.getFieldRepetitionCount(0) == 0) {
                     pgArrayBuilder.addElement((String) null);
+
                 } else {
                     PrimitiveType elementType = type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
-                    from(elementType).addValueToArray(repeatedGroup, 0, 0, elementType, pgArrayBuilder);
+                    from(elementType).addValueToArray(elementGroup, 0, 0, elementType, pgArrayBuilder);
                 }
             }
             pgArrayBuilder.endArray();
@@ -291,7 +292,7 @@ public enum ParquetTypeConverter {
         try {
             return valueOf(type.getOriginalType().name());
         } catch (IllegalArgumentException e) {
-            throw new PxfRuntimeException(String.format("Complex type %s is not supported", type.getOriginalType().name()), e);
+            throw new PxfRuntimeException(String.format("Parquet complex type %s is not supported", type.getOriginalType().name()), e);
         }
     }
 
