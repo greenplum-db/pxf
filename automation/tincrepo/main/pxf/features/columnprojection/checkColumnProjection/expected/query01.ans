@@ -9,8 +9,6 @@ INSERT INTO t0_values VALUES('A', 50);
 INSERT 0 1
 -- end_ignore
 -- @description query01 for PXF Column Projection Support
-SET extra_float_digits=0;
-SET
 SET optimizer = off;
 SET
 SELECT * FROM test_column_projection ORDER BY t0;

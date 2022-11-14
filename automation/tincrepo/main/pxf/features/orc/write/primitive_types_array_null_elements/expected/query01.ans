@@ -5,8 +5,6 @@
 Null display is "NIL".
 SET bytea_output=hex;
 SET
-SET extra_float_digits=0;
-SET
 SET timezone='America/Los_Angeles';
 SET
 SELECT * FROM orc_primitive_arrays_null_elements_readable ORDER BY id;

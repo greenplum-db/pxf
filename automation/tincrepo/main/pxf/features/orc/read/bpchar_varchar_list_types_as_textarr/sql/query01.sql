@@ -3,7 +3,6 @@
 
 SET bytea_output=hex;
 
-SET extra_float_digits=0;
 
 SELECT * FROM pxf_orc_bpchar_varchar_list_types_as_textarr ORDER BY id;
 

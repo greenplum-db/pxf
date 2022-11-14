@@ -1,8 +1,6 @@
 -- @description query01 for writing primitive ORC data types using the Hive profile
 SET bytea_output=hex;
 
-SET extra_float_digits=0;
-
 SET timezone='America/Los_Angeles';
 -- for the numeric column in GPDB, decimal(38,18) in Hive, there are differences in output between different hive versions.
 -- make the print consistent by doing `round(c_numeric, 18) as c_numeric` to force the same precision.

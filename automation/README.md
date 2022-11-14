@@ -148,7 +148,7 @@ To support running the tests for GPDB 7, we have created this new directory, `ti
 Steps:
 1. Download the GP6 Python libs `gsutil cp gs://data-gpdb-ud-pxf-build-resources/automation-dependencies/gp6-python-libs.tar.gz ~/workspace/pxf/automation/tinc/main/tinc-python-deps`
 2. Unzip the file `tar -xvzf ~/workspace/pxf/automation/tinc/main/tinc-python-deps/gp6-python-libs.tar.gz`
-3. export PXFAUTOMATIONTINCDEPS `export PXFAUTOMATIONTINCDEPS=~/workspace/pxf/automation/tinc/main/tinc-python-deps/`
+3. export PXF_AUTOMATION_TINC_DEPS `export PXF_AUTOMATION_TINC_DEPS=~/workspace/pxf/automation/tinc/main/tinc-python-deps/`
 
 ### Project structure
 _**src/main/java**_ - contains related classes and utilities for the test

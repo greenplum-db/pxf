@@ -4,7 +4,6 @@ CREATE TABLE t0_values(key char(1), value int) DISTRIBUTED BY (key);
 INSERT INTO t0_values VALUES('A', 50);
 -- end_ignore
 -- @description query01 for PXF Column Projection Support
-SET extra_float_digits=0;
 
 SET optimizer = off;
 

@@ -2,7 +2,6 @@
 \pset null 'NIL'
 SET bytea_output=hex;
 
-SET extra_float_digits=0;
 
 SET timezone='America/Los_Angeles';
 SELECT * FROM orc_primitive_arrays_null_elements_readable ORDER BY id;

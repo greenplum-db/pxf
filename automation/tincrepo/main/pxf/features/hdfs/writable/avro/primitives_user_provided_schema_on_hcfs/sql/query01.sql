@@ -5,6 +5,5 @@
 -- # create a match/subs
 --
 -- end_matchsubs
-SET extra_float_digits=0;
 
 SELECT * from writable_avro_primitive_user_provided_schema_on_hcfs_readable ORDER BY type_int;

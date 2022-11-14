@@ -2,7 +2,6 @@
 \pset null 'NIL'
 SET bytea_output=hex;
 
-SET extra_float_digits=0;
 
 SELECT * FROM pxf_orc_multidim_list_types ORDER BY id;
 
