@@ -479,7 +479,7 @@ public class JdbcBasePlugin extends BasePlugin {
      * @param connection connection to close
      * @throws SQLException throws when a SQLException occurs
      */
-    static void closeConnection(Connection connection) throws SQLException {
+    protected static void closeConnection(Connection connection) throws SQLException {
         if (connection == null) {
             LOG.warn("Call to close connection is ignored as connection provided was null");
             return;

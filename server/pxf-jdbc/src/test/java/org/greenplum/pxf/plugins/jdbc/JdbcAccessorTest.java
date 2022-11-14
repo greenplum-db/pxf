@@ -1,6 +1,7 @@
 package org.greenplum.pxf.plugins.jdbc;
 
 import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.plugins.jdbc.partitioning.IntPartition;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
@@ -27,6 +29,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 public class JdbcAccessorTest {
@@ -77,51 +80,63 @@ public class JdbcAccessorTest {
 
     @Test
     public void testReadFromQueryFailsWhenServerDirectoryIsNotSpecified() throws SQLException {
-        wireMocksForRead();
-        context.setServerName("unknown");
-        context.setDataSource("query:foo");
-        accessor.setRequestContext(context);
-        accessor.afterPropertiesSet();
-        Exception e = assertThrows(RuntimeException.class,
-                () -> accessor.openForRead());
-        assertEquals("No server configuration directory found for server unknown", e.getMessage());
+        try (MockedStatic<JdbcBasePlugin> jdbcBasePluginMockedStatic = mockStatic(JdbcBasePlugin.class)) {
+            wireMocksForRead();
+            context.setServerName("unknown");
+            context.setDataSource("query:foo");
+            accessor.setRequestContext(context);
+            accessor.afterPropertiesSet();
+            Exception e = assertThrows(PxfRuntimeException.class,
+                    () -> accessor.openForRead());
+            assertEquals("No server configuration directory found for server unknown", e.getMessage());
+            jdbcBasePluginMockedStatic.verify(() -> JdbcBasePlugin.closeConnection(mockConnection));
+        }
     }
 
     @Test
     public void testReadFromQueryFailsWhenServerDirectoryDoesNotExist() throws SQLException {
-        wireMocksForRead();
-        configuration.set("pxf.config.server.directory", "/non-existing-directory");
-        context.setDataSource("query:foo");
-        accessor.setRequestContext(context);
-        accessor.afterPropertiesSet();
-        Exception e = assertThrows(RuntimeException.class,
-                () -> accessor.openForRead());
-        assertEquals("Failed to read text of query foo : File '/non-existing-directory/foo.sql' does not exist", e.getMessage());
+        try (MockedStatic<JdbcBasePlugin> jdbcBasePluginMockedStatic = mockStatic(JdbcBasePlugin.class)) {
+            wireMocksForRead();
+            configuration.set("pxf.config.server.directory", "/non-existing-directory");
+            context.setDataSource("query:foo");
+            accessor.setRequestContext(context);
+            accessor.afterPropertiesSet();
+            Exception e = assertThrows(RuntimeException.class,
+                    () -> accessor.openForRead());
+            assertEquals("Failed to read text of query foo : File '/non-existing-directory/foo.sql' does not exist", e.getMessage());
+            jdbcBasePluginMockedStatic.verify(() -> JdbcBasePlugin.closeConnection(mockConnection));
+        }
     }
 
     @Test
     public void testReadFromQueryFailsWhenQueryFileIsNotFoundInExistingDirectory() throws SQLException {
-        wireMocksForRead();
-        configuration.set("pxf.config.server.directory", "/tmp/");
-        context.setDataSource("query:foo");
-        accessor.setRequestContext(context);
-        accessor.afterPropertiesSet();
-        Exception e = assertThrows(RuntimeException.class,
-                () -> accessor.openForRead());
-        assertEquals("Failed to read text of query foo : File '/tmp/foo.sql' does not exist", e.getMessage());
+        try (MockedStatic<JdbcBasePlugin> jdbcBasePluginMockedStatic = mockStatic(JdbcBasePlugin.class)) {
+            wireMocksForRead();
+            configuration.set("pxf.config.server.directory", "/tmp/");
+            context.setDataSource("query:foo");
+            accessor.setRequestContext(context);
+            accessor.afterPropertiesSet();
+            Exception e = assertThrows(RuntimeException.class,
+                    () -> accessor.openForRead());
+            assertEquals("Failed to read text of query foo : File '/tmp/foo.sql' does not exist", e.getMessage());
+            jdbcBasePluginMockedStatic.verify(() -> JdbcBasePlugin.closeConnection(mockConnection));
+        }
     }
 
     @Test
     public void testReadFromQueryFailsWhenQueryFileIsEmpty() throws Exception {
-        wireMocksForRead();
-        String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
-        configuration.set("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
-        context.setDataSource("query:emptyquery");
-        accessor.setRequestContext(context);
-        accessor.afterPropertiesSet();
-        Exception e = assertThrows(RuntimeException.class,
-                () -> accessor.openForRead());
-        assertEquals("Query text file is empty for query emptyquery", e.getMessage());
+        try (MockedStatic<JdbcBasePlugin> jdbcBasePluginMockedStatic = mockStatic(JdbcBasePlugin.class)) {
+            wireMocksForRead();
+            String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
+            configuration.set("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
+            context.setDataSource("query:emptyquery");
+            accessor.setRequestContext(context);
+            accessor.afterPropertiesSet();
+            Exception e = assertThrows(RuntimeException.class,
+                    () -> accessor.openForRead());
+            assertEquals("Query text file is empty for query emptyquery", e.getMessage());
+            jdbcBasePluginMockedStatic.verify(() -> JdbcBasePlugin.closeConnection(mockConnection));
+        }
     }
 
     @Test
