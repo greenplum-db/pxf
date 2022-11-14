@@ -177,5 +177,7 @@ public enum DataType {
         return typeElem;
     }
 
-    public DataType getTypeArray() { return typeArray; }
+    public DataType getTypeArray() {
+        return typeArray;
+    }
 }

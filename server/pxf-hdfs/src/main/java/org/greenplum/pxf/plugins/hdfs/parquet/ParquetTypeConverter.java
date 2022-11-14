@@ -255,7 +255,6 @@ public enum ParquetTypeConverter {
                 Group elementGroup = listGroup.getGroup(0, i);
                 if (elementGroup.getFieldRepetitionCount(0) == 0) {
                     pgArrayBuilder.addElement((String) null);
-
                 } else {
                     PrimitiveType elementType = type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
                     from(elementType).addValueToArray(elementGroup, 0, 0, elementType, pgArrayBuilder);

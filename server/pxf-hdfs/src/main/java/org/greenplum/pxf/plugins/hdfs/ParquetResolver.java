@@ -228,6 +228,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         ParquetTypeConverter converter = ParquetTypeConverter.from(type);
         // determine how many values for the field are present in the column
         int repetitionCount = group.getFieldRepetitionCount(columnIndex);
+        // repetitionCount would only be 0 or 1
         if (repetitionCount == 0) {
             field.type = converter.getDataType(type).getOID();
             field.val = null;
