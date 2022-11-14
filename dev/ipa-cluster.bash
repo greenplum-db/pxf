@@ -242,8 +242,8 @@ function setup_pxf_server() {
     cp ipa_env_files/conf/*.xml "${PXF_BASE}"/servers/hdfs-ipa/
     cp ipa_env_files/*.keytab "${PXF_BASE}"/servers/hdfs-ipa/
     cp "${parent_script_dir}"/server/pxf-service/src/templates/templates/pxf-site.xml "${PXF_BASE}"/servers/hdfs-ipa/
-    sed -i '' -e "s|>gpadmin/_HOST@EXAMPLE.COM<|>porter@${domain_name_upper}<|g" "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
-    sed -i '' -e 's|/keytabs/|/servers/hdfs-ipa/|g' "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
+    sed -e "s|>gpadmin/_HOST@EXAMPLE.COM<|>porter@${domain_name_upper}<|g" "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml > /tmp/pxf-site.xml.$$ && mv /tmp/pxf-site.xml.$$ "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
+    sed -e 's|/keytabs/|/servers/hdfs-ipa/|g' "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml > /tmp/pxf-site.xml.$$ && mv /tmp/pxf-site.xml.$$ "${PXF_BASE}"/servers/hdfs-ipa/pxf-site.xml
     # set Hadoop client to use hostnames for datanodes instead of IP addresses (which are internal in GCP network)
     xmlstarlet ed --inplace --pf --append '/configuration/property[last()]' --type elem -n property -v "" \
      --subnode '/configuration/property[last()]' --type elem -n name -v "dfs.client.use.datanode.hostname" \
@@ -253,7 +253,7 @@ function setup_pxf_server() {
 
     rm -rf "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation
     cp -R "${PXF_BASE}"/servers/hdfs-ipa "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation
-    sed -i '' -e 's|hdfs-ipa|hdfs-ipa-no-impersonation|g' "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation/pxf-site.xml
+    sed -e 's|hdfs-ipa|hdfs-ipa-no-impersonation|g' "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation/pxf-site.xml > /tmp/pxf-site.xml.$$ && mv /tmp/pxf-site.xml.$$ "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation/pxf-site.xml
     # set impersonation property to false for the PXF server
     xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.user.impersonation']/value" -v false "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation/pxf-site.xml
     # set service user to foobar
@@ -263,7 +263,7 @@ function setup_pxf_server() {
 
     rm -rf "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser
     cp -R "${PXF_BASE}"/servers/hdfs-ipa "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser
-    sed -i '' -e 's|hdfs-ipa|hdfs-ipa-no-impersonation-no-svcuser|g' "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml
+    sed -e 's|hdfs-ipa|hdfs-ipa-no-impersonation-no-svcuser|g' "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml > /tmp/pxf-site.xml.$$ && mv /tmp/pxf-site.xml.$$ "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml
     # set impersonation property to false for the PXF server
     xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.user.impersonation']/value" -v false "${PXF_BASE}"/servers/hdfs-ipa-no-impersonation-no-svcuser/pxf-site.xml
 }
