@@ -20,8 +20,6 @@ package org.greenplum.pxf.plugins.json.parser;
  */
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -46,7 +44,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class JsonRecordReaderSeekNoSeekTest {
 
-    private static final Log LOG = LogFactory.getLog(JsonRecordReaderSeekNoSeekTest.class);
     private static final String RECORD_MEMBER_IDENTIFIER = "json.input.format.record.identifier";
     private JobConf jobConf;
     private String[] hosts = null;
@@ -109,14 +106,12 @@ public class JsonRecordReaderSeekNoSeekTest {
         if (jsonObjectFiles.length == 0) {
             jsonRecordReader.next(key, data);
             assertEquals(0, data.getLength(), "File " + jsonFile.getAbsolutePath() + " got result '" + data.toString() + "'");
-            LOG.info("File " + jsonFile.getAbsolutePath() + " passed");
         } else {
             for (File jsonObjectFile : jsonObjectFiles) {
                 String expected = normalizeWhitespaces(FileUtils.readFileToString(jsonObjectFile, Charset.defaultCharset()));
                 jsonRecordReader.next(key, data);
                 assertNotEquals(0, data.getLength(), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
                 assertEquals(expected, normalizeWhitespaces(data.toString()), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
-                LOG.info("File " + jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName() + " passed");
             }
         }
     }

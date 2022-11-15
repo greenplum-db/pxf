@@ -15,8 +15,9 @@ SELECT '{"cüstömerstätüs":"' || CASE WHEN (((i+47)%29)=0) THEN 'invälid' EL
 FROM generate_series (1,30000000)i;
 ```
 
-Then going in and adding the starting and ending array brackets in the data itself so that the final file looks something like this
-```
+Then go in and add the starting and ending array brackets in the data itself so that the final file looks something like this
+
+```json
 [
  {...},
  {...},
