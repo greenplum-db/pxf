@@ -142,7 +142,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
             if (isObjectComplete && parser.foundObjectWithIdentifier()) {
                 String json = parser.getCompletedObject();
-                long jsonLength = json.getBytes(StandardCharsets.UTF_8).length;
+                long jsonLength = json.length();
                 if (jsonLength > maxObjectLength) {
                     LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
                 } else {

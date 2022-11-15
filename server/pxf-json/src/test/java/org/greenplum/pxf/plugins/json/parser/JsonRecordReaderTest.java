@@ -74,7 +74,7 @@ public class JsonRecordReaderTest {
         path = new Path(file.getPath());
         // This file split should not be ignored
         // the length is relative to the uncompressed file so pick something large
-        fileSplit = new FileSplit(path, 1000, 25000, hosts);
+        fileSplit = new FileSplit(path, 1000, 15000, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
         key = createKey();
         data = createValue();
@@ -82,7 +82,7 @@ public class JsonRecordReaderTest {
         while (jsonRecordReader.next(key, data)) {
             recordCount++;
         }
-        assertEquals(7275, recordCount);
+        assertEquals(8251, recordCount);
     }
     @Test
     /**
