@@ -132,18 +132,43 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      * Fill the index-th group based on the Greenplum data type and value string provided by {@link OneField} field
      *
      * @param index The index we are going to fill data at
-     * @param field The index-th field which provides Greenplum data type and String value of record[index]
-     * @param group The outermost group for the {@link OneRow} parquet schema and data we are going to construct
+     * @param field Provide the String value of record[index] we are going to convert into parquet
+     * @param group The outermost group for the {@link OneRow} parquet schema
      * @param type  The parquet schema type of record[index]
-     * @throws IOException if fill the index-th group from the field failed
      */
-    private void fillGroup(int index, OneField field, Group group, Type type) throws IOException {
+    private void fillGroup(int index, OneField field, Group group, Type type) {
         if (field.val == null)
             return;
         if (type.isPrimitive()) {
             fillPrimitiveGroup(index, field.val, group, type, true);
+        } else if (type.asGroupType().getOriginalType() == LogicalTypeAnnotation.listType().toOriginalType()) {
+            /*
+             * https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
+             * Parquet LIST must always annotate a 3-level structure:
+             * <list-repetition> group <name> (LIST) {
+             *   repeated group list {
+             *     <element-repetition> <element-type> element;
+             *   }
+             * }
+             */
+            GroupType listType = type.asGroupType();
+            GroupType repeatedType = listType.getType(0).asGroupType();
+            Type elementType = repeatedType.getType(0).asPrimitiveType();
+            // Decode Postgres String representation of an array into a list of Objects of the required element type
+            List<Object> values = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.asPrimitiveType().getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
+            Group arrayGroup = new SimpleGroup(listType);
+
+            for (Object value : values) {
+                Group repeatedGroup = new SimpleGroup(repeatedType);
+                // If current element is null, directly add repeatedGroup into group
+                if (value != null) {
+                    fillPrimitiveGroup(0, value, repeatedGroup, elementType, false);
+                }
+                arrayGroup.add(0, repeatedGroup);
+            }
+            group.add(index, arrayGroup);
         } else {
-            fillListGroup(index, field.val, group, type);
+            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported", type.asGroupType().getOriginalType().name()));
         }
     }
 
@@ -152,13 +177,12 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      * This primitive group could be an actual primitive group or the innermost primitive group of a List group
      *
      * @param index       The index we are going to fill data at
-     * @param fieldValue  The String value of record[index]
-     * @param group       The out most group for the {@link OneRow} parquet schema and data we are going to construct
+     * @param fieldValue  Provide the String value of record[index] we are going to convert into parquet
+     * @param group       The out most group for the {@link OneRow} parquet schema
      * @param type        The parquet schema type of record[index]
-     * @param isPrimitive Whether record[index] is a Primitive type or it is a recursive call to construct List type
-     * @throws IOException if fill the index-th group from the field failed
+     * @param isPrimitive This method is called to construct a Primitive type or a LIST type
      */
-    private void fillPrimitiveGroup(int index, Object fieldValue, Group group, Type type, boolean isPrimitive) throws IOException {
+    private void fillPrimitiveGroup(int index, Object fieldValue, Group group, Type type, boolean isPrimitive) {
         switch (type.asPrimitiveType().getPrimitiveTypeName()) {
             case BINARY:
                 if (type.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
@@ -210,50 +234,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 group.add(index, (Boolean) fieldValue);
                 break;
             default:
-                throw new UnsupportedTypeException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
+                throw new UnsupportedTypeException("Not supported primitive type " + type.asPrimitiveType().getPrimitiveTypeName());
         }
-    }
-
-    /**
-     * Fill the index-th List group based on the Greenplum data type and value string provided by {@link OneField} field
-     * It will call the fillPrimitiveGroup to fill the innermost primitive group
-     *
-     * @param index      The index we are going to fill data at
-     * @param fieldValue The String value of record[index]
-     * @param group      The out most group for the {@link OneRow} parquet schema and data we are going to construct
-     * @param type       The parquet schema type of record[index]
-     * @throws IOException if fill the index-th group from the field failed
-     */
-    private void fillListGroup(int index, Object fieldValue, Group group, Type type) throws IOException {
-        if (type.asGroupType().getOriginalType() != LogicalTypeAnnotation.listType().toOriginalType()) {
-            throw new IOException("Not supported complex type " + type.asGroupType().getOriginalType());
-        }
-
-        /*
-         * https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
-         * Parquet LIST must always annotate a 3-level structure:
-         * <list-repetition> group <name> (LIST) {
-         *   repeated group list {
-         *     <element-repetition> <element-type> element;
-         *   }
-         * }
-         */
-        GroupType listType = type.asGroupType();
-        GroupType repeatedType = listType.getType(0).asGroupType();
-        Type elementType = repeatedType.getType(0).asPrimitiveType();
-        // Decode Postgres String representation of an array into a list of Objects of the required element type
-        List<Object> vals = parquetUtilities.parsePostgresArray(fieldValue.toString(), elementType.asPrimitiveType().getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
-        Group arrayGroup = new SimpleGroup(listType);
-
-        for (Object value : vals) {
-            Group repeatedGroup = new SimpleGroup(repeatedType);
-            // If current element is null, directly add repeatedGroup into group
-            if (value != null) {
-                fillPrimitiveGroup(0, value, repeatedGroup, elementType, false);
-            }
-            arrayGroup.add(0, repeatedGroup);
-        }
-        group.add(index, arrayGroup);
     }
 
     private byte[] getFixedLenByteArray(String value, Type type) {
