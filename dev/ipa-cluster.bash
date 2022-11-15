@@ -164,16 +164,26 @@ function generate_keystores() {
     done
 }
 
+# Add ssh "Include config.d/*" wild card directive at beginning of
+# ~/.ssh/config file.
+function update_ssh_config(){
+    cat <<EOF > /tmp/ssh-config.$$
+Include config.d/*
+
+EOF
+    cat ~/.ssh/config >> /tmp/ssh-config.$$
+    mv /tmp/ssh-config.$$ ~/.ssh/config
+}
+
 # setup ssh ipa_config with host alias, users, and identity files
 function setup_ssh_config() {
-    mkdir -p ~/.ssh
-
+    mkdir -p ~/.ssh/config.d
     [ ! -f ~/.ssh/config ] && touch ~/.ssh/config
 
     # If necessary, update ~/.ssh/config file with Include directive
-    grep -qxF 'Include "ipa_config"' ~/.ssh/config || echo 'Include "ipa_config"' >> ~/.ssh/config
+    grep -qxF 'Include config.d/*' ~/.ssh/config || update_ssh_config
 
-    jq <"${metadata_path}" -r '.ssh_config.value'  >~/.ssh/ipa_config
+    jq <"${metadata_path}" -r '.ssh_config.value'  >~/.ssh/config.d/ipa_config
     jq <"${metadata_path}" -r '.private_key.value' >~/.ssh/ipa_"${cluster_name}"_rsa
 
     chmod 0600 ~/.ssh/ipa_"${cluster_name}"_rsa

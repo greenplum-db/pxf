@@ -38,7 +38,9 @@ The script will:
  * spin up GCP instances for the Hadoop cluster
  * apply ansible configuration steps to configure the Hadoop cluster
  * add a private key to access GCP VMs as `~/.ssh/[username]`
- * add SSH configurations to `~/.ssh/config` file
+ * create SSH ~/.ssh/config.d config directory
+ * add SSH `Include config.d/*` wild card include directive as first line in `~/.ssh/config` file
+ * add SSH configurations to `~/.ssh/config.d/ipa_config` file
  * create a PXF configuration server `$PXF_BASE/servers/hdfs-ipa`
  * print out messages instructing the user to:
    * enable constrained delegation property in their `$PXF_BASE/servers/hdfs-ipa/pxf-site.xml`
