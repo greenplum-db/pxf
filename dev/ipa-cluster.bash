@@ -75,8 +75,8 @@ function check_pre_requisites() {
 function create_firewall_resource() {
     local my_ip=$(curl -s ifconfig.co)
     cat << EOF > "${terraform_dir}"/local-firewall.tf
-resource "google_compute_firewall" "$USER-access" {
-  name    = "$USER-access"
+resource "google_compute_firewall" "${TF_VAR_env_name}-access" {
+  name    = "${TF_VAR_env_name}-access"
   network = var.network
   direction = "INGRESS"
   allow {
@@ -270,7 +270,7 @@ function setup_pxf_server() {
 
 # print instructions for the manual steps the user must perform
 function print_user_instructions() {
-    echo "Cluster $USER has been created, now do the following:"
+    echo "Cluster ${TF_VAR_env_name} has been created, now do the following:"
     echo "1. --- copy the following to your /etc/hosts :"
     cat ipa_env_files/etc_hostfile
     echo "2. --- add the following to your /etc/krb5.conf :"
@@ -283,8 +283,8 @@ function print_user_instructions() {
 
 [realms]
  C.DATA-GPDB-UD-IPA.INTERNAL = {
-  kdc = ccp-$USER-ipa.c.data-gpdb-ud-ipa.internal
-  admin_server = ccp-$USER-ipa.c.data-gpdb-ud-ipa.internal
+  kdc = ccp-${TF_VAR_env_name}-ipa.c.data-gpdb-ud-ipa.internal
+  admin_server = ccp-${TF_VAR_env_name}-ipa.c.data-gpdb-ud-ipa.internal
  }
 
 [domain_realm]
