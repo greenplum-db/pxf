@@ -73,21 +73,21 @@ SELECT t0, a1, colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = fa
  D  |  3 | t0|a1|b2|colprojvalue
 (2 rows)
 
-SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
-       sqrt       |     colprojvalue
-------------------+-----------------------
-                1 | t0|a1|b2|colprojvalue
- 1.73205080756888 | t0|a1|b2|colprojvalue
+SELECT round(sqrt(a1)::numeric, 5), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+  round  |     colprojvalue
+---------+-----------------------
+ 1.00000 | t0|a1|b2|colprojvalue
+ 1.73205 | t0|a1|b2|colprojvalue
 (2 rows)
 
-SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
-       sqrt       |     colprojvalue
-------------------+-----------------------
-                1 | t0|a1|b2|colprojvalue
- 1.73205080756888 | t0|a1|b2|colprojvalue
- 2.23606797749979 | t0|a1|b2|colprojvalue
- 2.64575131106459 | t0|a1|b2|colprojvalue
-                3 | t0|a1|b2|colprojvalue
+SELECT round(sqrt(a1)::numeric, 5), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
+  round  |     colprojvalue
+---------+-----------------------
+ 1.00000 | t0|a1|b2|colprojvalue
+ 1.73205 | t0|a1|b2|colprojvalue
+ 2.23607 | t0|a1|b2|colprojvalue
+ 2.64575 | t0|a1|b2|colprojvalue
+ 3.00000 | t0|a1|b2|colprojvalue
 (5 rows)
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
@@ -149,19 +149,19 @@ SELECT t0, colprojvalue FROM test_column_projection WHERE sqrt(a1) > 1 ORDER BY 
  J  | t0|a1|colprojvalue
 (8 rows)
 
-SELECT t0, colprojvalue, sqrt(a1) FROM test_column_projection ORDER BY t0;
- t0 |    colprojvalue    |       sqrt
-----+--------------------+------------------
- A  | t0|a1|colprojvalue |                0
- B  | t0|a1|colprojvalue |                1
- C  | t0|a1|colprojvalue |  1.4142135623731
- D  | t0|a1|colprojvalue | 1.73205080756888
- E  | t0|a1|colprojvalue |                2
- F  | t0|a1|colprojvalue | 2.23606797749979
- G  | t0|a1|colprojvalue | 2.44948974278318
- H  | t0|a1|colprojvalue | 2.64575131106459
- I  | t0|a1|colprojvalue | 2.82842712474619
- J  | t0|a1|colprojvalue |                3
+SELECT t0, colprojvalue, round(sqrt(a1)::numeric, 5) FROM test_column_projection ORDER BY t0;
+ t0 |    colprojvalue    |  round
+----+--------------------+---------
+ A  | t0|a1|colprojvalue | 0.00000
+ B  | t0|a1|colprojvalue | 1.00000
+ C  | t0|a1|colprojvalue | 1.41421
+ D  | t0|a1|colprojvalue | 1.73205
+ E  | t0|a1|colprojvalue | 2.00000
+ F  | t0|a1|colprojvalue | 2.23607
+ G  | t0|a1|colprojvalue | 2.44949
+ H  | t0|a1|colprojvalue | 2.64575
+ I  | t0|a1|colprojvalue | 2.82843
+ J  | t0|a1|colprojvalue | 3.00000
 (10 rows)
 
 -- Casting boolean column to int
@@ -244,21 +244,21 @@ SELECT t0, a1, colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = fa
  D  |  3 | t0|a1|b2|colprojvalue
 (2 rows)
 
-SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
-       sqrt       |     colprojvalue
-------------------+-----------------------
-                1 | t0|a1|b2|colprojvalue
- 1.73205080756888 | t0|a1|b2|colprojvalue
+SELECT round(sqrt(a1)::numeric, 5), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+  round  |     colprojvalue
+---------+-----------------------
+ 1.00000 | t0|a1|b2|colprojvalue
+ 1.73205 | t0|a1|b2|colprojvalue
 (2 rows)
 
-SELECT sqrt(a1), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
-       sqrt       |     colprojvalue
-------------------+-----------------------
-                1 | t0|a1|b2|colprojvalue
- 1.73205080756888 | t0|a1|b2|colprojvalue
- 2.23606797749979 | t0|a1|b2|colprojvalue
- 2.64575131106459 | t0|a1|b2|colprojvalue
-                3 | t0|a1|b2|colprojvalue
+SELECT round(sqrt(a1)::numeric, 5), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
+  round  |     colprojvalue
+---------+-----------------------
+ 1.00000 | t0|a1|b2|colprojvalue
+ 1.73205 | t0|a1|b2|colprojvalue
+ 2.23607 | t0|a1|b2|colprojvalue
+ 2.64575 | t0|a1|b2|colprojvalue
+ 3.00000 | t0|a1|b2|colprojvalue
 (5 rows)
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
@@ -320,19 +320,19 @@ SELECT t0, colprojvalue FROM test_column_projection WHERE sqrt(a1) > 1 ORDER BY 
  J  | t0|a1|colprojvalue
 (8 rows)
 
-SELECT t0, colprojvalue, sqrt(a1) FROM test_column_projection ORDER BY t0;
- t0 |    colprojvalue    |       sqrt
-----+--------------------+------------------
- A  | t0|a1|colprojvalue |                0
- B  | t0|a1|colprojvalue |                1
- C  | t0|a1|colprojvalue |  1.4142135623731
- D  | t0|a1|colprojvalue | 1.73205080756888
- E  | t0|a1|colprojvalue |                2
- F  | t0|a1|colprojvalue | 2.23606797749979
- G  | t0|a1|colprojvalue | 2.44948974278318
- H  | t0|a1|colprojvalue | 2.64575131106459
- I  | t0|a1|colprojvalue | 2.82842712474619
- J  | t0|a1|colprojvalue |                3
+SELECT t0, colprojvalue, round(sqrt(a1)::numeric, 5) FROM test_column_projection ORDER BY t0;
+ t0 |    colprojvalue    |  round
+----+--------------------+---------
+ A  | t0|a1|colprojvalue | 0.00000
+ B  | t0|a1|colprojvalue | 1.00000
+ C  | t0|a1|colprojvalue | 1.41421
+ D  | t0|a1|colprojvalue | 1.73205
+ E  | t0|a1|colprojvalue | 2.00000
+ F  | t0|a1|colprojvalue | 2.23607
+ G  | t0|a1|colprojvalue | 2.44949
+ H  | t0|a1|colprojvalue | 2.64575
+ I  | t0|a1|colprojvalue | 2.82843
+ J  | t0|a1|colprojvalue | 3.00000
 (10 rows)
 
 -- Casting boolean column to int

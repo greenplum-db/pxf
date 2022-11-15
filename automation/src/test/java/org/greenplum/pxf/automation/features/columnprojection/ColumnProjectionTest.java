@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 
 /** Functional PXF column projection cases */
-@WorksWithFDW
+@FailsWithFDW
 public class ColumnProjectionTest extends BaseFeature {
 
     String testPackageLocation = "/org/greenplum/pxf/automation/testplugin/";
