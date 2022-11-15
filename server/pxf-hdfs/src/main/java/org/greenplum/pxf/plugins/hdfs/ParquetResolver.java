@@ -29,12 +29,14 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -113,7 +115,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         return new OneRow(null, group);
     }
 
-    private void fillGroup(int index, OneField field, Group group, Type type) throws IOException {
+    private void fillGroup(int index, OneField field, Group group, Type type) {
         if (field.val == null)
             return;
         switch (type.asPrimitiveType().getPrimitiveTypeName()) {
@@ -198,7 +200,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 group.add(index, (Boolean) field.val);
                 break;
             default:
-                throw new IOException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
+                throw new UnsupportedTypeException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
         }
     }
 

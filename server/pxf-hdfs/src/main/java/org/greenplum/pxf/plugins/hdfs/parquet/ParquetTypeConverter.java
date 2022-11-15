@@ -8,12 +8,13 @@ import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.GreenplumDateTime;
-import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -239,7 +240,7 @@ public enum ParquetTypeConverter {
         public DataType getDataType(Type type) {
             Type elementType = type.asGroupType().getType(0).asGroupType().getType(0);
             if (!elementType.isPrimitive()) {
-                throw new PxfRuntimeException(String.format("List of type %s is not supported.", elementType.getOriginalType().name()));
+                throw new UnsupportedTypeException(String.format("List of type %s is not supported.", elementType.getOriginalType().name()));
             }
             return from(elementType).getArrayDataType(elementType);
         }
@@ -266,7 +267,7 @@ public enum ParquetTypeConverter {
 
         @Override
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
-            throw new PxfRuntimeException(String.format("Parquet complex type %s is not supported", type.asGroupType().getOriginalType().name()));
+            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported", type.asGroupType().getOriginalType().name()));
         }
     };
 
@@ -291,7 +292,7 @@ public enum ParquetTypeConverter {
         try {
             return valueOf(type.getOriginalType().name());
         } catch (IllegalArgumentException e) {
-            throw new PxfRuntimeException(String.format("Parquet complex type %s is not supported", type.getOriginalType().name()), e);
+            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported, error: %s", type.getOriginalType().name(), e));
         }
     }
 
