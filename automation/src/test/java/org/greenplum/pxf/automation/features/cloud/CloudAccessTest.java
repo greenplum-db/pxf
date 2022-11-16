@@ -62,8 +62,10 @@ public class CloudAccessTest extends BaseFeature {
     @Override
     protected void afterMethod() throws Exception {
         super.afterMethod();
-        s3Server.removeDirectory(PROTOCOL_S3 + s3PathRead);
-        s3Server.removeDirectory(PROTOCOL_S3 + s3PathWrite);
+        if (s3Server != null) {
+            s3Server.removeDirectory(PROTOCOL_S3 + s3PathRead);
+            s3Server.removeDirectory(PROTOCOL_S3 + s3PathWrite);
+        }
     }
 
     protected void prepareData() throws Exception {
