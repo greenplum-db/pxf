@@ -29,10 +29,6 @@ import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
  * A simple parser that builds up a JSON object from the supplied char fed in. The parser searches for the JSON
  * object containing the member string that the user supplies.
  *
- * It tracks and builds up the JSON object as it does this search. This code assumes that the user has found the first
- * JSON begin-object "{". It will return only the object containing the member string. For example, if there is a nested
- * JSON object and the member string is in the nested object, the parser will only return the nested object.
- *
  * It is not recommended to use this with JSON text where individual JSON objects that can be large (MB's or larger).
  */
 public class PartitionedJsonParser {
@@ -89,23 +85,31 @@ public class PartitionedJsonParser {
 		currentObject.append(START_BRACE);
 		objectStack.push(0);
 	}
+
 	/**
+	 * This function tracks and builds up a JSON object inside `currentObject` as it searches for the
+	 * member string that the user supplies. This code assumes that the user has found the first
+	 * JSON starting bracket '{'.
+	 *
+	 * It returns true when an ending bracket '}' at the same level as the first '{' is found, or an ending bracket '}'
+	 * at the same level of the matching member is found.
+	 * EX:
+	 *     1: {
+	 *     2: "a":1,
+	 *     3: "b":
+	 *     4: { "d":3
+	 *     5: },
+	 *     6: "c":2
+	 *     7: }
+	 * In this example JSON, these are the 3 scenarios in which we could return true depending on what the member is:
+	 *   1. If the member name was "d", we would return true at line 5, and currentObject would contain only lines 4-5
+	 *   2. If the member name was "a", we would return true at line 7, and currentObject would contain lines 1-7
+	 *   3. If the member name was "x", we would return true at line 7, but currentObject would be empty
+	 *
 	 * @param c character to parse
 	 *            Indicates the member name used to determine the encapsulating object to return.
 	 * @return true  if the JSON object containing the member name has been completed or true if the
-	 * 				ending bracket for the original begin bracket is found, false otherwise. This means that
-	 * 			    if a nested json object contains the member name, only the nested json will be returned.
-	 * 			    EX:
-	 * 			    1: {
-	 * 			    2: "a":1,
-	 * 			    3: "b":
-	 * 			    4: { "d":3
-	 * 			    5: },
-	 * 			    6: "c":2
-	 * 			    7: }
-	 *				In this example, if the member name was "d" we would return true at line 5, and currentObject would contain only lines 4-5
-	 *			    If the member name was "a", we would return true at line 7, and current object would contain lines 1-7
-	 *			    If the member name was "x", we would return true at line 7, but current object would be empty
+	 * 	              ending bracket for the original begin bracket is found, false otherwise.
 	 */
 	public boolean parse(char c) {
 		lexer.lex(c);
@@ -183,6 +187,9 @@ public class PartitionedJsonParser {
 			break;
 		}
 
+		// true in 2 scenarios:
+		// 1. member found, returns true when a '}' is found at the same level as the object containing the member
+		// 2. no member found, returns true when we find a '}' on the same level as the first '{'
 		return isCompletedObject;
 	}
 
