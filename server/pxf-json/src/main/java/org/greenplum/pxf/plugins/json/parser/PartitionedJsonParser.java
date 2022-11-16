@@ -92,7 +92,20 @@ public class PartitionedJsonParser {
 	/**
 	 * @param c character to parse
 	 *            Indicates the member name used to determine the encapsulating object to return.
-	 * @return true  if the JSON object has been completed, false otherwise
+	 * @return true  if the JSON object containing the member name has been completed or true if the
+	 * 				ending bracket for the original begin bracket is found, false otherwise. This means that
+	 * 			    if a nested json object contains the member name, only the nested json will be returned.
+	 * 			    EX:
+	 * 			    1: {
+	 * 			    2: "a":1,
+	 * 			    3: "b":
+	 * 			    4: { "d":3
+	 * 			    5: },
+	 * 			    6: "c":2
+	 * 			    7: }
+	 *				In this example, if the member name was "d" we would return true at line 5, and currentObject would contain only lines 4-5
+	 *			    If the member name was "a", we would return true at line 7, and current object would contain lines 1-7
+	 *			    If the member name was "x", we would return true at line 7, but current object would be empty
 	 */
 	public boolean parse(char c) {
 		lexer.lex(c);

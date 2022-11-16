@@ -228,7 +228,8 @@ public class PartitionedJsonParserTest {
         // `\n` from after the curly bracket
         // `  ]\n`
         // `}`
-        assertEquals(5, jsonContents.length() - charCount);
+        //jsonContents.length accounts for all chars except the starting bracket so add +1 here
+        assertEquals(6, jsonContents.length() + 1 - charCount);
         assertTrue(completed);
         assertTrue(parser.foundObjectWithIdentifier());
         // there are 119 bytes for the 113 characters
@@ -278,7 +279,6 @@ public class PartitionedJsonParserTest {
 
         String result = parser.getCompletedObject();
         assertEquals(163, charCount);
-        assertEquals(162, jsonContents.length());
         assertTrue(completed);
         assertFalse(parser.foundObjectWithIdentifier());
         assertEquals(0, result.getBytes(StandardCharsets.UTF_8).length);
@@ -319,10 +319,8 @@ public class PartitionedJsonParserTest {
         }
 
         String result = parser.getCompletedObject();
-        // there are 188 characters
+        // there are 189 characters
         assertEquals(189, charCount);
-        // `}`
-        assertEquals(188, jsonContents.length());
         assertTrue(completed);
         assertTrue(parser.foundObjectWithIdentifier());
         // there are 198 bytes for the 188 characters

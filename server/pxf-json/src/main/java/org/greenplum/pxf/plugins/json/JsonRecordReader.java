@@ -142,6 +142,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
             if (isObjectComplete && parser.foundObjectWithIdentifier()) {
                 String json = parser.getCompletedObject();
+                // check the char length of the json against the MAXLENGTH
                 long jsonLength = json.length();
                 if (jsonLength > maxObjectLength) {
                     LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
@@ -275,7 +276,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     /**
      * Reads the next line of the file in to begin parsing the characters
      * @return true if a line was read, false otherwise. False means that we have reached the end of the split
-     * @throws IOException
+     * @throws IOException if error occurs internally in underlying LineRecordReader
+     *         IllegalStateException if delta between the bytes read and the bytes in the current line is greater than 2
      */
     private boolean getNextLine() throws IOException {
         currentLine.clear();
@@ -292,8 +294,10 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 currentLine.append(CARRIAGERETURN_NEWLINE, 0, CARRIAGERETURN_NEWLINE.length);
             } else if (delta == 1) {
                 currentLine.append(NEW_LINE, 0, NEW_LINE.length);
+            } else if (delta == 0) {
+                // likely end of file, do not do anything.
             } else {
-                LOG.warn("LineRecordReader removed more characters than expected while parsing a JSON file.");
+                throw new IllegalStateException("LineRecordReader removed more characters than expected while parsing a JSON file.");
             }
             currentLineBuffer = new StringBuffer(currentLine.toString());
             currentLineIndex = 0;
