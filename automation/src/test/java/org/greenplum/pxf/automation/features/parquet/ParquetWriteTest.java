@@ -21,7 +21,7 @@ public class ParquetWriteTest extends BaseFeature {
     private static final String NUMERIC_UNDEFINED_PRECISION_TABLE = "numeric_undefined_precision";
     private static final String PXF_PARQUET_PRIMITIVE_TABLE = "pxf_parquet_primitive_types";
     private static final String PXF_PARQUET_LIST_TYPES = "pxf_parquet_list_types";
-    private static final String PXF_PARQUET_TIMESTAMP_LIST_TYPES = "pxf_parquet_list_types";
+    private static final String PXF_PARQUET_TIMESTAMP_LIST_TYPES = "pxf_parquet_timestamp_list_types";
     private static final String PARQUET_WRITE_PRIMITIVES = "parquet_write_primitives";
     private static final String PARQUET_WRITE_PADDED_CHAR = "parquet_write_padded_char";
     private static final String PARQUET_WRITE_PRIMITIVES_GZIP = "parquet_write_primitives_gzip";
