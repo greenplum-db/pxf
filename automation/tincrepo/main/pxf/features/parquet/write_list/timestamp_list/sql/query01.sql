@@ -12,4 +12,4 @@ SELECT id,
        CAST(tm_arr_elem2 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm_arr_elem2,
        CAST(tm_arr_elem3 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm_arr_elem3 FROM parquet_timestamp_list_breakdown_view;
 
-SELECT * FROM parquet_timestamp_list_PDT_view;
+SELECT * FROM parquet_timestamp_list_PDT_view ORDER BY id;
