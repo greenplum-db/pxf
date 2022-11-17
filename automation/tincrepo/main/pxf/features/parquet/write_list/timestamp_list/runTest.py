@@ -1,6 +1,6 @@
 from mpp.models import SQLConcurrencyTestCase
 
-class ParquetWritePrimitiveArrayTypesWithHive(SQLConcurrencyTestCase):
+class ParquetWriteTimestampList(SQLConcurrencyTestCase):
     """
     @db_name pxfautomation
     @concurrency 1
