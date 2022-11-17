@@ -40,7 +40,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     private static final String TRUE_LCASE = "true";
     private static final String PROFILE_SCHEME = "PROFILE-SCHEME";
     private static final String PXF_API_VERSION = "pxfApiVersion";
-    private static final String TEST_PROFILE_PREFIX = "test:";
 
     private final CharsetUtils charsetUtils;
     private final PluginConf pluginConf;
@@ -105,11 +104,8 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         // first of all, set profile and enrich parameters with information from specified profile
         String profileUserValue = params.removeUserProperty("PROFILE");
         String profile = profileUserValue == null ? null : profileUserValue.toLowerCase();
-        // test: profile is pseudo-profile used for testing only, there should be no corresponding mappings
-        if (!isTestProfile(profile)) {
-            context.setProfile(profile);
-            addProfilePlugins(profile, params);
-        }
+        context.setProfile(profile);
+        addProfilePlugins(profile, params);
 
         // Ext table uses system property FORMAT for wire serialization format
         String wireFormat = params.removeProperty("FORMAT");
@@ -250,15 +246,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
 
     String getServerApiVersion() {
         return buildProperties.get(PXF_API_VERSION);
-    }
-
-    /**
-     * Checks whether a profile provided in the request is a test profile
-     * @param profile name of the profile
-     * @return true if the profile is a test profile, false otherwise
-     */
-    private boolean isTestProfile(String profile) {
-        return StringUtils.startsWith(profile, TEST_PROFILE_PREFIX);
     }
 
     private void parseGreenplumCSV(RequestMap params, RequestContext context) {
