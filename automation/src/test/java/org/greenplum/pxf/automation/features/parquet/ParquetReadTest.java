@@ -2,7 +2,6 @@ package org.greenplum.pxf.automation.features.parquet;
 
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
-import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
@@ -189,8 +188,10 @@ public class ParquetReadTest extends BaseFeature {
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path) throws Exception {
-        exTable = TableFactory.getPxfHcfsReadableTable(name, fields, path, hdfs.getBasePath(), "parquet");
+        exTable = new ReadableExternalTable(name, fields,
+                protocol.getExternalTablePath(hdfs.getBasePath(), path), "custom");
+        exTable.setFormatter("pxfwritable_import");
+        exTable.setProfile(protocol.value() + ":parquet");
         createTable(exTable);
     }
-
 }
