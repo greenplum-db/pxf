@@ -1,13 +1,11 @@
 package org.greenplum.pxf.automation.features.parquet;
 
-import jsystem.framework.system.SystemManagerImpl;
 import org.greenplum.pxf.automation.components.hive.Hive;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
-import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -23,6 +21,7 @@ public class ParquetWriteTest extends BaseFeature {
     private static final String NUMERIC_UNDEFINED_PRECISION_TABLE = "numeric_undefined_precision";
     private static final String PXF_PARQUET_PRIMITIVE_TABLE = "pxf_parquet_primitive_types";
     private static final String PXF_PARQUET_LIST_TYPES = "pxf_parquet_list_types";
+    private static final String PXF_PARQUET_TIMESTAMP_LIST_TYPES = "pxf_parquet_list_types";
     private static final String PARQUET_WRITE_PRIMITIVES = "parquet_write_primitives";
     private static final String PARQUET_WRITE_PADDED_CHAR = "parquet_write_padded_char";
     private static final String PARQUET_WRITE_PRIMITIVES_GZIP = "parquet_write_primitives_gzip";
@@ -31,6 +30,7 @@ public class ParquetWriteTest extends BaseFeature {
     private static final String PARQUET_WRITE_LIST = "parquet_write_list";
     private static final String PARQUET_PRIMITIVE_TYPES = "parquet_primitive_types";
     private static final String PARQUET_LIST_TYPES = "parquet_list_types.parquet";
+    private static final String PARQUET_TIMESTAMP_LIST_TYPES = "parquet_timestamp_list_type.parquet";
     private static final String PARQUET_TYPES = "parquet_types.parquet";
     private static final String PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE = "undefined_precision_numeric.parquet";
     private static final String PARQUET_NUMERIC_FILE = "numeric.parquet";
@@ -124,11 +124,9 @@ public class ParquetWriteTest extends BaseFeature {
             "numeric_arr          NUMERIC[]", // DataType.NUMERICARRAY
     };
 
-    // parquet TIMESTAMP LIST data generated using Spark
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
             "id            INTEGER",
             "tm_arr        TIMESTAMP[]",
-//            "tmtz_zrr      TIMESTAMPTZ[]"
     };
     private static final String HIVE_JDBC_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
     private static final String HIVE_JDBC_URL_PREFIX = "jdbc:hive2://";
@@ -162,8 +160,12 @@ public class ParquetWriteTest extends BaseFeature {
                 + "/numeric/" + NUMERIC_FILENAME), "E','", true);
 
         prepareReadableExternalTable(PXF_PARQUET_PRIMITIVE_TABLE, PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + PARQUET_PRIMITIVE_TYPES);
+
         hdfs.copyFromLocal(resourcePath + PARQUET_LIST_TYPES, hdfsPath + PARQUET_LIST_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_LIST_TYPES, PARQUET_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_LIST_TYPES);
+
+        hdfs.copyFromLocal(resourcePath + PARQUET_TIMESTAMP_LIST_TYPES, hdfsPath + PARQUET_TIMESTAMP_LIST_TYPES);
+        prepareReadableExternalTable(PXF_PARQUET_TIMESTAMP_LIST_TYPES, PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_TIMESTAMP_LIST_TYPES);
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -280,8 +282,22 @@ public class ParquetWriteTest extends BaseFeature {
         String fullTestPath = hdfsPath + "parquet_write_timestamp_list";
 
         prepareWritableExternalTable(writeTableName, PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS, fullTestPath, null);
+        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, tm_arr FROM " + PXF_PARQUET_TIMESTAMP_LIST_TYPES);
+
+        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
+            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+            sleep(10000);
+            List<String> files = hdfs.list(fullTestPath);
+            for (String file : files) {
+                // make sure the file is available, saw flakes on Cloud that listed files were not available
+                int attempts = 0;
+                while (!hdfs.doesFileExist(file) && attempts++ < 20) {
+                    sleep(1000);
+                }
+            }
+        }
+
         prepareReadableExternalTable(readTableName, PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS, fullTestPath);
-        insertTimestampListData(writeTableName, 6);
 
         runTincTest("pxf.features.parquet.write_list.timestamp_list.runTest");
     }
@@ -384,18 +400,6 @@ public class ParquetWriteTest extends BaseFeature {
             exTable.setUserParameters(userParameters);
         }
         createTable(exTable);
-    }
-
-    private void insertTimestampListData(String exTable, int numRows) throws Exception {
-        StringBuilder insertStatement = new StringBuilder();
-        insertStatement.append("INSERT INTO " + exTable + " VALUES ");
-        for (int i = 0; i < numRows; i++) {
-            StringJoiner statementBuilder = new StringJoiner(",", "(", ")")
-                    .add(String.valueOf(i))
-                    .add(String.format("'{\"2013-07-13 21:00:05.%03d456\",null,\"2013-07-13 21:00:05.%03d456\"}'", i % 1000, (i + 20) % 1000));
-            insertStatement.append(statementBuilder.toString().concat((i < (numRows - 1)) ? "," : ";"));
-        }
-        gpdb.runQuery(insertStatement.toString());
     }
 
     private void insertArrayDataWithoutNulls(String exTable, int numRows) throws Exception {

@@ -14,14 +14,13 @@ CREATE OR REPLACE VIEW parquet_timestamp_list_PDT_view AS
            CAST(tm_arr_elem2 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm_arr_elem2,
            CAST(tm_arr_elem3 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm_arr_elem3 FROM parquet_timestamp_list_breakdown_view;
 CREATE VIEW
-SELECT * FROM parquet_timestamp_list_PDT_view;
- id |        tm_arr_elem1        | tm_arr_elem2 |    tm_arr_elem3
-----+----------------------------+--------------+---------------------------
-  0 | 2013-07-13 21:00:05.000456 | NIL          | 2013-07-13 21:00:05.020456
-  1 | 2013-07-13 21:00:05.001456 | NIL          | 2013-07-13 21:00:05.021456
-  2 | 2013-07-13 21:00:05.002456 | NIL          | 2013-07-13 21:00:05.022456
-  3 | 2013-07-13 21:00:05.003456 | NIL          | 2013-07-13 21:00:05.023456
-  4 | 2013-07-13 21:00:05.004456 | NIL          | 2013-07-13 21:00:05.024456
-  5 | NIL                        | NIL          | NIL
+SELECT * FROM parquet_timestamp_list_PDT_view ORDER BY id;
+ id |    tm_arr_elem1     |    tm_arr_elem2     |    tm_arr_elem3
+----+---------------------+---------------------+---------------------
+  1 | 2022-10-05 11:30:00 | 2022-10-06 12:30:00 | 2022-10-07 13:30:00
+  2 | 2022-10-05 11:30:00 | 2022-10-05 11:30:00 | 2022-10-07 13:30:00
+  3 | NIL                 | 2022-10-05 11:30:00 | 2022-10-05 11:30:00
+  4 | NIL                 | NIL                 | NIL
+  5 | NIL                 | NIL                 | NIL
+  6 | NIL                 | NIL                 | NIL
 (6 rows)
-
