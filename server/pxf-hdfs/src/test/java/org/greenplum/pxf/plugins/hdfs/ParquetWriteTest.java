@@ -1766,7 +1766,7 @@ public class ParquetWriteTest {
 
         for (int i = 0; i < 10; i++) {
             Instant timestamp = Instant.parse("2020-06-28T11:30:00Z"); // UTC
-            ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
+            ZonedDateTime localTime = timestamp.atZone(ZoneId.of("America/Los_Angeles"));
             String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX")); // 2020-06-28 04:30:00-07:00
             List<OneField> record = Collections.singletonList(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), localTimestampString));
             OneRow rowToWrite = resolver.setFields(record);
