@@ -136,7 +136,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         if (field.val == null)
             return;
         if (type.isPrimitive()) {
-            fillPrimitiveGroup(index, field.val, group, type, true);
+            fillGroupWithPrimitive(index, field.val, group, type);
         } else if (type.asGroupType().getOriginalType() == LogicalTypeAnnotation.listType().toOriginalType()) {
             /*
              * https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
@@ -158,7 +158,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 Group repeatedGroup = new SimpleGroup(repeatedType);
                 // If current element is null, directly add repeatedGroup into group
                 if (value != null) {
-                    fillPrimitiveGroup(0, value, repeatedGroup, elementType, false);
+                    fillGroupWithPrimitive(0, value, repeatedGroup, elementType);
                 }
                 arrayGroup.add(0, repeatedGroup);
             }
@@ -172,21 +172,20 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      * Fill the index-th primitive group based on the Greenplum data type and value string provided by {@link OneField} field
      * This primitive group could be an actual primitive group or the innermost primitive group of a List group
      *
-     * @param index       The index we are going to fill data at
-     * @param fieldValue  Provide the String value of record[index] we are going to convert into parquet
-     * @param group       The out most group for the {@link OneRow} parquet schema
-     * @param type        The parquet schema type of record[index]
-     * @param isPrimitive This method is called to construct a Primitive type or a LIST type
+     * @param index      The index we are going to fill data at
+     * @param fieldValue Provide the String value of record[index] we are going to convert into parquet
+     * @param group      The out most group for the {@link OneRow} parquet schema
+     * @param type       The parquet schema type of record[index]
      */
-    private void fillPrimitiveGroup(int index, Object fieldValue, Group group, Type type, boolean isPrimitive) {
+    private void fillGroupWithPrimitive(int index, Object fieldValue, Group group, Type type) {
         switch (type.asPrimitiveType().getPrimitiveTypeName()) {
             case BINARY:
                 if (type.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
                     group.add(index, (String) fieldValue);
-                } else if (isPrimitive) {
-                    group.add(index, Binary.fromReusedByteArray((byte[]) fieldValue));
-                } else {
+                } else if (fieldValue instanceof ByteBuffer) {
                     group.add(index, Binary.fromReusedByteArray(((ByteBuffer) fieldValue).array(), 0, ((ByteBuffer) fieldValue).limit()));
+                } else {
+                    group.add(index, Binary.fromReusedByteArray((byte[]) fieldValue));
                 }
                 break;
             case INT32:
