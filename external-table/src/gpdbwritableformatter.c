@@ -101,6 +101,8 @@ typedef struct
 /* for backward compatibility */
 #define GPDBWRITABLE_PREV_VERSION 1
 
+#define FORMATTER_ENCODING_ERR_MSG "gpdbwritable formatter can only %s UTF8 formatted data. Define the external table with ENCODING UTF8"
+
 /* Bit flag */
 #define GPDBWRITABLE_BITFLAG_ISNULL 1	/* Column is null */
 
@@ -495,7 +497,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	nvalidcolumns = 0;
 	for (i = 0; i < ncolumns; i++)
 	{
-        Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
+            Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
             if (!attr->attisdropped)
                 nvalidcolumns++;
@@ -512,22 +514,19 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
         if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
         {
                  ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                            errmsg("gpdbwritable formatter can only export UTF8 formatted data. Define the external table with ENCODING UTF8")));
+                            errmsg(FORMATTER_ENCODING_ERR_MSG, "export")));
         }
 #else
         Relation rel = FORMATTER_GET_RELATION(fcinfo);
-        if(rel != NULL)
-        {
-            ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
-            if (exttbl->encoding != PG_UTF8) {
-                ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                        errmsg("gpdbwritable formatter can only export UTF8 formatted data. Define the external table with ENCODING UTF8")));
-            }
-        }
-        // TODO: If for some reason the Relation is null here, then shall we throw an error anyways ??
-        else{
+        if(rel == NULL) {
             ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                    errmsg("gpdbwritable formatter can only export UTF8 formatted data. Define the external table with ENCODING UTF8")));
+                            errmsg(FORMATTER_ENCODING_ERR_MSG, "export")));
+        }
+
+        ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
+        if (exttbl->encoding != PG_UTF8) {
+            ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+                    errmsg(FORMATTER_ENCODING_ERR_MSG, "export")));
         }
 #endif
 
@@ -783,22 +782,20 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
             if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
             {
                      ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                                errmsg("gpdbwritable formatter can only import UTF8 formatted data. Define the external table with ENCODING UTF8")));
+                                errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
             }
 #else
-        Relation rel = FORMATTER_GET_RELATION(fcinfo);
-        if(rel != NULL) {
+            Relation rel = FORMATTER_GET_RELATION(fcinfo);
+            if(rel == NULL) {
+                ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+                                    errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
+            }
+
             ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
             if (exttbl->encoding != PG_UTF8) {
                 ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                        errmsg("gpdbwritable formatter can only import UTF8 formatted data. Define the external table with ENCODING UTF8")));
+                        errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
             }
-        }
-        // TODO: If for some reason the Relation is null here, then shall we throw an error anyways ??
-        else{
-            ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                    errmsg("gpdbwritable formatter can only import UTF8 formatted data. Define the external table with ENCODING UTF8")));
-        }
 #endif
 
 		myData = palloc(sizeof(format_t));

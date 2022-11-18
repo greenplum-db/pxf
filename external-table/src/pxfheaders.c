@@ -621,7 +621,7 @@ add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
   pg_ltoa(number, long_number);
   churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
 
-    for (i = 0;varNumbers && i < numSimpleVars ; i++)
+    for (i = 0; i < numSimpleVars ; i++)
   {
     attrs_used =
       bms_add_member(attrs_used,
