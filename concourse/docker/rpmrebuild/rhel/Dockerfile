@@ -14,5 +14,3 @@ RUN rpmbuild --rebuild rpmrebuild-*.src.rpm \
     && rpm -i /root/rpmbuild/RPMS/noarch/rpmrebuild-*.el8.noarch.rpm \
     && rm rpmrebuild-*.src.rpm \
     && rm -rf /root/rpmbuild
-
-RUN yum install libcgroup-tools
