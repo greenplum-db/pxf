@@ -38,7 +38,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -1169,7 +1171,7 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = generateLocalTimestampStrings();
+        String[] values = generateLocalTimestampStrings(null);
         insertParquetArrayData(DataType.TIMESTAMPARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
@@ -1791,7 +1793,6 @@ public class ParquetWriteTest {
         assertNull(type.getLogicalTypeAnnotation());
 
         for (int i = 0; i < 10; i++) {
-
             Instant timestamp = Instant.parse("2020-06-28T11:30:00Z"); // UTC
             ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
             //parquet doesn't keep timezone information
@@ -1818,7 +1819,7 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = generateLocalTimestampStrings();
+        String[] values = generateLocalTimestampStrings(ZoneId.of("America/Los_Angeles"));
         insertParquetArrayData(DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
@@ -1840,7 +1841,18 @@ public class ParquetWriteTest {
             }
             for (int j = 0; j < 3; j++) {
                 if (j != 0) {
-                    expectedValues[i][j] = values[i];
+                    // Convert timestamp with timezone string into instance with given offset
+                    OffsetDateTime odtInstanceAtOffset = OffsetDateTime.parse(values[i], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX"));
+                    // Instance in UTC
+                    OffsetDateTime odtInstanceAtUTC = odtInstanceAtOffset.withOffsetSameInstant(ZoneOffset.UTC);
+                    // Formatting to UTC string
+                    String timestampInUTC = odtInstanceAtUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX"));
+                    Instant timestamp = Instant.parse(timestampInUTC);
+                    // Reformat UTC string into local timestamp string
+                    ZonedDateTime localTime = timestamp.atZone(ZoneId.of("America/Los_Angeles"));
+                    //parquet doesn't keep timezone information
+                    String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    expectedValues[i][j] = localTimestampString;
                 }
             }
         }
@@ -1897,13 +1909,18 @@ public class ParquetWriteTest {
         }
     }
 
-    private String[] generateLocalTimestampStrings() {
+    private String[] generateLocalTimestampStrings(ZoneId zoneId) {
         String[] localTimestampStrings = new String[10];
         for (int i = 0; i < 10; i++) {
             if (i != 9) {
                 Instant timestamp = Instant.parse(String.format("2020-08-%02dT04:00:05Z", i + 1)); // UTC
-                ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-                localTimestampStrings[i] = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                if (zoneId == null) {
+                    ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
+                    localTimestampStrings[i] = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                } else {
+                    ZonedDateTime localTime = timestamp.atZone(zoneId);
+                    localTimestampStrings[i] = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX"));
+                }
             }
         }
         return localTimestampStrings;
