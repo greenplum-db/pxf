@@ -1767,9 +1767,9 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         for (int i = 0; i < 10; i++) {
-            Instant timestamp = Instant.parse("2020-06-28T11:30:00Z"); // UTC
+            Instant timestamp = Instant.parse("2020-08-01T04:00:05Z"); // UTC
             ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-            String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX")); // 2020-06-28 04:30:00-07:00
+            String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssxxx")); // 2020-06-28 04:30:00-07:00
             List<OneField> record = Collections.singletonList(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), localTimestampString));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
@@ -1793,7 +1793,7 @@ public class ParquetWriteTest {
         assertNull(type.getLogicalTypeAnnotation());
 
         for (int i = 0; i < 10; i++) {
-            Instant timestamp = Instant.parse("2020-06-28T11:30:00Z"); // UTC
+            Instant timestamp = Instant.parse("2020-08-01T04:00:05Z"); // UTC
             ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
             //parquet doesn't keep timezone information
             String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // 2020-06-28 04:30:00
@@ -1919,7 +1919,7 @@ public class ParquetWriteTest {
                     localTimestampStrings[i] = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 } else {
                     ZonedDateTime localTime = timestamp.atZone(zoneId);
-                    localTimestampStrings[i] = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX"));
+                    localTimestampStrings[i] = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssxxx"));
                 }
             }
         }
