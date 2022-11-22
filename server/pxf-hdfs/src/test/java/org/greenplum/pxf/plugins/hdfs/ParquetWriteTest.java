@@ -1768,7 +1768,7 @@ public class ParquetWriteTest {
 
         for (int i = 0; i < 10; i++) {
             Instant timestamp = Instant.parse("2020-06-28T11:30:00Z"); // UTC
-            ZonedDateTime localTime = timestamp.atZone(ZoneId.of("America/Los_Angeles"));
+            ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
             String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX")); // 2020-06-28 04:30:00-07:00
             List<OneField> record = Collections.singletonList(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), localTimestampString));
             OneRow rowToWrite = resolver.setFields(record);
@@ -1819,7 +1819,7 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = generateLocalTimestampStrings(ZoneId.of("America/Los_Angeles"));
+        String[] values = generateLocalTimestampStrings(ZoneId.systemDefault());
         insertParquetArrayData(DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), values, resolver, accessor);
 
         accessor.closeForWrite();
@@ -1849,7 +1849,7 @@ public class ParquetWriteTest {
                     String timestampInUTC = odtInstanceAtUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX"));
                     Instant timestamp = Instant.parse(timestampInUTC);
                     // Reformat UTC string into local timestamp string
-                    ZonedDateTime localTime = timestamp.atZone(ZoneId.of("America/Los_Angeles"));
+                    ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
                     //parquet doesn't keep timezone information
                     String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                     expectedValues[i][j] = localTimestampString;
