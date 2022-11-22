@@ -7,8 +7,8 @@ set -euxo pipefail
 # Run this command to generate the parquet_types.parquet file
 
 SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-HDFS_CMD=${HDFS_CMD:-~/workspace/singlecluster/bin/hdfs}
-HIVE_CMD=${HIVE_CMD:-~/workspace/singlecluster/bin/hive}
+HDFS_CMD=${HDFS_CMD:-~/workspace/singlecluster-HDP3/bin/hdfs}
+HIVE_CMD=${HIVE_CMD:-~/workspace/singlecluster-HDP3/bin/hive}
 HDFS_DIR=${HDFS_DIR:-/tmp/parquet_types/csv}
 HIVE_WAREHOUSE_PATH=${HIVE_WAREHOUSE_PATH:-/hive/warehouse/parquet_types}
 HQL_FILENAME=${HQL_FILENAME:-generate_parquet_types.hql}

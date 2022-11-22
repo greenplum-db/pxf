@@ -14,12 +14,15 @@ import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.pig.convert.DecimalUtils;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.Type;
+import org.apache.parquet.schema.Types;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
@@ -697,6 +700,26 @@ public class ParquetResolverTest {
 
     }
 
+    @Test
+    public void testGetFields_Unsupported_List() {
+        schema = getParquetSchemaForUnsupportedListType();
+        // schema has changed, set metadata again
+        context.setMetadata(schema);
+        Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
+        assertEquals("Parquet list of non primitives is not supported.", e.getMessage());
+    }
+
+    @Test
+    public void testGetFields_Unsupported_Complex() {
+        schema = getParquetSchemaForUnsupportedComplexType();
+        // schema has changed, set metadata again
+        context.setMetadata(schema);
+        Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
+        assertEquals("Parquet complex type MAP is not supported, error: java.lang.IllegalArgumentException: No enum constant org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.MAP", e.getMessage());
+    }
+
     private List<OneField> assertRow(List<Group> groups, int desiredRow, int numFields) {
         OneRow row = new OneRow(groups.get(desiredRow)); // get row
         List<OneField> fields = resolver.getFields(row);
@@ -811,6 +834,38 @@ public class ParquetResolverTest {
         }
         GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, repeatedGroupName, elementType);
         return new GroupType(groupRepetition, listName, org.apache.parquet.schema.OriginalType.LIST, repeatedGroupType);
+    }
+
+    @SuppressWarnings("deprecation")
+    private MessageType getParquetSchemaForUnsupportedListType() {
+        List<Type> structFields = new ArrayList<>();
+
+        structFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "num1"));
+        structFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "num2"));
+        structFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "num3"));
+
+        GroupType structGroupType = new GroupType(Type.Repetition.OPTIONAL, "element", structFields);
+
+        GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", structGroupType);
+        GroupType groupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, repeatedGroupType);
+        List<Type> fields = new ArrayList<>();
+        fields.add(groupType);
+        return new MessageType("spark_schema", fields);
+    }
+
+    @SuppressWarnings("deprecation")
+    private MessageType getParquetSchemaForUnsupportedComplexType() {
+        List<Type> mapFields = new ArrayList<>();
+
+        mapFields.add(new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveTypeName.INT32, "key"));
+        mapFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "value"));
+
+        GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "map", mapFields);
+        GroupType groupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_complex", org.apache.parquet.schema.OriginalType.MAP, repeatedGroupType);
+        List<Type> fields = new ArrayList<>();
+
+        fields.add(groupType);
+        return new MessageType("spark_schema", fields);
     }
 
     @SuppressWarnings("deprecation")

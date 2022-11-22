@@ -230,7 +230,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         ParquetTypeConverter converter = ParquetTypeConverter.from(type);
         // determine how many values for the field are present in the column
         int repetitionCount = group.getFieldRepetitionCount(columnIndex);
-        // repetitionCount would only be 0 or 1
+        // repetitionCount can only be 0 or 1 for non-REPEATED type,
+        // and can be any non-negative number for REPEATED type
         if (repetitionCount == 0) {
             field.type = converter.getDataType(type).getOID();
             field.val = null;
@@ -239,7 +240,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             field.type = converter.getDataType(type).getOID();
             field.val = converter.getValue(group, columnIndex, 0, type);
         } else {
-            // repeated primitive will be converted into JSON
+            // repeated primitives will be converted into JSON
             ArrayNode jsonArray = mapper.createArrayNode();
             for (int repeatIndex = 0; repeatIndex < repetitionCount; repeatIndex++) {
                 converter.addValueToJsonArray(group, columnIndex, repeatIndex, type, jsonArray);

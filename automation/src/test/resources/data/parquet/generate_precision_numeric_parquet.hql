@@ -1,3 +1,8 @@
+!connect jdbc:hive2://localhost:10000/
+
+DROP TABLE IF EXISTS precision_numeric_csv;
+DROP TABLE IF EXISTS precision_numeric_csv;
+
 CREATE EXTERNAL TABLE IF NOT EXISTS precision_numeric_csv (
 description STRING,
 a DECIMAL(5,  2),
