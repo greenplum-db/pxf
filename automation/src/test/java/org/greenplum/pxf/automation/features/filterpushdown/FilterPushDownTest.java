@@ -1,6 +1,6 @@
 package org.greenplum.pxf.automation.features.filterpushdown;
 
-import annotations.FailsWithFDW;
+import annotations.SkipForFDW;
 import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.features.BaseFeature;
@@ -84,7 +84,7 @@ public class FilterPushDownTest extends BaseFeature {
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "security"})
-    @FailsWithFDW // the guc used in the test is not applicable to FDW and has no effect
+    @SkipForFDW // the guc used in the test is not applicable to FDW and has no effect
     public void checkFilterPushDownDisabled() throws Exception {
 
         // Create PXF external table for filter testing

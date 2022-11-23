@@ -7,7 +7,7 @@
 -- m/, line \d+ of/
 -- s/, line \d+ of .*//
 --
--- # FDW in CSV mode will fail during parsing on C side twith the below error
+-- # FDW in CSV mode will fail during parsing on C side with the below error
 -- m/invalid input syntax for date: .*/
 -- s/invalid input syntax for date: .*/For field dob schema requires type DATE but input record has type INTEGER/
 --

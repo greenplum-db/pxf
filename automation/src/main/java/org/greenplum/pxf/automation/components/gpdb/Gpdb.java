@@ -176,7 +176,7 @@ public class Gpdb extends DbSystemObject {
 		"default_test");
 
 		// version below GP7 do not have IF EXISTS / IF NOT EXISTS command options
-		String option = (version >= 7) ? IF_NOT_EXISTS_OPTION : "";
+		String option = (version < 7) ? "" : IF_NOT_EXISTS_OPTION;
 		for (String server : servers) {
 			String foreignServerName = server.replace("-", "_");
 			if (version < 7 && serverExists(foreignServerName)) {

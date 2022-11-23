@@ -1,6 +1,7 @@
 package listeners;
 
 import annotations.FailsWithFDW;
+import annotations.SkipForFDW;
 import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.testng.IInvokedMethod;
@@ -27,7 +28,11 @@ public class FDWSkipTestAnalyzer implements IInvokedMethodListener {
             Class clazz = method.getDeclaringClass();
             // check if the method should not be skipped
             if (method.isAnnotationPresent(WorksWithFDW.class) ||
-                    (clazz.isAnnotationPresent(WorksWithFDW.class) && !method.isAnnotationPresent(FailsWithFDW.class))) {
+                    (clazz.isAnnotationPresent(WorksWithFDW.class) &&
+                     !method.isAnnotationPresent(FailsWithFDW.class) &&
+                     !method.isAnnotationPresent(SkipForFDW.class)
+                    )
+            ) {
                 return;
             }
             // in all other cases skip the test

@@ -308,9 +308,9 @@ function install_pxf_tarball() {
 		tar -xzf pxf_fdw_tarball/pxf-fdw-*.tar.gz -C /tmp
 		chmod 777 /tmp
 		ls -al /tmp
-		/usr/bin/install -c -m 755 /tmp/pxf_fdw.so "${GPHOME}/lib/postgresql/pxf_fdw.so"
-		/usr/bin/install -c -m 644 /tmp/pxf_fdw.control "${GPHOME}/share/postgresql/extension/"
-		/usr/bin/install -c -m 644 /tmp/pxf_fdw*.sql "${GPHOME}/share/postgresql/extension/"
+		/usr/bin/install -c -m 755 /tmp/pxf_fdw.so "$("${GPHOME}/bin/pg_config" --pkglibdir)"
+		/usr/bin/install -c -m 644 /tmp/pxf_fdw.control "$("${GPHOME}/bin/pg_config" --sharedir)"
+		/usr/bin/install -c -m 644 /tmp/pxf_fdw*.sql "$("${GPHOME}/bin/pg_config" --sharedir)"
 	fi
 }
 

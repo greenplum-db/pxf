@@ -120,10 +120,6 @@ public class ForeignTable extends WritableExternalTable {
         appendOption(builder, optionName, optionValue, false, true);
     }
 
-    private void appendQuotedOption(StringBuilder builder, String optionName, String optionValue) {
-        appendOption(builder, optionName, optionValue, false, false);
-    }
-
     private void appendOption(StringBuilder builder, String optionName, String optionValue, boolean first, boolean needQuoting) {
         if (!first) {
             builder.append(", ");

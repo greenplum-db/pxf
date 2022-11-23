@@ -22,21 +22,21 @@ import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 public abstract class TableFactory {
 
     /**
-     * Prepares PXF Readable External Table for Hive data
+     * Prepares PXF Readable External or Foreign Table for Hive data, using CUSTOM format and either
+     * "hive" profile or Hive fragmenter, accessor and resolver.
      *
-     * @param tableName
-     * @param fields
-     * @param hiveTable
-     * @param useProfile true to use Profile or false to use Fragmenter Accessor
-     *            Resolver
-     * @return PXF Readable External Table using "Hive" profile
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param hiveTable Hive table object
+     * @param useProfile true to use Profile or false to use Fragmenter, Accessor and Resolver
+     * @return PXF Readable External or Foreign table
      */
-    public static ReadableExternalTable getPxfHiveReadableTable(String tableName,
+    public static ReadableExternalTable getPxfHiveReadableTable(String name,
                                                                 String[] fields,
                                                                 HiveTable hiveTable,
                                                                 boolean useProfile) {
 
-        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name,
                 fields, hiveTable.getName(), "CUSTOM");
 
         if (useProfile) {
@@ -53,21 +53,21 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Readable External Table for Hive RC data
+     * Prepares PXF Readable External or Foreign Table for Hive RC data, using TEXT format and either
+     * "HiveRC" profile or Hive fragmenter, accessor and resolver.
      *
-     * @param tableName external table name
-     * @param fields for external table
-     * @param hiveTable to direct to
-     * @param useProfile true to use Profile or false to use Fragmenter Accessor
-     *            Resolver
-     * @return PXF Readable External Table using "HiveRC" profile
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param hiveTable Hive table object
+     * @param useProfile true to use Profile or false to use Fragmenter, Accessor and Resolver
+     * @return PXF Readable External or Foreign table
      */
-    public static ReadableExternalTable getPxfHiveRcReadableTable(String tableName,
+    public static ReadableExternalTable getPxfHiveRcReadableTable(String name,
                                                                   String[] fields,
                                                                   HiveTable hiveTable,
                                                                   boolean useProfile) {
 
-        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name,
                 fields, hiveTable.getName(), "TEXT");
 
         if (useProfile) {
@@ -83,21 +83,21 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Readable External Table for Hive ORC data
+     * Prepares PXF Readable External or Foreign Table for Hive ORC data, using CUSTOM format and either
+     * "HiveORC" profile or Hive fragmenter, accessor and resolver.
      *
-     * @param tableName external table name
-     * @param fields for external table
-     * @param hiveTable to direct to
-     * @param useProfile true to use Profile or false to use Fragmenter Accessor
-     *            Resolver
-     * @return PXF Readable External Table using "HiveORC" profile
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param hiveTable Hive table object
+     * @param useProfile true to use Profile or false to use Fragmenter, Accessor and Resolver
+     * @return PXF Readable External or Foreign table
      */
-    public static ReadableExternalTable getPxfHiveOrcReadableTable(String tableName,
-                                                                  String[] fields,
-                                                                  HiveTable hiveTable,
-                                                                  boolean useProfile) {
+    public static ReadableExternalTable getPxfHiveOrcReadableTable(String name,
+                                                                   String[] fields,
+                                                                   HiveTable hiveTable,
+                                                                   boolean useProfile) {
 
-        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name,
                 fields, hiveTable.getName(), "CUSTOM");
 
         if (useProfile) {
@@ -113,21 +113,21 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Readable External Table for Hive ORC data using vectorized profile
+     * Prepares PXF Readable External or Foreign Table for Hive data, using CUSTOM format and either
+     * "HiveVectorizedORC" profile or Hive fragmenter, accessor and resolver.
      *
-     * @param tableName external table name
-     * @param fields for external table
-     * @param hiveTable to direct to
-     * @param useProfile true to use Profile or false to use Fragmenter Accessor
-     *            Resolver
-     * @return PXF Readable External Table using "HiveVectorizedORC" profile
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param hiveTable Hive table object
+     * @param useProfile true to use Profile or false to use Fragmenter, Accessor and Resolver
+     * @return PXF Readable External or Foreign table
      */
-    public static ReadableExternalTable getPxfHiveVectorizedOrcReadableTable(String tableName,
-                                                                   String[] fields,
-                                                                   HiveTable hiveTable,
-                                                                   boolean useProfile) {
+    public static ReadableExternalTable getPxfHiveVectorizedOrcReadableTable(String name,
+                                                                             String[] fields,
+                                                                             HiveTable hiveTable,
+                                                                             boolean useProfile) {
 
-        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name,
                 fields, hiveTable.getName(), "CUSTOM");
 
         if (useProfile) {
@@ -142,29 +142,21 @@ public abstract class TableFactory {
         return exTable;
     }
 
-    public static void main(String[] args) {
-        HiveTable t = new HiveTable("bin_data", null);
-        ReadableExternalTable a = getPxfHiveRcReadableTable("hive_bin",
-                new String[] { "bin BYTEA" }, t, true);
-
-        System.out.println(a.constructCreateStmt());
-    }
-
     /**
-     * Prepares PXF Readable External Table for Hive Text data
+     * Prepares PXF Readable External or Foreign Table for Hive data, using TEXT format and either "hive:text" profile
+     * or Hive fragmenter, accessor and resolver.
      *
-     * @param tableName external table name
-     * @param fields for external table
-     * @param hiveTable to direct to
-     * @param useProfile true to use Profile or false to use Fragmenter Accessor
-     *            Resolver
-     * @return PXF Readable External Table using "HiveText" profile
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param hiveTable Hive table object
+     * @param useProfile true to use Profile or false to use Fragmenter, Accessor and Resolver
+     * @return PXF Readable External or Foreign table
      */
-    public static ReadableExternalTable getPxfHiveTextReadableTable(String tableName,
+    public static ReadableExternalTable getPxfHiveTextReadableTable(String name,
                                                                     String[] fields,
                                                                     HiveTable hiveTable,
                                                                     boolean useProfile) {
-        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name,
                 fields, hiveTable.getName(), "TEXT");
         if (useProfile) {
             exTable.setProfile(EnumPxfDefaultProfiles.HiveText.toString());
@@ -179,23 +171,33 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Readable External Table for HBase data
+     * Prepares PXF Readable External or Foreign Table for HBase data, using CUSTOM format and "hbase" profile.
      *
-     * @param tableName
-     * @param fields
-     * @param hbaseTable for external table path
-     * @return PXF Readable external table using HBase Profile
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param hbaseTable HBase table object
+     * @return PXF Readable External or Foreign table
      */
-    public static ReadableExternalTable getPxfHBaseReadableTable(String tableName,
+    public static ReadableExternalTable getPxfHBaseReadableTable(String name,
                                                                  String[] fields,
                                                                  HBaseTable hbaseTable) {
-        ReadableExternalTable exTable = getReadableExternalOrForeignTable(tableName,
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name,
                 fields, hbaseTable.getName(), "CUSTOM");
         exTable.setProfile("hbase");
         exTable.setFormatter("pxfwritable_import");
         return exTable;
     }
 
+    /**
+     * Prepares PXF Readable External or Foreign Table for test data, using TEXT format and "test:text" profile.
+     * Since "test:*" profiles are ephemeral, it should be used when testing with custom Fragmenter, Accessor or Resolver.
+     *
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param delimiter delimiter used in the external data
+     * @return PXF Readable External or Foreign table
+     */
     public static ReadableExternalTable getPxfReadableTestTextTable(String name,
                                                                     String[] fields,
                                                                     String path,
@@ -207,15 +209,13 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Readable External Table for Simple Text data, using
-     * "HdfsTextSimple" profile
+     * Prepares PXF Readable External or Foreign Table for TEXT data, using TEXT format and "<protocol>:text" profile.
      *
-     * @param name
-     * @param fields
-     * @param path
-     * @param delimiter
-     * @return PXF Readable External Table using "HdfsTextSimple" profile and
-     *         "Text" format.
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param delimiter delimiter used in the external data
+     * @return PXF Readable External or Foreign table
      */
     public static ReadableExternalTable getPxfReadableTextTable(String name,
                                                                 String[] fields,
@@ -228,15 +228,13 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Readable External Table for CSV data, using
-     * "HdfsTextSimple" profile
+     * Prepares PXF Readable External or Foreign Table for CSV data, using CSV format and "<protocol>:csv" profile.
      *
-     * @param name
-     * @param fields
-     * @param path
-     * @param delimiter
-     * @return PXF Readable External Table using "HdfsTextSimple" profile and
-     *         "CSV" format.
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param delimiter delimiter used in the external data
+     * @return PXF Readable External or Foreign table
      */
     public static ReadableExternalTable getPxfReadableCSVTable(String name,
                                                                String[] fields,
@@ -249,15 +247,13 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Writable External Table for Simple Text data, using
-     * "HdfsTextSimple" profile
+     * Prepares PXF Writable External or Foreign Table for TEXT data, using TEXT format and "<protocol>:text" profile.
      *
-     * @param name
-     * @param fields
-     * @param path
-     * @param delimiter
-     * @return PXF Writable External Table using "HdfsTextSimple" profile and
-     *         "Text" format.
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param delimiter delimiter used in the external data
+     * @return PXF Writable External or Foreign table
      */
     public static WritableExternalTable getPxfWritableTextTable(String name,
                                                                 String[] fields,
@@ -269,39 +265,61 @@ public abstract class TableFactory {
         return exTable;
     }
 
+    /**
+     * Prepares PXF Readable External or Foreign Table for HCFS-compatible file systems with a given file format
+     * using CUSTOM table format and "<protocol>:<fileFormat>" profile.
+     *
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param hcfsBasePath base path on HCFS file system
+     * @param fileFormat format of the file being read
+     * @return PXF Readable External or Foreign table
+     */
     public static ReadableExternalTable getPxfHcfsReadableTable(String name,
                                                                 String[] fields,
                                                                 String path,
-                                                                String hdfsBasePath,
-                                                                String profileFormat) {
-        String effectivePath = ProtocolUtils.getProtocol().getExternalTablePath(hdfsBasePath, path);
+                                                                String hcfsBasePath,
+                                                                String fileFormat) {
+        String effectivePath = ProtocolUtils.getProtocol().getExternalTablePath(hcfsBasePath, path);
         ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, effectivePath, "custom");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":" + profileFormat);
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":" + fileFormat);
         exTable.setFormatter("pxfwritable_import");
         return exTable;
     }
 
+    /**
+     * Prepares PXF Writable External or Foreign Table for HCFS-compatible file systems with a given file format
+     * using CUSTOM table format and "<protocol>:<fileFormat>" profile.
+     *
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param hcfsBasePath base path on HCFS file system
+     * @param fileFormat format of the file being written
+     * @return PXF Writable External or Foreign table
+     */
     public static ReadableExternalTable getPxfHcfsWritableTable(String name,
                                                                 String[] fields,
                                                                 String path,
-                                                                String hdfsBasePath,
-                                                                String profileFormat) {
-        String effectivePath = ProtocolUtils.getProtocol().getExternalTablePath(hdfsBasePath, path);
+                                                                String hcfsBasePath,
+                                                                String fileFormat) {
+        String effectivePath = ProtocolUtils.getProtocol().getExternalTablePath(hcfsBasePath, path);
         ReadableExternalTable exTable = getWritableExternalOrForeignTable(name, fields, effectivePath, "custom");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":" + profileFormat);
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":" + fileFormat);
         exTable.setFormatter("pxfwritable_export");
         return exTable;
     }
 
     /**
-     * Prepares PXF Writable External Table for Simple Text data, using
-     * "HdfsTextSimple" profile and Gzip Codec
+     * Prepares PXF Writable External or Foreign Table for TEXT data, using TEXT format and "<protocol>:text" profile
+     * with Gzip compression codec.
      *
-     * @param name
-     * @param fields
-     * @param path
-     * @return PXF Writable External Table using "HdfsTextSimple" profile and
-     *         "GZipCodec" compression.
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param delimiter delimiter used in the external data
+     * @return PXF Writable External or Foreign table
      */
     public static WritableExternalTable getPxfWritableGzipTable(String name,
                                                                 String[] fields,
@@ -315,14 +333,14 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Writable External Table for Simple Text data, using
-     * "HdfsTextSimple" profile and BZip2 Codec
+     * Prepares PXF Writable External or Foreign Table for TEXT data, using TEXT format and "<protocol>:text" profile
+     * with BZip2 compression codec.
      *
-     * @param name
-     * @param fields
-     * @param path
-     * @return PXF Writable External Table using "HdfsTextSimple" profile and
-     *         "BZip2" compression.
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param delimiter delimiter used in the external data
+     * @return PXF Writable External or Foreign table
      */
     public static WritableExternalTable getPxfWritableBZip2Table(String name,
                                                                  String[] fields,
@@ -336,16 +354,13 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Readable External Table using "SequenceWritable" profile,
-     * CUSTOM format with "pxfwritable_export" formatter and data schema.
+     * Prepares PXF Readable External or Foreign Table for SEQUENCE data, using CUSTOM format and "<protocol>:SequenceFile" profile.
      *
-     * @param name
-     * @param fields
-     * @param path
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
      * @param schema data schema
-     * @return PXF Readable External Table using "SequenceWritable" profile,
-     *         CUSTOM format with "pxfwritable_export" formatter and data
-     *         schema.
+     * @return PXF Readable External or Foreign table
      */
     public static ReadableExternalTable getPxfReadableSequenceTable(String name,
                                                                     String[] fields,
@@ -363,16 +378,13 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Writable External Table using "SequenceWritable" profile,
-     * CUSTOM format with "pxfwritable_export" formatter and data schema.
+     * Prepares PXF Writable External or Foreign Table for SEQUENCE data, using CUSTOM format and "<protocol>:SequenceFile" profile.
      *
-     * @param name
-     * @param fields
-     * @param path
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
      * @param schema data schema
-     * @return PXF Writable External Table using "SequenceWritable" profile,
-     *         CUSTOM format with "pxfwritable_export" formatter and data
-     *         schema.
+     * @return PXF Writable External or Foreign table
      */
     public static WritableExternalTable getPxfWritableSequenceTable(String name,
                                                                     String[] fields,
@@ -428,8 +440,8 @@ public abstract class TableFactory {
     /**
      * Generates Hive External Table using row format and comma delimiter
      *
-     * @param name
-     * @param fields
+     * @param name table name
+     * @param fields table fields
      * @return {@link HiveExternalTable} with "row" format and comma Delimiter.
      */
     public static HiveExternalTable getHiveByRowCommaExternalTable(String name,
@@ -443,13 +455,24 @@ public abstract class TableFactory {
         return table;
     }
 
-    private static ExternalTable getPxfJdbcReadableTable(String tableName,
+    /**
+     * Generates a PXF External Readable or Foreign Table using JDBC profile.
+     *
+     * @param name name of the external table which will be generated
+     * @param fields fields of the external table
+     * @param dataSourcePath path to the target table to be written to i.e. schema_name.table_name
+     * @param driver full class name of the JDBC driver
+     * @param dbUrl JDBC URL
+     * @param user database user
+     * @return PXF Writable External or Foreign table
+     */
+    private static ExternalTable getPxfJdbcReadableTable(String name,
                                                          String[] fields, String dataSourcePath, String driver,
                                                          String dbUrl, boolean isPartitioned,
                                                          Integer partitionByColumnIndex, String rangeExpression,
                                                          String interval, String user, EnumPartitionType partitionType,
                                                          String server, String customParameters) {
-        ExternalTable exTable = getReadableExternalOrForeignTable(tableName, fields,
+        ExternalTable exTable = getReadableExternalOrForeignTable(name, fields,
                 dataSourcePath, "CUSTOM");
         List<String> userParameters = new ArrayList<String>();
         if (driver != null) {
@@ -487,21 +510,21 @@ public abstract class TableFactory {
     }
 
     /**
-     * Generates an External Writable Table using JDBC profile.
+     * Generates a PXF External Writable or Foreign Table using JDBC profile.
      *
-     * @param tableName name of the external table which will be generated
+     * @param name name of the external table which will be generated
      * @param fields fields of the external table
      * @param dataSourcePath path to the target table to be written to i.e. schema_name.table_name
      * @param driver full class name of the JDBC driver
      * @param dbUrl JDBC URL
      * @param user database user
-     * @return External Writable Table
+     * @return PXF Writable External or Foreign table
      */
-    public static ExternalTable getPxfJdbcWritableTable(String tableName,
+    public static ExternalTable getPxfJdbcWritableTable(String name,
             String[] fields, String dataSourcePath, String driver,
             String dbUrl, String user, String customParameters) {
 
-        ExternalTable exTable = getWritableExternalOrForeignTable(tableName, fields, dataSourcePath, "CUSTOM");
+        ExternalTable exTable = getWritableExternalOrForeignTable(name, fields, dataSourcePath, "CUSTOM");
         List<String> userParameters = new ArrayList<String>();
         if (driver != null) {
             userParameters.add("JDBC_DRIVER=" + driver);
@@ -523,11 +546,11 @@ public abstract class TableFactory {
     }
 
     /**
-     * Generates an External Readable Table using JDBC profile, partitioned by given column
+     * Generates a PXF External Readable or Foreign Table using JDBC profile, partitioned by given column
      * on a given range with a given interval.
      * Recommended to use for large tables.
      *
-     * @param tableName name of the external table which will be generated
+     * @param name name of the external table which will be generated
      * @param fields fields of the external table
      * @param dataSourcePath path to the data object i.e. schema_name.table_name
      * @param driver full class name of the JDBC driver
@@ -537,107 +560,106 @@ public abstract class TableFactory {
      * @param interval interval expression
      * @param user database user
      * @param partitionType partition type used to get fragments
-     * @return External Readable Table
+     * @return PXF Readable External or Foreign table
      */
     public static ExternalTable getPxfJdbcReadablePartitionedTable(
-            String tableName,
+            String name,
             String[] fields, String dataSourcePath, String driver,
             String dbUrl, Integer partitionByColumnIndex,
             String rangeExpression, String interval, String user, EnumPartitionType partitionType, String server) {
 
-        return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, driver,
+        return getPxfJdbcReadableTable(name, fields, dataSourcePath, driver,
             dbUrl, true, partitionByColumnIndex, rangeExpression,
             interval, user, partitionType, server, null);
     }
 
     /**
-     * Generates an External Readable Table using JDBC profile.
+     * Generates a PXF External Readable or Foreign Table using JDBC profile.
      * It's not recommended for large tables.
      *
-     * @param tableName name of the external table which will be generated
+     * @param name name of the external table which will be generated
      * @param fields fields of the external table
      * @param dataSourcePath path to the data object i.e. schema_name.table_name
      * @param driver full class name of the JDBC driver
      * @param dbUrl JDBC url
      * @param user databases user name
-     * @return External Readable Table
+     * @return PXF Readable External or Foreign table
      */
-    public static ExternalTable getPxfJdbcReadableTable(String tableName,
+    public static ExternalTable getPxfJdbcReadableTable(String name,
             String[] fields, String dataSourcePath, String driver, String dbUrl, String user) {
 
-        return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, driver,
+        return getPxfJdbcReadableTable(name, fields, dataSourcePath, driver,
             dbUrl, false, null, null, null, user, null, null, null);
     }
 
     /**
-     * Generates an External Readable Table using JDBC profile.
+     * Generates a PXF External Readable or Foreign Table using JDBC profile.
      * It's not recommended for large tables.
      *
-     * @param tableName name of the external table which will be generated
+     * @param name name of the external table which will be generated
      * @param fields fields of the external table
      * @param dataSourcePath path to the data object i.e. schema_name.table_name
      * @param driver full class name of the JDBC driver
      * @param dbUrl JDBC url
      * @param user databases user name
      * @param customParameters additional user parameters
-     * @param
-     * @return External Readable Table
+     * @return PXF Readable External or Foreign table
      */
-    public static ExternalTable getPxfJdbcReadableTable(String tableName,
+    public static ExternalTable getPxfJdbcReadableTable(String name,
             String[] fields, String dataSourcePath, String driver, String dbUrl, String user, String customParameters) {
 
-        return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, driver,
+        return getPxfJdbcReadableTable(name, fields, dataSourcePath, driver,
                 dbUrl, false, null, null, null, user, null, null, customParameters);
     }
 
     /**
-     * Generates an External Readable Table using JDBC profile.
+     * Generates a PXF External Readable or Foreign Table using JDBC profile.
      *
-     * @param tableName name of the external table which will be generated
+     * @param name name of the external table which will be generated
      * @param fields fields of the external table
      * @param dataSourcePath path to the data object i.e. schema_name.table_name
      * @param server name of configuration server
-     * @return External Readable Table
+     * @return PXF Readable External or Foreign table
      */
-    public static ExternalTable getPxfJdbcReadableTable(String tableName, String[] fields, String dataSourcePath, String server) {
-        return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, null,
+    public static ExternalTable getPxfJdbcReadableTable(String name, String[] fields, String dataSourcePath, String server) {
+        return getPxfJdbcReadableTable(name, fields, dataSourcePath, null,
                 null, false, null, null, null, null, null, server, null);
     }
 
     /**
-     * Generates an External Readable Table using JDBC profile.
+     * Generates a PXF External Readable or Foreign Table using JDBC profile.
      *
-     * @param tableName name of the external table which will be generated
+     * @param name name of the external table which will be generated
      * @param fields fields of the external table
      * @param dataSourcePath path to the data object i.e. schema_name.table_name
      * @param dbUrl JDBC url
      * @param server name of configuration server
-     * @return External Readable Table
+     * @return PXF Readable External or Foreign table
      */
-    public static ExternalTable getPxfJdbcReadableTable(String tableName, String[] fields, String dataSourcePath, String dbUrl, String server) {
-        return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, null,
+    public static ExternalTable getPxfJdbcReadableTable(String name, String[] fields, String dataSourcePath, String dbUrl, String server) {
+        return getPxfJdbcReadableTable(name, fields, dataSourcePath, null,
                 dbUrl, false, null, null, null, null, null, server, null);
     }
 
     /**
-     * Generate an External Writable Table using JDBC profile.
+     * Generate a PXF External Writable or Foreign Table using JDBC profile.
      *
-     * @param tableName name of the external table which will be generated
+     * @param name name of the external table which will be generated
      * @param fields fields of the external table
      * @param dataSourcePath path to the data object i.e. schema_name.table_name
      * @param server name of configuration server
-     * @return External Writable Table
+     * @return PXF Writable External or Foreign table
      */
-    public static ExternalTable getPxfJdbcWritableTable(String tableName, String[] fields, String dataSourcePath, String server) {
+    public static ExternalTable getPxfJdbcWritableTable(String name, String[] fields, String dataSourcePath, String server) {
         String customParameter = server != null ? "SERVER=" + server : null;
-        return getPxfJdbcWritableTable(tableName, fields, dataSourcePath, null, null, null, customParameter);
+        return getPxfJdbcWritableTable(name, fields, dataSourcePath, null, null, null, customParameter);
     }
 
     // ============ FDW Adapter ============
     private static ReadableExternalTable getReadableExternalOrForeignTable (String name, String[] fields, String path, String format) {
         return FDWUtils.useFDW ?
-               new ForeignTable(name, fields, path, format) :
-               new ReadableExternalTable(name, fields, path, format);
+                new ForeignTable(name, fields, path, format) :
+                new ReadableExternalTable(name, fields, path, format);
     }
 
     private static WritableExternalTable getWritableExternalOrForeignTable (String name, String[] fields, String path, String format) {
