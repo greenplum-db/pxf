@@ -240,7 +240,8 @@ public enum ParquetTypeConverter {
         public DataType getDataType(Type type) {
             Type elementType = type.asGroupType().getType(0).asGroupType().getType(0);
             if (!elementType.isPrimitive()) {
-                throw new UnsupportedTypeException("Parquet list of non primitives is not supported.");
+                String originalTypeName = elementType.asGroupType().getOriginalType() == null ? "non primitives" : elementType.asGroupType().getOriginalType().name();
+                throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", originalTypeName));
             }
             return from(elementType).getArrayDataType(elementType);
         }

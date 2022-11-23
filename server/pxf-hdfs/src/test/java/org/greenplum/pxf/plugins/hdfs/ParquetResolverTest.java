@@ -702,12 +702,21 @@ public class ParquetResolverTest {
 
     @Test
     public void testGetFields_Unsupported_List() {
-        schema = getParquetSchemaForUnsupportedListType();
+        // LIST of customized Struct, with no parquet original type name
+        schema = getParquetSchemaForUnsupportedListType()[0];
         // schema has changed, set metadata again
         context.setMetadata(schema);
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals("Parquet list of non primitives is not supported.", e.getMessage());
+        assertEquals("Parquet LIST of non primitives is not supported.", e.getMessage());
+
+        // LIST of MAP
+        schema = getParquetSchemaForUnsupportedListType()[1];
+        // schema has changed, set metadata again
+        context.setMetadata(schema);
+        e = assertThrows(UnsupportedTypeException.class,
+                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
+        assertEquals("Parquet LIST of MAP is not supported.", e.getMessage());
     }
 
     @Test
@@ -837,7 +846,10 @@ public class ParquetResolverTest {
     }
 
     @SuppressWarnings("deprecation")
-    private MessageType getParquetSchemaForUnsupportedListType() {
+    private MessageType[] getParquetSchemaForUnsupportedListType() {
+        MessageType[] messageTypes = new MessageType[2];
+
+        // List of customized Struct
         List<Type> structFields = new ArrayList<>();
 
         structFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "num1"));
@@ -845,12 +857,27 @@ public class ParquetResolverTest {
         structFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "num3"));
 
         GroupType structGroupType = new GroupType(Type.Repetition.OPTIONAL, "element", structFields);
-
-        GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", structGroupType);
-        GroupType groupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, repeatedGroupType);
+        GroupType listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", structGroupType);
+        GroupType listGroupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, listRepeatedGroupType);
         List<Type> fields = new ArrayList<>();
-        fields.add(groupType);
-        return new MessageType("spark_schema", fields);
+        fields.add(listGroupType);
+        messageTypes[0] = new MessageType("spark_schema", fields);
+
+        // List of Map
+        List<Type> mapFields = new ArrayList<>();
+
+        mapFields.add(new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveTypeName.INT32, "key"));
+        mapFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "value"));
+
+        GroupType mapRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "map", mapFields);
+        GroupType mapGroupType = new GroupType(Type.Repetition.OPTIONAL, "my_map", org.apache.parquet.schema.OriginalType.MAP, mapRepeatedGroupType);
+        listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", mapGroupType);
+        listGroupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, listRepeatedGroupType);
+        fields = new ArrayList<>();
+
+        fields.add(listGroupType);
+        messageTypes[1] = new MessageType("spark_schema", fields);
+        return messageTypes;
     }
 
     @SuppressWarnings("deprecation")
