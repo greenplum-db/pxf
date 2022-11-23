@@ -4,7 +4,7 @@
 --
 -- # create a match/subs
 --
--- replace PXF URL with "pxf-location" string
+-- # replace PXF URL with "pxf-location" string
 -- m/pxf:\/\/(.*)\|/
 -- s/pxf:\/\/.*data\?PROFILE=hdfs:text/pxf-location/
 --

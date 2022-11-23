@@ -309,8 +309,8 @@ function install_pxf_tarball() {
 		chmod 777 /tmp
 		ls -al /tmp
 		/usr/bin/install -c -m 755 /tmp/pxf_fdw.so "$("${GPHOME}/bin/pg_config" --pkglibdir)"
-		/usr/bin/install -c -m 644 /tmp/pxf_fdw.control "$("${GPHOME}/bin/pg_config" --sharedir)"
-		/usr/bin/install -c -m 644 /tmp/pxf_fdw*.sql "$("${GPHOME}/bin/pg_config" --sharedir)"
+		/usr/bin/install -c -m 644 /tmp/pxf_fdw.control "$("${GPHOME}/bin/pg_config" --sharedir)/extension/"
+		/usr/bin/install -c -m 644 /tmp/pxf_fdw*.sql "$("${GPHOME}/bin/pg_config" --sharedir)/extension/"
 	fi
 }
 
