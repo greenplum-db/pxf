@@ -48,11 +48,11 @@ compile:
 GRADLEW_TEST_PARAMS = test
 ifneq "$(TEST)" ""
 	# find test file, remove leading "./" and trailing ".java"
-	TEST_FILE = $(shell : "$$(find . -name $(TEST).java)"; : "$${_%.java}"; echo "$${_\#./}")
+	TEST_FILE = $(subst ./,,$(subst .java,,$(shell find . -name $(TEST).java)))
 	# parse out the gradle project by grabbing top-level dir name
-	PROJECT   = $(shell : '${TEST_FILE}'; echo "$${_%%/*}")
+	PROJECT = $(word 1,$(subst /, ,$(TEST_FILE)))
 	# get java-style path with dots, starting at "org"
-	TEST_PATH = $(shell : '${TEST_FILE}'; : "$${_\#${PROJECT}/src/test/java/}"; echo "$${_//\//.}")
+	TEST_PATH = $(subst /,.,$(subst $(PROJECT)/src/test/java/,,$(TEST_FILE)))
 	GRADLEW_TEST_PARAMS = :$(PROJECT):test --rerun-tasks --tests $(TEST_PATH)
 endif
 
