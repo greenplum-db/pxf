@@ -126,7 +126,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 // if the currentLineIndex is greater than the length,  we are at the end of the buffer, read the next line
                 // however, if we are at the end of the split, then we need to get the next split before we can read the line
                 if (i == END_OF_SPLIT) {
-                    LOG.debug("JSON object incomplete, moving onto next split to finish");
+                    LOG.debug("JSON object incomplete, continuing into next split to finish");
                     getNextSplit();
                     // continue the while loop to complete the object
                     continue;
@@ -203,9 +203,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
     private void updatePos() {
         if (currentLineBuffer != null) {
-            long totalBytes = currentLineBuffer.toString().getBytes(StandardCharsets.UTF_8).length;
-            long readBytes = currentLineBuffer.substring(0, currentLineIndex).getBytes(StandardCharsets.UTF_8).length;
-            long unreadBytesInBuffer = totalBytes - readBytes;
+            long unreadBytesInBuffer = currentLineBuffer.substring(currentLineIndex).getBytes(StandardCharsets.UTF_8).length;
             pos = filePos - unreadBytesInBuffer;
         } else {
             pos = filePos;
@@ -219,10 +217,9 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private int readNextChar() throws IOException {
         // if the currentLineBuffer is null, nothing has been read yet, so we need to read the next line
         // if the currentLineIndex is greater than the length,  we are at the end of the buffer, read the next line
-        if (currentLineBuffer == null || currentLineIndex >= currentLineBuffer.length()) {
-            if (!getNextLine()) {
-                return END_OF_SPLIT;
-            }
+        boolean refreshLineBuffer = currentLineBuffer == null || currentLineIndex >= currentLineBuffer.length();
+        if (refreshLineBuffer && !getNextLine()) {
+            return END_OF_SPLIT;
         }
 
         int c = currentLineBuffer.charAt(currentLineIndex);
