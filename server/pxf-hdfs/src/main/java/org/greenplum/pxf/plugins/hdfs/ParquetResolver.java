@@ -71,14 +71,12 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         List<OneField> output = new LinkedList<>();
         int columnIndex = 0;
 
-        // schema is the readSchema, if there is column projection
-        // the schema will be a subset of tuple descriptions
         for (ColumnDescriptor columnDescriptor : columnDescriptors) {
             OneField oneField;
             if (!columnDescriptor.isProjected()) {
                 oneField = new OneField(columnDescriptor.columnTypeCode(), null);
             } else {
-                oneField = resolveField(group, columnIndex, schema.getType(columnIndex));
+                oneField = resolveField(group, columnIndex);
                 columnIndex++;
             }
             output.add(oneField);
@@ -221,12 +219,14 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      *
      * @param group       contains parquet schema and data of a {@link OneRow}
      * @param columnIndex is the column of the row we want to resolve
-     * @param type        can be GroupType or PrimitiveType
      * @return a field containing Greenplum data type and data
      */
-    private OneField resolveField(Group group, int columnIndex, Type type) {
+    private OneField resolveField(Group group, int columnIndex) {
         OneField field = new OneField();
         // get type converter based on the field type
+        // schema is the readSchema, if there is column projection
+        // the schema will be a subset of tuple descriptions
+        Type type = schema.getType(columnIndex);
         ParquetTypeConverter converter = ParquetTypeConverter.from(type);
         // determine how many values for the field are present in the column
         int repetitionCount = group.getFieldRepetitionCount(columnIndex);

@@ -34,9 +34,10 @@ df2.show(df2.count(), False)
 
 df2.printSchema()
 # root
-#  |-- id: integer (nullable = false)
-#  |-- tm_arr: array (nullable = true)
-#  |    |-- element: timestamp (containsNull = true)
+# |-- id: long (nullable = true)
+# |-- tm_arr: array (nullable = true)
+# |    |-- element: timestamp (containsNull = true)
+
 # write data into a single parquet file
 if os.path.exists("tmp.parquet"):
     shutil.rmtree("tmp.parquet")

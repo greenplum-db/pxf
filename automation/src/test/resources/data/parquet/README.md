@@ -67,7 +67,7 @@ The `parquet_list_types_without_null.parquet` file will be copied to the directo
 According to the latest version of [Hive](https://github.com/apache/hive/blob/4e4e39c471094567dcdfd9840edbd99d7eafc230/ql/src/java/org/apache/hadoop/hive/ql/io/parquet/vector/VectorizedParquetRecordReader.java#L578),
 Hive doesn't support TIMESTAMP LIST. Therefore, we use Spark to generate TIMESTAMP LIST dataset. 
 
-Note that the input and output timestamp data of Spark are all with zone, but Parquet stores timestamps in UTC time zone since Parquet only support `TIMESTAMP` type. 
+Note that the input and output timestamps of Spark can be in any zone, but Parquet stores timestamps only in UTC time zone since Parquet doesn't support `TIMESTAMP WITH TIMEZONE` type. 
 For example, in our `generate_parquet_timestamp_list.py` and `generate_parquet_timestamp_list.bash`, we are preparing timestamp list dataset using 
 `2022-10-05 11:30:00` in `America/Los Angeles` timezone. If we still use `America/Los Angeles` for reading, the output will still be `2022-10-05 11:30:00`. 
 If we use another timezone like `America/New York`, the output will be `2022-10-05 14:30:00`. But if we access 
