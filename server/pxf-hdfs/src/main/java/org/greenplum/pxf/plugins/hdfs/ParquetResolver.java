@@ -217,7 +217,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     }
 
     /**
-     * Resolve the Parquet data at the columnIndex in the Group into a field
+     * Resolve the Parquet data at the columnIndex into a Postgres type in String representation
      *
      * @param group       contains parquet schema and data of a {@link OneRow}
      * @param columnIndex is the column of the row we want to resolve
@@ -230,17 +230,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         ParquetTypeConverter converter = ParquetTypeConverter.from(type);
         // determine how many values for the field are present in the column
         int repetitionCount = group.getFieldRepetitionCount(columnIndex);
-        // repetitionCount can only be 0 or 1 for non-REPEATED type,
-        // and can be any non-negative number for REPEATED type
-        if (repetitionCount == 0) {
-            field.type = converter.getDataType(type).getOID();
-            field.val = null;
-        } else if (type.getRepetition() != REPEATED) {
-            // here the repetition count can only be 1
-            field.type = converter.getDataType(type).getOID();
-            field.val = converter.getValue(group, columnIndex, 0, type);
-        } else {
-            // repeated primitives will be converted into JSON
+        if (type.getRepetition() == REPEATED){
+            // For REPEATED type, repetitionCount can be any non-negative number,
+            // the element will be converted into JSON
             ArrayNode jsonArray = mapper.createArrayNode();
             for (int repeatIndex = 0; repeatIndex < repetitionCount; repeatIndex++) {
                 converter.addValueToJsonArray(group, columnIndex, repeatIndex, type, jsonArray);
@@ -251,6 +243,15 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             } catch (Exception e) {
                 throw new RuntimeException("Failed to serialize repeated parquet type " + type.asPrimitiveType().getName(), e);
             }
+        }else if (repetitionCount == 0){
+            // For non-REPEATED type, repetitionCount can only be 0 or 1
+            // repetitionCount == 0 means this is a null LIST/Primitive
+            field.type = converter.getDataType(type).getOID();
+            field.val = null;
+        }else{
+            // repetitionCount can only be 1
+            field.type = converter.getDataType(type).getOID();
+            field.val = converter.getValue(group, columnIndex, 0, type);
         }
         return field;
     }

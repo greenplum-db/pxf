@@ -238,7 +238,7 @@ public enum ParquetTypeConverter {
     LIST {
         @Override
         public DataType getDataType(Type type) {
-            Type elementType = type.asGroupType().getType(0).asGroupType().getType(0);
+            Type elementType = getElementType(type);
             if (!elementType.isPrimitive()) {
                 String originalTypeName = elementType.asGroupType().getOriginalType() == null ? "non primitives" : elementType.asGroupType().getOriginalType().name();
                 throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", originalTypeName));
@@ -258,7 +258,7 @@ public enum ParquetTypeConverter {
                 if (elementGroup.getFieldRepetitionCount(0) == 0) {
                     pgArrayBuilder.addElement((String) null);
                 } else {
-                    PrimitiveType elementType = type.asGroupType().getType(0).asGroupType().getType(0).asPrimitiveType();
+                    PrimitiveType elementType = getElementType(type).asPrimitiveType();
                     from(elementType).addValueToArray(elementGroup, 0, 0, elementType, pgArrayBuilder);
                 }
             }
@@ -364,6 +364,22 @@ public enum ParquetTypeConverter {
     // Helper method that returns a BigDecimal from the long value
     private static BigDecimal bigDecimalFromLong(DecimalLogicalTypeAnnotation decimalType, long value) {
         return new BigDecimal(BigInteger.valueOf(value), decimalType.getScale());
+    }
+
+    /*
+    Parquet List Schema
+    <list-repetition> group <name> (LIST) {
+      repeated group list {
+        <element-repetition> <element-type> element;
+      }
+    }
+
+    - The outer-most level must be a group annotated with `LIST` that contains a single field named `list`. The repetition of this level must be either `optional` or `required` and determines whether the list is nullable.
+    - The middle level, named `list`, must be a repeated group with a single field named `element`.
+    - The `element` field encodes the list's element type and repetition. Element repetition must be `required` or `optional`.
+     */
+    private static Type getElementType(Type type){
+        return type.asGroupType().getType(0).asGroupType().getType(0);
     }
 
     // ********** PUBLIC INTERFACE **********

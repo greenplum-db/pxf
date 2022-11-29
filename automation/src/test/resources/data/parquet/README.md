@@ -8,7 +8,7 @@ follow the instructions below.
 
 - Hadoop CLI commands
 - Hive version 2.3+
-- Spark
+- Spark 3.3.0
 
 ## Generate Parquet LIST Testing Data（Except TIMESTAMP LIST） using Hive
 
@@ -64,29 +64,17 @@ The `parquet_list_types_without_null.parquet` file will be copied to the directo
 
 ## Generate Parquet TIMESTAMP LIST Testing Data using Spark
 
-According to the latest version of[Hive](https://github.com/apache/hive/blob/4e4e39c471094567dcdfd9840edbd99d7eafc230/ql/src/java/org/apache/hadoop/hive/ql/io/parquet/vector/VectorizedParquetRecordReader.java#L578),
-Hive doesn't support TIMESTAMP LIST. Therefore, we use Spark to generate TIMESTAMP LIST dataset. Note that the input timestamps are in 
-local time zone, and Parquet will store them in UTC time zone.
+According to the latest version of [Hive](https://github.com/apache/hive/blob/4e4e39c471094567dcdfd9840edbd99d7eafc230/ql/src/java/org/apache/hadoop/hive/ql/io/parquet/vector/VectorizedParquetRecordReader.java#L578),
+Hive doesn't support TIMESTAMP LIST. Therefore, we use Spark to generate TIMESTAMP LIST dataset. 
+
+Note that the input and output timestamp data of Spark are all with zone, but Parquet stores timestamps in UTC time zone since Parquet only support `TIMESTAMP` type. 
+For example, in our `generate_parquet_timestamp_list.py` and `generate_parquet_timestamp_list.bash`, we are preparing timestamp list dataset using 
+`2022-10-05 11:30:00` in `America/Los Angeles` timezone. If we still use `America/Los Angeles` for reading, the output will still be `2022-10-05 11:30:00`. 
+If we use another timezone like `America/New York`, the output will be `2022-10-05 14:30:00`. But if we access 
+the generated parquet file `parquet_timestamp_list_type.parquet` directly, we will see that the timestamps are stored in UTC time `2022-10-05 18:30:00 +00:00`. 
 
 ```shell
-import org.apache.spark.sql.types._
-# prepare the timestamp array dataset in string type
-scala> val df = Seq(
-    (1,List("2022-10-05 11:30:00","2022-10-06 12:30:00","2022-10-07 13:30:00")),
-    (2, List("2022-10-05 11:30:00","2022-10-05 11:30:00","2022-10-07 13:30:00")),
-    (3, List(null, "2022-10-05 11:30:00", "2022-10-05 11:30:00")),
-    (4, List(null)),
-    (5, List()),
-    (6, null)
-).toDF("id", "tm_arr")
-  
-# convert from array<String> to array<Timestamp>
-scala> val df2=df.withColumn("tm_arr", expr("transform(tm_arr, x -> to_timestamp(x))"))
-scala> df2.printSchema()
-root
- |-- id: integer (nullable = false)
- |-- tm_arr: array (nullable = true)
- |    |-- element: timestamp (containsNull = true)
- # write data into a single parquet file
-scala> df2.repartition(1).write.parquet("~/workspace/pxf/automation/src/test/resources/data/parquet/parquet_timestamp_list_type.parquet")
+export SPARK_SUBMIT_CMD=$(which spark-submit)
+
+./generate_parquet_timestamp_list.bash
 ```
