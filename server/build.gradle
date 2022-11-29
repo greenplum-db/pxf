@@ -103,10 +103,10 @@ configure(javaProjects) {
             dependency("org.mortbay.jetty:jetty-util:6.1.26")
             dependency("org.objenesis:objenesis:2.1")
 
-            // ---- bump postgresql to 42.4.1 for CVE-2022-31197 fixes
-            // more details: https://nvd.nist.gov/vuln/detail/CVE-2022-31197
-            // revert once springboot provided postgresql is upgraded to bundle postgresql:42.4.1+
-            dependency("org.postgresql:postgresql:42.4.1")
+            // ---- bump postgresql to 42.4.3 for CVE-2022-41946 fixes
+            // more details: https://nvd.nist.gov/vuln/detail/CVE-2022-41946
+            // revert once springboot provided postgresql is upgraded to bundle postgresql:42.4.3+
+            dependency("org.postgresql:postgresql:42.4.3")
 
             dependency("org.simplify4u:slf4j-mock:2.1.0")
             dependency("org.threeten:threeten-extra:1.5.0")
