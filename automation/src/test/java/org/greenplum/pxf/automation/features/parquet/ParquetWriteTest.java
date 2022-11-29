@@ -73,56 +73,50 @@ public class ParquetWriteTest extends BaseFeature {
     //https://github.com/apache/hive/blob/master/ql/src/java/org/apache/hadoop/hive/ql/io/parquet/vector/VectorizedParquetRecordReader.java
     private static final String[] PARQUET_LIST_TABLE_COLUMNS = {
             "id                   INTEGER",
-            "bool_arr             BOOLEAN[]", // DataType.BOOLARRAY
-            "smallint_arr         SMALLINT[]", // DataType.INT2ARRAY
-            "int_arr              INTEGER[]", // DataType.INT4ARRAY
-            "bigint_arr           BIGINT[]", // DataType.INT8ARRAY
-            "real_arr             REAL[]", // DataType.FLOAT4ARRAY
-            "double_arr           FLOAT[]", // DataType.FLOAT8ARRAY
-            "text_arr             TEXT[]", // DataType.TEXTARRAY
-            "bytea_arr            BYTEA[]", // DataType.BYTEAARRAY
-            "char_arr             CHAR(15)[]", // DataType.BPCHARARRAY
-            "varchar_arr          VARCHAR(15)[]", // DataType.VARCHARARRAY
-            "date_arr             DATE[]", // DataType.DATEARRAY
-            "numeric_arr          NUMERIC[]", // DataType.NUMERICARRAY
+            "bool_arr             BOOLEAN[]",      // DataType.BOOLARRAY
+            "smallint_arr         SMALLINT[]",     // DataType.INT2ARRAY
+            "int_arr              INTEGER[]",      // DataType.INT4ARRAY
+            "bigint_arr           BIGINT[]",       // DataType.INT8ARRAY
+            "real_arr             REAL[]",         // DataType.FLOAT4ARRAY
+            "double_arr           FLOAT[]",        // DataType.FLOAT8ARRAY
+            "text_arr             TEXT[]",         // DataType.TEXTARRAY
+            "bytea_arr            BYTEA[]",        // DataType.BYTEAARRAY
+            "char_arr             CHAR(15)[]",     // DataType.BPCHARARRAY
+            "varchar_arr          VARCHAR(15)[]",  // DataType.VARCHARARRAY
+            "date_arr             DATE[]",         // DataType.DATEARRAY
+            "numeric_arr          NUMERIC[]",      // DataType.NUMERICARRAY
     };
 
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = {
             "id                   integer",
-            "bool_arr             array<boolean>", // DataType.BOOLARRAY
-//            "bytea_arr            array<binary>"      , // DataType.BYTEAARRAY  // not correct
-            "bigint_arr           array<bigint>", // DataType.INT8ARRAY
-            "smallint_arr         array<smallint>", // DataType.INT2ARRAY
-            "int_arr              array<int>", // DataType.INT4ARRAY
-            "text_arr             array<string>", // DataType.TEXTARRAY
-            "real_arr             array<float>", // DataType.FLOAT4ARRAY
-            "double_arr            array<double>", // DataType.FLOAT8ARRAY
-            "char_arr             array<char(7)>", // DataType.BPCHARARRAY
-            "varchar_arr          array<varchar(8)>", // DataType.VARCHARARRAY
-            "varchar_arr_nolimit  array<varchar(65535)>", // DataType.VARCHARARRAY with no length limit, varchar length must be in the range [1, 65535]
-            "date_arr             array<date>", // DataType.DATEARRAY
-//            "timestamp_arr        array<timestamp>"  , // DataType.TIMESTAMPARRAY
-//           "timestamptz_arr      timestamptz[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
+            "bool_arr             array<boolean>",        // DataType.BOOLARRAY
+            "smallint_arr         array<smallint>",       // DataType.INT2ARRAY
+            "int_arr              array<int>",            // DataType.INT4ARRAY
+            "bigint_arr           array<bigint>",         // DataType.INT8ARRAY
+            "real_arr             array<float>",          // DataType.FLOAT4ARRAY
+            "double_arr            array<double>",        // DataType.FLOAT8ARRAY
+            "text_arr             array<string>",         // DataType.TEXTARRAY
+            "bytea_arr            array<binary>",         // DataType.BYTEAARRAY  // not correct
+            "char_arr             array<char(15)>",       // DataType.BPCHARARRAY
+            "varchar_arr          array<varchar(15)>",    // DataType.VARCHARARRAY
+            "date_arr             array<date>",           // DataType.DATEARRAY
             "numeric_arr          array<decimal(38,18)>", // DataType.NUMERICARRAY
     };
 
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE = {
             "id                   INTEGER",
-            "bool_arr             BOOLEAN[]", // DataType.BOOLARRAY
-            "bytea_arr            TEXT[]", // DataType.BYTEAARRAY
-            "bigint_arr           BIGINT[]", // DataType.INT8ARRAY
-            "smallint_arr         SMALLINT[]", // DataType.INT2ARRAY
-            "int_arr              INTEGER[]", // DataType.INT4ARRAY
-            "text_arr             TEXT[]", // DataType.TEXTARRAY
-            "real_arr             REAL[]", // DataType.FLOAT4ARRAY
-            "double_arr           FLOAT[]", // DataType.FLOAT8ARRAY
-            "char_arr             CHAR(7)[]", // DataType.BPCHARARRAY
-            "varchar_arr          VARCHAR(8)[]", // DataType.VARCHARARRAY
-            "varchar_arr_nolimit  VARCHAR[]", // DataType.VARCHARARRAY with no length limit
-            "date_arr             DATE[]", // DataType.DATEARRAY
-//            "timestamp_arr        TIMESTAMP[]"  , // DataType.TIMESTAMPARRAY
-//            "timestamptz_arr      TIMESTAMPTZ[]", // DataType.TIMESTAMP_WITH_TIME_ZONE_ARRAY
-            "numeric_arr          NUMERIC[]", // DataType.NUMERICARRAY
+            "bool_arr             BOOLEAN[]",      // DataType.BOOLARRAY
+            "smallint_arr         SMALLINT[]",     // DataType.INT2ARRAY
+            "int_arr              INTEGER[]",      // DataType.INT4ARRAY
+            "bigint_arr           BIGINT[]",       // DataType.INT8ARRAY
+            "real_arr             REAL[]",         // DataType.FLOAT4ARRAY
+            "double_arr           FLOAT[]",        // DataType.FLOAT8ARRAY
+            "text_arr             TEXT[]",         // DataType.TEXTARRAY
+            "bytea_arr            BYTEA[]",        // DataType.BYTEAARRAY
+            "char_arr             CHAR(15)[]",     // DataType.BPCHARARRAY
+            "varchar_arr          VARCHAR(15)[]",  // DataType.VARCHARARRAY
+            "date_arr             DATE[]",         // DataType.DATEARRAY
+            "numeric_arr          NUMERIC[]",      // DataType.NUMERICARRAY
     };
 
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
@@ -304,10 +298,10 @@ public class ParquetWriteTest extends BaseFeature {
     }
 
 
-    //    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+//    @Test(groups = {"features", "gpdb"})
     public void parquetWriteListsReadWithHive() throws Exception {
-        String writeTableName = "pxf_parquet_write_list";
-        String readTableName = "pxf_parquet_read_list";
+        String writeTableName = "pxf_parquet_write_list_read_with_hive";
+        String readTableName = "pxf_parquet_read_list_with_hive";
         String fullTestPath = hdfsPath + PARQUET_WRITE_LIST;
 
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
@@ -403,20 +397,18 @@ public class ParquetWriteTest extends BaseFeature {
         for (int i = 0; i < numRows; i++) {
             StringJoiner statementBuilder = new StringJoiner(",", "(", ")")
                     .add(String.valueOf(i))    // always not-null row index, column index starts with 0 after it
-                    .add(String.format("'{\"%b\"}'", i % 2 != 0))                                   // DataType.BOOLEANARRAY
-//                    .add(String.format("'{\\\\x%02d%02d}'::bytea[]", i % 100, (i + 1) % 100))       // DataType.BYTEAARRAY
-                    .add(String.format("'{%d}'", 123456789000000000L + i))                          // DataType.INT8ARRAY
+                    .add(String.format("'{\"%b\"}'", i % 2 != 0))                                    // DataType.BOOLEANARRAY
                     .add(String.format("'{%d}'", 10L + i % 32000))                                   // DataType.INT2ARRAY
-                    .add(String.format("'{%d}'", 100L + i))                                         // DataType.INT4ARRAY
-                    .add(String.format("'{\"row-%02d\"}'", i))                                      // DataType.TEXTARRAY
-                    .add(String.format("'{%f}'", Float.valueOf(i + 0.00001f * i)))    // DataType.FLOAT4ARRAY
-                    .add(String.format("'{%f}'", i + Math.PI))                           // DataType.FLOAT8ARRAY
-                    .add(String.format("'{\"%s\"}'", i))                                            // DataType.BPCHARARRAY
-                    .add(String.format("'{\"var%02d\"}'", i))                                       // DataType.VARCHARARRAY
-                    .add(String.format("'{\"longer string var%02d\"}'", i))                        // DataType.VARCHARARRAY no limit
-                    .add(String.format("'{\"2010-01-%02d\"}'", (i % 30) + 1))                      // DataType.DATEARRAY
-//                    .add(String.format("'{\"2013-07-13 21:00:05.%03d456\"}'", i % 1000))           // DataType.TIMESTAMPARRAY
-                    .add(String.format("'{12345678900000.00000%s}'", i))                           // DataType.NUMERICARRAY
+                    .add(String.format("'{%d}'", 100L + i))                                          // DataType.INT4ARRAY
+                    .add(String.format("'{%d}'", 123456789000000000L + i))                           // DataType.INT8ARRAY
+                    .add(String.format("'{%f}'", Float.valueOf(i + 0.00001f * i)))                // DataType.FLOAT4ARRAY
+                    .add(String.format("'{%f}'", i + Math.PI))                                       // DataType.FLOAT8ARRAY
+                    .add(String.format("'{\"row-%02d\"}'", i))                                       // DataType.TEXTARRAY
+                    .add(String.format("'{\\\\x%02d%02d}'::bytea[]", i % 100, (i + 1) % 100))        // DataType.BYTEAARRAY
+                    .add(String.format("'{\"%s\"}'", i))                                             // DataType.BPCHARARRAY
+                    .add(String.format("'{\"var%02d\"}'", i))                                        // DataType.VARCHARARRAY
+                    .add(String.format("'{\"2010-01-%02d\"}'", (i % 30) + 1))                        // DataType.DATEARRAY
+                    .add(String.format("'{12345678900000.00000%s}'", i))                             // DataType.NUMERICARRAY
                     ;
             insertStatement.append(statementBuilder.toString().concat((i < (numRows - 1)) ? "," : ";"));
         }

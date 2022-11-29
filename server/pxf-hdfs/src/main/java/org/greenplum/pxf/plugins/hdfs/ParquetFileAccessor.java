@@ -438,7 +438,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     /**
      * Generate parquet schema for all the supported types using column descriptors
      *
-     * @param columns
+     * @param columns contains Greenplum data type and column name
      * @return the generated parquet schema used for write
      */
     private MessageType generateParquetSchema(List<ColumnDescriptor> columns) {
@@ -462,12 +462,12 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         int columnTypeCode = column.columnTypeCode();
         String columnName = column.columnName();
 
-
         boolean isArray = dataType.isArrayType();
         DataType elementType = isArray ? dataType.getTypeElem() : dataType;
 
         PrimitiveTypeName primitiveTypeName = null;
         LogicalTypeAnnotation logicalTypeAnnotation = null;
+        // length is only used in NUMERIC case
         Integer length = null;
 
         switch (elementType) {
