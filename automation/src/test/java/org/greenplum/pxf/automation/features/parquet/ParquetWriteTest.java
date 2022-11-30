@@ -1,9 +1,12 @@
 package org.greenplum.pxf.automation.features.parquet;
 
+import jsystem.framework.system.SystemManagerImpl;
 import org.greenplum.pxf.automation.components.hive.Hive;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
+import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
+import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
@@ -300,6 +303,9 @@ public class ParquetWriteTest extends BaseFeature {
 
 //    @Test(groups = {"features", "gpdb"})
     public void parquetWriteListsReadWithHive() throws Exception {
+        // init only here, not in beforeClass() method as other tests run in environments without Hive
+        hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
+
         String writeTableName = "pxf_parquet_write_list_read_with_hive";
         String readTableName = "pxf_parquet_read_list_with_hive";
         String fullTestPath = hdfsPath + PARQUET_WRITE_LIST;
@@ -307,47 +313,44 @@ public class ParquetWriteTest extends BaseFeature {
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
         insertArrayDataWithoutNulls(writeTableName, 33);
 
-        //
-//        // load the data into hive to check that PXF-written Parquet files can be read by other data
-//        String hiveExternalTableName=writeTableName+"_external";
-//        hiveTable = new HiveExternalTable(hiveExternalTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE, "hdfs:/" + fullTestPath);
-//        hiveTable.setStoredAs("PARQUET");
-//        hive.createTableAndVerify(hiveTable);
-//
-//        // the JDBC profile cannot handle binary, time and uuid types
-//        String ctasHiveQuery = new StringJoiner(",",
-//                "CREATE TABLE " + hiveTable.getFullName() + "_ctas AS SELECT ", " FROM " + hiveTable.getFullName())
-//                .add("id")
-//                .add("bool_arr")
-////                .add("bytea_arr") // binary cast as string
-//                .add("bigint_arr")
-//                .add("smallint_arr")
-//                .add("int_arr")
-//                .add("text_arr")
-//                .add("real_arr")
-//                .add("double_arr")
-//                .add("char_arr")
-//                .add("varchar_arr")
-//                .add("varchar_arr_nolimit")
-//                .add("date_arr")
-////                .add("timestamp_arr")
-////                .add("numeric_arr")
-//                .toString();
-//
-//        hive.runQuery("DROP TABLE IF EXISTS " + hiveTable.getFullName() + "_ctas");
-//        hive.runQuery(ctasHiveQuery);
-//
-//        // use the Hive JDBC profile to avoid using the PXF Parquet reader implementation
-//        String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
-//        ExternalTable exHiveJdbcTable = TableFactory.getPxfJdbcReadableTable(
-//                writeTableName + "_readable", PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE,
-//                hiveTable.getName() + "_ctas", HIVE_JDBC_DRIVER_CLASS, jdbcUrl, null);
-//        exHiveJdbcTable.setHost(pxfHost);
-//        exHiveJdbcTable.setPort(pxfPort);
-//        gpdb.createTableAndVerify(exHiveJdbcTable);
+        // load the data into hive to check that PXF-written Parquet files can be read by other data
+        String hiveExternalTableName=writeTableName+"_external";
+        hiveTable = new HiveExternalTable(hiveExternalTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE, "hdfs:/" + fullTestPath);
+        hiveTable.setStoredAs("PARQUET");
+        hive.createTableAndVerify(hiveTable);
+
+        // the JDBC profile cannot handle binary, time and uuid types
+        String ctasHiveQuery = new StringJoiner(",",
+                "CREATE TABLE " + hiveTable.getFullName() + "_ctas AS SELECT ", " FROM " + hiveTable.getFullName())
+                .add("id")
+                .add("bool_arr")
+                .add("smallint_arr")
+                .add("int_arr")
+                .add("bigint_arr")
+                .add("real_arr")
+                .add("double_arr")
+                .add("text_arr")
+                .add("bytea_arr") // binary cast as string
+                .add("char_arr")
+                .add("varchar_arr")
+                .add("date_arr")
+                .add("numeric_arr")
+                .toString();
+
+        hive.runQuery("DROP TABLE IF EXISTS " + hiveTable.getFullName() + "_ctas");
+        hive.runQuery(ctasHiveQuery);
+
+        // use the Hive JDBC profile to avoid using the PXF Parquet reader implementation
+        String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
+        ExternalTable exHiveJdbcTable = TableFactory.getPxfJdbcReadableTable(
+                writeTableName + "_readable", PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE,
+                hiveTable.getName() + "_ctas", HIVE_JDBC_DRIVER_CLASS, jdbcUrl, null);
+        exHiveJdbcTable.setHost(pxfHost);
+        exHiveJdbcTable.setPort(pxfPort);
+        gpdb.createTableAndVerify(exHiveJdbcTable);
 
         // use PXF hive:jdbc profile to read the data
-
+        runTincTest("pxf.features.parquet.write_list.write_list_read_with_hive.runTest");
     }
 
     private void runWritePrimitiveScenario(String writeTableName, String readTableName,
