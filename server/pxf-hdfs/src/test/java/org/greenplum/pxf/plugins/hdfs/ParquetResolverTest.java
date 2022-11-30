@@ -22,6 +22,7 @@ import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Types;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -727,6 +728,34 @@ public class ParquetResolverTest {
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
         assertEquals("Parquet complex type MAP is not supported, error: java.lang.IllegalArgumentException: No enum constant org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.MAP", e.getMessage());
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    public void testGetFields_Invalid_List_Schema() {
+        String validListSchema = "<list-repetition> group <name> (LIST) {\n"
+                + "  repeated group list {\n"
+                + "    <element-repetition> <element-type> element;\n"
+                + "  }\n"
+                + "}";
+
+        List<Type> fields = new ArrayList<>();
+
+        fields.add(new GroupType(Type.Repetition.OPTIONAL, "invalid_list", org.apache.parquet.schema.OriginalType.LIST, new ArrayList<>()));
+        schema = new MessageType("invalid_list_schema", fields);
+        context.setMetadata(schema);
+        Exception e = assertThrows(PxfRuntimeException.class,
+                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
+        assertEquals(String.format("Invalid Parquet List schema:\n %s. \nThe valid Parquet List schema should be:\n %s.", schema.getFields().get(0).toString(), validListSchema), e.getMessage());
+
+        fields = new ArrayList<>();
+        GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", new ArrayList<>());
+        fields.add(new GroupType(Type.Repetition.OPTIONAL, "invalid_list", org.apache.parquet.schema.OriginalType.LIST, repeatedGroupType));
+        schema = new MessageType("invalid_list_schema", fields);
+        context.setMetadata(schema);
+        e = assertThrows(PxfRuntimeException.class,
+                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
+        assertEquals(String.format("Invalid Parquet List schema:\n %s. \nThe valid Parquet List schema should be:\n %s.", schema.getFields().get(0).asGroupType().getType(0).toString(), validListSchema), e.getMessage());
     }
 
     private List<OneField> assertRow(List<Group> groups, int desiredRow, int numFields) {

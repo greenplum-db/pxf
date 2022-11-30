@@ -1,6 +1,7 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.apache.commons.lang.StringUtils;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
@@ -8,6 +9,7 @@ import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.GreenplumDateTime;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
@@ -367,18 +369,27 @@ public enum ParquetTypeConverter {
     }
 
     /*
-    Parquet List Schema
-    <list-repetition> group <name> (LIST) {
-      repeated group list {
-        <element-repetition> <element-type> element;
-      }
-    }
-
-    - The outer-most level must be a group annotated with `LIST` that contains a single field named `list`. The repetition of this level must be either `optional` or `required` and determines whether the list is nullable.
-    - The middle level, named `list`, must be a repeated group with a single field named `element`.
-    - The `element` field encodes the list's element type and repetition. Element repetition must be `required` or `optional`.
+     * Parquet List Schema
+     * <list-repetition> group <name> (LIST) {
+     *   repeated group list {
+     *     <element-repetition> <element-type> element;
+     *   }
+     * }
+     *
+     * - The outer-most level must be a group annotated with `LIST` that contains a single field named `list`. The repetition of this level must be either `optional` or `required` and determines whether the list is nullable.
+     * - The middle level, named `list`, must be a repeated group with a single field named `element`.
+     * - The `element` field encodes the list's element type and repetition. Element repetition must be `required` or `optional`.
      */
-    private static Type getElementType(Type type){
+    private static Type getElementType(Type type) {
+        if (type.asGroupType().getFields().size() != 1 || type.asGroupType().getType(0).asGroupType().getFields().size() != 1) {
+            String invalidListSchema = type.asGroupType().getFields().size() != 1 ? type.asGroupType().toString() : type.asGroupType().getType(0).asGroupType().toString();
+            String validListSchema = "<list-repetition> group <name> (LIST) {\n"
+                    + "  repeated group list {\n"
+                    + "    <element-repetition> <element-type> element;\n"
+                    + "  }\n"
+                    + "}";
+            throw new PxfRuntimeException(String.format("Invalid Parquet List schema:\n %s. \nThe valid Parquet List schema should be:\n %s.", invalidListSchema, validListSchema));
+        }
         return type.asGroupType().getType(0).asGroupType().getType(0);
     }
 
