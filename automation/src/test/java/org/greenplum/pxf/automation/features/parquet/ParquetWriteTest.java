@@ -143,7 +143,6 @@ public class ParquetWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteUndefinedPrecisionNumeric() throws Exception {
-
         String filename = "parquet_write_undefined_precision_numeric";
         prepareWritableExternalTable("pxf_parquet_write_undefined_precision_numeric",
                 UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename, null);
@@ -157,7 +156,6 @@ public class ParquetWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteNumericWithPrecisionAndScale() throws Exception {
-
         String filename = "parquet_write_numeric";
         prepareWritableExternalTable("pxf_parquet_write_numeric",
                 PARQUET_TABLE_DECIMAL_COLUMNS, hdfsPath + filename, null);

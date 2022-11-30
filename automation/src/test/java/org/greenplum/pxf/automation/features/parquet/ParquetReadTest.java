@@ -136,7 +136,6 @@ public class ParquetReadTest extends BaseFeature {
         gpdb.runQuery("CREATE OR REPLACE VIEW parquet_view AS SELECT s1, s2, n1, d1, dc1, " +
                 "CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm, " +
                 "f, bg, b, tn, sml, vc1, c1, bin FROM " + PXF_PARQUET_TABLE);
-
         runTincTest("pxf.features.parquet.primitive_types.runTest");
     }
 
