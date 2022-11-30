@@ -66,7 +66,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private List<ColumnDescriptor> columnDescriptors;
     private final ObjectMapper mapper = new ObjectMapper();
     private static final PgUtilities pgUtilities = new PgUtilities();
-    private ParquetUtilities parquetUtilities=new ParquetUtilities(pgUtilities);
+    private final ParquetUtilities parquetUtilities=new ParquetUtilities(pgUtilities);
 
     @Override
     public void afterPropertiesSet() {
@@ -146,22 +146,32 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             /*
              * https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
              * Parquet LIST must always annotate a 3-level structure:
-             * <list-repetition> group <name> (LIST) {
-             *   repeated group list {
-             *     <element-repetition> <element-type> element;
+             * <list-repetition> group <name> (LIST) {            // listType, a listType always has only 1 repeatedType
+             *   repeated group list {                            // repeatedType, a repeatedType always has only 1 element type
+             *     <element-repetition> <element-type> element;   // elementType
              *   }
              * }
              */
             GroupType listType = type.asGroupType();
             GroupType repeatedType = listType.getType(0).asGroupType();
             PrimitiveType elementType = repeatedType.getType(0).asPrimitiveType();
-            // Decode Postgres String representation of an array into a list of Objects of the required element type
+            // Decode Postgres String representation of an array into a list of Objects
             List<Object> values = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
-            Group arrayGroup = new SimpleGroup(listType);
 
+            /*
+             * the value of a text array would be like:
+             * text_arr
+             *    list
+             *      element: hello
+             *    list
+             *      element:         --> empty element ""
+             *    list               --> NULL element
+             *    list
+             *      element: test
+             */
+            Group arrayGroup = new SimpleGroup(listType);
             for (Object value : values) {
                 Group repeatedGroup = new SimpleGroup(repeatedType);
-                // If current element is null, directly add repeatedGroup into group
                 if (value != null) {
                     fillGroupWithPrimitive(0, value, repeatedGroup, elementType);
                 }
@@ -224,7 +234,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 String timestamp = (String) fieldValue;
                 if (TIMESTAMP_PATTERN.matcher(timestamp).find()) {
                     // Note: this conversion convert type "timestamp with time zone" will lose timezone information
-                    // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
+                    // while preserving the correct value. (as Parquet doesn't support timestamp with time zone)
                     group.add(columnIndex, ParquetTypeConverter.getBinaryFromTimestampWithTimeZone(timestamp));
                 } else {
                     group.add(columnIndex, ParquetTypeConverter.getBinaryFromTimestamp(timestamp));
