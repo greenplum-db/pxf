@@ -226,7 +226,7 @@ public class PartitionedJsonParser {
 	 * when instantiating a new 'currentObject'.
 	 */
 	private void updateAverageJsonObjectSize() {
-		int currentObjectSize = this.currentObject.toString().getBytes(StandardCharsets.UTF_8).length;
+		int currentObjectSize = currentObject.toString().getBytes(StandardCharsets.UTF_8).length;
 		if (numObjectsRead == 1) {
 			averageObjectSize = currentObjectSize;
 		} else {
