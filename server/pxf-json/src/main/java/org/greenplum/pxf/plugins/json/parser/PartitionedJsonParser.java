@@ -93,7 +93,7 @@ public class PartitionedJsonParser {
 		isCompletedObject = false;
 
 		currentObject.append(START_BRACE);
-		// push the index of the starting bracket w/r/t currentObject
+		// push the index of the starting bracket in relation to currentObject
 		objectStack.push(0);
 	}
 
@@ -108,8 +108,8 @@ public class PartitionedJsonParser {
 	 *     1: {
 	 *     2: "a":1,
 	 *     3: "b":
-	 *     4: { "d":3
-	 *     5: },
+	 *     4:   { "d":3
+	 *     5:   },
 	 *     6: "c":2
 	 *     7: }
 	 * In this example JSON, these are the 3 scenarios in which we could return true depending on what the member is:
@@ -220,6 +220,11 @@ public class PartitionedJsonParser {
 		return memberState == MemberSearchState.FOUND_STRING_NAME || memberState == MemberSearchState.IN_MATCHING_OBJECT;
 	}
 
+	/**
+	 * Calculate the average JSON object size in bytes as we read through the JSON file.
+	 * This function updates the averageObjectSize value for optimization purposes
+	 * when instantiating a new 'currentObject'.
+	 */
 	private void updateAverageJsonObjectSize() {
 		int currentObjectSize = this.currentObject.toString().getBytes(StandardCharsets.UTF_8).length;
 		if (numObjectsRead == 1) {

@@ -130,8 +130,8 @@ public class S3ProtocolHandler implements ProtocolHandler {
     }
 
     /**
-     * Determine if the HdfsFileFragmenter should be used for JSON filetypes
-     * This determination is dictated by the SPLIT_BY_FILE parameter.
+     * Determine if the HdfsFileFragmenter should be used for JSON filetypes.
+     * This determination is dictated by the SPLIT_BY_FILE parameter which is provided in the LOCATION uri.
      *
      * @param context the request context
      * @return true if the HdfsFileFragmenter should be used, false otherwise

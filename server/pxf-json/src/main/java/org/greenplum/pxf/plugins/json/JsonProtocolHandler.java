@@ -35,6 +35,13 @@ public class JsonProtocolHandler implements ProtocolHandler {
         return context.getResolver();
     }
 
+    /**
+     * Determine if the HdfsFileFragmenter should be used instead of the default fragmenter.
+     * This determination is dictated by the SPLIT_BY_FILE parameter which is provided in the LOCATION uri.
+     *
+     * @param context the request context
+     * @return true if the HdfsFileFragmenter should be used, false otherwise
+     */
     public boolean splitByFile(RequestContext context) {
         return context.getOption("split_by_file", false);
     }

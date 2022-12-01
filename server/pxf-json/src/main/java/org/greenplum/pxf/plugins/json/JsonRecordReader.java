@@ -120,7 +120,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             // read through the file until the object is completed
             int i;
             boolean isObjectComplete = false;
-            // object to pass in for streaming
             while (!isObjectComplete && (i = readNextChar()) != EOF) {
                 // if we are at the end of the split, then we need to get the next split before we can read the line
                 if (i == END_OF_SPLIT) {
@@ -142,7 +141,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
             if (isObjectComplete && parser.foundObjectWithIdentifier()) {
                 String json = parser.getCompletedObject();
-                // check the char length of the json against the MAXLENGTH
+                // check the char length of the json against the MAXLENGTH parameter
                 long jsonLength = json.length();
                 long jsonStart = pos - json.getBytes(StandardCharsets.UTF_8).length;
                 if (jsonLength > maxObjectLength) {
@@ -212,6 +211,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     }
     /**
      * Reads the next character in the buffer. It will pull the next line as necessary
+     *
      * @return the int value of a character
      * @throws IOException
      */
@@ -232,6 +232,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
     /**
      * Read through the characters until we hit starting bracket that indicates the start of a JSON object
+     *
      * @return true when an open bracket '{' is found, false otherwise
      * @throws IOException
      */
@@ -259,6 +260,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
      * This function allows JsonRecordReader to go into the next split to finish a JSON object.
      * Closes the current LineRecordReader and opens a new one that starts at the end of the current split
      * The end of the new split is set to Long.MAX
+     *
      * @throws IOException
      */
     private void getNextSplit() throws IOException {
@@ -273,6 +275,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
     /**
      * Reads the next line of the file in to begin parsing the characters
+     *
      * @return true if a line was read, false otherwise. False means that we have reached the end of the split
      * @throws IOException if error occurs internally in underlying LineRecordReader
      */
