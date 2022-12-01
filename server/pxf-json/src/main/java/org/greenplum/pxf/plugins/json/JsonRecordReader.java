@@ -275,7 +275,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
      * Reads the next line of the file in to begin parsing the characters
      * @return true if a line was read, false otherwise. False means that we have reached the end of the split
      * @throws IOException if error occurs internally in underlying LineRecordReader
-     *         IllegalStateException if delta between the bytes read and the bytes in the current line is greater than 2
      */
     private boolean getNextLine() throws IOException {
         currentLine.clear();
