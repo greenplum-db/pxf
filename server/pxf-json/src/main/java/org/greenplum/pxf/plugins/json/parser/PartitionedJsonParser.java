@@ -24,6 +24,8 @@ import java.util.ArrayDeque;
 import java.util.EnumSet;
 
 import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple parser that builds up a JSON object from the supplied char fed in. The parser searches for the JSON
@@ -32,6 +34,7 @@ import org.greenplum.pxf.plugins.json.parser.JsonLexer.JsonLexerState;
  * It is not recommended to use this with JSON text where individual JSON objects that can be large (MB's or larger).
  */
 public class PartitionedJsonParser {
+	private static final Logger LOG = LoggerFactory.getLogger(PartitionedJsonParser.class);
 
 	private static final char START_BRACE = '{';
 	private final JsonLexer lexer;
@@ -41,22 +44,29 @@ public class PartitionedJsonParser {
 	private StringBuilder currentObject;
 	private StringBuilder currentStringLiteral;
 	private int objectCount;
+	// the integer value saved is the index of any json starting bracket found
 	private ArrayDeque<Integer> objectStack;
 	private boolean isCompletedObject;
 	// track the average size of JSON objects produced to avoid extraneous buffer copies
 	private int averageObjectSize;
 	private int numObjectsRead;
+
+	/**
+	 * Create the partitioned json parser.
+	 *
+	 * @param memberName the json object identifier
+	 */
 	public PartitionedJsonParser(String memberName) {
-		this.lexer = new JsonLexer();
+		lexer = new JsonLexer();
 
 		this.memberName = memberName;
-		this.memberState = MemberSearchState.SEARCHING;
+		memberState = MemberSearchState.SEARCHING;
 
 		// set the capacity for average json object size somewhat large to start
-		this.averageObjectSize = 4132;
-		this.numObjectsRead = 0;
+		averageObjectSize = 4132;
+		numObjectsRead = 0;
 
-		this.objectStack = new ArrayDeque<>();
+		objectStack = new ArrayDeque<>();
 	}
 	private enum MemberSearchState {
 		FOUND_STRING_NAME,
@@ -73,16 +83,17 @@ public class PartitionedJsonParser {
 
 	public void startNewJsonObject() {
 		lexer.setState(JsonLexerState.BEGIN_OBJECT);
-		this.memberState = MemberSearchState.SEARCHING;
+		memberState = MemberSearchState.SEARCHING;
 
-		this.objectCount = 0;
-		this.currentObject = new StringBuilder(averageObjectSize);
+		objectCount = 0;
+		currentObject = new StringBuilder(averageObjectSize);
 		// as this variable only holds a json key or json value, it can be relatively small.
-		this.currentStringLiteral = new StringBuilder(32);
-		this.objectStack = new ArrayDeque<>();
-		this.isCompletedObject = false;
+		currentStringLiteral = new StringBuilder(32);
+		objectStack = new ArrayDeque<>();
+		isCompletedObject = false;
 
 		currentObject.append(START_BRACE);
+		// push the index of the starting bracket w/r/t currentObject
 		objectStack.push(0);
 	}
 
@@ -217,6 +228,7 @@ public class PartitionedJsonParser {
 			// recalculate the average: (averageObjectSize*(numObjectsRead - 1) + currentObjectSize) / numObjectsRead
 			//                        = averageObjectSize + (currentObjectSize - averageObjectSize) / numObjectsRead
 			averageObjectSize += (currentObjectSize - averageObjectSize)/numObjectsRead;
+			LOG.trace("Average JSON object size is " + averageObjectSize + ".");
 		}
 	}
 }

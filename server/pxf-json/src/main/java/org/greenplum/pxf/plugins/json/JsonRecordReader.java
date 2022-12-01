@@ -19,8 +19,6 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -29,6 +27,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.RecordReader;
 import org.greenplum.pxf.plugins.json.parser.PartitionedJsonParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,7 +45,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
     public static final String RECORD_MEMBER_IDENTIFIER = "json.input.format.record.identifier";
     public static final String RECORD_MAX_LENGTH = "multilinejsonrecordreader.maxlength";
-    private static final Log LOG = LogFactory.getLog(JsonRecordReader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JsonRecordReader.class);
     private final String jsonMemberName;
     private long start;
     private long pos;
@@ -70,8 +70,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     private static final char START_BRACE = '{';
     private static final int EOF = -1;
     private static final int END_OF_SPLIT = -2;
-    private final byte[] NEW_LINE = "\n".getBytes(StandardCharsets.UTF_8);
-    private final byte[] CARRIAGERETURN_NEWLINE = "\r\n".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] NEW_LINE = "\n".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] CARRIAGERETURN_NEWLINE = "\r\n".getBytes(StandardCharsets.UTF_8);
     private final LongWritable key;
 
     /**
@@ -83,8 +83,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
      */
     public JsonRecordReader(JobConf conf, FileSplit split) throws IOException {
 
-        this.jsonMemberName = conf.get(RECORD_MEMBER_IDENTIFIER);
-        this.maxObjectLength = conf.getInt(RECORD_MAX_LENGTH, Integer.MAX_VALUE);
+        jsonMemberName = conf.get(RECORD_MEMBER_IDENTIFIER);
+        maxObjectLength = conf.getInt(RECORD_MAX_LENGTH, Integer.MAX_VALUE);
 
         start = split.getStart();
         end = start + split.getLength();
@@ -93,9 +93,9 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         this.conf = conf;
         parser = new PartitionedJsonParser(jsonMemberName);
         currentLine = new Text();
-        this.pos = start;
-        this.filePos = start;
-        this.key = lineRecordReader.createKey();
+        pos = start;
+        filePos = start;
+        key = lineRecordReader.createKey();
     }
 
     /*
@@ -122,9 +122,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             boolean isObjectComplete = false;
             // object to pass in for streaming
             while (!isObjectComplete && (i = readNextChar()) != EOF) {
-                // if the currentLineBuffer is null, nothing has been read yet, so we need to read the next line
-                // if the currentLineIndex is greater than the length,  we are at the end of the buffer, read the next line
-                // however, if we are at the end of the split, then we need to get the next split before we can read the line
+                // if we are at the end of the split, then we need to get the next split before we can read the line
                 if (i == END_OF_SPLIT) {
                     LOG.debug("JSON object incomplete, continuing into next split to finish");
                     getNextSplit();
@@ -133,6 +131,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 }
 
                 char c = (char) i;
+                // object is complete if we found a matching } for either the starting {
+                // or for an internal object that has a field with the matching identifier
                 isObjectComplete = parser.parse(c);
             }
 
@@ -144,11 +144,12 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 String json = parser.getCompletedObject();
                 // check the char length of the json against the MAXLENGTH
                 long jsonLength = json.length();
+                long jsonStart = pos - json.getBytes(StandardCharsets.UTF_8).length;
                 if (jsonLength > maxObjectLength) {
-                    LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + pos);
+                    LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + jsonStart);
                 } else {
                     // the key is set to beginning of the json object
-                    key.set(pos - jsonLength);
+                    key.set(jsonStart);
                     value.set(json);
                     return true;
                 }
@@ -256,8 +257,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
     /**
      * This function allows JsonRecordReader to go into the next split to finish a JSON object.
-     *   Closes the current LineRecordReader and opens a new one that starts at the end of the current split
-     *  The end of the new split is set to Long.MAX
+     * Closes the current LineRecordReader and opens a new one that starts at the end of the current split
+     * The end of the new split is set to Long.MAX
      * @throws IOException
      */
     private void getNextSplit() throws IOException {
@@ -291,10 +292,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 currentLine.append(CARRIAGERETURN_NEWLINE, 0, CARRIAGERETURN_NEWLINE.length);
             } else if (delta == 1) {
                 currentLine.append(NEW_LINE, 0, NEW_LINE.length);
-            } else if (delta == 0) {
-                // likely end of file, do not do anything.
-            } else {
-                throw new IllegalStateException("LineRecordReader removed more characters than expected while parsing a JSON file.");
+            } else if (delta > 2) {
+                LOG.warn("LineRecordReader removed delta = {} characters while parsing a line in the JSON file at pos {}", delta, filePos);
             }
             currentLineBuffer = new StringBuffer(currentLine.toString());
             currentLineIndex = 0;

@@ -129,7 +129,14 @@ public class S3ProtocolHandler implements ProtocolHandler {
         }
     }
 
-    public boolean useFileReadForJson(RequestContext context) {
+    /**
+     * Determine if the HdfsFileFragmenter should be used for JSON filetypes
+     * This determination is dictated by the SPLIT_BY_FILE parameter.
+     *
+     * @param context the request context
+     * @return true if the HdfsFileFragmenter should be used, false otherwise
+     */
+    private boolean useFileReadForJson(RequestContext context) {
         boolean JsonFormat = StringUtils.equalsIgnoreCase("JSON", context.getFormat());
         boolean splitByFile = context.getOption("split_by_file", false);
         return JsonFormat && splitByFile;
