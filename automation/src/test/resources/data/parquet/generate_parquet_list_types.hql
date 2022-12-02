@@ -1,6 +1,3 @@
-!connect jdbc:hive2://localhost:10000/
-
-DROP TABLE IF EXISTS parquet_list_types_tmp;
 DROP TABLE IF EXISTS parquet_list_types_tmp;
 
 CREATE TABLE parquet_list_types_tmp (

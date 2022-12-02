@@ -6,7 +6,7 @@ follow the instructions below.
 
 ## Requirements
 
-- Hadoop CLI commands
+- Hadoop singlecluster-HDP3 CLI commands
 - Hive version 2.3+
 - Spark 3.3.0
 
@@ -80,5 +80,3 @@ For example, in our `generate_parquet_timestamp_list.py` and `generate_parquet_t
 `2022-10-05 11:30:00` in `America/Los Angeles` timezone. If we still use `America/Los Angeles` for reading, the output will still be `2022-10-05 11:30:00`. 
 If we use another timezone like `America/New York`, the output will be `2022-10-05 14:30:00`. But if we access 
 the generated parquet file `parquet_timestamp_list_type.parquet` directly, we will see that the timestamps are stored in UTC time `2022-10-05 18:30:00 +00:00`. 
-
-

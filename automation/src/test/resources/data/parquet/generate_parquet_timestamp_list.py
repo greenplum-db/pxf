@@ -17,8 +17,9 @@ data = [
 columnNames = ["id", "tm_arr"]
 df = spark.createDataFrame(data, columnNames)
 
-# convert from array<String> to array<Timestamp>
+# convert from Long to Integer
 df1 = df.withColumn("id", df["id"].cast(IntegerType()))
+# convert from array<String> to array<Timestamp>
 df2 = df1.withColumn("tm_arr", expr("transform(tm_arr, x -> to_timestamp(x))"))
 df2.show(df2.count(), False)
 # +---+---------------------------------------------------------------+
@@ -38,8 +39,7 @@ df2.printSchema()
 # |-- tm_arr: array (nullable = true)
 # |    |-- element: timestamp (containsNull = true)
 
-# write data into a single parquet file
 if os.path.exists("tmp.parquet"):
     shutil.rmtree("tmp.parquet")
-
+# write data into a single parquet file
 df2.repartition(1).write.parquet("tmp.parquet")

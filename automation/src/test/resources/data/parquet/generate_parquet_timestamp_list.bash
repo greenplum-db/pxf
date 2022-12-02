@@ -10,7 +10,6 @@ SPARK_SUBMIT_CMD=${SPARK_SUBMIT_CMD:-/usr/local/spark/bin/spark-submit}
 PYTHON_FILENAME=${PYTHON_FILENAME:-generate_parquet_timestamp_list.py}
 PARQUET_FILENAME=${PARQUET_FILENAME:-parquet_timestamp_list_type.parquet}
 
-
 TZ="America/Los_Angeles" "$SPARK_SUBMIT_CMD" "${PYTHON_FILENAME}"
 
 # Copy file to the directory where this script resides

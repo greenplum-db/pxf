@@ -64,6 +64,12 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         columnDescriptors = context.getTupleDescription();
     }
 
+    /**
+     * Get fields based on the row
+     *
+     * @param row the row to get the fields from
+     * @return a list of fields containing Greenplum data type and data value
+     */
     @Override
     public List<OneField> getFields(OneRow row) {
         validateSchema();
@@ -214,25 +220,25 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }
     }
 
+
     /**
-     * Resolve the Parquet data at the columnIndex into a Postgres type in String representation
+     * Resolve the Parquet data at the columnIndex into Greenplum representation
      *
-     * @param group       contains parquet schema and data of a {@link OneRow}
-     * @param columnIndex is the column of the row we want to resolve
-     * @return a field containing Greenplum data type and data
+     * @param group       contains parquet schema and data for a row
+     * @param columnIndex is the index of the column in the row that needs to be resolved
+     * @return a field containing Greenplum data type and data value
      */
     private OneField resolveField(Group group, int columnIndex) {
         OneField field = new OneField();
-        // get type converter based on the field type
-        // schema is the readSchema, if there is column projection
-        // the schema will be a subset of tuple descriptions
+        // get type converter based on the field data type
+        // schema is the readSchema, if there is column projection, the schema will be a subset of tuple descriptions
         Type type = schema.getType(columnIndex);
         ParquetTypeConverter converter = ParquetTypeConverter.from(type);
         // determine how many values for the field are present in the column
         int repetitionCount = group.getFieldRepetitionCount(columnIndex);
-        if (type.getRepetition() == REPEATED){
+        if (type.getRepetition() == REPEATED) {
             // For REPEATED type, repetitionCount can be any non-negative number,
-            // the element will be converted into JSON
+            // the element value will be converted into JSON value
             ArrayNode jsonArray = mapper.createArrayNode();
             for (int repeatIndex = 0; repeatIndex < repetitionCount; repeatIndex++) {
                 converter.addValueToJsonArray(group, columnIndex, repeatIndex, type, jsonArray);
@@ -241,14 +247,17 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             try {
                 field.val = mapper.writeValueAsString(jsonArray);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to serialize repeated parquet type " + type.asPrimitiveType().getName(), e);
+                String typeName = type.isPrimitive() ?
+                        type.asPrimitiveType().getPrimitiveTypeName().name() :
+                        type.asGroupType().getOriginalType().name();
+                throw new RuntimeException("Failed to serialize repeated parquet type " + typeName, e);
             }
-        }else if (repetitionCount == 0){
+        } else if (repetitionCount == 0) {
             // For non-REPEATED type, repetitionCount can only be 0 or 1
             // repetitionCount == 0 means this is a null LIST/Primitive
             field.type = converter.getDataType(type).getOID();
             field.val = null;
-        }else{
+        } else {
             // repetitionCount can only be 1
             field.type = converter.getDataType(type).getOID();
             field.val = converter.getValue(group, columnIndex, 0, type);

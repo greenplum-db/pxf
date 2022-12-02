@@ -14,12 +14,10 @@ import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.pig.convert.DecimalUtils;
-import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.Type;
-import org.apache.parquet.schema.Types;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
@@ -698,7 +696,6 @@ public class ParquetResolverTest {
         fields = assertRow(groups, 5, 2);
         assertField(fields, 0, 6, DataType.INTEGER);
         assertField(fields, 1, null, DataType.TIMESTAMPARRAY);
-
     }
 
     @Test
@@ -732,21 +729,30 @@ public class ParquetResolverTest {
 
     @Test
     @SuppressWarnings("deprecation")
-    public void testGetFields_Invalid_List_Schema() {
-        String validListSchema = "<list-repetition> group <name> (LIST) {\n"
-                + "  repeated group list {\n"
-                + "    <element-repetition> <element-type> element;\n"
-                + "  }\n"
-                + "}";
-
+    public void testGetFields_Invalid_Schema() {
+        // test invalid parquet primitive schema
         List<Type> fields = new ArrayList<>();
-
-        fields.add(new GroupType(Type.Repetition.OPTIONAL, "invalid_list", org.apache.parquet.schema.OriginalType.LIST, new ArrayList<>()));
+        fields.add(new PrimitiveType(Type.Repetition.OPTIONAL, null, "", null));
         schema = new MessageType("invalid_list_schema", fields);
         context.setMetadata(schema);
         Exception e = assertThrows(PxfRuntimeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals(String.format("Invalid Parquet List schema:\n %s. \nThe valid Parquet List schema should be:\n %s.", schema.getFields().get(0).toString(), validListSchema), e.getMessage());
+        assertEquals("Invalid Parquet Primitive schema.", e.getMessage());
+
+        // test invalid parquet list schema
+        String validListSchema = "<list-repetition> group <name> (LIST) {\n"
+                + "  repeated group list {\n"
+                + "    <element-repetition> <element-type> element;\n"
+                + "  }\n"
+                + "}\n";
+
+        fields = new ArrayList<>();
+        fields.add(new GroupType(Type.Repetition.OPTIONAL, "invalid_list", org.apache.parquet.schema.OriginalType.LIST, new ArrayList<>()));
+        schema = new MessageType("invalid_list_schema", fields);
+        context.setMetadata(schema);
+        e = assertThrows(PxfRuntimeException.class,
+                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
+        assertEquals(String.format("Invalid Parquet List schema: %s. The valid Parquet List schema should be: %s.", schema.getFields().get(0).toString(), validListSchema), e.getMessage());
 
         fields = new ArrayList<>();
         GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", new ArrayList<>());
@@ -755,7 +761,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         e = assertThrows(PxfRuntimeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals(String.format("Invalid Parquet List schema:\n %s. \nThe valid Parquet List schema should be:\n %s.", schema.getFields().get(0).asGroupType().getType(0).toString(), validListSchema), e.getMessage());
+        assertEquals(String.format("Invalid Parquet List schema: %s. The valid Parquet List schema should be: %s.", schema.getFields().get(0).toString(), validListSchema), e.getMessage());
     }
 
     private List<OneField> assertRow(List<Group> groups, int desiredRow, int numFields) {
@@ -859,7 +865,7 @@ public class ParquetResolverTest {
         List<Type> fields = new ArrayList<>();
         fields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "id", null));
         fields.add(generateListSchema(Type.Repetition.OPTIONAL, "list", Type.Repetition.OPTIONAL, "element", PrimitiveTypeName.INT96, 0, "tm_arr", null));
-        return new MessageType("hive_schema", fields);
+        return new MessageType("spark_schema", fields);
     }
 
     @SuppressWarnings("deprecation")

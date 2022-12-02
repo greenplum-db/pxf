@@ -1,10 +1,10 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import org.apache.commons.lang.StringUtils;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
+import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
@@ -240,9 +240,11 @@ public enum ParquetTypeConverter {
     LIST {
         @Override
         public DataType getDataType(Type type) {
-            Type elementType = getElementType(type);
+            Type elementType = getElementType(type.asGroupType());
             if (!elementType.isPrimitive()) {
-                String originalTypeName = elementType.asGroupType().getOriginalType() == null ? "non primitives" : elementType.asGroupType().getOriginalType().name();
+                String originalTypeName = elementType.asGroupType().getOriginalType() == null ?
+                        "non primitives" :
+                        elementType.asGroupType().getOriginalType().name();
                 throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", originalTypeName));
             }
             return from(elementType).getArrayDataType(elementType);
@@ -254,14 +256,18 @@ public enum ParquetTypeConverter {
             pgArrayBuilder.startArray();
 
             Group listGroup = group.getGroup(columnIndex, repeatIndex);
+            // a listGroup can have any number of repeatedGroups
             int repetitionCount = listGroup.getFieldRepetitionCount(0);
             for (int i = 0; i < repetitionCount; i++) {
-                Group elementGroup = listGroup.getGroup(0, i);
-                if (elementGroup.getFieldRepetitionCount(0) == 0) {
+                Group repeatedGroup = listGroup.getGroup(0, i);
+                // each repeatedGroup can only have no more than 1 element
+                // 0 means it is a null primitive element
+                if (repeatedGroup.getFieldRepetitionCount(0) == 0) {
                     pgArrayBuilder.addElement((String) null);
                 } else {
-                    PrimitiveType elementType = getElementType(type).asPrimitiveType();
-                    from(elementType).addValueToArray(elementGroup, 0, 0, elementType, pgArrayBuilder);
+                    // add the non-null element into array
+                    PrimitiveType elementType = getElementType(type.asGroupType()).asPrimitiveType();
+                    from(elementType).addValueToArray(repeatedGroup, 0, 0, elementType, pgArrayBuilder);
                 }
             }
             pgArrayBuilder.endArray();
@@ -290,12 +296,16 @@ public enum ParquetTypeConverter {
      */
     public static ParquetTypeConverter from(Type type) {
         if (type.isPrimitive()) {
+            if (type.asPrimitiveType().getPrimitiveTypeName() == null) {
+                throw new PxfRuntimeException("Invalid Parquet Primitive schema.");
+            }
             return valueOf(type.asPrimitiveType().getPrimitiveTypeName().name());
         }
+
         try {
             return valueOf(type.getOriginalType().name());
         } catch (IllegalArgumentException e) {
-            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported, error: %s", type.getOriginalType().name(), e));
+            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported, error: %s", type.asGroupType().getOriginalType().name(), e));
         }
     }
 
@@ -369,6 +379,8 @@ public enum ParquetTypeConverter {
     }
 
     /*
+     * Get the Parquet primitive schema type based on Parquet List schema type
+     *
      * Parquet List Schema
      * <list-repetition> group <name> (LIST) {
      *   repeated group list {
@@ -380,17 +392,14 @@ public enum ParquetTypeConverter {
      * - The middle level, named `list`, must be a repeated group with a single field named `element`.
      * - The `element` field encodes the list's element type and repetition. Element repetition must be `required` or `optional`.
      */
-    private static Type getElementType(Type type) {
-        if (type.asGroupType().getFields().size() != 1 || type.asGroupType().getType(0).asGroupType().getFields().size() != 1) {
-            String invalidListSchema = type.asGroupType().getFields().size() != 1 ? type.asGroupType().toString() : type.asGroupType().getType(0).asGroupType().toString();
-            String validListSchema = "<list-repetition> group <name> (LIST) {\n"
-                    + "  repeated group list {\n"
-                    + "    <element-repetition> <element-type> element;\n"
-                    + "  }\n"
-                    + "}";
-            throw new PxfRuntimeException(String.format("Invalid Parquet List schema:\n %s. \nThe valid Parquet List schema should be:\n %s.", invalidListSchema, validListSchema));
+    private static Type getElementType(GroupType listType) {
+        if (listType.getFields().size() != 1 || listType.getType(0).asGroupType().getFields().size() != 1) {
+            String invalidListSchema = listType.toString();
+            throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", invalidListSchema));
         }
-        return type.asGroupType().getType(0).asGroupType().getType(0);
+
+        GroupType repeatedType = listType.getType(0).asGroupType();
+        return repeatedType.getType(0);
     }
 
     // ********** PUBLIC INTERFACE **********

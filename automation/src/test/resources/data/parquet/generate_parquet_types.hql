@@ -1,9 +1,6 @@
-!connect jdbc:hive2://localhost:10000/
-
-DROP TABLE IF EXISTS parquet_types_csv;
 DROP TABLE IF EXISTS parquet_types_csv;
 
-CREATE EXTERNAL TABLE IF NOT EXISTS parquet_types_csv (
+CREATE EXTERNAL TABLE parquet_types_csv (
 id       INT,
 name     STRING,
 cdate    DATE,

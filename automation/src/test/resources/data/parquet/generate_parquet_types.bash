@@ -21,8 +21,9 @@ PARQUET_FILENAME=${PARQUET_FILENAME:-parquet_types.parquet}
 "$HDFS_CMD" dfs -mkdir -p "${HDFS_DIR}"
 # Copy source CSV file to HDFS
 "$HDFS_CMD" dfs -copyFromLocal "${SRC_DIR}/${CSV_FILENAME}" "${HDFS_DIR}"
-# Run the HQL file
-"$HIVE_CMD" -f "${SRC_DIR}/${HQL_FILENAME}"
+
+# Open connection and run hql file
+"$HIVE_CMD" -u jdbc:hive2://localhost:10000/ -f "${SRC_DIR}/${HQL_FILENAME}"
 
 # Copy file to the directory where this script resides
 rm -f "${SRC_DIR}/${PARQUET_FILENAME}"

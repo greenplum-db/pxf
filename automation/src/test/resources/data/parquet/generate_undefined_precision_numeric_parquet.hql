@@ -1,9 +1,6 @@
-!connect jdbc:hive2://localhost:10000/
-
-DROP TABLE IF EXISTS undefined_precision_numeric_csv;
 DROP TABLE IF EXISTS undefined_precision_numeric_csv;
 
-CREATE EXTERNAL TABLE IF NOT EXISTS undefined_precision_numeric_csv
+CREATE EXTERNAL TABLE undefined_precision_numeric_csv
 (description STRING, value DECIMAL(38,18))
 ROW FORMAT
 DELIMITED FIELDS TERMINATED BY ','

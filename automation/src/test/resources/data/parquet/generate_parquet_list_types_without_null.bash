@@ -12,7 +12,8 @@ HIVE_WAREHOUSE_PATH=${HIVE_WAREHOUSE_PATH:-/hive/warehouse/parquet_list_types_wi
 HQL_FILENAME=${HQL_FILENAME:-generate_parquet_list_types_without_null.hql}
 PARQUET_FILENAME=${PARQUET_FILENAME:-parquet_list_types_without_null.parquet}
 
-"$HIVE_CMD" -f "${SRC_DIR}/${HQL_FILENAME}"
+# Open connection and run hql file
+"$HIVE_CMD" -u jdbc:hive2://localhost:10000/ -f "${SRC_DIR}/${HQL_FILENAME}"
 
 # Copy file to the directory where this script resides
 rm -f "${SRC_DIR}/${PARQUET_FILENAME}"
