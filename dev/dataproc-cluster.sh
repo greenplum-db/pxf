@@ -39,6 +39,8 @@ function check_pre_requisites() {
 }
 
 function create_dataproc_cluster() {
+    local extra_hadoop_config="${1}"
+
     if gcloud dataproc clusters describe "${cluster_name}" --region="${region}" &>/dev/null; then
         echo "Cluster ${cluster_name} already exists; skipping create..."
         return 0
@@ -55,7 +57,7 @@ function create_dataproc_cluster() {
         --network="${network}")
 
     if [[ -n $1 ]]; then
-        create_cmd+=("$1")
+        create_cmd+=("--properties=${extra_hadoop_config}")
     fi
 
     "${create_cmd[@]}"
@@ -104,6 +106,20 @@ function delete_firewall_rule() {
 function create_dataproc_env_files() {
     local zoneUri
     zoneUri="$(gcloud dataproc clusters describe "${cluster_name}" --region us-west1 --format='get(config.gceClusterConfig.zoneUri)')"
+    # the zoneUri field may contain a
+    #
+    #   * full URL    (https://www.googleapis.com/compute/v1/projects/[projectId]/zones/[zone])
+    #   * partial URI (projects/[projectId]/zones/[zone])
+    #   * short name  ([zone])
+    #
+    # <https://cloud.google.com/dataproc/docs/reference/rest/v1/ClusterConfig#gceclusterconfig>
+    #
+    # we need the just the short name when running
+    #
+    #     gcloud compute instances describe
+    #
+    # use bash parameter expansion to remove the longest matching prefix
+    # (everything up to the last forward-slash)
     local zone="${zoneUri##*/}"
 
     mkdir -p dataproc_env_files/conf
@@ -164,17 +180,20 @@ NAME
     dataproc-cluster.sh - manage a Google Cloud Dataproc cluster
 
 SYNOPSIS
-    dataproc-cluster.sh create [<optional-options-for-dataproc>]
+    dataproc-cluster.sh create [<optional-extra-hadoop-config>]
     dataproc-cluster.sh delete
 
 DESCRIPTION
     When creating the dataproc cluster, additional options can be passed in to
     customize the created cluster. For example:
 
-        dataproc-cluster.sh create --properties=hdfs:dfs.namenode.fs-limits.min-block-size=1024
+        dataproc-cluster.sh create hdfs:dfs.namenode.fs-limits.min-block-size=1024
 
     would create a cluster with a customized hdfs-site.xml that contains the
-    custom value for dfs.namenode.fs-limits.min-block-size.
+    custom value for dfs.namenode.fs-limits.min-block-size. Multiple
+    properties can be specified by separating them with a comma. For a more
+    detailed description of the format, See '--properties' in the man page
+    for 'gcloud dataproc clusters create'.
 
 EOF
 
@@ -183,11 +202,11 @@ EOF
 # --- main script logic ---
 
 script_command="$1"
-custom_dataproc_properties="$2"
+extra_hadoop_config="$2"
 case "${script_command}" in
 'create')
     check_pre_requisites
-    create_dataproc_cluster "${custom_dataproc_properties}"
+    create_dataproc_cluster "${extra_hadoop_config}"
     create_firewall_rule "${cluster_name}-external-access"
     create_dataproc_env_files
     print_user_instructions_for_create
