@@ -740,19 +740,13 @@ public class ParquetResolverTest {
         assertEquals("Invalid Parquet Primitive schema.", e.getMessage());
 
         // test invalid parquet list schema
-        String validListSchema = "<list-repetition> group <name> (LIST) {\n"
-                + "  repeated group list {\n"
-                + "    <element-repetition> <element-type> element;\n"
-                + "  }\n"
-                + "}\n";
-
         fields = new ArrayList<>();
         fields.add(new GroupType(Type.Repetition.OPTIONAL, "invalid_list", org.apache.parquet.schema.OriginalType.LIST, new ArrayList<>()));
         schema = new MessageType("invalid_list_schema", fields);
         context.setMetadata(schema);
         e = assertThrows(PxfRuntimeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals(String.format("Invalid Parquet List schema: %s. The valid Parquet List schema should be: %s.", schema.getFields().get(0).toString(), validListSchema), e.getMessage());
+        assertEquals(String.format("Invalid Parquet List schema: %s.", schema.getFields().get(0).toString()), e.getMessage());
 
         fields = new ArrayList<>();
         GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", new ArrayList<>());
@@ -761,7 +755,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         e = assertThrows(PxfRuntimeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals(String.format("Invalid Parquet List schema: %s. The valid Parquet List schema should be: %s.", schema.getFields().get(0).toString(), validListSchema), e.getMessage());
+        assertEquals(String.format("Invalid Parquet List schema: %s.", schema.getFields().get(0).toString()), e.getMessage());
     }
 
     private List<OneField> assertRow(List<Group> groups, int desiredRow, int numFields) {

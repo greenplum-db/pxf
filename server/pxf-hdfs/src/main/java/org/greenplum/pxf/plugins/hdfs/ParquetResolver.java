@@ -247,10 +247,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             try {
                 field.val = mapper.writeValueAsString(jsonArray);
             } catch (Exception e) {
-                String typeName = type.isPrimitive() ?
-                        type.asPrimitiveType().getPrimitiveTypeName().name() :
-                        type.asGroupType().getOriginalType().name();
-                throw new RuntimeException("Failed to serialize repeated parquet type " + typeName, e);
+                throw new RuntimeException(String.format("Failed to serialize repeated parquet type %s.", type.getOriginalType().name()), e);
             }
         } else if (repetitionCount == 0) {
             // For non-REPEATED type, repetitionCount can only be 0 or 1

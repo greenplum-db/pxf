@@ -1,18 +1,22 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import expr
 from pyspark.sql.types import IntegerType
-import shutil,os
+import shutil, os
 
-spark = SparkSession.builder.master("local[2]").appName("generate_parquet_timestamp_list").getOrCreate()
+spark = (
+    SparkSession.builder.master("local[2]")
+    .appName("generate_parquet_timestamp_list")
+    .getOrCreate()
+)
 
 # prepare the timestamp array dataset in string type
 data = [
     (1, ["2022-10-05 11:30:00", "2022-10-06 12:30:00", "2022-10-07 13:30:00"]),
-    (2, ["2022-10-05 11:30:00","2022-10-05 11:30:00","2022-10-07 13:30:00"]),
+    (2, ["2022-10-05 11:30:00", "2022-10-05 11:30:00", "2022-10-07 13:30:00"]),
     (3, [None, "2022-10-05 11:30:00", "2022-10-05 11:30:00"]),
     (4, [None]),
     (5, []),
-    (6, None)
+    (6, None),
 ]
 columnNames = ["id", "tm_arr"]
 df = spark.createDataFrame(data, columnNames)

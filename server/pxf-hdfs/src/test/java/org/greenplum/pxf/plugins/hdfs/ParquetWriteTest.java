@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static java.math.BigDecimal.ROUND_UNNECESSARY;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.BLOCK_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.DICTIONARY_PAGE_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.ENABLE_DICTIONARY;

@@ -73,13 +73,14 @@ public enum ParquetTypeConverter {
         }
 
         @Override
-        public void addValueToArray(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType, PgArrayBuilder pgArrayBuilder) {
+        public String getValueFromList(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType) {
             Object value = getValue(group, columnIndex, repeatIndex, primitiveType);
             if (primitiveType.getLogicalTypeAnnotation() == null) {
                 ByteBuffer byteBuffer = ByteBuffer.wrap((byte[]) value);
-                pgArrayBuilder.addElementNoEscaping(pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
+                String escapedByteaHex = pgUtilities.encodeAndEscapeByteaHex(byteBuffer);
+                return pgUtilities.unescapeArrayElement(escapedByteaHex);
             } else {
-                pgArrayBuilder.addElement(String.valueOf(value));
+                return String.valueOf(value);
             }
         }
     },
@@ -267,7 +268,8 @@ public enum ParquetTypeConverter {
                 } else {
                     // add the non-null element into array
                     PrimitiveType elementType = getElementType(type.asGroupType()).asPrimitiveType();
-                    from(elementType).addValueToArray(repeatedGroup, 0, 0, elementType, pgArrayBuilder);
+                    String elementValue = from(elementType).getValueFromList(repeatedGroup, 0, 0, elementType);
+                    pgArrayBuilder.addElement(elementValue);
                 }
             }
             pgArrayBuilder.endArray();
@@ -394,8 +396,7 @@ public enum ParquetTypeConverter {
      */
     private static Type getElementType(GroupType listType) {
         if (listType.getFields().size() != 1 || listType.getType(0).asGroupType().getFields().size() != 1) {
-            String invalidListSchema = listType.toString();
-            throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", invalidListSchema));
+            throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", listType));
         }
 
         GroupType repeatedType = listType.getType(0).asGroupType();
@@ -409,12 +410,27 @@ public enum ParquetTypeConverter {
 
     public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
 
+    /**
+     * Get DataType based on the element type of Parquet LIST
+     *
+     * @param type is the element type of the Parquet LIST
+     * @return the array DataType
+     */
     public DataType getArrayDataType(Type type) {
         return getDataType(type).getTypeArray();
     }
 
-    public void addValueToArray(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType, PgArrayBuilder pgArrayBuilder) {
-        pgArrayBuilder.addElement(String.valueOf(getValue(group, columnIndex, repeatIndex, primitiveType)));
+    /**
+     * Get the String value of each primitive element from the list
+     *
+     * @param group         contains parquet schema and data for a row
+     * @param columnIndex   is the index of the column in the row that needs to be resolved
+     * @param repeatIndex   is the index of each repeated group in the list group at the column
+     * @param primitiveType is the primitive type of the primitive element we are going to get
+     * @return the String value of the primitive element
+     */
+    public String getValueFromList(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType) {
+        return String.valueOf(getValue(group, columnIndex, repeatIndex, primitiveType));
     }
 
 }

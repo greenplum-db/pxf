@@ -80,7 +80,7 @@ public class ParquetReadTest extends BaseFeature {
             "bin   BYTEA"
     };
     // parquet LIST data are generated using HIVE, but HIVE doesn't support TIMESTAMP for parquet LIST
-    private static final String[] PARQUET_LIST_TABLE_COLUMNS = {
+    private static final String[] PARQUET_LIST_TABLE_COLUMNS = new String[]{
             "id                   INTEGER",
             "bool_arr             BOOLEAN[]",
             "smallint_arr         SMALLINT[]",
@@ -96,7 +96,7 @@ public class ParquetReadTest extends BaseFeature {
             "numeric_arr          NUMERIC[]",
     };
     // parquet TIMESTAMP LIST data generated using Spark
-    private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
+    private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = new String[]{
             "id            INTEGER",
             "tm_arr        TIMESTAMP[]",
     };
