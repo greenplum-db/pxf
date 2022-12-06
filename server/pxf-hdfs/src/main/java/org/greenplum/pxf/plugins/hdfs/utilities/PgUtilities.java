@@ -210,15 +210,21 @@ public class PgUtilities {
 
     /**
      * Converts a byte buffer into a String containing Postgres bytea hex format.
+     *
      * @param data a byte buffer to convert to bytea hex format
      * @return a string containing Postgres bytea hex format
      */
     public String encodeAndEscapeByteaHex(ByteBuffer data) {
-        return escapeArrayElement(String.format("\\x%s", Hex.encodeHexString(data)));
+        return escapeArrayElement(encodeByteaHex(data));
+    }
+
+    public String encodeByteaHex(ByteBuffer data) {
+        return String.format("\\x%s", Hex.encodeHexString(data));
     }
 
     /**
      * Converts a Postgres boolean from text format ("t" or "f") to Java boolean
+     *
      * @param value string containing a valid Postgres boolean in text format
      * @return Java boolean
      * @throws {@link PxfRuntimeException} if the input is not a valid text format Postgres boolean

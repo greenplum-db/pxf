@@ -26,15 +26,12 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
-import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
-import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -542,34 +539,34 @@ public class ParquetResolverTest {
         assertEquals(2, groups.size());
 
         List<OneField> fields = assertRow(groups, 0, 13);
-        assertField(fields, 0, 1, DataType.INTEGER);
-        assertField(fields, 1, new Boolean[]{true}, DataType.BOOLARRAY);
-        assertField(fields, 2, new Short[]{50}, DataType.INT2ARRAY);
-        assertField(fields, 3, new Integer[]{1}, DataType.INT4ARRAY);
-        assertField(fields, 4, new Long[]{1L}, DataType.INT8ARRAY);
-        assertField(fields, 5, new Float[]{(float) 1.11}, DataType.FLOAT4ARRAY);
-        assertField(fields, 6, new Double[]{1.7E308}, DataType.FLOAT8ARRAY);
-        assertField(fields, 7, new String[]{"this is a test string"}, DataType.TEXTARRAY);
-        assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(DatatypeConverter.parseHexBinary("DEADBEEF"))}, DataType.BYTEAARRAY);
-        assertField(fields, 9, new String[]{"hello"}, DataType.BPCHARARRAY);
-        assertField(fields, 10, new String[]{"hello"}, DataType.VARCHARARRAY);
-        assertField(fields, 11, new String[]{"2022-10-07"}, DataType.DATEARRAY);
-        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
+        assertList(fields, 0, "1");                                                                       // DataType.INTEGER
+        assertList(fields, 1, "{true}");                                                                  // DataType.BOOLARRAY
+        assertList(fields, 2, "{50}");                                                                    // DataType.INT2ARRAY
+        assertList(fields, 3, "{1}");                                                                     // DataType.INT4ARRAY
+        assertList(fields, 4, "{1}");                                                                     // DataType.INT8ARRAY
+        assertList(fields, 5, "{1.11}");                                                                  // DataType.FLOAT4ARRAY
+        assertList(fields, 6, "{1.7E308}");                                                               // DataType.FLOAT8ARRAY
+        assertList(fields, 7, "{\"this is a test string\"}");                                             // DataType.TEXTARRAY
+        assertList(fields, 8, "{\"\\\\xdeadbeef\"}");                                                     // DataType.BYTEAARRAY
+        assertList(fields, 9, "{hello}");                                                                 // DataType.BPCHARARRAY, right trimmed spaces
+        assertList(fields, 10, "{hello}");                                                                // DataType.VARCHARARRAY
+        assertList(fields, 11, "{2022-10-07}");                                                           // DataType.DATEARRAY
+        assertList(fields, 12, "{" + BigDecimal.valueOf(1234560000000000000L, 18) + "}");// DataType.NUMERICARRAY
 
         fields = assertRow(groups, 1, 13);
-        assertField(fields, 0, 2, DataType.INTEGER);
-        assertField(fields, 1, new Boolean[]{false, true, true, false}, DataType.BOOLARRAY);
-        assertField(fields, 2, new Short[]{-128, 96}, DataType.INT2ARRAY);
-        assertField(fields, 3, new Integer[]{2, 3}, DataType.INT4ARRAY);
-        assertField(fields, 4, new Long[]{-9223372036854775808L, 223372036854775808L}, DataType.INT8ARRAY);
-        assertField(fields, 5, new Float[]{(float) -1.23456984E5, (float) 123456.984}, DataType.FLOAT4ARRAY);
-        assertField(fields, 6, new Double[]{1.0, -9.99E1}, DataType.FLOAT8ARRAY);
-        assertField(fields, 7, new String[]{"this is a string with \"special\" characters", "this is a string without"}, DataType.TEXTARRAY);
-        assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(DatatypeConverter.parseHexBinary("DEADBEEF")), Binary.fromReusedByteArray(DatatypeConverter.parseHexBinary("ADBEEF"))}, DataType.BYTEAARRAY);
-        assertField(fields, 9, new String[]{"this is exactly", " fifteen chars."}, DataType.BPCHARARRAY);
-        assertField(fields, 10, new String[]{"this is exactly", " fifteen chars."}, DataType.VARCHARARRAY);
-        assertField(fields, 11, new String[]{"2022-10-07", "2022-10-08"}, DataType.DATEARRAY);
-        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18), BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
+        assertList(fields, 0, "2");                                                                                   // DataType.INTEGER
+        assertList(fields, 1, "{false,true,true,false}");                                                             // DataType.BOOLARRAY
+        assertList(fields, 2, "{-128,96}");                                                                           // DataType.INT2ARRAY
+        assertList(fields, 3, "{2,3}");                                                                               // DataType.INT4ARRAY
+        assertList(fields, 4, "{-9223372036854775808,223372036854775808}");                                           // DataType.INT8ARRAY
+        assertList(fields, 5, "{-123456.984,123456.984}");                                                            // DataType.FLOAT8ARRAY
+        assertList(fields, 6, "{1.0,-99.9}");                                                                         // DataType.FLOAT8ARRAY
+        assertList(fields, 7, "{\"this is a string with \\\"special\\\" characters\",\"this is a string without\"}"); // DataType.TEXTARRAY
+        assertList(fields, 8, "{\"\\\\xdeadbeef\",\"\\\\xadbeef\"}");                                                 // DataType.BYTEAARRAY
+        assertList(fields, 9, "{\"this is exactly\",\" fifteen chars.\"}");                                           // DataType.BPCHARARRAY
+        assertList(fields, 10, "{\"this is exactly\",\" fifteen chars.\"}");                                          // DataType.VARCHARARRAY
+        assertList(fields, 11, "{2022-10-07,2022-10-08}");                                                            // DataType.DATEARRAY
+        assertList(fields, 12, "{" + BigDecimal.valueOf(1234560000000000000L, 18) + "," + BigDecimal.valueOf(1234560000000000000L, 18) + "}");  // DataType.NUMERICARRAY
     }
 
     @Test
@@ -585,19 +582,19 @@ public class ParquetResolverTest {
         assertEquals(6, groups.size());
 
         List<OneField> fields = assertRow(groups, 3, 13);
-        assertField(fields, 0, 4, DataType.INTEGER);
-        assertField(fields, 1, null, DataType.BOOLARRAY);
-        assertField(fields, 2, new Short[]{10, 20}, DataType.INT2ARRAY);
-        assertField(fields, 3, new Integer[]{7, null, 8}, DataType.INT4ARRAY);
-        assertField(fields, 4, new Long[]{-9223372036854775808L, 0L}, DataType.INT8ARRAY);
-        assertField(fields, 5, new Float[]{(float) 2.3, (float) 4.5}, DataType.FLOAT4ARRAY);
-        assertField(fields, 6, null, DataType.FLOAT8ARRAY);
-        assertField(fields, 7, new String[]{null, ""}, DataType.TEXTARRAY);
-        assertField(fields, 8, new Binary[]{null, Binary.fromReusedByteArray(DatatypeConverter.parseHexBinary("5c22"))}, DataType.BYTEAARRAY);
-        assertField(fields, 9, null, DataType.BPCHARARRAY);
-        assertField(fields, 10, null, DataType.VARCHARARRAY);
-        assertField(fields, 11, new String[]{"2022-10-07", "2022-10-07", null}, DataType.DATEARRAY);
-        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234500000000000000L, 18)}, DataType.NUMERICARRAY);
+        assertList(fields, 0, "4");                                                                         // DataType.INTEGER
+        assertList(fields, 1, "NULL");                                                                      // DataType.BOOLARRAY
+        assertList(fields, 2, "{10,20}");                                                                   // DataType.INT2ARRAY
+        assertList(fields, 3, "{7,NULL,8}");                                                                // DataType.INT4ARRAY
+        assertList(fields, 4, "{-9223372036854775808,0}");                                                  // DataType.INT8ARRAY
+        assertList(fields, 5, "{2.3,4.5}");                                                                 // DataType.FLOAT4ARRAY
+        assertList(fields, 6, "NULL");                                                                      // DataType.FLOAT8ARRAY
+        assertList(fields, 7, "{NULL,\"\"}");                                                               // DataType.TEXTARRAY
+        assertList(fields, 8, "{NULL,\"\\\\x5c22\"}");                                                      // DataType.BYTEAARRAY
+        assertList(fields, 9, "NULL");                                                                      // DataType.BPCHARARRAY
+        assertList(fields, 10, "NULL");                                                                     // DataType.VARCHARARRAY
+        assertList(fields, 11, "{2022-10-07,2022-10-07,NULL}");                                             // DataType.DATEARRAY
+        assertList(fields, 12, "{" + BigDecimal.valueOf(1234500000000000000L, 18) + "}");  // DataType.NUMERICARRAY
     }
 
     @Test
@@ -620,34 +617,35 @@ public class ParquetResolverTest {
         assertEquals(2, groups.size());
 
         List<OneField> fields = assertRow(groups, 0, 13);
-        assertField(fields, 0, 1, DataType.INTEGER);
-        assertField(fields, 1, null, DataType.BOOLARRAY);
-        assertField(fields, 2, new Short[]{50}, DataType.INT2ARRAY);
-        assertField(fields, 3, null, DataType.INT4ARRAY);
-        assertField(fields, 4, new Long[]{1L}, DataType.INT8ARRAY);
-        assertField(fields, 5, null, DataType.FLOAT4ARRAY);
-        assertField(fields, 6, new Double[]{1.7E308}, DataType.FLOAT8ARRAY);
-        assertField(fields, 7, null, DataType.TEXTARRAY);
-        assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(new byte[]{(byte) 222, (byte) 173, (byte) 190, (byte) 239})}, DataType.BYTEAARRAY);
-        assertField(fields, 9, null, DataType.BPCHARARRAY);
-        assertField(fields, 10, new String[]{"hello"}, DataType.VARCHARARRAY);
-        assertField(fields, 11, null, DataType.DATEARRAY);
-        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
+        assertList(fields, 0, "1");                                                                        // DataType.INTEGER
+        assertList(fields, 1, "NULL");                                                                     // DataType.BOOLARRAY
+        assertList(fields, 2, "{50}");                                                                     // DataType.INT2ARRAY
+        assertList(fields, 3, "NULL");                                                                     // DataType.INT4ARRAY
+        assertList(fields, 4, "{1}");                                                                      // DataType.INT8ARRAY
+        assertList(fields, 5, "NULL");                                                                     // DataType.FLOAT4ARRAY
+        assertList(fields, 6, "{1.7E308}");                                                                // DataType.FLOAT8ARRAY
+        assertList(fields, 7, "NULL");                                                                     // DataType.TEXTARRAY
+        assertList(fields, 8, "{\"\\\\xdeadbeef\"}");                                                      // DataType.BYTEAARRAY
+        assertList(fields, 9, "NULL");                                                                     // DataType.BPCHARARRAY, right trimmed spaces
+        assertList(fields, 10, "{hello}");                                                                 // DataType.VARCHARARRAY
+        assertList(fields, 11, "NULL");                                                                    // DataType.DATEARRAY
+        assertList(fields, 12, "{" + BigDecimal.valueOf(1234560000000000000L, 18) + "}"); // DataType.NUMERICARRAY
 
         fields = assertRow(groups, 1, 13);
-        assertField(fields, 0, 2, DataType.INTEGER);
-        assertField(fields, 1, null, DataType.BOOLARRAY);
-        assertField(fields, 2, new Short[]{-128, 96}, DataType.INT2ARRAY);
-        assertField(fields, 3, null, DataType.INT4ARRAY);
-        assertField(fields, 4, new Long[]{-9223372036854775808L, 223372036854775808L}, DataType.INT8ARRAY);
-        assertField(fields, 5, null, DataType.FLOAT4ARRAY);
-        assertField(fields, 6, new Double[]{1.0, -9.99E1}, DataType.FLOAT8ARRAY);
-        assertField(fields, 7, null, DataType.TEXTARRAY);
-        assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(new byte[]{(byte) 222, (byte) 173, (byte) 190, (byte) 239}), Binary.fromReusedByteArray(new byte[]{(byte) 173, (byte) 190, (byte) 239})}, DataType.BYTEAARRAY);
-        assertField(fields, 9, null, DataType.BPCHARARRAY);
-        assertField(fields, 10, new String[]{"this is exactly", " fifteen chars."}, DataType.VARCHARARRAY);
-        assertField(fields, 11, null, DataType.DATEARRAY);
-        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18), BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
+        assertList(fields, 0, "2");                                                                                   // DataType.INTEGER
+        assertList(fields, 1, "NULL");                                                                                // DataType.BOOLARRAY
+        assertList(fields, 2, "{-128,96}");                                                                           // DataType.INT2ARRAY
+        assertList(fields, 3, "NULL");                                                                                // DataType.INT4ARRAY
+        assertList(fields, 4, "{-9223372036854775808,223372036854775808}");                                           // DataType.INT8ARRAY
+        assertList(fields, 5, "NULL");                                                                                // DataType.FLOAT8ARRAY
+        assertList(fields, 6, "{1.0,-99.9}");                                                                         // DataType.FLOAT8ARRAY
+        assertList(fields, 7, "NULL");                                                                                // DataType.TEXTARRAY
+        assertList(fields, 8, "{\"\\\\xdeadbeef\",\"\\\\xadbeef\"}");                                                 // DataType.BYTEAARRAY
+        assertList(fields, 9, "NULL");                                                                                // DataType.BPCHARARRAY
+        assertList(fields, 10, "{\"this is exactly\",\" fifteen chars.\"}");                                          // DataType.VARCHARARRAY
+        assertList(fields, 11, "NULL");                                                                               // DataType.DATEARRAY
+        assertList(fields, 12, "{" + BigDecimal.valueOf(1234560000000000000L, 18) + "," + BigDecimal.valueOf(1234560000000000000L, 18) + "}");  // DataType.NUMERICARRAY
+
     }
 
     @Test
@@ -674,28 +672,29 @@ public class ParquetResolverTest {
         String localTimestampString3 = localTime3.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         List<OneField> fields = assertRow(groups, 0, 2);
-        assertField(fields, 0, 1, DataType.INTEGER);
-        assertField(fields, 1, new String[]{localTimestampString1, localTimestampString2, localTimestampString3}, DataType.TIMESTAMPARRAY);
+        assertList(fields, 0, "1");
+        assertList(fields, 1, "{\"" + localTimestampString1 + "\",\"" + localTimestampString2 + "\",\"" + localTimestampString3 + "\"}");
 
         fields = assertRow(groups, 1, 2);
-        assertField(fields, 0, 2, DataType.INTEGER);
-        assertField(fields, 1, new String[]{localTimestampString1, localTimestampString1, localTimestampString3}, DataType.TIMESTAMPARRAY);
+        assertList(fields, 0, "2");
+        assertList(fields, 1, "{\"" + localTimestampString1 + "\",\"" + localTimestampString1 + "\",\"" + localTimestampString3 + "\"}");
 
         fields = assertRow(groups, 2, 2);
-        assertField(fields, 0, 3, DataType.INTEGER);
-        assertField(fields, 1, new String[]{null, localTimestampString1, localTimestampString1}, DataType.TIMESTAMPARRAY);
+        assertList(fields, 0, "3");
+        assertList(fields, 1, "{NULL,\"" + localTimestampString1 + "\",\"" + localTimestampString1 + "\"}");
 
         fields = assertRow(groups, 3, 2);
-        assertField(fields, 0, 4, DataType.INTEGER);
-        assertField(fields, 1, new String[]{null}, DataType.TIMESTAMPARRAY);
+        assertList(fields, 0, "4");
+        assertList(fields, 1, "{NULL}");
+
 
         fields = assertRow(groups, 4, 2);
-        assertField(fields, 0, 5, DataType.INTEGER);
-        assertField(fields, 1, new String[]{}, DataType.TIMESTAMPARRAY);
+        assertList(fields, 0, "5");
+        assertList(fields, 1, "{}");
 
         fields = assertRow(groups, 5, 2);
-        assertField(fields, 0, 6, DataType.INTEGER);
-        assertField(fields, 1, null, DataType.TIMESTAMPARRAY);
+        assertList(fields, 0, "6");
+        assertList(fields, 1, "NULL");
     }
 
     @Test
@@ -766,40 +765,23 @@ public class ParquetResolverTest {
     }
 
     private void assertField(List<OneField> fields, int index, Object expectedValue, DataType type) {
-        if (type.getOID() == DataType.BPCHARARRAY.getOID() || type.getOID() == DataType.VARCHARARRAY.getOID()) {
-            assertEquals(DataType.TEXTARRAY.getOID(), fields.get(index).type);
-        } else {
-            assertEquals(type.getOID(), fields.get(index).type);
-        }
+        assertEquals(type.getOID(), fields.get(index).type);
 
         if (expectedValue == null) {
             assertNull(fields.get(index).val);
         } else if (type == DataType.BYTEA) {
             assertArrayEquals((byte[]) expectedValue, (byte[]) fields.get(index).val);
-        } else if (type.isArrayType()) {
-            assertList((Object[]) expectedValue, (String) fields.get(index).val, type);
         } else {
             assertEquals(expectedValue, fields.get(index).val);
         }
     }
 
-    private void assertList(Object[] expectedValues, String result, DataType type) {
-        PgUtilities pgUtilities = new PgUtilities();
-        PgArrayBuilder pgArrayBuilder = new PgArrayBuilder(pgUtilities);
-
-        pgArrayBuilder.startArray();
-        for (Object expectedValue : expectedValues) {
-            if (expectedValue == null) {
-                pgArrayBuilder.addElement((String) null);
-            } else if (type == DataType.BYTEAARRAY) {
-                pgArrayBuilder.addElementNoEscaping(pgUtilities.encodeAndEscapeByteaHex(ByteBuffer.wrap(((Binary) expectedValue).getBytes())));
-            } else {
-                pgArrayBuilder.addElement(String.valueOf(expectedValue));
-            }
+    private void assertList(List<OneField> fields, int index, String expectedValue) {
+        if (expectedValue.equals("NULL")) {
+            assertNull(fields.get(index).val);
+        } else {
+            assertEquals(expectedValue, String.valueOf(fields.get(index).val));
         }
-        pgArrayBuilder.endArray();
-
-        assertEquals(pgArrayBuilder.toString(), result);
     }
 
     @SuppressWarnings("deprecation")

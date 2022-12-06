@@ -25,28 +25,28 @@ package org.greenplum.pxf.api.io;
  * There's a one-to-one match between a Data Type and it's corresponding OID.
  */
 public enum DataType {
-    BOOLEAN(16),
-    BYTEA(17),
-    BIGINT(20),
-    SMALLINT(21),
-    INTEGER(23),
-    TEXT(25),
-    REAL(700),
-    FLOAT8(701),
+    BOOLEAN(16, false),
+    BYTEA(17, true),
+    BIGINT(20, false),
+    SMALLINT(21, false),
+    INTEGER(23, false),
+    TEXT(25, true),
+    REAL(700, false),
+    FLOAT8(701, false),
     /**
      * char(length), blank-padded string, fixed storage length
      */
-    BPCHAR(1042),
+    BPCHAR(1042, true),
     /**
      * varchar(length), non-blank-padded string, variable storage length
      */
-    VARCHAR(1043),
-    DATE(1082),
-    TIME(1083),
-    TIMESTAMP(1114),
-    TIMESTAMP_WITH_TIME_ZONE(1184),
-    NUMERIC(1700),
-    UUID(2950),
+    VARCHAR(1043, true),
+    DATE(1082, false),
+    TIME(1083, true),
+    TIMESTAMP(1114, true),
+    TIMESTAMP_WITH_TIME_ZONE(1184, true),
+    NUMERIC(1700, false),
+    UUID(2950, false),
 
     INT2ARRAY(1005),
     INT4ARRAY(1007),
@@ -120,11 +120,18 @@ public enum DataType {
     }
 
     private final int OID;
+    private final boolean needsEscapingInArray;
     private DataType typeElem;
     private DataType typeArray;
 
+    DataType(int OID, boolean needsEscapingInArray) {
+        this.OID = OID;
+        this.needsEscapingInArray = needsEscapingInArray;
+    }
+
     DataType(int OID) {
         this.OID = OID;
+        this.needsEscapingInArray = true;
     }
 
     /**
@@ -179,5 +186,9 @@ public enum DataType {
 
     public DataType getTypeArray() {
         return typeArray;
+    }
+
+    public boolean getNeedsEscapingInArray() {
+        return needsEscapingInArray;
     }
 }

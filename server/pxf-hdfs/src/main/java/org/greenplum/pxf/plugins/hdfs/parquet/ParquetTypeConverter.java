@@ -77,8 +77,7 @@ public enum ParquetTypeConverter {
             Object value = getValue(group, columnIndex, repeatIndex, primitiveType);
             if (primitiveType.getLogicalTypeAnnotation() == null) {
                 ByteBuffer byteBuffer = ByteBuffer.wrap((byte[]) value);
-                String escapedByteaHex = pgUtilities.encodeAndEscapeByteaHex(byteBuffer);
-                return pgUtilities.unescapeArrayElement(escapedByteaHex);
+                return pgUtilities.encodeByteaHex(byteBuffer);
             } else {
                 return String.valueOf(value);
             }
@@ -259,6 +258,7 @@ public enum ParquetTypeConverter {
             Group listGroup = group.getGroup(columnIndex, repeatIndex);
             // a listGroup can have any number of repeatedGroups
             int repetitionCount = listGroup.getFieldRepetitionCount(0);
+            DataType elemGPType = getDataType(type).getTypeElem();
             for (int i = 0; i < repetitionCount; i++) {
                 Group repeatedGroup = listGroup.getGroup(0, i);
                 // each repeatedGroup can only have no more than 1 element
@@ -269,7 +269,11 @@ public enum ParquetTypeConverter {
                     // add the non-null element into array
                     PrimitiveType elementType = getElementType(type.asGroupType()).asPrimitiveType();
                     String elementValue = from(elementType).getValueFromList(repeatedGroup, 0, 0, elementType);
-                    pgArrayBuilder.addElement(elementValue);
+                    if (elemGPType.getNeedsEscapingInArray()) {
+                        pgArrayBuilder.addElement(elementValue);
+                    } else {
+                        pgArrayBuilder.addElementNoEscaping(elementValue);
+                    }
                 }
             }
             pgArrayBuilder.endArray();
