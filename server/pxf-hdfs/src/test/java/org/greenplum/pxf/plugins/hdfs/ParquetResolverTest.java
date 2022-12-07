@@ -538,7 +538,7 @@ public class ParquetResolverTest {
         assertEquals(2, groups.size());
 
         List<OneField> fields = assertRow(groups, 0, 13);
-        assertList(fields, 0, "1", DataType.INTEGER);
+        assertField(fields, 0, 1, DataType.INTEGER);
         assertList(fields, 1, "{true}", DataType.BOOLARRAY);
         assertList(fields, 2, "{50}", DataType.INT2ARRAY);
         assertList(fields, 3, "{1}", DataType.INT4ARRAY);
@@ -553,7 +553,7 @@ public class ParquetResolverTest {
         assertList(fields, 12, "{" + BigDecimal.valueOf(1234560000000000000L, 18) + "}", DataType.NUMERICARRAY);
 
         fields = assertRow(groups, 1, 13);
-        assertList(fields, 0, "2", DataType.INTEGER);
+        assertField(fields, 0, 2, DataType.INTEGER);
         assertList(fields, 1, "{false,true,true,false}", DataType.BOOLARRAY);
         assertList(fields, 2, "{-128,96}", DataType.INT2ARRAY);
         assertList(fields, 3, "{2,3}", DataType.INT4ARRAY);
@@ -581,7 +581,7 @@ public class ParquetResolverTest {
         assertEquals(6, groups.size());
 
         List<OneField> fields = assertRow(groups, 3, 13);
-        assertList(fields, 0, "4", DataType.INTEGER);
+        assertField(fields, 0, 4, DataType.INTEGER);
         assertList(fields, 1, null, DataType.BOOLARRAY);
         assertList(fields, 2, "{10,20}", DataType.INT2ARRAY);
         assertList(fields, 3, "{7,NULL,8}", DataType.INT4ARRAY);
@@ -616,7 +616,7 @@ public class ParquetResolverTest {
         assertEquals(2, groups.size());
 
         List<OneField> fields = assertRow(groups, 0, 13);
-        assertList(fields, 0, "1", DataType.INTEGER);
+        assertField(fields, 0, 1, DataType.INTEGER);
         assertList(fields, 1, null, DataType.BOOLARRAY);
         assertList(fields, 2, "{50}", DataType.INT2ARRAY);
         assertList(fields, 3, null, DataType.INT4ARRAY);
@@ -631,7 +631,7 @@ public class ParquetResolverTest {
         assertList(fields, 12, "{" + BigDecimal.valueOf(1234560000000000000L, 18) + "}", DataType.NUMERICARRAY);
 
         fields = assertRow(groups, 1, 13);
-        assertList(fields, 0, "2", DataType.INTEGER);
+        assertField(fields, 0, 2, DataType.INTEGER);
         assertList(fields, 1, null, DataType.BOOLARRAY);
         assertList(fields, 2, "{-128,96}", DataType.INT2ARRAY);
         assertList(fields, 3, null, DataType.INT4ARRAY);
@@ -670,27 +670,27 @@ public class ParquetResolverTest {
         String localTimestampString3 = localTime3.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         List<OneField> fields = assertRow(groups, 0, 2);
-        assertList(fields, 0, "1", DataType.INTEGER);
+        assertField(fields, 0, 1, DataType.INTEGER);
         assertList(fields, 1, "{\"" + localTimestampString1 + "\",\"" + localTimestampString2 + "\",\"" + localTimestampString3 + "\"}", DataType.TIMESTAMPARRAY);
 
         fields = assertRow(groups, 1, 2);
-        assertList(fields, 0, "2", DataType.INTEGER);
+        assertField(fields, 0, 2, DataType.INTEGER);
         assertList(fields, 1, "{\"" + localTimestampString1 + "\",\"" + localTimestampString1 + "\",\"" + localTimestampString3 + "\"}", DataType.TIMESTAMPARRAY);
 
         fields = assertRow(groups, 2, 2);
-        assertList(fields, 0, "3", DataType.INTEGER);
+        assertField(fields, 0, 3, DataType.INTEGER);
         assertList(fields, 1, "{NULL,\"" + localTimestampString1 + "\",\"" + localTimestampString1 + "\"}", DataType.TIMESTAMPARRAY);
 
         fields = assertRow(groups, 3, 2);
-        assertList(fields, 0, "4", DataType.INTEGER);
+        assertField(fields, 0, 4, DataType.INTEGER);
         assertList(fields, 1, "{NULL}", DataType.TIMESTAMPARRAY);
 
         fields = assertRow(groups, 4, 2);
-        assertList(fields, 0, "5", DataType.INTEGER);
+        assertField(fields, 0, 5, DataType.INTEGER);
         assertList(fields, 1, "{}", DataType.TIMESTAMPARRAY);
 
         fields = assertRow(groups, 5, 2);
-        assertList(fields, 0, "6", DataType.INTEGER);
+        assertField(fields, 0, 6, DataType.INTEGER);
         assertList(fields, 1, null, DataType.TIMESTAMPARRAY);
     }
 
@@ -774,9 +774,9 @@ public class ParquetResolverTest {
     }
 
     private void assertList(List<OneField> fields, int index, String expectedValue, DataType type) {
-        if(type.getOID() == DataType.BPCHARARRAY.getOID() || type.getOID() == DataType.VARCHARARRAY.getOID()){
+        if (type.getOID() == DataType.BPCHARARRAY.getOID() || type.getOID() == DataType.VARCHARARRAY.getOID()) {
             assertEquals(DataType.TEXTARRAY.getOID(), fields.get(index).type);
-        }else{
+        } else {
             assertEquals(type.getOID(), fields.get(index).type);
         }
 

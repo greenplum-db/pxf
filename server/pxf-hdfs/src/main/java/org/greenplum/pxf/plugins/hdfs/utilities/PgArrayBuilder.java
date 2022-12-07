@@ -36,9 +36,9 @@ public class PgArrayBuilder {
      * @param needsEscapingInArray whether the element need to be escaped before being added to the array
      */
     public void addElement(String elem, boolean needsEscapingInArray) {
-        if(needsEscapingInArray){
+        if (needsEscapingInArray) {
             addElement(elem);
-        }else{
+        } else {
             addElementNoEscaping(elem);
         }
     }
