@@ -29,10 +29,27 @@ public class PgArrayBuilderTest {
     }
 
     @Test
+    public void testAddElementIsFirstWithEscapingOption() {
+        pgArrayBuilder.startArray();
+        pgArrayBuilder.addElement("test",false);
+        pgArrayBuilder.endArray();
+        assertEquals("{test}", pgArrayBuilder.toString());
+    }
+
+    @Test
     public void testAddElementMultipleElementsNoEscaping() {
         pgArrayBuilder.startArray();
         pgArrayBuilder.addElementNoEscaping("test");
         pgArrayBuilder.addElementNoEscaping("elem2");
+        pgArrayBuilder.endArray();
+        assertEquals("{test,elem2}", pgArrayBuilder.toString());
+    }
+
+    @Test
+    public void testAddElementMultipleElementsNoEscapingWithEscapingOption() {
+        pgArrayBuilder.startArray();
+        pgArrayBuilder.addElement("test",false);
+        pgArrayBuilder.addElement("elem2",false);
         pgArrayBuilder.endArray();
         assertEquals("{test,elem2}", pgArrayBuilder.toString());
     }
@@ -47,6 +64,15 @@ public class PgArrayBuilderTest {
     }
 
     @Test
+    public void testAddMultipleElementNeedsEscapingWithEscapingOption() {
+        pgArrayBuilder.startArray();
+        pgArrayBuilder.addElement("test element",true);
+        pgArrayBuilder.addElement("\"escape me\" she said",true);
+        pgArrayBuilder.endArray();
+        assertEquals("{\"test element\",\"\\\"escape me\\\" she said\"}", pgArrayBuilder.toString());
+    }
+
+    @Test
     public void testAddNullElementNeedsEscaping() {
         pgArrayBuilder.startArray();
         pgArrayBuilder.addElement((String) null);
@@ -55,9 +81,25 @@ public class PgArrayBuilderTest {
     }
 
     @Test
+    public void testAddNullElementNeedsEscapingWithEscapingOption() {
+        pgArrayBuilder.startArray();
+        pgArrayBuilder.addElement((String) null,true);
+        pgArrayBuilder.endArray();
+        assertEquals("{NULL}", pgArrayBuilder.toString());
+    }
+
+    @Test
     public void testAddEmptyStringNoEscaping() {
         pgArrayBuilder.startArray();
         pgArrayBuilder.addElementNoEscaping("");
+        pgArrayBuilder.endArray();
+        assertEquals("{}", pgArrayBuilder.toString());
+    }
+
+    @Test
+    public void testAddEmptyStringNoEscapingWithEscapingOption() {
+        pgArrayBuilder.startArray();
+        pgArrayBuilder.addElement("",false);
         pgArrayBuilder.endArray();
         assertEquals("{}", pgArrayBuilder.toString());
     }
@@ -72,10 +114,28 @@ public class PgArrayBuilderTest {
     }
 
     @Test
+    public void testAddTwoEmptyStringNoEscapingWithEscapingOption() {
+        pgArrayBuilder.startArray();
+        pgArrayBuilder.addElement("",false);
+        pgArrayBuilder.addElement("",false);
+        pgArrayBuilder.endArray();
+        assertEquals("{,}", pgArrayBuilder.toString());
+    }
+
+    @Test
     public void testAddTwoEmptyStringNeedsEscaping() {
         pgArrayBuilder.startArray();
         pgArrayBuilder.addElement("");
         pgArrayBuilder.addElement("");
+        pgArrayBuilder.endArray();
+        assertEquals("{\"\",\"\"}", pgArrayBuilder.toString());
+    }
+
+    @Test
+    public void testAddTwoEmptyStringNeedsEscapingWithEscapingOption() {
+        pgArrayBuilder.startArray();
+        pgArrayBuilder.addElement("",true);
+        pgArrayBuilder.addElement("",true);
         pgArrayBuilder.endArray();
         assertEquals("{\"\",\"\"}", pgArrayBuilder.toString());
     }
@@ -88,6 +148,13 @@ public class PgArrayBuilderTest {
         assertEquals("{\"\"}", pgArrayBuilder.toString());
     }
 
+    @Test
+    public void testAddEmptyStringNeedsEscapingWithEscapingOption() {
+        pgArrayBuilder.startArray();
+        pgArrayBuilder.addElement("",true);
+        pgArrayBuilder.endArray();
+        assertEquals("{\"\"}", pgArrayBuilder.toString());
+    }
     @Test
     public void testAddElementUsingLambda() {
         pgArrayBuilder.startArray();

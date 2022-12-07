@@ -269,11 +269,7 @@ public enum ParquetTypeConverter {
                     // add the non-null element into array
                     PrimitiveType elementType = getElementType(type.asGroupType()).asPrimitiveType();
                     String elementValue = from(elementType).getValueFromList(repeatedGroup, 0, 0, elementType);
-                    if (elemGPType.getNeedsEscapingInArray()) {
-                        pgArrayBuilder.addElement(elementValue);
-                    } else {
-                        pgArrayBuilder.addElementNoEscaping(elementValue);
-                    }
+                    pgArrayBuilder.addElement(elementValue, elemGPType.getNeedsEscapingInArray());
                 }
             }
             pgArrayBuilder.endArray();
