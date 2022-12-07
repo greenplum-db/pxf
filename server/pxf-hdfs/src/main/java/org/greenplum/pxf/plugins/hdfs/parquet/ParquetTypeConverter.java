@@ -258,7 +258,7 @@ public enum ParquetTypeConverter {
             Group listGroup = group.getGroup(columnIndex, repeatIndex);
             // a listGroup can have any number of repeatedGroups
             int repetitionCount = listGroup.getFieldRepetitionCount(0);
-            DataType elemGPType = getDataType(type).getTypeElem();
+            boolean elemNeedsEscapingInArray = getDataType(type).getTypeElem().getNeedsEscapingInArray();
             for (int i = 0; i < repetitionCount; i++) {
                 Group repeatedGroup = listGroup.getGroup(0, i);
                 // each repeatedGroup can only have no more than 1 element
@@ -269,7 +269,7 @@ public enum ParquetTypeConverter {
                     // add the non-null element into array
                     PrimitiveType elementType = getElementType(type.asGroupType()).asPrimitiveType();
                     String elementValue = from(elementType).getValueFromList(repeatedGroup, 0, 0, elementType);
-                    pgArrayBuilder.addElement(elementValue, elemGPType.getNeedsEscapingInArray());
+                    pgArrayBuilder.addElement(elementValue, elemNeedsEscapingInArray);
                 }
             }
             pgArrayBuilder.endArray();
@@ -298,7 +298,8 @@ public enum ParquetTypeConverter {
      */
     public static ParquetTypeConverter from(Type type) {
         if (type.isPrimitive()) {
-            if (type.asPrimitiveType().getPrimitiveTypeName() == null) {
+            PrimitiveType.PrimitiveTypeName primitiveTypeName = type.asPrimitiveType().getPrimitiveTypeName();
+            if (primitiveTypeName == null) {
                 throw new PxfRuntimeException("Invalid Parquet Primitive schema.");
             }
             return valueOf(type.asPrimitiveType().getPrimitiveTypeName().name());

@@ -42,6 +42,8 @@ public class DataTypeTest {
                     assertFalse(dataType.getTypeElem().getNeedsEscapingInArray());
                 }
                 assertTrue(dataType.getNeedsEscapingInArray());
+            } else if (dataType.getOID() == DataType.UNSUPPORTED_TYPE.getOID()) {
+                assertTrue(dataType.getNeedsEscapingInArray());
             }
         }
     }
