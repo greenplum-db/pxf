@@ -305,10 +305,11 @@ public enum ParquetTypeConverter {
             return valueOf(type.asPrimitiveType().getPrimitiveTypeName().name());
         }
 
+        String originalTypeName = type.asGroupType().getOriginalType().name();
         try {
-            return valueOf(type.getOriginalType().name());
+            return valueOf(originalTypeName);
         } catch (IllegalArgumentException e) {
-            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported, error: %s", type.asGroupType().getOriginalType().name(), e));
+            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported, error: %s", originalTypeName, e));
         }
     }
 
