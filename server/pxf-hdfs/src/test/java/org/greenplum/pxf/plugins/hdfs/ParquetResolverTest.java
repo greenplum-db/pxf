@@ -733,7 +733,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         Exception e = assertThrows(PxfRuntimeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals("Invalid Parquet Primitive schema.", e.getMessage());
+        assertEquals("Invalid Parquet primitive schema. Parquet primitive type name is null.", e.getMessage());
 
         // test invalid parquet list schema
         fields = new ArrayList<>();
