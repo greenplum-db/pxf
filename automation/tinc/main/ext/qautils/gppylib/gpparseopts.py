@@ -73,13 +73,13 @@ class OptChecker(Option):
     def datetimeCheck(option, opt, value):
         try:
             return str_to_datetime(value)
-        except DatetimeValueError as e:
+        except DatetimeValueError, e:
             raise OptionValueError('"%s %s" ... %s' % (opt, value, e.description))
             
     def durationCheck(option, opt, value):
         try:
             return str_to_duration(value, signed=False)
-        except DatetimeValueError as e:
+        except DatetimeValueError, e:
             raise OptionValueError('"%s %s" ... %s' % (opt, value, e.description))
             
     def regexCheck(option, opt, value):
@@ -90,7 +90,7 @@ class OptChecker(Option):
             flags |= re.IGNORECASE
         try:
             return re.compile(value, flags)
-        except Exception as e:
+        except Exception, e:
             raise OptionValueError('"%s %s" ... %s' % (opt, value, e))
  
     def regexSetCaseSensitivity(option, opt, value, parser):

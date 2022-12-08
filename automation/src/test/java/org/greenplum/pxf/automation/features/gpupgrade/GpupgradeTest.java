@@ -4,7 +4,7 @@ import org.greenplum.pxf.automation.BaseFunctionality;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
-import org.testng.annotations.AfterMethod;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 public class GpupgradeTest extends BaseFunctionality {
@@ -37,10 +37,9 @@ public class GpupgradeTest extends BaseFunctionality {
     @Test(groups = {"features", "gpdb"})
     public void testGpdbUpgradeScenario() throws Exception {
 
-        // Since this test isn't passing for GP7,
-        // Skipping this test for GP7 as of now
+        // Skipping this test for GP7 since this isn't passing for GP7
         if(gpdb.getVersion() >= 7)
-            return;
+            throw new SkipException("Skipping testGpdbUpgradeScenario for GPDB7");
 
         runTincTest("pxf.features.gpupgrade.step_1_before_running_pxf_pre_gpupgrade.runTest");
 

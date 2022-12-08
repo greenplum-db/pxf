@@ -140,15 +140,12 @@ a) installed the PXF server, and
 b) only have 1 jar file inside `/usr/local/pxf/application/`
 
 ### Running automation tests for GPDB7
-Tinc still runs on Python2 so it won't work with Python libraries that come with GP7. To overcome that, here is a small workaround in place.
-We will copy the GP6 python libraries and then run the automation for GP7.
+Tinc only runs with Python 2 so it won't work with the Python 3 libraries that come with GP7.
+We will copy the required Python 2 libraries from GP6 in order to run tinc against GP7.
 
-To support running the tests for GPDB 7, we have created this new directory, `tinc-python-deps` under `/pxf/automation/tinc/main`
+To support running the tests for GPDB 7, export PXF_AUTOMATION_TINC_DEPS to point to GPDB6 python libs.
 
-Steps:
-1. Download the GP6 Python libs `gsutil cp gs://data-gpdb-ud-pxf-build-resources/automation-dependencies/gp6-python-libs.tar.gz ~/workspace/pxf/automation/tinc/main/tinc-python-deps`
-2. Unzip the file `tar -xvzf ~/workspace/pxf/automation/tinc/main/tinc-python-deps/gp6-python-libs.tar.gz`
-3. export PXF_AUTOMATION_TINC_DEPS `export PXF_AUTOMATION_TINC_DEPS=~/workspace/pxf/automation/tinc/main/tinc-python-deps/`
+`export PXF_AUTOMATION_TINC_DEPS="${GP6HOME}/lib/python"`
 
 ### Project structure
 _**src/main/java**_ - contains related classes and utilities for the test
