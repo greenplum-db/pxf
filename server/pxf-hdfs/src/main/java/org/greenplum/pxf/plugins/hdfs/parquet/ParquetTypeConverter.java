@@ -258,7 +258,10 @@ public enum ParquetTypeConverter {
             Group listGroup = group.getGroup(columnIndex, repeatIndex);
             // a listGroup can have any number of repeatedGroups
             int repetitionCount = listGroup.getFieldRepetitionCount(0);
-            boolean elemNeedsEscapingInArray = getDataType(type).getTypeElem().getNeedsEscapingInArray();
+            boolean elementNeedsEscapingInArray = getDataType(type).getTypeElem().getNeedsEscapingInArray();
+            PrimitiveType elementType = getElementType(type.asGroupType()).asPrimitiveType();
+            ParquetTypeConverter converter = from(elementType);
+
             for (int i = 0; i < repetitionCount; i++) {
                 Group repeatedGroup = listGroup.getGroup(0, i);
                 // each repeatedGroup can only have no more than 1 element
@@ -267,9 +270,8 @@ public enum ParquetTypeConverter {
                     pgArrayBuilder.addElement((String) null);
                 } else {
                     // add the non-null element into array
-                    PrimitiveType elementType = getElementType(type.asGroupType()).asPrimitiveType();
-                    String elementValue = from(elementType).getValueFromList(repeatedGroup, 0, 0, elementType);
-                    pgArrayBuilder.addElement(elementValue, elemNeedsEscapingInArray);
+                    String elementValue = converter.getValueFromList(repeatedGroup, 0, 0, elementType);
+                    pgArrayBuilder.addElement(elementValue, elementNeedsEscapingInArray);
                 }
             }
             pgArrayBuilder.endArray();
@@ -300,9 +302,9 @@ public enum ParquetTypeConverter {
         if (type.isPrimitive()) {
             PrimitiveType.PrimitiveTypeName primitiveTypeName = type.asPrimitiveType().getPrimitiveTypeName();
             if (primitiveTypeName == null) {
-                throw new PxfRuntimeException("Invalid Parquet Primitive schema.");
+                throw new PxfRuntimeException("Invalid Parquet primitive schema. Parquet primitive type name is null.");
             }
-            return valueOf(type.asPrimitiveType().getPrimitiveTypeName().name());
+            return valueOf(primitiveTypeName.name());
         }
 
         String originalTypeName = type.asGroupType().getOriginalType().name();

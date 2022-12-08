@@ -36,7 +36,7 @@ public class DataTypeTest {
     public void testNeedsEscapingInArray() {
         for (DataType dataType : DataType.values()) {
             if (dataType.isArrayType()) {
-                if (needsEscaping(dataType.getOID())) {
+                if (needsEscapingForElementsInArray(dataType.getOID())) {
                     assertTrue(dataType.getTypeElem().getNeedsEscapingInArray());
                 } else {
                     assertFalse(dataType.getTypeElem().getNeedsEscapingInArray());
@@ -48,7 +48,7 @@ public class DataTypeTest {
         }
     }
 
-    private boolean needsEscaping(int oid) {
+    private boolean needsEscapingForElementsInArray(int oid) {
         return oid == DataType.BYTEAARRAY.getOID() || oid == DataType.TEXTARRAY.getOID() ||
                 oid == DataType.BPCHARARRAY.getOID() || oid == DataType.VARCHARARRAY.getOID() ||
                 oid == DataType.TIMEARRAY.getOID() || oid == DataType.TIMESTAMPARRAY.getOID() ||
