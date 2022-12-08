@@ -446,94 +446,92 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 context.getSegmentId(), columns);
         List<Type> fields = new ArrayList<>();
         for (ColumnDescriptor column : columns) {
-            fields.add(generateParquetSchemaType(column));
+            DataType dataType = column.getDataType();
+            int columnTypeCode = column.columnTypeCode();
+            String columnName = column.columnName();
+
+            boolean isArray = dataType.isArrayType();
+            DataType elementType = isArray ? dataType.getTypeElem() : dataType;
+
+            PrimitiveTypeName primitiveTypeName;
+            LogicalTypeAnnotation logicalTypeAnnotation = null;
+            // length is only used in NUMERIC case
+            Integer length = null;
+
+            switch (elementType) {
+                case BOOLEAN:
+                    primitiveTypeName = PrimitiveTypeName.BOOLEAN;
+                    break;
+                case BYTEA:
+                    primitiveTypeName = PrimitiveTypeName.BINARY;
+                    break;
+                case BIGINT:
+                    primitiveTypeName = PrimitiveTypeName.INT64;
+                    break;
+                case SMALLINT:
+                    primitiveTypeName = PrimitiveTypeName.INT32;
+                    logicalTypeAnnotation = LogicalTypeAnnotation.intType(16, true);
+                    break;
+                case INTEGER:
+                    primitiveTypeName = PrimitiveTypeName.INT32;
+                    break;
+                case REAL:
+                    primitiveTypeName = PrimitiveTypeName.FLOAT;
+                    break;
+                case FLOAT8:
+                    primitiveTypeName = PrimitiveTypeName.DOUBLE;
+                    break;
+                case NUMERIC:
+                    Integer[] columnTypeModifiers = column.columnTypeModifiers();
+                    int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
+                    int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
+
+                    if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
+                        precision = columnTypeModifiers[0];
+                        scale = columnTypeModifiers[1];
+                    }
+                    primitiveTypeName = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
+                    logicalTypeAnnotation = DecimalLogicalTypeAnnotation.decimalType(scale, precision);
+                    length = PRECISION_TO_BYTE_COUNT[precision - 1];
+                    break;
+                case TIMESTAMP:
+                case TIMESTAMP_WITH_TIME_ZONE:
+                    primitiveTypeName = PrimitiveTypeName.INT96;
+                    break;
+                case DATE:
+                    // DATE is used to for a logical date type, without a time
+                    // of day. It must annotate an int32 that stores the number
+                    // of days from the Unix epoch, 1 January 1970. The sort
+                    // order used for DATE is signed.
+                    primitiveTypeName = PrimitiveTypeName.INT32;
+                    logicalTypeAnnotation = LogicalTypeAnnotation.dateType();
+                    break;
+                case TIME:
+                case VARCHAR:
+                case BPCHAR:
+                case TEXT:
+                    primitiveTypeName = PrimitiveTypeName.BINARY;
+                    logicalTypeAnnotation = LogicalTypeAnnotation.stringType();
+                    break;
+                default:
+                    throw new UnsupportedTypeException(
+                            String.format("Type %d is not supported", columnTypeCode));
+            }
+
+            Type type;
+            if (!isArray) {
+                type = length == null ?
+                        Types.optional(primitiveTypeName).as(logicalTypeAnnotation).named(columnName) :
+                        Types.optional(primitiveTypeName).length(length).as(logicalTypeAnnotation).named(columnName);
+            }else{
+                type = length == null ?
+                        Types.optionalList().optionalElement(primitiveTypeName).as(logicalTypeAnnotation).named(columnName) :
+                        Types.optionalList().optionalElement(primitiveTypeName).length(length).as(logicalTypeAnnotation).named(columnName);
+            }
+
+            fields.add(type);
         }
         return new MessageType("hive_schema", fields);
-    }
-
-    /**
-     * Generate parquet schema type
-     *
-     * @param column contains Greenplum data type and column name
-     * @return the generated schema type for parquet primitive types only
-     */
-    private Type generateParquetSchemaType(ColumnDescriptor column) {
-        DataType dataType = column.getDataType();
-        int columnTypeCode = column.columnTypeCode();
-        String columnName = column.columnName();
-
-        boolean isArray = dataType.isArrayType();
-        DataType elementType = isArray ? dataType.getTypeElem() : dataType;
-
-        PrimitiveTypeName primitiveTypeName = null;
-        LogicalTypeAnnotation logicalTypeAnnotation = null;
-        // length is only used in NUMERIC case
-        Integer length = null;
-
-        switch (elementType) {
-            case BOOLEAN:
-                primitiveTypeName = PrimitiveTypeName.BOOLEAN;
-                break;
-            case BYTEA:
-                primitiveTypeName = PrimitiveTypeName.BINARY;
-                break;
-            case BIGINT:
-                primitiveTypeName = PrimitiveTypeName.INT64;
-                break;
-            case SMALLINT:
-                primitiveTypeName = PrimitiveTypeName.INT32;
-                logicalTypeAnnotation = LogicalTypeAnnotation.intType(16, true);
-                break;
-            case INTEGER:
-                primitiveTypeName = PrimitiveTypeName.INT32;
-                break;
-            case REAL:
-                primitiveTypeName = PrimitiveTypeName.FLOAT;
-                break;
-            case FLOAT8:
-                primitiveTypeName = PrimitiveTypeName.DOUBLE;
-                break;
-            case NUMERIC:
-                Integer[] columnTypeModifiers = column.columnTypeModifiers();
-                int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
-                int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
-
-                if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
-                    precision = columnTypeModifiers[0];
-                    scale = columnTypeModifiers[1];
-                }
-                primitiveTypeName = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
-                logicalTypeAnnotation = DecimalLogicalTypeAnnotation.decimalType(scale, precision);
-                length = PRECISION_TO_BYTE_COUNT[precision - 1];
-                break;
-            case TIMESTAMP:
-            case TIMESTAMP_WITH_TIME_ZONE:
-                primitiveTypeName = PrimitiveTypeName.INT96;
-                break;
-            case DATE:
-                // DATE is used to for a logical date type, without a time
-                // of day. It must annotate an int32 that stores the number
-                // of days from the Unix epoch, 1 January 1970. The sort
-                // order used for DATE is signed.
-                primitiveTypeName = PrimitiveTypeName.INT32;
-                logicalTypeAnnotation = LogicalTypeAnnotation.dateType();
-                break;
-            case TIME:
-            case VARCHAR:
-            case BPCHAR:
-            case TEXT:
-                primitiveTypeName = PrimitiveTypeName.BINARY;
-                logicalTypeAnnotation = LogicalTypeAnnotation.stringType();
-                break;
-            default:
-                throw new UnsupportedTypeException(
-                        String.format("Type %d is not supported", columnTypeCode));
-        }
-
-        if (!isArray) {
-            return length == null ? Types.optional(primitiveTypeName).as(logicalTypeAnnotation).named(columnName) : Types.optional(primitiveTypeName).length(length).as(logicalTypeAnnotation).named(columnName);
-        }
-        return length == null ? Types.optionalList().optionalElement(primitiveTypeName).as(logicalTypeAnnotation).named(columnName) : Types.optionalList().optionalElement(primitiveTypeName).length(length).as(logicalTypeAnnotation).named(columnName);
     }
 
     /**

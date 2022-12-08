@@ -66,7 +66,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private List<ColumnDescriptor> columnDescriptors;
     private final ObjectMapper mapper = new ObjectMapper();
     private static final PgUtilities pgUtilities = new PgUtilities();
-    private final ParquetUtilities parquetUtilities=new ParquetUtilities(pgUtilities);
+    private final ParquetUtilities parquetUtilities = new ParquetUtilities(pgUtilities);
 
     @Override
     public void afterPropertiesSet() {
@@ -159,7 +159,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             List<Object> values = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
 
             /*
-             * the value of a text array would be like:
+             * For example, the value of a text array ["hello","",null,"test"] would look like:
              * text_arr
              *    list
              *      element: hello
@@ -184,7 +184,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     }
 
     /**
-     * Fill the index-th primitive group based on the Greenplum data type and value string provided by {@link OneField} field
+     * Fill the columnIndex-th primitive group based on the Greenplum data type and value string provided by {@link OneField} field
      * This primitive group could be an actual primitive group or the innermost primitive group of a List group
      *
      * @param columnIndex   is the column of the row we want to fill data at
@@ -193,22 +193,26 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      * @param primitiveType is the Primitive parquet schema we want to fill the group with
      */
     private void fillGroupWithPrimitive(int columnIndex, Object fieldValue, Group group, PrimitiveType primitiveType) {
-        switch (primitiveType.asPrimitiveType().getPrimitiveTypeName()) {
+        LogicalTypeAnnotation logicalTypeAnnotation = primitiveType.getLogicalTypeAnnotation();
+        PrimitiveType.PrimitiveTypeName primitiveTypeName = primitiveType.getPrimitiveTypeName();
+
+        switch (primitiveTypeName) {
             case BINARY:
-                if (primitiveType.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation) {
+                if (logicalTypeAnnotation instanceof StringLogicalTypeAnnotation) {
                     group.add(columnIndex, (String) fieldValue);
                 } else if (fieldValue instanceof ByteBuffer) {
-                    group.add(columnIndex, Binary.fromReusedByteArray(((ByteBuffer) fieldValue).array(), 0, ((ByteBuffer) fieldValue).limit()));
+                    ByteBuffer byteBuffer = (ByteBuffer) fieldValue;
+                    group.add(columnIndex, Binary.fromReusedByteArray(byteBuffer.array(), 0, byteBuffer.limit()));
                 } else {
                     group.add(columnIndex, Binary.fromReusedByteArray((byte[]) fieldValue));
                 }
                 break;
             case INT32:
-                if (primitiveType.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
+                if (logicalTypeAnnotation instanceof DateLogicalTypeAnnotation) {
                     String dateString = (String) fieldValue;
                     group.add(columnIndex, ParquetTypeConverter.getDaysFromEpochFromDateString(dateString));
-                } else if (primitiveType.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
-                        ((IntLogicalTypeAnnotation) primitiveType.getLogicalTypeAnnotation()).getBitWidth() == 16) {
+                } else if (logicalTypeAnnotation instanceof IntLogicalTypeAnnotation &&
+                        ((IntLogicalTypeAnnotation) logicalTypeAnnotation).getBitWidth() == 16) {
                     group.add(columnIndex, (Short) fieldValue);
                 } else {
                     group.add(columnIndex, (Integer) fieldValue);
@@ -244,7 +248,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 group.add(columnIndex, (Boolean) fieldValue);
                 break;
             default:
-                throw new UnsupportedTypeException("Not supported primitive type " + primitiveType.asPrimitiveType().getPrimitiveTypeName());
+                throw new UnsupportedTypeException(String.format("Parquet primitive type %s is not supported.", primitiveTypeName));
         }
     }
 

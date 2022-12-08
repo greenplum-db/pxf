@@ -1965,7 +1965,8 @@ public class ParquetWriteTest {
             assertEquals(1, elementGroup.getFieldRepetitionCount(0));
             switch (elementTypeName) {
                 case INT32:
-                    if (logicalTypeAnnotation != null && logicalTypeAnnotation.toOriginalType() == LogicalTypeAnnotation.IntLogicalTypeAnnotation.intType(16, true).toOriginalType()) {
+                    if (logicalTypeAnnotation != null &&
+                            logicalTypeAnnotation.toOriginalType() == LogicalTypeAnnotation.IntLogicalTypeAnnotation.intType(16, true).toOriginalType()) {
                         assertEquals((short) expectedValues[j], (short) elementGroup.getInteger(0, 0));
                     } else {
                         assertEquals((Integer) expectedValues[j], elementGroup.getInteger(0, 0));

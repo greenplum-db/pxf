@@ -77,6 +77,7 @@ public class ParquetUtilities {
                 return pgUtilities.parseBoolLiteral(val.substring(0,1));
             case INT32:
                 if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+                    // ParquetResolver.fillGroupWithPrimitive will convert Date String into INT32 (number of days from the Unix epoch, 1 January 1970)
                     return val;
                 } else if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation &&
                         ((LogicalTypeAnnotation.IntLogicalTypeAnnotation) logicalTypeAnnotation).getBitWidth() == 16) {
