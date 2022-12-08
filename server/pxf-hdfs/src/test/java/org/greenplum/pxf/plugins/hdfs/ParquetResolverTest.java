@@ -695,29 +695,134 @@ public class ParquetResolverTest {
     }
 
     @Test
-    public void testGetFields_Unsupported_List() {
+    @SuppressWarnings("deprecation")
+    public void testGetFields_Unsupported_Struct_List() {
+        List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
+        ColumnDescriptor listColumnDescriptor = new ColumnDescriptor("unsupported_list", -1, 1, "", new Integer[]{});
+        columnDescriptors.add(listColumnDescriptor);
+
         // LIST of customized Struct, with no parquet original type name
         schema = getParquetSchemaForUnsupportedListType()[0];
         // schema has changed, set metadata again
         context.setMetadata(schema);
-        Exception e = assertThrows(UnsupportedTypeException.class,
-                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals("Parquet LIST of customized struct is not supported.", e.getMessage());
+        context.setTupleDescription(columnDescriptors);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
-        // LIST of MAP
+        List<Type> structFields = new ArrayList<>();
+
+        structFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "num1"));
+        structFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "num2"));
+        structFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "num3"));
+
+        GroupType structGroupType = new GroupType(Type.Repetition.OPTIONAL, "element", structFields);
+        Group structGroup = new SimpleGroup(structGroupType);
+
+        GroupType listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "repeated_list", structGroupType);
+        Group listRepeatedGroup = new SimpleGroup(listRepeatedGroupType);
+        listRepeatedGroup.add(0, structGroup);
+
+        GroupType listGroupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, listRepeatedGroupType);
+        Group listGroup = new SimpleGroup(listGroupType);
+        listGroup.add(0, listRepeatedGroup);
+
+        List<Group> groups = new ArrayList<>();
+        groups.add(listGroup);
+
+        Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> assertRow(groups, 0, 1));
+        assertEquals("Parquet LIST of customized struct is not supported.", e.getMessage());
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    public void testGetFields_Unsupported_Map_List() {
+        List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
+        ColumnDescriptor listColumnDescriptor = new ColumnDescriptor("unsupported_list", -1, 1, "", new Integer[]{});
+        columnDescriptors.add(listColumnDescriptor);
+
+        // LIST of customized Struct, with no parquet original type name
         schema = getParquetSchemaForUnsupportedListType()[1];
         // schema has changed, set metadata again
         context.setMetadata(schema);
-        e = assertThrows(UnsupportedTypeException.class,
-                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
+        context.setTupleDescription(columnDescriptors);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        List<Type> mapFields = new ArrayList<>();
+
+        mapFields.add(new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveTypeName.INT32, "key"));
+        mapFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "value"));
+
+        GroupType mapElementGroupType = new GroupType(Type.Repetition.OPTIONAL, "element", mapFields);
+        Group mapElementGroup = new SimpleGroup(mapElementGroupType);
+
+        GroupType mapRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "map", mapElementGroupType);
+        Group mapRepeatedGroup = new SimpleGroup(mapRepeatedGroupType);
+        mapRepeatedGroup.add(0, mapElementGroup);
+
+        GroupType mapGroupType = new GroupType(Type.Repetition.OPTIONAL, "my_map", org.apache.parquet.schema.OriginalType.MAP, mapRepeatedGroupType);
+        GroupType listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "repeated_list", mapGroupType);
+        Group listRepeatedGroup = new SimpleGroup(listRepeatedGroupType);
+        listRepeatedGroup.add(0, mapRepeatedGroup);
+
+        GroupType listGroupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, listRepeatedGroupType);
+        Group listGroup = new SimpleGroup(listGroupType);
+        listGroup.add(0, listRepeatedGroup);
+
+        List<Group> groups = new ArrayList<>();
+        groups.add(listGroup);
+
+        Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> assertRow(groups, 0, 1));
         assertEquals("Parquet LIST of MAP is not supported.", e.getMessage());
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    public void testGetFields_Unsupported_List_List() {
+        List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
+        ColumnDescriptor listColumnDescriptor = new ColumnDescriptor("unsupported_list", -1, 1, "", new Integer[]{});
+        columnDescriptors.add(listColumnDescriptor);
 
         // LIST of LIST
         schema = getParquetSchemaForUnsupportedListType()[2];
         // schema has changed, set metadata again
         context.setMetadata(schema);
-        e = assertThrows(UnsupportedTypeException.class,
-                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
+        columnDescriptors = new ArrayList<>();
+        listColumnDescriptor = new ColumnDescriptor("unsupported_list", -1, 1, "", new Integer[]{});
+        columnDescriptors.add(listColumnDescriptor);
+        context.setTupleDescription(columnDescriptors);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        List<Type> innerListElementFields = new ArrayList<>();
+        innerListElementFields.add(new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveTypeName.INT32, "id"));
+
+        GroupType innerListElementGroupType = new GroupType(Type.Repetition.OPTIONAL, "element", innerListElementFields);
+        Group innerListElementGroup = new SimpleGroup(innerListElementGroupType);
+
+        GroupType innerListRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "inner_repeated_list", innerListElementGroupType);
+        Group innerRepeatedGroup = new SimpleGroup(innerListRepeatedGroupType);
+        innerRepeatedGroup.add(0, innerListElementGroup);
+
+        GroupType innerListGroupType = new GroupType(Type.Repetition.OPTIONAL, "inner_list", org.apache.parquet.schema.OriginalType.LIST, innerListRepeatedGroupType);
+        Group innerListGroup = new SimpleGroup(innerListGroupType);
+        innerListGroup.add(0, innerRepeatedGroup);
+
+        GroupType listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "repeated_list", innerListGroupType);
+        Group listRepeatedGroup = new SimpleGroup(listRepeatedGroupType);
+        listRepeatedGroup.add(0, innerListGroup);
+
+        GroupType listGroupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, listRepeatedGroupType);
+        Group listGroup = new SimpleGroup(listGroupType);
+        listGroup.add(0, listRepeatedGroup);
+
+        List<Group> groups = new ArrayList<>();
+        groups.add(listGroup);
+
+        Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> assertRow(groups, 0, 1));
         assertEquals("Parquet LIST of LIST is not supported.", e.getMessage());
     }
 
@@ -728,7 +833,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals("Parquet LIST of MAP is not supported, error: java.lang.IllegalArgumentException: No enum constant org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.MAP", e.getMessage());
+        assertEquals("Parquet complex type MAP is not supported, error: java.lang.IllegalArgumentException: No enum constant org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.MAP", e.getMessage());
     }
 
     @Test
@@ -879,7 +984,7 @@ public class ParquetResolverTest {
         structFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.INT32, "num3"));
 
         GroupType structGroupType = new GroupType(Type.Repetition.OPTIONAL, "element", structFields);
-        GroupType listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", structGroupType);
+        GroupType listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "repeated_list", structGroupType);
         GroupType listGroupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, listRepeatedGroupType);
         List<Type> fields = new ArrayList<>();
         fields.add(listGroupType);
@@ -893,7 +998,7 @@ public class ParquetResolverTest {
 
         GroupType mapRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "map", mapFields);
         GroupType mapGroupType = new GroupType(Type.Repetition.OPTIONAL, "my_map", org.apache.parquet.schema.OriginalType.MAP, mapRepeatedGroupType);
-        listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", mapGroupType);
+        listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "repeated_list", mapGroupType);
         listGroupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, listRepeatedGroupType);
         fields = new ArrayList<>();
 
@@ -905,9 +1010,9 @@ public class ParquetResolverTest {
 
         innerListElementFields.add(new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveTypeName.INT32, "id"));
 
-        GroupType innerListRepeatedGroup = new GroupType(Type.Repetition.REPEATED, "inner_repeated_list", innerListElementFields);
-        GroupType innerListGroupType = new GroupType(Type.Repetition.OPTIONAL, "inner_list", org.apache.parquet.schema.OriginalType.LIST, innerListRepeatedGroup);
-        listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", innerListGroupType);
+        GroupType innerListRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "inner_repeated_list", innerListElementFields);
+        GroupType innerListGroupType = new GroupType(Type.Repetition.OPTIONAL, "inner_list", org.apache.parquet.schema.OriginalType.LIST, innerListRepeatedGroupType);
+        listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "repeated_list", innerListGroupType);
         listGroupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, listRepeatedGroupType);
         fields = new ArrayList<>();
 

@@ -241,12 +241,7 @@ public enum ParquetTypeConverter {
         @Override
         public DataType getDataType(Type type) {
             Type elementType = getElementType(type.asGroupType());
-            if (!elementType.isPrimitive()) {
-                String originalTypeName = elementType.asGroupType().getOriginalType() == null ?
-                        "customized struct" :
-                        elementType.asGroupType().getOriginalType().name();
-                throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", originalTypeName));
-            }
+            validateElementTypeInListType(elementType);
             return from(elementType).getDataType(elementType).getTypeArray();
         }
 
@@ -258,9 +253,10 @@ public enum ParquetTypeConverter {
             Group listGroup = group.getGroup(columnIndex, repeatIndex);
             // a listGroup can have any number of repeatedGroups
             int repetitionCount = listGroup.getFieldRepetitionCount(0);
-            PrimitiveType elementType = getElementType(type.asGroupType()).asPrimitiveType();
+            Type elementType = getElementType(type.asGroupType());
+            validateElementTypeInListType(elementType);
             ParquetTypeConverter elementConverter = from(elementType);
-            boolean elementNeedsEscapingInArray = getDataType(type).getTypeElem().getNeedsEscapingInArray();
+            boolean elementNeedsEscapingInArray = elementConverter.getDataType(elementType).getNeedsEscapingInArray();
 
             for (int i = 0; i < repetitionCount; i++) {
                 Group repeatedGroup = listGroup.getGroup(0, i);
@@ -270,7 +266,7 @@ public enum ParquetTypeConverter {
                     pgArrayBuilder.addElement((String) null);
                 } else {
                     // add the non-null element into array
-                    String elementValue = elementConverter.getValueFromList(repeatedGroup, 0, 0, elementType);
+                    String elementValue = elementConverter.getValueFromList(repeatedGroup, 0, 0, elementType.asPrimitiveType());
                     pgArrayBuilder.addElement(elementValue, elementNeedsEscapingInArray);
                 }
             }
@@ -280,10 +276,10 @@ public enum ParquetTypeConverter {
 
         @Override
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
-            String originalTypeName = type.asGroupType().getOriginalType() == null ?
+            String complexTypeName = type.asGroupType().getOriginalType() == null ?
                     "customized struct" :
                     type.asGroupType().getOriginalType().name();
-            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", originalTypeName));
+            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", complexTypeName));
         }
     };
 
@@ -310,12 +306,14 @@ public enum ParquetTypeConverter {
             return valueOf(primitiveTypeName.name());
         }
 
-        String originalTypeName = type.asGroupType().getOriginalType() == null ?
+        String complexTypeName = type.asGroupType().getOriginalType() == null ?
                 "customized struct" : type.asGroupType().getOriginalType().name();
         try {
-            return valueOf(originalTypeName);
+            // parquet LIST type
+            return valueOf(complexTypeName);
         } catch (IllegalArgumentException e) {
-            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported, error: %s", originalTypeName, e));
+            // other unsupported parquet complex type
+            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported, error: %s", complexTypeName, e));
         }
     }
 
@@ -431,4 +429,17 @@ public enum ParquetTypeConverter {
         return String.valueOf(getValue(group, columnIndex, repeatIndex, primitiveType));
     }
 
+    /**
+     * Validate whether the element type in Parquet List type is supported by pxf
+     *
+     * @param elementType the element type of Parquet List type
+     */
+    public void validateElementTypeInListType(Type elementType) {
+        if (!elementType.isPrimitive()) {
+            String complexTypeName = elementType.asGroupType().getOriginalType() == null ?
+                    "customized struct" :
+                    elementType.asGroupType().getOriginalType().name();
+            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", complexTypeName));
+        }
+    }
 }
