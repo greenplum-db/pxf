@@ -243,11 +243,11 @@ public enum ParquetTypeConverter {
             Type elementType = getElementType(type.asGroupType());
             if (!elementType.isPrimitive()) {
                 String originalTypeName = elementType.asGroupType().getOriginalType() == null ?
-                        "non primitives" :
+                        "customized struct" :
                         elementType.asGroupType().getOriginalType().name();
                 throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", originalTypeName));
             }
-            return from(elementType).getArrayDataType(elementType);
+            return from(elementType).getDataType(elementType).getTypeArray();
         }
 
         @Override
@@ -258,9 +258,9 @@ public enum ParquetTypeConverter {
             Group listGroup = group.getGroup(columnIndex, repeatIndex);
             // a listGroup can have any number of repeatedGroups
             int repetitionCount = listGroup.getFieldRepetitionCount(0);
-            boolean elementNeedsEscapingInArray = getDataType(type).getTypeElem().getNeedsEscapingInArray();
             PrimitiveType elementType = getElementType(type.asGroupType()).asPrimitiveType();
-            ParquetTypeConverter converter = from(elementType);
+            ParquetTypeConverter elementConverter = from(elementType);
+            boolean elementNeedsEscapingInArray = getDataType(type).getTypeElem().getNeedsEscapingInArray();
 
             for (int i = 0; i < repetitionCount; i++) {
                 Group repeatedGroup = listGroup.getGroup(0, i);
@@ -270,7 +270,7 @@ public enum ParquetTypeConverter {
                     pgArrayBuilder.addElement((String) null);
                 } else {
                     // add the non-null element into array
-                    String elementValue = converter.getValueFromList(repeatedGroup, 0, 0, elementType);
+                    String elementValue = elementConverter.getValueFromList(repeatedGroup, 0, 0, elementType);
                     pgArrayBuilder.addElement(elementValue, elementNeedsEscapingInArray);
                 }
             }
@@ -280,7 +280,10 @@ public enum ParquetTypeConverter {
 
         @Override
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
-            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported", type.asGroupType().getOriginalType().name()));
+            String originalTypeName = type.asGroupType().getOriginalType() == null ?
+                    "customized struct" :
+                    type.asGroupType().getOriginalType().name();
+            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", originalTypeName));
         }
     };
 
@@ -307,11 +310,12 @@ public enum ParquetTypeConverter {
             return valueOf(primitiveTypeName.name());
         }
 
-        String originalTypeName = type.asGroupType().getOriginalType().name();
+        String originalTypeName = type.asGroupType().getOriginalType() == null ?
+                "customized struct" : type.asGroupType().getOriginalType().name();
         try {
             return valueOf(originalTypeName);
         } catch (IllegalArgumentException e) {
-            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported, error: %s", originalTypeName, e));
+            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported, error: %s", originalTypeName, e));
         }
     }
 
@@ -413,16 +417,6 @@ public enum ParquetTypeConverter {
     public abstract Object getValue(Group group, int columnIndex, int repeatIndex, Type type);
 
     public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
-
-    /**
-     * Get DataType based on the element type of Parquet LIST
-     *
-     * @param type is the element type of the Parquet LIST
-     * @return the array DataType
-     */
-    public DataType getArrayDataType(Type type) {
-        return getDataType(type).getTypeArray();
-    }
 
     /**
      * Get the String value of each primitive element from the list

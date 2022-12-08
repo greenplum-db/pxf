@@ -702,7 +702,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals("Parquet LIST of non primitives is not supported.", e.getMessage());
+        assertEquals("Parquet LIST of customized struct is not supported.", e.getMessage());
 
         // LIST of MAP
         schema = getParquetSchemaForUnsupportedListType()[1];
@@ -711,6 +711,14 @@ public class ParquetResolverTest {
         e = assertThrows(UnsupportedTypeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
         assertEquals("Parquet LIST of MAP is not supported.", e.getMessage());
+
+        // LIST of LIST
+        schema = getParquetSchemaForUnsupportedListType()[2];
+        // schema has changed, set metadata again
+        context.setMetadata(schema);
+        e = assertThrows(UnsupportedTypeException.class,
+                () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
+        assertEquals("Parquet LIST of LIST is not supported.", e.getMessage());
     }
 
     @Test
@@ -720,7 +728,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals("Parquet complex type MAP is not supported, error: java.lang.IllegalArgumentException: No enum constant org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.MAP", e.getMessage());
+        assertEquals("Parquet LIST of MAP is not supported, error: java.lang.IllegalArgumentException: No enum constant org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.MAP", e.getMessage());
     }
 
     @Test
@@ -861,7 +869,7 @@ public class ParquetResolverTest {
 
     @SuppressWarnings("deprecation")
     private MessageType[] getParquetSchemaForUnsupportedListType() {
-        MessageType[] messageTypes = new MessageType[2];
+        MessageType[] messageTypes = new MessageType[3];
 
         // List of customized Struct
         List<Type> structFields = new ArrayList<>();
@@ -891,6 +899,20 @@ public class ParquetResolverTest {
 
         fields.add(listGroupType);
         messageTypes[1] = new MessageType("spark_schema", fields);
+
+        // List of List
+        List<Type> innerListElementFields = new ArrayList<>();
+
+        innerListElementFields.add(new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveTypeName.INT32, "id"));
+
+        GroupType innerListRepeatedGroup = new GroupType(Type.Repetition.REPEATED, "inner_repeated_list", innerListElementFields);
+        GroupType innerListGroupType = new GroupType(Type.Repetition.OPTIONAL, "inner_list", org.apache.parquet.schema.OriginalType.LIST, innerListRepeatedGroup);
+        listRepeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", innerListGroupType);
+        listGroupType = new GroupType(Type.Repetition.OPTIONAL, "unsupported_list", org.apache.parquet.schema.OriginalType.LIST, listRepeatedGroupType);
+        fields = new ArrayList<>();
+
+        fields.add(listGroupType);
+        messageTypes[2] = new MessageType("spark_schema", fields);
         return messageTypes;
     }
 
