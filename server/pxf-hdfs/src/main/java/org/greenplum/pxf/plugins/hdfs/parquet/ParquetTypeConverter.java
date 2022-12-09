@@ -4,16 +4,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
-import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.GreenplumDateTime;
-import org.greenplum.pxf.api.error.PxfRuntimeException;
-import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
-import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,17 +64,6 @@ public enum ParquetTypeConverter {
                 return group.getBinary(columnIndex, repeatIndex).getBytes();
             } else {
                 return group.getString(columnIndex, repeatIndex);
-            }
-        }
-
-        @Override
-        public String getValueFromList(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType) {
-            Object value = getValue(group, columnIndex, repeatIndex, primitiveType);
-            if (primitiveType.getLogicalTypeAnnotation() == null) {
-                ByteBuffer byteBuffer = ByteBuffer.wrap((byte[]) value);
-                return pgUtilities.encodeByteaHex(byteBuffer);
-            } else {
-                return String.valueOf(value);
             }
         }
     },
@@ -235,86 +219,27 @@ public enum ParquetTypeConverter {
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
             jsonNode.add(group.getBoolean(columnIndex, repeatIndex));
         }
-    },
-
-    LIST {
-        @Override
-        public DataType getDataType(Type type) {
-            Type elementType = getElementType(type.asGroupType());
-            validateElementTypeInListType(elementType);
-            return from(elementType).getDataType(elementType).getTypeArray();
-        }
-
-        @Override
-        public Object getValue(Group group, int columnIndex, int repeatIndex, Type type) {
-            PgArrayBuilder pgArrayBuilder = new PgArrayBuilder(pgUtilities);
-            pgArrayBuilder.startArray();
-
-            Group listGroup = group.getGroup(columnIndex, repeatIndex);
-            // a listGroup can have any number of repeatedGroups
-            int repetitionCount = listGroup.getFieldRepetitionCount(0);
-            Type elementType = getElementType(type.asGroupType());
-            validateElementTypeInListType(elementType);
-            ParquetTypeConverter elementConverter = from(elementType);
-            boolean elementNeedsEscapingInArray = elementConverter.getDataType(elementType).getNeedsEscapingInArray();
-
-            for (int i = 0; i < repetitionCount; i++) {
-                Group repeatedGroup = listGroup.getGroup(0, i);
-                // each repeatedGroup can only have no more than 1 element
-                // 0 means it is a null primitive element
-                if (repeatedGroup.getFieldRepetitionCount(0) == 0) {
-                    pgArrayBuilder.addElement((String) null);
-                } else {
-                    // add the non-null element into array
-                    String elementValue = elementConverter.getValueFromList(repeatedGroup, 0, 0, elementType.asPrimitiveType());
-                    pgArrayBuilder.addElement(elementValue, elementNeedsEscapingInArray);
-                }
-            }
-            pgArrayBuilder.endArray();
-            return pgArrayBuilder.toString();
-        }
-
-        @Override
-        public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
-            String complexTypeName = type.asGroupType().getOriginalType() == null ?
-                    "customized struct" :
-                    type.asGroupType().getOriginalType().name();
-            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", complexTypeName));
-        }
     };
+
+
+    public static ParquetTypeConverter from(PrimitiveType primitiveType) {
+        return valueOf(primitiveType.getPrimitiveTypeName().name());
+    }
+
+
+    // ********** PUBLIC INTERFACE **********
+    public abstract DataType getDataType(Type type);
+
+    public abstract Object getValue(Group group, int columnIndex, int repeatIndex, Type type);
+
+    public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
 
     private static final int SECOND_IN_MICROS = 1000 * 1000;
     private static final long JULIAN_EPOCH_OFFSET_DAYS = 2440588L;
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
     private static final long MICROS_IN_DAY = 24 * 3600 * 1000 * 1000L;
     private static final long NANOS_IN_MICROS = 1000;
-    private static final PgUtilities pgUtilities = new PgUtilities();
     private static final Logger LOG = LoggerFactory.getLogger(ParquetTypeConverter.class);
-
-    /**
-     * Retrieve corresponding ENUM value according to the input parquet type
-     *
-     * @param type is the input parquet type
-     * @return a {@link ParquetTypeConverter} containing the ENUM value
-     */
-    public static ParquetTypeConverter from(Type type) {
-        if (type.isPrimitive()) {
-            PrimitiveType.PrimitiveTypeName primitiveTypeName = type.asPrimitiveType().getPrimitiveTypeName();
-            if (primitiveTypeName == null) {
-                throw new PxfRuntimeException("Invalid Parquet primitive schema. Parquet primitive type name is null.");
-            }
-            return valueOf(primitiveTypeName.name());
-        }
-
-        String complexTypeName = getComplexTypeName(type.asGroupType());
-        try {
-            // parquet LIST type
-            return valueOf(complexTypeName);
-        } catch (IllegalArgumentException e) {
-            // other unsupported parquet complex type
-            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported, error: %s", complexTypeName, e));
-        }
-    }
 
     // Convert parquet byte array to java timestamp IN LOCAL SERVER'S TIME ZONE
     public static String bytesToTimestamp(byte[] bytes) {
@@ -383,70 +308,5 @@ public enum ParquetTypeConverter {
     // Helper method that returns a BigDecimal from the long value
     private static BigDecimal bigDecimalFromLong(DecimalLogicalTypeAnnotation decimalType, long value) {
         return new BigDecimal(BigInteger.valueOf(value), decimalType.getScale());
-    }
-
-    /**
-     * Validate whether the element type in Parquet List type is supported by pxf
-     *
-     * @param elementType the element type of Parquet List type
-     */
-    private static void validateElementTypeInListType(Type elementType) {
-        if (!elementType.isPrimitive()) {
-            String complexTypeName = getComplexTypeName(elementType.asGroupType());
-            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", complexTypeName));
-        }
-    }
-
-    /*
-     * Get the Parquet primitive schema type based on Parquet List schema type
-     *
-     * Parquet List Schema
-     * <list-repetition> group <name> (LIST) {
-     *   repeated group list {
-     *     <element-repetition> <element-type> element;
-     *   }
-     * }
-     *
-     * - The outer-most level must be a group annotated with `LIST` that contains a single field named `list`. The repetition of this level must be either `optional` or `required` and determines whether the list is nullable.
-     * - The middle level, named `list`, must be a repeated group with a single field named `element`.
-     * - The `element` field encodes the list's element type and repetition. Element repetition must be `required` or `optional`.
-     */
-    private static Type getElementType(GroupType listType) {
-        if (listType.getFields().size() != 1 || listType.getType(0).asGroupType().getFields().size() != 1) {
-            throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", listType));
-        }
-
-        GroupType repeatedType = listType.getType(0).asGroupType();
-        return repeatedType.getType(0);
-    }
-
-    /**
-     * Get the type name of the input complex type
-     *
-     * @param complexType the GroupType we want to get the type name from
-     * @return the type name of the complex type
-     */
-    private static String getComplexTypeName(GroupType complexType) {
-        return complexType.getOriginalType() == null ? "customized struct" : complexType.getOriginalType().name();
-    }
-
-    // ********** PUBLIC INTERFACE **********
-    public abstract DataType getDataType(Type type);
-
-    public abstract Object getValue(Group group, int columnIndex, int repeatIndex, Type type);
-
-    public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
-
-    /**
-     * Get the String value of each primitive element from the list
-     *
-     * @param group         contains parquet schema and data for a row
-     * @param columnIndex   is the index of the column in the row that needs to be resolved
-     * @param repeatIndex   is the index of each repeated group in the list group at the column
-     * @param primitiveType is the primitive type of the primitive element we are going to get
-     * @return the String value of the primitive element
-     */
-    public String getValueFromList(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType) {
-        return String.valueOf(getValue(group, columnIndex, repeatIndex, primitiveType));
     }
 }

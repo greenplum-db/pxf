@@ -30,21 +30,8 @@ public class PgArrayBuilder {
     }
 
     /**
-     * Add the given element to the list array and handle any string escaping
-     *
-     * @param elem the element to be added to the array
-     * @param needsEscapingInArray whether the element need to be escaped before being added to the array
-     */
-    public void addElement(String elem, boolean needsEscapingInArray) {
-        if (needsEscapingInArray) {
-            addElement(elem);
-        } else {
-            addElementNoEscaping(elem);
-        }
-    }
-
-    /**
      * Add the given element to the list array.
+     *
      * This function assumes that the element has
      * either already been escaped, or does not need escaping.
      * @param elem the element to be added to the array

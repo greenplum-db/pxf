@@ -122,7 +122,7 @@ public class PgUtilities {
 
         String[] subStrings = new String[posList.size() - 1];
         for (int i = 0; i < posList.size() - 1; i++) {
-            subStrings[i] = unescapeArrayElement(new String(value, posList.get(i) + 1, posList.get(i + 1) - posList.get(i) - 1));
+            subStrings[i] = unescapeArrayElement(new String(value, posList.get(i) + 1, posList.get(i+1) - posList.get(i) - 1));
         }
         return subStrings;
 
@@ -214,16 +214,7 @@ public class PgUtilities {
      * @return a string containing Postgres bytea hex format
      */
     public String encodeAndEscapeByteaHex(ByteBuffer data) {
-        return escapeArrayElement(encodeByteaHex(data));
-    }
-
-    /**
-     * Converts a byte buffer into a String containing bytea hex format.
-     * @param data a byte buffer to convert to bytea hex format
-     * @return a string containing bytea hex format
-     */
-    public String encodeByteaHex(ByteBuffer data) {
-        return String.format("\\x%s", Hex.encodeHexString(data));
+        return escapeArrayElement(String.format("\\x%s", Hex.encodeHexString(data)));
     }
 
     /**
@@ -321,7 +312,7 @@ public class PgUtilities {
     private byte parseUnsignedByte(String s, int radix) {
         int i = Integer.parseInt(s, radix);
         if (i >= 0 && i <= 255) {
-            return (byte) i;
+            return (byte)i;
         } else {
             throw new NumberFormatException("Value out of range for byte. Value:\"" + s + "\" Radix:" + radix);
         }
