@@ -306,8 +306,7 @@ public enum ParquetTypeConverter {
             return valueOf(primitiveTypeName.name());
         }
 
-        String complexTypeName = type.asGroupType().getOriginalType() == null ?
-                "customized struct" : type.asGroupType().getOriginalType().name();
+        String complexTypeName = getComplexTypeName(type.asGroupType());
         try {
             // parquet LIST type
             return valueOf(complexTypeName);
@@ -386,6 +385,18 @@ public enum ParquetTypeConverter {
         return new BigDecimal(BigInteger.valueOf(value), decimalType.getScale());
     }
 
+    /**
+     * Validate whether the element type in Parquet List type is supported by pxf
+     *
+     * @param elementType the element type of Parquet List type
+     */
+    private static void validateElementTypeInListType(Type elementType) {
+        if (!elementType.isPrimitive()) {
+            String complexTypeName = getComplexTypeName(elementType.asGroupType());
+            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", complexTypeName));
+        }
+    }
+
     /*
      * Get the Parquet primitive schema type based on Parquet List schema type
      *
@@ -409,6 +420,16 @@ public enum ParquetTypeConverter {
         return repeatedType.getType(0);
     }
 
+    /**
+     * Get the type name of the input complex type
+     *
+     * @param complexType the GroupType we want to get the type name from
+     * @return the type name of the complex type
+     */
+    private static String getComplexTypeName(GroupType complexType) {
+        return complexType.getOriginalType() == null ? "customized struct" : complexType.getOriginalType().name();
+    }
+
     // ********** PUBLIC INTERFACE **********
     public abstract DataType getDataType(Type type);
 
@@ -427,19 +448,5 @@ public enum ParquetTypeConverter {
      */
     public String getValueFromList(Group group, int columnIndex, int repeatIndex, PrimitiveType primitiveType) {
         return String.valueOf(getValue(group, columnIndex, repeatIndex, primitiveType));
-    }
-
-    /**
-     * Validate whether the element type in Parquet List type is supported by pxf
-     *
-     * @param elementType the element type of Parquet List type
-     */
-    public void validateElementTypeInListType(Type elementType) {
-        if (!elementType.isPrimitive()) {
-            String complexTypeName = elementType.asGroupType().getOriginalType() == null ?
-                    "customized struct" :
-                    elementType.asGroupType().getOriginalType().name();
-            throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", complexTypeName));
-        }
     }
 }
