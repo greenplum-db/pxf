@@ -459,7 +459,6 @@ public class AvroResolverTest {
         List<OneField> oneFields = resolver.getFields(new OneRow(null, genericRecord));
         List<Schema.Field> schemaFields = schema.getFields();
         // Default System TimeZone
-        TimeZone defaultTimeZone = TimeZone.getDefault();
         String timeStampMillis = avroTypeConverter.timestampMillis(1634845704629l, getFieldSchema(schema, 0), getFieldSchema(schema, 0).getLogicalType());
         String timeStampMicros = avroTypeConverter.timestampMicros(1634845704629556l, getFieldSchema(schema, 1), getFieldSchema(schema, 1).getLogicalType());
         String localTimeStampMillis = avroTypeConverter.localTimestampMillis(1634845704629l, getFieldSchema(schema, 2), getFieldSchema(schema, 2).getLogicalType());
@@ -497,8 +496,6 @@ public class AvroResolverTest {
         assertField(oneFields, 1, timeStampMicros, DataType.TIMESTAMP_WITH_TIME_ZONE);
         assertField(oneFields, 2, localTimeStampMicros, DataType.TIMESTAMP);
         assertField(oneFields, 3, localTimeStampMillis, DataType.TIMESTAMP);
-
-        TimeZone.setDefault(defaultTimeZone);
     }
 
     @Test
