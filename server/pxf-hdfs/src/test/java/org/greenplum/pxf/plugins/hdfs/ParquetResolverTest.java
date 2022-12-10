@@ -489,7 +489,7 @@ public class ParquetResolverTest {
         List<OneField> fields = assertRow(groups, 0, 16);
 
         assertField(fields, 0, "[\"row1-1\",\"row1-2\"]", DataType.TEXT);
-        assertField(fields, 1, null, DataType.TEXT);
+        assertField(fields, 1, "[]", DataType.TEXT);
         assertField(fields, 2, "[1,2,3]", DataType.TEXT);
         assertField(fields, 3, "[6.0,-16.34]", DataType.TEXT);
         assertField(fields, 4, "[123456.789012345987654321]", DataType.TEXT); // scale fixed to 18 in schema
@@ -647,58 +647,8 @@ public class ParquetResolverTest {
     }
 
     @Test
-    public void testGetFields_List_With_Projection() throws IOException {
-        schema = getParquetSchemaForListTypesGeneratedByHive();
-        context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
-        // set odd columns to be not projected, their values will become null
-        for (int i = 0; i < context.getTupleDescription().size(); i++) {
-            context.getTupleDescription().get(i).setProjected(i % 2 == 0);
-        }
-
-        MessageType readSchema = buildReadSchema(schema);
-        // schema has changed, set metadata again
-        context.setMetadata(readSchema);
-
-        resolver.setRequestContext(context);
-        resolver.afterPropertiesSet();
-
-        List<Group> groups = readParquetFile("parquet_list_types_without_null.parquet", 2, readSchema);
-        assertEquals(2, groups.size());
-
-        List<OneField> fields = assertRow(groups, 0, 13);
-        assertField(fields, 0, 1, DataType.INTEGER);
-        assertField(fields, 1, null, DataType.BOOLARRAY);
-        assertField(fields, 2, new Short[]{50}, DataType.INT2ARRAY);
-        assertField(fields, 3, null, DataType.INT4ARRAY);
-        assertField(fields, 4, new Long[]{1L}, DataType.INT8ARRAY);
-        assertField(fields, 5, null, DataType.FLOAT4ARRAY);
-        assertField(fields, 6, new Double[]{1.7E308}, DataType.FLOAT8ARRAY);
-        assertField(fields, 7, null, DataType.TEXTARRAY);
-        assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(new byte[]{(byte) 222, (byte) 173, (byte) 190, (byte) 239})}, DataType.BYTEAARRAY);
-        assertField(fields, 9, null, DataType.BPCHARARRAY);
-        assertField(fields, 10, new String[]{"hello"}, DataType.VARCHARARRAY);
-        assertField(fields, 11, null, DataType.DATEARRAY);
-        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
-
-        fields = assertRow(groups, 1, 13);
-        assertField(fields, 0, 2, DataType.INTEGER);
-        assertField(fields, 1, null, DataType.BOOLARRAY);
-        assertField(fields, 2, new Short[]{-128, 96}, DataType.INT2ARRAY);
-        assertField(fields, 3, null, DataType.INT4ARRAY);
-        assertField(fields, 4, new Long[]{-9223372036854775808L, 223372036854775808L}, DataType.INT8ARRAY);
-        assertField(fields, 5, null, DataType.FLOAT4ARRAY);
-        assertField(fields, 6, new Double[]{1.0, -9.99E1}, DataType.FLOAT8ARRAY);
-        assertField(fields, 7, null, DataType.TEXTARRAY);
-        assertField(fields, 8, new Binary[]{Binary.fromReusedByteArray(new byte[]{(byte) 222, (byte) 173, (byte) 190, (byte) 239}), Binary.fromReusedByteArray(new byte[]{(byte) 173, (byte) 190, (byte) 239})}, DataType.BYTEAARRAY);
-        assertField(fields, 9, null, DataType.BPCHARARRAY);
-        assertField(fields, 10, new String[]{"this is exactly", " fifteen chars."}, DataType.VARCHARARRAY);
-        assertField(fields, 11, null, DataType.DATEARRAY);
-        assertField(fields, 12, new BigDecimal[]{BigDecimal.valueOf(1234560000000000000L, 18), BigDecimal.valueOf(1234560000000000000L, 18)}, DataType.NUMERICARRAY);
-    }
-
-    @Test
     public void testGetFields_Timestamp_List_Nulls() throws IOException {
-        schema = getParquetSchemaForTimestampListType(Type.Repetition.OPTIONAL, Type.Repetition.OPTIONAL);
+        schema = getParquetSchemaForTimestampListTypeGeneratedBySpark();
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
