@@ -74,7 +74,7 @@ public class ParquetUtilities {
                 }
             case BOOLEAN:
                 //parquet bool val is "true" or "false" but pgUtilities only accept "t" or "f"
-                return pgUtilities.parseBoolLiteral(val.substring(0,1));
+                return pgUtilities.parseBoolLiteral(val);
             case INT32:
                 if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
                     // ParquetResolver.fillGroupWithPrimitive will convert Date String into INT32 (number of days from the Unix epoch, 1 January 1970)
