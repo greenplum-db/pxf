@@ -52,7 +52,8 @@ function create_dataproc_cluster() {
         --tags="${CLUSTER_USER}-only"
         --num-workers="${NUM_WORKERS}"
         --image-version="${IMAGE_VERSION}"
-        --network="${NETWORK}")
+        --network="${NETWORK}"
+        --enable-kerberos)
 
     if [[ -n $1 ]]; then
         create_cmd+=("--properties=${extra_hadoop_config}")
@@ -90,10 +91,14 @@ function create_firewall_rule() {
     # HDFS NameNode         9870 http://${CLUSTER_NAME}-m:9870
     #
     # https://cloud.google.com/dataproc/docs/concepts/accessing/cluster-web-interfaces
+    #
+    # Kerberos Service  Port
+    # KDC               88
+    # Admin server      750
     gcloud compute firewall-rules create "${firewall_rule_name}" \
         --description="Allow incoming HDFS traffic from ${USER}'s home office" \
         --network="${NETWORK}" \
-        --allow=tcp:8020,tcp:8088,tcp:9083,tcp:9866,tcp:9870,tcp:10000 \
+        --allow=tcp:8020,tcp:8088,tcp:9083,tcp:9866,tcp:9870,tcp:10000,udp:88,udp:750 \
         --direction=INGRESS \
         --target-tags="${CLUSTER_USER}-only" \
         --source-ranges="${local_external_ip}/32"

@@ -1,0 +1,191 @@
+# Local Dataproc Cluster with Kerberos Authentication
+
+This developer note will guide you through the process of creating a Google Cloud Dataproc cluster with Kerberos authentication enabled.
+
+## Environment SetUp
+
+1. Modify `dataproc-cluster.bash` to include the following changes
+    1. Add `--enable-kerberos` to the `create_cmd` array in the function `create_dataproc_cluster`
+    1. Add `udp:88,udp:750` to the `--allow` argument  in the function `create_firewall_rule`
+
+1. Run the modified `dataproc-cluster.bash` script with following options to createLaunced a local Dataproc cluster
+
+    ```sh
+    IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.sh 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT'
+    ```
+
+    **NOTE:** After running the script, but before creating the PXF server config, replace `bradford-local-cluster-m` with `bradford-local-cluster-m.c.data-gpdb-ud.internal` for `hive.metastore.uris` in `$PXF_BASE/servers/dataproc/hive-site.xml`
+
+1. SSH into cluster code (e.g., `gcloud compute ssh bradford-local-cluster-m`) and created a PXF service principal named `rosie`
+
+    ```sh
+    sudo kadmin.local -q 'add_principal -nokey rosie'
+    sudo kadmin.local -q 'ktadd -k /home/bradford/pxf.service.keytab rosie'
+    sudo chown bradford: ~/pxf.service.keytab
+    chmod 0600 ~/pxf.service.keytab
+    sudo addgroup rosie hdfs
+    sudo addgroup rosie hadoop
+
+    # verify the keytab
+    klist -ekt pxf.service.keytab
+    ```
+
+1. Copy Kerberos files from the cluster to the local working directory
+
+    ```sh
+    gcloud compute scp bradford-local-cluster-m:~/pxf.service.keytab bradford-local-cluster-m:/etc/krb5.conf dataproc_env_files/
+    cp -i dataproc_env_files/pxf.service.keytab "${PXF_BASE}/keytabs"
+    ```
+
+1. If `kinit` and/or `klist` are not found on your path, install
+    * `krb5-user` on Debian-based distros
+    * `krb5-workstation` and `krb5-libs` on RHEL7-based distros
+
+1. Verify that Kerberos is working
+
+    ```sh
+    KRB5_CONFIG="${PWD}/dataproc_env_files/krb5.conf" kinit -kt dataproc_env_files/pxf.service.keytab rosie
+    klist
+    hdfs dfs -ls /
+    # using beeline from singlecluster-HDP3 fails with the following error locally
+    #   Error: org.apache.thrift.transport.TTransportException (state=08S01,code=0)
+    #
+    # from the log file on the cluster node
+    #   org.apache.thrift.protocol.TProtocolException: Missing version in readMessageBegin, old client?
+    ```
+
+    **NOTE:** Java 8 does not like/support the [directives `include` or `includedir`][0]; rather than attempt to automate editing the system's `/etc/krb5.conf` or provide manual steps for editing it (which would require also removing the config when destroying the cluster), this guide takes a more conservative approach of using an alternate location for the Kerberos config (e.g., `KRB5_CONFIG` above and `-Djava.security.krb5.conf` below).
+
+## PXF Setup
+
+1. Edit `$PXF_BASE/servers/dataproc/pxf-site.xml`
+    * Set `pxf.service.kerberos.principal` to `rosie@C.DATA-GPDB-UD.INTERNAL`
+
+1. Edit `$PXF_BASE/conf/pxf-env.sh` and add `-Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf` to `PXF_JVM_OPTS`
+
+1. Copy `dataproc_env_files/krb5.conf` to `$PXF_BASE/conf/krb5.conf`
+
+## Hive Setup
+
+1. SSH into cluster node (e.g., `bradford-local-cluster-m`) and connect to Hive
+
+    ```sh
+    $GPHD_ROOT/hive/bin/beeline -u 'jdbc:hive2://bradford-local-cluster-m:10000/default;principal=hive/bradford-local-cluster-m.c.data-gpdb-ud.internal@C.DATA-GPDB-UD.INTERNAL;saslQop=auth-conf'
+    ```
+
+1. Create a table
+
+    ```sql
+    CREATE TABLE gh_909_parquet (col1 INTEGER, col2 STRING) STORED AS PARQUET;
+    INSERT INTO gh_909_parquet VALUES
+        (1, 'hive row 1'),
+        (2, 'hive row 2'),
+        (3, 'hive row 3'),
+        (4, 'hive row 4'),
+        (5, 'hive row 5'),
+        (6, 'hive row 6'),
+        (7, 'hive row 7'),
+        (8, 'hive row 8'),
+        (9, 'hive row 9'),
+        (10, 'hive row 10');
+    ```
+
+## Greenplum Setup
+
+1. Create a writable external table to generate parquet data in Google Cloud Storage
+
+    ```sh
+    mkdir ${PXF_BASE}/servers/gh_909_gs
+    cp ${PXF_HOME}/template/gs-site.xml ${PXF_BASE}/servers/gh_909_gs
+    # retrieve ud/pxf/secrets/gsc-ci-service-account-key from Vault and save it somewhere
+    # update 'google.cloud.auth.service.account.json.keyfile' in gs-site.xml
+    ```
+
+    ```sql
+    CREATE WRITABLE EXTERNAL TABLE pxf_gs_parquet_gh_909_w(col1 int, col2 text)
+    LOCATION ('pxf://data-gpdb-ud-tpch/tmp/bradford_gh_909?PROFILE=gs:parquet&SERVER=gh_909_gs')
+    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
+
+    INSERT INTO pxf_gs_parquet_gh_909_w SELECT i, 'gs row ' || i FROM generate_series(1,10) i;
+
+    CREATE READABLE EXTERNAL TABLE pxf_gs_parquet_gh_909_r(col1 int, col2 text)
+    LOCATION ('pxf://data-gpdb-ud-tpch/tmp/bradford_gh_909?PROFILE=gs:parquet&SERVER=gh_909_gs')
+    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
+
+    SELECT * FROM pxf_gs_parquet_gh_909_r ORDER BY col1;
+    --  col1 |   col2
+    -- ------+-----------
+    --     1 | gs row 1
+    --     2 | gs row 2
+    --     3 | gs row 3
+    --     4 | gs row 4
+    --     5 | gs row 5
+    --     6 | gs row 6
+    --     7 | gs row 7
+    --     8 | gs row 8
+    --     9 | gs row 9
+    --    10 | gs row 10
+    -- (10 rows)
+    ```
+
+1. Create a readable external table using the `hdfs:parquet` profile; the location is set to the HDFS directory that contains the Hive table's parquet-formatted data
+
+    ```sql
+    CREATE READABLE EXTERNAL TABLE pxf_hdfs_parquet_gh_909_r(col1 int, col2 text)
+    LOCATION ('pxf://user/hive/warehouse/gh_909_parquet?PROFILE=hdfs:parquet&SERVER=dataproc')
+    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
+
+    SELECT * FROM pxf_hdfs_parquet_gh_909_r ORDER BY col1;
+    --  col1 |    col2
+    -- ------+-------------
+    --     1 | hive row 1
+    --     2 | hive row 2
+    --     3 | hive row 3
+    --     4 | hive row 4
+    --     5 | hive row 5
+    --     6 | hive row 6
+    --     7 | hive row 7
+    --     8 | hive row 8
+    --     9 | hive row 9
+    --    10 | hive row 10
+    -- (10 rows)
+    ```
+
+1. Create a readable external table using the `hive` profile
+
+    ```sql
+    CREATE READABLE EXTERNAL TABLE pxf_hive_gh_909_r(col1 int, col2 text)
+    LOCATION ('pxf://gh_909_parquet?PROFILE=hive&SERVER=dataproc')
+    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
+
+    SELECT * FROM pxf_hive_gh_909_r ORDER BY col1;
+    --  col1 |    col2
+    -- ------+-------------
+    --     1 | hive row 1
+    --     2 | hive row 2
+    --     3 | hive row 3
+    --     4 | hive row 4
+    --     5 | hive row 5
+    --     6 | hive row 6
+    --     7 | hive row 7
+    --     8 | hive row 8
+    --     9 | hive row 9
+    --    10 | hive row 10
+    -- (10 rows)
+    ```
+
+1. Attempt to reproduce the issue reported in GitHub 909
+
+    ```sql
+    SELECT * FROM pxf_gs_parquet_gh_909_r ORDER BY col1;
+    SELECT * FROM pxf_hive_gh_909_r ORDER BY col1;
+    SELECT * FROM pxf_gs_parquet_gh_909_r ORDER BY col1;
+    ```
+
+## Clean-Up
+
+1. Stop PXF, remove `-Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf` from `PXF_JVM_OPTS` in `$PXF_BASE/conf/pxf-env.sh`, and delete `${PXF_BASE}/conf/krb5.conf`
+2. Run `./dataproc-cluster.bash --destory`
+
+<!-- link ids -->
+[0]: https://linux.die.net/man/5/krb5.conf
