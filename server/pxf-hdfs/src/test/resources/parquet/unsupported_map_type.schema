@@ -1,0 +1,8 @@
+message spark_schema {
+  optional group unsupported_map (MAP) {
+    repeated group map {
+      required int32 key;
+      optional int32 value;
+    }
+  }
+}

@@ -41,6 +41,7 @@ import org.apache.parquet.hadoop.example.GroupWriteSupport;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.hadoop.metadata.FileMetaData;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
+import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
@@ -48,6 +49,7 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Types;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.InOperatorTransformer;
@@ -87,6 +89,7 @@ import static org.apache.parquet.hadoop.ParquetOutputFormat.PAGE_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.WRITER_VERSION;
 import static org.apache.parquet.hadoop.api.ReadSupport.PARQUET_READ_SCHEMA;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
+import static org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.from;
 
 /**
  * Parquet file accessor.
@@ -236,9 +239,17 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         LOG.debug("{}-{}: Parquet options: PAGE_SIZE = {}, ROWGROUP_SIZE = {}, DICTIONARY_PAGE_SIZE = {}, PARQUET_VERSION = {}, ENABLE_DICTIONARY = {}",
                 context.getTransactionId(), context.getSegmentId(), pageSize, rowGroupSize, dictionarySize, parquetVersion, enableDictionary);
 
+        // fs is the dependency for both readSchemaFile and createParquetWriter
+        String fileName = filePrefix + codecName.getExtension() + ".parquet";
+        LOG.debug("{}-{}: Creating file {}", context.getTransactionId(),
+                context.getSegmentId(), fileName);
+        file = new Path(fileName);
+        fs = FileSystem.get(URI.create(fileName), configuration);
+        HdfsUtilities.validateFile(file, fs);
+
         // Read schema file, if given
         String schemaFile = context.getOption("SCHEMA");
-        MessageType schema = (schemaFile != null) ? readSchemaFile(schemaFile) :
+        MessageType schema = (schemaFile != null) ? readSchemaFile(schemaFile, context.getTupleDescription()) :
                 generateParquetSchema(context.getTupleDescription());
         LOG.debug("{}-{}: Schema fields = {}", context.getTransactionId(),
                 context.getSegmentId(), schema.getFields());
@@ -405,14 +416,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     }
 
     private void createParquetWriter() throws IOException, InterruptedException {
-
-        String fileName = filePrefix + codecName.getExtension() + ".parquet";
-        LOG.debug("{}-{}: Creating file {}", context.getTransactionId(),
-                context.getSegmentId(), fileName);
-        file = new Path(fileName);
-        fs = FileSystem.get(URI.create(fileName), configuration);
-        HdfsUtilities.validateFile(file, fs);
-
         configuration.setInt(PAGE_SIZE, pageSize);
         configuration.setInt(DICTIONARY_PAGE_SIZE, dictionarySize);
         configuration.setBoolean(ENABLE_DICTIONARY, enableDictionary);
@@ -426,12 +429,53 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     /**
      * Generate parquet schema using schema file
      */
-    private MessageType readSchemaFile(String schemaFile)
+    private MessageType readSchemaFile(String schemaFile, List<ColumnDescriptor> columns)
             throws IOException {
         LOG.debug("{}-{}: Using parquet schema from given schema file {}", context.getTransactionId(),
                 context.getSegmentId(), schemaFile);
+        MessageType schema;
         try (InputStream inputStream = fs.open(new Path(schemaFile))) {
-            return MessageTypeParser.parseMessageType(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+            schema = MessageTypeParser.parseMessageType(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+        }
+
+        validateParsedSchema(schema, columns);
+        return schema;
+    }
+
+    /**
+     * Validate parquet schema parsed from user provided schema file
+     *
+     * @param schema schema parsed from user provided schema file
+     */
+    private void validateParsedSchema(MessageType schema, List<ColumnDescriptor> columns) {
+        for (int i = 0; i < columns.size(); i++) {
+            ColumnDescriptor column = columns.get(i);
+            Type type = schema.getType(i);
+            if (!type.isPrimitive()) {
+                if (type.asGroupType().getLogicalTypeAnnotation() == LogicalTypeAnnotation.listType()) {
+                    // list of unsupported type
+                    GroupType listType = type.asGroupType();
+                    if (listType.getFields().size() != 1 || listType.getType(0).asGroupType().getFields().size() != 1) {
+                        throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", listType));
+                    }
+                    GroupType repeatedGroupType = listType.getType(0).asGroupType();
+                    Type elementType = repeatedGroupType.getType(0);
+                    if (!elementType.isPrimitive()) {
+                        String complexTypeName = elementType.asGroupType().getOriginalType() == null ?
+                                "customized struct" :
+                                elementType.asGroupType().getOriginalType().name();
+                        throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", complexTypeName));
+                    }
+                } else if (column.columnTypeCode() == DataType.UNSUPPORTED_TYPE.getOID()) {
+                    // unsupported conplex type like MAP
+                    throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported.", type.asGroupType().getLogicalTypeAnnotation()));
+                }
+            }
+            // inconsistency between parquet type and greenplum type
+            int dataTypeOID = from(type).getDataType(type).getOID();
+            if (dataTypeOID != column.columnTypeCode()) {
+                throw new PxfRuntimeException(String.format("The Greenplum data type %s converted from schema at index %s doesn't match expected Greenplum data type %s.", dataTypeOID, i, column.columnTypeCode()));
+            }
         }
     }
 
@@ -450,8 +494,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             int columnTypeCode = column.columnTypeCode();
             String columnName = column.columnName();
 
-            boolean isArray = dataType.isArrayType();
-            DataType elementType = isArray ? dataType.getTypeElem() : dataType;
+            boolean isArrayType = dataType.isArrayType();
+            DataType elementType = isArrayType ? dataType.getTypeElem() : dataType;
 
             PrimitiveTypeName primitiveTypeName;
             LogicalTypeAnnotation logicalTypeAnnotation = null;
@@ -515,15 +559,15 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     break;
                 default:
                     throw new UnsupportedTypeException(
-                            String.format("Type %d is not supported", columnTypeCode));
+                            String.format("Type %d for column %s is not supported for writing Parquet.", columnTypeCode, columnName));
             }
 
             Type type;
-            if (!isArray) {
+            if (!isArrayType) {
                 type = length == null ?
                         Types.optional(primitiveTypeName).as(logicalTypeAnnotation).named(columnName) :
                         Types.optional(primitiveTypeName).length(length).as(logicalTypeAnnotation).named(columnName);
-            }else{
+            } else {
                 type = length == null ?
                         Types.optionalList().optionalElement(primitiveTypeName).as(logicalTypeAnnotation).named(columnName) :
                         Types.optionalList().optionalElement(primitiveTypeName).length(length).as(logicalTypeAnnotation).named(columnName);

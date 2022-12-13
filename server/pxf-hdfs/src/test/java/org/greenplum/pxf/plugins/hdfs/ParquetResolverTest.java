@@ -741,7 +741,7 @@ public class ParquetResolverTest {
         ColumnDescriptor listColumnDescriptor = new ColumnDescriptor("unsupported_list", -1, 1, "", new Integer[]{});
         columnDescriptors.add(listColumnDescriptor);
 
-        // LIST of customized Struct, with no parquet original type name
+        // LIST of customized Map, with no parquet original type name
         schema = getParquetSchemaForUnsupportedListType()[1];
         // schema has changed, set metadata again
         context.setMetadata(schema);

@@ -1,0 +1,11 @@
+message spark_schema {
+  optional group unsupported_list_of_lists (LIST) {
+    repeated group repeated_list {
+      optional group inner_list (LIST) {
+        repeated group inner_repeated_list {
+          required int32 id;
+        }
+      }
+    }
+  }
+}

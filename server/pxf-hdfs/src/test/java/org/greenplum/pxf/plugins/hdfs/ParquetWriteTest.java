@@ -22,6 +22,8 @@ import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -62,6 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ParquetWriteTest {
 
@@ -1859,6 +1862,120 @@ public class ParquetWriteTest {
         assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT96, null);
 
         fileReader.close();
+    }
+
+    @Test
+    public void testWriteUnsupportedComplexWithSchemaFile() throws Exception {
+        String path = temp + "/out/unsupported_map/";
+
+        columnDescriptors.add(new ColumnDescriptor("unsupported_map", DataType.UNSUPPORTED_TYPE.getOID(), 0, "unsupported_map", null));
+
+        String filepath = this.getClass().getClassLoader().getResource("parquet/unsupported_map_type.schema").getPath();
+        context.addOption("SCHEMA", filepath);
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123486");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> accessor.openForWrite());
+        assertEquals("Parquet complex type MAP is not supported.", e.getMessage());
+    }
+
+    @Test
+    public void testWriteMultiDimensionalList() throws Exception {
+        String path = temp + "/out/unsupported_list_of_lists/";
+
+        columnDescriptors.add(new ColumnDescriptor("list_of_lists", DataType.INT4ARRAY.getOID(), 0, "list_of_lists", null));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123487");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+        List<OneField> record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), "{{1,2,3},{4,5,6}}"));
+        Exception e = assertThrows(PxfRuntimeException.class,
+                () -> resolver.setFields(record));
+        assertEquals("Error parsing array element: {1,2,3} was not of expected type INT32. " +
+                "Hint: Column value \"{{1,2,3},{4,5,6}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", e.getMessage());
+    }
+
+    @Test
+    public void testWriteMultiDimensionalListWithSchemaFile() {
+        String path = temp + "/out/unsupported_list_of_lists/";
+
+        columnDescriptors.add(new ColumnDescriptor("list_of_lists", DataType.INT4ARRAY.getOID(), 0, "list_of_lists", null));
+
+        String filepath = this.getClass().getClassLoader().getResource("parquet/unsupported_list_of_lists_type.schema").getPath();
+        context.addOption("SCHEMA", filepath);
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123488");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> accessor.openForWrite());
+        assertEquals("Parquet LIST of LIST is not supported.", e.getMessage());
+    }
+
+    @Test
+    public void testWriteInvalidListSchema() {
+        String path = temp + "/out/invalid_list_schema/";
+
+        columnDescriptors.add(new ColumnDescriptor("invalid_list_schema", DataType.BOOLARRAY.getOID(), 0, "invalid_list_schema", null));
+
+        String filepath = this.getClass().getClassLoader().getResource("parquet/invalid_list_schema.schema").getPath();
+        context.addOption("SCHEMA", filepath);
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123489");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        // need to add an elementType validation, but when should we throw exception? when getting schema or when parsing values?
+        Exception e = assertThrows(PxfRuntimeException.class,
+                () -> accessor.openForWrite());
+        assertEquals("Invalid Parquet List schema: optional group bool_arr (LIST) {\n" +
+                "  repeated group bag {\n" +
+                "  }\n" +
+                "}.", e.getMessage());
+    }
+
+    @Test
+    public void testWriteInconsistencyBetweenProvidedSchemaAndDataType() {
+        String path = temp + "/out/test_inconsistency/";
+
+        columnDescriptors.add(new ColumnDescriptor("test_inconsistency", DataType.BOOLEAN.getOID(), 0, "test_inconsistency", null));
+
+        String filepath = this.getClass().getClassLoader().getResource("parquet/test_inconsistency.schema").getPath();
+        context.addOption("SCHEMA", filepath);
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123490");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        // need to add an elementType validation, but when should we throw exception? when getting schema or when parsing values?
+        Exception e = assertThrows(PxfRuntimeException.class,
+                () -> accessor.openForWrite());
+        assertEquals("The Greenplum data type 1000 converted from schema at index 0 doesn't match expected Greenplum data type 16.", e.getMessage());
     }
 
     private MessageType validateFooter(Path parquetFile) throws IOException {

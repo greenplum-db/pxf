@@ -1,9 +1,12 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +50,7 @@ public class ParquetUtilities {
                 data.add(decodeString(split, primitiveTypeName, logicalTypeAnnotation));
             } catch (NumberFormatException | PxfRuntimeException | DateTimeParseException e) {
                 String hint = createErrorHintFromValue(StringUtils.startsWith(split, "{"), val);
-                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, primitiveTypeName), hint, e);
+                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s. Hint: %s", split, primitiveTypeName, hint), e);
             }
         }
         return data;
@@ -113,5 +116,4 @@ public class ParquetUtilities {
             return "Unexpected state since PXF generated the Parquet schema.";
         }
     }
-
 }

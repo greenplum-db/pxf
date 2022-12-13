@@ -1,0 +1,7 @@
+message hive_schema {
+  OPTIONAL group bool_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL BOOLEAN array_element;
+    }
+  }
+}
