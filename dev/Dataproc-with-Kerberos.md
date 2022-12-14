@@ -10,17 +10,17 @@ This developer note will guide you through the process of creating a Google Clou
     IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.bash 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT'
     ```
 
-    **NOTE:** After running the script, but before creating the PXF server config, replace `bradford-local-cluster-m` with `bradford-local-cluster-m.c.data-gpdb-ud.internal` for `hive.metastore.uris` in `$PXF_BASE/servers/dataproc/hive-site.xml`
+    **NOTE:** After running the script, but before creating the PXF server config, replace `bradford-local-cluster-m` with `bradford-local-cluster-m.c.data-gpdb-ud.internal` for `hive.metastore.uris` in `dataproc_env_files/conf/hive-site.xml`
 
 1. SSH into cluster code (e.g., `gcloud compute ssh bradford-local-cluster-m`) and created a PXF service principal named `rosie`
 
     ```sh
-    sudo kadmin.local -q 'add_principal -nokey rosie'
-    sudo kadmin.local -q 'ktadd -k /home/bradford/pxf.service.keytab rosie'
+    sudo kadmin.local -q "add_principal -nokey ${USER}"
+    sudo kadmin.local -q "ktadd -k /home/bradford/pxf.service.keytab ${USER}"
     sudo chown bradford: ~/pxf.service.keytab
     chmod 0600 ~/pxf.service.keytab
-    sudo addgroup rosie hdfs
-    sudo addgroup rosie hadoop
+    sudo addgroup "${USER}" hdfs
+    sudo addgroup "${USER}" hadoop
 
     # verify the keytab
     klist -ekt pxf.service.keytab
@@ -40,9 +40,9 @@ This developer note will guide you through the process of creating a Google Clou
 1. Verify that Kerberos is working
 
     ```sh
-    KRB5_CONFIG="${PWD}/dataproc_env_files/krb5.conf" kinit -kt dataproc_env_files/pxf.service.keytab rosie
+    KRB5_CONFIG="${PWD}/dataproc_env_files/krb5.conf" kinit -kt dataproc_env_files/pxf.service.keytab "${USER}"
     klist
-    hdfs dfs -ls /
+    HADOOP_OPTS="-Djava.security.krb5.conf=${PWD}/dataproc_env_files/krb5.conf" hdfs dfs -ls /
     # using beeline from singlecluster-HDP3 fails with the following error locally
     #   Error: org.apache.thrift.transport.TTransportException (state=08S01,code=0)
     #
@@ -50,16 +50,27 @@ This developer note will guide you through the process of creating a Google Clou
     #   org.apache.thrift.protocol.TProtocolException: Missing version in readMessageBegin, old client?
     ```
 
-    **NOTE:** Java 8 does not like/support the [directives `include` or `includedir`][0]; rather than attempt to automate editing the system's `/etc/krb5.conf` or provide manual steps for editing it (which would require also removing the config when destroying the cluster), this guide takes a more conservative approach of using an alternate location for the Kerberos config (e.g., `KRB5_CONFIG` above and `-Djava.security.krb5.conf` below).
+    **NOTE:** Java 8 does not like/support the [directives `include` or `includedir`][0]; rather than attempt to automate editing the system's `/etc/krb5.conf` or provide manual steps for editing it (which would require also removing the config when destroying the cluster), this guide takes a more conservative approach of using an alternate location for the Kerberos config (e.g., `KRB5_CONFIG` and `-Djava.security.krb5.conf` above).
 
 ## PXF Setup
 
 1. Edit `$PXF_BASE/servers/dataproc/pxf-site.xml`
-    * Set `pxf.service.kerberos.principal` to `rosie@C.DATA-GPDB-UD.INTERNAL`
+    * Set `pxf.service.kerberos.principal` to `<username>@C.DATA-GPDB-UD.INTERNAL`
 
 1. Edit `$PXF_BASE/conf/pxf-env.sh` and add `-Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf` to `PXF_JVM_OPTS`
 
 1. Copy `dataproc_env_files/krb5.conf` to `$PXF_BASE/conf/krb5.conf`
+
+    ```sh
+    cp dataproc_env_files/krb5.conf $PXF_BASE/conf/krb5.conf
+    ```
+
+1. (Re-)Start PXF
+
+    ```sh
+    pxf stop
+    pxf start
+    ```
 
 ## Hive Setup
 
@@ -86,6 +97,34 @@ This developer note will guide you through the process of creating a Google Clou
         (10, 'hive row 10');
     ```
 
+1. Create a copy of the data in HDFS
+
+    ```sh
+    hdfs dfs -cp /user/hive/warehouse/gh_909_parquet /tmp/
+    ```
+
+1. Create an external Hive table
+
+    ```sql
+    CREATE EXTERNAL TABLE gh_909_parquet_ext (col1 INTEGER, col2 STRING)
+    STORED AS PARQUET
+    LOCATION 'hdfs:///tmp/gh_909_parquet';
+
+    SELECT * FROM gh_909_parquet_ext;
+    -- OK
+    -- 1    hive row 1
+    -- 2    hive row 2
+    -- 3    hive row 3
+    -- 4    hive row 4
+    -- 5    hive row 5
+    -- 6    hive row 6
+    -- 7    hive row 7
+    -- 8    hive row 8
+    -- 9    hive row 9
+    -- 10   hive row 10
+    -- Time taken: 8.672 seconds, Fetched: 10 row(s)
+    ```
+
 ## Greenplum Setup
 
 1. Create a writable external table to generate parquet data in Google Cloud Storage
@@ -99,13 +138,13 @@ This developer note will guide you through the process of creating a Google Clou
 
     ```sql
     CREATE WRITABLE EXTERNAL TABLE pxf_gs_parquet_gh_909_w(col1 int, col2 text)
-    LOCATION ('pxf://data-gpdb-ud-tpch/tmp/bradford_gh_909?PROFILE=gs:parquet&SERVER=gh_909_gs')
+    LOCATION ('pxf://data-gpdb-ud-bradford_scratch/tmp/bradford_gh_909?PROFILE=gs:parquet&SERVER=gh_909_gs')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
 
     INSERT INTO pxf_gs_parquet_gh_909_w SELECT i, 'gs row ' || i FROM generate_series(1,10) i;
 
     CREATE READABLE EXTERNAL TABLE pxf_gs_parquet_gh_909_r(col1 int, col2 text)
-    LOCATION ('pxf://data-gpdb-ud-tpch/tmp/bradford_gh_909?PROFILE=gs:parquet&SERVER=gh_909_gs')
+    LOCATION ('pxf://data-gpdb-ud-bradford_scratch/tmp/bradford_gh_909?PROFILE=gs:parquet&SERVER=gh_909_gs')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 
     SELECT * FROM pxf_gs_parquet_gh_909_r ORDER BY col1;
@@ -128,7 +167,7 @@ This developer note will guide you through the process of creating a Google Clou
 
     ```sql
     CREATE READABLE EXTERNAL TABLE pxf_hdfs_parquet_gh_909_r(col1 int, col2 text)
-    LOCATION ('pxf://user/hive/warehouse/gh_909_parquet?PROFILE=hdfs:parquet&SERVER=dataproc')
+    LOCATION ('pxf://tmp/gh_909_parquet?PROFILE=hdfs:parquet&SERVER=dataproc')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 
     SELECT * FROM pxf_hdfs_parquet_gh_909_r ORDER BY col1;
@@ -151,7 +190,7 @@ This developer note will guide you through the process of creating a Google Clou
 
     ```sql
     CREATE READABLE EXTERNAL TABLE pxf_hive_gh_909_r(col1 int, col2 text)
-    LOCATION ('pxf://gh_909_parquet?PROFILE=hive&SERVER=dataproc')
+    LOCATION ('pxf://gh_909_parquet_ext?PROFILE=hive&SERVER=dataproc')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 
     SELECT * FROM pxf_hive_gh_909_r ORDER BY col1;
