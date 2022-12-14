@@ -127,13 +127,7 @@ public class Gpdb extends DbSystemObject {
 	public void createDataBase(String schemaName, boolean ignoreFail) throws Exception {
 
 		runQuery("CREATE DATABASE " + schemaName, ignoreFail, false);
-		runQuery("ALTER DATABASE " + schemaName + " SET bytea_output TO 'escape'", ignoreFail, false);
-
-		// This GUC has a default value of 1 in PG12 (GPDB7) and thus the columns of type REAL displays one digit extra.
-		// So to keep the behavior consistent, setting this to 0.
-		if (version == 7) {
-			runQuery("ALTER DATABASE " + schemaName + " SET extra_float_digits=0", ignoreFail, false);
-		}
+		alterDatabase(schemaName, ignoreFail);
 	}
 
 	@Override
@@ -150,6 +144,11 @@ public class Gpdb extends DbSystemObject {
 		}
 
 		runQuery(createStatement, ignoreFail, false);
+		alterDatabase(schemaName, ignoreFail);
+	}
+
+	private void alterDatabase(String schemaName, boolean ignoreFail) throws Exception {
+
 		runQuery("ALTER DATABASE " + schemaName + " SET bytea_output TO 'escape'", ignoreFail, false);
 
 		// This GUC has a default value of 1 in PG12 (GPDB7) and thus the columns of type REAL displays one digit extra.
