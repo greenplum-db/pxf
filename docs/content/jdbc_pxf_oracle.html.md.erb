@@ -32,6 +32,8 @@ In this example, you:
 - Write data to the Oracle table using PXF
 - Read the data in the Oracle table again
 
+For information about controlling parallel execution in Oracle, refer to [About Setting Parallel Query Session Parameters](#parallel) located at the end of this topic.
+
 ## <a id="ex_create_pgtbl"></a>Create an Oracle Table
 
 Perform the following steps to create an Oracle table named `countries` in the schema `oracleuser`, and grant a user named `oracleuser` all the necessary privileges:
@@ -187,4 +189,58 @@ Perform the following procedure to insert some data into the `countries` Oracle 
             66 | Colombia     |      50.34
     (3 rows)
     ```
+
+
+## <a id="parallel"></a>About Setting Oracle Parallel Query Session Parameters
+
+PXF recognizes certain Oracle session parameters that control parallel query execution, and will set these parameters before it runs a query. You specify these session parameters via properties that you set in the `jdbc-site.xml` configuration file for the Oracle PXF server.
+
+For more information about parallel query execution in Oracle databases, refer to the [Oracle documentation](https://docs.oracle.com/database/121/VLDBG/GUID-3E2AE088-2505-465E-A8B2-AC38813EA355.htm#VLDBG010).
+
+PXF names an Oracle parallel query session property as follows:
+
+```
+jdbc.session.property.alter_session_parallel.<n>
+```
+
+`<n>` is an ordinal number that identifies a session parameter setting; for example, `jdbc.session.property.alter_session_parallel.1`. You may specify multiple property settings, where `<n>` is unique in each.
+
+A value that you specify for an Oracle parallel query execution property must conform to the following format:
+
+```
+<action>.<statement_type>[.<degree_of_parallelism>]
+```
+
+where:
+
+| Keyword | Values/Description |
+|--------------|-----------------|
+| `<action>`  | `enable`</br>`disable`</br>`force` |
+| `<statement_type>`  | `query`</br>`ddl`</br>`dml`</br> |
+| `<degree_of_parallelism>`  | The \(integer\) number of parallel sessions that you can force when `<action>` specifies `force`. PXF ignores this value for other `<action>` settings. |
+
+Example parallel query execution property settings in the `jdbc-site.xml` configuration file for an Oracle PXF server follow:
+
+``` xml
+<property>
+    <name>jdbc.session.property.alter_session_parallel.1</name>
+    <value>force.query.4</value>
+</property>
+<property>
+    <name>jdbc.session.property.alter_session_parallel.2</name>
+    <value>disable.ddl</value>
+</property>
+<property>
+    <name>jdbc.session.property.alter_session_parallel.3</name>
+    <value>enable.dml</value>
+</property>
+```
+
+With this configuration, PXF runs the following commands before it submits the query to the Oracle database:
+
+``` sql
+ALTER SESSION FORCE PARALLEL QUERY PARALLEL 4;
+ALTER SESSION DISABLE PARALLEL DDL;
+ALTER SESSION ENABLE PARALLEL DML;
+```
 
