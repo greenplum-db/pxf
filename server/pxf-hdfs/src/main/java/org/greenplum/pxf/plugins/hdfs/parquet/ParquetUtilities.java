@@ -50,7 +50,7 @@ public class ParquetUtilities {
                 data.add(decodeString(split, primitiveTypeName, logicalTypeAnnotation));
             } catch (NumberFormatException | PxfRuntimeException | DateTimeParseException e) {
                 String hint = createErrorHintFromValue(StringUtils.startsWith(split, "{"), val);
-                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s. Hint: %s", split, primitiveTypeName, hint), e);
+                throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, primitiveTypeName), hint, e);
             }
         }
         return data;

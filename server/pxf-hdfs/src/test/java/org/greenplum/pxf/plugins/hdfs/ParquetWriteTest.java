@@ -1903,8 +1903,7 @@ public class ParquetWriteTest {
         List<OneField> record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), "{{1,2,3},{4,5,6}}"));
         Exception e = assertThrows(PxfRuntimeException.class,
                 () -> resolver.setFields(record));
-        assertEquals("Error parsing array element: {1,2,3} was not of expected type INT32. " +
-                "Hint: Column value \"{{1,2,3},{4,5,6}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", e.getMessage());
+        assertEquals("Error parsing array element: {1,2,3} was not of expected type INT32", e.getMessage());
     }
 
     @Test
