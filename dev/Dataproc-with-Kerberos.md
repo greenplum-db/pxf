@@ -4,14 +4,10 @@ This developer note will guide you through the process of creating a Google Clou
 
 ## Environment SetUp
 
-1. Modify `dataproc-cluster.bash` to include the following changes
-    1. Add `--enable-kerberos` to the `create_cmd` array in the function `create_dataproc_cluster`
-    1. Add `udp:88,udp:750` to the `--allow` argument  in the function `create_firewall_rule`
-
-1. Run the modified `dataproc-cluster.bash` script with following options to createLaunced a local Dataproc cluster
+1. Run the modified `dataproc-cluster.bash` script with following options to create a local Dataproc cluster with Kerberos authentication
 
     ```sh
-    IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.sh 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT'
+    IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.bash 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT'
     ```
 
     **NOTE:** After running the script, but before creating the PXF server config, replace `bradford-local-cluster-m` with `bradford-local-cluster-m.c.data-gpdb-ud.internal` for `hive.metastore.uris` in `$PXF_BASE/servers/dataproc/hive-site.xml`
@@ -70,7 +66,7 @@ This developer note will guide you through the process of creating a Google Clou
 1. SSH into cluster node (e.g., `bradford-local-cluster-m`) and connect to Hive
 
     ```sh
-    $GPHD_ROOT/hive/bin/beeline -u 'jdbc:hive2://bradford-local-cluster-m:10000/default;principal=hive/bradford-local-cluster-m.c.data-gpdb-ud.internal@C.DATA-GPDB-UD.INTERNAL;saslQop=auth-conf'
+    hive
     ```
 
 1. Create a table
@@ -96,7 +92,7 @@ This developer note will guide you through the process of creating a Google Clou
 
     ```sh
     mkdir ${PXF_BASE}/servers/gh_909_gs
-    cp ${PXF_HOME}/template/gs-site.xml ${PXF_BASE}/servers/gh_909_gs
+    cp ${PXF_HOME}/templates/gs-site.xml ${PXF_BASE}/servers/gh_909_gs
     # retrieve ud/pxf/secrets/gsc-ci-service-account-key from Vault and save it somewhere
     # update 'google.cloud.auth.service.account.json.keyfile' in gs-site.xml
     ```
