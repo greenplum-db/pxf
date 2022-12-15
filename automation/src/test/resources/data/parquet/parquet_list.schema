@@ -1,0 +1,63 @@
+message hive_schema {
+  OPTIONAL INT32 id;
+  OPTIONAL group bool_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL BOOLEAN array_element;
+    }
+  }
+  OPTIONAL group smallint_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL INT32 array_element (INT_8);
+    }
+  }
+  OPTIONAL group int_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL INT32 array_element;
+    }
+  }
+  OPTIONAL group bigint_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL INT64 array_element;
+    }
+  }
+  OPTIONAL group real_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL FLOAT array_element;
+    }
+  }
+  OPTIONAL group double_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL DOUBLE array_element;
+    }
+  }
+  OPTIONAL group text_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL BINARY array_element (UTF8);
+    }
+  }
+  OPTIONAL group bytea_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL BINARY array_element;
+    }
+  }
+  OPTIONAL group char_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL BINARY array_element (UTF8);
+    }
+  }
+  OPTIONAL group varchar_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL BINARY array_element (UTF8);
+    }
+  }
+  OPTIONAL group date_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL INT32 array_element (DATE);
+    }
+  }
+  OPTIONAL group numeric_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL FIXED_LEN_BYTE_ARRAY (16) array_element (DECIMAL(38, 18));
+    }
+  }
+}

@@ -448,6 +448,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      * @param schema schema parsed from user provided schema file
      */
     private void validateParsedSchema(MessageType schema, List<ColumnDescriptor> columns) {
+        if (schema.getFieldCount() != columns.size()) {
+            throw new PxfRuntimeException(String.format("Schema field count %s doesn't match column count %s", schema.getFieldCount(), columns.size()));
+        }
+
         for (int i = 0; i < columns.size(); i++) {
             ColumnDescriptor column = columns.get(i);
             Type type = schema.getType(i);
@@ -472,10 +476,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 }
             }
             // inconsistency between parquet type and greenplum type
-            int dataTypeOID = from(type).getDataType(type).getOID();
-            if (dataTypeOID != column.columnTypeCode()) {
-                throw new PxfRuntimeException(String.format("The Greenplum data type %s converted from schema at index %s doesn't match expected Greenplum data type %s.", dataTypeOID, i, column.columnTypeCode()));
-            }
+//            int dataTypeOID = from(type).getDataType(type).getOID();
+//            if (dataTypeOID != column.columnTypeCode()) {
+//                throw new PxfRuntimeException(String.format("The Greenplum data type %s converted from schema at index %s doesn't match expected Greenplum data type %s.", dataTypeOID, i, column.columnTypeCode()));
+//            }
         }
     }
 

@@ -60,13 +60,12 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     // used to distinguish string pattern between type "timestamp" ("2019-03-14 14:10:28")
     // and type "timestamp with time zone" ("2019-03-14 14:10:28+07:30")
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
-
+    private static final PgUtilities pgUtilities = new PgUtilities();
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final ParquetUtilities parquetUtilities = new ParquetUtilities(pgUtilities);
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
     private List<ColumnDescriptor> columnDescriptors;
-    private final ObjectMapper mapper = new ObjectMapper();
-    private static final PgUtilities pgUtilities = new PgUtilities();
-    private final ParquetUtilities parquetUtilities = new ParquetUtilities(pgUtilities);
 
     @Override
     public void afterPropertiesSet() {
@@ -138,49 +137,58 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      */
     private void fillGroup(int columnIndex, OneField field, Group group) {
         Type type = schema.getType(columnIndex);
-        if (field.val == null)
+        if (field.val == null) {
             return;
+        }
         if (type.isPrimitive()) {
             fillGroupWithPrimitive(columnIndex, field.val, group, type.asPrimitiveType());
-        } else if (type.asGroupType().getOriginalType() == LogicalTypeAnnotation.listType().toOriginalType()) {
-            /*
-             * https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
-             * Parquet LIST must always annotate a 3-level structure:
-             * <list-repetition> group <name> (LIST) {            // listType, a listType always has only 1 repeatedType
-             *   repeated group list {                            // repeatedType, a repeatedType always has only 1 element type
-             *     <element-repetition> <element-type> element;   // elementType
-             *   }
-             * }
-             */
-            GroupType listType = type.asGroupType();
-            GroupType repeatedType = listType.getType(0).asGroupType();
-            PrimitiveType elementType = repeatedType.getType(0).asPrimitiveType();
-            // Decode Postgres String representation of an array into a list of Objects
-            List<Object> values = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
+            return;
+        }
 
-            /*
-             * For example, the value of a text array ["hello","",null,"test"] would look like:
-             * text_arr
-             *    list
-             *      element: hello
-             *    list
-             *      element:         --> empty element ""
-             *    list               --> NULL element
-             *    list
-             *      element: test
-             */
-            Group arrayGroup = new SimpleGroup(listType);
-            for (Object value : values) {
-                Group repeatedGroup = new SimpleGroup(repeatedType);
-                if (value != null) {
-                    fillGroupWithPrimitive(0, value, repeatedGroup, elementType);
-                }
-                arrayGroup.add(0, repeatedGroup);
-            }
-            group.add(columnIndex, arrayGroup);
-        } else {
+        LogicalTypeAnnotation logicalTypeAnnotation = type.getLogicalTypeAnnotation();
+
+        if (logicalTypeAnnotation == null) {
+            throw new UnsupportedTypeException("Parquet group type without logical annotation is not supported");
+        }
+
+        if (logicalTypeAnnotation != LogicalTypeAnnotation.listType()) {
             throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported", type.asGroupType().getOriginalType().name()));
         }
+        /*
+         * https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
+         * Parquet LIST must always annotate a 3-level structure:
+         * <list-repetition> group <name> (LIST) {            // listType, a listType always has only 1 repeatedType
+         *   repeated group list {                            // repeatedType, a repeatedType always has only 1 element type
+         *     <element-repetition> <element-type> element;   // elementType
+         *   }
+         * }
+         */
+        GroupType listType = type.asGroupType();
+        GroupType repeatedType = listType.getType(0).asGroupType();
+        PrimitiveType elementType = repeatedType.getType(0).asPrimitiveType();
+        // Decode Postgres String representation of an array into a list of Objects
+        List<Object> values = parquetUtilities.parsePostgresArray(field.val.toString(), elementType.getPrimitiveTypeName(), elementType.getLogicalTypeAnnotation());
+
+        /*
+         * For example, the value of a text array ["hello","",null,"test"] would look like:
+         * text_arr
+         *    list
+         *      element: hello
+         *    list
+         *      element:         --> empty element ""
+         *    list               --> NULL element
+         *    list
+         *      element: test
+         */
+        Group arrayGroup = new SimpleGroup(listType);
+        for (Object value : values) {
+            Group repeatedGroup = new SimpleGroup(repeatedType);
+            if (value != null) {
+                fillGroupWithPrimitive(0, value, repeatedGroup, elementType);
+            }
+            arrayGroup.add(0, repeatedGroup);
+        }
+        group.add(columnIndex, arrayGroup);
     }
 
     /**
