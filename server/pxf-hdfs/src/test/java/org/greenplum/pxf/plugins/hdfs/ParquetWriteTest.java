@@ -1948,10 +1948,7 @@ public class ParquetWriteTest {
         // need to add an elementType validation, but when should we throw exception? when getting schema or when parsing values?
         Exception e = assertThrows(PxfRuntimeException.class,
                 () -> accessor.openForWrite());
-        assertEquals("Invalid Parquet List schema: optional group bool_arr (LIST) {\n" +
-                "  repeated group bag {\n" +
-                "  }\n" +
-                "}.", e.getMessage());
+        assertEquals("Invalid Parquet List schema: optional group bool_arr (LIST) {   repeated group bag {   } }.", e.getMessage());
     }
 
     private MessageType validateFooter(Path parquetFile) throws IOException {

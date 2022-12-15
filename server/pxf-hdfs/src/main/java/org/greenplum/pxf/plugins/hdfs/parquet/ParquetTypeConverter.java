@@ -413,7 +413,7 @@ public enum ParquetTypeConverter {
      */
     private static Type getElementType(GroupType listType) {
         if (listType.getFields().size() != 1 || listType.getType(0).asGroupType().getFields().size() != 1) {
-            throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", listType));
+            throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", listType.toString().replace("\n", " ")));
         }
 
         GroupType repeatedType = listType.getType(0).asGroupType();

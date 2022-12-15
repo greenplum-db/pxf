@@ -370,9 +370,12 @@ public class ParquetWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void parquetWriteListsUserProvidedSchemaFileOnHcfs_InvalidSchema() throws Exception {
-        String writeTableName = "parquet_list_user_provided_invalid_schema_on_hcfs_write";
+        hdfs.copyFromLocal(resourcePath + PARQUET_LIST_TYPES, hdfsPath + PARQUET_LIST_TYPES);
+        prepareReadableExternalTable(PXF_PARQUET_LIST_TYPES, PARQUET_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_LIST_TYPES);
 
-        String fullTestPath = hdfsPath + "parquet_write_list_with_user_provided_invalid_schema_file_on_hcfs";
+        String writeTableName = "parquet_list_user_provided_invalid_schema_write";
+
+        String fullTestPath = hdfsPath + "parquet_write_list_with_user_provided_invalid_schema_file";
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
 
         String schemaPath = hdfsPath.replaceFirst("/$", "_schema/invalid_parquet_list.schema");
@@ -382,43 +385,7 @@ public class ParquetWriteTest extends BaseFeature {
         // update the exTable with schema file provided
         gpdb.createTableAndVerify(exTable);
 
-//        Exception e = assertThrows(PSQLException.class,
-//                () -> insertArrayDataWithoutNulls(writeTableName, 33));
-//        assertEquals("Invalid Parquet List schema: optional group bool_arr (LIST) {\n" +
-//                "}.", e.getMessage());
-    }
-
-    //    @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void parquetWriteListsUserProvidedSchemaFileOnClasspath() throws Exception {
-        String writeTableName = "parquet_list_user_provided_schema_on_classpath_write";
-        String readTableName = "parquet_list_user_provided_schema_on_classpath_read";
-        String fullTestPath = hdfsPath + "parquet_write_lists_with_user_provided_schema_file_on_classpath";
-        prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
-
-        String schemaPath = cluster.getPxfConfLocation();
-        cluster.copyFileToNodes(new File(resourcePath + "parquet_list.schema").getAbsolutePath(),
-                schemaPath,
-                false, false);
-        exTable.setExternalDataSchema(schemaPath + "/parquet_list.schema");
-        // update the exTable with schema file provided
-        gpdb.createTableAndVerify(exTable);
-
-        insertArrayDataWithoutNulls(writeTableName, 33);
-        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
-            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
-            sleep(10000);
-            List<String> files = hdfs.list(fullTestPath);
-            for (String file : files) {
-                // make sure the file is available, saw flakes on Cloud that listed files were not available
-                int attempts = 0;
-                while (!hdfs.doesFileExist(file) && attempts++ < 20) {
-                    sleep(1000);
-                }
-            }
-        }
-
-        prepareReadableExternalTable(readTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath);
-        runTincTest("pxf.features.parquet.write_list.list.runTest");
+        runTincTest("pxf.features.parquet.write_list.write_with_invalid_schema_hcfs.runTest");
     }
 
     private void runWritePrimitivesScenario(String writeTableName, String readTableName,

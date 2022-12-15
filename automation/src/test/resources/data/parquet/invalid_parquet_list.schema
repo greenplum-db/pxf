@@ -1,6 +1,8 @@
 message invalid_parquet_list_schema {
   OPTIONAL INT32 id;
   OPTIONAL group bool_arr (LIST) {
+    REPEATED group bag {
+    }
   }
   OPTIONAL group smallint_arr (LIST) {
     REPEATED group bag {
