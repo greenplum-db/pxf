@@ -1954,29 +1954,6 @@ public class ParquetWriteTest {
                 "}.", e.getMessage());
     }
 
-    @Test
-    public void testWriteInconsistencyBetweenProvidedSchemaAndDataType() {
-        String path = temp + "/out/test_inconsistency/";
-
-        columnDescriptors.add(new ColumnDescriptor("test_inconsistency", DataType.BOOLEAN.getOID(), 0, "test_inconsistency", null));
-
-        String filepath = this.getClass().getClassLoader().getResource("parquet/test_inconsistency.schema").getPath();
-        context.addOption("SCHEMA", filepath);
-
-        context.setDataSource(path);
-        context.setTransactionId("XID-XYZ-123490");
-
-        accessor.setRequestContext(context);
-        accessor.afterPropertiesSet();
-        resolver.setRequestContext(context);
-        resolver.afterPropertiesSet();
-
-        // need to add an elementType validation, but when should we throw exception? when getting schema or when parsing values?
-        Exception e = assertThrows(PxfRuntimeException.class,
-                () -> accessor.openForWrite());
-        assertEquals("The Greenplum data type 1000 converted from schema at index 0 doesn't match expected Greenplum data type 16.", e.getMessage());
-    }
-
     private MessageType validateFooter(Path parquetFile) throws IOException {
         return validateFooter(parquetFile, 1, 10);
     }

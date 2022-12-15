@@ -70,7 +70,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -89,7 +88,6 @@ import static org.apache.parquet.hadoop.ParquetOutputFormat.PAGE_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.WRITER_VERSION;
 import static org.apache.parquet.hadoop.api.ReadSupport.PARQUET_READ_SCHEMA;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
-import static org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.from;
 
 /**
  * Parquet file accessor.
@@ -142,6 +140,95 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private long rowsRead, totalRowsRead, totalRowsWritten;
     private WriterVersion parquetVersion;
     private long totalReadTimeInNanos;
+
+    private static Type getTypeForColumnDescriptor(ColumnDescriptor columnDescriptor) {
+        DataType dataType = columnDescriptor.getDataType();
+        int columnTypeCode = columnDescriptor.columnTypeCode();
+        String columnName = columnDescriptor.columnName();
+
+        boolean isArrayType = dataType.isArrayType();
+        DataType elementType = isArrayType ? dataType.getTypeElem() : dataType;
+
+        PrimitiveTypeName primitiveTypeName;
+        LogicalTypeAnnotation logicalTypeAnnotation = null;
+        // length is only used in NUMERIC case
+        Integer length = null;
+
+        switch (elementType) {
+            case BOOLEAN:
+                primitiveTypeName = PrimitiveTypeName.BOOLEAN;
+                break;
+            case BYTEA:
+                primitiveTypeName = PrimitiveTypeName.BINARY;
+                break;
+            case BIGINT:
+                primitiveTypeName = PrimitiveTypeName.INT64;
+                break;
+            case SMALLINT:
+                primitiveTypeName = PrimitiveTypeName.INT32;
+                logicalTypeAnnotation = LogicalTypeAnnotation.intType(16, true);
+                break;
+            case INTEGER:
+                primitiveTypeName = PrimitiveTypeName.INT32;
+                break;
+            case REAL:
+                primitiveTypeName = PrimitiveTypeName.FLOAT;
+                break;
+            case FLOAT8:
+                primitiveTypeName = PrimitiveTypeName.DOUBLE;
+                break;
+            case NUMERIC:
+                Integer[] columnTypeModifiers = columnDescriptor.columnTypeModifiers();
+                int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
+                int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
+
+                if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
+                    precision = columnTypeModifiers[0];
+                    scale = columnTypeModifiers[1];
+                }
+                primitiveTypeName = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
+                logicalTypeAnnotation = DecimalLogicalTypeAnnotation.decimalType(scale, precision);
+                length = PRECISION_TO_BYTE_COUNT[precision - 1];
+                break;
+            case TIMESTAMP:
+            case TIMESTAMP_WITH_TIME_ZONE:
+                primitiveTypeName = PrimitiveTypeName.INT96;
+                break;
+            case DATE:
+                // DATE is used to for a logical date type, without a time
+                // of day. It must annotate an int32 that stores the number
+                // of days from the Unix epoch, 1 January 1970. The sort
+                // order used for DATE is signed.
+                primitiveTypeName = PrimitiveTypeName.INT32;
+                logicalTypeAnnotation = LogicalTypeAnnotation.dateType();
+                break;
+            case TIME:
+            case VARCHAR:
+            case BPCHAR:
+            case TEXT:
+                primitiveTypeName = PrimitiveTypeName.BINARY;
+                logicalTypeAnnotation = LogicalTypeAnnotation.stringType();
+                break;
+            default:
+                throw new UnsupportedTypeException(
+                        String.format("Type %d for column %s is not supported for writing Parquet.", columnTypeCode, columnName));
+        }
+
+        Types.BasePrimitiveBuilder<? extends Type, ?> builder;
+        if (!isArrayType) {
+            builder = Types.optional(primitiveTypeName);
+        } else {
+            builder = Types.optionalList().optionalElement(primitiveTypeName);
+        }
+        if (length != null) {
+            builder.length(length);
+        }
+        if (logicalTypeAnnotation != null) {
+            builder.as(logicalTypeAnnotation);
+        }
+
+        return builder.named(columnName);
+    }
 
     /**
      * Opens the resource for read.
@@ -445,42 +532,50 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     /**
      * Validate parquet schema parsed from user provided schema file
      *
-     * @param schema schema parsed from user provided schema file
+     * @param schema  the schema parsed from user provided schema file
+     * @param columns contains Greenplum column type information of a row
      */
     private void validateParsedSchema(MessageType schema, List<ColumnDescriptor> columns) {
         if (schema.getFieldCount() != columns.size()) {
             throw new PxfRuntimeException(String.format("Schema field count %s doesn't match column count %s", schema.getFieldCount(), columns.size()));
         }
 
-        for (int i = 0; i < columns.size(); i++) {
-            ColumnDescriptor column = columns.get(i);
+        int i = 0;
+        for (ColumnDescriptor columnDescriptor : columns) {
             Type type = schema.getType(i);
             if (!type.isPrimitive()) {
-                if (type.asGroupType().getLogicalTypeAnnotation() == LogicalTypeAnnotation.listType()) {
-                    // list of unsupported type
-                    GroupType listType = type.asGroupType();
-                    if (listType.getFields().size() != 1 || listType.getType(0).asGroupType().getFields().size() != 1) {
-                        throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", listType));
-                    }
-                    GroupType repeatedGroupType = listType.getType(0).asGroupType();
-                    Type elementType = repeatedGroupType.getType(0);
-                    if (!elementType.isPrimitive()) {
-                        String complexTypeName = elementType.asGroupType().getOriginalType() == null ?
-                                "customized struct" :
-                                elementType.asGroupType().getOriginalType().name();
-                        throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", complexTypeName));
-                    }
-                } else if (column.columnTypeCode() == DataType.UNSUPPORTED_TYPE.getOID()) {
-                    // unsupported conplex type like MAP
-                    throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported.", type.asGroupType().getLogicalTypeAnnotation()));
-                }
+                validateComplexType(type, columnDescriptor.columnTypeCode());
             }
-            // inconsistency between parquet type and greenplum type
-//            int dataTypeOID = from(type).getDataType(type).getOID();
-//            if (dataTypeOID != column.columnTypeCode()) {
-//                throw new PxfRuntimeException(String.format("The Greenplum data type %s converted from schema at index %s doesn't match expected Greenplum data type %s.", dataTypeOID, i, column.columnTypeCode()));
-//            }
+            // TODO: Need to check the if the data type of the schema is a match with the data type of the column
+            //  for both primitive types and complex types. Greenplum may have type casting for the input.
+            i++;
         }
+    }
+
+    private void validateComplexType(Type type, int columnTypeCode) {
+        if (!type.isPrimitive()) {
+            if (!isListType(type) && columnTypeCode == DataType.UNSUPPORTED_TYPE.getOID()) {
+                // unsupported complex type like MAP
+                throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported.", type.asGroupType().getLogicalTypeAnnotation()));
+            }
+            // list of unsupported type
+            GroupType listType = type.asGroupType();
+            if (listType.getFields().size() != 1 || listType.getType(0).asGroupType().getFields().size() != 1) {
+                throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", listType));
+            }
+            GroupType repeatedGroupType = listType.getType(0).asGroupType();
+            Type elementType = repeatedGroupType.getType(0);
+            if (!elementType.isPrimitive()) {
+                String complexTypeName = elementType.asGroupType().getOriginalType() == null ?
+                        "customized struct" :
+                        elementType.asGroupType().getOriginalType().name();
+                throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", complexTypeName));
+            }
+        }
+    }
+
+    private boolean isListType(Type type) {
+        return type.getLogicalTypeAnnotation() == LogicalTypeAnnotation.listType();
     }
 
     /**
@@ -492,94 +587,12 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private MessageType generateParquetSchema(List<ColumnDescriptor> columns) {
         LOG.debug("{}-{}: Generating parquet schema for write using {}", context.getTransactionId(),
                 context.getSegmentId(), columns);
-        List<Type> fields = new ArrayList<>();
-        for (ColumnDescriptor column : columns) {
-            DataType dataType = column.getDataType();
-            int columnTypeCode = column.columnTypeCode();
-            String columnName = column.columnName();
+        List<Type> fields = columns
+                .stream()
+                .map(ParquetFileAccessor::getTypeForColumnDescriptor)
+                .collect(Collectors.toList());
 
-            boolean isArrayType = dataType.isArrayType();
-            DataType elementType = isArrayType ? dataType.getTypeElem() : dataType;
-
-            PrimitiveTypeName primitiveTypeName;
-            LogicalTypeAnnotation logicalTypeAnnotation = null;
-            // length is only used in NUMERIC case
-            Integer length = null;
-
-            switch (elementType) {
-                case BOOLEAN:
-                    primitiveTypeName = PrimitiveTypeName.BOOLEAN;
-                    break;
-                case BYTEA:
-                    primitiveTypeName = PrimitiveTypeName.BINARY;
-                    break;
-                case BIGINT:
-                    primitiveTypeName = PrimitiveTypeName.INT64;
-                    break;
-                case SMALLINT:
-                    primitiveTypeName = PrimitiveTypeName.INT32;
-                    logicalTypeAnnotation = LogicalTypeAnnotation.intType(16, true);
-                    break;
-                case INTEGER:
-                    primitiveTypeName = PrimitiveTypeName.INT32;
-                    break;
-                case REAL:
-                    primitiveTypeName = PrimitiveTypeName.FLOAT;
-                    break;
-                case FLOAT8:
-                    primitiveTypeName = PrimitiveTypeName.DOUBLE;
-                    break;
-                case NUMERIC:
-                    Integer[] columnTypeModifiers = column.columnTypeModifiers();
-                    int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
-                    int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
-
-                    if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
-                        precision = columnTypeModifiers[0];
-                        scale = columnTypeModifiers[1];
-                    }
-                    primitiveTypeName = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
-                    logicalTypeAnnotation = DecimalLogicalTypeAnnotation.decimalType(scale, precision);
-                    length = PRECISION_TO_BYTE_COUNT[precision - 1];
-                    break;
-                case TIMESTAMP:
-                case TIMESTAMP_WITH_TIME_ZONE:
-                    primitiveTypeName = PrimitiveTypeName.INT96;
-                    break;
-                case DATE:
-                    // DATE is used to for a logical date type, without a time
-                    // of day. It must annotate an int32 that stores the number
-                    // of days from the Unix epoch, 1 January 1970. The sort
-                    // order used for DATE is signed.
-                    primitiveTypeName = PrimitiveTypeName.INT32;
-                    logicalTypeAnnotation = LogicalTypeAnnotation.dateType();
-                    break;
-                case TIME:
-                case VARCHAR:
-                case BPCHAR:
-                case TEXT:
-                    primitiveTypeName = PrimitiveTypeName.BINARY;
-                    logicalTypeAnnotation = LogicalTypeAnnotation.stringType();
-                    break;
-                default:
-                    throw new UnsupportedTypeException(
-                            String.format("Type %d for column %s is not supported for writing Parquet.", columnTypeCode, columnName));
-            }
-
-            Type type;
-            if (!isArrayType) {
-                type = length == null ?
-                        Types.optional(primitiveTypeName).as(logicalTypeAnnotation).named(columnName) :
-                        Types.optional(primitiveTypeName).length(length).as(logicalTypeAnnotation).named(columnName);
-            } else {
-                type = length == null ?
-                        Types.optionalList().optionalElement(primitiveTypeName).as(logicalTypeAnnotation).named(columnName) :
-                        Types.optionalList().optionalElement(primitiveTypeName).length(length).as(logicalTypeAnnotation).named(columnName);
-            }
-
-            fields.add(type);
-        }
-        return new MessageType("hive_schema", fields);
+        return new MessageType("greenplum_pxf_schema", fields);
     }
 
     /**
