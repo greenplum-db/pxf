@@ -13,6 +13,7 @@ import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
+import org.postgresql.util.PSQLException;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -22,6 +23,7 @@ import java.util.StringJoiner;
 
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class ParquetWriteTest extends BaseFeature {
     private static final String NUMERIC_TABLE = "numeric_precision";
@@ -29,20 +31,11 @@ public class ParquetWriteTest extends BaseFeature {
     private static final String PXF_PARQUET_PRIMITIVE_TABLE = "pxf_parquet_primitive_types";
     private static final String PXF_PARQUET_LIST_TYPES = "pxf_parquet_list_types";
     private static final String PXF_PARQUET_TIMESTAMP_LIST_TYPES = "pxf_parquet_timestamp_list_types";
-    private static final String PARQUET_WRITE_PRIMITIVES = "parquet_write_primitives";
-    private static final String PARQUET_WRITE_PADDED_CHAR = "parquet_write_padded_char";
-    private static final String PARQUET_WRITE_PRIMITIVES_GZIP = "parquet_write_primitives_gzip";
-    private static final String PARQUET_WRITE_PRIMITIVES_GZIP_CLASSNAME = "parquet_write_primitives_gzip_classname";
-    private static final String PARQUET_WRITE_PRIMITIVES_V2 = "parquet_write_primitives_v2";
-    private static final String PARQUET_WRITE_LIST = "parquet_write_list";
     private static final String PARQUET_PRIMITIVE_TYPES = "parquet_primitive_types";
     private static final String PARQUET_LIST_TYPES = "parquet_list_types.parquet";
     private static final String PARQUET_TIMESTAMP_LIST_TYPES = "parquet_timestamp_list_type.parquet";
-    private static final String PARQUET_TYPES = "parquet_types.parquet";
     private static final String PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE = "undefined_precision_numeric.parquet";
     private static final String PARQUET_NUMERIC_FILE = "numeric.parquet";
-    private static final String UNDEFINED_PRECISION_NUMERIC_FILENAME = "undefined_precision_numeric.csv";
-    private static final String NUMERIC_FILENAME = "numeric_with_precision.csv";
     private static final String[] PARQUET_PRIMITIVE_TABLE_COLUMNS = new String[]{
             "s1    TEXT",
             "s2    TEXT",
@@ -109,22 +102,6 @@ public class ParquetWriteTest extends BaseFeature {
             "numeric_arr          array<decimal(38,18)>", // DataType.NUMERICARRAY
     };
 
-    private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE = {
-            "id                   INTEGER",
-            "bool_arr             BOOLEAN[]",      // DataType.BOOLARRAY
-            "smallint_arr         SMALLINT[]",     // DataType.INT2ARRAY
-            "int_arr              INTEGER[]",      // DataType.INT4ARRAY
-            "bigint_arr           BIGINT[]",       // DataType.INT8ARRAY
-            "real_arr             REAL[]",         // DataType.FLOAT4ARRAY
-            "double_arr           FLOAT[]",        // DataType.FLOAT8ARRAY
-            "text_arr             TEXT[]",         // DataType.TEXTARRAY
-            "bytea_arr            BYTEA[]",        // DataType.BYTEAARRAY
-            "char_arr             CHAR(15)[]",     // DataType.BPCHARARRAY
-            "varchar_arr          VARCHAR(15)[]",  // DataType.VARCHARARRAY
-            "date_arr             DATE[]",         // DataType.DATEARRAY
-            "numeric_arr          NUMERIC[]",      // DataType.NUMERICARRAY
-    };
-
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
             "id            INTEGER",
             "tm_arr        TIMESTAMP[]",
@@ -148,8 +125,11 @@ public class ParquetWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWritePaddedChar() throws Exception {
+        hdfs.copyFromLocal(resourcePath + PARQUET_PRIMITIVE_TYPES, hdfsPath + PARQUET_PRIMITIVE_TYPES);
+        prepareReadableExternalTable(PXF_PARQUET_PRIMITIVE_TABLE, PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + PARQUET_PRIMITIVE_TYPES);
+
         /* 1. run the regular test */
-        runWritePrimitivesScenario("pxf_parquet_write_padded_char", "pxf_parquet_read_padded_char", PARQUET_WRITE_PADDED_CHAR, null);
+        runWritePrimitivesScenario("pxf_parquet_write_padded_char", "pxf_parquet_read_padded_char", "parquet_write_padded_char", null);
 
         /* 2. Insert data with chars that need padding */
         gpdb.runQuery("INSERT INTO pxf_parquet_write_padded_char VALUES ('row25_char_needs_padding', 's_17', 11, 37, 0.123456789012345679, " +
@@ -172,28 +152,28 @@ public class ParquetWriteTest extends BaseFeature {
         hdfs.copyFromLocal(resourcePath + PARQUET_PRIMITIVE_TYPES, hdfsPath + PARQUET_PRIMITIVE_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_PRIMITIVE_TABLE, PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + PARQUET_PRIMITIVE_TYPES);
 
-        runWritePrimitivesScenario("pxf_parquet_write_primitives", "pxf_parquet_read_primitives", PARQUET_WRITE_PRIMITIVES, null);
+        runWritePrimitivesScenario("pxf_parquet_write_primitives", "pxf_parquet_read_primitives", "parquet_write_primitives", null);
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWritePrimitivesV2() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_PRIMITIVE_TYPES, hdfsPath + PARQUET_PRIMITIVE_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_PRIMITIVE_TABLE, PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + PARQUET_PRIMITIVE_TYPES);
-        runWritePrimitivesScenario("pxf_parquet_write_primitives_v2", "pxf_parquet_read_primitives_v2", PARQUET_WRITE_PRIMITIVES_V2, new String[]{"PARQUET_VERSION=v2"});
+        runWritePrimitivesScenario("pxf_parquet_write_primitives_v2", "pxf_parquet_read_primitives_v2", "parquet_write_primitives_v2", new String[]{"PARQUET_VERSION=v2"});
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWritePrimitivesGZip() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_PRIMITIVE_TYPES, hdfsPath + PARQUET_PRIMITIVE_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_PRIMITIVE_TABLE, PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + PARQUET_PRIMITIVE_TYPES);
-        runWritePrimitivesScenario("pxf_parquet_write_primitives_gzip", "pxf_parquet_read_primitives_gzip", PARQUET_WRITE_PRIMITIVES_GZIP, new String[]{"COMPRESSION_CODEC=gzip"});
+        runWritePrimitivesScenario("pxf_parquet_write_primitives_gzip", "pxf_parquet_read_primitives_gzip", "parquet_write_primitives_gzip", new String[]{"COMPRESSION_CODEC=gzip"});
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWritePrimitivesGZipClassName() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_PRIMITIVE_TYPES, hdfsPath + PARQUET_PRIMITIVE_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_PRIMITIVE_TABLE, PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + PARQUET_PRIMITIVE_TYPES);
-        runWritePrimitivesScenario("pxf_parquet_write_primitives_gzip_classname", "pxf_parquet_read_primitives_gzip_classname", PARQUET_WRITE_PRIMITIVES_GZIP_CLASSNAME, new String[]{"COMPRESSION_CODEC=org.apache.hadoop.io.compress.GzipCodec"});
+        runWritePrimitivesScenario("pxf_parquet_write_primitives_gzip_classname", "pxf_parquet_read_primitives_gzip_classname", "parquet_write_primitives_gzip_classname", new String[]{"COMPRESSION_CODEC=org.apache.hadoop.io.compress.GzipCodec"});
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -204,7 +184,7 @@ public class ParquetWriteTest extends BaseFeature {
         gpdbUndefinedPrecisionNumericTable.setDistributionFields(new String[]{"description"});
         gpdb.createTableAndVerify(gpdbUndefinedPrecisionNumericTable);
         gpdb.copyFromFile(gpdbUndefinedPrecisionNumericTable, new File(localDataResourcesFolder
-                + "/numeric/" + UNDEFINED_PRECISION_NUMERIC_FILENAME), "E','", true);
+                + "/numeric/undefined_precision_numeric.csv"), "E','", true);
 
         String filename = "parquet_write_undefined_precision_numeric";
         exTable = new WritableExternalTable("pxf_parquet_write_undefined_precision_numeric",
@@ -236,7 +216,7 @@ public class ParquetWriteTest extends BaseFeature {
         gpdbNumericWithPrecisionScaleTable.setDistributionFields(new String[]{"description"});
         gpdb.createTableAndVerify(gpdbNumericWithPrecisionScaleTable);
         gpdb.copyFromFile(gpdbNumericWithPrecisionScaleTable, new File(localDataResourcesFolder
-                + "/numeric/" + NUMERIC_FILENAME), "E','", true);
+                + "/numeric/numeric_with_precision.csv"), "E','", true);
 
         String filename = "parquet_write_numeric";
         prepareWritableExternalTable("pxf_parquet_write_numeric",
@@ -248,14 +228,14 @@ public class ParquetWriteTest extends BaseFeature {
         runTincTest("pxf.features.parquet.decimal.numeric.runTest");
     }
 
-    //    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteLists() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_LIST_TYPES, hdfsPath + PARQUET_LIST_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_LIST_TYPES, PARQUET_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_LIST_TYPES);
 
         String writeTableName = "pxf_parquet_write_list";
         String readTableName = "pxf_parquet_read_list";
-        String fullTestPath = hdfsPath + PARQUET_WRITE_LIST;
+        String fullTestPath = hdfsPath + "parquet_write_list";
 
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, bool_arr, smallint_arr, int_arr, bigint_arr, real_arr, " +
@@ -314,7 +294,7 @@ public class ParquetWriteTest extends BaseFeature {
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
 
         String writeTableName = "pxf_parquet_write_list_read_with_hive";
-        String fullTestPath = hdfsPath + PARQUET_WRITE_LIST;
+        String fullTestPath = hdfsPath + "parquet_write_list_read_with_hive";
 
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
         insertArrayDataWithoutNulls(writeTableName, 33);
@@ -353,6 +333,9 @@ public class ParquetWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void parquetWriteListsUserProvidedSchemaFileOnHcfs_ValidSchema() throws Exception {
+        hdfs.copyFromLocal(resourcePath + PARQUET_LIST_TYPES, hdfsPath + PARQUET_LIST_TYPES);
+        prepareReadableExternalTable(PXF_PARQUET_LIST_TYPES, PARQUET_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_LIST_TYPES);
+
         String writeTableName = "parquet_list_user_provided_schema_on_hcfs_write";
         String readTableName = "parquet_list_user_provided_schema_on_hcfs_read";
 
@@ -366,7 +349,8 @@ public class ParquetWriteTest extends BaseFeature {
         // update the exTable with schema file provided
         gpdb.createTableAndVerify(exTable);
 
-        insertArrayDataWithoutNulls(writeTableName, 33);
+        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, bool_arr, smallint_arr, int_arr, bigint_arr, real_arr, " +
+                "double_arr, text_arr, bytea_arr, char_arr, varchar_arr, date_arr, numeric_arr FROM " + PXF_PARQUET_LIST_TYPES);
         if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
             // for HCFS on Cloud, wait a bit for async write in previous steps to finish
             sleep(10000);
@@ -381,7 +365,7 @@ public class ParquetWriteTest extends BaseFeature {
         }
 
         prepareReadableExternalTable(readTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath);
-        runTincTest("pxf.features.parquet.write_list.list.runTest");
+        runTincTest("pxf.features.parquet.write_list.write_with_valid_schema_hcfs.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -403,7 +387,6 @@ public class ParquetWriteTest extends BaseFeature {
 //        assertEquals("Invalid Parquet List schema: optional group bool_arr (LIST) {\n" +
 //                "}.", e.getMessage());
     }
-
 
     //    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void parquetWriteListsUserProvidedSchemaFileOnClasspath() throws Exception {

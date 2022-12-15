@@ -1,7 +1,0 @@
--- start_ignore
--- end_ignore
--- @description query01 for writing Parquet List data then reading using the Hive profile
-SET bytea_output=hex;
-
-SELECT * FROM pxf_orc_primitive_types_with_hive_readable ORDER BY id;
-

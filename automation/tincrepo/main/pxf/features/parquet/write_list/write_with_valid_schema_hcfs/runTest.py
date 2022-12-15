@@ -1,6 +1,6 @@
 from mpp.models import SQLConcurrencyTestCase
 
-class ParquetWriteListsReadWithHive(SQLConcurrencyTestCase):
+class ParquetWriteListWithValidSchemaOnHCFS(SQLConcurrencyTestCase):
     """
     @db_name pxfautomation
     @concurrency 1
