@@ -111,7 +111,7 @@ public class ParquetUtilities {
      */
     private String createErrorHintFromValue(boolean isMultiDimensional, String val) {
         if (isMultiDimensional) {
-            return String.format("Column value \"%s\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", val);
+            return String.format("Column value \"%s\" is a multi-dimensional array; PXF does not support writing multi-dimensional arrays to Parquet files.", val);
         } else {
             return "Unexpected state since PXF generated the Parquet schema.";
         }

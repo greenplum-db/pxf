@@ -69,7 +69,7 @@ public class PgUtilities {
      * Split the outer-most Postgres array into its constituent elements
      *
      * Re-used from GPHDFS, commit 3b0bfdc169
-     * @param value     string with a Postgres array
+     * @param value string with a Postgres array
      * @param delimiter character separating array elements in value
      * @return array of strings for each element
      */
@@ -314,7 +314,7 @@ public class PgUtilities {
      * Parses the string argument as an unsigned byte in the radix specified by the second argument.
      *
      * Note that we cannot use [@code Byte.parseByte} because it parses a _signed_ byte.
-     * @param s     the String containing the byte representation to be parsed
+     * @param s the String containing the byte representation to be parsed
      * @param radix the radix to be used while parsing s
      * @return the byte value represented by the string argument in the specified radix
      */

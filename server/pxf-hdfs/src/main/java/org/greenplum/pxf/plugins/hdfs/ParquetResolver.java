@@ -180,7 +180,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
          *    list
          *      element: test
          */
-        Group arrayGroup = new SimpleGroup(listType);
+        Group arrayGroup = groupFactory.newGroup();
         for (Object value : values) {
             Group repeatedGroup = new SimpleGroup(repeatedType);
             if (value != null) {

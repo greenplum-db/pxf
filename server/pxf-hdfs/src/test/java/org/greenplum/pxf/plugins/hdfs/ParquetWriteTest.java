@@ -29,8 +29,8 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
-import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -40,9 +40,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -67,18 +65,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ParquetWriteTest {
-
+    protected List<ColumnDescriptor> columnDescriptors;
+    @TempDir
+    File temp; // must be non-private
     private Accessor accessor;
     private Resolver resolver;
     private RequestContext context;
     private Configuration configuration;
-    private final PgUtilities pgUtilities = new PgUtilities();
     private PgArrayBuilder pgArrayBuilder = null;
-
-    protected List<ColumnDescriptor> columnDescriptors;
-
-    @TempDir
-    File temp; // must be non-private
 
     @BeforeEach
     public void setup() {
@@ -931,8 +925,13 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = new String[]{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-        insertParquetArrayData(DataType.INT4ARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{"{NULL,0,0}", "{NULL,1,1}", "{NULL,2,2}", "{NULL,3,3}",
+                "{NULL,4,4}", "{NULL,5,5}", "{NULL,6,6}", "{NULL,7,7}", "{NULL,8,8}", null};
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.INT4ARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -945,19 +944,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = Integer.parseInt(values[i]);
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT32, null);
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.INT32, null);
         fileReader.close();
 
     }
@@ -978,8 +965,15 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = new String[]{"a", "aa", "aaa", "aaaa", "aaaaa", "aaaaaa", "aaaaaaa", "aaaaaaaa", "aaaaaaaaa", "aaaaaaaaaa"};
-        insertParquetArrayData(DataType.TEXTARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{"{NULL,a,a}", "{NULL,aa,aa}", "{NULL,aaa,aaa}", "{NULL,aaaa,aaaa}",
+                "{NULL,aaaaa,aaaaa}", "{NULL,aaaaaa,aaaaaa}", "{NULL,aaaaaaa,aaaaaaa}", "{NULL,aaaaaaaa,aaaaaaaa}",
+                "{NULL,aaaaaaaaa,aaaaaaaaa}", null};
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.TEXTARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -993,18 +987,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = values[i];
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());
 
         fileReader.close();
     }
@@ -1027,11 +1010,24 @@ public class ParquetWriteTest {
 
         // write parquet file with DATE from 2020-08-01 to 2020-08-10
         // physical type is int32
-        String[] values = new String[]{String.format("2020-08-%02d", 1), String.format("2020-08-%02d", 2),
-                String.format("2020-08-%02d", 3), String.format("2020-08-%02d", 4), String.format("2020-08-%02d", 5),
-                String.format("2020-08-%02d", 6), String.format("2020-08-%02d", 7), String.format("2020-08-%02d", 8),
-                String.format("2020-08-%02d", 9), String.format("2020-08-%02d", 10)};
-        insertParquetArrayData(DataType.DATEARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{
+                String.format("{NULL,%s,%s}", String.format("2020-08-%02d", 1), String.format("2020-08-%02d", 1)),
+                String.format("{NULL,%s,%s}", String.format("2020-08-%02d", 2), String.format("2020-08-%02d", 2)),
+                String.format("{NULL,%s,%s}", String.format("2020-08-%02d", 3), String.format("2020-08-%02d", 3)),
+                String.format("{NULL,%s,%s}", String.format("2020-08-%02d", 4), String.format("2020-08-%02d", 4)),
+                String.format("{NULL,%s,%s}", String.format("2020-08-%02d", 5), String.format("2020-08-%02d", 5)),
+                String.format("{NULL,%s,%s}", String.format("2020-08-%02d", 6), String.format("2020-08-%02d", 6)),
+                String.format("{NULL,%s,%s}", String.format("2020-08-%02d", 7), String.format("2020-08-%02d", 7)),
+                String.format("{NULL,%s,%s}", String.format("2020-08-%02d", 8), String.format("2020-08-%02d", 8)),
+                String.format("{NULL,%s,%s}", String.format("2020-08-%02d", 9), String.format("2020-08-%02d", 9)),
+                null
+        };
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.DATEARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1045,18 +1041,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = 18475 + i;
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.DateLogicalTypeAnnotation.dateType());
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.DateLogicalTypeAnnotation.dateType());
 
         fileReader.close();
     }
@@ -1077,11 +1062,24 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = new String[]{String.valueOf((double) 0), String.valueOf(1.01),
-                String.valueOf(2.02), String.valueOf(3.03), String.valueOf(4.04),
-                String.valueOf(5.05), String.valueOf(6.06), String.valueOf(7.07),
-                String.valueOf(8.08), String.valueOf(9.09)};
-        insertParquetArrayData(DataType.FLOAT8ARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{
+                String.format("{NULL,%s,%s}", 1.01, 1.01),
+                String.format("{NULL,%s,%s}", 2.02, 2.02),
+                String.format("{NULL,%s,%s}", 3.03, 3.03),
+                String.format("{NULL,%s,%s}", 4.04, 4.04),
+                String.format("{NULL,%s,%s}", 5.05, 5.05),
+                String.format("{NULL,%s,%s}", 6.06, 6.06),
+                String.format("{NULL,%s,%s}", 7.07, 7.07),
+                String.format("{NULL,%s,%s}", 8.08, 8.08),
+                String.format("{NULL,%s,%s}", 9.09, 9.09),
+                null
+        };
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.FLOAT8ARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1094,18 +1092,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = Double.parseDouble(values[i]);
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.DOUBLE, null);
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.DOUBLE, null);
 
         fileReader.close();
 
@@ -1127,8 +1114,14 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = new String[]{"t", "f", "t", "f", "t", "f", "t", "f", "t", "f"};
-        insertParquetArrayData(DataType.BOOLARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{"{NULL,t,t}", "{NULL,f,f}", "{NULL,t,t}", "{NULL,f,f}",
+                "{NULL,t,t}", "{NULL,f,f}", "{NULL,t,t}", "{NULL,f,f}", "{NULL,t,t}", null};
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.BOOLARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1142,18 +1135,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = Boolean.parseBoolean(values[i]);
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BOOLEAN, null);
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.BOOLEAN, null);
 
         fileReader.close();
     }
@@ -1175,7 +1157,12 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = generateLocalTimestampStrings(null);
-        insertParquetArrayData(DataType.TIMESTAMPARRAY.getOID(), values, resolver, accessor);
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.TIMESTAMPARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1189,18 +1176,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = values[i];
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT96, null);
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.INT96, null);
 
         fileReader.close();
     }
@@ -1221,12 +1197,24 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = new String[]{String.valueOf((long) Integer.MAX_VALUE), String.valueOf((long) Integer.MAX_VALUE + 1),
-                String.valueOf((long) Integer.MAX_VALUE + 2), String.valueOf((long) Integer.MAX_VALUE + 3),
-                String.valueOf((long) Integer.MAX_VALUE + 4), String.valueOf((long) Integer.MAX_VALUE + 5),
-                String.valueOf((long) Integer.MAX_VALUE + 6), String.valueOf((long) Integer.MAX_VALUE + 7),
-                String.valueOf((long) Integer.MAX_VALUE + 8), String.valueOf((long) Integer.MAX_VALUE + 9)};
-        insertParquetArrayData(DataType.INT8ARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{
+                String.format("{NULL,%s,%s}", (long) Integer.MAX_VALUE, (long) Integer.MAX_VALUE),
+                String.format("{NULL,%s,%s}", (long) Integer.MAX_VALUE + 1, (long) Integer.MAX_VALUE + 1),
+                String.format("{NULL,%s,%s}", (long) Integer.MAX_VALUE + 2, (long) Integer.MAX_VALUE + 2),
+                String.format("{NULL,%s,%s}", (long) Integer.MAX_VALUE + 3, (long) Integer.MAX_VALUE + 3),
+                String.format("{NULL,%s,%s}", (long) Integer.MAX_VALUE + 4, (long) Integer.MAX_VALUE + 4),
+                String.format("{NULL,%s,%s}", (long) Integer.MAX_VALUE + 5, (long) Integer.MAX_VALUE + 5),
+                String.format("{NULL,%s,%s}", (long) Integer.MAX_VALUE + 6, (long) Integer.MAX_VALUE + 6),
+                String.format("{NULL,%s,%s}", (long) Integer.MAX_VALUE + 7, (long) Integer.MAX_VALUE + 7),
+                String.format("{NULL,%s,%s}", (long) Integer.MAX_VALUE + 8, (long) Integer.MAX_VALUE + 8),
+                null
+        };
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.INT8ARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1239,21 +1227,9 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = Long.parseLong(values[i]);
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT64, null);
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.INT64, null);
 
         fileReader.close();
-
     }
 
     @Test
@@ -1273,8 +1249,15 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         // write parquet file with bytea array values
-        String[] values = new String[]{"a", "aa", "aaa", "aaaa", "aaaaa", "aaaaaa", "aaaaaaa", "aaaaaaaa", "aaaaaaaaa", "aaaaaaaaaa"};
-        insertParquetArrayData(DataType.BYTEAARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{"{NULL,a,a}", "{NULL,aa,aa}", "{NULL,aaa,aaa}", "{NULL,aaaa,aaaa}",
+                "{NULL,aaaaa,aaaaa}", "{NULL,aaaaaa,aaaaaa}", "{NULL,aaaaaaa,aaaaaaa}", "{NULL,aaaaaaaa,aaaaaaaa}",
+                "{NULL,aaaaaaaaa,aaaaaaaaa}", null};
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.BYTEAARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1288,30 +1271,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Binary[] expectedResults = new Binary[]{
-                Binary.fromString("a"),
-                Binary.fromString("aa"),
-                Binary.fromString("aaa"),
-                Binary.fromString("aaaa"),
-                Binary.fromString("aaaaa"),
-                Binary.fromString("aaaaaa"),
-                Binary.fromString("aaaaaaa"),
-                Binary.fromString("aaaaaaaa"),
-                Binary.fromString("aaaaaaaaa"),
-                null
-        };
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = expectedResults[i];
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BINARY, null);
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.BINARY, null);
 
         fileReader.close();
     }
@@ -1333,8 +1293,14 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = new String[]{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-        insertParquetArrayData(DataType.INT2ARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{"{NULL,0,0}", "{NULL,1,1}", "{NULL,2,2}", "{NULL,3,3}",
+                "{NULL,4,4}", "{NULL,5,5}", "{NULL,6,6}", "{NULL,7,7}", "{NULL,8,8}", null};
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.INT2ARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1347,18 +1313,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = Short.parseShort(values[i]);
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.intType(16, true));
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.intType(16, true));
 
         fileReader.close();
     }
@@ -1379,12 +1334,24 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = new String[]{String.valueOf((float) 0), String.valueOf((float) 1.01),
-                String.valueOf((float) 2.02), String.valueOf((float) 3.03),
-                String.valueOf((float) 4.04), String.valueOf((float) 5.05),
-                String.valueOf((float) 6.06), String.valueOf((float) 7.07),
-                String.valueOf((float) 8.08), String.valueOf((float) 9.09)};
-        insertParquetArrayData(DataType.FLOAT4ARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{
+                String.format("{NULL,%s,%s}", 1.01, 1.01),
+                String.format("{NULL,%s,%s}", 2.02, 2.02),
+                String.format("{NULL,%s,%s}", 3.03, 3.03),
+                String.format("{NULL,%s,%s}", 4.04, 4.04),
+                String.format("{NULL,%s,%s}", 5.05, 5.05),
+                String.format("{NULL,%s,%s}", 6.06, 6.06),
+                String.format("{NULL,%s,%s}", 7.07, 7.07),
+                String.format("{NULL,%s,%s}", 8.08, 8.08),
+                String.format("{NULL,%s,%s}", 9.09, 9.09),
+                null
+        };
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.FLOAT4ARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1397,18 +1364,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = Float.parseFloat(values[i]);
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.FLOAT, null);
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.FLOAT, null);
 
         fileReader.close();
     }
@@ -1429,8 +1385,15 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = new String[]{"", "b", "bb", "bbb", "bbbb", "", "b", "bb", "bbb", "bbbb"};
-        insertParquetArrayData(DataType.VARCHARARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{"{NULL,b,b}", "{NULL,bb,bb}", "{NULL,bbb,bbb}", "{NULL,bbbb,bbbb}",
+                "{NULL,bbbbb,bbbbb}", "{NULL,bbbbbb,bbbbbb}", "{NULL,bbbbbbb,bbbbbbb}", "{NULL,bbbbbbbb,bbbbbbbb}",
+                "{NULL,bbbbbbbbb,bbbbbbbbb}", null};
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.VARCHARARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1444,18 +1407,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = values[i];
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());
 
         fileReader.close();
     }
@@ -1476,8 +1428,15 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String[] values = new String[]{"", "c", "cc", "", "c", "cc", "", "c", "cc", ""};
-        insertParquetArrayData(DataType.BPCHARARRAY.getOID(), values, resolver, accessor);
+        String[] values = new String[]{"{NULL,c,c}", "{NULL,cc,cc}", "{NULL,ccc,ccc}", "{NULL,cccc,cccc}",
+                "{NULL,ccccc,ccccc}", "{NULL,cccccc,cccccc}", "{NULL,ccccccc,ccccccc}", "{NULL,cccccccc,cccccccc}",
+                "{NULL,ccccccccc,ccccccccc}", null};
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.BPCHARARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1491,18 +1450,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = values[i];
-                }
-            }
-        }
-        assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());
+        assertList(schema.getType(0), fileReader, values, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType());
 
         fileReader.close();
     }
@@ -1524,18 +1472,23 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = new String[]{
-                "12345678901234567890.123456789012345678",
-                "22.2345",
-                "333.34567",
-                "4444.456789",
-                "55555.5678901",
-                "666666.67890123",
-                "7777777.789012345",
-                "88888888.8901234567",
-                "999999999.90123456789",
+                String.format("{NULL,%s,%s}", "12345678901234567890.123456789012345678", "12345678901234567890.123456789012345678"),
+                String.format("{NULL,%s,%s}", "22.2345", "22.2345"),
+                String.format("{NULL,%s,%s}", "333.34567", "333.34567"),
+                String.format("{NULL,%s,%s}", "4444.456789", "4444.456789"),
+                String.format("{NULL,%s,%s}", "55555.5678901", "55555.5678901"),
+                String.format("{NULL,%s,%s}", "666666.67890123", "666666.67890123"),
+                String.format("{NULL,%s,%s}", "7777777.789012345", "7777777.789012345"),
+                String.format("{NULL,%s,%s}", "88888888.8901234567", "88888888.8901234567"),
+                String.format("{NULL,%s,%s}", "999999999.90123456789", "999999999.90123456789"),
                 null
         };
-        insertParquetArrayData(DataType.NUMERICARRAY.getOID(), values, resolver, accessor);
+
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERICARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
 
         accessor.closeForWrite();
 
@@ -1549,28 +1502,19 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        BigDecimal[] expectedResults = new BigDecimal[]{
-                new BigDecimal("12345678901234567890.123456789012345678"),
-                new BigDecimal("22.234500000000000000"),
-                new BigDecimal("333.345670000000000000"),
-                new BigDecimal("4444.456789000000000000"),
-                new BigDecimal("55555.567890100000000000"),
-                new BigDecimal("666666.678901230000000000"),
-                new BigDecimal("7777777.789012345000000000"),
-                new BigDecimal("88888888.890123456700000000"),
-                new BigDecimal("999999999.901234567890000000")
+        String[] expectedValues = new String[]{
+                String.format("{NULL,%s,%s}", "12345678901234567890.123456789012345678", "12345678901234567890.123456789012345678"),
+                String.format("{NULL,%s,%s}", "22.234500000000000000", "22.234500000000000000"),
+                String.format("{NULL,%s,%s}", "333.345670000000000000", "333.345670000000000000"),
+                String.format("{NULL,%s,%s}", "4444.456789000000000000", "4444.456789000000000000"),
+                String.format("{NULL,%s,%s}", "55555.567890100000000000", "55555.567890100000000000"),
+                String.format("{NULL,%s,%s}", "666666.678901230000000000", "666666.678901230000000000"),
+                String.format("{NULL,%s,%s}", "7777777.789012345000000000", "7777777.789012345000000000"),
+                String.format("{NULL,%s,%s}", "88888888.890123456700000000", "88888888.890123456700000000"),
+                String.format("{NULL,%s,%s}", "999999999.901234567890000000", "999999999.901234567890000000"),
+                null
         };
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    expectedValues[i][j] = expectedResults[i];
-                }
-            }
-        }
+
         assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, LogicalTypeAnnotation.DecimalLogicalTypeAnnotation.decimalType(18, 38));
 
         fileReader.close();
@@ -1616,50 +1560,18 @@ public class ParquetWriteTest {
             byte[] bytes = Binary.fromString(StringUtils.repeat("e", i + 1)).getBytes();
             record.add(new OneField(DataType.BYTEA.getOID(), bytes));
 
-
             String text = StringUtils.repeat("f", i + 1);
             record.add(new OneField(DataType.TEXT.getOID(), text));
 
+            record.add(new OneField(DataType.INT4ARRAY.getOID(), String.format("{NULL,%s,%s}", i, i)));
 
-            pgArrayBuilder = new PgArrayBuilder(pgUtilities);
-            pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement((String) null);
-            pgArrayBuilder.addElement(String.valueOf(i));
-            pgArrayBuilder.addElement(String.valueOf(i));
-            pgArrayBuilder.endArray();
-            record.add(new OneField(DataType.INT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            record.add(new OneField(DataType.FLOAT4ARRAY.getOID(), String.format("{NULL,%s,%s}", i + 0.01F, i + 0.01F)));
 
-            pgArrayBuilder = new PgArrayBuilder(pgUtilities);
-            pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement((String) null);
-            pgArrayBuilder.addElement(String.valueOf(i + 0.01F));
-            pgArrayBuilder.addElement(String.valueOf(i + 0.01F));
-            pgArrayBuilder.endArray();
-            record.add(new OneField(DataType.FLOAT4ARRAY.getOID(), pgArrayBuilder.toString()));
+            record.add(new OneField(DataType.TIMESTAMPARRAY.getOID(), String.format("{NULL,%s,%s}", localTimestampString, localTimestampString)));
 
-            pgArrayBuilder = new PgArrayBuilder(pgUtilities);
-            pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement((String) null);
-            pgArrayBuilder.addElement(localTimestampString);
-            pgArrayBuilder.addElement(localTimestampString);
-            pgArrayBuilder.endArray();
-            record.add(new OneField(DataType.TIMESTAMPARRAY.getOID(), pgArrayBuilder));
+            record.add(new OneField(DataType.BYTEAARRAY.getOID(), String.format("{NULL,%s,%s}", StringUtils.repeat("e", i + 1), StringUtils.repeat("e", i + 1))));
 
-            pgArrayBuilder = new PgArrayBuilder(pgUtilities);
-            pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement((String) null);
-            pgArrayBuilder.addElement(StringUtils.repeat("e", i + 1));
-            pgArrayBuilder.addElement(StringUtils.repeat("e", i + 1));
-            pgArrayBuilder.endArray();
-            record.add(new OneField(DataType.BYTEAARRAY.getOID(), pgArrayBuilder.toString()));
-
-            pgArrayBuilder = new PgArrayBuilder(pgUtilities);
-            pgArrayBuilder.startArray();
-            pgArrayBuilder.addElement((String) null);
-            pgArrayBuilder.addElement(text);
-            pgArrayBuilder.addElement(text);
-            pgArrayBuilder.endArray();
-            record.add(new OneField(DataType.TEXTARRAY.getOID(), pgArrayBuilder.toString()));
+            record.add(new OneField(DataType.TEXTARRAY.getOID(), String.format("{NULL,%s,%s}", text, text)));
 
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
@@ -1729,25 +1641,25 @@ public class ParquetWriteTest {
         assertEquals("ff", row1.getString(4, 0));
         assertEquals("fff", row2.getString(4, 0));
 
-        assertListElementValue(row0.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, new Object[]{0});
-        assertListElementValue(row1.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, new Object[]{1});
-        assertListElementValue(row2.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, new Object[]{2});
+        assertListElementValue(row0.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, "{NULL,0,0}");
+        assertListElementValue(row1.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, "{NULL,1,1}");
+        assertListElementValue(row2.asGroup().getGroup(5, 0), 1, PrimitiveType.PrimitiveTypeName.INT32, null, "{NULL,2,2}");
 
-        assertListElementValue(row0.asGroup().getGroup(6, 0), 1, PrimitiveType.PrimitiveTypeName.FLOAT, null, new Object[]{(float) 0.01});
-        assertListElementValue(row1.asGroup().getGroup(6, 0), 1, PrimitiveType.PrimitiveTypeName.FLOAT, null, new Object[]{(float) 1.01});
-        assertListElementValue(row2.asGroup().getGroup(6, 0), 1, PrimitiveType.PrimitiveTypeName.FLOAT, null, new Object[]{(float) 2.01});
+        assertListElementValue(row0.asGroup().getGroup(6, 0), 1, PrimitiveType.PrimitiveTypeName.FLOAT, null, String.format("{NULL,%s,%s}", 0.01F, 0.01F));
+        assertListElementValue(row1.asGroup().getGroup(6, 0), 1, PrimitiveType.PrimitiveTypeName.FLOAT, null, String.format("{NULL,%s,%s}", 1.01F, 1.01F));
+        assertListElementValue(row2.asGroup().getGroup(6, 0), 1, PrimitiveType.PrimitiveTypeName.FLOAT, null, String.format("{NULL,%s,%s}", 2.01F, 2.01F));
 
-        assertListElementValue(row0.asGroup().getGroup(7, 0), 1, PrimitiveType.PrimitiveTypeName.INT96, null, new Object[]{localTimestampString0});
-        assertListElementValue(row1.asGroup().getGroup(7, 0), 1, PrimitiveType.PrimitiveTypeName.INT96, null, new Object[]{localTimestampString1});
-        assertListElementValue(row2.asGroup().getGroup(7, 0), 1, PrimitiveType.PrimitiveTypeName.INT96, null, new Object[]{localTimestampString2});
+        assertListElementValue(row0.asGroup().getGroup(7, 0), 1, PrimitiveType.PrimitiveTypeName.INT96, null, String.format("{NULL,%s,%s}", localTimestampString0, localTimestampString0));
+        assertListElementValue(row1.asGroup().getGroup(7, 0), 1, PrimitiveType.PrimitiveTypeName.INT96, null, String.format("{NULL,%s,%s}", localTimestampString0, localTimestampString0));
+        assertListElementValue(row2.asGroup().getGroup(7, 0), 1, PrimitiveType.PrimitiveTypeName.INT96, null, String.format("{NULL,%s,%s}", localTimestampString0, localTimestampString0));
 
-        assertListElementValue(row0.asGroup().getGroup(8, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, null, new Object[]{Binary.fromString("e")});
-        assertListElementValue(row1.asGroup().getGroup(8, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, null, new Object[]{Binary.fromString("ee")});
-        assertListElementValue(row2.asGroup().getGroup(8, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, null, new Object[]{Binary.fromString("eee")});
+        assertListElementValue(row0.asGroup().getGroup(8, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, null, String.format("{NULL,%s,%s}", Binary.fromString("e"), Binary.fromString("e")));
+        assertListElementValue(row1.asGroup().getGroup(8, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, null, String.format("{NULL,%s,%s}", Binary.fromString("ee"), Binary.fromString("ee")));
+        assertListElementValue(row2.asGroup().getGroup(8, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, null, String.format("{NULL,%s,%s}", Binary.fromString("eee"), Binary.fromString("eee")));
 
-        assertListElementValue(row0.asGroup().getGroup(9, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), new Object[]{"f"});
-        assertListElementValue(row1.asGroup().getGroup(9, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), new Object[]{"ff"});
-        assertListElementValue(row2.asGroup().getGroup(9, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), new Object[]{"fff"});
+        assertListElementValue(row0.asGroup().getGroup(9, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), String.format("{NULL,%s,%s}", Binary.fromString("f"), Binary.fromString("f")));
+        assertListElementValue(row1.asGroup().getGroup(9, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), String.format("{NULL,%s,%s}", Binary.fromString("ff"), Binary.fromString("ff")));
+        assertListElementValue(row2.asGroup().getGroup(9, 0), 1, PrimitiveType.PrimitiveTypeName.BINARY, LogicalTypeAnnotation.StringLogicalTypeAnnotation.stringType(), String.format("{NULL,%s,%s}", Binary.fromString("fff"), Binary.fromString("fff")));
 
         assertNull(fileReader.read());
         fileReader.close();
@@ -1823,8 +1735,11 @@ public class ParquetWriteTest {
         assertTrue(accessor.openForWrite());
 
         String[] values = generateLocalTimestampStrings(ZoneId.systemDefault());
-        insertParquetArrayData(DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), values, resolver, accessor);
-
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
         accessor.closeForWrite();
 
         // Validate write
@@ -1837,35 +1752,14 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        Object[][] expectedValues = new Object[values.length][3];
-        for (int i = 0; i < values.length; i++) {
-            if (i == values.length - 1) {
-                continue;
-            }
-            for (int j = 0; j < 3; j++) {
-                if (j != 0) {
-                    // Convert timestamp with timezone string into instance with given offset
-                    OffsetDateTime odtInstanceAtOffset = OffsetDateTime.parse(values[i], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX"));
-                    // Instance in UTC
-                    OffsetDateTime odtInstanceAtUTC = odtInstanceAtOffset.withOffsetSameInstant(ZoneOffset.UTC);
-                    // Formatting to UTC string
-                    String timestampInUTC = odtInstanceAtUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX"));
-                    Instant timestamp = Instant.parse(timestampInUTC);
-                    // Reformat UTC string into local timestamp string
-                    ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-                    //parquet doesn't keep timezone information
-                    String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    expectedValues[i][j] = localTimestampString;
-                }
-            }
-        }
+        String[] expectedValues = generateLocalTimestampStrings(null);
         assertList(schema.getType(0), fileReader, expectedValues, PrimitiveType.PrimitiveTypeName.INT96, null);
 
         fileReader.close();
     }
 
     @Test
-    public void testWriteUnsupportedComplexWithSchemaFile() throws Exception {
+    public void testWriteUnsupportedComplexWithSchemaFile() {
         String path = temp + "/out/unsupported_map/";
 
         columnDescriptors.add(new ColumnDescriptor("unsupported_map", DataType.UNSUPPORTED_TYPE.getOID(), 0, "unsupported_map", null));
@@ -1979,26 +1873,6 @@ public class ParquetWriteTest {
         }
     }
 
-    // all the inserted values pxf gets from greenplum are converted into String along with their datatype.
-    private void insertParquetArrayData(int oid, String[] values, Resolver resolver, Accessor accessor) throws Exception {
-        for (int i = 0; i < values.length; i++) {
-            List<OneField> record;
-            if (i != values.length - 1) {
-                pgArrayBuilder = new PgArrayBuilder(pgUtilities);
-                pgArrayBuilder.startArray();
-                pgArrayBuilder.addElement((String) null);
-                pgArrayBuilder.addElement(values[i]);
-                pgArrayBuilder.addElement(values[i]);
-                pgArrayBuilder.endArray();
-                record = Collections.singletonList(new OneField(oid, pgArrayBuilder.toString()));
-            } else {
-                record = Collections.singletonList(new OneField(oid, null));
-            }
-            OneRow rowToWrite = resolver.setFields(record);
-            assertTrue(accessor.writeNextObject(rowToWrite));
-        }
-    }
-
     private String[] generateLocalTimestampStrings(ZoneId zoneId) {
         String[] localTimestampStrings = new String[10];
         for (int i = 0; i < 10; i++) {
@@ -2006,17 +1880,19 @@ public class ParquetWriteTest {
                 Instant timestamp = Instant.parse(String.format("2020-08-%02dT04:00:05Z", i + 1)); // UTC
                 if (zoneId == null) {
                     ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-                    localTimestampStrings[i] = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    localTimestampStrings[i] = String.format("{NULL,%s,%s}", localTimestampString, localTimestampString);
                 } else {
                     ZonedDateTime localTime = timestamp.atZone(zoneId);
-                    localTimestampStrings[i] = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssxxx"));
+                    String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssxxx"));
+                    localTimestampStrings[i] = String.format("{NULL,%s,%s}", localTimestampString, localTimestampString);
                 }
             }
         }
         return localTimestampStrings;
     }
 
-    private void assertList(Type outerType, ParquetReader<Group> fileReader, Object[][] expectedValues, PrimitiveType.PrimitiveTypeName elementTypeName, LogicalTypeAnnotation logicalTypeAnnotation) throws IOException {
+    private void assertList(Type outerType, ParquetReader<Group> fileReader, String[] expectedValues, PrimitiveType.PrimitiveTypeName elementTypeName, LogicalTypeAnnotation logicalTypeAnnotation) throws IOException {
         for (int i = 0; i < expectedValues.length; i++) {
             assertNotNull(outerType.getLogicalTypeAnnotation());
             assertEquals(LogicalTypeAnnotation.listType(), outerType.getLogicalTypeAnnotation());
@@ -2043,7 +1919,10 @@ public class ParquetWriteTest {
         }
     }
 
-    private void assertListElementValue(Group repeatedGroup, int repetitionCount, PrimitiveType.PrimitiveTypeName elementTypeName, LogicalTypeAnnotation logicalTypeAnnotation, Object[] expectedValues) {
+    private void assertListElementValue(Group repeatedGroup, int repetitionCount, PrimitiveType.PrimitiveTypeName elementTypeName, LogicalTypeAnnotation logicalTypeAnnotation, String expectedValueArrayString) {
+        expectedValueArrayString = expectedValueArrayString.substring(1, expectedValueArrayString.length() - 1); // remove {}
+
+        String[] expectedValues = expectedValueArrayString.split(",");
         for (int j = 0; j < repetitionCount; j++) {
             Group elementGroup = repeatedGroup.getGroup(0, j);
             // the first element is null, so repetitonCount should be 0
@@ -2056,27 +1935,29 @@ public class ParquetWriteTest {
             switch (elementTypeName) {
                 case INT32:
                     if (logicalTypeAnnotation != null &&
-                            logicalTypeAnnotation.toOriginalType() == LogicalTypeAnnotation.IntLogicalTypeAnnotation.intType(16, true).toOriginalType()) {
-                        assertEquals((short) expectedValues[j], (short) elementGroup.getInteger(0, 0));
+                            logicalTypeAnnotation == LogicalTypeAnnotation.IntLogicalTypeAnnotation.intType(16, true)) {
+                        assertEquals(Short.parseShort(expectedValues[j]), (short) elementGroup.getInteger(0, 0));
+                    } else if (logicalTypeAnnotation != null && logicalTypeAnnotation == LogicalTypeAnnotation.dateType()) {
+                        assertEquals(ParquetTypeConverter.getDaysFromEpochFromDateString(expectedValues[j]), elementGroup.getInteger(0, 0));
                     } else {
-                        assertEquals((Integer) expectedValues[j], elementGroup.getInteger(0, 0));
+                        assertEquals(Integer.parseInt(expectedValues[j]), elementGroup.getInteger(0, 0));
                     }
                     break;
                 case INT96:
                     assertEquals(expectedValues[j], bytesToTimestamp(elementGroup.getInt96(0, 0).getBytes()));
                     break;
                 case FLOAT:
-                    assertEquals((Float) expectedValues[j], elementGroup.getFloat(0, 0));
+                    assertEquals(Float.parseFloat(expectedValues[j]), elementGroup.getFloat(0, 0));
                     break;
                 case BINARY:
                     if (logicalTypeAnnotation != null) {
                         assertEquals(expectedValues[j], elementGroup.getBinary(0, 0).toStringUsingUTF8());
                     } else {
-                        assertEquals(expectedValues[j], elementGroup.getBinary(0, 0));
+                        assertEquals(Binary.fromReusedByteArray(expectedValues[j].getBytes()), elementGroup.getBinary(0, 0));
                     }
                     break;
                 case FIXED_LEN_BYTE_ARRAY:
-                    assertEquals(expectedValues[j], new BigDecimal(new BigInteger(elementGroup.getBinary(0, 0).getBytes()), 18));
+                    assertEquals(expectedValues[j], new BigDecimal(new BigInteger(elementGroup.getBinary(0, 0).getBytes()), 18).toString());
                     break;
                 default:
                     break;
