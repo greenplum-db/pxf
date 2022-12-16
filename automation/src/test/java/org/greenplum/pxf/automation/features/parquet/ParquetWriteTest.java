@@ -156,6 +156,7 @@ public class ParquetWriteTest extends BaseFeature {
     public void parquetWritePrimitivesV2() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_PRIMITIVE_TYPES, hdfsPath + PARQUET_PRIMITIVE_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_PRIMITIVE_TABLE, PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + PARQUET_PRIMITIVE_TYPES);
+
         runWritePrimitivesScenario("pxf_parquet_write_primitives_v2", "pxf_parquet_read_primitives_v2", "parquet_write_primitives_v2", new String[]{"PARQUET_VERSION=v2"});
     }
 
@@ -163,6 +164,7 @@ public class ParquetWriteTest extends BaseFeature {
     public void parquetWritePrimitivesGZip() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_PRIMITIVE_TYPES, hdfsPath + PARQUET_PRIMITIVE_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_PRIMITIVE_TABLE, PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + PARQUET_PRIMITIVE_TYPES);
+
         runWritePrimitivesScenario("pxf_parquet_write_primitives_gzip", "pxf_parquet_read_primitives_gzip", "parquet_write_primitives_gzip", new String[]{"COMPRESSION_CODEC=gzip"});
     }
 
@@ -170,6 +172,7 @@ public class ParquetWriteTest extends BaseFeature {
     public void parquetWritePrimitivesGZipClassName() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_PRIMITIVE_TYPES, hdfsPath + PARQUET_PRIMITIVE_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_PRIMITIVE_TABLE, PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + PARQUET_PRIMITIVE_TYPES);
+
         runWritePrimitivesScenario("pxf_parquet_write_primitives_gzip_classname", "pxf_parquet_read_primitives_gzip_classname", "parquet_write_primitives_gzip_classname", new String[]{"COMPRESSION_CODEC=org.apache.hadoop.io.compress.GzipCodec"});
     }
 
@@ -291,7 +294,7 @@ public class ParquetWriteTest extends BaseFeature {
                 .add("real_arr")
                 .add("double_arr")
                 .add("text_arr")
-                .add("bytea_arr") // binary cast as string
+                .add("bytea_arr")
                 .add("char_arr")
                 .add("varchar_arr")
                 .add("date_arr")
