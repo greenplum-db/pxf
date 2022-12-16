@@ -98,6 +98,7 @@ public class ParquetUtilities {
             case FIXED_LEN_BYTE_ARRAY:
                 return val;
             default:
+                // For now, we've covered all the Parquet Primitive types, so we won't get into this case
                 throw new PxfRuntimeException(String.format("type: %s is not supported", primitiveTypeName));
         }
     }

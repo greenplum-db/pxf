@@ -448,17 +448,18 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      */
     private void validateParsedSchema(MessageType schema, List<ColumnDescriptor> columns) {
         if (schema.getFieldCount() != columns.size()) {
-            throw new PxfRuntimeException(String.format("Schema field count %s doesn't match column count %s", schema.getFieldCount(), columns.size()));
+            LOG.warn(String.format("Schema field count %s doesn't match column count %s", schema.getFieldCount(), columns.size()));
         }
 
         int i = 0;
         for (ColumnDescriptor columnDescriptor : columns) {
-            Type type = schema.getType(i);
-            if (!type.isPrimitive()) {
-                validateComplexType(type.asGroupType(), columnDescriptor.columnTypeCode());
+            if (i < schema.getFieldCount()) {
+                Type type = schema.getType(i);
+                if (!type.isPrimitive()) {
+                    validateComplexType(type.asGroupType(), columnDescriptor.columnTypeCode());
+                }
             }
-            // TODO: Need to check the if the data type of the schema is a match with the data type of the column
-            //  for both primitive types and complex types. Greenplum may have type casting for the input.
+            // TODO: Need to check ordering and type matching between schema and columns
             i++;
         }
     }
@@ -467,7 +468,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      * LIST is the only complex type we support for parquet.
      * Valid whether the complex type is other unsupported complex type, or invalid/unsupported LIST.
      *
-     * @param complexType the parsed complex schema type we are going to validate
+     * @param complexType    the parsed complex schema type we are going to validate
      * @param columnTypeCode the OID of the current column data type from user input
      */
     private void validateComplexType(GroupType complexType, int columnTypeCode) {

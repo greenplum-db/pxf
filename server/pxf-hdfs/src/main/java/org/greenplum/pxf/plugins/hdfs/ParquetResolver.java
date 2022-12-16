@@ -180,15 +180,13 @@ public class ParquetResolver extends BasePlugin implements Resolver {
          *    list
          *      element: test
          */
-        Group arrayGroup = groupFactory.newGroup();
+        Group listGroup = group.addGroup(columnIndex);
         for (Object value : values) {
-            Group repeatedGroup = new SimpleGroup(repeatedType);
+            Group repeatedGroup = listGroup.addGroup(0);
             if (value != null) {
                 fillGroupWithPrimitive(repeatedGroup, 0, value, elementType);
             }
-            arrayGroup.add(0, repeatedGroup);
         }
-        group.add(columnIndex, arrayGroup);
     }
 
     /**
