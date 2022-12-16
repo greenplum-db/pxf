@@ -40,7 +40,7 @@ public class ParquetUtilitiesTest {
     @Test
     public void testParsePostgresArrayIntegerArrayWithNulls() {
         List<Object> result = parquetUtilities.parsePostgresArray("{1,NULL,-3}", PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.IntLogicalTypeAnnotation.IntLogicalTypeAnnotation.intType(16,true));
-        assertIterableEquals(Arrays.asList((short) 1, (short) 2, (short) -3), result);
+        assertIterableEquals(Arrays.asList((short) 1, null, (short) -3), result);
 
         result = parquetUtilities.parsePostgresArray("{1,NULL,3}", PrimitiveType.PrimitiveTypeName.INT32, null);
         assertIterableEquals(Arrays.asList(1, null, 3), result);
@@ -165,15 +165,15 @@ public class ParquetUtilitiesTest {
         //Integer
         PxfRuntimeException exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.INT32, null));
         assertEquals("Error parsing array element: {1,2} was not of expected type INT32", exception.getMessage());
-        assertEquals("Column value \"{{1,2},{3,4}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", exception.getHint());
+        assertEquals("Column value \"{{1,2},{3,4}}\" is a multi-dimensional array; PXF does not support writing multi-dimensional arrays to Parquet files.", exception.getHint());
         // Short
         exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.INT32, LogicalTypeAnnotation.intType(16, true)));
         assertEquals("Error parsing array element: {1,2} was not of expected type INT32", exception.getMessage());
-        assertEquals("Column value \"{{1,2},{3,4}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", exception.getHint());
+        assertEquals("Column value \"{{1,2},{3,4}}\" is a multi-dimensional array; PXF does not support writing multi-dimensional arrays to Parquet files.", exception.getHint());
         // Long
         exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.INT64, null));
         assertEquals("Error parsing array element: {1,2} was not of expected type INT64", exception.getMessage());
-        assertEquals("Column value \"{{1,2},{3,4}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", exception.getHint());
+        assertEquals("Column value \"{{1,2},{3,4}}\" is a multi-dimensional array; PXF does not support writing multi-dimensional arrays to Parquet files.", exception.getHint());
     }
 
     @Test
@@ -184,7 +184,7 @@ public class ParquetUtilitiesTest {
 
         PxfRuntimeException exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.FLOAT, null));
         assertEquals("Error parsing array element: {1.1,2.1} was not of expected type FLOAT", exception.getMessage());
-        assertEquals("Column value \"{{1.1,2.1},{3.1,4.1}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", exception.getHint());
+        assertEquals("Column value \"{{1.1,2.1},{3.1,4.1}}\" is a multi-dimensional array; PXF does not support writing multi-dimensional arrays to Parquet files.", exception.getHint());
     }
 
     @Test
@@ -195,7 +195,7 @@ public class ParquetUtilitiesTest {
 
         PxfRuntimeException exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.DOUBLE, null));
         assertEquals("Error parsing array element: {1.01,2.01} was not of expected type DOUBLE", exception.getMessage());
-        assertEquals("Column value \"{{1.01,2.01},{3.01,4.01}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", exception.getHint());
+        assertEquals("Column value \"{{1.01,2.01},{3.01,4.01}}\" is a multi-dimensional array; PXF does not support writing multi-dimensional arrays to Parquet files.", exception.getHint());
     }
 
     @Test
@@ -206,7 +206,7 @@ public class ParquetUtilitiesTest {
 
         PxfRuntimeException exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.BOOLEAN, null));
         assertEquals("Error parsing array element: {t,f} was not of expected type BOOLEAN", exception.getMessage());
-        assertEquals("Column value \"{{t,f},{f,t}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", exception.getHint());
+        assertEquals("Column value \"{{t,f},{f,t}}\" is a multi-dimensional array; PXF does not support writing multi-dimensional arrays to Parquet files.", exception.getHint());
     }
 
     @Test
@@ -217,7 +217,7 @@ public class ParquetUtilitiesTest {
 
         PxfRuntimeException exception = assertThrows(PxfRuntimeException.class, () -> parquetUtilities.parsePostgresArray(value, PrimitiveType.PrimitiveTypeName.BINARY, null));
         assertEquals("Error parsing array element: {\\x0001, \\x0002} was not of expected type BINARY", exception.getMessage());
-        assertEquals("Column value \"{{\\\\x0001, \\\\x0002},{\\\\x4041, \\\\x4142}}\" is a multi-dimensional array, PXF does not support multi-dimensional arrays for writing Parquet files.", exception.getHint());
+        assertEquals("Column value \"{{\\\\x0001, \\\\x0002},{\\\\x4041, \\\\x4142}}\" is a multi-dimensional array; PXF does not support writing multi-dimensional arrays to Parquet files.", exception.getHint());
     }
 
     @Test
