@@ -464,12 +464,15 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     }
 
     /**
-     * @param complexType
-     * @param columnTypeCode
+     * LIST is the only complex type we support for parquet.
+     * Valid whether the complex type is other unsupported complex type, or invalid/unsupported LIST.
+     *
+     * @param complexType the parsed complex schema type we are going to validate
+     * @param columnTypeCode the OID of the current column data type from user input
      */
     private void validateComplexType(GroupType complexType, int columnTypeCode) {
         // unsupported complex type like MAP
-        if (columnTypeCode == DataType.UNSUPPORTED_TYPE.getOID()) {
+        if (!isListType(complexType) && columnTypeCode == DataType.UNSUPPORTED_TYPE.getOID()) {
             throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported.", complexType.getLogicalTypeAnnotation()));
         }
 
@@ -489,7 +492,12 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         }
     }
 
-
+    /**
+     * Whether the schema type is parquet List type
+     *
+     * @param type the schema type we are going to check whether is parquet LIST or not
+     * @return true if type is LIST
+     */
     private boolean isListType(Type type) {
         return type.getLogicalTypeAnnotation() == LogicalTypeAnnotation.listType();
     }
@@ -510,6 +518,12 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         return new MessageType("greenplum_pxf_schema", fields);
     }
 
+    /**
+     * Generate parquet schema type based on each columnDescriptor
+     *
+     * @param columnDescriptor contains Greenplum data type information
+     * @return the generated parquet type schema
+     */
     private Type getTypeForColumnDescriptor(ColumnDescriptor columnDescriptor) {
         DataType dataType = columnDescriptor.getDataType();
         int columnTypeCode = columnDescriptor.columnTypeCode();

@@ -123,36 +123,36 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             if (columnDescriptor.getDataType() == DataType.BPCHAR && field.val instanceof String) {
                 field.val = Utilities.rightTrimWhiteSpace((String) field.val);
             }
-            fillGroup(i, field, group);
+            fillGroup(group, i, field);
         }
         return new OneRow(null, group);
     }
 
     /**
-     * Fill the columnIndex-th group based on the Greenplum data type and value string provided by {@link OneField} field
+     * Fill the element of Parquet Group at the given index with provided value
      *
-     * @param columnIndex is the column of the row we want to fill data at
-     * @param field       provides the String value of record[columnIndex] we are going to convert into parquet
-     * @param group       is the group we are going to fill
+     * @param group       the Parquet Group object being filled
+     * @param columnIndex the index of the column in a row that needs to be filled with data
+     * @param field       OneField object holding the value we need to fill into the Parquet Group object
      */
-    private void fillGroup(int columnIndex, OneField field, Group group) {
-        Type type = schema.getType(columnIndex);
+    private void fillGroup(Group group, int columnIndex, OneField field) {
         if (field.val == null) {
             return;
         }
+
+        Type type = schema.getType(columnIndex);
         if (type.isPrimitive()) {
-            fillGroupWithPrimitive(columnIndex, field.val, group, type.asPrimitiveType());
+            fillGroupWithPrimitive(group, columnIndex, field.val, type.asPrimitiveType());
             return;
         }
 
         LogicalTypeAnnotation logicalTypeAnnotation = type.getLogicalTypeAnnotation();
-
         if (logicalTypeAnnotation == null) {
             throw new UnsupportedTypeException("Parquet group type without logical annotation is not supported");
         }
 
         if (logicalTypeAnnotation != LogicalTypeAnnotation.listType()) {
-            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported", type.asGroupType().getOriginalType().name()));
+            throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported", logicalTypeAnnotation));
         }
         /*
          * https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
@@ -184,7 +184,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         for (Object value : values) {
             Group repeatedGroup = new SimpleGroup(repeatedType);
             if (value != null) {
-                fillGroupWithPrimitive(0, value, repeatedGroup, elementType);
+                fillGroupWithPrimitive(repeatedGroup, 0, value, elementType);
             }
             arrayGroup.add(0, repeatedGroup);
         }
@@ -192,15 +192,14 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     }
 
     /**
-     * Fill the columnIndex-th primitive group based on the Greenplum data type and value string provided by {@link OneField} field
-     * This primitive group could be an actual primitive group or the innermost primitive group of a List group
+     * Fill the element of Parquet Group at the given index with provided field value and Parquet Primitive type
      *
-     * @param columnIndex   is the column of the row we want to fill data at
-     * @param fieldValue    provides the String value of record[index] we are going to convert into parquet
-     * @param group         is the group we are going to fill
-     * @param primitiveType is the Primitive parquet schema we want to fill the group with
+     * @param group         the Parquet Group object being filled
+     * @param columnIndex   the index of the column in a row that needs to be filled with data
+     * @param fieldValue    OneField object holding the value we need to fill into the Parquet Group object
+     * @param primitiveType the Primitive Parquet schema we need to fill into the Parquet Group object
      */
-    private void fillGroupWithPrimitive(int columnIndex, Object fieldValue, Group group, PrimitiveType primitiveType) {
+    private void fillGroupWithPrimitive(Group group, int columnIndex, Object fieldValue, PrimitiveType primitiveType) {
         LogicalTypeAnnotation logicalTypeAnnotation = primitiveType.getLogicalTypeAnnotation();
         PrimitiveType.PrimitiveTypeName primitiveTypeName = primitiveType.getPrimitiveTypeName();
 
@@ -313,7 +312,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }
     }
 
-
     /**
      * Resolve the Parquet data at the columnIndex into Greenplum representation
      *
@@ -344,8 +342,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 if (type.isPrimitive()) {
                     typeName = type.asPrimitiveType().getPrimitiveTypeName().name();
                 } else {
-                    typeName = type.asGroupType().getOriginalType() == null ?
-                            "customized struct" : type.asGroupType().getOriginalType().name();
+                    typeName = type.asGroupType().getLogicalTypeAnnotation() == null ?
+                            "customized struct" : type.asGroupType().getLogicalTypeAnnotation().toString();
                 }
                 throw new RuntimeException(String.format("Failed to serialize repeated parquet type %s.", typeName), e);
             }

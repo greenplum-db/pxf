@@ -855,7 +855,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         e = assertThrows(PxfRuntimeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals(String.format("Invalid Parquet List schema: %s.", schema.getFields().get(0).toString()), e.getMessage());
+        assertEquals(String.format("Invalid Parquet List schema: %s.", schema.getFields().get(0).toString().replace("\n", " ")), e.getMessage());
 
         fields = new ArrayList<>();
         GroupType repeatedGroupType = new GroupType(Type.Repetition.REPEATED, "list", new ArrayList<>());
@@ -864,7 +864,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         e = assertThrows(PxfRuntimeException.class,
                 () -> context.setTupleDescription(getColumnDescriptorsFromSchema(schema)));
-        assertEquals(String.format("Invalid Parquet List schema: %s.", schema.getFields().get(0).toString()), e.getMessage());
+        assertEquals(String.format("Invalid Parquet List schema: %s.", schema.getFields().get(0).toString().replace("\n", " ")), e.getMessage());
     }
 
     private List<OneField> assertRow(List<Group> groups, int desiredRow, int numFields) {
