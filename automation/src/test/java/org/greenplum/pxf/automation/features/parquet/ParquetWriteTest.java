@@ -117,10 +117,7 @@ public class ParquetWriteTest extends BaseFeature {
         // path for storing data on HDFS (for processing by PXF)
         hdfsPath = hdfs.getWorkingDirectory() + "/parquet/";
         protocol = ProtocolUtils.getProtocol();
-
         resourcePath = localDataResourcesFolder + "/parquet/";
-
-
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -187,8 +184,8 @@ public class ParquetWriteTest extends BaseFeature {
                 + "/numeric/undefined_precision_numeric.csv"), "E','", true);
 
         String filename = "parquet_write_undefined_precision_numeric";
-        exTable = new WritableExternalTable("pxf_parquet_write_undefined_precision_numeric",
-                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename, "custom");
+        prepareWritableExternalTable("pxf_parquet_write_undefined_precision_numeric",
+                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename, null);
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
         exTable.setFormatter("pxfwritable_export");
@@ -197,8 +194,8 @@ public class ParquetWriteTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT * FROM " + NUMERIC_UNDEFINED_PRECISION_TABLE);
 
-        exTable = new ReadableExternalTable("pxf_parquet_read_undefined_precision_numeric",
-                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename, "custom");
+        prepareReadableExternalTable("pxf_parquet_read_undefined_precision_numeric",
+                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename);
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
         exTable.setFormatter("pxfwritable_import");
@@ -241,18 +238,7 @@ public class ParquetWriteTest extends BaseFeature {
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, bool_arr, smallint_arr, int_arr, bigint_arr, real_arr, " +
                 "double_arr, text_arr, bytea_arr, char_arr, varchar_arr, date_arr, numeric_arr FROM " + PXF_PARQUET_LIST_TYPES);
 
-        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
-            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
-            sleep(10000);
-            List<String> files = hdfs.list(fullTestPath);
-            for (String file : files) {
-                // make sure the file is available, saw flakes on Cloud that listed files were not available
-                int attempts = 0;
-                while (!hdfs.doesFileExist(file) && attempts++ < 20) {
-                    sleep(1000);
-                }
-            }
-        }
+        waitForAsyncWriteToSucceedOnHCFS("parquet_write_list");
 
         prepareReadableExternalTable(readTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath);
         runTincTest("pxf.features.parquet.write_list.list.runTest");
@@ -270,25 +256,14 @@ public class ParquetWriteTest extends BaseFeature {
         prepareWritableExternalTable(writeTableName, PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS, fullTestPath, null);
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, tm_arr FROM " + PXF_PARQUET_TIMESTAMP_LIST_TYPES);
 
-        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
-            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
-            sleep(10000);
-            List<String> files = hdfs.list(fullTestPath);
-            for (String file : files) {
-                // make sure the file is available, saw flakes on Cloud that listed files were not available
-                int attempts = 0;
-                while (!hdfs.doesFileExist(file) && attempts++ < 20) {
-                    sleep(1000);
-                }
-            }
-        }
+        waitForAsyncWriteToSucceedOnHCFS("parquet_write_timestamp_list");
 
         prepareReadableExternalTable(readTableName, PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS, fullTestPath);
 
         runTincTest("pxf.features.parquet.write_list.timestamp_list.runTest");
     }
 
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb ", "security", "hive"})
     public void parquetWriteListsReadWithHive() throws Exception {
         // init only here, not in beforeClass() method as other tests run in environments without Hive
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
@@ -331,8 +306,8 @@ public class ParquetWriteTest extends BaseFeature {
         assertHiveQueryResultData(hiveResultTable.getData());
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void parquetWriteListsUserProvidedSchemaFileOnHcfs_ValidSchema() throws Exception {
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void parquetWriteListsUserProvidedSchemaFile_ValidSchema() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_LIST_TYPES, hdfsPath + PARQUET_LIST_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_LIST_TYPES, PARQUET_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_LIST_TYPES);
 
@@ -351,25 +326,15 @@ public class ParquetWriteTest extends BaseFeature {
 
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, bool_arr, smallint_arr, int_arr, bigint_arr, real_arr, " +
                 "double_arr, text_arr, bytea_arr, char_arr, varchar_arr, date_arr, numeric_arr FROM " + PXF_PARQUET_LIST_TYPES);
-        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
-            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
-            sleep(10000);
-            List<String> files = hdfs.list(fullTestPath);
-            for (String file : files) {
-                // make sure the file is available, saw flakes on Cloud that listed files were not available
-                int attempts = 0;
-                while (!hdfs.doesFileExist(file) && attempts++ < 20) {
-                    sleep(1000);
-                }
-            }
-        }
+
+        waitForAsyncWriteToSucceedOnHCFS("parquet_write_lists_with_user_provided_schema_file_on_hcfs");
 
         prepareReadableExternalTable(readTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath);
         runTincTest("pxf.features.parquet.write_list.write_with_valid_schema_hcfs.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void parquetWriteListsUserProvidedSchemaFileOnHcfs_InvalidSchema() throws Exception {
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void parquetWriteListsUserProvidedSchemaFile_InvalidSchema() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_LIST_TYPES, hdfsPath + PARQUET_LIST_TYPES);
         prepareReadableExternalTable(PXF_PARQUET_LIST_TYPES, PARQUET_LIST_TABLE_COLUMNS, hdfsPath + PARQUET_LIST_TYPES);
 
@@ -395,18 +360,8 @@ public class ParquetWriteTest extends BaseFeature {
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT s1, s2, n1, d1, dc1, tm, " +
                 "f, bg, b, tn, vc1, sml, c1, bin FROM " + PXF_PARQUET_PRIMITIVE_TABLE);
 
-        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
-            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
-            sleep(10000);
-            List<String> files = hdfs.list(hdfsPath + filename);
-            for (String file : files) {
-                // make sure the file is available, saw flakes on Cloud that listed files were not available
-                int attempts = 0;
-                while (!hdfs.doesFileExist(file) && attempts++ < 20) {
-                    sleep(1000);
-                }
-            }
-        }
+        waitForAsyncWriteToSucceedOnHCFS(filename);
+
         prepareReadableExternalTable(readTableName,
                 PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + filename);
         gpdb.runQuery("CREATE OR REPLACE VIEW parquet_view AS SELECT s1, s2, n1, d1, dc1, " +
@@ -427,6 +382,21 @@ public class ParquetWriteTest extends BaseFeature {
             exTable.setUserParameters(userParameters);
         }
         createTable(exTable);
+    }
+
+    private void waitForAsyncWriteToSucceedOnHCFS(String filename) throws Exception {
+        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
+            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+            sleep(10000);
+            List<String> files = hdfs.list(hdfsPath + filename);
+            for (String file : files) {
+                // make sure the file is available, saw flakes on Cloud that listed files were not available
+                int attempts = 0;
+                while (!hdfs.doesFileExist(file) && attempts++ < 20) {
+                    sleep(1000);
+                }
+            }
+        }
     }
 
     private void insertArrayDataWithoutNulls(String exTable, int numRows) throws Exception {
