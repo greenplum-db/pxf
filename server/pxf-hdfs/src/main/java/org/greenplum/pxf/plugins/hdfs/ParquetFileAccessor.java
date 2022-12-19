@@ -49,7 +49,6 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Types;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.InOperatorTransformer;
@@ -64,6 +63,7 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.filter.BPCharOperatorTransformer;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPruner;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -247,7 +247,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         // Read schema file, if given
         String schemaFile = context.getOption("SCHEMA");
-        MessageType schema = (schemaFile != null) ? readSchemaFile(schemaFile, context.getTupleDescription()) :
+        MessageType schema = (schemaFile != null) ? readSchemaFile(hcfsType.getDataUri(configuration, schemaFile), context.getTupleDescription()) :
                 generateParquetSchema(context.getTupleDescription());
         LOG.debug("{}-{}: Schema fields = {}", context.getTransactionId(),
                 context.getSegmentId(), schema.getFields());
@@ -451,16 +451,12 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             LOG.warn(String.format("Schema field count %s doesn't match column count %s", schema.getFieldCount(), columns.size()));
         }
 
-        int i = 0;
-        for (ColumnDescriptor columnDescriptor : columns) {
-            if (i < schema.getFieldCount()) {
-                Type type = schema.getType(i);
-                if (!type.isPrimitive()) {
-                    validateComplexType(type.asGroupType(), columnDescriptor.columnTypeCode());
-                }
+        for (int i = 0; i < schema.getFieldCount(); i++) {
+            Type type = schema.getType(i);
+            if (!type.isPrimitive()) {
+                validateComplexType(type.asGroupType());
             }
             // TODO: Need to check ordering and type matching between schema and columns
-            i++;
         }
     }
 
@@ -468,19 +464,16 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      * LIST is the only complex type we support for parquet.
      * Valid whether the complex type is other unsupported complex type, or invalid/unsupported LIST.
      *
-     * @param complexType    the parsed complex schema type we are going to validate
-     * @param columnTypeCode the OID of the current column data type from user input
+     * @param complexType the parsed complex schema type we are going to validate
      */
-    private void validateComplexType(GroupType complexType, int columnTypeCode) {
+    private void validateComplexType(GroupType complexType) {
         // unsupported complex type like MAP
-        if (!isListType(complexType) && columnTypeCode == DataType.UNSUPPORTED_TYPE.getOID()) {
+        if (complexType.getLogicalTypeAnnotation() != LogicalTypeAnnotation.listType()) {
             throw new UnsupportedTypeException(String.format("Parquet complex type %s is not supported.", complexType.getLogicalTypeAnnotation()));
         }
 
-        // invalid list schema
-        if (complexType.getFields().size() != 1 || complexType.getType(0).asGroupType().getFields().size() != 1) {
-            throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", complexType.toString().replace("\n", " ")));
-        }
+        // whether the list schema is a valid one
+        ParquetUtilities.validateListSchema(complexType);
 
         // list of unsupported type
         GroupType repeatedGroupType = complexType.getType(0).asGroupType();
@@ -491,16 +484,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     elementType.asGroupType().getOriginalType().name();
             throw new UnsupportedTypeException(String.format("Parquet LIST of %s is not supported.", elementTypeName));
         }
-    }
-
-    /**
-     * Whether the schema type is parquet List type
-     *
-     * @param type the schema type we are going to check whether is parquet LIST or not
-     * @return true if type is LIST
-     */
-    private boolean isListType(Type type) {
-        return type.getLogicalTypeAnnotation() == LogicalTypeAnnotation.listType();
     }
 
     /**

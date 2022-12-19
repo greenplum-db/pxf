@@ -1,4 +1,4 @@
--- @description query01 for Parquet Timestamp List data type. Timestamp stored in Parquet is UTC time. Extract every timestamp first then convert them into PDT time
+-- @description query01 for writing Parquet Timestamp List data type. Timestamp stored in Parquet is UTC time. Extract every timestamp first then convert them into PDT time
 SET bytea_output=hex;
 
 \pset null 'NIL'

@@ -1,6 +1,6 @@
 -- start_ignore
 -- end_ignore
--- @description query01 for Parquet List data types (except timestamp List)
+-- @description query01 for writing Parquet List data types (except timestamp List)
 SET bytea_output=hex;
 SET
 \pset null 'NIL'

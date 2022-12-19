@@ -4,9 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
-import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
-import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +25,17 @@ public class ParquetUtilities {
 
     public ParquetUtilities(PgUtilities pgUtilities) {
         this.pgUtilities = pgUtilities;
+    }
+
+    /**
+     * Check whether the provided Parquet lIST schema is a valid one
+     *
+     * @param listType Parquet LIST schema
+     */
+    public static void validateListSchema(GroupType listType) {
+        if (listType.getFields().size() != 1 || listType.getType(0).isPrimitive() || listType.getType(0).asGroupType().getFields().size() != 1) {
+            throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", listType.toString().replace("\n", " ")));
+        }
     }
 
     /**

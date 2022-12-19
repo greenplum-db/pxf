@@ -1823,12 +1823,58 @@ public class ParquetWriteTest {
     }
 
     @Test
-    public void testWriteInvalidListSchema() {
-        String path = temp + "/out/invalid_list_schema/";
+    public void testWriteInvalidListSchemaWithoutRepeatedGroup() {
+        String path = temp + "/out/invalid_list_schema_without_repeated_group/";
 
-        columnDescriptors.add(new ColumnDescriptor("invalid_list_schema", DataType.BOOLARRAY.getOID(), 0, "invalid_list_schema", null));
+        columnDescriptors.add(new ColumnDescriptor("invalid_list_schema_without_repeated_group", DataType.BOOLARRAY.getOID(), 0, "invalid_list_schema_without_repeated_group", null));
 
-        String filepath = this.getClass().getClassLoader().getResource("parquet/invalid_list_schema.schema").getPath();
+        String filepath = this.getClass().getClassLoader().getResource("parquet/invalid_list_schema_without_repeated_group.schema").getPath();
+        context.addOption("SCHEMA", filepath);
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123489");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        // need to add an elementType validation, but when should we throw exception? when getting schema or when parsing values?
+        Exception e = assertThrows(PxfRuntimeException.class,
+                () -> accessor.openForWrite());
+        assertEquals("Invalid Parquet List schema: optional group bool_arr (LIST) { }.", e.getMessage());
+    }
+
+    @Test
+    public void testWriteInvalidListSchemaWithInvalidRepeatedGroup() {
+        String path = temp + "/out/invalid_list_schema_with_invalid_repeated_group/";
+
+        columnDescriptors.add(new ColumnDescriptor("invalid_list_schema_with_invalid_repeated_group", DataType.BOOLARRAY.getOID(), 0, "invalid_list_schema_with_invalid_repeated_group", null));
+
+        String filepath = this.getClass().getClassLoader().getResource("parquet/invalid_list_schema_with_invalid_repeated_group.schema").getPath();
+        context.addOption("SCHEMA", filepath);
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123489");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        // need to add an elementType validation, but when should we throw exception? when getting schema or when parsing values?
+        Exception e = assertThrows(PxfRuntimeException.class,
+                () -> accessor.openForWrite());
+        assertEquals("Invalid Parquet List schema: optional group bool_arr (LIST) {   optional int32 bag; }.", e.getMessage());
+    }
+
+    @Test
+    public void testWriteInvalidListSchemaWithoutElementGroup() {
+        String path = temp + "/out/invalid_list_schema_without_element_group/";
+
+        columnDescriptors.add(new ColumnDescriptor("invalid_list_schema_without_element_group", DataType.BOOLARRAY.getOID(), 0, "invalid_list_schemawithout_element_group", null));
+
+        String filepath = this.getClass().getClassLoader().getResource("parquet/invalid_list_schema_without_element_group.schema").getPath();
         context.addOption("SCHEMA", filepath);
 
         context.setDataSource(path);

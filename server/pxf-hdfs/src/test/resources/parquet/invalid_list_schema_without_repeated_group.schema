@@ -1,0 +1,4 @@
+message hive_schema {
+  OPTIONAL group bool_arr (LIST) {
+  }
+}

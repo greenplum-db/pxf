@@ -412,9 +412,7 @@ public enum ParquetTypeConverter {
      * - The `element` field encodes the list's element type and repetition. Element repetition must be `required` or `optional`.
      */
     private static Type getElementType(GroupType listType) {
-        if (listType.getFields().size() != 1 || listType.getType(0).asGroupType().getFields().size() != 1) {
-            throw new PxfRuntimeException(String.format("Invalid Parquet List schema: %s.", listType.toString().replace("\n", " ")));
-        }
+        ParquetUtilities.validateListSchema(listType);
 
         GroupType repeatedType = listType.getType(0).asGroupType();
         return repeatedType.getType(0);
