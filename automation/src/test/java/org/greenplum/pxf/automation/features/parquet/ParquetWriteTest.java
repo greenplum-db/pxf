@@ -33,19 +33,19 @@ public class ParquetWriteTest extends BaseFeature {
     private static final String PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE = "undefined_precision_numeric.parquet";
     private static final String PARQUET_NUMERIC_FILE = "numeric.parquet";
     private static final String[] PARQUET_PRIMITIVE_TABLE_COLUMNS = new String[]{
-            "s1    TEXT",
-            "s2    TEXT",
-            "n1    INTEGER",
+            "s1    TEXT"            ,
+            "s2    TEXT"            ,
+            "n1    INTEGER"         ,
             "d1    DOUBLE PRECISION",
-            "dc1   NUMERIC",
-            "tm    TIMESTAMP",
-            "f     REAL",
-            "bg    BIGINT",
-            "b     BOOLEAN",
-            "tn    SMALLINT",
-            "vc1   VARCHAR(5)",
-            "sml   SMALLINT",
-            "c1    CHAR(3)",
+            "dc1   NUMERIC"         ,
+            "tm    TIMESTAMP"       ,
+            "f     REAL"            ,
+            "bg    BIGINT"          ,
+            "b     BOOLEAN"         ,
+            "tn    SMALLINT"        ,
+            "vc1   VARCHAR(5)"      ,
+            "sml   SMALLINT"        ,
+            "c1    CHAR(3)"         ,
             "bin   BYTEA"
     };
     private static final String[] PARQUET_TABLE_DECIMAL_COLUMNS = new String[]{
@@ -67,23 +67,23 @@ public class ParquetWriteTest extends BaseFeature {
     // HIVE Parquet array vectorization read currently doesn't support TIMESTAMP and INTERVAL_DAY_TIME
     //https://github.com/apache/hive/blob/master/ql/src/java/org/apache/hadoop/hive/ql/io/parquet/vector/VectorizedParquetRecordReader.java
     private static final String[] PARQUET_LIST_TABLE_COLUMNS = {
-            "id                   INTEGER",
-            "bool_arr             BOOLEAN[]",      // DataType.BOOLARRAY
-            "smallint_arr         SMALLINT[]",     // DataType.INT2ARRAY
-            "int_arr              INTEGER[]",      // DataType.INT4ARRAY
-            "bigint_arr           BIGINT[]",       // DataType.INT8ARRAY
-            "real_arr             REAL[]",         // DataType.FLOAT4ARRAY
-            "double_arr           FLOAT[]",        // DataType.FLOAT8ARRAY
-            "text_arr             TEXT[]",         // DataType.TEXTARRAY
-            "bytea_arr            BYTEA[]",        // DataType.BYTEAARRAY
-            "char_arr             CHAR(15)[]",     // DataType.BPCHARARRAY
-            "varchar_arr          VARCHAR(15)[]",  // DataType.VARCHARARRAY
-            "date_arr             DATE[]",         // DataType.DATEARRAY
-            "numeric_arr          NUMERIC[]"       // DataType.NUMERICARRAY
+            "id                   INTEGER"      ,
+            "bool_arr             BOOLEAN[]"    ,         // DataType.BOOLARRAY
+            "smallint_arr         SMALLINT[]"   ,         // DataType.INT2ARRAY
+            "int_arr              INTEGER[]"    ,         // DataType.INT4ARRAY
+            "bigint_arr           BIGINT[]"     ,         // DataType.INT8ARRAY
+            "real_arr             REAL[]"       ,         // DataType.FLOAT4ARRAY
+            "double_arr           FLOAT[]"      ,         // DataType.FLOAT8ARRAY
+            "text_arr             TEXT[]"       ,         // DataType.TEXTARRAY
+            "bytea_arr            BYTEA[]"      ,         // DataType.BYTEAARRAY
+            "char_arr             CHAR(15)[]"   ,         // DataType.BPCHARARRAY
+            "varchar_arr          VARCHAR(15)[]",         // DataType.VARCHARARRAY
+            "date_arr             DATE[]"       ,         // DataType.DATEARRAY
+            "numeric_arr          NUMERIC[]"              // DataType.NUMERICARRAY
     };
 
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = {
-            "id                   integer"              ,
+            "id                   int"                  ,
             "bool_arr             array<boolean>"       ,           // DataType.BOOLARRAY
             "smallint_arr         array<smallint>"      ,           // DataType.INT2ARRAY
             "int_arr              array<int>"           ,           // DataType.INT4ARRAY
@@ -250,7 +250,7 @@ public class ParquetWriteTest extends BaseFeature {
         runTincTest("pxf.features.parquet.write_list.timestamp_list.runTest");
     }
 
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "security"})
     public void parquetWriteListsReadWithHive() throws Exception {
         // init only here, not in beforeClass() method as other tests run in environments without Hive
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
