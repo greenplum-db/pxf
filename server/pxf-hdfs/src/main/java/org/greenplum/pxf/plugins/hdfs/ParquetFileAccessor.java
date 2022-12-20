@@ -451,8 +451,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             LOG.warn(String.format("Schema field count %s doesn't match column count %s", schema.getFieldCount(), columns.size()));
         }
 
-        for (int i = 0; i < schema.getFieldCount(); i++) {
-            Type type = schema.getType(i);
+        for (Type type : schema.getFields()) {
             if (!type.isPrimitive()) {
                 validateComplexType(type.asGroupType());
             }

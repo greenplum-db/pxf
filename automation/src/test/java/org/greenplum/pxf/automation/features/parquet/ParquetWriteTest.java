@@ -83,19 +83,19 @@ public class ParquetWriteTest extends BaseFeature {
     };
 
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = {
-            "id                   integer",
-            "bool_arr             array<boolean>",        // DataType.BOOLARRAY
-            "smallint_arr         array<smallint>",       // DataType.INT2ARRAY
-            "int_arr              array<int>",            // DataType.INT4ARRAY
-            "bigint_arr           array<bigint>",         // DataType.INT8ARRAY
-            "real_arr             array<float>",          // DataType.FLOAT4ARRAY
-            "double_arr            array<double>",        // DataType.FLOAT8ARRAY
-            "text_arr             array<string>",         // DataType.TEXTARRAY
-            "bytea_arr            array<binary>",         // DataType.BYTEAARRAY
-            "char_arr             array<char(15)>",       // DataType.BPCHARARRAY
-            "varchar_arr          array<varchar(15)>",    // DataType.VARCHARARRAY
-            "date_arr             array<date>",           // DataType.DATEARRAY
-            "numeric_arr          array<decimal(38,18)>", // DataType.NUMERICARRAY
+            "id                   integer"              ,
+            "bool_arr             array<boolean>"       ,           // DataType.BOOLARRAY
+            "smallint_arr         array<smallint>"      ,           // DataType.INT2ARRAY
+            "int_arr              array<int>"           ,           // DataType.INT4ARRAY
+            "bigint_arr           array<bigint>"        ,           // DataType.INT8ARRAY
+            "real_arr             array<float>"         ,           // DataType.FLOAT4ARRAY
+            "double_arr           array<double>"        ,           // DataType.FLOAT8ARRAY
+            "text_arr             array<string>"        ,           // DataType.TEXTARRAY
+            "bytea_arr            array<binary>"        ,           // DataType.BYTEAARRAY
+            "char_arr             array<char(15)>"      ,           // DataType.BPCHARARRAY
+            "varchar_arr          array<varchar(15)>"   ,           // DataType.VARCHARARRAY
+            "date_arr             array<date>"          ,           // DataType.DATEARRAY
+            "numeric_arr          array<decimal(38,18)>",           // DataType.NUMERICARRAY
     };
 
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
