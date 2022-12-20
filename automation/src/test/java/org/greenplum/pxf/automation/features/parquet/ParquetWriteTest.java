@@ -79,7 +79,7 @@ public class ParquetWriteTest extends BaseFeature {
             "char_arr             CHAR(15)[]",     // DataType.BPCHARARRAY
             "varchar_arr          VARCHAR(15)[]",  // DataType.VARCHARARRAY
             "date_arr             DATE[]",         // DataType.DATEARRAY
-            "numeric_arr          NUMERIC[]",      // DataType.NUMERICARRAY
+            "numeric_arr          NUMERIC[]"       // DataType.NUMERICARRAY
     };
 
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = {
@@ -95,12 +95,12 @@ public class ParquetWriteTest extends BaseFeature {
             "char_arr             array<char(15)>"      ,           // DataType.BPCHARARRAY
             "varchar_arr          array<varchar(15)>"   ,           // DataType.VARCHARARRAY
             "date_arr             array<date>"          ,           // DataType.DATEARRAY
-            "numeric_arr          array<decimal(38,18)>",           // DataType.NUMERICARRAY
+            "numeric_arr          array<decimal(38,18)>"            // DataType.NUMERICARRAY
     };
 
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
             "id            INTEGER",
-            "tm_arr        TIMESTAMP[]",
+            "tm_arr        TIMESTAMP[]"
     };
     private String hdfsPath;
     private ProtocolEnum protocol;
@@ -250,7 +250,7 @@ public class ParquetWriteTest extends BaseFeature {
         runTincTest("pxf.features.parquet.write_list.timestamp_list.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb"})
     public void parquetWriteListsReadWithHive() throws Exception {
         // init only here, not in beforeClass() method as other tests run in environments without Hive
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
@@ -267,7 +267,6 @@ public class ParquetWriteTest extends BaseFeature {
         hiveTable.setStoredAs("PARQUET");
         hive.createTableAndVerify(hiveTable);
 
-        // the JDBC profile cannot handle binary, time and uuid types
         String ctasHiveQuery = new StringJoiner(",",
                 "CREATE TABLE " + hiveTable.getFullName() + "_ctas AS SELECT ", " FROM " + hiveTable.getFullName() + " ORDER BY id")
                 .add("id")
