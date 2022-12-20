@@ -85,6 +85,11 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     private ShellSystemObject namenodeSso;
     private String namenodePrincipal;
     private String namenodeKeytab;
+    private String relativeWorkingDirectory;
+
+    public String getRelativeWorkingDirectory() {
+        return relativeWorkingDirectory;
+    }
 
     public Hdfs() {
 
@@ -620,14 +625,21 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     }
 
     public void setWorkingDirectory(String workingDirectory) {
+        this.relativeWorkingDirectory = workingDirectory;
+
         this.workingDirectory = workingDirectory;
 
         if (workingDirectory != null) {
             String basePath = getBasePath();
+            String uuid = UUID.randomUUID().toString();
+
+            this.relativeWorkingDirectory = workingDirectory
+                    .replace("${base.path}/", "")
+                    .replace("__UUID__", uuid);
 
             this.workingDirectory = workingDirectory
                     .replace("${base.path}", basePath)
-                    .replace("__UUID__", UUID.randomUUID().toString());
+                    .replace("__UUID__", uuid);
         }
     }
 

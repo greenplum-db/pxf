@@ -294,15 +294,24 @@ public class ParquetWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteListsUserProvidedSchemaFile_ValidSchema() throws Exception {
+
         String writeTableName = "parquet_list_user_provided_schema_on_hcfs_write";
         String readTableName = "parquet_list_user_provided_schema_on_hcfs_read";
 
         String fullTestPath = hdfsPath + "parquet_write_lists_with_user_provided_schema_file_on_hcfs";
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
 
-        String schemaPath = hdfsPath.replaceFirst("/$", "_schema/parquet_list.schema");
-        hdfs.copyFromLocal(resourcePath + "parquet_list.schema", schemaPath);
-        schemaPath = "/" + schemaPath;
+        String schemaPath;
+        ProtocolEnum protocol = ProtocolUtils.getProtocol();
+        String absoluteSchemaPath = hdfs.getWorkingDirectory() + "/parquet_schema/parquet_list.schema";
+        if (protocol == ProtocolEnum.FILE) {
+            // we expect user to provide relative path for the schema file
+            schemaPath = hdfs.getRelativeWorkingDirectory() + "/parquet_schema/parquet_list.schema";
+        } else {
+            schemaPath = "/" + absoluteSchemaPath;
+        }
+
+        hdfs.copyFromLocal(resourcePath + "parquet_list.schema", absoluteSchemaPath);
         exTable.setExternalDataSchema(schemaPath);
         // update the exTable with schema file provided
         gpdb.createTableAndVerify(exTable);
