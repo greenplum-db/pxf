@@ -48,8 +48,8 @@ PXF uses the following data type mapping when reading Parquet data:
 | Parquet Physical Type | Parquet Logical Type | PXF/Greenplum Data Type |
 |-------------------|---------------|--------------------------|
 | boolean | -- | Boolean |
-| byte\_array | -- | Bytea |
-| byte\_array | String | Text |
+| binary \(byte\_array\) | -- | Bytea |
+| binary \(byte\_array\) | String | Text |
 | double | -- | Float8 |
 | fixed\_len\_byte\_array | Decimal | Numeric |
 | float | -- | Real |
@@ -68,9 +68,8 @@ PXF can read a Parquet `LIST` nested type when it represents a one dimensional a
 | Parquet Data Type | PXF/Greenplum Data Type |
 |-------------------|-------------------------|
 | list of \<boolean> | Boolean[] |
-| list of \<byte\_array> | Bytea[] |
-| list of \<byte\_array> (UTF8) | Date[] |
-| list of \<byte\_array> (String) | Text[] |
+| list of \<binary>  | Bytea[] |
+| list of \<binary> (UTF8) | Text[] |
 | list of \<double> | Float8[] |
 | list of \<fixed\_len\_byte\_array> (Decimal) | Numeric[] |
 | list of \<float> | Real[] |
