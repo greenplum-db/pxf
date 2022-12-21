@@ -59,7 +59,7 @@ PXF uses the following data type mapping when reading Parquet data:
 | int32 | -- | Integer |
 | int64 | Decimal | Numeric |
 | int64 | -- | Bigint |
-| int96 | Timestamp | Timestamp |
+| int96 | -- | Timestamp |
 
 **Note**: PXF supports filter predicate pushdown on all parquet data types listed above, *except* the `fixed_len_byte_array` and `int96` types.
 
