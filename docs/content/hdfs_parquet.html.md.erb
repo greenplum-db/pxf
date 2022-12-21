@@ -164,7 +164,7 @@ Parquet files that you write to HDFS with PXF have the following naming format: 
 
 ## <a id="parquet_write"></a> Example
 
-This example utilizes the data schema introduced in [Example: Reading Text Data on HDFS](hdfs_text.html#profile_text_query) and adds a new column, `item_quantity_per_order`, an array of `number_of_orders` length that identifies the number of items in each order.
+This example utilizes the data schema introduced in [Example: Reading Text Data on HDFS](hdfs_text.html#profile_text_query) and adds a new column, `item_quantity_per_order`, an array with length equal to `number_of_orders`, that identifies the number of items in each order.
 
 | Column Name  | Data Type |
 |-------|-------------------------------------|
