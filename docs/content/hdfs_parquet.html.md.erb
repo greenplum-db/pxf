@@ -54,7 +54,6 @@ PXF uses the following data type mapping when reading Parquet data:
 | fixed\_len\_byte\_array | Decimal | Numeric |
 | float | -- | Real |
 | int32 | int_8 | Smallint |
-| int32 | int_16, signed | Smallint |
 | int32 | Date | Date |
 | int32 | Decimal | Numeric |
 | int32 | -- | Integer |
@@ -76,7 +75,6 @@ PXF can read a Parquet `LIST` nested type when it represents a one dimensional a
 | list of \<fixed\_len\_byte\_array> (Decimal) | Numeric[] |
 | list of \<float> | Real[] |
 | list of \<int32> (int_8) | Smallint[] |
-| list of \<int32> (int_16, signed) | Smallint[] |
 | list of \<int32> (Date) | Date[] |
 | list of \<int32> (Decimal) | Numeric[] |
 | list of \<int32> | Integer[] |
