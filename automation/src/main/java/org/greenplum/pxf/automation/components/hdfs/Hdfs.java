@@ -87,10 +87,6 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     private String namenodeKeytab;
     private String relativeWorkingDirectory;
 
-    public String getRelativeWorkingDirectory() {
-        return relativeWorkingDirectory;
-    }
-
     public Hdfs() {
 
     }
@@ -641,6 +637,10 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                     .replace("${base.path}", basePath)
                     .replace("__UUID__", uuid);
         }
+    }
+
+    public String getRelativeWorkingDirectory() {
+        return relativeWorkingDirectory;
     }
 
     public String getPort() {

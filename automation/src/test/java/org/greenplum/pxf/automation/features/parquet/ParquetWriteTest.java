@@ -332,9 +332,17 @@ public class ParquetWriteTest extends BaseFeature {
         String fullTestPath = hdfsPath + "parquet_write_list_with_user_provided_invalid_schema_file";
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
 
-        String schemaPath = hdfsPath.replaceFirst("/$", "_schema/invalid_parquet_list.schema");
-        hdfs.copyFromLocal(resourcePath + "invalid_parquet_list.schema", schemaPath);
-        schemaPath = "/" + schemaPath;
+        String schemaPath;
+        ProtocolEnum protocol = ProtocolUtils.getProtocol();
+        String absoluteSchemaPath = hdfs.getWorkingDirectory() + "/parquet_schema/invalid_parquet_list.schema";
+        if (protocol == ProtocolEnum.FILE) {
+            // we expect user to provide relative path for the schema file
+            schemaPath = hdfs.getRelativeWorkingDirectory() + "/parquet_schema/invalid_parquet_list.schema";
+        } else {
+            schemaPath = "/" + absoluteSchemaPath;
+        }
+
+        hdfs.copyFromLocal(resourcePath + "invalid_parquet_list.schema", absoluteSchemaPath);
         exTable.setExternalDataSchema(schemaPath);
         // update the exTable with schema file provided
         gpdb.createTableAndVerify(exTable);
@@ -398,7 +406,7 @@ public class ParquetWriteTest extends BaseFeature {
                     .add(String.format("'{%d}'", 10L + i % 32000))                                   // DataType.INT2ARRAY
                     .add(String.format("'{%d}'", 100L + i))                                          // DataType.INT4ARRAY
                     .add(String.format("'{%d}'", 123456789000000000L + i))                           // DataType.INT8ARRAY
-                    .add(String.format("'{%f}'", Float.valueOf(i + 0.00001f * i)))                // DataType.FLOAT4ARRAY
+                    .add(String.format("'{%.4f}'", Float.valueOf(i + 0.00001f * i)))              // DataType.FLOAT4ARRAY
                     .add(String.format("'{%f}'", i + Math.PI))                                       // DataType.FLOAT8ARRAY
                     .add(String.format("'{\"row-%02d\"}'", i))                                       // DataType.TEXTARRAY
                     .add(String.format("'{\\\\x%02d%02d}'::bytea[]", i % 100, (i + 1) % 100))        // DataType.BYTEAARRAY
@@ -426,7 +434,7 @@ public class ParquetWriteTest extends BaseFeature {
                     .add(String.format("[%d]", 10L + i % 32000))                                        // DataType.INT2ARRAY
                     .add(String.format("[%d]", 100L + i))                                               // DataType.INT4ARRAY
                     .add(String.format("[%d]", 123456789000000000L + i))                                // DataType.INT8ARRAY
-                    .add(String.format("[%s]", Float.valueOf(i + 0.00001f * i)))                     // DataType.FLOAT4ARRAY
+                    .add(String.format("[%.4f]", Float.valueOf(i + 0.00001f * i)))                   // DataType.FLOAT4ARRAY
                     .add(String.format("[%f]", i + Math.PI))                                            // DataType.FLOAT8ARRAY
                     .add(String.format("[\"row-%02d\"]", i))                                            // DataType.TEXTARRAY
                     .add(String.format("[\\\\x%02d%02d]", i % 100, (i + 1) % 100))                      // DataType.BYTEAARRAY
