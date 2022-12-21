@@ -70,27 +70,61 @@ PXF uses the following data type mapping when reading Parquet data:
 
 PXF uses the following data type mapping when writing Parquet data:
 
-| PXF/Greenplum Data Type | Original Type | Parquet Data Type |
+| PXF/Greenplum Data Type | Parquet Logical Type | Parquet Physical Type |
 |-------------------|---------------|--------------------------|
-| Boolean | -- | boolean |
-| Bytea | -- | binary |
 | Bigint | -- | int64 |
-| SmallInt | int_16 | int32 |
-| Integer | -- | int32 |
-| Real | -- | float |
+| Boolean | -- | boolean |
+| Bpchar | UTF8 | binary (byte\_array) |
+| Bytea | -- | binary (byte\_array) |
+| Date | Date | int32 |
 | Float8 | -- | double |
+| Integer | -- | int32 |
 | Numeric/Decimal | Decimal | fixed\_len\_byte\_array |
+| Real | -- | float |
+| SmallInt | int\_8 | int32 |
+| Text | UTF8 | binary (byte\_array) |
 | Timestamp<sup>1</sup> | -- | int96 |
 | Timestamptz<sup>2</sup> | -- | int96 |
-| Date | date | int32 |
-| Time | utf8 | binary |
-| Varchar | utf8 | binary |
-| Text | utf8 | binary |
+| Varchar | UTF8 | binary (byte\_array) |
 | OTHERS | -- | UNSUPPORTED |
 
 </br><sup>1</sup>&nbsp;PXF localizes a <code>Timestamp</code> to the current system time zone and converts it to universal time (UTC) before finally converting to <code>int96</code>.
-</br><sup>2</sup>&nbsp;PXF converts a <code>Timestamptz</code> to a UTC <code>timestamp</code> and then converts to <code>int96</code>. PXF loses the time zone information during this conversion.
+</br><sup>2</sup>&nbsp;PXF converts a <code>Timestamptz</code> to a UTC <code>timestamp</code> in the current system time timezone, and then converts to <code>int96</code>. PXF loses the time zone information during this conversion.
 
+PXF can write a one-dimensional `LIST` of certain Parquet data types. The supported mappings follow:
+
+| PXF/Greenplum Data Type |  Parquet Data Type |
+|-------------------|--------------------------|
+| Bigint[] | list of int64 |
+| Boolean[] | list of boolean |
+| Bpchar[] |  list of binary (UTF8) |
+| Bytea[] | list of binary |
+| Date[] | list of int32 (Date) |
+| Float8[] | list of double |
+| Integer[] | list of int32 |
+| Numeric[]/Decimal[] | list of fixed\_len\_byte\_array (Decimal) |
+| Real[] | list of float |
+| SmallInt[] | list of int32 (int_8) |
+| Text[] |  list of binary (UTF8) |
+| Timestamp[]<sup>1</sup> | list of int96 |
+| Timestamptz[]<sup>2</sup> | list of int96 |
+| Varchar[] | list of binary (UTF8) |
+| OTHERS | UNSUPPORTED |
+
+### <a id="schema "></a>About Parquet Schemas and Data
+
+Parquet is a columnar storage format. A Parquet data file contains a compact binary representation of the data. The *schema* defines the structure of the data, and is composed of the same primitive and complex types identified in the data type mapping section above.
+
+A Parquet data file may include an embedded schema. Or, you can specify the schema that PXF uses to write the data to HDFS via the `SCHEMA` custom option in the `CREATE EXTERNAL TABLE` `LOCATION` clause \(described below\):
+
+| External Table Type  | `SCHEMA` Specified? | Behaviour |
+|-------|--------------------------|-----------|
+| writable   | yes | PXF uses the specified schema. |
+| writable   | no | PXF creates the Parquet schema based on the external table definition. |
+
+When you provide the Parquet schema file to PXF, the file must reside in the same location on each Greenplum Database host **or** the file may reside on the Hadoop file system. PXF first searches for an absolute file path on the Greenplum hosts. If PXF does not find the schema file there, it searches for the file relative to the PXF classpath. If PXF cannot find the schema file locally, it searches for the file on HDFS.
+
+The `$PXF_BASE/conf` directory is in the PXF classpath. PXF can locate an Parquet schema file that you add to this directory on every Greenplum Database host.
 
 ## <a id="profile_cet"></a>Creating the External Table
 
@@ -135,7 +169,7 @@ The PXF `hdfs:parquet` profile supports encoding- and compression-related write 
 | ENABLE\_DICTIONARY | A boolean value that specifies whether or not to enable dictionary encoding. The default value is `true`; dictionary encoding is enabled when PXF writes Parquet files. |
 | DICTIONARY\_PAGE\_SIZE | When dictionary encoding is enabled, there is a single dictionary page per column, per row group. `DICTIONARY_PAGE_SIZE` is similar to `PAGE_SIZE`, but for the dictionary. The default dictionary page size is `1 * 1024 * 1024` bytes. |
 | PARQUET_VERSION | The Parquet version; PXF supports the values `v1` and `v2` for this option. The default Parquet version is `v1`. |
-| SCHEMA | The location of the Parquet schema file on the file system of the specified `SERVER`. |
+| SCHEMA | The absolute path to the Parquet schema file on the Greenplum host or on HDFS, or the relative path to the schema file on the host. |
 
 **Note**: You must explicitly specify `uncompressed` if you do not want PXF to compress the data.
 
