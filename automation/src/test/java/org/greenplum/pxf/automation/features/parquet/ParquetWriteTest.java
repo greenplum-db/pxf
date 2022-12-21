@@ -1,12 +1,12 @@
 package org.greenplum.pxf.automation.features.parquet;
 
 import jsystem.framework.system.SystemManagerImpl;
-import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.components.hive.Hive;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
+import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
@@ -32,6 +32,8 @@ public class ParquetWriteTest extends BaseFeature {
     private static final String PARQUET_TIMESTAMP_LIST_TYPES = "parquet_timestamp_list_type.parquet";
     private static final String PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE = "undefined_precision_numeric.parquet";
     private static final String PARQUET_NUMERIC_FILE = "numeric.parquet";
+    private static final String HIVE_JDBC_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
+    private static final String HIVE_JDBC_URL_PREFIX = "jdbc:hive2://";
     private static final String[] PARQUET_PRIMITIVE_TABLE_COLUMNS = new String[]{
             "s1    TEXT"            ,
             "s2    TEXT"            ,
@@ -98,6 +100,22 @@ public class ParquetWriteTest extends BaseFeature {
             "numeric_arr          array<decimal(38,18)>"            // DataType.NUMERICARRAY
     };
 
+    // JDBC dosen't support array, so convert array into text type for comparison
+    private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE = {
+            "id                   int",
+            "bool_arr             text",           // DataType.BOOLARRAY
+            "smallint_arr         text",           // DataType.INT2ARRAY
+            "int_arr              text",           // DataType.INT4ARRAY
+            "bigint_arr           text",           // DataType.INT8ARRAY
+            "real_arr             text",           // DataType.FLOAT4ARRAY
+            "double_arr           text",           // DataType.FLOAT8ARRAY
+            "text_arr             text",           // DataType.TEXTARRAY
+            "bytea_arr            text",           // DataType.BYTEAARRAY
+            "char_arr             text",           // DataType.BPCHARARRAY
+            "varchar_arr          text",           // DataType.VARCHARARRAY
+            "date_arr             text",           // DataType.DATEARRAY
+            "numeric_arr          text"            // DataType.NUMERICARRAY
+    };
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
             "id            INTEGER",
             "tm_arr        TIMESTAMP[]"
@@ -255,7 +273,8 @@ public class ParquetWriteTest extends BaseFeature {
         // init only here, not in beforeClass() method as other tests run in environments without Hive
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
 
-        String writeTableName = "pxf_parquet_write_list_read_with_hive";
+        String writeTableName = "pxf_parquet_write_list_read_with_hive_writable";
+        String readTableName = "pxf_parquet_write_list_read_with_hive_readable";
         String fullTestPath = hdfsPath + "parquet_write_list_read_with_hive";
 
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
@@ -287,9 +306,22 @@ public class ParquetWriteTest extends BaseFeature {
         hive.runQuery("DROP TABLE IF EXISTS " + hiveTable.getFullName() + "_ctas");
         hive.runQuery(ctasHiveQuery);
 
+        // Check the bytea_array using the following way since the JDBC profile cannot handle binary
         Table hiveResultTable = new Table(hiveTable.getFullName() + "_ctas", PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE);
-        hive.queryResults(hiveResultTable, "SELECT * FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
-        assertHiveQueryResultData(hiveResultTable.getData());
+        hive.queryResults(hiveResultTable, "SELECT id,bytea_arr FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
+        assertHiveByteaArrayData(hiveResultTable.getData());
+
+        // use the Hive JDBC profile to avoid using the PXF Parquet reader implementation
+        String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
+
+        ExternalTable exHiveJdbcTable = TableFactory.getPxfJdbcReadableTable(
+                readTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE,
+                hiveTable.getName() + "_ctas", HIVE_JDBC_DRIVER_CLASS, jdbcUrl, null);
+        exHiveJdbcTable.setHost(pxfHost);
+        exHiveJdbcTable.setPort(pxfPort);
+        gpdb.createTableAndVerify(exHiveJdbcTable);
+
+        runTincTest("pxf.features.parquet.write_list.write_list_read_with_hive.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -420,38 +452,21 @@ public class ParquetWriteTest extends BaseFeature {
         gpdb.runQuery(insertStatement.toString());
     }
 
-    private void assertHiveQueryResultData(List<List<String>> queryResultData) {
+    private void assertHiveByteaArrayData(List<List<String>> queryResultData) {
         PgUtilities pgUtilities = new PgUtilities();
 
         for (int i = 0; i < queryResultData.size(); i++) {
-            // remove trailing zeros of numeric
-            String numericString = String.format("12345678900000.00000%s", i);
-            numericString = numericString.indexOf(".") < 0 ? numericString : numericString.replaceAll("0*$", "").replaceAll("\\.$", "");
-
             StringJoiner rowBuilder = new StringJoiner(", ", "[", "]")
-                    .add(String.valueOf(i))    // always not-null row index, column index starts with 0 after it
-                    .add(String.format("[%b]", i % 2 != 0))                                             // DataType.BOOLEANARRAY
-                    .add(String.format("[%d]", 10L + i % 32000))                                        // DataType.INT2ARRAY
-                    .add(String.format("[%d]", 100L + i))                                               // DataType.INT4ARRAY
-                    .add(String.format("[%d]", 123456789000000000L + i))                                // DataType.INT8ARRAY
-                    .add(String.format("[%.4f]", Float.valueOf(i + 0.00001f * i)))                   // DataType.FLOAT4ARRAY
-                    .add(String.format("[%f]", i + Math.PI))                                            // DataType.FLOAT8ARRAY
-                    .add(String.format("[\"row-%02d\"]", i))                                            // DataType.TEXTARRAY
+                    .add(String.valueOf(i))    // always not-null row index, column index starts with 0 after it                    // DataType.TEXTARRAY
                     .add(String.format("[\\\\x%02d%02d]", i % 100, (i + 1) % 100))                      // DataType.BYTEAARRAY
-                    // 15 characters
-                    .add(String.format("[\"%s%s\"]", i, StringUtils.repeat(" ", i > 9 ? 13 : 14)))  // DataType.BPCHARARRAY
-                    .add(String.format("[\"var%02d\"]", i))                                             // DataType.VARCHARARRAY
-                    .add(String.format("[\"2010-01-%02d\"]", (i % 30) + 1))                             // DataType.DATEARRAY
-                    .add(String.format("[%s]", numericString))                                           // DataType.NUMERICARRAY
                     ;
 
             // Only 1 bytea element in bytea_array. Need to convert the bytea result in the array into a hex string
-            String byteaArrayString = queryResultData.get(i).get(8);
+            String byteaArrayString = queryResultData.get(i).get(1);
             byteaArrayString = byteaArrayString.substring(1, byteaArrayString.length() - 1);
             ByteBuffer byteBuffer = ByteBuffer.wrap(byteaArrayString.getBytes());
             String hexString = pgUtilities.encodeByteaHex(byteBuffer); // \x0001, need another \ when added into string
-            queryResultData.get(i).set(8, "[\\" + hexString + "]");
-
+            queryResultData.get(i).set(1, "[\\" + hexString + "]");
             assertEquals(rowBuilder.toString(), queryResultData.get(i).toString());
         }
     }
