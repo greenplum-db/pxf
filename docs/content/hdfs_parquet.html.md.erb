@@ -65,7 +65,7 @@ PXF uses the following data type mapping when reading Parquet data:
 
 **Note**: PXF supports filter predicate pushdown on all parquet data types listed above, *except* the `fixed_len_byte_array` and `int96` types.
 
-PXF can read a Parquet `LIST` nested type when it represents a one dimensional array of certain Parquet types. The supported mappings follow:
+PXF can read a Parquet `LIST` nested type when it represents a one-dimensional array of certain Parquet types. The supported mappings follow:
 
 | Parquet Data Type | PXF/Greenplum Data Type |
 |-------------------|-------------------------|
