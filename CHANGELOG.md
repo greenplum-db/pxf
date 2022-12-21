@@ -6,7 +6,6 @@
 
 - [#872](https://github.com/greenplum-db/pxf/pull/872) Enable automation tests to run against PXF FDW extension
 - [#876](https://github.com/greenplum-db/pxf/pull/876) Parquet write array
-- [#877](https://github.com/greenplum-db/pxf/pull/877) Update shell scripts to use a more consistent style
 - [#879](https://github.com/greenplum-db/pxf/pull/879) Add new SPLIT_BY_FILE option for json profiles
 - [#880](https://github.com/greenplum-db/pxf/pull/880) Allow setting JDBC session-level parallel instructions for Oracle
 - [#885](https://github.com/greenplum-db/pxf/pull/885) Prevent out-of-bounds buffer access
