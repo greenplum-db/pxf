@@ -110,7 +110,6 @@ public class ParquetWriteTest extends BaseFeature {
             "real_arr             text",           // DataType.FLOAT4ARRAY
             "double_arr           text",           // DataType.FLOAT8ARRAY
             "text_arr             text",           // DataType.TEXTARRAY
-            "bytea_arr            text",           // DataType.BYTEAARRAY
             "char_arr             text",           // DataType.BPCHARARRAY
             "varchar_arr          text",           // DataType.VARCHARARRAY
             "date_arr             text",           // DataType.DATEARRAY
