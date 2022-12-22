@@ -74,7 +74,7 @@ PXF uses the following data type mapping when writing Parquet data:
 |-------------------|---------------|--------------------------|
 | Bigint | -- | int64 |
 | Boolean | -- | boolean |
-| Bpchar | UTF8 | binary (byte\_array) |
+| Bpchar<sup>1</sup> | UTF8 | binary (byte\_array) |
 | Bytea | -- | binary (byte\_array) |
 | Date | Date | int32 |
 | Float8 | -- | double |
@@ -83,13 +83,14 @@ PXF uses the following data type mapping when writing Parquet data:
 | Real | -- | float |
 | SmallInt | int\_8 | int32 |
 | Text | UTF8 | binary (byte\_array) |
-| Timestamp<sup>1</sup> | -- | int96 |
-| Timestamptz<sup>2</sup> | -- | int96 |
+| Timestamp<sup>2</sup> | -- | int96 |
+| Timestamptz<sup>3</sup> | -- | int96 |
 | Varchar | UTF8 | binary (byte\_array) |
 | OTHERS | -- | UNSUPPORTED |
 
-</br><sup>1</sup>&nbsp;PXF localizes a <code>Timestamp</code> to the current system time zone and converts it to universal time (UTC) before finally converting to <code>int96</code>.
-</br><sup>2</sup>&nbsp;PXF converts a <code>Timestamptz</code> to a UTC <code>timestamp</code> and then converts to <code>int96</code>. PXF loses the time zone information during this conversion.
+</br><sup>1</sup>&nbsp;Because Parquet does not save the field length, a Bpchar that PXF writes to Parquet will be a text of undefined length.
+</br><sup>2</sup>&nbsp;PXF localizes a <code>Timestamp</code> to the current system time zone and converts it to universal time (UTC) before finally converting to <code>int96</code>.
+</br><sup>3</sup>&nbsp;PXF converts a <code>Timestamptz</code> to a UTC <code>timestamp</code> and then converts to <code>int96</code>. PXF loses the time zone information during this conversion.
 
 PXF can write a one-dimensional `LIST` of certain Parquet data types. The supported mappings follow:
 
@@ -97,7 +98,7 @@ PXF can write a one-dimensional `LIST` of certain Parquet data types. The suppor
 |-------------------|--------------------------|
 | Bigint[] | list of \<int64> |
 | Boolean[] | list of \<boolean> |
-| Bpchar[] |  list of \<binary> (UTF8) |
+| Bpchar[]<sup>1</sup> |  list of \<binary> (UTF8) |
 | Bytea[] | list of \<binary> |
 | Date[] | list of \<int32> (Date) |
 | Float8[] | list of \<double> |
@@ -106,8 +107,8 @@ PXF can write a one-dimensional `LIST` of certain Parquet data types. The suppor
 | Real[] | list of \<float> |
 | SmallInt[] | list of \<int32> (int_8) |
 | Text[] |  list of \<binary> (UTF8) |
-| Timestamp[]<sup>1</sup> | list of \<int96> |
-| Timestamptz[]<sup>2</sup> | list of \<int96> |
+| Timestamp[]<sup>2</sup> | list of \<int96> |
+| Timestamptz[]<sup>3</sup> | list of \<int96> |
 | Varchar[] | list of \<binary> (UTF8) |
 | OTHERS | UNSUPPORTED |
 
