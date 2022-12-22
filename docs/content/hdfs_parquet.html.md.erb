@@ -70,23 +70,23 @@ PXF uses the following data type mapping when reading Parquet data:
 
 PXF uses the following data type mapping when writing Parquet data:
 
-| PXF/Greenplum Data Type | Parquet Logical Type | Parquet Physical Type |
+| PXF/Greenplum Data Type | Parquet Physical Type | Parquet Logical Type |
 |-------------------|---------------|--------------------------|
-| Bigint | -- | int64 |
-| Boolean | -- | boolean |
-| Bpchar<sup>1</sup> | UTF8 | binary (byte\_array) |
-| Bytea | -- | binary (byte\_array) |
-| Date | Date | int32 |
-| Float8 | -- | double |
-| Integer | -- | int32 |
-| Numeric/Decimal | Decimal | fixed\_len\_byte\_array |
-| Real | -- | float |
-| SmallInt | int\_8 | int32 |
-| Text | UTF8 | binary (byte\_array) |
-| Timestamp<sup>2</sup> | -- | int96 |
-| Timestamptz<sup>3</sup> | -- | int96 |
-| Varchar | UTF8 | binary (byte\_array) |
-| OTHERS | -- | UNSUPPORTED |
+| Bigint | int64 | -- |
+| Boolean | boolean | -- |
+| Bpchar<sup>1</sup> |  binary (byte\_array) | UTF8 |
+| Bytea | binary (byte\_array) | -- |
+| Date |  int32 | Date |
+| Float8 | double | -- |
+| Integer | int32 | -- |
+| Numeric/Decimal | fixed\_len\_byte\_array | Decimal |
+| Real | float | -- |
+| SmallInt | int32 | int\_8 |
+| Text | binary (byte\_array) | UTF8 |
+| Timestamp<sup>2</sup> | int96 | -- |
+| Timestamptz<sup>3</sup> | int96 | -- |
+| Varchar | binary (byte\_array) | UTF8 |
+| OTHERS | UNSUPPORTED | -- |
 
 </br><sup>1</sup>&nbsp;Because Parquet does not save the field length, a Bpchar that PXF writes to Parquet will be a text of undefined length.
 </br><sup>2</sup>&nbsp;PXF localizes a <code>Timestamp</code> to the current system time zone and converts it to universal time (UTC) before finally converting to <code>int96</code>.
