@@ -116,14 +116,14 @@ PXF can write a one-dimensional `LIST` of certain Parquet data types. The suppor
 
 Parquet is a columnar storage format. A Parquet data file contains a compact binary representation of the data. The *schema* defines the structure of the data, and is composed of the same primitive and complex types identified in the data type mapping section above.
 
-A Parquet data file may include an embedded schema. Or, you can specify the schema that PXF uses to write the data to HDFS via the `SCHEMA` custom option in the `CREATE WRITABLE EXTERNAL TABLE` `LOCATION` clause \(described below\):
+A Parquet data file includes an embedded schema. You can choose to provide the schema that PXF uses to write the data to HDFS via the `SCHEMA` custom option in the `CREATE WRITABLE EXTERNAL TABLE` `LOCATION` clause \(described below\):
 
 | External Table Type  | `SCHEMA` Specified? | Behaviour |
 |-------|--------------------------|-----------|
 | writable   | yes | PXF uses the specified schema. |
 | writable   | no | PXF creates the Parquet schema based on the external table definition. |
 
-When you provide the Parquet schema file to PXF, you must specify the absolute path, and the file must reside in the same location on each Greenplum Database host **or** the file may reside on the Hadoop file system.
+When you provide the Parquet schema file to PXF, you must specify the absolute path to the file, and the file must reside on the Hadoop file system.
 
 ## <a id="profile_cet"></a>Creating the External Table
 
