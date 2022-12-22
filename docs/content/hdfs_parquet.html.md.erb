@@ -95,20 +95,20 @@ PXF can write a one-dimensional `LIST` of certain Parquet data types. The suppor
 
 | PXF/Greenplum Data Type |  Parquet Data Type |
 |-------------------|--------------------------|
-| Bigint[] | list of int64 |
-| Boolean[] | list of boolean |
-| Bpchar[] |  list of binary (UTF8) |
-| Bytea[] | list of binary |
-| Date[] | list of int32 (Date) |
-| Float8[] | list of double |
-| Integer[] | list of int32 |
-| Numeric[]/Decimal[] | list of fixed\_len\_byte\_array (Decimal) |
-| Real[] | list of float |
-| SmallInt[] | list of int32 (int_8) |
-| Text[] |  list of binary (UTF8) |
-| Timestamp[]<sup>1</sup> | list of int96 |
-| Timestamptz[]<sup>2</sup> | list of int96 |
-| Varchar[] | list of binary (UTF8) |
+| Bigint[] | list of \<int64> |
+| Boolean[] | list of \<boolean> |
+| Bpchar[] |  list of \<binary> (UTF8) |
+| Bytea[] | list of \<binary> |
+| Date[] | list of \<int32> (Date) |
+| Float8[] | list of \<double> |
+| Integer[] | list of \<int32> |
+| Numeric[]/Decimal[] | list of \<fixed\_len\_byte\_array> (Decimal) |
+| Real[] | list of \<float> |
+| SmallInt[] | list of \<int32> (int_8) |
+| Text[] |  list of \<binary> (UTF8) |
+| Timestamp[]<sup>1</sup> | list of \<int96> |
+| Timestamptz[]<sup>2</sup> | list of \<int96> |
+| Varchar[] | list of \<binary> (UTF8) |
 | OTHERS | UNSUPPORTED |
 
 ### <a id="schema "></a>About Parquet Schemas and Data
