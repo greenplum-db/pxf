@@ -11,11 +11,11 @@ import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
-import org.junit.Ignore;
 import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.sql.Date;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -97,7 +97,7 @@ public class ParquetWriteTest extends BaseFeature {
             "bytea_arr            array<binary>"        ,           // DataType.BYTEAARRAY
             "char_arr             array<char(15)>"      ,           // DataType.BPCHARARRAY
             "varchar_arr          array<varchar(15)>"   ,           // DataType.VARCHARARRAY
-            "date_arr             array<string>"          ,           // DataType.DATEARRAY
+            "date_arr             array<int>"           ,           // DataType.DATEARRAY
             "numeric_arr          array<decimal(38,18)>"            // DataType.NUMERICARRAY
     };
 
@@ -113,7 +113,6 @@ public class ParquetWriteTest extends BaseFeature {
             "text_arr             text",           // DataType.TEXTARRAY
             "char_arr             text",           // DataType.BPCHARARRAY
             "varchar_arr          text",           // DataType.VARCHARARRAY
-            "date_arr             text",           // DataType.DATEARRAY
             "numeric_arr          text"            // DataType.NUMERICARRAY
     };
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
@@ -304,7 +303,7 @@ public class ParquetWriteTest extends BaseFeature {
                 .add("bytea_arr")
                 .add("char_arr")
                 .add("varchar_arr")
-                .add("array(cast(date_add('1970-01-01', cast(date_arr[0] as int)) as string)) as date_arr")
+                .add("date_arr")
                 .add("numeric_arr")
                 .toString();
 
@@ -313,8 +312,8 @@ public class ParquetWriteTest extends BaseFeature {
 
         // Check the bytea_array using the following way since the JDBC profile cannot handle binary
         Table hiveResultTable = new Table(hiveTable.getFullName() + "_ctas", PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE);
-        hive.queryResults(hiveResultTable, "SELECT id,bytea_arr FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
-        assertHiveByteaArrayData(hiveResultTable.getData());
+        hive.queryResults(hiveResultTable, "SELECT id,bytea_arr,date_arr FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
+        assertHiveByteaArrayDataAndDateArrayDate(hiveResultTable.getData());
 
         // use the Hive JDBC profile to avoid using the PXF Parquet reader implementation
         String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
@@ -457,13 +456,14 @@ public class ParquetWriteTest extends BaseFeature {
         gpdb.runQuery(insertStatement.toString());
     }
 
-    private void assertHiveByteaArrayData(List<List<String>> queryResultData) {
+    private void assertHiveByteaArrayDataAndDateArrayDate(List<List<String>> queryResultData) {
         PgUtilities pgUtilities = new PgUtilities();
 
         for (int i = 0; i < queryResultData.size(); i++) {
             StringJoiner rowBuilder = new StringJoiner(", ", "[", "]")
-                    .add(String.valueOf(i))    // always not-null row index, column index starts with 0 after it                    // DataType.TEXTARRAY
+                    .add(String.valueOf(i))    // always not-null row index, column index starts with 0 after it
                     .add(String.format("[\\\\x%02d%02d]", i % 100, (i + 1) % 100))                      // DataType.BYTEAARRAY
+                    .add(String.format("[\"2010-01-%02d\"]", (i % 30) + 1))                             // DataType.DATEARRAY
                     ;
 
             // Only 1 bytea element in bytea_array. Need to convert the bytea result in the array into a hex string
@@ -472,6 +472,12 @@ public class ParquetWriteTest extends BaseFeature {
             ByteBuffer byteBuffer = ByteBuffer.wrap(byteaArrayString.getBytes());
             String hexString = pgUtilities.encodeByteaHex(byteBuffer); // \x0001, need another \ when added into string
             queryResultData.get(i).set(1, "[\\" + hexString + "]");
+
+            String dateArrayString = queryResultData.get(i).get(2);
+            dateArrayString = dateArrayString.substring(1, dateArrayString.length() - 1);
+            Integer dateArrayInt = Integer.parseInt(dateArrayString);
+            Date date = new org.apache.hadoop.hive.serde2.io.DateWritable(dateArrayInt).get();
+            queryResultData.get(i).set(2, "[\"" + date.toString() + "\"]");
             assertEquals(rowBuilder.toString(), queryResultData.get(i).toString());
         }
     }
