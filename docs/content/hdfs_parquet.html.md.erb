@@ -122,9 +122,7 @@ A Parquet data file may include an embedded schema. Or, you can specify the sche
 | writable   | yes | PXF uses the specified schema. |
 | writable   | no | PXF creates the Parquet schema based on the external table definition. |
 
-When you provide the Parquet schema file to PXF, the file must reside in the same location on each Greenplum Database host **or** the file may reside on the Hadoop file system. PXF first searches for an absolute file path on the Greenplum hosts. If PXF does not find the schema file there, it searches for the file relative to the PXF classpath. If PXF cannot find the schema file locally, it searches for the file on HDFS.
-
-The `$PXF_BASE/conf` directory is in the PXF classpath. PXF can locate an Parquet schema file that you add to this directory on every Greenplum Database host.
+When you provide the Parquet schema file to PXF, you must specify the absolute path, and the file must reside in the same location on each Greenplum Database host **or** the file may reside on the Hadoop file system.
 
 ## <a id="profile_cet"></a>Creating the External Table
 
@@ -169,7 +167,7 @@ The PXF `hdfs:parquet` profile supports encoding- and compression-related write 
 | ENABLE\_DICTIONARY | A boolean value that specifies whether or not to enable dictionary encoding. The default value is `true`; dictionary encoding is enabled when PXF writes Parquet files. |
 | DICTIONARY\_PAGE\_SIZE | When dictionary encoding is enabled, there is a single dictionary page per column, per row group. `DICTIONARY_PAGE_SIZE` is similar to `PAGE_SIZE`, but for the dictionary. The default dictionary page size is `1 * 1024 * 1024` bytes. |
 | PARQUET_VERSION | The Parquet version; PXF supports the values `v1` and `v2` for this option. The default Parquet version is `v1`. |
-| SCHEMA | The absolute path to the Parquet schema file on the Greenplum host or on HDFS, or the relative path to the schema file on the host. |
+| SCHEMA | The absolute path to the Parquet schema file on the Greenplum host or on HDFS. |
 
 **Note**: You must explicitly specify `uncompressed` if you do not want PXF to compress the data.
 
