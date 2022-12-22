@@ -214,3 +214,9 @@ Perform the following procedure to insert some data into the `ex1` directory and
 
     When you select from the `pxf_read_nfs` table here, PXF reads the `somedata.csv` file and the new files that it added to the `ex1/` directory in the previous step.
 
+## <a id="about_schema"></a>About Specifying a Parquet Schema File Location
+
+If you use the `file:parquet` profile to write to an external table that references a Parquet file and you want to provide the Parquet schema, specify the `SCHEMA` custom option in the `LOCATION` clause when you create the writable external table. Refer to the [Creating the External Table](hdfs_parquet.html#profile_cet) discussion in the PXF HDFS Parquet documentation for more information on the options available when you create an external table.
+
+You must set `SCHEMA` to the location of the Parquet schema file on the file system of the specified `SERVER=<server_name>`. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers the file that you specify to be relative to the base path specified.
+
