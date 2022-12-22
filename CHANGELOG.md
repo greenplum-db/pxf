@@ -1,5 +1,24 @@
 # Changelog
 
+## 6.5.0 (12/21/2022)
+
+### Enhancements:
+
+- [#872](https://github.com/greenplum-db/pxf/pull/872) Enable automation tests to run against PXF FDW extension
+- [#876](https://github.com/greenplum-db/pxf/pull/876) Parquet write array
+- [#879](https://github.com/greenplum-db/pxf/pull/879) Add new SPLIT_BY_FILE option for json profiles
+- [#880](https://github.com/greenplum-db/pxf/pull/880) Allow setting JDBC session-level parallel instructions for Oracle
+- [#885](https://github.com/greenplum-db/pxf/pull/885) Prevent out-of-bounds buffer access
+- [#886](https://github.com/greenplum-db/pxf/pull/886) Update jackson-databind to 2.13.4.1
+- [#895](https://github.com/greenplum-db/pxf/pull/895) Parquet read array
+- [#903](https://github.com/greenplum-db/pxf/pull/903) Bump postgresql from 42.4.1 to 42.4.3
+
+### Bug Fixes:
+
+- [#875](https://github.com/greenplum-db/pxf/pull/875) Fix projection of boolean qualifiers whose attrs are not in SELECT list
+- [#879](https://github.com/greenplum-db/pxf/pull/879) Refactor JsonRecordReader and fix incorrect parsing of JSON objects for multi-line JSON
+- [#897](https://github.com/greenplum-db/pxf/pull/897) Add close connection if statementRead is null
+
 ## 6.4.2 (09/19/2022)
 
 ### Bug Fixes:

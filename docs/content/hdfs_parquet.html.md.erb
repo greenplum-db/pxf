@@ -45,26 +45,46 @@ Parquet supports a small set of primitive data types, and uses metadata annotati
 
 PXF uses the following data type mapping when reading Parquet data:
 
-| Parquet Data Type | Original Type | PXF/Greenplum Data Type |
+| Parquet Physical Type | Parquet Logical Type | PXF/Greenplum Data Type |
 |-------------------|---------------|--------------------------|
-| binary (byte_array) | Date | Date |
-| binary (byte_array) | Timestamp_millis | Timestamp |
-| binary (byte_array) | all others | Text |
-| binary (byte_array) | -- | Bytea |
 | boolean | -- | Boolean |
+| binary \(byte\_array\) | -- | Bytea |
+| binary \(byte\_array\) | Date | Date |
+| binary \(byte\_array\) | Timestamp_millis | Timestamp |
+| binary \(byte\_array\) | UTF8 | Text |
 | double | -- | Float8 |
-| fixed\_len\_byte\_array | -- | Numeric |
+| fixed\_len\_byte\_array | Decimal | Numeric |
 | float | -- | Real |
+| int32 | int_8 | Smallint |
 | int32 | Date | Date |
 | int32 | Decimal | Numeric |
-| int32 | int_8 | Smallint |
-| int32 | int_16 | Smallint |
 | int32 | -- | Integer |
 | int64 | Decimal | Numeric |
 | int64 | -- | Bigint |
 | int96 | -- | Timestamp |
 
 **Note**: PXF supports filter predicate pushdown on all parquet data types listed above, *except* the `fixed_len_byte_array` and `int96` types.
+
+PXF can read a Parquet `LIST` nested type when it represents a one-dimensional array of certain Parquet types. The supported mappings follow:
+
+| Parquet Data Type | PXF/Greenplum Data Type |
+|-------------------|-------------------------|
+| list of \<boolean> | Boolean[] |
+| list of \<binary>  | Bytea[] |
+| list of \<binary> (Date) | Date[] |
+| list of \<binary> (Timestamp_millis) | Timestamp[] |
+| list of \<binary> (UTF8) | Text[] |
+| list of \<double> | Float8[] |
+| list of \<fixed\_len\_byte\_array> (Decimal) | Numeric[] |
+| list of \<float> | Real[] |
+| list of \<int32> (int_8) | Smallint[] |
+| list of \<int32> (Date) | Date[] |
+| list of \<int32> (Decimal) | Numeric[] |
+| list of \<int32> | Integer[] |
+| list of \<int64> (Decimal) | Numeric[] |
+| list of \<int64> | Bigint[] |
+| list of \<int96> | Timestamp[] |
+
 
 ### <a id="datatype_map_Write "></a>Write Mapping
 
@@ -176,13 +196,14 @@ Parquet files that you write to HDFS with PXF have the following naming format: 
 
 ## <a id="parquet_write"></a> Example
 
-This example utilizes the data schema introduced in [Example: Reading Text Data on HDFS](hdfs_text.html#profile_text_query).
+This example utilizes the data schema introduced in [Example: Reading Text Data on HDFS](hdfs_text.html#profile_text_query) and adds a new column, `item_quantity_per_order`, an array with length equal to `number_of_orders`, that identifies the number of items in each order.
 
 | Column Name  | Data Type |
 |-------|-------------------------------------|
 | location | text |
 | month | text |
 | number\_of\_orders | int |
+| item\_quantity\_per\_order | int[] |
 | total\_sales | float8 |
 
 In this example, you create a Parquet-format writable external table that uses the default PXF server to reference Parquet-format data in HDFS, insert some data into the table, and then create a readable external table to read the data.
@@ -190,7 +211,7 @@ In this example, you create a Parquet-format writable external table that uses t
 1. Use the `hdfs:parquet` profile to create a writable external table. For example:
 
     ``` sql
-    postgres=# CREATE WRITABLE EXTERNAL TABLE pxf_tbl_parquet (location text, month text, number_of_orders int, total_sales double precision)
+    postgres=# CREATE WRITABLE EXTERNAL TABLE pxf_tbl_parquet (location text, month text, number_of_orders int, item_quantity_per_order int[], total_sales double precision)
         LOCATION ('pxf://data/pxf_examples/pxf_parquet?PROFILE=hdfs:parquet')
       FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
@@ -198,14 +219,14 @@ In this example, you create a Parquet-format writable external table that uses t
 2. Write a few records to the `pxf_parquet` HDFS directory by inserting directly into the `pxf_tbl_parquet` table. For example:
 
     ``` sql
-    postgres=# INSERT INTO pxf_tbl_parquet VALUES ( 'Frankfurt', 'Mar', 777, 3956.98 );
-    postgres=# INSERT INTO pxf_tbl_parquet VALUES ( 'Cleveland', 'Oct', 3812, 96645.37 );
+    postgres=# INSERT INTO pxf_tbl_parquet VALUES ( 'Frankfurt', 'Mar', 3, '{1,11,111}', 3956.98 );
+    postgres=# INSERT INTO pxf_tbl_parquet VALUES ( 'Cleveland', 'Oct', 2, '{3333,7777}', 96645.37 );
     ```
 
 3. Recall that Greenplum Database does not support directly querying a writable external table. To read the data in `pxf_parquet`, create a readable external Greenplum Database referencing this HDFS directory:
 
     ``` sql
-    postgres=# CREATE EXTERNAL TABLE read_pxf_parquet(location text, month text, number_of_orders int, total_sales double precision)
+    postgres=# CREATE EXTERNAL TABLE read_pxf_parquet(location text, month text, number_of_orders int, item_quantity_per_order int[], total_sales double precision)
         LOCATION ('pxf://data/pxf_examples/pxf_parquet?PROFILE=hdfs:parquet')
         FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
@@ -217,10 +238,10 @@ In this example, you create a Parquet-format writable external table that uses t
     ```
 
     ``` pre
-     location  | month | number_of_orders | total_sales
-    -----------+-------+------------------+-------------
-     Frankfurt | Mar   |              777 |     3956.98
-     Cleveland | Oct   |             3812 |     96645.4
+     location  | month | number_of_orders | item_quantity_per_order | total_sales
+    -----------+-------+------------------+-------------------------+-------------
+     Frankfurt | Mar   |              777 | {1,11,111}              |     3956.98
+     Cleveland | Oct   |             3812 | {3333,7777}             |    96645.4
     (2 rows)
     ```
 
