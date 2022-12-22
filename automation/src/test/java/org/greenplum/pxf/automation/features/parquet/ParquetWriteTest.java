@@ -97,7 +97,7 @@ public class ParquetWriteTest extends BaseFeature {
             "bytea_arr            array<binary>"        ,           // DataType.BYTEAARRAY
             "char_arr             array<char(15)>"      ,           // DataType.BPCHARARRAY
             "varchar_arr          array<varchar(15)>"   ,           // DataType.VARCHARARRAY
-            "date_arr             array<date>"          ,           // DataType.DATEARRAY
+            "date_arr             array<string>"          ,           // DataType.DATEARRAY
             "numeric_arr          array<decimal(38,18)>"            // DataType.NUMERICARRAY
     };
 
@@ -272,7 +272,7 @@ public class ParquetWriteTest extends BaseFeature {
      * Do not run this test with "hcfs" group as Hive is not available in the environments prepared for that group
      * Also do not run with "security" group that would require kerberos principal to be included in Hive JDBC URL
      */
-    @Test(groups = {"features", "gpdb"}, enabled = false)
+    @Test(groups = {"features", "gpdb"})
     public void parquetWriteListsReadWithHive() throws Exception {
         // TODO: HDP and HDP3 can pass this test. HIVE 1.1 in CDH doesn't support Parquet Date
         // init only here, not in beforeClass() method as other tests run in environments without Hive
@@ -304,7 +304,7 @@ public class ParquetWriteTest extends BaseFeature {
                 .add("bytea_arr")
                 .add("char_arr")
                 .add("varchar_arr")
-                .add("date_arr")
+                .add("array(cast(date_add('1970-01-01', cast(date_arr[0] as int)) as string)) as date_arr")
                 .add("numeric_arr")
                 .toString();
 
