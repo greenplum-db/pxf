@@ -242,7 +242,7 @@ public class ParquetWriteTest extends BaseFeature {
 
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, bool_arr, smallint_arr, int_arr, bigint_arr, real_arr, " +
-                "double_arr, text_arr, bytea_arr, char_arr, varchar_arr, date_arr, numeric_arr FROM " + PXF_PARQUET_LIST_TYPES);
+                "double_arr, text_arr, bytea_arr, char_arr, varchar_arr, numeric_arr, date_arr FROM " + PXF_PARQUET_LIST_TYPES);
 
         waitForAsyncWriteToSucceedOnHCFS("parquet_write_list");
 
@@ -367,7 +367,7 @@ public class ParquetWriteTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, bool_arr, smallint_arr, int_arr, bigint_arr, real_arr, " +
-                "double_arr, text_arr, bytea_arr, char_arr, varchar_arr, date_arr, numeric_arr FROM " + PXF_PARQUET_LIST_TYPES);
+                "double_arr, text_arr, bytea_arr, char_arr, varchar_arr, numeric_arr, date_arr FROM " + PXF_PARQUET_LIST_TYPES);
 
         waitForAsyncWriteToSucceedOnHCFS("parquet_write_lists_with_user_provided_schema_file_on_hcfs");
 

@@ -50,14 +50,14 @@ message hive_schema {
       OPTIONAL BINARY array_element (UTF8);
     }
   }
-  OPTIONAL group date_arr (LIST) {
-    REPEATED group bag {
-      OPTIONAL INT32 array_element (DATE);
-    }
-  }
   OPTIONAL group numeric_arr (LIST) {
     REPEATED group bag {
       OPTIONAL FIXED_LEN_BYTE_ARRAY (16) array_element (DECIMAL(38, 18));
+    }
+  }
+  OPTIONAL group date_arr (LIST) {
+    REPEATED group bag {
+      OPTIONAL INT32 array_element (DATE);
     }
   }
 }
