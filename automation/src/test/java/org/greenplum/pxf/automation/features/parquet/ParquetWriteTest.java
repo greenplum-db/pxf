@@ -15,7 +15,8 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.sql.Date;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -81,11 +82,12 @@ public class ParquetWriteTest extends BaseFeature {
             "bytea_arr            BYTEA[]"      ,         // DataType.BYTEAARRAY
             "char_arr             CHAR(15)[]"   ,         // DataType.BPCHARARRAY
             "varchar_arr          VARCHAR(15)[]",         // DataType.VARCHARARRAY
-            "date_arr             DATE[]"       ,         // DataType.DATEARRAY
-            "numeric_arr          NUMERIC[]"              // DataType.NUMERICARRAY
+            "numeric_arr          NUMERIC[]"    ,         // DataType.NUMERICARRAY
+            "date_arr             DATE[]"                 // DataType.DATEARRAY
     };
 
-    private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = {
+    // CDH (Hive 1.1) does not support date, so we will add the date_arr column as needed in the test case
+    private static ArrayList<String> PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = new ArrayList<>(Arrays.asList(
             "id                   int"                  ,
             "bool_arr             array<boolean>"       ,           // DataType.BOOLARRAY
             "smallint_arr         array<smallint>"      ,           // DataType.INT2ARRAY
@@ -97,11 +99,10 @@ public class ParquetWriteTest extends BaseFeature {
             "bytea_arr            array<binary>"        ,           // DataType.BYTEAARRAY
             "char_arr             array<char(15)>"      ,           // DataType.BPCHARARRAY
             "varchar_arr          array<varchar(15)>"   ,           // DataType.VARCHARARRAY
-            "date_arr             array<string>"        ,           // DataType.DATEARRAY
             "numeric_arr          array<decimal(38,18)>"            // DataType.NUMERICARRAY
-    };
+    ));
 
-    // JDBC dosen't support array, so convert array into text type for comparison
+    // JDBC doesn't support array, so convert array into text type for comparison
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE = {
             "id                   int",
             "bool_arr             text",           // DataType.BOOLARRAY
@@ -115,6 +116,7 @@ public class ParquetWriteTest extends BaseFeature {
             "varchar_arr          text",           // DataType.VARCHARARRAY
             "numeric_arr          text"            // DataType.NUMERICARRAY
     };
+
     private static final String[] PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS = {
             "id            INTEGER",
             "tm_arr        TIMESTAMP[]"
@@ -273,7 +275,12 @@ public class ParquetWriteTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb"})
     public void parquetWriteListsReadWithHive() throws Exception {
-        // TODO: HDP and HDP3 can pass this test. HIVE 1.1 in CDH doesn't support Parquet Date
+        // CDH (Hive 1.1) does not support PARQUET DATE type. See https://issues.apache.org/jira/browse/HIVE-6384,
+        // So only check the date_arr column if we are not using singlecluster-CDH
+        boolean usingCDH = cluster.getPhdRoot().contains("CDH");
+        if (!usingCDH) {
+            PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.add("date_arr array<date>");
+        }
         // init only here, not in beforeClass() method as other tests run in environments without Hive
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
 
@@ -286,11 +293,11 @@ public class ParquetWriteTest extends BaseFeature {
 
         // load the data into hive to check that PXF-written Parquet files can be read by other data
         String hiveExternalTableName = writeTableName + "_external";
-        hiveTable = new HiveExternalTable(hiveExternalTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE, "hdfs:/" + fullTestPath);
+        hiveTable = new HiveExternalTable(hiveExternalTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(new String[0]), "hdfs:/" + fullTestPath);
         hiveTable.setStoredAs("PARQUET");
         hive.createTableAndVerify(hiveTable);
 
-        String ctasHiveQuery = new StringJoiner(",",
+        StringJoiner ctasHiveQuery = new StringJoiner(",",
                 "CREATE TABLE " + hiveTable.getFullName() + "_ctas AS SELECT ", " FROM " + hiveTable.getFullName() + " ORDER BY id")
                 .add("id")
                 .add("bool_arr")
@@ -303,17 +310,24 @@ public class ParquetWriteTest extends BaseFeature {
                 .add("bytea_arr")
                 .add("char_arr")
                 .add("varchar_arr")
-                .add("date_arr")
-                .add("numeric_arr")
-                .toString();
+                .add("numeric_arr");
+
+        if (!usingCDH) {
+            ctasHiveQuery.add("date_arr");
+        }
 
         hive.runQuery("DROP TABLE IF EXISTS " + hiveTable.getFullName() + "_ctas");
-        hive.runQuery(ctasHiveQuery);
+        hive.runQuery(ctasHiveQuery.toString());
 
         // Check the bytea_array using the following way since the JDBC profile cannot handle binary
-        Table hiveResultTable = new Table(hiveTable.getFullName() + "_ctas", PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE);
-        hive.queryResults(hiveResultTable, "SELECT id,bytea_arr,date_arr FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
-        assertHiveByteaArrayDataAndDateArrayDate(hiveResultTable.getData());
+        Table hiveResultTable = new Table(hiveTable.getFullName() + "_ctas", PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(new String[0]));
+        hive.queryResults(hiveResultTable, "SELECT id, bytea_arr FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
+        assertHiveByteaArrayData(hiveResultTable.getData());
+
+        if (!usingCDH) {
+            hive.queryResults(hiveResultTable, "SELECT id, date_arr FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
+            assertHiveDateArrayData(hiveResultTable.getData());
+        }
 
         // use the Hive JDBC profile to avoid using the PXF Parquet reader implementation
         String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
@@ -448,22 +462,21 @@ public class ParquetWriteTest extends BaseFeature {
                     .add(String.format("'{\\\\x%02d%02d}'::bytea[]", i % 100, (i + 1) % 100))        // DataType.BYTEAARRAY
                     .add(String.format("'{\"%s\"}'", i))                                             // DataType.BPCHARARRAY
                     .add(String.format("'{\"var%02d\"}'", i))                                        // DataType.VARCHARARRAY
-                    .add(String.format("'{\"2010-01-%02d\"}'", (i % 30) + 1))                        // DataType.DATEARRAY
                     .add(String.format("'{12345678900000.00000%s}'", i))                             // DataType.NUMERICARRAY
+                    .add(String.format("'{\"2010-01-%02d\"}'", (i % 30) + 1))                        // DataType.DATEARRAY
                     ;
             insertStatement.append(statementBuilder.toString().concat((i < (numRows - 1)) ? "," : ";"));
         }
         gpdb.runQuery(insertStatement.toString());
     }
 
-    private void assertHiveByteaArrayDataAndDateArrayDate(List<List<String>> queryResultData) {
+    private void assertHiveByteaArrayData(List<List<String>> queryResultData) {
         PgUtilities pgUtilities = new PgUtilities();
 
         for (int i = 0; i < queryResultData.size(); i++) {
             StringJoiner rowBuilder = new StringJoiner(", ", "[", "]")
                     .add(String.valueOf(i))    // always not-null row index, column index starts with 0 after it
                     .add(String.format("[\\\\x%02d%02d]", i % 100, (i + 1) % 100))                      // DataType.BYTEAARRAY
-                    .add(String.format("[\"2010-01-%02d\"]", (i % 30) + 1))                             // DataType.DATEARRAY
                     ;
 
             // Only 1 bytea element in bytea_array. Need to convert the bytea result in the array into a hex string
@@ -473,11 +486,17 @@ public class ParquetWriteTest extends BaseFeature {
             String hexString = pgUtilities.encodeByteaHex(byteBuffer); // \x0001, need another \ when added into string
             queryResultData.get(i).set(1, "[\\" + hexString + "]");
 
-            String dateArrayString = queryResultData.get(i).get(2);
-            dateArrayString = dateArrayString.substring(2, dateArrayString.length() - 2);
-            Integer dateArrayInt = Integer.parseInt(dateArrayString);
-            Date date = new org.apache.hadoop.hive.serde2.io.DateWritable(dateArrayInt).get();
-            queryResultData.get(i).set(2, "[\"" + date.toString() + "\"]");
+            assertEquals(rowBuilder.toString(), queryResultData.get(i).toString());
+        }
+    }
+
+    private void assertHiveDateArrayData(List<List<String>> queryResultData) {
+        for (int i = 0; i < queryResultData.size(); i++) {
+            StringJoiner rowBuilder = new StringJoiner(", ", "[", "]")
+                    .add(String.valueOf(i))    // always not-null row index, column index starts with 0 after it
+                    .add(String.format("[\"2010-01-%02d\"]", (i % 30) + 1)) // DataType.DATEARRAY
+                    ;
+
             assertEquals(rowBuilder.toString(), queryResultData.get(i).toString());
         }
     }
