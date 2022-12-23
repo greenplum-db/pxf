@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.StringJoiner;
 
 import static java.lang.Thread.sleep;
@@ -277,7 +278,8 @@ public class ParquetWriteTest extends BaseFeature {
     public void parquetWriteListsReadWithHive() throws Exception {
         // CDH (Hive 1.1) does not support PARQUET DATE type. See https://issues.apache.org/jira/browse/HIVE-6384,
         // So only check the date_arr column if we are not using singlecluster-CDH
-        boolean usingCDH = cluster.getPhdRoot().contains("CDH");
+        boolean usingCDH = checkForCdhCluster();
+
         if (!usingCDH) {
             PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.add("date_arr array<date>");
         }
@@ -499,5 +501,20 @@ public class ParquetWriteTest extends BaseFeature {
 
             assertEquals(rowBuilder.toString(), queryResultData.get(i).toString());
         }
+    }
+
+    private boolean checkForCdhCluster() throws Exception {
+        File versionFile = new File(cluster.getPhdRoot() + "/versions.txt");
+        Scanner versionScanner =  new Scanner(versionFile);
+        while (versionScanner.hasNext()) {
+            String line = versionScanner.nextLine();
+            if (line.contains("CDH")) {
+                return true;
+            } else if (line.contains("HDP")) {
+                // if HDP, bail early so we don't have to scan the entire file
+                return false;
+            }
+        }
+        return false;
     }
 }
