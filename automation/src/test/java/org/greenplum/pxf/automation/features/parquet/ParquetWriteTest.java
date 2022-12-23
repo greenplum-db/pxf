@@ -97,7 +97,7 @@ public class ParquetWriteTest extends BaseFeature {
             "bytea_arr            array<binary>"        ,           // DataType.BYTEAARRAY
             "char_arr             array<char(15)>"      ,           // DataType.BPCHARARRAY
             "varchar_arr          array<varchar(15)>"   ,           // DataType.VARCHARARRAY
-            "date_arr             array<int>"           ,           // DataType.DATEARRAY
+            "date_arr             array<string>"        ,           // DataType.DATEARRAY
             "numeric_arr          array<decimal(38,18)>"            // DataType.NUMERICARRAY
     };
 
@@ -474,7 +474,7 @@ public class ParquetWriteTest extends BaseFeature {
             queryResultData.get(i).set(1, "[\\" + hexString + "]");
 
             String dateArrayString = queryResultData.get(i).get(2);
-            dateArrayString = dateArrayString.substring(1, dateArrayString.length() - 1);
+            dateArrayString = dateArrayString.substring(2, dateArrayString.length() - 2);
             Integer dateArrayInt = Integer.parseInt(dateArrayString);
             Date date = new org.apache.hadoop.hive.serde2.io.DateWritable(dateArrayInt).get();
             queryResultData.get(i).set(2, "[\"" + date.toString() + "\"]");
