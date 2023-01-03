@@ -88,7 +88,7 @@ public class ParquetWriteTest extends BaseFeature {
     };
 
     // CDH (Hive 1.1) does not support date, so we will add the date_arr column as needed in the test case
-    private static ArrayList<String> PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = new ArrayList<>(Arrays.asList(
+    private static List<String> PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = new ArrayList<>(Arrays.asList(
             "id                   int"                  ,
             "bool_arr             array<boolean>"       ,           // DataType.BOOLARRAY
             "smallint_arr         array<smallint>"      ,           // DataType.INT2ARRAY
@@ -504,6 +504,15 @@ public class ParquetWriteTest extends BaseFeature {
     }
 
     private boolean checkForCdhCluster() throws Exception {
+        /* example versions.txt:
+        build number: root
+        single_cluster-2.1.0
+        CDH-5.12.2
+        hive-1.1.0-cdh5.12.2
+        hbase-1.2.0-cdh5.12.2
+        zookeeper-3.4.5-cdh5.12.2
+        hadoop-2.6.0-cdh5.12.2
+         */
         File versionFile = new File(cluster.getPhdRoot() + "/versions.txt");
         Scanner versionScanner =  new Scanner(versionFile);
         while (versionScanner.hasNext()) {
