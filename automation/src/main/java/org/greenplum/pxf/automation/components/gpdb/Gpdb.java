@@ -473,7 +473,7 @@ public class Gpdb extends DbSystemObject {
 		ResultSet res = stmt.executeQuery(query);
 		res.next();
 		int count = res.getInt(1);
-		ReportUtils.report(report, getClass(), "Retrieved from Greenplum: [" + count + "]");
+		ReportUtils.report(report, getClass(), "Retrieved from Greenplum: [" + count + "] servers");
 		return count > 0;
 	}
 
