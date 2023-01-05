@@ -175,7 +175,7 @@ public class Gpdb extends DbSystemObject {
 		"hdfs-ipa_hdfs",
 		"default_test");
 
-		// version below GP7 do not have IF EXISTS / IF NOT EXISTS command options
+		// version below GP7 do not have IF EXISTS / IF NOT EXISTS command options for foreign SERVER creation
 		String option = (version < 7) ? "" : IF_NOT_EXISTS_OPTION;
 		for (String server : servers) {
 			String foreignServerName = server.replace("-", "_");
@@ -467,6 +467,13 @@ public class Gpdb extends DbSystemObject {
 	}
 
 	private boolean serverExists(String name) throws SQLException {
+		/* If in the future we want to check the existence of both the foreign server and the user mapping
+		we can use the following query
+		SELECT COUNT(*) FROM pg_catalog.pg_user_mapping um
+		LEFT JOIN pg_catalog.pg_foreign_server fs ON um.umserver = fs.oid
+		LEFT JOIN pg_catalog.pg_roles r ON um.umuser = r.oid
+		WHERE r.rolname = session_user::text AND fs.srvname = '%s';
+		 */
 		String query = String.format("SELECT COUNT(*) FROM pg_catalog.pg_foreign_server WHERE srvname = '%s'", name);
 		ReportUtils.report(report, getClass(), "Determining if foreign server exists - query: " + query);
 

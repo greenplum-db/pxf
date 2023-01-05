@@ -2,6 +2,8 @@ package org.greenplum.pxf.automation.structures.tables.pxf;
 
 import org.apache.commons.lang.StringUtils;
 
+import java.util.StringJoiner;
+
 public class ForeignTable extends WritableExternalTable {
 
     public ForeignTable(String name, String[] fields, String path, String format) {
@@ -43,64 +45,64 @@ public class ForeignTable extends WritableExternalTable {
     protected String createOptions() {
         // foreign tables do not have locations, parameters go into options
         // path (resource option for FDW) should always be present
-        StringBuilder builder = new StringBuilder(" OPTIONS (");
-        appendOption(builder,"resource", getPath(), true, true);
+        StringJoiner joiner = new StringJoiner(",", " OPTIONS (", ")");
+        appendOption(joiner,"resource", getPath(), true);
 
         String formatOption = getFormatOption();
         if (formatOption != null) {
-            appendOption(builder, "format", formatOption);
+            appendOption(joiner, "format", formatOption);
         }
 
         // process F/A/R as options, they are used in tests to test column projection / predicate pushdown
         if (getFragmenter() != null) {
-            appendOption(builder, "fragmenter", getFragmenter());
+            appendOption(joiner, "fragmenter", getFragmenter());
         }
         if (getAccessor() != null) {
-            appendOption(builder, "accessor", getAccessor());
+            appendOption(joiner, "accessor", getAccessor());
         }
         if (getResolver() != null) {
-            appendOption(builder, "resolver", getResolver());
+            appendOption(joiner, "resolver", getResolver());
         }
 
         // process copy options
         if (getDelimiter() != null) {
             // if Escape character, no need for "'"
-            appendOption(builder,"delimiter", getDelimiter(), false, !getDelimiter().startsWith("E"));
+            appendOption(joiner,"delimiter", getDelimiter(), !getDelimiter().startsWith("E"));
         }
 
         if (getEscape() != null) {
             // if Escape character, no need for "'"
-            appendOption(builder,"delimiter", getEscape(), false, !getEscape().startsWith("E"));
+            appendOption(joiner,"delimiter", getEscape(), !getEscape().startsWith("E"));
         }
 
         if (getNewLine() != null) {
-            appendOption(builder, "newline", getNewLine());
+            appendOption(joiner, "newline", getNewLine());
         }
 
         // TODO: encoding might only be properly supported in refactor branch
         // https://github.com/greenplum-db/pxf/commit/6be3ca67e1a2748205fcaf9ac96e124925593e11#diff-495fb626f562922c4333130eb7334b9766a18f1968e577549bff0384890e0d05
         if (getEncoding() != null) {
-            appendOption(builder, "encoding", getEncoding());
+            appendOption(joiner, "encoding", getEncoding());
         }
 
         if (getErrorTable() != null) {
-            appendOption(builder, "log_errors", "true");
+            appendOption(joiner, "log_errors", "true");
         }
 
         if (getSegmentRejectLimit() > 0) {
-            appendOption(builder, "reject_limit", String.valueOf(getSegmentRejectLimit()));
-            appendOption(builder, "reject_limit_type", getSegmentRejectLimitType().toLowerCase());
+            appendOption(joiner, "reject_limit", String.valueOf(getSegmentRejectLimit()));
+            appendOption(joiner, "reject_limit_type", getSegmentRejectLimitType().toLowerCase());
         }
 
         // process user options, some might actually belong to Foreign Server, but eventually they all will be
         // combined in a single set, so the net result is the same, other than testing option precedence rules
 
         if (getDataSchema() != null) {
-            appendOption(builder, "DATA-SCHEMA", getDataSchema());
+            appendOption(joiner, "DATA-SCHEMA", getDataSchema());
         }
 
         if (getExternalDataSchema() != null) {
-            appendOption(builder, "SCHEMA", getExternalDataSchema());
+            appendOption(joiner, "SCHEMA", getExternalDataSchema());
         }
 
         String[] params = getUserParameters();
@@ -108,27 +110,18 @@ public class ForeignTable extends WritableExternalTable {
             for (String param : params) {
                 // parse parameter, each one is KEY=VALUE
                 String[] paramPair = param.split("=");
-                appendOption(builder, paramPair[0], paramPair[1]);
+                appendOption(joiner, paramPair[0], paramPair[1]);
             }
         }
-
-        builder.append(")");
-        return builder.toString();
+        return joiner.toString();
     }
 
-    private void appendOption(StringBuilder builder, String optionName, String optionValue) {
-        appendOption(builder, optionName, optionValue, false, true);
+    private void appendOption(StringJoiner joiner, String optionName, String optionValue) {
+        appendOption(joiner, optionName, optionValue, true);
     }
 
-    private void appendOption(StringBuilder builder, String optionName, String optionValue, boolean first, boolean needQuoting) {
-        if (!first) {
-            builder.append(", ");
-        }
-        builder.append(optionName)
-               .append(" ")
-               .append(needQuoting ? "'" : "")
-               .append(optionValue)
-               .append(needQuoting ? "'" : "");
+    private void appendOption(StringJoiner joiner, String optionName, String optionValue, boolean needQuoting) {
+        joiner.add(String.format("%s %s", optionName, needQuoting ? "'" + optionValue + "'" : optionValue));
     }
 
     private String getFormatOption() {
