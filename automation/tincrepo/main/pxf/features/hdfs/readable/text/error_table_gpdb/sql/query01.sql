@@ -6,7 +6,7 @@
 --
 -- # replace PXF URL with "pxf-location" string
 -- m/pxf:\/\/(.*)\|/
--- s/pxf:\/\/.*data\?PROFILE=hdfs:text/pxf-location/
+-- s/pxf:\/\/.*data\?PROFILE=.*/pxf-location/
 --
 -- m/\|.*\/data/
 -- s/\|.*\/data/\|pxf-location/
