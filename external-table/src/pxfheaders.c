@@ -37,13 +37,7 @@ static void add_alignment_size_httpheader(CHURL_HEADERS headers);
 static void add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel);
 static void add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri);
 static char *get_format_name(char fmtcode);
-
-#if PG_VERSION_NUM >= 120000
-static void add_projection_desc_httpheader_pg12(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
-#else
-static void add_projection_desc_httpheader_pg94(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
-#endif
-
+static void add_projection_desc_httpheader(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
 static bool add_attnums_from_targetList(Node *node, List *attnums);
 static void add_projection_index_header(CHURL_HEADERS pVoid, StringInfoData data, int attno, char number[32]);
 #if PG_VERSION_NUM < 90400
@@ -132,11 +126,7 @@ build_http_headers(PxfInputData *input)
     if (qualsAreSupported &&
       (qualsAttributes != NIL || list_length(input->quals) == 0))
     {
-       #if PG_VERSION_NUM >= 120000
-            add_projection_desc_httpheader_pg12(headers, proj_info, qualsAttributes, rel);
-       #else
-          add_projection_desc_httpheader_pg94(headers, proj_info, qualsAttributes, rel);
-       #endif
+       add_projection_desc_httpheader(headers, proj_info, qualsAttributes, rel);
     }
     else
     {
@@ -393,7 +383,7 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 
 #if PG_VERSION_NUM < 120000
 static void
-add_projection_desc_httpheader_pg94(CHURL_HEADERS headers,
+add_projection_desc_httpheader(CHURL_HEADERS headers,
                  ProjectionInfo *projInfo,
                  List *qualsAttributes,
                  Relation rel)
@@ -538,7 +528,7 @@ add_projection_desc_httpheader_pg94(CHURL_HEADERS headers,
 
 #if PG_VERSION_NUM >= 120000
 static void
-add_projection_desc_httpheader_pg12(CHURL_HEADERS headers,
+add_projection_desc_httpheader(CHURL_HEADERS headers,
                  ProjectionInfo *projInfo,
                  List *qualsAttributes,
                  Relation rel)
