@@ -19,8 +19,8 @@ pivnet login "--api-token=${PIVNET_API_TOKEN}"
 # https://stackoverflow.com/questions/57071166/jq-find-the-max-in-quoted-values/57071319#57071319
 gpdb_version=$(
 	pivnet --format=json releases "--product-slug=${PRODUCT_SLUG}" | \
-		jq --raw-output --argjson gpdb "${GPDB_VERSION}" --argjson m "${VERSIONS_BEFORE_LATEST}" \
-		'sort_by(.version | split(".") | map(tonumber) | select(.[0] == $gpdb))[-1-$m].version'
+		jq --raw-output --argjson gpdb "\"${GPDB_VERSION}\"" --argjson m "${VERSIONS_BEFORE_LATEST}" \
+		'sort_by(.version | split(".") | select(.[0] == $gpdb) | map(tonumber))[-1-$m].version'
 )
 echo -e "Latest - ${VERSIONS_BEFORE_LATEST} GPDB version found:\n${GPDB_VERSION}X:\t${gpdb_version}"
 
