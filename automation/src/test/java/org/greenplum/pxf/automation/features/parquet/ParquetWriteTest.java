@@ -88,7 +88,7 @@ public class ParquetWriteTest extends BaseFeature {
     };
 
     // CDH (Hive 1.1) does not support date, so we will add the date_arr column as needed in the test case
-    private static List<String> PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = new ArrayList<>(Arrays.asList(
+    private static List<String> PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = Arrays.asList(
             "id                   int"                  ,
             "bool_arr             array<boolean>"       ,           // DataType.BOOLARRAY
             "smallint_arr         array<smallint>"      ,           // DataType.INT2ARRAY
@@ -101,7 +101,7 @@ public class ParquetWriteTest extends BaseFeature {
             "char_arr             array<char(15)>"      ,           // DataType.BPCHARARRAY
             "varchar_arr          array<varchar(15)>"   ,           // DataType.VARCHARARRAY
             "numeric_arr          array<decimal(38,18)>"            // DataType.NUMERICARRAY
-    ));
+    );
 
     // JDBC doesn't support array, so convert array into text type for comparison
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE = {
@@ -295,7 +295,8 @@ public class ParquetWriteTest extends BaseFeature {
 
         // load the data into hive to check that PXF-written Parquet files can be read by other data
         String hiveExternalTableName = writeTableName + "_external";
-        hiveTable = new HiveExternalTable(hiveExternalTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(new String[0]), "hdfs:/" + fullTestPath);
+        String[] fields = PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(new String[PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.size()]);
+        hiveTable = new HiveExternalTable(hiveExternalTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(fields), "hdfs:/" + fullTestPath);
         hiveTable.setStoredAs("PARQUET");
         hive.createTableAndVerify(hiveTable);
 
