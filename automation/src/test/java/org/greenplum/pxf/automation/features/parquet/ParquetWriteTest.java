@@ -15,10 +15,8 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 import java.util.StringJoiner;
 
 import static java.lang.Thread.sleep;
@@ -276,16 +274,13 @@ public class ParquetWriteTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb"})
     public void parquetWriteListsReadWithHive() throws Exception {
-        // CDH (Hive 1.1) does not support PARQUET DATE type. See https://issues.apache.org/jira/browse/HIVE-6384,
-        // So only check the date_arr column if we are not using singlecluster-CDH
-        boolean usingCDH = checkForCdhCluster();
-
-        if (!usingCDH) {
-            PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.add("date_arr array<date>");
-        }
         // init only here, not in beforeClass() method as other tests run in environments without Hive
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
 
+        boolean includeDateCol = checkHiveVersionForDateSupport(hive);
+        if (includeDateCol) {
+            PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.add("date_arr array<date>");
+        }
         String writeTableName = "pxf_parquet_write_list_read_with_hive_writable";
         String readTableName = "pxf_parquet_write_list_read_with_hive_readable";
         String fullTestPath = hdfsPath + "parquet_write_list_read_with_hive";
@@ -315,7 +310,7 @@ public class ParquetWriteTest extends BaseFeature {
                 .add("varchar_arr")
                 .add("numeric_arr");
 
-        if (!usingCDH) {
+        if (includeDateCol) {
             ctasHiveQuery.add("date_arr");
         }
 
@@ -327,7 +322,7 @@ public class ParquetWriteTest extends BaseFeature {
         hive.queryResults(hiveResultTable, "SELECT id, bytea_arr FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
         assertHiveByteaArrayData(hiveResultTable.getData());
 
-        if (!usingCDH) {
+        if (includeDateCol) {
             hive.queryResults(hiveResultTable, "SELECT id, date_arr FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
             assertHiveDateArrayData(hiveResultTable.getData());
         }
@@ -504,27 +499,28 @@ public class ParquetWriteTest extends BaseFeature {
         }
     }
 
-    private boolean checkForCdhCluster() throws Exception {
-        /* example versions.txt:
-        build number: root
-        single_cluster-2.1.0
-        CDH-5.12.2
-        hive-1.1.0-cdh5.12.2
-        hbase-1.2.0-cdh5.12.2
-        zookeeper-3.4.5-cdh5.12.2
-        hadoop-2.6.0-cdh5.12.2
-         */
-        File versionFile = new File(cluster.getPhdRoot() + "/versions.txt");
-        Scanner versionScanner =  new Scanner(versionFile);
-        while (versionScanner.hasNext()) {
-            String line = versionScanner.nextLine();
-            if (line.contains("CDH")) {
-                return true;
-            } else if (line.contains("HDP")) {
-                // if HDP, bail early so we don't have to scan the entire file
-                return false;
-            }
+    /**
+     *  Support for Parquet Date types was introduced with Hive 1.2.0
+     *  See https://issues.apache.org/jira/browse/HIVE-6384
+     * @param hive
+     * @return boolean returns true if the Hive version is greater than 1.2, false otherwise
+     * @throws Exception
+     */
+    private boolean checkHiveVersionForDateSupport(Hive hive) throws Exception {
+        Table versionResult = new Table("versionResult", null);
+
+        hive.queryResults(versionResult, "SELECT version()");
+
+        String result = versionResult.getData().get(0).get(0);
+        String[] versions = result.split("\\.");
+        int majorVersion = Integer.parseInt(versions[0]);
+        int minorVersion = Integer.parseInt(versions[1]);
+
+        // we do not need to check the patch version since it went in 1.2.0
+        if (majorVersion == 1 && minorVersion < 2) {
+            return false;
         }
-        return false;
+
+        return true;
     }
 }
