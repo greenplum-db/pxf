@@ -299,13 +299,14 @@ function install_pxf_server() {
 
 function install_pxf_tarball() {
 	local tarball_dir=${PXF_PKG_DIR:-pxf_tarball}
-	tar -xzf "${tarball_dir}/"pxf-*.tar.gz -C /tmp
+	tar -xzf "${tarball_dir}/"pxf-gp*.tar.gz -C /tmp
 	/tmp/pxf*/install_component
 	chown -R gpadmin:gpadmin "${PXF_HOME}"
 
 	# install separately built PXF FDW extension if it is available on the inputs
-	if [[ -d pxf_fdw_tarball ]]; then
-		tar -xzf pxf_fdw_tarball/pxf-fdw-*.tar.gz -C /tmp
+	local fdw_tarball_dir=${PXF_PKG_DIR:-pxf_fdw_tarball}
+	if compgen -G "${fdw_tarball_dir}/pxf-fdw-*.tar.gz" > /dev/null; then
+		tar -xzf "${fdw_tarball_dir}/"pxf-fdw-*.tar.gz -C /tmp
 		chmod 777 /tmp
 		ls -al /tmp
 		/usr/bin/install -c -m 755 /tmp/pxf_fdw.so "$("${GPHOME}/bin/pg_config" --pkglibdir)"
