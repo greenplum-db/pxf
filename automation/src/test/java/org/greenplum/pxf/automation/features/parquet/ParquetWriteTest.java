@@ -15,6 +15,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
@@ -86,7 +87,7 @@ public class ParquetWriteTest extends BaseFeature {
     };
 
     // CDH (Hive 1.1) does not support date, so we will add the date_arr column as needed in the test case
-    private static List<String> PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = Arrays.asList(
+    private static List<String> PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = new ArrayList<>(Arrays.asList(
             "id                   int"                  ,
             "bool_arr             array<boolean>"       ,           // DataType.BOOLARRAY
             "smallint_arr         array<smallint>"      ,           // DataType.INT2ARRAY
@@ -99,7 +100,7 @@ public class ParquetWriteTest extends BaseFeature {
             "char_arr             array<char(15)>"      ,           // DataType.BPCHARARRAY
             "varchar_arr          array<varchar(15)>"   ,           // DataType.VARCHARARRAY
             "numeric_arr          array<decimal(38,18)>"            // DataType.NUMERICARRAY
-    );
+    ));
 
     // JDBC doesn't support array, so convert array into text type for comparison
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE = {
@@ -290,8 +291,10 @@ public class ParquetWriteTest extends BaseFeature {
 
         // load the data into hive to check that PXF-written Parquet files can be read by other data
         String hiveExternalTableName = writeTableName + "_external";
-        String[] fields = PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(new String[PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.size()]);
-        hiveTable = new HiveExternalTable(hiveExternalTableName, PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(fields), "hdfs:/" + fullTestPath);
+        String[] parquetArrayTableCols = PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(new String[PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.size()]);
+        PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(parquetArrayTableCols);
+
+        hiveTable = new HiveExternalTable(hiveExternalTableName, parquetArrayTableCols, "hdfs:/" + fullTestPath);
         hiveTable.setStoredAs("PARQUET");
         hive.createTableAndVerify(hiveTable);
 
@@ -318,7 +321,7 @@ public class ParquetWriteTest extends BaseFeature {
         hive.runQuery(ctasHiveQuery.toString());
 
         // Check the bytea_array using the following way since the JDBC profile cannot handle binary
-        Table hiveResultTable = new Table(hiveTable.getFullName() + "_ctas", PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(new String[0]));
+        Table hiveResultTable = new Table(hiveTable.getFullName() + "_ctas", parquetArrayTableCols);
         hive.queryResults(hiveResultTable, "SELECT id, bytea_arr FROM " + hiveTable.getFullName() + "_ctas ORDER BY id");
         assertHiveByteaArrayData(hiveResultTable.getData());
 
