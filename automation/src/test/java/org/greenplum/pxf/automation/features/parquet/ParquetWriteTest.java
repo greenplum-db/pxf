@@ -1,6 +1,8 @@
 package org.greenplum.pxf.automation.features.parquet;
 
+import com.google.common.collect.Lists;
 import jsystem.framework.system.SystemManagerImpl;
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.components.hive.Hive;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
@@ -15,8 +17,6 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -87,7 +87,7 @@ public class ParquetWriteTest extends BaseFeature {
     };
 
     // CDH (Hive 1.1) does not support date, so we will add the date_arr column as needed in the test case
-    private static List<String> PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = new ArrayList<>(Arrays.asList(
+    private static List<String> PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE = Lists.newArrayList(
             "id                   int"                  ,
             "bool_arr             array<boolean>"       ,           // DataType.BOOLARRAY
             "smallint_arr         array<smallint>"      ,           // DataType.INT2ARRAY
@@ -100,7 +100,7 @@ public class ParquetWriteTest extends BaseFeature {
             "char_arr             array<char(15)>"      ,           // DataType.BPCHARARRAY
             "varchar_arr          array<varchar(15)>"   ,           // DataType.VARCHARARRAY
             "numeric_arr          array<decimal(38,18)>"            // DataType.NUMERICARRAY
-    ));
+    );
 
     // JDBC doesn't support array, so convert array into text type for comparison
     private static final String[] PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_READ_FROM_HIVE = {
@@ -278,10 +278,6 @@ public class ParquetWriteTest extends BaseFeature {
         // init only here, not in beforeClass() method as other tests run in environments without Hive
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
 
-        boolean includeDateCol = checkHiveVersionForDateSupport(hive);
-        if (includeDateCol) {
-            PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.add("date_arr array<date>");
-        }
         String writeTableName = "pxf_parquet_write_list_read_with_hive_writable";
         String readTableName = "pxf_parquet_write_list_read_with_hive_readable";
         String fullTestPath = hdfsPath + "parquet_write_list_read_with_hive";
@@ -291,6 +287,11 @@ public class ParquetWriteTest extends BaseFeature {
 
         // load the data into hive to check that PXF-written Parquet files can be read by other data
         String hiveExternalTableName = writeTableName + "_external";
+
+        boolean includeDateCol = checkHiveVersionForDateSupport(hive);
+        if (includeDateCol) {
+            PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.add("date_arr array<date>");
+        }
         String[] parquetArrayTableCols = PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(new String[PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.size()]);
         PARQUET_PRIMITIVE_ARRAYS_TABLE_COLUMNS_HIVE.toArray(parquetArrayTableCols);
 
@@ -512,18 +513,28 @@ public class ParquetWriteTest extends BaseFeature {
     private boolean checkHiveVersionForDateSupport(Hive hive) throws Exception {
         Table versionResult = new Table("versionResult", null);
 
-        hive.queryResults(versionResult, "SELECT version()");
+        try {
+            // Hive 1.1.0-cdh and Hive 3.1 both have the version() UDF.
+            hive.queryResults(versionResult, "SELECT version()");
 
-        String result = versionResult.getData().get(0).get(0);
-        String[] versions = result.split("\\.");
-        int majorVersion = Integer.parseInt(versions[0]);
-        int minorVersion = Integer.parseInt(versions[1]);
+            String result = versionResult.getData().get(0).get(0);
+            String[] versions = result.split("\\.");
+            int majorVersion = Integer.parseInt(versions[0]);
+            int minorVersion = Integer.parseInt(versions[1]);
 
-        // we do not need to check the patch version since it went in 1.2.0
-        if (majorVersion == 1 && minorVersion < 2) {
-            return false;
+            // we do not need to check the patch version since it went in 1.2.0
+            if (majorVersion == 1 && minorVersion < 2) {
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            // Hive 1.2.1 fails to find the version as `select version()` was not introduced until Hive 2.1
+            // We fail here due to this UDF not existing, so if we get this err, catch it and return true
+            if (StringUtils.contains(e.getCause().toString(),"Invalid function 'version'")) {
+                return true;
+            } else {
+                throw e;
+            }
         }
-
-        return true;
     }
 }
