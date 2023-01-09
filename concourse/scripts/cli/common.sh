@@ -138,13 +138,13 @@ list_remote_pxf_running_pid() {
   ssh "${1}" "ps -aef | grep pxf | grep -v grep | tr -s ' ' | cut -d ' ' -f 2"
 }
 
-has_standby_master() {
-  grep -q smdw hostfile_all
+has_standby_coordinator() {
+  grep -q scdw hostfile_all
 }
 
 get_cluster_description() {
   local cluster_description="master host"
-  if has_standby_master; then
+  if has_standby_coordinator; then
     cluster_description+=", standby master host,"
   fi
   local num_segment_hosts
@@ -156,7 +156,7 @@ get_cluster_description() {
 
 get_cluster_sync_description() {
   local cluster_sync_description="master host to "
-  if has_standby_master; then
+  if has_standby_coordinator; then
     cluster_sync_description+="standby master host and "
   fi
   local num_segment_hosts

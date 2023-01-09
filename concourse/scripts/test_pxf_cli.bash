@@ -6,13 +6,13 @@ cluster_env_files=$( cd "${SCRIPT_DIR}/../../../cluster_env_files" && pwd )
 
 cp -r "${cluster_env_files}/.ssh" "${HOME}"
 
-scp "${SCRIPT_DIR}/cli/common.sh" mdw:
+scp "${SCRIPT_DIR}/cli/common.sh" cdw:
 
 err_cnt=0
 for script in "${SCRIPT_DIR}/cli/"test_*.sh; do
-	scp "${script}" mdw:
+	scp "${script}" cdw:
 	script_short_name=${script##*/} # chop off path to script
-	ssh mdw "~gpadmin/${script_short_name}"
+	ssh cdw "~gpadmin/${script_short_name}"
 	((err_cnt+=$?))
 done
 

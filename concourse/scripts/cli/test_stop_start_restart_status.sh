@@ -107,11 +107,11 @@ run_test test_stop_succeeds_none_running "pxf cluster stop (none running) should
 expected_status_message=\
 "Checking status of PXF servers on ${cluster_description}\n\
 ERROR: PXF is not running on ${num_hosts} out of ${num_hosts} hosts\n\
-mdw ==> ${yellow}Checking if PXF is up and running...${reset}\n\
+cdw ==> ${yellow}Checking if PXF is up and running...${reset}\n\
 ${red}ERROR: PXF is down - the application is not running${reset}...\n"
 
-if has_standby_master; then
-  expected_status_message+="smdw ==> ${yellow}Checking if PXF is up and running...${reset}\n${red}ERROR: PXF is down - the application is not running${reset}...\n"
+if has_standby_coordinator; then
+  expected_status_message+="scdw ==> ${yellow}Checking if PXF is up and running...${reset}\n${red}ERROR: PXF is down - the application is not running${reset}...\n"
 fi
 
 expected_status_message+=\
@@ -305,7 +305,7 @@ expected_restart_message=\
 "Restarting PXF on ${cluster_description}
 PXF restarted successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_restart_succeeds_one_running() {
-  # given: PXF is not running on master, standby master or segment host 2
+  # given: PXF is not running on coordinator, standby coordinator or segment host 2
   for host in "${all_cluster_hosts[@]}"; do
     [[ $host == sdw1 ]] && continue
 
@@ -345,7 +345,7 @@ test_start_succeeds_one_running() {
   # given: PXF is running on segment host 1
   local sdw1_pid="$(list_remote_pxf_running_pid sdw1)"
   assert_not_empty "${sdw1_pid}" "PXF should be running on host sdw1"
-  #      : AND PXF is not running on master, standby master or segment host 2
+  #      : AND PXF is not running on coordinator, standby coordinator or segment host 2
   for host in "${all_cluster_hosts[@]}"; do
     [[ $host == sdw1 ]] && continue
 
@@ -378,11 +378,11 @@ run_test test_start_succeeds_one_running "pxf cluster start (one running) should
 expected_status_message=\
 "Checking status of PXF servers on ${cluster_description}\n\
 ERROR: PXF is not running on $((num_hosts-1)) out of ${num_hosts} hosts\n\
-mdw ==> ${yellow}Checking if PXF is up and running...${reset}\n\
+cdw ==> ${yellow}Checking if PXF is up and running...${reset}\n\
 ${red}ERROR: PXF is down - the application is not running${reset}...\n"
 
-if has_standby_master; then
-  expected_status_message+="smdw ==> ${yellow}Checking if PXF is up and running...${reset}\n${red}ERROR: PXF is down - the application is not running${reset}...\n"
+if has_standby_coordinator; then
+  expected_status_message+="scdw ==> ${yellow}Checking if PXF is up and running...${reset}\n${red}ERROR: PXF is down - the application is not running${reset}...\n"
 fi
 
 expected_status_message+=\
@@ -412,7 +412,7 @@ expected_stop_message=\
 "Stopping PXF on ${cluster_description}
 PXF stopped successfully on ${num_hosts} out of ${num_hosts} hosts"
 test_stop_succeeds_one_running() {
-  # given: PXF is not running on master, standby master or segment host 2
+  # given: PXF is not running on coordinator, standby coordinator or segment host 2
   for host in "${all_cluster_hosts[@]}"; do
     [[ ${host} == sdw1 ]] && continue
 

@@ -3,8 +3,8 @@
 set -euxo pipefail
 
 GPHOME=/usr/local/greenplum-db-devel
-# we need word boundary in case of standby master (smdw)
-MASTER_HOSTNAME=$(grep < cluster_env_files/etc_hostfile '\bmdw' | awk '{print $2}')
+# we need word boundary in case of standby coordinator (scdw)
+COORDINATOR_HOSTNAME="cdw"
 BASE_PATH=${BASE_PATH:-/mnt/nfs/var/nfsshare}
 
 cat << EOF
@@ -21,12 +21,12 @@ function create_nfs_installer_scripts() {
 
 set -euxo pipefail
 
-echo "check available NFS shares in mdw"
-showmount -e mdw
+echo "check available NFS shares in cdw"
+showmount -e cdw
 
 echo "create mount point and mount it"
 mkdir -p ${BASE_PATH}
-mount -t nfs mdw:/var/nfs ${BASE_PATH}
+mount -t nfs cdw:/var/nfs ${BASE_PATH}
 chown gpadmin:gpadmin ${BASE_PATH}
 chmod 755 ${BASE_PATH}
 
@@ -41,14 +41,14 @@ ls -l ${BASE_PATH}
 EOFF
 
   chmod +x /tmp/install_and_configure_nfs_client.sh
-  scp /tmp/install_and_configure_nfs_client.sh "${MASTER_HOSTNAME}:~gpadmin"
+  scp /tmp/install_and_configure_nfs_client.sh "${COORDINATOR_HOSTNAME}:~gpadmin"
 }
 
 # assumes only two segment hosts sdw1 and sdw2
 function run_nfs_installation() {
 
-  # install and configure the NFS server on master
-  ssh "centos@${MASTER_HOSTNAME}" "
+  # install and configure the NFS server on coordinator
+  ssh "centos@${COORDINATOR_HOSTNAME}" "
     echo 'enable and start the NFS service'
     sudo systemctl enable nfs-server rpcbind
     sudo systemctl start nfs-server rpcbind
@@ -63,11 +63,11 @@ function run_nfs_installation() {
     echo 'export shared directories'
     sudo exportfs -r
     echo 'display available shares on this server'
-    sudo showmount -e ${MASTER_HOSTNAME}
+    sudo showmount -e ${COORDINATOR_HOSTNAME}
   "
 
   # install and configure the NFS clients on sdw1 and sdw2
-  ssh "${MASTER_HOSTNAME}" "
+  ssh "${COORDINATOR_HOSTNAME}" "
     source ${GPHOME}/greenplum_path.sh &&
     gpscp -f ~gpadmin/hostfile_init -v -u centos ~gpadmin/install_and_configure_nfs_client.sh centos@=: &&
     gpssh -f ~gpadmin/hostfile_init -v -u centos -s -e 'sudo ~centos/install_and_configure_nfs_client.sh'
@@ -76,7 +76,7 @@ function run_nfs_installation() {
 
 function _main() {
   local SCP_FILES=(cluster_env_files/hostfile_init)
-  scp -r "${SCP_FILES[@]}" "${MASTER_HOSTNAME}:~gpadmin"
+  scp -r "${SCP_FILES[@]}" "${COORDINATOR_HOSTNAME}:~gpadmin"
 
   create_nfs_installer_scripts
   run_nfs_installation

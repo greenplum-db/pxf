@@ -2,7 +2,7 @@
 
 GPHOME=${GPHOME:=/usr/local/greenplum-db-devel}
 PXF_HOME=${PXF_HOME:=${GPHOME}/pxf}
-MDD_VALUE=/data/gpdata/master/gpseg-1
+CDD_VALUE=/data/gpdata/coordinator/gpseg-1
 PXF_COMMON_SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PXF_VERSION=${PXF_VERSION:=6}
 PROXY_USER=${PROXY_USER:-pxfuser}
@@ -208,10 +208,10 @@ function remote_access_to_gpdb() {
 	cp cluster_env_files/.ssh/*.pem /home/gpadmin/.ssh/id_rsa
 	cp cluster_env_files/public_key.openssh /home/gpadmin/.ssh/authorized_keys
 	{ ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
-	ssh "${SSH_OPTS[@]}" gpadmin@mdw "
+	ssh "${SSH_OPTS[@]}" gpadmin@cdw "
 		source ${GPHOME}/greenplum_path.sh &&
-		export MASTER_DATA_DIRECTORY=${MDD_VALUE} &&
-		echo 'host all all 10.0.0.0/16 trust' >> ${MDD_VALUE}/pg_hba.conf &&
+		export MASTER_DATA_DIRECTORY=${CDD_VALUE} &&
+		echo 'host all all 10.0.0.0/16 trust' >> ${CDD_VALUE}/pg_hba.conf &&
 		psql -d template1 <<-EOF && gpstop -u
 			CREATE EXTENSION pxf;
 			CREATE DATABASE gpadmin;

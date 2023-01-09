@@ -10,7 +10,7 @@
             <class>
                 org.greenplum.pxf.automation.components.cluster.installer.nodes.MasterNode
             </class>
-            <host>mdw</host>
+            <host>cdw</host>
             <userName>gpadmin</userName>
             <password></password>
             <services>gpdb,pxf</services>
@@ -38,7 +38,7 @@
     <gpdb>
         <class>org.greenplum.pxf.automation.components.gpdb.Gpdb</class>
         <host>localhost</host>
-        <masterHost>mdw</masterHost>
+        <masterHost>cdw</masterHost>
         <userName>gpadmin</userName>
         <db>pxfautomation</db>
     </gpdb>
@@ -46,7 +46,7 @@
     <gpdb2>
         <class>org.greenplum.pxf.automation.components.gpdb.Gpdb</class>
         <host>localhost</host>
-        <masterHost>mdw</masterHost>
+        <masterHost>cdw</masterHost>
         <userName>gpadmin</userName>
         <db>pxfautomation_encoding</db>
         <encoding>WIN1251</encoding>

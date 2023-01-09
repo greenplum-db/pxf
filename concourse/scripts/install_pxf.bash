@@ -17,8 +17,8 @@ PXF_VERSION=${PXF_VERSION:=6}
 DEFAULT_OS_USER=$(jq --raw-output ".ami_default_user" terraform/metadata)
 
 
-# we need word boundary in case of standby master (smdw)
-MASTER_HOSTNAME=$(grep < cluster_env_files/etc_hostfile '\bmdw' | awk '{print $2}')
+# we need word boundary in case of standby coordinator (scdw)
+COORDINATOR_HOSTNAME="cdw"
 REALM=${REALM:-}
 REALM_2=${REALM_2:-}
 GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
@@ -224,11 +224,11 @@ function create_pxf_installer_scripts() {
 	EOFF
 
 	chmod +x /tmp/{install_pxf_dependencies,configure_pxf}.sh
-	scp /tmp/{install_pxf_dependencies,configure_pxf}.sh "${MASTER_HOSTNAME}:~gpadmin"
+	scp /tmp/{install_pxf_dependencies,configure_pxf}.sh "${COORDINATOR_HOSTNAME}:~gpadmin"
 }
 
 function run_pxf_installer_scripts() {
-	ssh "${MASTER_HOSTNAME}" "
+	ssh "${COORDINATOR_HOSTNAME}" "
 		source ${GPHOME}/greenplum_path.sh &&
 		export JAVA_HOME=/usr/lib/jvm/jre &&
 		export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1/ &&
@@ -266,7 +266,7 @@ function run_pxf_installer_scripts() {
 
 	# Create a database for PXF extension upgrade testing
 	if [[ ${PXF_VERSION} == 5 ]]; then
-		ssh "${MASTER_HOSTNAME}" "
+		ssh "${COORDINATOR_HOSTNAME}" "
 			source ${GPHOME}/greenplum_path.sh &&
 			createdb testupgrade &&
 			psql -d testupgrade -c 'CREATE EXTENSION IF NOT EXISTS pxf'
@@ -312,7 +312,7 @@ EOF
 		SCP_FILES+=(ipa_env_files)
 	fi
 
-	scp -r "${SCP_FILES[@]}" "${MASTER_HOSTNAME}:~gpadmin"
+	scp -r "${SCP_FILES[@]}" "${COORDINATOR_HOSTNAME}:~gpadmin"
 
 	create_pxf_installer_scripts
 	run_pxf_installer_scripts

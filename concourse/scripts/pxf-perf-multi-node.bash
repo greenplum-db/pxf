@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-export PGHOST=mdw
+export PGHOST=cdw
 export PGUSER=gpadmin
 export PGDATABASE=tpch
 GPHOME="/usr/local/greenplum-db-devel"
@@ -98,7 +98,7 @@ function read_and_validate_table_count() {
 }
 
 function sync_configuration() {
-    gpssh -u gpadmin -h mdw -v -s -e "${PXF_HOME}/bin/pxf cluster sync"
+    gpssh -u gpadmin -h cdw -v -s -e "${PXF_HOME}/bin/pxf cluster sync"
 }
 
 function create_database_and_schema() {
@@ -189,10 +189,10 @@ function validate_write_to_external() {
 function configure_adl_server() {
     ADL_SERVER_DIR="${PXF_SERVER_DIR}/adlbenchmark"
     # Create the ADL Benchmark server and copy core-site.xml
-    gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $ADL_SERVER_DIR && cp ${PXF_HOME}/templates/adl-site.xml $ADL_SERVER_DIR"
-    gpssh -u gpadmin -h mdw -v -s -e "sed -i \"s|YOUR_ADL_REFRESH_URL|${ADL_REFRESH_URL}|\" ${ADL_SERVER_DIR}/adl-site.xml"
-    gpssh -u gpadmin -h mdw -v -s -e "sed -i \"s|YOUR_ADL_CLIENT_ID|${ADL_CLIENT_ID}|\" ${ADL_SERVER_DIR}/adl-site.xml"
-    gpssh -u gpadmin -h mdw -v -s -e "sed -i \"s|YOUR_ADL_CREDENTIAL|${ADL_CREDENTIAL}|\" ${ADL_SERVER_DIR}/adl-site.xml"
+    gpssh -u gpadmin -h cdw -v -s -e "mkdir -p $ADL_SERVER_DIR && cp ${PXF_HOME}/templates/adl-site.xml $ADL_SERVER_DIR"
+    gpssh -u gpadmin -h cdw -v -s -e "sed -i \"s|YOUR_ADL_REFRESH_URL|${ADL_REFRESH_URL}|\" ${ADL_SERVER_DIR}/adl-site.xml"
+    gpssh -u gpadmin -h cdw -v -s -e "sed -i \"s|YOUR_ADL_CLIENT_ID|${ADL_CLIENT_ID}|\" ${ADL_SERVER_DIR}/adl-site.xml"
+    gpssh -u gpadmin -h cdw -v -s -e "sed -i \"s|YOUR_ADL_CREDENTIAL|${ADL_CREDENTIAL}|\" ${ADL_SERVER_DIR}/adl-site.xml"
     sync_configuration
 }
 
@@ -208,9 +208,9 @@ ${GOOGLE_CREDENTIALS}
 EOF
 
     GS_SERVER_DIR="${PXF_SERVER_DIR}/gsbenchmark"
-    gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $GS_SERVER_DIR && cp ${PXF_HOME}/templates/gs-site.xml $GS_SERVER_DIR"
-    gpscp -u gpadmin -h mdw /tmp/gsc-ci-service-account.key.json =:${GS_SERVER_DIR}/
-    gpssh -u gpadmin -h mdw -v -s -e "sed -i \"s|YOUR_GOOGLE_STORAGE_KEYFILE|${GS_SERVER_DIR}/gsc-ci-service-account.key.json|\" ${GS_SERVER_DIR}/gs-site.xml"
+    gpssh -u gpadmin -h cdw -v -s -e "mkdir -p $GS_SERVER_DIR && cp ${PXF_HOME}/templates/gs-site.xml $GS_SERVER_DIR"
+    gpscp -u gpadmin -h cdw /tmp/gsc-ci-service-account.key.json =:${GS_SERVER_DIR}/
+    gpssh -u gpadmin -h cdw -v -s -e "sed -i \"s|YOUR_GOOGLE_STORAGE_KEYFILE|${GS_SERVER_DIR}/gsc-ci-service-account.key.json|\" ${GS_SERVER_DIR}/gs-site.xml"
     sync_configuration
 }
 
@@ -292,13 +292,13 @@ function configure_s3_server() {
     # Special configuration for reading parquet files
     S3_SERVER_DIR_PARQUET="${PXF_SERVER_DIR}/s3benchmarkparquet"
     # Make a backup of core-site and update it with the S3 core-site
-    gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $S3_SERVER_DIR && cp ${PXF_HOME}/templates/s3-site.xml $S3_SERVER_DIR"
-    gpssh -u gpadmin -h mdw -v -s -e "sed -i \"s|YOUR_AWS_ACCESS_KEY_ID|${AWS_ACCESS_KEY_ID}|\" $S3_SERVER_DIR/s3-site.xml"
-    gpssh -u gpadmin -h mdw -v -s -e "sed -i \"s|YOUR_AWS_SECRET_ACCESS_KEY|${AWS_SECRET_ACCESS_KEY}|\" $S3_SERVER_DIR/s3-site.xml"
+    gpssh -u gpadmin -h cdw -v -s -e "mkdir -p $S3_SERVER_DIR && cp ${PXF_HOME}/templates/s3-site.xml $S3_SERVER_DIR"
+    gpssh -u gpadmin -h cdw -v -s -e "sed -i \"s|YOUR_AWS_ACCESS_KEY_ID|${AWS_ACCESS_KEY_ID}|\" $S3_SERVER_DIR/s3-site.xml"
+    gpssh -u gpadmin -h cdw -v -s -e "sed -i \"s|YOUR_AWS_SECRET_ACCESS_KEY|${AWS_SECRET_ACCESS_KEY}|\" $S3_SERVER_DIR/s3-site.xml"
 
-    gpssh -u gpadmin -h mdw -v -s -e "cp -R $S3_SERVER_DIR $S3_SERVER_DIR_PARQUET"
+    gpssh -u gpadmin -h cdw -v -s -e "cp -R $S3_SERVER_DIR $S3_SERVER_DIR_PARQUET"
     # Improves reading from parquet files for S3
-    gpssh -u gpadmin -h mdw -v -s -e "sed -i \"s|</configuration>|<property><name>fs.s3a.experimental.input.fadvise</name><value>random</value></property></configuration>|\" $S3_SERVER_DIR_PARQUET/s3-site.xml"
+    gpssh -u gpadmin -h cdw -v -s -e "sed -i \"s|</configuration>|<property><name>fs.s3a.experimental.input.fadvise</name><value>random</value></property></configuration>|\" $S3_SERVER_DIR_PARQUET/s3-site.xml"
     sync_configuration
 }
 
@@ -321,9 +321,9 @@ function create_s3_parquet_tables() {
 function configure_wasb_server() {
     WASB_SERVER_DIR="${PXF_SERVER_DIR}/wasbbenchmark"
     # Create the WASB Benchmark server and copy core-site.xml
-    gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $WASB_SERVER_DIR && cp ${PXF_HOME}/templates/wasbs-site.xml $WASB_SERVER_DIR"
-    gpssh -u gpadmin -h mdw -v -s -e "sed -i \"s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_NAME|${WASB_ACCOUNT_NAME}|\" ${WASB_SERVER_DIR}/wasbs-site.xml"
-    gpssh -u gpadmin -h mdw -v -s -e "sed -i \"s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_KEY|${WASB_ACCOUNT_KEY}|\" ${WASB_SERVER_DIR}/wasbs-site.xml"
+    gpssh -u gpadmin -h cdw -v -s -e "mkdir -p $WASB_SERVER_DIR && cp ${PXF_HOME}/templates/wasbs-site.xml $WASB_SERVER_DIR"
+    gpssh -u gpadmin -h cdw -v -s -e "sed -i \"s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_NAME|${WASB_ACCOUNT_NAME}|\" ${WASB_SERVER_DIR}/wasbs-site.xml"
+    gpssh -u gpadmin -h cdw -v -s -e "sed -i \"s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_KEY|${WASB_ACCOUNT_KEY}|\" ${WASB_SERVER_DIR}/wasbs-site.xml"
     sync_configuration
 }
 

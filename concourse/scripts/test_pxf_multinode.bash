@@ -49,7 +49,7 @@ function run_multinode_smoke_test() {
 	echo "Found $("${LOCAL_GPHD_ROOT}/bin/hdfs" dfs -ls /tmp/pxf_test | grep -c pxf_test) items in /tmp/pxf_test"
 	expected_output=$((3 * NO_OF_FILES))
 
-	time ssh "${SSH_OPTS[@]}" gpadmin@mdw "
+	time ssh "${SSH_OPTS[@]}" gpadmin@cdw "
 		source ${GPHOME}/greenplum_path.sh
 		psql -d template1 -c \"
 			CREATE EXTERNAL TABLE pxf_multifile_test (b TEXT)
@@ -70,25 +70,25 @@ function update_pghba_conf() {
 	local sdw_ips=("$@")
 	for ip in "${sdw_ips[@]}"; do
 		echo "host	all	gpadmin		$ip/32	trust"
-	done | ssh "${SSH_OPTS[@]}" gpadmin@mdw "
-		cat >> /data/gpdata/master/gpseg-1/pg_hba.conf &&
-		cat /data/gpdata/master/gpseg-1/pg_hba.conf
+	done | ssh "${SSH_OPTS[@]}" gpadmin@cdw "
+		cat >> /data/gpdata/coordinator/gpseg-1/pg_hba.conf &&
+		cat /data/gpdata/coordinator/gpseg-1/pg_hba.conf
 	"
 }
 
 function add_testing_encoding() {
 	# install new encoding and restart Greenplum so that the new encoding is picked up by Greenplum
-	ssh "${SSH_OPTS[@]}" gpadmin@mdw "
+	ssh "${SSH_OPTS[@]}" gpadmin@cdw "
 		source ${GPHOME}/greenplum_path.sh &&
 		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo localedef -c -i ru_RU -f CP1251 ru_RU.CP1251' &&
-		export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 &&
+		export MASTER_DATA_DIRECTORY=/data/gpdata/coordinator/gpseg-1 &&
 		gpstop -air
 	"
 }
 
 function setup_pxf_on_cluster() {
-	# drop named query file for JDBC test to gpadmin's home on mdw
-	scp "${SSH_OPTS[@]}" pxf_src/automation/src/test/resources/{,hive-}report.sql gpadmin@mdw:
+	# drop named query file for JDBC test to gpadmin's home on cdw
+	scp "${SSH_OPTS[@]}" pxf_src/automation/src/test/resources/{,hive-}report.sql gpadmin@cdw:
 
 	if [[ "${PROTOCOL}" == "file" ]]; then
 		# drop pxf-profiles.xml file with sequence file profiles for file protocol
@@ -114,11 +114,11 @@ function setup_pxf_on_cluster() {
 </profiles>
 EOF
 
-		scp "${SSH_OPTS[@]}" /tmp/pxf-profiles.xml "gpadmin@mdw:${BASE_DIR}/conf/pxf-profiles.xml"
+		scp "${SSH_OPTS[@]}" /tmp/pxf-profiles.xml "gpadmin@cdw:${BASE_DIR}/conf/pxf-profiles.xml"
 	fi
 
-	# configure PXF on master, sync configs and start pxf
-	ssh "${SSH_OPTS[@]}" gpadmin@mdw "
+	# configure PXF on coordinator, sync configs and start pxf
+	ssh "${SSH_OPTS[@]}" gpadmin@cdw "
 		source ${GPHOME}/greenplum_path.sh &&
 		${PXF_HOME}/bin/pxf cluster register
 		if [[ ! -d ${BASE_DIR} ]]; then
@@ -139,7 +139,7 @@ EOF
 		mkdir -p ${BASE_DIR}/servers/database &&
 		cp ${TEMPLATES_DIR}/templates/jdbc-site.xml ${BASE_DIR}/servers/database/ &&
 		sed -i  -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|' \
-			-e 's|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://mdw:5432/pxfautomation|' \
+			-e 's|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://cdw:5432/pxfautomation|' \
 			-e 's|YOUR_DATABASE_JDBC_USER|gpadmin|' \
 			-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
 			${BASE_DIR}/servers/database/jdbc-site.xml &&
@@ -149,7 +149,7 @@ EOF
 		mkdir -p ${BASE_DIR}/servers/db-session-params &&
 		cp ${TEMPLATES_DIR}/templates/jdbc-site.xml ${BASE_DIR}/servers/db-session-params &&
 		sed -i  -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|' \
-			-e 's|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://mdw:5432/pxfautomation|' \
+			-e 's|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://cdw:5432/pxfautomation|' \
 			-e 's|YOUR_DATABASE_JDBC_USER||' \
 			-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
 			-e 's|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|' \
@@ -197,7 +197,7 @@ function setup_pxf_kerberos_on_cluster() {
 		-e "s|</cluster>|<testKerberosPrincipal>gpadmin@${REALM}</testKerberosPrincipal></cluster>|g" \
 		-e "s|</hive>|<kerberosPrincipal>${KERBERIZED_HADOOP_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
 		"$multiNodesCluster"
-	ssh gpadmin@mdw "
+	ssh gpadmin@cdw "
 		cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/db-hive/pxf-site.xml &&
 		sed -i 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${BASE_DIR}/servers/db-hive/pxf-site.xml &&
 		sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
@@ -209,7 +209,7 @@ function setup_pxf_kerberos_on_cluster() {
 	sudo mkdir -p /etc/security/keytabs
 	sudo cp "${DATAPROC_DIR}/pxf.service.keytab" /etc/security/keytabs/gpadmin.headless.keytab
 	sudo chown gpadmin:gpadmin /etc/security/keytabs/gpadmin.headless.keytab
-	scp centos@mdw:/etc/krb5.conf /tmp/krb5.conf
+	scp centos@cdw:/etc/krb5.conf /tmp/krb5.conf
 	sudo cp /tmp/krb5.conf /etc/krb5.conf
 
 	# Add foreign dataproc hostfile to /etc/hosts
@@ -225,21 +225,21 @@ function setup_pxf_kerberos_on_cluster() {
 		REALM2=$(< "${DATAPROC_2_DIR}/REALM")
 		REALM2=${REALM2^^} # make sure REALM2 is up-cased, down-case below for hive principal
 		KERBERIZED_HADOOP_2_URI="hive/${HADOOP_2_HOSTNAME}.${REALM2,,}@${REALM2};saslQop=auth-conf" # quoted because of semicolon
-		ssh gpadmin@mdw "
+		ssh gpadmin@cdw "
 			mkdir -p ${BASE_DIR}/servers/hdfs-secure &&
 			cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/hdfs-secure &&
 			sed -i -e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>${HADOOP_2_USER}/_HOST@${REALM2}<|g\" ${BASE_DIR}/servers/hdfs-secure/pxf-site.xml &&
 			sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${BASE_DIR}/servers/hdfs-secure/pxf-site.xml
 		"
-		scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${BASE_DIR}/servers/hdfs-secure"
-		ssh gpadmin@mdw "PXF_BASE=${BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync"
+		scp dataproc_2_env_files/conf/*-site.xml "gpadmin@cdw:${BASE_DIR}/servers/hdfs-secure"
+		ssh gpadmin@cdw "PXF_BASE=${BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync"
 
 		sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>${HADOOP_2_USER}@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
 			-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>${HADOOP_2_USER}</userName></hive2>|g" \
 			"$multiNodesCluster"
 
 		# Create the db-hive-kerberos server configuration
-		ssh "${SSH_OPTS[@]}" gpadmin@mdw "
+		ssh "${SSH_OPTS[@]}" gpadmin@cdw "
 			mkdir -p ${BASE_DIR}/servers/db-hive-kerberos &&
 			cp ${TEMPLATES_DIR}/templates/jdbc-site.xml ${BASE_DIR}/servers/db-hive-kerberos &&
 			sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
@@ -269,24 +269,24 @@ function setup_pxf_kerberos_on_cluster() {
 			sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-0.c.${GOOGLE_PROJECT_ID}.internal'
 			sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-1.c.${GOOGLE_PROJECT_ID}.internal'
 			sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-2.c.${GOOGLE_PROJECT_ID}.internal'
-			sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-mdw.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-0.c.${GOOGLE_PROJECT_ID}.internal\"
+			sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-cdw.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-0.c.${GOOGLE_PROJECT_ID}.internal\"
 			sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw1.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-1.c.${GOOGLE_PROJECT_ID}.internal\"
 			sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw2.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-2.c.${GOOGLE_PROJECT_ID}.internal\"
-			sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-mdw.keytab\"
+			sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-cdw.keytab\"
 			sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-sdw1.keytab\"
 			sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-sdw2.keytab\"
 			"
 		scp "${HADOOP_2_SSH_OPTS[@]}" "${HADOOP_2_USER}@${HADOOP_2_HOSTNAME}":~/pxf.service-*.keytab \
 			/tmp/
 
-		scp /tmp/pxf.service-*.keytab gpadmin@mdw:~/dataproc_2_env_files/
+		scp /tmp/pxf.service-*.keytab gpadmin@cdw:~/dataproc_2_env_files/
 
 		# Add foreign dataproc hostfile to /etc/hosts on all nodes and copy keytab
-		ssh gpadmin@mdw "
+		ssh gpadmin@cdw "
 			source ${GPHOME}/greenplum_path.sh &&
 			gpscp -f ~gpadmin/hostfile_all -v -r -u centos ~/dataproc_2_env_files/etc_hostfile =:/tmp/etc_hostfile &&
 			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
-			gpscp -h mdw -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-mdw.keytab =:${BASE_DIR}/keytabs/pxf.service.2.keytab &&
+			gpscp -h cdw -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-cdw.keytab =:${BASE_DIR}/keytabs/pxf.service.2.keytab &&
 			gpscp -h sdw1 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw1.keytab =:${BASE_DIR}/keytabs/pxf.service.2.keytab &&
 			gpscp -h sdw2 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw2.keytab =:${BASE_DIR}/keytabs/pxf.service.2.keytab
 		"
@@ -307,7 +307,7 @@ function setup_pxf_kerberos_on_cluster() {
 		DOMAIN3="$(< "${HADOOP_3_DIR}/domain")"
 		REALM3="$(< "${HADOOP_3_DIR}/REALM")"
 		REALM3="${REALM3^^}" # make sure REALM3 is upper-case
-		ssh gpadmin@mdw "
+		ssh gpadmin@cdw "
 			mkdir -p ${BASE_DIR}/servers/hdfs-ipa &&
 			cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/hdfs-ipa &&
 			sed -i \
@@ -316,10 +316,10 @@ function setup_pxf_kerberos_on_cluster() {
 				-e '/pxf.service.kerberos.constrained-delegation/{n;s|<value>.*</value>|<value>true</value>|}' ${BASE_DIR}/servers/hdfs-ipa/pxf-site.xml
 		"
 
-		scp ipa_env_files/conf/*-site.xml "gpadmin@mdw:${BASE_DIR}/servers/hdfs-ipa"
+		scp ipa_env_files/conf/*-site.xml "gpadmin@cdw:${BASE_DIR}/servers/hdfs-ipa"
 
 		# optionally create a non-impersonation configuration servers with/without a service user for the IPA cluster for the proxy test
-		ssh gpadmin@mdw "
+		ssh gpadmin@cdw "
 			if [[ ${IMPERSONATION} == true ]]; then
 				cp -r ${BASE_DIR}/servers/hdfs-ipa ${BASE_DIR}/servers/hdfs-ipa-no-impersonation
 				sed -i \
@@ -336,7 +336,7 @@ function setup_pxf_kerberos_on_cluster() {
 		"
 
 		# sync up PXF server configuration
-		ssh gpadmin@mdw "PXF_BASE=${BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync"
+		ssh gpadmin@cdw "PXF_BASE=${BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync"
 
 		# add configuration information to the SUT file for the automation suite
 		sed -i \
@@ -353,7 +353,7 @@ function setup_pxf_kerberos_on_cluster() {
 		sudo tee --append /etc/hosts < ipa_env_files/etc_hostfile
 
 		# add foreign Hadoop and IPA KDC hostfile to /etc/hosts on all nodes
-		ssh gpadmin@mdw "
+		ssh gpadmin@cdw "
 			source ${GPHOME}/greenplum_path.sh &&
 			gpscp -f ~gpadmin/hostfile_all -v -r -u centos ~/ipa_env_files/etc_hostfile =:/tmp/etc_hostfile &&
 			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
@@ -371,7 +371,7 @@ function setup_pxf_kerberos_on_cluster() {
 
 	# Create the non-secure cluster configuration
 	NON_SECURE_HADOOP_IP=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print $1}')
-	ssh gpadmin@mdw "
+	ssh gpadmin@cdw "
 		mkdir -p ${BASE_DIR}/servers/db-hive-non-secure &&
 		cp ${TEMPLATES_DIR}/templates/jdbc-site.xml ${BASE_DIR}/servers/db-hive-non-secure &&
 		sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
@@ -389,7 +389,7 @@ function setup_pxf_kerberos_on_cluster() {
 	sed -i "s/>non-secure-hadoop</>${NON_SECURE_HADOOP_IP}</g" "$multiNodesCluster"
 
 	# Create a secured server configuration with invalid principal name
-	ssh gpadmin@mdw "
+	ssh gpadmin@cdw "
 		mkdir -p ${BASE_DIR}/servers/secure-hdfs-invalid-principal &&
 		cp ${BASE_DIR}/servers/default/*-site.xml ${BASE_DIR}/servers/secure-hdfs-invalid-principal &&
 		cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/secure-hdfs-invalid-principal &&
@@ -398,7 +398,7 @@ function setup_pxf_kerberos_on_cluster() {
 	"
 
 	# Create a secured server configuration with invalid keytab
-	ssh gpadmin@mdw "
+	ssh gpadmin@cdw "
 		mkdir -p ${BASE_DIR}/servers/secure-hdfs-invalid-keytab &&
 		cp ${BASE_DIR}/servers/default/*-site.xml ${BASE_DIR}/servers/secure-hdfs-invalid-keytab &&
 		cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/secure-hdfs-invalid-keytab &&
@@ -407,7 +407,7 @@ function setup_pxf_kerberos_on_cluster() {
 	"
 
 	# Configure the principal for the default-no-impersonation server
-	ssh gpadmin@mdw "
+	ssh gpadmin@cdw "
 	if [[ ${IMPERSONATION} == true ]]; then
 		sed -i -e 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${BASE_DIR}/servers/default-no-impersonation/pxf-site.xml &&
 		PXF_BASE=${BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync
@@ -419,12 +419,12 @@ function configure_nfs() {
 	echo "install the NFS client"
 	yum install -y -q -e 0 nfs-utils
 
-	echo "check available NFS shares in mdw"
-	showmount -e mdw
+	echo "check available NFS shares in cdw"
+	showmount -e cdw
 
 	echo "create mount point and mount it"
 	mkdir -p "${BASE_PATH}"
-	mount -o nolock -t nfs mdw:/var/nfs "${BASE_PATH}"
+	mount -o nolock -t nfs cdw:/var/nfs "${BASE_PATH}"
 	chown -R gpadmin:gpadmin "${BASE_PATH}"
 	chmod -R 755 "${BASE_PATH}"
 
@@ -462,7 +462,7 @@ function run_pxf_automation() {
 
 	# point the tests at remote Hadoop and GPDB
 	sed -i "s/>hadoop</>${HADOOP_HOSTNAME}</g" "$multiNodesCluster"
-	sed -i "/<class>org.greenplum.pxf.automation.components.gpdb.Gpdb<\/class>/ {n; s/localhost/mdw/}" \
+	sed -i "/<class>org.greenplum.pxf.automation.components.gpdb.Gpdb<\/class>/ {n; s/localhost/cdw/}" \
 		"$multiNodesCluster"
 
 	if [[ $KERBEROS == true ]]; then
@@ -481,7 +481,7 @@ function run_pxf_automation() {
 		# set explicit GPHOME here for consistency across container / CCP
 		export GPHOME=${GPHOME}
 		export PXF_HOME=${PXF_HOME}
-		export PGHOST=mdw
+		export PGHOST=cdw
 		export PGPORT=5432
 
 		export ACCESS_KEY_ID='${ACCESS_KEY_ID}' SECRET_ACCESS_KEY='${SECRET_ACCESS_KEY}'
@@ -511,8 +511,8 @@ function _main() {
 	if [[ "${PROTOCOL}" == "file" ]]; then
 		# ensure user id and group id match the VM id on the container to be able
 		# to read and write files
-		usermod -u  "$(ssh mdw 'id -u gpadmin')" gpadmin
-		groupmod -g "$(ssh mdw 'id -g gpadmin')" gpadmin
+		usermod -u  "$(ssh cdw 'id -u gpadmin')" gpadmin
+		groupmod -g "$(ssh cdw 'id -g gpadmin')" gpadmin
 	fi
 
 	cp -R cluster_env_files/.ssh/* /root/.ssh
@@ -556,7 +556,7 @@ function _main() {
 	inflate_singlecluster
 	configure_local_hdfs
 
-	# widen access to mdw to all nodes in the cluster for JDBC test
+	# widen access to cdw to all nodes in the cluster for JDBC test
 	update_pghba_conf "${gpdb_segments[@]}"
 
 	# Add the ru_RU.CP1251 encoding for testing
