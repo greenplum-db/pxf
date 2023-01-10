@@ -74,9 +74,9 @@ endif
 	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJOR_VERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
 	mkdir -p build/stage/$${PXF_PACKAGE_NAME} ;\
 	cp -a external-table/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
-ifneq ($(FDW_SUPPORT),)
+	if [ -z $${FDW_SUPPORT+x} ]; then \
 	cp -a fdw/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
-endif
+	fi;\
 	cp -a cli/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
 	cp -a server/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
 	echo $$(git rev-parse --verify HEAD) > build/stage/$${PXF_PACKAGE_NAME}/pxf/commit.sha ;\
@@ -104,10 +104,10 @@ endif
 	mkdir -p build/rpmbuild/{BUILD,RPMS,SOURCES,SPECS} ;\
 	mkdir -p build/rpmbuild/SOURCES/gpexttable ;\
 	cp -a external-table/build/stage/* build/rpmbuild/SOURCES/gpexttable ;\
-ifneq ($(FDW_SUPPORT),)
+	if [ -z $${FDW_SUPPORT+x} ]; then \
 	mkdir -p build/rpmbuild/SOURCES/fdw ;\
 	cp -a fdw/build/stage/* build/rpmbuild/SOURCES/fdw ;\
-endif
+	fi;\
 	cp -a cli/build/stage/pxf/* build/rpmbuild/SOURCES ;\
 	cp -a server/build/stage/pxf/* build/rpmbuild/SOURCES ;\
 	echo $$(git rev-parse --verify HEAD) > build/rpmbuild/SOURCES/commit.sha ;\
@@ -149,10 +149,10 @@ endif
 	rm -rf build/debbuild ;\
 	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpexttable ;\
 	cp -a external-table/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpexttable ;\
-ifneq ($(FDW_SUPPORT),)
+	if [ -z $${FDW_SUPPORT+x} ]; then \
 	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/fdw ;\
 	cp -a fdw/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/fdw ;\
-endif
+	fi;\
 	cp -a cli/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION} ;\
 	cp -a server/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION} ;\
 	echo $$(git rev-parse --verify HEAD) > build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/commit.sha ;\
