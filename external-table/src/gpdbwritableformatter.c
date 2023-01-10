@@ -433,8 +433,6 @@ verifyExternalTableDefinition(int16 ncolumns_remote, AttrNumber nvalidcolumns, A
 		if (attr->attisdropped) continue;
 
 		input_type = 0;
-		defined_type = attr->atttypid;
-		enumType = readInt1FromBuffer(data_buf, bufidx);
 		defined_type = tupdesc->attrs[i].atttypid;
 		enumType = readInt1FromBuffer(data_buf, data_len, bufidx);
 
