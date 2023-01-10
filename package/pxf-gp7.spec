@@ -35,10 +35,10 @@ fi
 %__cp -R %{_sourcedir}/* %{buildroot}/%{prefix}
 
 %post
-sed -i "s|directory =.*|directory = '${RPM_INSTALL_PREFIX}/fdw/'|g" "${RPM_INSTALL_PREFIX}/fdw/pxf_fdw.control"
-sed -i "s|module_pathname =.*|module_pathname = '${RPM_INSTALL_PREFIX}/fdw/pxf_fdw'|g" "${RPM_INSTALL_PREFIX}/fdw/pxf_fdw.control"
 sed -i "s|directory =.*|directory = '${RPM_INSTALL_PREFIX}/gpextable/'|g" "${RPM_INSTALL_PREFIX}/gpextable/pxf.control"
 sed -i "s|module_pathname =.*|module_pathname = '${RPM_INSTALL_PREFIX}/gpextable/pxf'|g" "${RPM_INSTALL_PREFIX}/gpextable/pxf.control"
+sed -i "s|directory =.*|directory = '${RPM_INSTALL_PREFIX}/fdw/'|g" "${RPM_INSTALL_PREFIX}/fdw/pxf_fdw.control"
+sed -i "s|module_pathname =.*|module_pathname = '${RPM_INSTALL_PREFIX}/fdw/pxf_fdw'|g" "${RPM_INSTALL_PREFIX}/fdw/pxf_fdw.control"
 
 %files
 %{prefix}
