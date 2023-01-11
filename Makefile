@@ -1,11 +1,30 @@
 include common.mk
 
-PG_CONFIG = pg_config
-
 PXF_VERSION ?= $(shell cat version)
 export PXF_VERSION
 
-FDW_SUPPORT = $(shell $(PG_CONFIG) --version | egrep "PostgreSQL 12")
+PG_CONFIG = pg_config
+PGXS := $(shell $(PG_CONFIG) --pgxs)
+
+ifndef PGXS
+    $(error Make sure the Greenplum installation binaries are in your PATH. i.e. export PATH=<path to your greenplum installation>/bin:$$PATH)
+endif
+
+include $(PGXS)
+
+FDW_BUILD = TRUE
+FDW_PACKAGE = TRUE
+
+ifeq ($(shell test $(GP_MAJORVERSION) -lt 6; echo $$?),0)
+	FDW_BUILD = FALSE
+endif
+
+ifeq ($(shell test $(GP_MAJORVERSION) -lt 7; echo $$?),0)
+	FDW_PACKAGE = FALSE
+endif
+
+export FDW_BUILD
+export FDW_PACKAGE
 
 LICENSE ?= ASL 2.0
 VENDOR ?= Open Source
@@ -20,7 +39,11 @@ external-table:
 	make -C external-table
 
 fdw:
+ifeq ($(FDW_BUILD),TRUE)
 	make -C fdw
+else
+	@echo "Skipping building FDW extension because GPDB version is less than 6"
+endif
 
 extensions: external-table fdw
 
@@ -38,10 +61,10 @@ clean:
 	make -C server clean
 
 test:
-ifneq ($(FDW_SUPPORT),)
+ifeq ($(FDW_BUILD),TRUE)
 	make -C fdw installcheck
 else
-	@echo "The variable FDW_SUPPORT was empty; skipping fdw tests"
+	@echo "Skipping testing FDW extension because GPDB version is less than 6"
 endif
 	make -C cli/go/src/pxf-cli test
 	make -C server test
@@ -51,7 +74,11 @@ it:
 
 install:
 	make -C external-table install
+ifeq ($(FDW_BUILD),TRUE)
 	make -C fdw install
+else
+	@echo "Skipping installing FDW extension because GPDB version is less than 6"
+endif
 	make -C cli/go/src/pxf-cli install
 	make -C server install
 
@@ -61,7 +88,7 @@ install-server:
 stage:
 	rm -rf build/stage
 	make -C external-table stage
-ifneq ($(FDW_SUPPORT),)
+ifeq ($(FDW_PACKAGE),TRUE)
 	make -C fdw stage
 else
 	@echo "Skipping staging FDW extension because GPDB version is less than 7"
@@ -74,7 +101,7 @@ endif
 	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJOR_VERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
 	mkdir -p build/stage/$${PXF_PACKAGE_NAME} ;\
 	cp -a external-table/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
-	if [ -z $${FDW_SUPPORT+x} ]; then \
+	if [[ $$(FDW_PACKAGE) == TRUE ]]; then \
 	cp -a fdw/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
 	fi;\
 	cp -a cli/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
@@ -89,7 +116,7 @@ tar: stage
 
 rpm:
 	make -C external-table stage
-ifneq ($(FDW_SUPPORT),)
+ifeq ($(FDW_PACKAGE),TRUE)
 	make -C fdw stage
 else
 	@echo "Skipping packaging FDW extension because GPDB version is less than 7"
@@ -102,9 +129,9 @@ endif
 	if [[ $${PXF_VERSION} == *"-SNAPSHOT" ]]; then PXF_RELEASE=SNAPSHOT; else PXF_RELEASE=1; fi ;\
 	rm -rf build/rpmbuild ;\
 	mkdir -p build/rpmbuild/{BUILD,RPMS,SOURCES,SPECS} ;\
-	mkdir -p build/rpmbuild/SOURCES/gpexttable ;\
-	cp -a external-table/build/stage/* build/rpmbuild/SOURCES/gpexttable ;\
-	if [ -z $${FDW_SUPPORT+x} ]; then \
+	mkdir -p build/rpmbuild/SOURCES/gpextable ;\
+	cp -a external-table/build/stage/* build/rpmbuild/SOURCES/gpextable ;\
+	if [[ $$(FDW_PACKAGE) == TRUE ]]; then \
 	mkdir -p build/rpmbuild/SOURCES/fdw ;\
 	cp -a fdw/build/stage/* build/rpmbuild/SOURCES/fdw ;\
 	fi;\
@@ -135,7 +162,7 @@ rpm-tar: rpm
 
 deb:
 	make -C external-table stage
-ifneq ($(FDW_SUPPORT),)
+ifneq ($(FDW_PACKAGE),TRUE)
 	make -C fdw stage
 else
 	@echo "Skipping packaging FDW extension because GPDB version is less than 7"
@@ -147,9 +174,9 @@ endif
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\
 	if [[ $${PXF_VERSION} == *"-SNAPSHOT" ]]; then PXF_RELEASE=SNAPSHOT; else PXF_RELEASE=1; fi ;\
 	rm -rf build/debbuild ;\
-	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpexttable ;\
-	cp -a external-table/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpexttable ;\
-	if [ -z $${FDW_SUPPORT+x} ]; then \
+	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpextable ;\
+	cp -a external-table/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpextable ;\
+	if [[ $$(FDW_PACKAGE) == TRUE ]]; then \
 	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/fdw ;\
 	cp -a fdw/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/fdw ;\
 	fi;\
