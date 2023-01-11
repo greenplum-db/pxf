@@ -150,9 +150,9 @@ public class BridgeOutputBuilder {
      */
     public LinkedList<Writable> makeOutput(List<OneField> recFields)
             throws BadRecordException {
-        if (output == null && outputFormat == OutputFormat.GPDBWritable) {
-            makeGPDBWritableOutput();
-        }
+//        if (output == null && outputFormat == OutputFormat.GPDBWritable) {
+//            makeGPDBWritableOutput();
+//        }
 
         outputList.clear();
 
@@ -211,11 +211,11 @@ public class BridgeOutputBuilder {
      * @throws BadRecordException if building the output record failed
      */
     void fillOutputRecord(List<OneField> recFields) throws BadRecordException {
-        if (outputFormat == OutputFormat.GPDBWritable) {
-            fillGPDBWritable(recFields);
-        } else {
+//        if (outputFormat == OutputFormat.GPDBWritable) {
+//            fillGPDBWritable(recFields);
+//        } else {
             fillText(recFields);
-        }
+//        }
     }
 
     /**
@@ -324,6 +324,9 @@ public class BridgeOutputBuilder {
             } else {
                 output = new Text(fieldListToCSVString(recFields));
             }
+
+            // append magic header?
+
         }
 
         outputList.add(output);

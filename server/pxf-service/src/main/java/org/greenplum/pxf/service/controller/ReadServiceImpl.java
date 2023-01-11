@@ -82,6 +82,10 @@ public class ReadServiceImpl extends BaseServiceImpl<OperationStats> implements 
         CountingOutputStream countingOutputStream = new CountingOutputStream(outputStream);
         String sourceName = null;
         try {
+
+            String magicString = "ED00\0\0\0~";
+            countingOutputStream.write(magicString.getBytes());
+
             List<Fragment> fragments = fragmenterService.getFragmentsForSegment(context);
             for (int i = 0; i < fragments.size(); i++) {
                 Fragment fragment = fragments.get(i);
