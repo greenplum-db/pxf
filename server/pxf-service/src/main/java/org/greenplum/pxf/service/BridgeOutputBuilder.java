@@ -150,9 +150,9 @@ public class BridgeOutputBuilder {
      */
     public LinkedList<Writable> makeOutput(List<OneField> recFields)
             throws BadRecordException {
-//        if (output == null && outputFormat == OutputFormat.GPDBWritable) {
-//            makeGPDBWritableOutput();
-//        }
+        if (output == null && outputFormat == OutputFormat.GPDBWritable && !(gpdbTableformat.equalsIgnoreCase("csv") || gpdbTableformat.equalsIgnoreCase("text"))) {
+            makeGPDBWritableOutput();
+        }
 
         outputList.clear();
 
@@ -165,7 +165,7 @@ public class BridgeOutputBuilder {
         outputList.clear();
         if (recordsBatch != null) {
             for (List<OneField> record : recordsBatch) {
-                if (outputFormat == OutputFormat.GPDBWritable) {
+                if (outputFormat == OutputFormat.GPDBWritable && !(gpdbTableformat.equalsIgnoreCase("csv") || gpdbTableformat.equalsIgnoreCase("text"))) {
                     makeGPDBWritableOutput();
                 }
                 fillOutputRecord(record);
@@ -211,11 +211,11 @@ public class BridgeOutputBuilder {
      * @throws BadRecordException if building the output record failed
      */
     void fillOutputRecord(List<OneField> recFields) throws BadRecordException {
-//        if (outputFormat == OutputFormat.GPDBWritable) {
-//            fillGPDBWritable(recFields);
-//        } else {
+        if (outputFormat == OutputFormat.GPDBWritable && !(gpdbTableformat.equalsIgnoreCase("csv") || gpdbTableformat.equalsIgnoreCase("text"))) {
+            fillGPDBWritable(recFields);
+        } else {
             fillText(recFields);
-//        }
+        }
     }
 
     /**
