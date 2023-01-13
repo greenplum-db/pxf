@@ -90,7 +90,6 @@ install_gpdb
 # installation of GPDB from RPM/DEB doesn't ensure that the installation location will match the version
 # given in the gpdb_package, so set the GPHOME after installation
 GPHOME=$(find /usr/local/ -name "greenplum-db-${GPDB_VERSION}*")
-
 inflate_dependencies
 compile_pxf
 package_pxf
