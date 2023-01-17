@@ -574,13 +574,7 @@ jobs:
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
-{% if gp_ver == 7 %}
-      GROUP: fdw_gpdb_schedule
-      HADOOP_JAVA_HOME: /usr/lib/jvm/jre-1.8.0-openjdk
-      PG_REGRESS: true
-{% else %}
       GROUP: gpdb,proxy,profile
-{% endif %}
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
 {% endfor %}
 {% set gp_ver = None %}
