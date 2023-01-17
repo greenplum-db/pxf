@@ -101,7 +101,7 @@ endif
 	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJOR_VERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
 	mkdir -p build/stage/$${PXF_PACKAGE_NAME} ;\
 	cp -a external-table/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
-	if [[ $$(FDW_PACKAGE) == TRUE ]]; then \
+	if [[ $${FDW_PACKAGE} == TRUE ]]; then \
 	cp -a fdw/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
 	fi;\
 	cp -a cli/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
@@ -131,7 +131,7 @@ endif
 	mkdir -p build/rpmbuild/{BUILD,RPMS,SOURCES,SPECS} ;\
 	mkdir -p build/rpmbuild/SOURCES/gpextable ;\
 	cp -a external-table/build/stage/* build/rpmbuild/SOURCES/gpextable ;\
-	if [[ $$(FDW_PACKAGE) == TRUE ]]; then \
+	if [[ $${FDW_PACKAGE} == TRUE ]]; then \
 	mkdir -p build/rpmbuild/SOURCES/fdw ;\
 	cp -a fdw/build/stage/* build/rpmbuild/SOURCES/fdw ;\
 	fi;\
@@ -162,7 +162,7 @@ rpm-tar: rpm
 
 deb:
 	make -C external-table stage
-ifneq ($(FDW_PACKAGE),TRUE)
+ifeq ($(FDW_PACKAGE),TRUE)
 	make -C fdw stage
 else
 	@echo "Skipping packaging FDW extension because GPDB version is less than 7"
@@ -176,7 +176,7 @@ endif
 	rm -rf build/debbuild ;\
 	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpextable ;\
 	cp -a external-table/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpextable ;\
-	if [[ $$(FDW_PACKAGE) == TRUE ]]; then \
+	if [[ $${FDW_PACKAGE} == TRUE ]]; then \
 	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/fdw ;\
 	cp -a fdw/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/fdw ;\
 	fi;\
