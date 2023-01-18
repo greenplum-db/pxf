@@ -47,15 +47,8 @@ static List *getTargetList(ProjectionInfo *projInfo);
 static bool needToIterateTargetList(List *targetList, int *varNumbers);
 static Node *getTargetListEntryExpression(ListCell *lc1);
 static int  getNumSimpleVars(ProjectionInfo *projInfo);
-static char *
-strtokx2(const char *s,
-         const char *whitespace,
-         const char *delim,
-         const char *quote,
-         char escape,
-         bool e_strings,
-         bool del_quotes,
-         int encoding);
+static char *parse_formatter_name(char *fmtstr, char **formatter_name);
+
 #if PG_VERSION_NUM < 90400
 /*
  * this function is copied from Greenplum 6 (6X_STABLE branch) code
@@ -90,7 +83,8 @@ build_http_headers(PxfInputData *input)
 	const char	   *relname;
 	char		   *relnamespace = NULL;
     char           *formatter_name = NULL;
-    List	       *formatter_params = NIL;
+    char           *format_options = NULL;
+
 	relname = gphduri->data;
 	if (rel != NULL)
 	{
@@ -625,288 +619,34 @@ add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri)
 		pfree(x_gp_key);
 	}
 }
-static DefElem *
-makeDefElem(char *name, Node *arg)
-{
-    DefElem    *res = makeNode(DefElem);
 
-    res->defnamespace = NULL;
-    res->defname = name;
-    res->arg = arg;
-    res->defaction = DEFELEM_UNSPEC;
-
-    return res;
-}
-
-static void
-parseCustomFormatString(char *fmtstr, char **formatter_name, List **formatter_params)
-{
-    char	   *token;
-    const char *whitespace = " \t\n\r";
-    char		nonstd_backslash = 0;
-    int			encoding = GetDatabaseEncoding();
-    List	   *l = NIL;
-    bool		formatter_found = false;
-
-    token = strtokx2(fmtstr, whitespace, NULL, NULL,
-                     0, false, true, encoding);
-
-    /* parse user custom options. take it as is. no validation needed */
-
-    if (token)
-    {
-        char	   *key = token;
-        char	   *val = NULL;
-        StringInfoData key_modified;
-
-        initStringInfo(&key_modified);
-
-        while (key)
-        {
-            /* MPP-14467 - replace meta chars back to original */
-            resetStringInfo(&key_modified);
-            appendStringInfoString(&key_modified, key);
-            replaceStringInfoString(&key_modified, "<gpx20>", " ");
-
-            val = strtokx2(NULL, whitespace, NULL, "'",
-                           nonstd_backslash, true, true, encoding);
-            if (val)
-            {
-
-                if (pg_strcasecmp(key, "formatter") == 0)
-                {
-                    *formatter_name = pstrdup(val);
-                    formatter_found = true;
-                }
-                else
-                    l = lappend(l, makeDefElem(pstrdup(key_modified.data),
-                                               (Node *) makeString(pstrdup(val))));
-            }
-            else
-                goto error;
-
-            key = strtokx2(NULL, whitespace, NULL, NULL,
-                           0, false, false, encoding);
-        }
-
-    }
-
-    if (!formatter_found)
-        ereport(ERROR,
-                (errcode(ERRCODE_INTERNAL_ERROR),
-                        errmsg("external table internal parse error: no formatter function name found")));
-
-    *formatter_params = l;
-
-    return;
-
-    error:
-    if (token)
-        ereport(ERROR,
-                (errcode(ERRCODE_INTERNAL_ERROR),
-                        errmsg("external table internal parse error at \"%s\"",
-                               token)));
-    else
-        ereport(ERROR,
-                (errcode(ERRCODE_INTERNAL_ERROR),
-                        errmsg("external table internal parse error at end of line")));
-}
-
+/*
+ * Checks for the multibyte delimiter
+ */
 static char *
-strtokx2(const char *s,
-         const char *whitespace,
-         const char *delim,
-         const char *quote,
-         char escape,
-         bool e_strings,
-         bool del_quotes,
-         int encoding)
+parse_formatter_name(char *fmtstr, char **formatter_name)
 {
-    static char *storage = NULL;/* store the local copy of the users string
-								 * here */
-    static char *string = NULL; /* pointer into storage where to continue on
-								 * next call */
 
-    /* variously abused variables: */
-    unsigned int offset;
-    char	   *start;
-    char	   *p;
-
-    if (s)
+    bool		formatter_found = false;
+    char        *format_options = NULL;
+    char        *result = NULL;
+    if ((result = strstr(fmtstr, "multibyte_delim_import")) != NULL)
     {
-        /*
-         * We may need extra space to insert delimiter nulls for adjacent
-         * tokens.  2X the space is a gross overestimate, but it's unlikely
-         * that this code will be used on huge strings anyway.
-         */
-        storage = palloc(2 * strlen(s) + 1);
-        strcpy(storage, s);
-        string = storage;
-    }
+        *formatter_name = DelimitedFormatterName;
+        formatter_found = true;
 
-    if (!storage)
-        return NULL;
+        // remove the formatter and multibyte_delim_import aspects of the string
+        //"multibyte_delim_import' delimiter ','"
+        // copy only last part
+        // format_options = "delimiter ','"
 
-    /* skip leading whitespace */
-    offset = strspn(string, whitespace);
-    start = &string[offset];
-
-    /* end of string reached? */
-    if (*start == '\0')
-    {
-        /* technically we don't need to free here, but we're nice */
-        pfree(storage);
-        storage = NULL;
-        string = NULL;
-        return NULL;
-    }
-
-    /* test if delimiter character */
-    if (delim && strchr(delim, *start))
-    {
-        /*
-         * If not at end of string, we need to insert a null to terminate the
-         * returned token.  We can just overwrite the next character if it
-         * happens to be in the whitespace set ... otherwise move over the
-         * rest of the string to make room.  (This is why we allocated extra
-         * space above).
-         */
-        p = start + 1;
-        if (*p != '\0')
-        {
-            if (!strchr(whitespace, *p))
-                memmove(p + 1, p, strlen(p) + 1);
-            *p = '\0';
-            string = p + 1;
-        }
-        else
-        {
-            /* at end of string, so no extra work */
-            string = p;
-        }
-
-        return start;
-    }
-
-    /* check for E string */
-    p = start;
-    if (e_strings &&
-        (*p == 'E' || *p == 'e') &&
-        p[1] == '\'')
-    {
-        quote = "'";
-        escape = '\\';			/* if std strings before, not any more */
-        p++;
-    }
-
-    /* test if quoting character */
-    if (quote && strchr(quote, *p))
-    {
-        /* okay, we have a quoted token, now scan for the closer */
-        char		thisquote = *p++;
-
-        /*
-         * MPP-6698 START
-         *
-         * unfortunately, it is possible for an external table format string
-         * to be represented in the catalog in a way which is problematic to
-         * parse: when using a single quote as a QUOTE or ESCAPE character the
-         * format string will show [quote ''']. since we do not want to change
-         * how this is stored at this point (as it will affect previous
-         * versions of the software already in production) the following code
-         * block will detect this scenario where 3 quote characters follow
-         * each other, with no fourth one. in that case, we will skip the
-         * second one (the first is skipped just above) and the last trailing
-         * quote will be skipped below. the result will be the actual token
-         * (''') and after stripping it due to del_quotes we'll end up with
-         * ('). very ugly, but will do the job...
-         */
-        char		qt = quote[0];
-
-        if (strlen(p) >= 3 && p[0] == qt && p[1] == qt && p[2] != qt)
-            p++;
-        /* MPP-6698 END */
-
-        for (; *p; p += pg_encoding_mblen(encoding, p))
-        {
-            if (*p == escape && p[1] != '\0')
-                p++;			/* process escaped anything */
-            else if (*p == thisquote && p[1] == thisquote)
-                p++;			/* process doubled quote */
-            else if (*p == thisquote)
-            {
-                p++;			/* skip trailing quote */
-                break;
-            }
-        }
-
-        /*
-         * If not at end of string, we need to insert a null to terminate the
-         * returned token.  See notes above.
-         */
-        if (*p != '\0')
-        {
-            if (!strchr(whitespace, *p))
-                memmove(p + 1, p, strlen(p) + 1);
-            *p = '\0';
-            string = p + 1;
-        }
-        else
-        {
-            /* at end of string, so no extra work */
-            string = p;
-        }
-//
-//        /* Clean up the token if caller wants that */
-//        if (del_quotes)
-//            strip_quotes(start, thisquote, escape, encoding);
-
-        return start;
-    }
-
-    /*
-     * Otherwise no quoting character.  Scan till next whitespace, delimiter
-     * or quote.  NB: at this point, *start is known not to be '\0',
-     * whitespace, delim, or quote, so we will consume at least one character.
-     */
-    offset = strcspn(start, whitespace);
-
-    if (delim)
-    {
-        unsigned int offset2 = strcspn(start, delim);
-
-        if (offset > offset2)
-            offset = offset2;
-    }
-
-    if (quote)
-    {
-        unsigned int offset2 = strcspn(start, quote);
-
-        if (offset > offset2)
-            offset = offset2;
-    }
-
-    p = start + offset;
-
-    /*
-     * If not at end of string, we need to insert a null to terminate the
-     * returned token.  See notes above.
-     */
-    if (*p != '\0')
-    {
-        if (!strchr(whitespace, *p))
-            memmove(p + 1, p, strlen(p) + 1);
-        *p = '\0';
-        string = p + 1;
     }
     else
     {
-        /* at end of string, so no extra work */
-        string = p;
+        return fmtstr;
     }
 
-    return start;
+    return format_options;
 }
 
 /*
