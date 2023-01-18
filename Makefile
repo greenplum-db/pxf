@@ -23,6 +23,10 @@ ifeq ($(shell test $(GP_MAJORVERSION) -lt 7; echo $$?),0)
 	FDW_PACKAGE = FALSE
 endif
 
+GP_BUILD_ARCH = $(subst _,-,$(BLD_ARCH))
+
+export GP_MAJORVERSION
+export GP_BUILD_ARCH
 export FDW_BUILD
 export FDW_PACKAGE
 
@@ -35,6 +39,8 @@ default: all
 
 all: extensions cli server
 
+extensions: external-table fdw
+
 external-table:
 	make -C external-table
 
@@ -44,8 +50,6 @@ ifeq ($(FDW_BUILD),TRUE)
 else
 	@echo "Skipping building FDW extension because GPDB version is less than 6"
 endif
-
-extensions: external-table fdw
 
 cli:
 	make -C cli/go/src/pxf-cli
@@ -95,10 +99,11 @@ else
 endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
+	@echo GP_MAJORVERSION=$(GP_MAJORVERSION)
+	@echo BLD_ARCH=$(BLD_ARCH)
+	@echo GP_BUILD_ARCH=$(GP_BUILD_ARCH)
 	set -e ;\
-	GP_MAJOR_VERSION=$$(cat external-table/build/metadata/gp_major_version) ;\
-	GP_BUILD_ARCH=$$(cat external-table/build/metadata/build_arch) ;\
-	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJOR_VERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
+	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJORVERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
 	mkdir -p build/stage/$${PXF_PACKAGE_NAME} ;\
 	cp -a external-table/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
 	if [[ $${FDW_PACKAGE} == TRUE ]]; then \
@@ -124,7 +129,6 @@ endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
 	set -e ;\
-	GP_MAJOR_VERSION=$$(cat external-table/build/metadata/gp_major_version) ;\
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\
 	if [[ $${PXF_VERSION} == *"-SNAPSHOT" ]]; then PXF_RELEASE=SNAPSHOT; else PXF_RELEASE=1; fi ;\
 	rm -rf build/rpmbuild ;\
@@ -145,14 +149,13 @@ endif
 	--define "pxf_release $${PXF_RELEASE}" \
 	--define "license ${LICENSE}" \
 	--define "vendor ${VENDOR}" \
-	-bb $${PWD}/build/rpmbuild/SPECS/pxf-gp$${GP_MAJOR_VERSION}.spec
+	-bb $${PWD}/build/rpmbuild/SPECS/pxf-gp$${GP_MAJORVERSION}.spec
 
 rpm-tar: rpm
 	rm -rf build/{stagerpm,distrpm}
 	mkdir -p build/{stagerpm,distrpm}
 	set -e ;\
-	GP_MAJOR_VERSION=$$(cat external-table/build/metadata/gp_major_version) ;\
-	PXF_RPM_FILE=$$(find build/rpmbuild/RPMS -name pxf-gp$${GP_MAJOR_VERSION}-*.rpm) ;\
+	PXF_RPM_FILE=$$(find build/rpmbuild/RPMS -name pxf-gp$${GP_MAJORVERSION}-*.rpm) ;\
 	PXF_RPM_BASE_NAME=$$(basename $${PXF_RPM_FILE%*.rpm}) ;\
 	PXF_PACKAGE_NAME=$${PXF_RPM_BASE_NAME%.*} ;\
 	mkdir -p build/stagerpm/$${PXF_PACKAGE_NAME} ;\
@@ -170,31 +173,29 @@ endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
 	set -e ;\
-	GP_MAJOR_VERSION=$$(cat external-table/build/metadata/gp_major_version) ;\
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\
 	if [[ $${PXF_VERSION} == *"-SNAPSHOT" ]]; then PXF_RELEASE=SNAPSHOT; else PXF_RELEASE=1; fi ;\
 	rm -rf build/debbuild ;\
-	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpextable ;\
-	cp -a external-table/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/gpextable ;\
+	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/gpextable ;\
+	cp -a external-table/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/gpextable ;\
 	if [[ $${FDW_PACKAGE} == TRUE ]]; then \
-	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/fdw ;\
-	cp -a fdw/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/fdw ;\
+	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/fdw ;\
+	cp -a fdw/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/fdw ;\
 	fi;\
-	cp -a cli/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION} ;\
-	cp -a server/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION} ;\
-	echo $$(git rev-parse --verify HEAD) > build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/commit.sha ;\
+	cp -a cli/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION} ;\
+	cp -a server/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION} ;\
+	echo $$(git rev-parse --verify HEAD) > build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/commit.sha ;\
 	mkdir build/debbuild/DEBIAN ;\
 	cp -a package/DEBIAN/* build/debbuild/DEBIAN/ ;\
 	sed -i -e "s/%VERSION%/$${PXF_MAIN_VERSION}-$${PXF_RELEASE}/" -e "s/%MAINTAINER%/${VENDOR}/" build/debbuild/DEBIAN/control ;\
 	dpkg-deb --build build/debbuild ;\
-	mv build/debbuild.deb build/pxf-gp$${GP_MAJOR_VERSION}-$${PXF_MAIN_VERSION}-$${PXF_RELEASE}-ubuntu18.04-amd64.deb
+	mv build/debbuild.deb build/pxf-gp$${GP_MAJORVERSION}-$${PXF_MAIN_VERSION}-$${PXF_RELEASE}-ubuntu18.04-amd64.deb
 
 deb-tar: deb
 	rm -rf build/{stagedeb,distdeb}
 	mkdir -p build/{stagedeb,distdeb}
 	set -e ;\
-	GP_MAJOR_VERSION=$$(cat external-table/build/metadata/gp_major_version) ;\
-	PXF_DEB_FILE=$$(find build/ -name pxf-gp$${GP_MAJOR_VERSION}*.deb) ;\
+	PXF_DEB_FILE=$$(find build/ -name pxf-gp$${GP_MAJORVERSION}*.deb) ;\
 	PXF_PACKAGE_NAME=$$(dpkg-deb --field $${PXF_DEB_FILE} Package)-$$(dpkg-deb --field $${PXF_DEB_FILE} Version)-ubuntu18.04 ;\
 	mkdir -p build/stagedeb/$${PXF_PACKAGE_NAME} ;\
 	cp $${PXF_DEB_FILE} build/stagedeb/$${PXF_PACKAGE_NAME} ;\

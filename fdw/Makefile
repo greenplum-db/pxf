@@ -24,13 +24,12 @@ include $(PGXS)
 
 .PHONY: stage
 stage: pxf_fdw.so
-	mkdir -p build/metadata
 	mkdir -p build/stage
 	install -c -m 755 pxf_fdw.so build/stage/pxf_fdw.so
 	install -c -m 644 pxf_fdw.control build/stage/
 	install -c -m 644 pxf_fdw--1.0.sql build/stage/
-	@echo $(GP_MAJORVERSION) > build/metadata/gp_major_version
-	@echo $(BLD_ARCH) | sed 's/_/-/' > build/metadata/build_arch
+	@echo "gpdb.version=$(GP_VERSION)" > build/stage/metadata
+	@echo "gpdb.major-version=$(GP_MAJORVERSION)" >> build/stage/metadata
 
 .PHONY: clean-all
 clean-all: clean
