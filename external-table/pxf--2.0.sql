@@ -22,7 +22,7 @@ CREATE OR REPLACE FUNCTION pg_catalog.pxfwritable_export(record) RETURNS bytea
 AS 'MODULE_PATHNAME', 'gpdbwritableformatter_export'
 LANGUAGE C STABLE;
 
-CREATE OR REPLACE FUNCTION pg_catalog.multibyte_delim_import() RETURNS record
+CREATE OR REPLACE FUNCTION pg_catalog.pxfdelimited_import() RETURNS record
 AS 'MODULE_PATHNAME', 'multibyte_delim_import'
 LANGUAGE C STABLE;
 

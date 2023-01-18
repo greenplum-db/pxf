@@ -23,7 +23,7 @@
 
 /* Do the module magic dance */
 //PG_MODULE_MAGIC;
-PG_FUNCTION_INFO_V1(delimited_import);
+PG_FUNCTION_INFO_V1(multibyte_delim_import);
 
 typedef enum DelimitedSituation
 {

@@ -630,7 +630,7 @@ parse_formatter_name(char *fmtstr, char **formatter_name)
     bool		formatter_found = false;
     char        *format_options = NULL;
     char        *result = NULL;
-    if ((result = strstr(fmtstr, "multibyte_delim_import")) != NULL)
+    if ((result = strstr(fmtstr, "pxfdelimited_import")) != NULL)
     {
         *formatter_name = DelimitedFormatterName;
         formatter_found = true;
