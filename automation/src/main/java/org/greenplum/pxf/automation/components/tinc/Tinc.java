@@ -32,10 +32,9 @@ public class Tinc extends ShellSystemObject {
 		runCommand("cd " + gphome);
 		runCommand("source greenplum_path.sh");
 
-		// This property is for setting PYTHONPATH in local env.
-		// This change is for running the Automation tests in GP7.
-		// Since, Tinc still runs on Python2, It won't work with Python3 libs which are present with GP7, so we need to set the PYTHONPATH
-		// pointing towards the Python2 libs.
+		// Tinc runs with Python2 only, but GP7 environment includes Python3 libraries.
+		// In this case we have to set PXF_AUTOMATION_TINC_DEPS environment variable to point to Python2 libraries
+		// and use it here to set PYTHONPATH dynamically to the same value.
 		String pxfAutomationTincDeps = System.getenv("PXF_AUTOMATION_TINC_DEPS");
 		if (StringUtils.isNotBlank(pxfAutomationTincDeps)) {
 			ReportUtils.report(report, getClass(),
