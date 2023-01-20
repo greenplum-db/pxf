@@ -7,7 +7,7 @@ This developer note will guide you through the process of creating a Google Clou
 1. Run the modified `dataproc-cluster.bash` script with following options to create a local Dataproc cluster with Kerberos authentication
 
     ```sh
-    IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.bash 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT'
+    IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.bash --create 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT,hdfs:dfs.client.use.datanode.hostname=true'
     ```
 
     **NOTE:** After running the script, but before creating the PXF server config, replace `bradford-local-cluster-m` with `bradford-local-cluster-m.c.data-gpdb-ud.internal` for `hive.metastore.uris` in `dataproc_env_files/conf/hive-site.xml`
@@ -16,8 +16,8 @@ This developer note will guide you through the process of creating a Google Clou
 
     ```sh
     sudo kadmin.local -q "add_principal -nokey ${USER}"
-    sudo kadmin.local -q "ktadd -k /home/bradford/pxf.service.keytab ${USER}"
-    sudo chown bradford: ~/pxf.service.keytab
+    sudo kadmin.local -q "ktadd -k pxf.service.keytab ${USER}"
+    sudo chown "${USER}:" ~/pxf.service.keytab
     chmod 0600 ~/pxf.service.keytab
     sudo addgroup "${USER}" hdfs
     sudo addgroup "${USER}" hadoop
@@ -40,14 +40,15 @@ This developer note will guide you through the process of creating a Google Clou
 1. Verify that Kerberos is working
 
     ```sh
-    KRB5_CONFIG="${PWD}/dataproc_env_files/krb5.conf" kinit -kt dataproc_env_files/pxf.service.keytab "${USER}"
+    export KRB5_CONFIG="${PWD}/dataproc_env_files/krb5.conf"
+    kinit -kt dataproc_env_files/pxf.service.keytab "${USER}"
     klist
-    HADOOP_OPTS="-Djava.security.krb5.conf=${PWD}/dataproc_env_files/krb5.conf" hdfs dfs -ls /
-    # using beeline from singlecluster-HDP3 fails with the following error locally
-    #   Error: org.apache.thrift.transport.TTransportException (state=08S01,code=0)
-    #
-    # from the log file on the cluster node
-    #   org.apache.thrift.protocol.TProtocolException: Missing version in readMessageBegin, old client?
+    export HADOOP_OPTS="-Djava.security.krb5.conf=${PWD}/dataproc_env_files/krb5.conf"
+
+    #export HADOOP_HOME=<path/to/hadoop>
+    #export HIVE_HOME=<path/to/hive>
+    "${HADOOP_HOME}/bin/hdfs" dfs -ls /
+    "${HIVE_HOME}/bin/beeline" -u 'jdbc:hive2://bradford-local-cluster-m.c.data-gpdb-ud.internal:10000/default;principal=hive/bradford-local-cluster-m.c.data-gpdb-ud.internal@C.DATA-GPDB-UD.INTERNAL'
     ```
 
     **NOTE:** Java 8 does not like/support the [directives `include` or `includedir`][0]; rather than attempt to automate editing the system's `/etc/krb5.conf` or provide manual steps for editing it (which would require also removing the config when destroying the cluster), this guide takes a more conservative approach of using an alternate location for the Kerberos config (e.g., `KRB5_CONFIG` and `-Djava.security.krb5.conf` above).

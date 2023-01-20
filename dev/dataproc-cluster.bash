@@ -223,7 +223,7 @@ DESCRIPTION
     When creating the dataproc cluster, additional options can be passed in to
     customize the created cluster. For example:
 
-        dataproc-cluster.bash create hdfs:dfs.namenode.fs-limits.min-block-size=1024
+        dataproc-cluster.bash --create hdfs:dfs.namenode.fs-limits.min-block-size=1024
 
     would create a cluster with a customized hdfs-site.xml that contains the
     custom value for dfs.namenode.fs-limits.min-block-size. Multiple
