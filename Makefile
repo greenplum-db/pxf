@@ -3,32 +3,32 @@ include common.mk
 PXF_VERSION ?= $(shell cat version)
 export PXF_VERSION
 
-PG_CONFIG = pg_config
+PG_CONFIG ?= pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
-
 ifndef PGXS
-    $(error Make sure the Greenplum installation binaries are in your PATH. i.e. export PATH=<path to your greenplum installation>/bin:$$PATH)
+    $(error Make sure the Greenplum installation binaries are in your PATH. i.e. export PATH=<path to your Greenplum installation>/bin:$$PATH)
 endif
-
 include $(PGXS)
 
-FDW_BUILD = TRUE
-FDW_PACKAGE = TRUE
-
+FDW_BUILD   := TRUE
+FDW_PACKAGE := TRUE
 ifeq ($(shell test $(GP_MAJORVERSION) -lt 6; echo $$?),0)
-	FDW_BUILD = FALSE
+	FDW_BUILD := FALSE
 endif
-
 ifeq ($(shell test $(GP_MAJORVERSION) -lt 7; echo $$?),0)
-	FDW_PACKAGE = FALSE
+	FDW_PACKAGE := FALSE
 endif
 
-GP_BUILD_ARCH = $(subst _,-,$(BLD_ARCH))
+ifeq ($(BLD_ARCH),)
+	GP_BUILD_ARCH := $(PORTNAME)-$(subst _,-,$(host_cpu))
+else
+	GP_BUILD_ARCH := $(subst _,-,$(BLD_ARCH))
+endif
 
-export GP_MAJORVERSION
-export GP_BUILD_ARCH
 export FDW_BUILD
 export FDW_PACKAGE
+export GP_MAJORVERSION
+export GP_BUILD_ARCH
 
 LICENSE ?= ASL 2.0
 VENDOR ?= Open Source
