@@ -13,8 +13,6 @@ inputs:
   optional: true
 - name: ambari_env_files
   optional: true
-- name: pxf_gp7_headerfile
-  optional: true
 - name: gp6-python-libs
   optional: true
 - name: pxf_fdw_tarball
