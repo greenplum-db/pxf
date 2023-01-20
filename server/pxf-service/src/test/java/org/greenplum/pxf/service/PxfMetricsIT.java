@@ -6,6 +6,7 @@ import org.greenplum.pxf.service.controller.ReadService;
 import org.greenplum.pxf.service.controller.WriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.autoconfigure.actuate.metrics.AutoConfigureMetrics;
@@ -19,6 +20,7 @@ import java.io.OutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.condition.OS.MAC;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -27,6 +29,8 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = PxfServiceApplication.class)
 @AutoConfigureMetrics
+// on MacOS with Intel chip (and JDK 8) this test crashes the JVM. Commenting out for now to not run on Mac.
+@DisabledOnOs(MAC)
 public class PxfMetricsIT {
 
     @LocalServerPort
