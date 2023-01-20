@@ -624,58 +624,6 @@ jobs:
 {% endfor %}
 {% set gp_ver = None %}
 
-## -- PXF GP7 REHL 8 --
-
-# {% set gp_ver = 7 %}
-#- name: Build PXF-GP[[gp_ver]] on RHEL8
-#  plan:
-#    - in_parallel:
-#        - get: pxf_src
-#          trigger: true
-#        - get: gpdb_package
-#          resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-#        - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
-#        - get: pxf-build-dependencies
-#    - task: Build PXF-GP[[gp_ver]] on RHEL8
-#      image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
-#      file: pxf_src/concourse/tasks/build.yml
-#      params:
-#        LICENSE: ((ud/pxf/common/rpm-license))
-#        VENDOR: ((ud/pxf/common/rpm-vendor))
-#        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
-#        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-#        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-#    - put: pxf_gp[[gp_ver]]_tarball_rhel8
-#      params:
-#        file: dist/pxf-gp[[gp_ver]]-*.el8.tar.gz
-#
-#- name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
-#  plan:
-#    - in_parallel:
-#        - get: pxf_src
-#          passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-#          trigger: true
-#        - get: pxf_tarball
-#          resource: pxf_gp[[gp_ver]]_tarball_rhel8
-#          passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-#        - get: gpdb_package
-#          resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-#          passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-#        - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
-#          passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-#        - get: pxf-automation-dependencies
-#        - get: singlecluster
-#          resource: singlecluster-hdp2
-#    - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
-#      file: pxf_src/concourse/tasks/test.yml
-#      image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
-#      params:
-#        ACCESS_KEY_ID: ((tf-machine-access-key-id))
-#        GP_VER: [[gp_ver]]
-#        GROUP: gpdb,proxy,profile
-#SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-#  {% set gp_ver = None %}
-
 ## ---------- Extended Tests ----------
 {% set gp_ver = 6 %}
 {% if hdp2 %}
