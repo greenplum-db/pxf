@@ -99,9 +99,6 @@ else
 endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
-	@echo GP_MAJORVERSION=$(GP_MAJORVERSION)
-	@echo BLD_ARCH=$(BLD_ARCH)
-	@echo GP_BUILD_ARCH=$(GP_BUILD_ARCH)
 	set -e ;\
 	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJORVERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
 	mkdir -p build/stage/$${PXF_PACKAGE_NAME} ;\
