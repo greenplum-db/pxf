@@ -196,6 +196,19 @@ configure(javaProjects) {
                 entry("aws-java-sdk-s3")
             }
 
+            // currently imported BOM spring-boot-dependencies:2.5.12 includes log4j-bom:2.17.2 and
+            // importing a module log4j-spring-boot:2.17.2 results in its transitive Junit dependencies
+            // being put into compileClasspath so we have to exclude them here so they are not shipped with PXF
+            // this is fixed in log4j-spring-boot:2.19.0, which is used by spring-boot-dependencies:3.0.0+
+            // so when we upgrade to Spring Boot version 3.0.0+ we should remove this fix
+            // alternatively we can bump log4j-spring-boot to 2.19.0 and not use excludes
+            // dependency("org.apache.logging.log4j:log4j-spring-boot:2.19.0")
+            dependency("org.apache.logging.log4j:log4j-spring-boot:2.17.2") {
+                exclude("org.junit.vintage:junit-vintage-engine")
+                exclude("org.junit.jupiter:junit-jupiter-engine")
+                exclude("org.junit.jupiter:junit-jupiter-api")
+            }
+
         }
     }
 
