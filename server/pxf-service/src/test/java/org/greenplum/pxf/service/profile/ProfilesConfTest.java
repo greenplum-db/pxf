@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -193,7 +195,7 @@ public class ProfilesConfTest {
     public void testMalformedXmlFile() {
         Exception e = assertThrows(ProfileConfException.class,
                 () -> getProfilesConf("malformedXmlFile"));
-        assertTrue(e.getMessage().contains("Content is not allowed in prolog"));
+        assertThat(e.getMessage(), matchesPattern("^Profiles configuration .+ could not be loaded:.*"));
     }
 
     @Test
