@@ -91,24 +91,26 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
     {
         char* key = FORMATTER_GET_NTH_ARG_KEY(fcinfo, i);
         char* value = FORMATTER_GET_NTH_ARG_VAL(fcinfo, i);
+        int table_encoding = ((FormatterData*) fcinfo->context)->fmt_external_encoding;
 
         if (strcmp(key, "delimiter") == 0)
         {
-            fmt_state->delimiter = value;
+            fmt_state->delimiter = pg_server_to_any(value, strlen(value), table_encoding);
         }
         else if (strcmp(key, "eol_prefix") == 0)
         {
-            fmt_state->eol_prefix = value;
-            fmt_state->eol = (char*)palloc(strlen(value) + 2);
+            // Note: We assume EOL of the file will always be \n
+            fmt_state->eol_prefix = pg_server_to_any(value, strlen(value), table_encoding);
+            fmt_state->eol = (char*)palloc(strlen(fmt_state->eol_prefix) + 2);
             sprintf(fmt_state->eol, "%s%c", fmt_state->eol_prefix, '\n');
         }
         else if (strcmp(key, "quote") == 0)
         {
-            fmt_state->quote = value;
+            fmt_state->quote = pg_server_to_any(value, strlen(value), table_encoding);
         }
         else if (strcmp(key, "escape") == 0)
         {
-            fmt_state->escape = value;
+            fmt_state->escape = pg_server_to_any(value, strlen(value), table_encoding);
         }
     }
 
@@ -447,7 +449,6 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
      */
     m = FORMATTER_GET_PER_ROW_MEM_CTX(fcinfo);
     oldcontext = MemoryContextSwitchTo(m);
-
 
     FORMATTER_SET_DATACURSOR(fcinfo, data_cur);
     myData->length = 2000;

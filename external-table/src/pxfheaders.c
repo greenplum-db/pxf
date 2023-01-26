@@ -99,6 +99,7 @@ build_http_headers(PxfInputData *input)
 		churl_headers_append(headers, "X-GP-FORMAT", format);
 
 		/* Parse fmtOptString here */
+		// can't do this for CUSTOM format with pxfdelimited_import formatter due to parseCopyFormatString's internal check
 		if (fmttype_is_text(exttbl->fmtcode) || fmttype_is_csv(exttbl->fmtcode))
 		{
 #if PG_VERSION_NUM >= 120000
