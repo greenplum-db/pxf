@@ -69,4 +69,8 @@ s/, record/, line/
 m/invalid input syntax for type/
 s/invalid input syntax for type/invalid input syntax for/
 
+# alter table syntax is different in GP6 and GP7 for external table.
+m/ALTER/
+s/ALTER EXTERNAL TABLE/ALTER FOREIGN TABLE/g
+
 -- end_matchsubs
