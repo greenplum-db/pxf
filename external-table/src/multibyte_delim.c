@@ -1,3 +1,5 @@
+// Portions Copyright (c) 2023 VMware, Inc. or its affiliates.
+
 #include "multibyte_delim.h"
 #include "stdio.h"
 
