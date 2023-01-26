@@ -5,3 +5,4 @@ no_of_files: 10000
 pxf-jvm-opts: "-Xmx512m -Xms512m"
 kerberos-enabled: true
 dataproc-image-version: "1.4"
+ccp_tag_filter: v2.7.0

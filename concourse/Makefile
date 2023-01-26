@@ -16,7 +16,7 @@ PERF_PIPELINE_NAME          ?= pxf_perf-$(SCALE)g
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS          ?= 10
 NUM_GPDB6_VERSIONS          ?=  9
-FLY_CMD                      = /usr/local/bin/fly
+FLY_CMD                     ?= fly
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
 EMAIL                       ?= true
@@ -62,7 +62,7 @@ set-build-pipeline:
 		--check-creds \
 		--pipeline=$(BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--load-vars-from=$(CURDIR)/settings/pxf-multinode-params.yml \
 		--var=pxf-git-branch=branch-5.16 \
 		--var=pxf-build-bucket-prefix=prod \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
@@ -85,7 +85,7 @@ set-dev-release-pipeline:
 		--check-creds \
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--load-vars-from=$(CURDIR)/settings/pxf-multinode-params.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=pxf-build-bucket-prefix=dev/$(USER)-$(BRANCH) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
@@ -122,7 +122,7 @@ set-dev-build-pipeline:
 		--check-creds \
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--load-vars-from=$(CURDIR)/settings/pxf-multinode-params.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=slack-integration-webhook-url=$${SLACK_INTEGRATION_WEBHOOK_URL} \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
@@ -171,7 +171,7 @@ set-cloudbuild-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
-		--config $(HOME)/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
+		--config $(CURDIR)/pipelines/cloudbuild_pipeline.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--pipeline cloudbuild
 
@@ -204,8 +204,8 @@ perf:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
-		--config $(HOME)/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
-		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/perf-settings-$(SCALE)g.yml \
+		--config $(CURDIR)/pipelines/perf_pipeline.yml \
+		--load-vars-from=$(CURDIR)/settings/perf-settings-$(SCALE)g.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--pipeline $(PERF_PIPELINE_NAME) \
 		${FLY_OPTION_NON-INTERACTIVE}
@@ -213,7 +213,7 @@ perf:
 .PHONY: singlecluster
 singlecluster:
 	fly -t ud set-pipeline \
-		-c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
+		-c $(CURDIR)/pipelines/singlecluster-pipeline.yml \
 		-v pxf-git-branch=master -p pxf-singlecluster
 
 # ============================= LONGEVITY PIPELINE TARGETS =============================

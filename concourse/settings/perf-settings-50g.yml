@@ -34,3 +34,5 @@ perf-benchmark-gcs: true
 perf-benchmark-gphdfs: false
 perf-benchmark-wasb: true
 perf-sleep-before-destroy: 10
+
+ccp_tag_filter: v2.7.0
