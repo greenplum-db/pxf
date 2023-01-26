@@ -16,11 +16,6 @@
 
 #include "lib/stringinfo.h"
 
-/*
- * Magic headers
- */
-#define DELIMITER_MESSAGE_HEADER_MAGIC 0x4445 //'DE'
-
 /* Do the module magic dance */
 //PG_MODULE_MAGIC;
 PG_FUNCTION_INFO_V1(multibyte_delim_import);
