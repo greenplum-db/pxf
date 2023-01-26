@@ -324,9 +324,6 @@ public class BridgeOutputBuilder {
             } else {
                 output = new Text(fieldListToCSVString(recFields));
             }
-
-            // append magic header?
-
         }
 
         outputList.add(output);
