@@ -81,17 +81,17 @@ build_http_headers(PxfInputData *input)
     if (fmttype_is_text(exttbl->fmtcode) || fmttype_is_csv(exttbl->fmtcode))
     {
 #if PG_VERSION_NUM >= 120000
-      copyFmtOpts = exttbl->options;
+		copyFmtOpts = exttbl->options;
 #else
-      copyFmtOpts = parseCopyFormatString(rel, exttbl->fmtopts, exttbl->fmtcode);
+		copyFmtOpts = parseCopyFormatString(rel, exttbl->fmtopts, exttbl->fmtcode);
 #endif
     }
 
 #if PG_VERSION_NUM >= 120000
     /* pass external table's encoding to copy's options */
-    copyFmtOpts = lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(exttbl->encoding)), -1));
+		copyFmtOpts = lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(exttbl->encoding)), -1));
 #else
-        copyFmtOpts = appendCopyEncodingOption(copyFmtOpts, exttbl->encoding);
+		copyFmtOpts = appendCopyEncodingOption(copyFmtOpts, exttbl->encoding);
 #endif
 
 		/* Extract options from the statement node tree */
@@ -116,24 +116,24 @@ build_http_headers(PxfInputData *input)
 		relnamespace = GetNamespaceName(RelationGetNamespace(rel));
 	}
 
-  if (proj_info != NULL)
-  {
-    bool qualsAreSupported = true;
-    List *qualsAttributes =
-         extractPxfAttributes(input->quals, &qualsAreSupported);
-    /* projection information is incomplete if columns from WHERE clause wasn't extracted */
-    /* if any of expressions in WHERE clause is not supported - do not send any projection information at all*/
-    if (qualsAreSupported &&
-      (qualsAttributes != NIL || list_length(input->quals) == 0))
-    {
-       add_projection_desc_httpheader(headers, proj_info, qualsAttributes, rel);
-    }
-    else
-    {
-      elog(DEBUG2,
-         "Query will not be optimized to use projection information");
-    }
-  }
+	if (proj_info != NULL)
+	{
+		bool qualsAreSupported = true;
+		List *qualsAttributes =
+				 extractPxfAttributes(input->quals, &qualsAreSupported);
+		/* projection information is incomplete if columns from WHERE clause wasn't extracted */
+		/* if any of expressions in WHERE clause is not supported - do not send any projection information at all*/
+		if (qualsAreSupported &&
+			(qualsAttributes != NIL || list_length(input->quals) == 0))
+		{
+			add_projection_desc_httpheader(headers, proj_info, qualsAttributes, rel);
+		}
+		else
+		{
+			elog(DEBUG2,
+				 "Query will not be optimized to use projection information");
+		}
+	}
 
 	/* GP cluster configuration */
 	external_set_env_vars(&ev, gphduri->uri, false, NULL, NULL, false, 0);
@@ -551,9 +551,6 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
    List *targetList = (List *) projInfo->pi_state.expr;
      int  numSimpleVars = 0;
 
-  int numNonSimpleVars = 0;
-
-    // TODO Re-evaluate this logic and may be we don't need numNonSimpleVars
    for (int i = 0; i < projInfo->pi_state.steps_len; i++)
      {
          ExprEvalStep *step = &projInfo->pi_state.steps[i];
@@ -562,9 +559,6 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
                      opcode == EEOP_ASSIGN_OUTER_VAR ||
                      opcode == EEOP_ASSIGN_SCAN_VAR)
                      numSimpleVars++;
-             else if (opcode == EEOP_ASSIGN_TMP_MAKE_RO ||
-                        opcode == EEOP_ASSIGN_TMP)
-                     numNonSimpleVars++;
      }
 
   /*
