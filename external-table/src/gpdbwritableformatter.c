@@ -55,6 +55,7 @@ PG_FUNCTION_INFO_V1(gpdbwritableformatter_import);
 Datum		gpdbwritableformatter_import(PG_FUNCTION_ARGS);
 Datum		gpdbwritableformatter_export(PG_FUNCTION_ARGS);
 static Form_pg_attribute getAttributeFromTupleDesc(TupleDesc, int);
+static void reportErrorIfNonUTF8Encoding(PG_FUNCTION_ARGS);
 
 static const int ERR_COL_OFFSET = 9;
 static const int FIRST_LINE_NUM = 1;
@@ -506,27 +507,8 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	 */
 	if (myData == NULL)
 	{
-        // In GP7 FORMATTER_GET_EXTENCODING(fcinfo) gets the database encoding which may not match the table encoding
-        // and thus results in exception here. So getting the table encoding from the ExtTableEntry
-#if PG_VERSION_NUM < 120000
-        if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
-        {
-                 ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                            errmsg(FORMATTER_ENCODING_ERR_MSG, "export")));
-        }
-#else
-        Relation rel = FORMATTER_GET_RELATION(fcinfo);
-        if(rel == NULL) {
-            ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                            errmsg(FORMATTER_ENCODING_ERR_MSG, "export")));
-        }
 
-        ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
-        if (exttbl->encoding != PG_UTF8) {
-            ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                    errmsg(FORMATTER_ENCODING_ERR_MSG, "export")));
-        }
-#endif
+        reportErrorIfNonUTF8Encoding(fcinfo);
 
 		myData = palloc(sizeof(format_t));
 		myData->values = palloc(sizeof(Datum) * ncolumns);
@@ -765,8 +747,8 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	{
         Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
-            if (!attr->attisdropped)
-                nvalidcolumns++;
+        if (!attr->attisdropped)
+            nvalidcolumns++;
 	}
 
 	/*
@@ -774,27 +756,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	 */
 	if (myData == NULL)
 	{
-        // In GP7 FORMATTER_GET_EXTENCODING(fcinfo) gets the database encoding which may not match the table encoding
-        // and thus results in exception here. So getting the table encoding from the ExtTableEntry
-#if PG_VERSION_NUM < 120000
-            if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
-            {
-                     ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                                errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
-            }
-#else
-            Relation rel = FORMATTER_GET_RELATION(fcinfo);
-            if(rel == NULL) {
-                ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                                    errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
-            }
-
-            ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
-            if (exttbl->encoding != PG_UTF8) {
-                ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-                        errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
-            }
-#endif
+	    reportErrorIfNonUTF8Encoding(fcinfo);
 
 		myData = palloc(sizeof(format_t));
 		myData->values = palloc(sizeof(Datum) * ncolumns);
@@ -806,15 +768,15 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 
 		for (i = 0; i < ncolumns; i++)
 		{
-                Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
+            Form_pg_attribute attr = getAttributeFromTupleDesc(tupdesc,i);
 
-                    Oid type = attr->atttypid;
+            Oid type = attr->atttypid;
 
-                    Oid			functionId;
+            Oid			functionId;
 
-                 /* Ignore dropped attributes. */
-                 if (attr->attisdropped)
-                     continue;
+            /* Ignore dropped attributes. */
+            if (attr->attisdropped)
+             continue;
 
 			/* Get the text/binary "receive" function */
 			if (isBinaryFormatType(type))
@@ -1043,3 +1005,27 @@ getAttributeFromTupleDesc(TupleDesc tupdesc, int index)
 
 }
 
+static void reportErrorIfNonUTF8Encoding(FunctionCallInfo fcinfo)
+{
+// In GP7 FORMATTER_GET_EXTENCODING(fcinfo) gets the database encoding which may not match the table encoding
+// and thus results in exception here. So getting the table encoding from the ExtTableEntry
+#if PG_VERSION_NUM < 120000
+    if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
+    {
+             ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+                        errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
+    }
+    #else
+    Relation rel = FORMATTER_GET_RELATION(fcinfo);
+    if(rel == NULL) {
+        ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+                            errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
+    }
+
+    ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
+    if (exttbl->encoding != PG_UTF8) {
+        ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+                errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
+    }
+#endif
+}
