@@ -291,13 +291,7 @@ GPHDUri_verify_no_duplicate_options(GPHDUri *uri)
 	{
 		OptionData *data = (OptionData *) lfirst(option);
 
-// For GP 5.x latest (5.29.8) the server_version_num is 80323.
-// For 6.x or later str_toupper doesn't work as it has different signature ( one extra parameter) so the asc_toupper will work for 6.x or 7.x
-#if PG_VERSION_NUM <= 80323
-		Value	   *key = makeString(str_toupper(data->key, strlen(data->key)));
-#else
 		Value	   *key = makeString(asc_toupper(data->key, strlen(data->key)));
-#endif
 
 		if (!list_member(previousKeys, key))
 			previousKeys = lappend(previousKeys, key);

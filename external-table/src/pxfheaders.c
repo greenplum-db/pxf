@@ -551,14 +551,16 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
    List *targetList = (List *) projInfo->pi_state.expr;
      int  numSimpleVars = 0;
 
-   for (int i = 0; i < projInfo->pi_state.steps_len; i++)
+   for (i = 0; i < projInfo->pi_state.steps_len; i++)
      {
          ExprEvalStep *step = &projInfo->pi_state.steps[i];
          ExprEvalOp opcode = ExecEvalStepOp(&projInfo->pi_state, step);
              if ( opcode == EEOP_ASSIGN_INNER_VAR ||
                      opcode == EEOP_ASSIGN_OUTER_VAR ||
                      opcode == EEOP_ASSIGN_SCAN_VAR)
-                     numSimpleVars++;
+             {
+                 numSimpleVars++;
+             }
      }
 
   /*
@@ -578,7 +580,7 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
             add_attnums_from_targetList( (Node *) gstate, l);
     }
 
-        int i=0;
+    i=0;
     foreach(lc1, l)
     {
       int attno = lfirst_int(lc1);
