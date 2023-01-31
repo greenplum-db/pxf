@@ -10,13 +10,20 @@ ifndef PGXS
 endif
 include $(PGXS)
 
-FDW_BUILD   := TRUE
-FDW_PACKAGE := TRUE
-ifeq ($(shell test $(GP_MAJORVERSION) -lt 6; echo $$?),0)
-	FDW_BUILD := FALSE
-endif
-ifeq ($(shell test $(GP_MAJORVERSION) -lt 7; echo $$?),0)
-	FDW_PACKAGE := FALSE
+FDW_BUILD   := TRUE # FDW build is only for for GPDB version 6 and 7. For GPDB 6 we will still build it but not package it.
+FDW_PACKAGE := TRUE # We are not packaging FDW for GPDB versions less than 7. So this is true only for GPDB version 7 or higher
+
+ifeq ($(GP_MAJORVERSION), 5)
+    FDW_BUILD := FALSE
+    FDW_PACKAGE := FALSE
+else ifeq ($(GP_MAJORVERSION), 6)
+    FDW_BUILD := TRUE
+    FDW_PACKAGE := FALSE
+else ifeq ($(GP_MAJORVERSION), 7)
+    FDW_BUILD := TRUE
+    FDW_PACKAGE := TRUE
+else
+    $(error GP_MAJORVERSION must be 5, 6, or 7)
 endif
 
 ifeq ($(BLD_ARCH),)
@@ -48,7 +55,7 @@ fdw:
 ifeq ($(FDW_BUILD),TRUE)
 	make -C fdw
 else
-	@echo "Skipping building FDW extension because GPDB version is less than 6"
+	@echo "Skipping building FDW extension because FDW_BUILD was not set"
 endif
 
 cli:
@@ -68,7 +75,7 @@ test:
 ifeq ($(FDW_BUILD),TRUE)
 	make -C fdw installcheck
 else
-	@echo "Skipping testing FDW extension because GPDB version is less than 6"
+	@echo "Skipping testing FDW extension because FDW_BUILD was not set"
 endif
 	make -C cli/go/src/pxf-cli test
 	make -C server test
