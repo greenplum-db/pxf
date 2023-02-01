@@ -11,7 +11,7 @@ PG_CPPFLAGS     := -DPXF_API_VERSION=\"$(PXF_API_VERSION)\"
 PG_CONFIG ?= pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 ifndef PGXS
-    $(error Make sure the Greenplum installation binaries are in your PATH. i.e. export PATH=<path to your Greenplum installation>/bin:$$PATH)
+	$(error Make sure the Greenplum installation binaries are in your PATH. i.e. export PATH=<path to your Greenplum installation>/bin:$$PATH)
 endif
 include $(PGXS)
 
