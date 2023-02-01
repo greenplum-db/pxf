@@ -10,15 +10,13 @@ ifndef PGXS
 endif
 include $(PGXS)
 
-FDW_BUILD   := TRUE # FDW build is only for for GPDB version 6 and 7. For GPDB 6 we will still build it but not package it.
-FDW_PACKAGE := TRUE # We are not packaging FDW for GPDB versions less than 7. So this is true only for GPDB version 7 or higher
+FDW_BUILD   := TRUE
+FDW_PACKAGE := TRUE
 ifeq ($(shell test $(GP_MAJORVERSION) -lt 6; echo $$?),0)
-	FDW_BUILD := FALSE \
-	@echo "Skipping building FDW extension because GPDB version $(GP_MAJORVERSION) is less than 6."
+	FDW_BUILD := FALSE
 endif
 ifeq ($(shell test $(GP_MAJORVERSION) -lt 7; echo $$?),0)
-	FDW_PACKAGE := FALSE \
-	@echo "Skipping packaging FDW extension because GPDB version $(GP_MAJORVERSION) is less than 7."
+	FDW_PACKAGE := FALSE
 endif
 
 ifeq ($(BLD_ARCH),)
@@ -49,6 +47,8 @@ external-table:
 fdw:
 ifeq ($(FDW_BUILD),TRUE)
 	make -C fdw
+else
+	@echo "Skipping building FDW extension because GPDB version is less than 6"
 endif
 
 cli:
@@ -67,6 +67,8 @@ clean:
 test:
 ifeq ($(FDW_BUILD),TRUE)
 	make -C fdw installcheck
+else
+	@echo "Skipping testing FDW extension because GPDB version is less than 6"
 endif
 	make -C cli/go/src/pxf-cli test
 	make -C server test
@@ -78,6 +80,8 @@ install:
 	make -C external-table install
 ifeq ($(FDW_BUILD),TRUE)
 	make -C fdw install
+else
+	@echo "Skipping installing FDW extension because GPDB version is less than 6"
 endif
 	make -C cli/go/src/pxf-cli install
 	make -C server install
@@ -90,6 +94,8 @@ stage:
 	make -C external-table stage
 ifeq ($(FDW_PACKAGE),TRUE)
 	make -C fdw stage
+else
+	@echo "Skipping staging FDW extension because GPDB version is less than 7"
 endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
@@ -114,6 +120,8 @@ rpm:
 	make -C external-table stage
 ifeq ($(FDW_PACKAGE),TRUE)
 	make -C fdw stage
+else
+	@echo "Skipping packaging FDW extension because GPDB version is less than 7"
 endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
@@ -156,6 +164,8 @@ deb:
 	make -C external-table stage
 ifeq ($(FDW_PACKAGE),TRUE)
 	make -C fdw stage
+else
+	@echo "Skipping packaging FDW extension because GPDB version is less than 7"
 endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
