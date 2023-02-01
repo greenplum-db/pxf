@@ -10,13 +10,13 @@ ifndef PGXS
 endif
 include $(PGXS)
 
-FDW_BUILD   := TRUE
-FDW_PACKAGE := TRUE
+# variables that control whether the FDW extension will be built and packaged,
+# if left empty there is no skipping, otherwise a value should contain a reason for skipping
 ifeq ($(shell test $(GP_MAJORVERSION) -lt 6; echo $$?),0)
-	FDW_BUILD := FALSE
+	SKIP_FDW_BUILD_REASON := "GPDB version $(GP_MAJORVERSION) is less than 6."
 endif
 ifeq ($(shell test $(GP_MAJORVERSION) -lt 7; echo $$?),0)
-	FDW_PACKAGE := FALSE
+	SKIP_FDW_PACKAGE_REASON := "GPDB version $(GP_MAJORVERSION) is less than 7."
 endif
 
 ifeq ($(BLD_ARCH),)
@@ -25,8 +25,8 @@ else
 	GP_BUILD_ARCH := $(subst _,-,$(BLD_ARCH))
 endif
 
-export FDW_BUILD
-export FDW_PACKAGE
+export SKIP_FDW_BUILD_REASON
+export SKIP_FDW_PACKAGE_REASON
 export GP_MAJORVERSION
 export GP_BUILD_ARCH
 
@@ -45,10 +45,10 @@ external-table:
 	make -C external-table
 
 fdw:
-ifeq ($(FDW_BUILD),TRUE)
+ifeq ($(SKIP_FDW_BUILD_REASON),)
 	make -C fdw
 else
-	@echo "Skipping building FDW extension because GPDB version is less than 6"
+	@echo "Skipping building FDW extension because $(SKIP_FDW_BUILD_REASON)"
 endif
 
 cli:
@@ -65,10 +65,10 @@ clean:
 	make -C server clean
 
 test:
-ifeq ($(FDW_BUILD),TRUE)
+ifeq ($(SKIP_FDW_BUILD_REASON),)
 	make -C fdw installcheck
 else
-	@echo "Skipping testing FDW extension because GPDB version is less than 6"
+	@echo "Skipping testing FDW extension because $(SKIP_FDW_BUILD_REASON)"
 endif
 	make -C cli/go/src/pxf-cli test
 	make -C server test
@@ -78,10 +78,10 @@ it:
 
 install:
 	make -C external-table install
-ifeq ($(FDW_BUILD),TRUE)
+ifeq ($(SKIP_FDW_BUILD_REASON),)
 	make -C fdw install
 else
-	@echo "Skipping installing FDW extension because GPDB version is less than 6"
+	@echo "Skipping installing FDW extension because $(SKIP_FDW_BUILD_REASON)"
 endif
 	make -C cli/go/src/pxf-cli install
 	make -C server install
@@ -92,10 +92,10 @@ install-server:
 stage:
 	rm -rf build/stage
 	make -C external-table stage
-ifeq ($(FDW_PACKAGE),TRUE)
+ifeq ($(SKIP_FDW_PACKAGE_REASON),)
 	make -C fdw stage
 else
-	@echo "Skipping staging FDW extension because GPDB version is less than 7"
+	@echo "Skipping staging FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
 endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
@@ -103,7 +103,7 @@ endif
 	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJORVERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
 	mkdir -p build/stage/$${PXF_PACKAGE_NAME} ;\
 	cp -a external-table/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
-	if [[ $${FDW_PACKAGE} == TRUE ]]; then \
+	if [[ -z $${SKIP_FDW_PACKAGE_REASON} ]]; then \
 	cp -a fdw/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
 	fi;\
 	cp -a cli/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
@@ -118,10 +118,10 @@ tar: stage
 
 rpm:
 	make -C external-table stage
-ifeq ($(FDW_PACKAGE),TRUE)
+ifeq ($(SKIP_FDW_PACKAGE_REASON),)
 	make -C fdw stage
 else
-	@echo "Skipping packaging FDW extension because GPDB version is less than 7"
+	@echo "Skipping packaging FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
 endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
@@ -132,7 +132,7 @@ endif
 	mkdir -p build/rpmbuild/{BUILD,RPMS,SOURCES,SPECS} ;\
 	mkdir -p build/rpmbuild/SOURCES/gpextable ;\
 	cp -a external-table/build/stage/* build/rpmbuild/SOURCES/gpextable ;\
-	if [[ $${FDW_PACKAGE} == TRUE ]]; then \
+	if [[ -z $${SKIP_FDW_PACKAGE_REASON} ]]; then \
 	mkdir -p build/rpmbuild/SOURCES/fdw ;\
 	cp -a fdw/build/stage/* build/rpmbuild/SOURCES/fdw ;\
 	fi;\
@@ -162,10 +162,10 @@ rpm-tar: rpm
 
 deb:
 	make -C external-table stage
-ifeq ($(FDW_PACKAGE),TRUE)
+ifeq ($(SKIP_FDW_PACKAGE_REASON),)
 	make -C fdw stage
 else
-	@echo "Skipping packaging FDW extension because GPDB version is less than 7"
+	@echo "Skipping packaging FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
 endif
 	make -C cli/go/src/pxf-cli stage
 	make -C server stage
@@ -175,7 +175,7 @@ endif
 	rm -rf build/debbuild ;\
 	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/gpextable ;\
 	cp -a external-table/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/gpextable ;\
-	if [[ $${FDW_PACKAGE} == TRUE ]]; then \
+	if [[ -z $${SKIP_FDW_PACKAGE_REASON} ]]; then \
 	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/fdw ;\
 	cp -a fdw/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/fdw ;\
 	fi;\
