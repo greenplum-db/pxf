@@ -13,11 +13,11 @@ include $(PGXS)
 FDW_BUILD   := TRUE # FDW build is only for for GPDB version 6 and 7. For GPDB 6 we will still build it but not package it.
 FDW_PACKAGE := TRUE # We are not packaging FDW for GPDB versions less than 7. So this is true only for GPDB version 7 or higher
 ifeq ($(shell test $(GP_MAJORVERSION) -lt 6; echo $$?),0)
-	FDW_BUILD := FALSE
+	FDW_BUILD := FALSE \
 	@echo "Skipping building FDW extension because GPDB version $(GP_MAJORVERSION) is less than 6."
 endif
 ifeq ($(shell test $(GP_MAJORVERSION) -lt 7; echo $$?),0)
-	FDW_PACKAGE := FALSE
+	FDW_PACKAGE := FALSE \
 	@echo "Skipping packaging FDW extension because GPDB version $(GP_MAJORVERSION) is less than 7."
 endif
 
