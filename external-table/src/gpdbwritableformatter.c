@@ -55,7 +55,7 @@ PG_FUNCTION_INFO_V1(gpdbwritableformatter_import);
 Datum		gpdbwritableformatter_import(PG_FUNCTION_ARGS);
 Datum		gpdbwritableformatter_export(PG_FUNCTION_ARGS);
 static Form_pg_attribute getAttributeFromTupleDesc(TupleDesc, int);
-static bool isUtf8Encoding(PG_FUNCTION_ARGS);
+static bool isExternalTableInUTF8Encoding(PG_FUNCTION_ARGS);
 
 static const int ERR_COL_OFFSET = 9;
 static const int FIRST_LINE_NUM = 1;
@@ -508,7 +508,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	 */
 	if (myData == NULL)
 	{
-		if(!isUtf8Encoding(fcinfo))
+		if (!isExternalTableInUTF8Encoding(fcinfo))
 		{
 		     ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
 		            errmsg(FORMATTER_ENCODING_ERR_MSG, "export", "export")));
@@ -759,7 +759,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	 */
 	if (myData == NULL)
 	{
-		if(!isUtf8Encoding(fcinfo))
+		if (!isExternalTableInUTF8Encoding(fcinfo))
 		{
 		    ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
 			  errmsg(FORMATTER_ENCODING_ERR_MSG, "import", "import")));
@@ -1013,24 +1013,18 @@ getAttributeFromTupleDesc(TupleDesc tupdesc, int index)
 
 }
 
-static bool isUtf8Encoding(FunctionCallInfo fcinfo)
+static bool isExternalTableInUTF8Encoding(FunctionCallInfo fcinfo)
 {
 // In GP7 FORMATTER_GET_EXTENCODING(fcinfo) gets the database encoding which may not match the table encoding
 // and thus results in exception here. So getting the table encoding from the ExtTableEntry
 #if PG_VERSION_NUM < 120000
-    if(FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
-        return false;
-    return true;
+    return (FORMATTER_GET_EXTENCODING(fcinfo) == PG_UTF8);
 #else
     Relation rel = FORMATTER_GET_RELATION(fcinfo);
-    if(rel == NULL)
+    if (rel == NULL)
         return false;
     ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
-    if (exttbl->encoding != PG_UTF8) {
-        return false;
-    }
-    else{
-        return true;
-    }
+    return (exttbl->encoding == PG_UTF8);
+
 #endif
 }
