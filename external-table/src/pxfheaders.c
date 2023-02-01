@@ -40,6 +40,8 @@ static char *get_format_name(char fmtcode);
 static void add_projection_desc_httpheader(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
 static bool add_attnums_from_targetList(Node *node, List *attnums);
 static void add_projection_index_header(CHURL_HEADERS pVoid, StringInfoData data, int attno, char number[32]);
+// these 2 functions below are defined here for GP5.
+// in GP6 they are available in fileam.h and in GP7 we do not need them as this logic is done by ????
 #if PG_VERSION_NUM < 90400
 static List *parseCopyFormatString(Relation rel, char *fmtstr, char fmttype);
 static List *appendCopyEncodingOption(List *copyFmtOpts, int encoding);
@@ -239,14 +241,14 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 	/* Get tuple description itself */
 	tuple = RelationGetDescr(rel);
 
-  /* Iterate attributes */
-  for (i = 0, attrIx = 0; i < tuple->natts; ++i)
-  {
-        #if PG_VERSION_NUM >= 120000
-            FormData_pg_attribute *attribute = &tuple->attrs[i];
-        #else
-            FormData_pg_attribute *attribute = tuple->attrs[i];
-        #endif
+	/* Iterate attributes */
+	for (i = 0, attrIx = 0; i < tuple->natts; ++i)
+	{
+		#if PG_VERSION_NUM >= 120000
+			FormData_pg_attribute *attribute = &tuple->attrs[i];
+		#else
+			FormData_pg_attribute *attribute = tuple->attrs[i];
+		#endif
 
 		/* Ignore dropped attributes. */
 		if (attribute->attisdropped)

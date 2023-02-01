@@ -1002,14 +1002,14 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 static inline Form_pg_attribute
 getAttributeFromTupleDesc(TupleDesc tupdesc, int index)
 {
-    Form_pg_attribute attr;
-    #if PG_VERSION_NUM >= 120000
-         attr = &tupdesc->attrs[index];
-    #else
-         attr = tupdesc->attrs[index];
-    #endif
+	Form_pg_attribute attr;
+	#if PG_VERSION_NUM >= 120000
+		attr = &tupdesc->attrs[index];
+	#else
+		attr = tupdesc->attrs[index];
+	#endif
 
-    return attr;
+	return attr;
 
 }
 
@@ -1018,13 +1018,13 @@ static bool isExternalTableInUTF8Encoding(FunctionCallInfo fcinfo)
 // In GP7 FORMATTER_GET_EXTENCODING(fcinfo) gets the database encoding which may not match the table encoding
 // and thus results in exception here. So getting the table encoding from the ExtTableEntry
 #if PG_VERSION_NUM < 120000
-    return (FORMATTER_GET_EXTENCODING(fcinfo) == PG_UTF8);
+	return (FORMATTER_GET_EXTENCODING(fcinfo) == PG_UTF8);
 #else
-    Relation rel = FORMATTER_GET_RELATION(fcinfo);
-    if (rel == NULL)
-        return false;
-    ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
-    return (exttbl->encoding == PG_UTF8);
+	Relation rel = FORMATTER_GET_RELATION(fcinfo);
+	if (rel == NULL)
+		return false;
+	ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
+	return (exttbl->encoding == PG_UTF8);
 
 #endif
 }
