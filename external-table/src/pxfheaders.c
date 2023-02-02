@@ -40,16 +40,17 @@ static char *get_format_name(char fmtcode);
 static void add_projection_desc_httpheader(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
 static bool add_attnums_from_targetList(Node *node, List *attnums);
 static void add_projection_index_header(CHURL_HEADERS pVoid, StringInfoData data, int attno, char number[32]);
+static List *appendCopyEncodingOptionToList(List *copyFmtOpts, int encoding);
 
 /*
- * these 2 functions below are copied from GP6 code and are defined here for GP5 only.
- * in GP6 they are available in fileam.h
- * in GP7 we do not need parseCopyFormatString() as all options (copy or custom) are added to ExtTableEntry.options
- * list by external.c::GetExtFromForeignTableOptions()
+ * this function is copied from Greenplum 6 (6X_STABLE branch) code
+ * it is defined here for compilation with Greenplum 5 only
+ * for compilation with Greenplum 6 it is defined in included fileam.h
+ * in Greenplum 7 we do not need to define and call it as all options (copy or custom)
+ * are added to ExtTableEntry.options list by external.c::GetExtFromForeignTableOptions()
  */
 #if PG_VERSION_NUM < 90400
 static List *parseCopyFormatString(Relation rel, char *fmtstr, char fmttype);
-static List *appendCopyEncodingOption(List *copyFmtOpts, int encoding);
 #endif
 
 /*
@@ -94,12 +95,8 @@ build_http_headers(PxfInputData *input)
 #endif
 		}
 
-#if PG_VERSION_NUM >= 120000
 		/* pass external table's encoding to copy's options */
-		copyFmtOpts = lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(exttbl->encoding)), -1));
-#else
-		copyFmtOpts = appendCopyEncodingOption(copyFmtOpts, exttbl->encoding);
-#endif
+		copyFmtOpts = appendCopyEncodingOptionToList(copyFmtOpts, exttbl->encoding);
 
 		/* Extract options from the statement node tree */
 		foreach(option, copyFmtOpts)
@@ -752,6 +749,21 @@ add_attnums_from_targetList(Node *node, List *attnums)
 								  (void *) attnums);
 }
 
+/*
+ * This function is copied from fileam.c::appendCopyEncodingOption() in the 6X_STABLE branch.
+ * appendCopyEncodingOption() does not exist on GP5
+ * and in GP7 it is now a part of gpcontrib/gp_exttable_fdw/extaccess.c that is not easily linkable,
+ * so we just define it here with a different name for all versions to use
+ */
+static List *
+appendCopyEncodingOptionToList(List *copyFmtOpts, int encoding)
+{
+	return lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(encoding))
+#if PG_VERSION_NUM >= 120000 // GP7 requires an extra parameter for makeDefElem()
+					, -1
+#endif
+					));
+
 #if PG_VERSION_NUM < 90400
 /*
  * This function is copied from fileam.c in the 6X_STABLE branch.
@@ -958,13 +970,5 @@ parseCopyFormatString(Relation rel, char *fmtstr, char fmttype)
 			        errmsg("external table internal parse error at end of line")));
 }
 
-/*
- * This function is copied from fileam.c in the 6X_STABLE branch.
- * In version 6, this function is no longer required to be copied.
- */
-static List *
-appendCopyEncodingOption(List *copyFmtOpts, int encoding)
-{
-	return lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(encoding))));
-}
 #endif
+}
