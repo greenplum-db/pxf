@@ -148,6 +148,12 @@ appendStringInfoFill(StringInfo str, int occurrences, char ch)
 		} \
 	} while (0)
 
+#if PG_VERSION_NUM < 90400
+// Copied from tupdesc.h (6.x), since this is not present in GPDB 5
+/* Accessor for the i'th attribute of tupdesc. */
+#define TupleDescAttr(tupdesc, i) ((tupdesc)->attrs[(i)])
+#endif
+
 /*
  * Write a int4 to the buffer
  */
