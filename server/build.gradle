@@ -244,6 +244,7 @@ configure(javaProjects) {
         licenseScanner {
             extendsFrom runtimeClasspath
             exclude group: 'org.springframework.boot', module: 'spring-boot-devtools'
+            exclude group: 'com.fasterxml.jackson', module: 'jackson-bom'
             dependencies {
                 licenseScanner('org.springframework.boot:spring-boot-loader')
             }
