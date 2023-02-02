@@ -756,13 +756,13 @@ add_attnums_from_targetList(Node *node, List *attnums)
  * so we just define it here with a different name for all versions to use
  */
 static List *
-appendCopyEncodingOptionToList(List *copyFmtOpts, int encoding)
-{
-	return lappend(copyFmtOpts, makeDefElem("encoding", (Node *)makeString((char *)pg_encoding_to_char(encoding))
+appendCopyEncodingOptionToList(List *copyFmtOpts, int encoding) {
+	return lappend(copyFmtOpts, makeDefElem("encoding", (Node *) makeString((char *) pg_encoding_to_char(encoding))
 #if PG_VERSION_NUM >= 120000 // GP7 requires an extra parameter for makeDefElem()
 					, -1
 #endif
 					));
+}
 
 #if PG_VERSION_NUM < 90400
 /*
@@ -971,4 +971,3 @@ parseCopyFormatString(Relation rel, char *fmtstr, char fmttype)
 }
 
 #endif
-}
