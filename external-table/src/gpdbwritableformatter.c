@@ -54,7 +54,6 @@ PG_FUNCTION_INFO_V1(gpdbwritableformatter_export);
 PG_FUNCTION_INFO_V1(gpdbwritableformatter_import);
 Datum		gpdbwritableformatter_import(PG_FUNCTION_ARGS);
 Datum		gpdbwritableformatter_export(PG_FUNCTION_ARGS);
-static bool isExternalTableInUTF8Encoding(PG_FUNCTION_ARGS);
 
 static const int ERR_COL_OFFSET = 9;
 static const int FIRST_LINE_NUM = 1;
@@ -513,7 +512,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	 */
 	if (myData == NULL)
 	{
-		if (!isExternalTableInUTF8Encoding(fcinfo))
+		if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
 		{
 		     ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
 		            errmsg(FORMATTER_ENCODING_ERR_MSG, "export", "export")));
@@ -715,7 +714,8 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 
 	if(myData->export_format_tuple->len != datlen + VARHDRSZ)
 	{
-		elog(ERROR, "Tuple length doesn't match the data length");
+		ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+					errmsg("Tuple length doesn't match the data length")));
 	}
 
 	SET_VARSIZE(myData->export_format_tuple->data, datlen + VARHDRSZ);
@@ -768,7 +768,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	 */
 	if (myData == NULL)
 	{
-		if (!isExternalTableInUTF8Encoding(fcinfo))
+		if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
 		{
 		    ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
 			  errmsg(FORMATTER_ENCODING_ERR_MSG, "import", "import")));
@@ -1006,20 +1006,4 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	tuple = heap_form_tuple(tupdesc, myData->values, myData->nulls);
 	FORMATTER_SET_TUPLE(fcinfo, tuple);
 	FORMATTER_RETURN_TUPLE(tuple);
-}
-
-static bool isExternalTableInUTF8Encoding(FunctionCallInfo fcinfo)
-{
-// In GP7 FORMATTER_GET_EXTENCODING(fcinfo) gets the database encoding which may not match the table encoding
-// and thus results in exception here. So getting the table encoding from the ExtTableEntry
-#if PG_VERSION_NUM < 120000
-	return (FORMATTER_GET_EXTENCODING(fcinfo) == PG_UTF8);
-#else
-	Relation rel = FORMATTER_GET_RELATION(fcinfo);
-	if (rel == NULL)
-		return false;
-	ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
-	return (exttbl->encoding == PG_UTF8);
-
-#endif
 }
