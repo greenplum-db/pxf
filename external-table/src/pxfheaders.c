@@ -518,19 +518,19 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 #if PG_VERSION_NUM >= 120000
 static void
 add_projection_desc_httpheader(CHURL_HEADERS headers,
-							ProjectionInfo *projInfo,
-							List *qualsAttributes,
-							Relation rel)
+							   ProjectionInfo *projInfo,
+							   List *qualsAttributes,
+							   Relation rel)
 {
-	int 		i;
-	int 		dropped_count;
-	int 		number;
-	int 		numTargetList;
-	char 		long_number[sizeof(int32) * 8];
+	int 		 i;
+	int 		 dropped_count;
+	int 		 number;
+	int 		 numTargetList;
+	char		 long_number[sizeof(int32) * 8];
 	// In versions < 120000, projInfo->pi_varNumbers contains attribute numbers of SimpleVars
 	// Since,this pi_varNumbers doesn't exist in PG12 and above, we can add the attribute numbers by
 	// iterating on the Simple vars.
-	int       varNumbers[sizeof(int32) * 8];
+	int 		 varNumbers[sizeof(int32) * 8];
 	Bitmapset   *attrs_used;
 	StringInfoData  formatter;
 	TupleDesc   tupdesc;
@@ -545,8 +545,8 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 		ExprEvalStep *step = &projInfo->pi_state.steps[i];
 		ExprEvalOp opcode = ExecEvalStepOp(&projInfo->pi_state, step);
 		if ( opcode == EEOP_ASSIGN_INNER_VAR ||
-				 opcode == EEOP_ASSIGN_OUTER_VAR ||
-					opcode == EEOP_ASSIGN_SCAN_VAR)
+			 opcode == EEOP_ASSIGN_OUTER_VAR ||
+			 opcode == EEOP_ASSIGN_SCAN_VAR)
 		{
 			numSimpleVars++;
 		}
@@ -560,31 +560,30 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	if (targetList)
 	{
 
-	List     *l = lappend_int(NIL, 0);
-	ListCell *lc1;
+		List     *l = lappend_int(NIL, 0);
+		ListCell *lc1;
 
-	foreach(lc1, targetList)
-	{
-		ExprState *gstate = (ExprState *) lfirst(lc1);
-		add_attnums_from_targetList( (Node *) gstate, l);
-	}
-
-	i=0;
-	foreach(lc1, l)
-	{
-		int attno = lfirst_int(lc1);
-		if (attno > InvalidAttrNumber)
+		foreach(lc1, targetList)
 		{
-			add_projection_index_header(headers,
-				formatter, attno - 1, long_number);
-			numTargetList++;
-			varNumbers[i] = attno;
-			i++;
+			ExprState *gstate = (ExprState *) lfirst(lc1);
+			add_attnums_from_targetList( (Node *) gstate, l);
 		}
-	}
 
-	list_free(l);
-}
+		i=0;
+		foreach(lc1, l)
+		{
+			int attno = lfirst_int(lc1);
+			if (attno > InvalidAttrNumber)
+			{
+				add_projection_index_header(headers, formatter, attno - 1, long_number);
+				numTargetList++;
+				varNumbers[i] = attno;
+				i++;
+			}
+		}
+
+		list_free(l);
+	}
 
 	number = numTargetList + numSimpleVars + list_length(qualsAttributes);
 	if (number == 0)
