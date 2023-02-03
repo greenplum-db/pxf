@@ -42,6 +42,7 @@ static bool add_attnums_from_targetList(Node *node, List *attnums);
 static void add_projection_index_header(CHURL_HEADERS pVoid, StringInfoData data, int attno, char number[32]);
 static List *appendCopyEncodingOptionToList(List *copyFmtOpts, int encoding);
 
+#if PG_VERSION_NUM < 90400
 /*
  * this function is copied from Greenplum 6 (6X_STABLE branch) code
  * it is defined here for compilation with Greenplum 5 only
@@ -49,8 +50,11 @@ static List *appendCopyEncodingOptionToList(List *copyFmtOpts, int encoding);
  * in Greenplum 7 we do not need to define and call it as all options (copy or custom)
  * are added to ExtTableEntry.options list by external.c::GetExtFromForeignTableOptions()
  */
-#if PG_VERSION_NUM < 90400
 static List *parseCopyFormatString(Relation rel, char *fmtstr, char fmttype);
+
+// Copied this Macro from tupdesc.h (6.x), since this is not present in GPDB 5
+/* Accessor for the i'th attribute of tupdesc. */
+#define TupleDescAttr(tupdesc, i) ((tupdesc)->attrs[(i)])
 #endif
 
 /*
@@ -246,11 +250,7 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 	/* Iterate attributes */
 	for (i = 0, attrIx = 0; i < tuple->natts; ++i)
 	{
-		#if PG_VERSION_NUM >= 120000
-			FormData_pg_attribute *attribute = &tuple->attrs[i];
-		#else
-			FormData_pg_attribute *attribute = tuple->attrs[i];
-		#endif
+		FormData_pg_attribute *attribute = TupleDescAttr(tuple,i);
 
 		/* Ignore dropped attributes. */
 		if (attribute->attisdropped)
