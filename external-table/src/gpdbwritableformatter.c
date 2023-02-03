@@ -712,7 +712,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	/* End padding */
 	appendStringInfoFill(myData->export_format_tuple, endpadding, '\0');
 
-	if(myData->export_format_tuple->len != datlen + VARHDRSZ)
+	if (myData->export_format_tuple->len != datlen + VARHDRSZ)
 	{
 		ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
 					errmsg("Tuple length doesn't match the data length")));
@@ -770,8 +770,8 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	{
 		if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
 		{
-		    ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-			  errmsg(FORMATTER_ENCODING_ERR_MSG, "import", "import")));
+			ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+							errmsg(FORMATTER_ENCODING_ERR_MSG, "import", "import")));
 		}
 
 		myData = palloc(sizeof(format_t));
@@ -790,7 +790,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 
 			Oid			functionId;
 
-            /* Ignore dropped attributes. */
+			/* Ignore dropped attributes. */
 			if (attr->attisdropped)
 				continue;
 
@@ -883,7 +883,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	if (error_flag) {
 		bufidx += ERR_COL_OFFSET;
 		ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-		                errmsg("%.*s", tupleEndIdx - bufidx, data_buf + bufidx)));
+						errmsg("%.*s", tupleEndIdx - bufidx, data_buf + bufidx)));
 	}
 
 	ncolumns_remote = readInt2FromBuffer(data_buf, tupleEndIdx, &bufidx);
