@@ -37,12 +37,15 @@ static void add_alignment_size_httpheader(CHURL_HEADERS headers);
 static void add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel);
 static void add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri);
 static char *get_format_name(char fmtcode);
-static void add_projection_desc_httpheader(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
+static void add_projection_desc_httpheaders(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
 static bool add_attnums_from_targetList(Node *node, List *attnums);
 static void add_projection_index_header(CHURL_HEADERS pVoid, StringInfoData data, int attno, char number[32]);
 static List *appendCopyEncodingOptionToList(List *copyFmtOpts, int encoding);
-
+static int  *getVarNumbers(ProjectionInfo *projInfo);
 static List *getTargetList(ProjectionInfo *projInfo);
+static bool needToIterateTargetList(List *targetList, int *varNumbers);
+static Node *getTargetListEntryExpression(ListCell *lc1);
+static int  getNumSimpleVars(ProjectionInfo *projInfo);
 
 #if PG_VERSION_NUM < 90400
 /*
@@ -136,7 +139,7 @@ build_http_headers(PxfInputData *input)
 		if (qualsAreSupported &&
 			(qualsAttributes != NIL || list_length(input->quals) == 0))
 		{
-			add_projection_desc_httpheader(headers, proj_info, qualsAttributes, rel);
+			add_projection_desc_httpheaders(headers, proj_info, qualsAttributes, rel);
 		}
 		else
 		{
@@ -373,22 +376,36 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 }
 
 /*
- * Report projection description to the remote component, the indices of
- * dropped columns do not get reported, as if they never existed, and
- * column indices that follow dropped columns will be shifted by the number
- * of dropped columns that precede it. For example,
- *
- *  ---------------------------------------------
- * |  col1  |  col2 (dropped)  |  col3  |  col4  |
- *  ---------------------------------------------
- *
- * Let's assume that col1 and col4 are projected, the reported projected
- * indices will be 0, 2. This is because we use 0-based indexing and because
- * col2 was dropped, the indices for col3 and col4 get shifted by -1.
+ * Returns pre-computed array of simple var attrnos, if available
  */
+static inline int*
+getVarNumbers(ProjectionInfo *projInfo) {
+#if PG_VERSION_NUM >= 120000
+	return NULL; // does not exist in projInfo in GP7
+#else
+	return projInfo->pi_varNumbers;
+#endif
+}
 
+/*
+ * Returns targetList from provided ProjectionInfo
+ */
+static inline List*
+getTargetList(ProjectionInfo *projInfo)
+{
+#if PG_VERSION_NUM >= 120000
+	return (List *) projInfo->pi_state.expr;
+#else
+	return projInfo->pi_targetlist;
+#endif
+}
+
+/*
+ * Determines whether there is a need to iterate over the targetList to find projected attributes
+ */
 static inline bool
-needToIterateTargetList(List *targetList, int *varNumbers) {
+needToIterateTargetList(List *targetList, int *varNumbers)
+{
 #if PG_VERSION_NUM >= 90400
 	/*
 	 * In GP6 non-simple Vars are added to the targetlist of ProjectionInfo while
@@ -405,80 +422,28 @@ needToIterateTargetList(List *targetList, int *varNumbers) {
 #endif
 }
 
-static inline List*
-getTargetList(ProjectionInfo *projInfo) {
-#if PG_VERSION_NUM >= 120000
-	return (List *) projInfo->pi_state.expr;
-#else
-	return projInfo->pi_targetlist;
-#endif
-}
-
-static void
-add_projection_desc_httpheader(CHURL_HEADERS headers,
-							   ProjectionInfo *projInfo,
-							   List *qualsAttributes,
-							   Relation rel)
+/*
+ * Returns expression for a targetList entry.
+ */
+static inline
+Node *getTargetListEntryExpression(ListCell *lc1)
 {
-	int			   i;
-	int			   droppedCount;
-	int			   headerCount;
-
-	int			   numSimpleVars;
-
-	char			long_number[sizeof(int32) * 8];
 #if PG_VERSION_NUM >= 120000
-	int				*varNumbers = NULL; // does not exist in projInfo in GP7
+	ExprState *gstate = (ExprState *) lfirst(lc1);
+	return (Node *) gstate;
 #else
-	int				*varNumbers = projInfo->pi_varNumbers;
+	GenericExprState *gstate = (GenericExprState *) lfirst(lc1);
+	return (Node *) gstate->arg->expr;
 #endif
-	Bitmapset		*attrs_used;
-	StringInfoData	formatter;
-	TupleDesc		tupdesc;
+};
 
-	initStringInfo(&formatter);
-	attrs_used = NULL;
-	List     *targetList = getTargetList(projInfo);
-
-
-	// STEP 1: collect attribute numbers from the targetList, if necessary
-	if (needToIterateTargetList(targetList, varNumbers)) {
-		/*
-		 * we use expression_tree_walker to access attrno information
-		 * we do it through a helper function add_attnums_from_targetList
-		 */
-		List     *l = lappend_int(NIL, 0);
-		ListCell *lc1;
-
-		foreach(lc1, targetList)
-		{
-			Node *node;
-#if PG_VERSION_NUM >= 120000
-			ExprState *gstate = (ExprState *) lfirst(lc1);
-			node = (Node *) gstate;
-#else
-			GenericExprState *gstate = (GenericExprState *) lfirst(lc1);
-			node = (Node *) gstate->arg->expr;
-#endif
-			add_attnums_from_targetList(node, l);
-		}
-
-		foreach(lc1, l)
-		{
-			int attno = lfirst_int(lc1);
-			if (attno > InvalidAttrNumber)
-			{
-				attrs_used =
-					bms_add_member(attrs_used,
-									attno - FirstLowInvalidHeapAttributeNumber);
-			}
-		}
-
-		list_free(l);
-	}
-
-	// STEP 2: collect attribute numbers from pre-computed list of varNumbers (if available) of simpleVars
-	numSimpleVars = 0;
+/*
+ * Returns a count of simpleVars if they were pre-computed.
+ */
+static inline
+int getNumSimpleVars(ProjectionInfo *projInfo)
+{
+	int numSimpleVars = 0;
 #if PG_VERSION_NUM < 90400
 	// in GP5 if varNumbers is not NULL, it means the attnums have been pre-computed in varNumbers
 	// and targetList consists only of simpleVars, so we can use its length
@@ -492,7 +457,78 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 #else
 	// in GP7 there is no precomputation, the numSimpleVars stays at 0
 #endif
+	return numSimpleVars;
+};
 
+/*
+ * Report projection description to the remote component, the indices of
+ * dropped columns do not get reported, as if they never existed, and
+ * column indices that follow dropped columns will be shifted by the number
+ * of dropped columns that precede it. For example,
+ *
+ *  ---------------------------------------------
+ * |  col1  |  col2 (dropped)  |  col3  |  col4  |
+ *  ---------------------------------------------
+ *
+ * Let's assume that col1 and col4 are projected, the reported projected
+ * indices will be 0, 2. This is because we use 0-based indexing and because
+ * col2 was dropped, the indices for col3 and col4 get shifted by -1.
+ */
+static void
+add_projection_desc_httpheaders(CHURL_HEADERS headers,
+							   ProjectionInfo *projInfo,
+							   List *qualsAttributes,
+							   Relation rel)
+{
+	int			   i;
+	int			   droppedCount;  // count of dropped attributes
+	int			   headerCount;   // count of created http headers
+	char		   long_number[sizeof(int32) * 8];
+	int			   numSimpleVars; // number of pre-computed simple vars
+	int			   *varNumbers;   // pre-computed array of simple var attrnos
+
+	Bitmapset	   *attrs_used;   // hashset to keep and de-dup collected attrnos
+	StringInfoData	formatter;
+	List		   *targetList;   // targetList from the query plan
+	TupleDesc	   tupdesc;
+
+	// STEP 0: initialize variables
+	initStringInfo(&formatter);
+	attrs_used = NULL;
+	targetList = getTargetList(projInfo);
+	varNumbers = getVarNumbers(projInfo);
+
+	// STEP 1: collect attribute numbers from the targetList, if necessary
+	if (needToIterateTargetList(targetList, varNumbers)) {
+		/*
+		 * we use expression_tree_walker to access attrno information
+		 * we do it through a helper function add_attnums_from_targetList
+		 */
+		List     *l = lappend_int(NIL, 0);
+		ListCell *lc1;
+
+		foreach(lc1, targetList)
+		{
+			Node *node = getTargetListEntryExpression(lc1);
+			add_attnums_from_targetList(node, l);
+		}
+
+		foreach(lc1, l)
+		{
+			int attno = lfirst_int(lc1);
+			if (attno > InvalidAttrNumber)
+			{
+				attrs_used =
+					bms_add_member(attrs_used,
+								 attno - FirstLowInvalidHeapAttributeNumber);
+			}
+		}
+
+		list_free(l);
+	}
+
+	// STEP 2: collect attribute numbers from pre-computed list of varNumbers (if available) of simpleVars
+	numSimpleVars = getNumSimpleVars(projInfo);
 	for (i = 0; varNumbers && i < numSimpleVars; i++)
 	{
 		attrs_used =
@@ -545,141 +581,6 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	pfree(formatter.data);
 	bms_free(attrs_used);
 }
-
-//#if PG_VERSION_NUM >= 120000
-//static void
-//add_projection_desc_httpheader(CHURL_HEADERS headers,
-//							   ProjectionInfo *projInfo,
-//							   List *qualsAttributes,
-//							   Relation rel)
-//{
-//	int 		 i;
-//	int 		 dropped_count;
-//	int 		 number;
-//	int 		 numTargetList;
-//	char		 long_number[sizeof(int32) * 8];
-//	// In versions < 120000, projInfo->pi_varNumbers contains attribute numbers of SimpleVars
-//	// Since,this pi_varNumbers doesn't exist in PG12 and above, we can add the attribute numbers by
-//	// iterating on the Simple vars.
-//	int 		 varNumbers[sizeof(int32) * 8];
-//	Bitmapset   *attrs_used;
-//	StringInfoData  formatter;
-//	TupleDesc   tupdesc;
-//	initStringInfo(&formatter);
-//	numTargetList = 0;
-//
-//	List *targetList = (List *) projInfo->pi_state.expr;
-//	int  numSimpleVars = 0;
-//
-//	for (i = 0; i < projInfo->pi_state.steps_len; i++)
-//	{
-//		ExprEvalStep *step = &projInfo->pi_state.steps[i];
-//		ExprEvalOp opcode = ExecEvalStepOp(&projInfo->pi_state, step);
-//		if ( opcode == EEOP_ASSIGN_INNER_VAR ||
-//			 opcode == EEOP_ASSIGN_OUTER_VAR ||
-//			 opcode == EEOP_ASSIGN_SCAN_VAR)
-//		{
-//			numSimpleVars++;
-//		}
-//	}
-//
-//	/*
-//	* Non-simpleVars are added to the targetlist
-//	* we use expression_tree_walker to access attrno information
-//	* we do it through a helper function add_attnums_from_targetList
-//	*/
-//	if (targetList)
-//	{
-//
-//		List     *l = lappend_int(NIL, 0);
-//		ListCell *lc1;
-//
-//		foreach(lc1, targetList)
-//		{
-//			ExprState *gstate = (ExprState *) lfirst(lc1);
-//			add_attnums_from_targetList( (Node *) gstate, l);
-//		}
-//
-//		i=0;
-//		foreach(lc1, l)
-//		{
-//			int attno = lfirst_int(lc1);
-//			if (attno > InvalidAttrNumber)
-//			{
-//				add_projection_index_header(headers, formatter, attno - 1, long_number);
-//				numTargetList++;
-//				varNumbers[i] = attno;
-//				i++;
-//			}
-//		}
-//
-//		list_free(l);
-//	}
-//
-//	number = numTargetList + numSimpleVars + list_length(qualsAttributes);
-//	if (number == 0)
-//		return;
-//
-//	attrs_used = NULL;
-//
-//	/* Convert the number of projection columns to a string */
-//	pg_ltoa(number, long_number);
-//	churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
-//
-//	for (i = 0; i < numSimpleVars ; i++)
-//	{
-//		attrs_used =
-//			bms_add_member(attrs_used,
-//				varNumbers[i] - FirstLowInvalidHeapAttributeNumber);
-//	}
-//
-//	ListCell *attribute = NULL;
-//
-//	/*
-//	* AttrNumbers coming from quals
-//	*/
-//	foreach(attribute, qualsAttributes)
-//	{
-//		AttrNumber attrNumber = (AttrNumber) lfirst_int(attribute);
-//		attrs_used =
-//			bms_add_member(attrs_used,
-//				attrNumber + 1 - FirstLowInvalidHeapAttributeNumber);
-//	}
-//
-//	tupdesc = RelationGetDescr(rel);
-//	dropped_count = 0;
-//
-//	for (i = 1; i <= tupdesc->natts; i++)
-//	{
-//		/* Ignore dropped attributes. */
-//		if (tupdesc->attrs[i - 1].attisdropped)
-//		{
-//			/* keep a counter of the number of dropped attributes */
-//			dropped_count++;
-//			continue;
-//		}
-//
-//		if (bms_is_member(i - FirstLowInvalidHeapAttributeNumber, attrs_used))
-//		{
-//			/* Shift the column index by the running dropped_count */
-//			add_projection_index_header(headers, formatter,
-//										i - 1 - dropped_count, long_number);
-//			number++;
-//		}
-//	}
-//
-//	if (number != 0)
-//	{
-//		/* Convert the number of projection columns to a string */
-//		pg_ltoa(number, long_number);
-//		churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
-//	}
-//
-//	list_free(qualsAttributes);
-//	pfree(formatter.data);
-//	bms_free(attrs_used);
-//}
-//#endif
 
 /*
  * Adds the projection index header for the given attno
