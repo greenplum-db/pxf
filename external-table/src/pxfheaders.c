@@ -447,7 +447,7 @@ int getNumSimpleVars(ProjectionInfo *projInfo)
 #if PG_VERSION_NUM < 90400
 	// in GP5 if varNumbers is not NULL, it means the attnums have been pre-computed in varNumbers
 	// and targetList consists only of simpleVars, so we can use its length
-	if (varNumbers)
+	if (projInfo->pi_varNumbers)
 	{
 		numSimpleVars = list_length(projInfo->pi_targetlist);
 	}
