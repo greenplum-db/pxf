@@ -100,7 +100,7 @@ typedef struct
 /* for backward compatibility */
 #define GPDBWRITABLE_PREV_VERSION 1
 
-#define FORMATTER_ENCODING_ERR_MSG "pxfwritable_%s formatter can only %s UTF8 formatted data. Define the external table with ENCODING UTF8"
+#define FORMATTER_ENCODING_ERR_MSG "pxfwritable_%1$s formatter can only %1$s UTF8 formatted data. Define the external table with ENCODING UTF8"
 
 /* Bit flag */
 #define GPDBWRITABLE_BITFLAG_ISNULL 1	/* Column is null */
@@ -515,7 +515,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 		if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
 		{
 		     ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-		            errmsg(FORMATTER_ENCODING_ERR_MSG, "export", "export")));
+		            errmsg(FORMATTER_ENCODING_ERR_MSG, "export")));
 		}
 
 		myData = palloc(sizeof(format_t));
@@ -771,7 +771,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 		if (FORMATTER_GET_EXTENCODING(fcinfo) != PG_UTF8)
 		{
 			ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-							errmsg(FORMATTER_ENCODING_ERR_MSG, "import", "import")));
+							errmsg(FORMATTER_ENCODING_ERR_MSG, "import")));
 		}
 
 		myData = palloc(sizeof(format_t));

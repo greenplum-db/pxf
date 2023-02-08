@@ -415,7 +415,7 @@ needToIterateTargetList(List *targetList, int *varNumbers)
 	return (targetList != NULL);
 #else
 	/*
-	 * In GP5 if targetList contains ONLY simple Vars their attnums will be populated into varNumbers array
+	 * In GP5 if targetList contains ONLY simple Vars their attrnos will be populated into varNumbers array
 	 * otherwise the varNumbers array will be NULL, and we will need to iterate over the targetList
 	 */
 	return (varNumbers == NULL);
@@ -445,7 +445,7 @@ int getNumSimpleVars(ProjectionInfo *projInfo)
 {
 	int numSimpleVars = 0;
 #if PG_VERSION_NUM < 90400
-	// in GP5 if varNumbers is not NULL, it means the attnums have been pre-computed in varNumbers
+	// in GP5 if varNumbers is not NULL, it means the attrnos have been pre-computed in varNumbers
 	// and targetList consists only of simpleVars, so we can use its length
 	if (projInfo->pi_varNumbers)
 	{
@@ -498,7 +498,7 @@ add_projection_desc_httpheaders(CHURL_HEADERS headers,
 	targetList = getTargetList(projInfo);
 	varNumbers = getVarNumbers(projInfo);
 
-	// STEP 1: collect attribute numbers from the targetList, if necessary
+	// STEP 1: collect attribute numbers (attrno) from the targetList, if necessary
 	if (needToIterateTargetList(targetList, varNumbers)) {
 		/*
 		 * we use expression_tree_walker to access attrno information
@@ -546,7 +546,7 @@ add_projection_desc_httpheaders(CHURL_HEADERS headers,
 						 attrNumber + 1 - FirstLowInvalidHeapAttributeNumber);
 	}
 
-	// STEP 4: add projection headers for attributes of relation that are not dropped and were selected in steps before
+	// STEP 4: for attributes in the relation that are not dropped, add projection headers for those selected in steps 0 - 3 above
 	tupdesc = RelationGetDescr(rel);
 	droppedCount = 0;
 	headerCount = 0;
