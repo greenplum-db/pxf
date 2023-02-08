@@ -255,7 +255,7 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 	/* Iterate attributes */
 	for (i = 0, attrIx = 0; i < tuple->natts; ++i)
 	{
-		FormData_pg_attribute *attribute = TupleDescAttr(tuple,i);
+		FormData_pg_attribute *attribute = TupleDescAttr(tuple, i);
 
 		/* Ignore dropped attributes. */
 		if (attribute->attisdropped)
