@@ -99,12 +99,14 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         {
             fmt_state->delimiter = pg_server_to_any(value, strlen(value), table_encoding);
         }
+        else if (strcmp(key, "eol") == 0)
+        {
+            fmt_state->eol = pg_server_to_any(value, strlen(value), table_encoding);
+        }
         else if (strcmp(key, "eol_prefix") == 0)
         {
             // Note: We assume EOL of the file will always be \n
             fmt_state->eol_prefix = pg_server_to_any(value, strlen(value), table_encoding);
-            fmt_state->eol = (char*)palloc(strlen(fmt_state->eol_prefix) + 2);
-            sprintf(fmt_state->eol, "%s%c", fmt_state->eol_prefix, '\n');
         }
         else if (strcmp(key, "quote") == 0)
         {
@@ -114,6 +116,17 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         {
             fmt_state->escape = pg_server_to_any(value, strlen(value), table_encoding);
         }
+    }
+
+    if (fmt_state->eol == NULL)
+    {
+        fmt_state->eol = "\n";
+    }
+    if (fmt_state->eol_prefix != NULL)
+    {
+        char* new_eol = (char*)palloc(strlen(fmt_state->eol_prefix) + strlen(fmt_state->eol));
+        sprintf(new_eol, "%s%s", fmt_state->eol_prefix, fmt_state->eol);
+        fmt_state->eol = new_eol;
     }
 
     //with quote, we must also have escape
@@ -138,11 +151,6 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
     if(fmt_state->escape != NULL && strlen(fmt_state->escape) != 1)
     {
         ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("escape option wrong length")));
-    }
-
-    if(fmt_state->eol == NULL)
-    {
-        fmt_state->eol = "\n";
     }
 
     fmt_state->situation = (fmt_state->quote != NULL ? WITH_QUOTE : WITHOUT_QUOTE);
