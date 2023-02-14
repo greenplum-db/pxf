@@ -2,11 +2,6 @@ ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb5-centos7-build-test:latest
 
 FROM ${BASE_IMAGE}
 
-ARG GINKGO_VERSION
-
-# install Go utilities
-RUN GOPATH=/opt/go /usr/local/go/bin/go install github.com/onsi/ginkgo/ginkgo@v${GINKGO_VERSION}
-
 # add Java 8, Java 11, jq and rpm-build
 RUN yum install -y rpm-build java-1.8.0-openjdk-devel jq && yum clean all \
     && wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz \

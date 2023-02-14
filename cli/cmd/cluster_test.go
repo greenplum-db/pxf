@@ -1,7 +1,6 @@
 package cmd_test
 
 import (
-	"fmt"
 	"pxf-cli/cmd"
 
 	"github.com/greenplum-db/gp-common-go-libs/cluster"
@@ -379,7 +378,7 @@ stderr line three`
 				},
 			}
 			_ = cmd.GenerateOutput(&cmd.StopCommand, clusterData)
-			Expect(testStdout).Should(gbytes.Say(fmt.Sprintf("PXF failed to stop on 1 out of 3 hosts")))
+			Expect(testStdout).Should(gbytes.Say("PXF failed to stop on 1 out of 3 hosts"))
 			Expect(testStderr).Should(gbytes.Say("sdw2 ==> stderr line one\nstderr line two..."))
 		})
 	})

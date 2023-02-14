@@ -31,18 +31,20 @@ steps:
     args: [ './server/gradlew', '--gradle-user-home=/workspace/.gradle', '-Dorg.gradle.daemon=false', '-b', './server/build.gradle', 'test', 'stage' ]
     waitFor: [ 'untar-pxf-build-dependencies' ]
 
-  - name: golang:1.17.6
+  - name: golang:1.19
     id: golang-build
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         mkdir -p ./.go-mod-cached-sources
-        cp -r ./.go-mod-cached-sources ./cli/go/pkg/mod
-        go install github.com/onsi/ginkgo/ginkgo@v1.16.5
-        make -C ./cli/go/src/pxf-cli build
+        cp -r ./.go-mod-cached-sources $(go env GOMODCACHE)
+        cd ./cli
+        make install-tools
+        make build
+        cd -
         rm -rf ./.go-mod-cached-sources
-        mv ./cli/go/pkg/mod ./.go-mod-cached-sources
+        mv $(go env GOMODCACHE) ./.go-mod-cached-sources
     waitFor: [ 'untar-pxf-build-dependencies' ]
 
   # create an updated tarball with build dependencies and upload it
@@ -97,7 +99,7 @@ steps:
         mkdir -p /root/pxf/servers/database/ && cp ./server/pxf-service/src/templates/templates/jdbc-site.xml /root/pxf/servers/database/
         mkdir -p /root/pxf/servers/db-session-params/ && cp ./server/pxf-service/src/templates/templates/jdbc-site.xml /root/pxf/servers/db-session-params/
         mkdir -p /root/pxf/servers/db-hive/ && cp ./server/pxf-service/src/templates/templates/jdbc-site.xml /root/pxf/servers/db-hive/
-        GPHD_ROOT=/tmp PXF_HOME=/tmp/pxf mvn -B -e -Dpxf.lib=/workspace/automation_tmp_lib -Dtest=HdfsSmokeTest -Djava.awt.headless=true -Dmaven.repo.local=/workspace/.m2/repository -f ./automation/pom.xml -U test || true 
+        GPHD_ROOT=/tmp PXF_HOME=/tmp/pxf mvn -B -e -Dpxf.lib=/workspace/automation_tmp_lib -Dtest=HdfsSmokeTest -Djava.awt.headless=true -Dmaven.repo.local=/workspace/.m2/repository -f ./automation/pom.xml -U test || true
         # create regression-tools directory and copy jars needed by pxf
         mkdir -p regression-tools
         cp $(find . -name avro-tools*.jar) regression-tools

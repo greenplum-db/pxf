@@ -1,12 +1,11 @@
 package end_to_end_test
 
 import (
-	"fmt"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"os"
 	"os/exec"
 	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 func TestEndToEnd(t *testing.T) {
@@ -20,12 +19,12 @@ func TestEndToEnd(t *testing.T) {
 func runCli(commandStr string, args ...string) string {
 	command := exec.Command(commandStr, args...)
 	output, _ := command.CombinedOutput()
-	return fmt.Sprintf("%s", output)
+	return string(output)
 }
 
 var _ = Describe("pxf-cli", func() {
 
-	pxfCliPath := fmt.Sprintf("%s/bin/pxf-cli", os.Getenv("GOPATH"))
+	pxfCliPath := "../build/pxf-cli"
 
 	It("returns unknown command when invalid arg is given", func() {
 		output := runCli(pxfCliPath, "invalid")
@@ -44,11 +43,11 @@ var _ = Describe("pxf-cli", func() {
 
 	It("returns help when --version flag is given", func() {
 		output := runCli(pxfCliPath, "--version")
-		Expect(output).To(ContainSubstring(fmt.Sprintf("PXF version")))
+		Expect(output).To(ContainSubstring("PXF version"))
 	})
 
 	It("returns help when invalid cluster arg is given", func() {
 		output := runCli(pxfCliPath, "cluster", "init1")
-		Expect(output).To(ContainSubstring(fmt.Sprintf("Perform <command> on each segment host in the cluster")))
+		Expect(output).To(ContainSubstring("Perform <command> on each segment host in the cluster"))
 	})
 })

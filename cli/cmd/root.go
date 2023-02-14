@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"github.com/greenplum-db/gp-common-go-libs/gplog"
 	"os"
+
+	"github.com/greenplum-db/gp-common-go-libs/gplog"
 
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
 var version string
 
 // rootCmd represents the base command when called without any subcommands

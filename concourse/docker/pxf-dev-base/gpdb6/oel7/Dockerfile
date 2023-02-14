@@ -3,13 +3,11 @@ ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-oel7-test:latest
 FROM ${BASE_IMAGE}
 
 ARG GO_VERSION
-ARG GINKGO_VERSION
 
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go.tgz && rm go.tgz \
-    && GOPATH=/opt/go /usr/local/go/bin/go install github.com/onsi/ginkgo/ginkgo@v${GINKGO_VERSION}
+    && tar -C /usr/local -xzf go.tgz && rm go.tgz
 
 ARG MAVEN_VERSION=3.6.3
 ARG USER_HOME_DIR="/root"

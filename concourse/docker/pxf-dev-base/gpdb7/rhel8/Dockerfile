@@ -2,11 +2,6 @@ ARG BASE_IMAGE=gcr.io/data-gpdb-private-images/gpdb7-rhel8-test:latest
 
 FROM ${BASE_IMAGE}
 
-ARG GINKGO_VERSION
-
-# install Go utilities
-RUN GOPATH=/opt/go /usr/local/go/bin/go install github.com/onsi/ginkgo/ginkgo@v${GINKGO_VERSION}
-
 # add minio software
 RUN useradd -s /sbin/nologin -d /opt/minio minio \
     && mkdir -p /opt/minio/bin \

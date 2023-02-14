@@ -2,11 +2,6 @@ ARG BASE_IMAGE=gcr.io/data-gpdb-private-images/gpdb6-rhel8-test:latest
 
 FROM ${BASE_IMAGE}
 
-ARG GINKGO_VERSION
-
-# install Go utilities
-RUN GOPATH=/opt/go /usr/local/go/bin/go install github.com/onsi/ginkgo/ginkgo@v${GINKGO_VERSION}
-
 # add Java 11
 RUN wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz \
     && mkdir -p /usr/lib/jvm \

@@ -52,7 +52,7 @@ else
 endif
 
 cli:
-	make -C cli/go/src/pxf-cli
+	make -C cli
 
 server:
 	make -C server
@@ -61,7 +61,7 @@ clean:
 	rm -rf build
 	make -C external-table clean-all
 	make -C fdw clean-all
-	make -C cli/go/src/pxf-cli clean
+	make -C cli clean
 	make -C server clean
 
 test:
@@ -70,7 +70,7 @@ ifeq ($(SKIP_FDW_BUILD_REASON),)
 else
 	@echo "Skipping testing FDW extension because $(SKIP_FDW_BUILD_REASON)"
 endif
-	make -C cli/go/src/pxf-cli test
+	make -C cli test
 	make -C server test
 
 it:
@@ -83,7 +83,7 @@ ifeq ($(SKIP_FDW_BUILD_REASON),)
 else
 	@echo "Skipping installing FDW extension because $(SKIP_FDW_BUILD_REASON)"
 endif
-	make -C cli/go/src/pxf-cli install
+	make -C cli install
 	make -C server install
 
 install-server:
@@ -97,7 +97,7 @@ ifeq ($(SKIP_FDW_PACKAGE_REASON),)
 else
 	@echo "Skipping staging FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
 endif
-	make -C cli/go/src/pxf-cli stage
+	make -C cli stage
 	make -C server stage
 	set -e ;\
 	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJORVERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
@@ -123,7 +123,7 @@ ifeq ($(SKIP_FDW_PACKAGE_REASON),)
 else
 	@echo "Skipping packaging FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
 endif
-	make -C cli/go/src/pxf-cli stage
+	make -C cli stage
 	make -C server stage
 	set -e ;\
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\
@@ -167,7 +167,7 @@ ifeq ($(SKIP_FDW_PACKAGE_REASON),)
 else
 	@echo "Skipping packaging FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
 endif
-	make -C cli/go/src/pxf-cli stage
+	make -C cli stage
 	make -C server stage
 	set -e ;\
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\

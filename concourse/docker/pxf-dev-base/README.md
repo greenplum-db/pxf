@@ -21,16 +21,15 @@ gcloud builds submit . --config=concourse/docker/pxf-dev-base/cloudbuild.yaml \
 -- or if you would like to modify the go and ginkgo versions, you can do so by doing the following --
 
 gcloud builds submit . --config=concourse/docker/pxf-dev-base/cloudbuild.yaml \
---substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,_PRIVATE_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-private-images,_GO_VERSION=<test-version>,_GINKGO_VERSION=<test-version>,COMMIT_SHA=dev-build-<test-name>
+--substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,_PRIVATE_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-private-images,_GO_VERSION=<test-version>,COMMIT_SHA=dev-build-<test-name>
 ```
 
 This guide assumes the PXF repository lives under the `~/workspace/pxf`
 directory. The `cloudbuild.yaml` file produces the following docker images:
 
-You can build these images individually by first setting these local variables: 
+You can build these images individually by first setting these local variables:
 ```
-export GO_VERSION=1.17.6
-export GINKGO_VERSION=1.16.5
+export GO_VERSION=1.19
 ```
 ## Greenplum 5 Images
 
@@ -45,7 +44,6 @@ command to build the image:
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb5-centos7-build-test:latest \
-      --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb5-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb5/centos7/Dockerfile \
       .
@@ -62,7 +60,6 @@ command to build the image:
     docker build \
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-centos7-test:latest \
       --build-arg=GO_VERSION=${GO_VERSION} \
-      --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb6-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/centos7/Dockerfile \
       .
@@ -76,7 +73,6 @@ command to build the image:
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-private-images/gpdb6-rhel8-test:latest \
-      --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb6-rhel8-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/rhel8/Dockerfile \
       .
@@ -91,7 +87,6 @@ command to build the image:
     docker build \
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-ubuntu18.04-test:latest \
       --build-arg=GO_VERSION=${GO_VERSION} \
-      --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb6-ubuntu18.04-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/ubuntu18.04/Dockerfile \
       .
@@ -106,7 +101,6 @@ following command to build the image:
     docker build \
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-oel7-test:latest \
       --build-arg=GO_VERSION=${GO_VERSION} \
-      --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb6-oel7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/oel7/Dockerfile \
       .
@@ -125,7 +119,6 @@ command to build the image:
     docker build \
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-centos7-test:latest \
       --build-arg=GO_VERSION=${GO_VERSION} \
-      --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb7-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/centos7/Dockerfile \
       .
@@ -139,7 +132,6 @@ command to build the image:
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-private-images/gpdb7-rhel8-test:latest \
-      --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb7-rhel8-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/rhel8/Dockerfile \
       .
@@ -154,7 +146,6 @@ command to build the image:
     docker build \
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-ubuntu18.04-test:latest \
       --build-arg=GO_VERSION=${GO_VERSION} \
-      --build-arg=GINKGO_VERSION=${GINKGO_VERSION} \
       --tag=gpdb7-ubuntu18.04-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/ubuntu18.04/Dockerfile \
       .
