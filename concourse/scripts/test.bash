@@ -312,8 +312,11 @@ function _main() {
 
 	inflate_dependencies
 
+	# To run Tinc against GP7 we need to modify PYTHONPATH in $GPHOME/greenplum_path.sh since Tinc calls that script
+	# we will set PYTHONPATH to point to the set of python libs compiled with Python2 for GP6
 	if [[ ${GP_VER} == 7 ]]; then
 	  local gp6_python_libs=~gpadmin/python
+	  echo "export PYTHONPATH=${gp6_python_libs}" >> /usr/local/greenplum-db/greenplum_path.sh
 	fi
 
 	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src

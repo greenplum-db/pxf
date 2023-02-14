@@ -41,9 +41,6 @@ public class Tinc extends ShellSystemObject {
 					String.format("Overriding PYTHONPATH to '%s' (from environment variable PXF_AUTOMATION_TINC_DEPS)", pxfAutomationTincDeps));
 			runCommand("export PYTHONPATH=" + pxfAutomationTincDeps);
 		}
-		else {
-			runCommand("export PYTHONPATH=/home/gpadmin/python");
-		}
 
 		runCommand("cd " + new File(tincFolder).getAbsolutePath());
 		runCommand("source tinc_env.sh");

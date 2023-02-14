@@ -299,14 +299,6 @@ resources:
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/master/greenplum-db-(7.*)-rhel8-x86_64.rpm
 
-- name: gpdb7_rhel8_rpm_latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/master/greenplum-db-(7.*)-rhel8-x86_64.rpm
-
 ## ---------- PXF 5 Artifact ---------------
 {% if multinode %}
 - name: pxf5_gp6_rhel7_released
@@ -358,24 +350,6 @@ resources:
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
 {% endfor %}
 
-
-- name: pxf_gp7_headerfile
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-resources-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: build-dependencies/extaccess.h
-
-
-- name: pxf-build-dependencies
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-resources-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
-
 ## ---------- Auxiliary Resources ----------
 {% if multinode or multinode_no_impersonation or file %}
 - name: terraform
@@ -426,9 +400,6 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: pxf-build-dependencies
-{% if gp_ver == 7 %}
-    - get: pxf_gp7_headerfile
-{% endif %}
   - task: Build PXF-GP[[gp_ver]] on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
@@ -652,58 +623,6 @@ jobs:
       USE_FDW: true
 {% endfor %}
 {% set gp_ver = None %}
-
-## -- PXF GP7 REHL 8 --
-
-  {% set gp_ver = 7 %}
-- name: Build PXF-GP[[gp_ver]] on RHEL8
-  plan:
-    - in_parallel:
-        - get: pxf_src
-          trigger: true
-        - get: gpdb_package
-          resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-        - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
-        - get: pxf-build-dependencies
-    - task: Build PXF-GP[[gp_ver]] on RHEL8
-      image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
-      file: pxf_src/concourse/tasks/build.yml
-      params:
-        LICENSE: ((ud/pxf/common/rpm-license))
-        VENDOR: ((ud/pxf/common/rpm-vendor))
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
-        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-    - put: pxf_gp[[gp_ver]]_tarball_rhel8
-      params:
-        file: dist/pxf-gp[[gp_ver]]-*.el8.tar.gz
-
-- name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
-  plan:
-    - in_parallel:
-        - get: pxf_src
-          passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-          trigger: true
-        - get: pxf_tarball
-          resource: pxf_gp[[gp_ver]]_tarball_rhel8
-          passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-        - get: gpdb_package
-          resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-          passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-        - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
-          passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-        - get: pxf-automation-dependencies
-        - get: singlecluster
-          resource: singlecluster-hdp2
-    - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
-      file: pxf_src/concourse/tasks/test.yml
-      image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
-      params:
-        ACCESS_KEY_ID: ((tf-machine-access-key-id))
-        GP_VER: [[gp_ver]]
-        GROUP: gpdb,proxy,profile
-SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-  {% set gp_ver = None %}
 
 ## ---------- Extended Tests ----------
 {% set gp_ver = 6 %}

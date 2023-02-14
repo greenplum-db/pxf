@@ -2,9 +2,6 @@
 --
 -- start_matchsubs
 --
--- m/ALTER FOREIGN TABLE/
--- s/ALTER FOREIGN TABLE/ALTER EXTERNAL TABLE/g
---
 -- end_matchsubs
 --
 -- sets the date style and bytea output to the expected by the tests

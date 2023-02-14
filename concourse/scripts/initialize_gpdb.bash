@@ -21,7 +21,6 @@ sed -e "s/MASTER_HOSTNAME=mdw/MASTER_HOSTNAME=\$(hostname -f)/g" \
 	"${GPHOME}/docs/cli_help/gpconfigs/gpinitsystem_config" >~gpadmin/gpconfigs/gpinitsystem_config
 chmod +w ~gpadmin/gpconfigs/gpinitsystem_config
 
-
 #Script to start segments and create directories.
 hostname -f >/tmp/hosts.txt
 

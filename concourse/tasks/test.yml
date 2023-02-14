@@ -15,11 +15,7 @@ inputs:
   optional: true
 - name: gp6-python-libs
   optional: true
-- name: pxf_gp7_headerfile
-  optional: true
 - name: pxf_fdw_tarball
-  optional: true
-- name: gp6-python-libs # TODO : Conflict with Alex's PR need to remove later.
   optional: true
 
 params:
