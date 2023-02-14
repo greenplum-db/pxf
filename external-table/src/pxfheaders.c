@@ -105,7 +105,7 @@ build_http_headers(PxfInputData *input)
 #if PG_VERSION_NUM >= 120000
 			copyFmtOpts = exttbl->options;
 #else
-			copyFmtOpts = parseCopyFormatString(rel, exttbl->fmtopts, exttbl->fmtcode);
+			copyFmtOpts = parseCopyFormatString(rel, format_options, exttbl->fmtcode);
 #endif
 		}
 
