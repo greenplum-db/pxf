@@ -228,7 +228,7 @@ steps:
     - gpdb7-ubuntu18.04-test-pxf-image-cache
 
 substitutions:
-  _GO_VERSION: 1.19 # default values
+  _GO_VERSION: '1.19' # default values
 
 # Push images to Cloud Build to Container Registry
 images:
