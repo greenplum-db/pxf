@@ -72,24 +72,24 @@ coverage:
 .PHONY: stage
 stage:
 	./gradlew $(PXF_GRADLE_PROPERTIES) test stage
-	install -m 744 -d "build/stage/pxf/lib"
-	install -m 744 -d "build/stage/pxf/lib/native"
-	install -m 744 -d "build/stage/pxf/servers"
-	install -m 744 -d "build/stage/pxf/servers/default"
-	install -m 700 -d "build/stage/pxf/logs"
-	install -m 700 -d "build/stage/pxf/run"
-	install -m 700 -d "build/stage/pxf/keytabs"
+	install -m 744 -d "build/stage/lib"
+	install -m 744 -d "build/stage/lib/native"
+	install -m 744 -d "build/stage/servers"
+	install -m 744 -d "build/stage/servers/default"
+	install -m 700 -d "build/stage/logs"
+	install -m 700 -d "build/stage/run"
+	install -m 700 -d "build/stage/keytabs"
 
 .PHONY: stage-notest
 stage-notest:
 	./gradlew $(PXF_GRADLE_PROPERTIES) stage -x test
-	install -m 744 -d "build/stage/pxf/lib"
-	install -m 744 -d "build/stage/pxf/lib/native"
-	install -m 744 -d "build/stage/pxf/servers"
-	install -m 744 -d "build/stage/pxf/servers/default"
-	install -m 700 -d "build/stage/pxf/logs"
-	install -m 700 -d "build/stage/pxf/run"
-	install -m 700 -d "build/stage/pxf/keytabs"
+	install -m 744 -d "build/stage/lib"
+	install -m 744 -d "build/stage/lib/native"
+	install -m 744 -d "build/stage/servers"
+	install -m 744 -d "build/stage/servers/default"
+	install -m 700 -d "build/stage/logs"
+	install -m 700 -d "build/stage/run"
+	install -m 700 -d "build/stage/keytabs"
 
 clean:
 	./gradlew clean
@@ -106,7 +106,7 @@ install: stage
 		echo "ERROR: PXF_HOME is not set"; exit 2; \
 	fi
 	mkdir -p "$(PXF_HOME)"
-	cp -R build/stage/pxf/* "$(PXF_HOME)"
+	cp -R build/stage/* "$(PXF_HOME)"
 
 .PHONY: install-server
 install-server: stage-notest
@@ -114,7 +114,7 @@ install-server: stage-notest
 		echo "ERROR: PXF_HOME is not set"; exit 2; \
 	fi
 	mkdir -p "$(PXF_HOME)"
-	cp -R build/stage/pxf/* "$(PXF_HOME)"
+	cp -R build/stage/* "$(PXF_HOME)"
 
 .PHONY: version
 version:

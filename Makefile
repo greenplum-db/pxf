@@ -1,5 +1,8 @@
 include common.mk
 
+PXF_MODULES = external-table fdw cli server
+export PXF_MODULES
+
 PXF_VERSION ?= $(shell cat version)
 export PXF_VERSION
 
@@ -91,23 +94,18 @@ install-server:
 
 stage:
 	rm -rf build/stage
-	make -C external-table stage
-ifeq ($(SKIP_FDW_PACKAGE_REASON),)
-	make -C fdw stage
-else
+ifneq ($(SKIP_FDW_PACKAGE_REASON),)
 	@echo "Skipping staging FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
+	$(eval PXF_MODULES := $(filter-out fdw,$(PXF_MODULES)))
 endif
-	make -C cli stage
-	make -C server stage
 	set -e ;\
 	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJORVERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
-	mkdir -p build/stage/$${PXF_PACKAGE_NAME} ;\
-	cp -a external-table/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
-	if [[ -z $${SKIP_FDW_PACKAGE_REASON} ]]; then \
-	cp -a fdw/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
-	fi;\
-	cp -a cli/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
-	cp -a server/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
+	mkdir -p build/stage/$${PXF_PACKAGE_NAME}/pxf ;\
+	for module in $${PXF_MODULES[@]}; do \
+		echo "===> Staging [$${module}] module <===" ;\
+		make -C $${module} stage ;\
+		cp -a "$${module}"/build/stage/* "build/stage/$${PXF_PACKAGE_NAME}/pxf" ;\
+	done ;\
 	echo $$(git rev-parse --verify HEAD) > build/stage/$${PXF_PACKAGE_NAME}/pxf/commit.sha ;\
 	cp package/install_binary build/stage/$${PXF_PACKAGE_NAME}/install_component
 

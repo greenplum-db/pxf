@@ -21,7 +21,7 @@ help:
 	@echo	"  - all (build, test, stage, install)"
 	@echo	"  - build - build pxf-cli binary"
 	@echo	"  - test - runs tests for pxf-cli binary"
-	@echo	"  - stage - install pxf-cli binary into build/stage/pxf/bin directory"
+	@echo	"  - stage - install pxf-cli binary into build/stage/bin directory"
 	@echo	"  - install - install pxf-cli binary into $PXF_HOME/bin/"
 	@echo	"  - clean - remove pxf-cli binary"
 
@@ -35,8 +35,8 @@ build:
 	go build -v $(LDFLAGS) -o build/$(TARGET) $(MODULE_NAME)
 
 stage: test
-	mkdir -p $(PXF_CLI_DIR)/build/stage/pxf/bin
-	cp build/$(TARGET) build/stage/pxf/bin
+	mkdir -p $(PXF_CLI_DIR)/build/stage/bin
+	cp build/$(TARGET) build/stage/bin
 
 install: build
 	@if [ -z "$(PXF_HOME)" ]; then \
