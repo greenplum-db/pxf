@@ -123,7 +123,7 @@ rpm: stage
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\
 	if [[ $${PXF_VERSION} == *"-SNAPSHOT" ]]; then PXF_RELEASE=SNAPSHOT; else PXF_RELEASE=1; fi ;\
 	mkdir -p build/rpmbuild/{BUILD,RPMS,SOURCES,SPECS} ;\
-	cp -a /build/stage/pxf/* build/rpmbuild/SOURCES ;\
+	cp -a build/stage/pxf/* build/rpmbuild/SOURCES ;\
 	cp package/*.spec build/rpmbuild/SPECS/ ;\
 	rpmbuild \
 	--define "_topdir $${PWD}/build/rpmbuild" \
