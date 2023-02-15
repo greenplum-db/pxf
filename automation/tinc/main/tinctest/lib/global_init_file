@@ -60,6 +60,8 @@ s/DETAIL/CONTEXT/
 # treat foreign table error messages as if they were from external table
 m/Foreign table.*/
 s/Foreign table/External table/
+m/FOREIGN TABLE.*/
+s/FOREIGN TABLE/EXTERNAL TABLE/
 
 # rename record (FDW) to line (exttable)
 m/, record \d+ of/
