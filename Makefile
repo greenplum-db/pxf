@@ -41,31 +41,30 @@ default: all
 .PHONY: all extensions external-table fdw cli server install install-server stage tar rpm rpm-tar deb deb-tar clean test it help
 
 all: extensions cli server
+	@echo "===> PXF compilation is complete <==="
 
 extensions: external-table fdw
 
-external-table:
-	make -C external-table
+external-table cli server:
+	@echo "===> Compiling [$@] module <==="
+	make -C $@
 
 fdw:
 ifeq ($(SKIP_FDW_BUILD_REASON),)
+	@echo "===> Compiling [$@] module <==="
 	make -C fdw
 else
 	@echo "Skipping building FDW extension because $(SKIP_FDW_BUILD_REASON)"
 endif
 
-cli:
-	make -C cli
-
-server:
-	make -C server
-
 clean:
 	rm -rf build
-	make -C external-table clean-all
-	make -C fdw clean-all
-	make -C cli clean
-	make -C server clean
+	set -e ;\
+	for module in $${PXF_MODULES[@]}; do \
+		echo "===> Cleaning [$${module}] module <===" ;\
+		make -C $${module} clean-all ;\
+	done ;\
+	echo "===> PXF cleaning is complete <==="
 
 test:
 ifeq ($(SKIP_FDW_BUILD_REASON),)
@@ -80,14 +79,16 @@ it:
 	make -C automation TEST=$(TEST)
 
 install:
-	make -C external-table install
-ifeq ($(SKIP_FDW_BUILD_REASON),)
-	make -C fdw install
-else
-	@echo "Skipping installing FDW extension because $(SKIP_FDW_BUILD_REASON)"
+ifneq ($(SKIP_FDW_PACKAGE_REASON),)
+	@echo "Skipping installing FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
+	$(eval PXF_MODULES := $(filter-out fdw,$(PXF_MODULES)))
 endif
-	make -C cli install
-	make -C server install
+	set -e ;\
+	for module in $${PXF_MODULES[@]}; do \
+		echo "===> Installing [$${module}] module <===" ;\
+		make -C $${module} install ;\
+	done ;\
+	echo "===> PXF installation is complete <==="
 
 install-server:
 	make -C server install-server
@@ -107,36 +108,22 @@ endif
 		cp -a "$${module}"/build/stage/* "build/stage/$${PXF_PACKAGE_NAME}/pxf" ;\
 	done ;\
 	echo $$(git rev-parse --verify HEAD) > build/stage/$${PXF_PACKAGE_NAME}/pxf/commit.sha ;\
-	cp package/install_binary build/stage/$${PXF_PACKAGE_NAME}/install_component
+	cp package/install_binary build/stage/$${PXF_PACKAGE_NAME}/install_component ;\
+	echo "===> PXF staging is complete <==="
 
 tar: stage
 	rm -rf build/dist
 	mkdir -p build/dist
 	tar -czf build/dist/$(shell ls build/stage).tar.gz -C build/stage $(shell ls build/stage)
+	echo "===> PXF TAR file with binaries creation is complete <==="
 
-rpm:
-	make -C external-table stage
-ifeq ($(SKIP_FDW_PACKAGE_REASON),)
-	make -C fdw stage
-else
-	@echo "Skipping packaging FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
-endif
-	make -C cli stage
-	make -C server stage
+rpm: stage
+	rm -rf build/rpmbuild
 	set -e ;\
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\
 	if [[ $${PXF_VERSION} == *"-SNAPSHOT" ]]; then PXF_RELEASE=SNAPSHOT; else PXF_RELEASE=1; fi ;\
-	rm -rf build/rpmbuild ;\
 	mkdir -p build/rpmbuild/{BUILD,RPMS,SOURCES,SPECS} ;\
-	mkdir -p build/rpmbuild/SOURCES/gpextable ;\
-	cp -a external-table/build/stage/* build/rpmbuild/SOURCES/gpextable ;\
-	if [[ -z $${SKIP_FDW_PACKAGE_REASON} ]]; then \
-	mkdir -p build/rpmbuild/SOURCES/fdw ;\
-	cp -a fdw/build/stage/* build/rpmbuild/SOURCES/fdw ;\
-	fi;\
-	cp -a cli/build/stage/pxf/* build/rpmbuild/SOURCES ;\
-	cp -a server/build/stage/pxf/* build/rpmbuild/SOURCES ;\
-	echo $$(git rev-parse --verify HEAD) > build/rpmbuild/SOURCES/commit.sha ;\
+	cp -a /build/stage/pxf/* build/rpmbuild/SOURCES ;\
 	cp package/*.spec build/rpmbuild/SPECS/ ;\
 	rpmbuild \
 	--define "_topdir $${PWD}/build/rpmbuild" \
@@ -144,7 +131,8 @@ endif
 	--define "pxf_release $${PXF_RELEASE}" \
 	--define "license ${LICENSE}" \
 	--define "vendor ${VENDOR}" \
-	-bb $${PWD}/build/rpmbuild/SPECS/pxf-gp$${GP_MAJORVERSION}.spec
+	-bb $${PWD}/build/rpmbuild/SPECS/pxf-gp$${GP_MAJORVERSION}.spec ;\
+	echo "===> PXF RPM package creation is complete <==="
 
 rpm-tar: rpm
 	rm -rf build/{stagerpm,distrpm}
@@ -156,35 +144,23 @@ rpm-tar: rpm
 	mkdir -p build/stagerpm/$${PXF_PACKAGE_NAME} ;\
 	cp $${PXF_RPM_FILE} build/stagerpm/$${PXF_PACKAGE_NAME} ;\
 	cp package/install_rpm build/stagerpm/$${PXF_PACKAGE_NAME}/install_component ;\
-	tar -czf build/distrpm/$${PXF_PACKAGE_NAME}.tar.gz -C build/stagerpm $${PXF_PACKAGE_NAME}
+	tar -czf build/distrpm/$${PXF_PACKAGE_NAME}.tar.gz -C build/stagerpm $${PXF_PACKAGE_NAME} ;\
+	echo "===> PXF TAR file with RPM package creation is complete <==="
 
-deb:
-	make -C external-table stage
-ifeq ($(SKIP_FDW_PACKAGE_REASON),)
-	make -C fdw stage
-else
-	@echo "Skipping packaging FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
-endif
-	make -C cli stage
-	make -C server stage
+deb: stage
+	rm -rf build/debbuild
 	set -e ;\
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\
 	if [[ $${PXF_VERSION} == *"-SNAPSHOT" ]]; then PXF_RELEASE=SNAPSHOT; else PXF_RELEASE=1; fi ;\
-	rm -rf build/debbuild ;\
-	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/gpextable ;\
-	cp -a external-table/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/gpextable ;\
-	if [[ -z $${SKIP_FDW_PACKAGE_REASON} ]]; then \
-	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/fdw ;\
-	cp -a fdw/build/stage/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/fdw ;\
-	fi;\
-	cp -a cli/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION} ;\
-	cp -a server/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION} ;\
-	echo $$(git rev-parse --verify HEAD) > build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION}/commit.sha ;\
+	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION} ;\
+	cp -a build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION} ;\
 	mkdir build/debbuild/DEBIAN ;\
 	cp -a package/DEBIAN/* build/debbuild/DEBIAN/ ;\
 	sed -i -e "s/%VERSION%/$${PXF_MAIN_VERSION}-$${PXF_RELEASE}/" -e "s/%MAINTAINER%/${VENDOR}/" build/debbuild/DEBIAN/control ;\
 	dpkg-deb --build build/debbuild ;\
-	mv build/debbuild.deb build/pxf-gp$${GP_MAJORVERSION}-$${PXF_MAIN_VERSION}-$${PXF_RELEASE}-ubuntu18.04-amd64.deb
+	mv build/debbuild.deb build/pxf-gp$${GP_MAJORVERSION}-$${PXF_MAIN_VERSION}-$${PXF_RELEASE}-ubuntu18.04-amd64.deb ;\
+	echo "===> PXF DEB package creation is complete <==="
+
 
 deb-tar: deb
 	rm -rf build/{stagedeb,distdeb}
@@ -195,23 +171,25 @@ deb-tar: deb
 	mkdir -p build/stagedeb/$${PXF_PACKAGE_NAME} ;\
 	cp $${PXF_DEB_FILE} build/stagedeb/$${PXF_PACKAGE_NAME} ;\
 	cp package/install_deb build/stagedeb/$${PXF_PACKAGE_NAME}/install_component ;\
-	tar -czf build/distdeb/$${PXF_PACKAGE_NAME}.tar.gz -C build/stagedeb $${PXF_PACKAGE_NAME}
+	tar -czf build/distdeb/$${PXF_PACKAGE_NAME}.tar.gz -C build/stagedeb $${PXF_PACKAGE_NAME} ;\
+	echo "===> PXF TAR file with DEB package creation is complete <==="
 
 
 help:
 	@echo
 	@echo 'Possible targets'
-	@echo	'  - all (extensions, cli, server)'
-	@echo	'  - extensions - build external table, fdw extensions'
+	@echo	'  - all - build extensions, cli, and server modules'
+	@echo	'  - extensions - build Greenplum external table and foreign data wrapper extensions'
 	@echo	'  - external-table - build Greenplum external table extension'
-	@echo	'  - fdw - build PXF Foreign-Data Wrapper Greenplum extension'
+	@echo	'  - fdw - build Greenplum foreign data wrapper extension'
 	@echo	'  - cli - install Go CLI dependencies and build Go CLI'
-	@echo	'  - server - install PXF server dependencies and build PXF server'
+	@echo	'  - server - install server dependencies and build server module'
 	@echo	'  - clean - clean up external-table, fdw, CLI and server binaries'
-	@echo	'  - test - runs tests for PXF Go CLI and server'
-	@echo	'  - install - install PXF external table extension, CLI and server'
-	@echo	'  - install-server - install PXF server without running tests'
-	@echo	'  - tar - bundle PXF external table extension, CLI, server and tomcat into a single tarball'
+	@echo	'  - test - runs tests for Go CLI and server'
+	@echo	'  - install - install external table and foreign data wrapper extensions, CLI and server binaries'
+	@echo	'  - install-server - install server binaries only without running tests'
+	@echo	'  - stage - install external table and foreign data wrapper extensions, CLI, and server binaries into build/stage/pxf directory'
+	@echo	'  - tar - bundle external table and foreign data wrapper extensions, CLI, and server into a single tarball'
 	@echo	'  - rpm - create PXF RPM package'
 	@echo	'  - rpm-tar - bundle PXF RPM package along with helper scripts into a single tarball'
 	@echo	'  - deb - create PXF DEB package'

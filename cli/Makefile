@@ -1,6 +1,6 @@
 include ../common.mk
 
-.PHONY: all build stage install test clean help
+.PHONY: all build stage install test clean clean-all help
 .DEFAULT_GOAL := build
 
 MODULE_NAME    := $(shell go list -m)
@@ -29,7 +29,7 @@ all: test stage install
 
 build:
 	@if [ -d ${HOME}/.go-mod-cached-sources ] && [ ! -d $(GOMODCACHE) ]; then \
-		mkdir -p $(GO_MOD_CACHE); \
+		mkdir -p $(GOMODCACHE); \
 		ln -s ${HOME}/.go-mod-cached-sources $(GOMODCACHE); \
 	fi
 	go build -v $(LDFLAGS) -o build/$(TARGET) $(MODULE_NAME)
@@ -56,3 +56,5 @@ install-tools:
 clean:
 	rm -rf $(PXF_CLI_DIR)/build
 	go clean -i
+
+clean-all: clean

@@ -95,6 +95,9 @@ clean:
 	./gradlew clean
 	rm -rf build
 
+.PHONY: clean-all
+clean-all: clean
+
 distclean maintainer-clean: clean
 
 doc:
