@@ -11,7 +11,7 @@ GPDB_VERSION=$(<"${GPDB_PKG_DIR}/version")
 function install_gpdb() {
     local pkg_file
     if command -v rpm; then
-        pkg_file=$(find "${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-rhel*-x86_64.rpm")
+        pkg_file=$(find "${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-r*-x86_64.rpm")
         echo "Installing RPM ${pkg_file}..."
         rpm --quiet -ivh "${pkg_file}" >/dev/null
     elif command -v apt-get; then
