@@ -47,8 +47,9 @@ static List *getTargetList(ProjectionInfo *projInfo);
 static bool needToIterateTargetList(List *targetList, int *varNumbers);
 static Node *getTargetListEntryExpression(ListCell *lc1);
 static int  getNumSimpleVars(ProjectionInfo *projInfo);
+#if PG_VERSION_NUM < 120000
 static char *parse_formatter_name(char *fmtstr, char **formatter_name);
-
+#endif
 #if PG_VERSION_NUM < 90400
 /*
  * this function is copied from Greenplum 6 (6X_STABLE branch) code
@@ -83,7 +84,9 @@ build_http_headers(PxfInputData *input)
 	const char	   *relname;
 	char		   *relnamespace = NULL;
     char           *formatter_name = NULL;
+#if PG_VERSION_NUM < 120000
     char           *format_options = NULL;
+#endif
 
 	relname = gphduri->data;
 	if (rel != NULL)
@@ -624,6 +627,7 @@ add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri)
 /*
  * Checks for the multibyte delimiter
  */
+#if PG_VERSION_NUM < 120000
 static char *
 parse_formatter_name(char *fmtstr, char **formatter_name)
 {
@@ -649,6 +653,7 @@ parse_formatter_name(char *fmtstr, char **formatter_name)
 
     return format_options;
 }
+#endif
 
 /*
  * Converts a character code for the format name and the formatter name into a string

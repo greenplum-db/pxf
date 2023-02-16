@@ -399,7 +399,11 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
             }
 
             myData->values[index] = InputFunctionCall(&myData->conv_functions[index],
+#if PG_VERSION_NUM >= 120000
+                                                      buf->data, myData->typioparams[index], myData->desc->attrs[index].atttypmod);
+#else
                                                       buf->data, myData->typioparams[index], myData->desc->attrs[index]->atttypmod);
+#endif
             myData->nulls[index] = false;
         }
         index++;
