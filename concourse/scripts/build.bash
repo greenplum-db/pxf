@@ -81,8 +81,8 @@ function package_pxf_fdw() {
     local pxf_fdw_tarball="pxf_src/build/${DIST_DIR}/pxf-fdw${pxf_tarball#pxf}"
 
     # build the tarball and copy it to the output directory
-    ls -al pxf_src/fdw/build/stage
-    tar -cvzf "${pxf_fdw_tarball}" -C pxf_src/fdw/build/stage .
+    ls -al pxf_src/fdw/build/stage/fdw
+    tar -cvzf "${pxf_fdw_tarball}" -C pxf_src/fdw/build/stage/fdw .
     cp pxf_src/build/${DIST_DIR}/pxf-fdw-*.tar.gz dist
 }
 
