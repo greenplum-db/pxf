@@ -290,14 +290,14 @@ resources:
     regexp: server/published/gpdb6/greenplum-db-(6.*)-rhel8-x86_64.rpm
 {% set gp_ver = None %}
 
-## ---------- Greenplum 7 Alpha Builds ----------
+## ---------- Greenplum 7 Beta Builds ----------
 - name: gpdb7_rhel8_rpm_latest-0
   type: gcs
   icon: google-drive
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/master/greenplum-db-(7.*)-rhel8-x86_64.rpm
+    regexp: server/published/main/greenplum-db-(7.*)-rocky8-x86_64.rpm
 
 ## ---------- PXF 5 Artifact ---------------
 {% if multinode %}
