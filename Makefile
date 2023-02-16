@@ -33,6 +33,9 @@ export SKIP_FDW_PACKAGE_REASON
 export GP_MAJORVERSION
 export GP_BUILD_ARCH
 
+PXF_PACKAGE_NAME := pxf-gpdb$(GP_MAJORVERSION)-$(PXF_VERSION)-$(GP_BUILD_ARCH)
+export PXF_PACKAGE_NAME
+
 LICENSE ?= ASL 2.0
 VENDOR ?= Open Source
 
@@ -100,7 +103,6 @@ ifneq ($(SKIP_FDW_PACKAGE_REASON),)
 	$(eval PXF_MODULES := $(filter-out fdw,$(PXF_MODULES)))
 endif
 	set -e ;\
-	PXF_PACKAGE_NAME=pxf-gpdb$${GP_MAJORVERSION}-$${PXF_VERSION}-$${GP_BUILD_ARCH} ;\
 	mkdir -p build/stage/$${PXF_PACKAGE_NAME}/pxf ;\
 	for module in $${PXF_MODULES[@]}; do \
 		echo "===> Staging [$${module}] module <===" ;\
@@ -114,7 +116,7 @@ endif
 tar: stage
 	rm -rf build/dist
 	mkdir -p build/dist
-	tar -czf build/dist/$(shell ls build/stage).tar.gz -C build/stage $(shell ls build/stage)
+	tar -czf build/dist/$(PXF_PACKAGE_NAME).tar.gz -C build/stage $(PXF_PACKAGE_NAME)
 	echo "===> PXF TAR file with binaries creation is complete <==="
 
 rpm: stage
@@ -123,7 +125,7 @@ rpm: stage
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\
 	if [[ $${PXF_VERSION} == *"-SNAPSHOT" ]]; then PXF_RELEASE=SNAPSHOT; else PXF_RELEASE=1; fi ;\
 	mkdir -p build/rpmbuild/{BUILD,RPMS,SOURCES,SPECS} ;\
-	cp -a build/stage/pxf/* build/rpmbuild/SOURCES ;\
+	cp -a build/stage/$${PXF_PACKAGE_NAME}/pxf/* build/rpmbuild/SOURCES ;\
 	cp package/*.spec build/rpmbuild/SPECS/ ;\
 	rpmbuild \
 	--define "_topdir $${PWD}/build/rpmbuild" \
@@ -153,7 +155,7 @@ deb: stage
 	PXF_MAIN_VERSION=$${PXF_VERSION//-SNAPSHOT/} ;\
 	if [[ $${PXF_VERSION} == *"-SNAPSHOT" ]]; then PXF_RELEASE=SNAPSHOT; else PXF_RELEASE=1; fi ;\
 	mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION} ;\
-	cp -a build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION} ;\
+	cp -a build/stage/$${PXF_PACKAGE_NAME}/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJORVERSION} ;\
 	mkdir build/debbuild/DEBIAN ;\
 	cp -a package/DEBIAN/* build/debbuild/DEBIAN/ ;\
 	sed -i -e "s/%VERSION%/$${PXF_MAIN_VERSION}-$${PXF_RELEASE}/" -e "s/%MAINTAINER%/${VENDOR}/" build/debbuild/DEBIAN/control ;\
