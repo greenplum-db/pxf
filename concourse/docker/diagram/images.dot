@@ -17,6 +17,7 @@ digraph pxf_container_image_flow {
         gp6_ubuntu18_latest[label="gpdb6-ubuntu18.04-test:latest"]
         gp6_oel7_latest[label="gpdb6-oel7-test:latest"]
         gp7_centos7_latest[label="gpdb7-centos7-test:latest"]
+        gp7_rocky8_latest[label="gpdb7-rocky8-test:latest"]
         gp7_ubuntu18_latest[label="gpdb7-ubuntu18.04-test:latest"]
     }
 
@@ -41,6 +42,7 @@ digraph pxf_container_image_flow {
         gp6_oel7_dockerfile[label="gpdb6/oel7"]
         gp7_centos7_dockerfile[label="gpdb7/centos7"]
         gp7_rhel8_dockerfile[label="gpdb7/rhel8"]
+        gp7_rocky8_dockerfile[label="gpdb7/rocky8"]
         gp7_ubuntu18_dockerfile[label="gpdb7/ubuntu18.04"]
 
     }
@@ -72,6 +74,7 @@ digraph pxf_container_image_flow {
             gp6_oel7_pxf_sha[label="gpdb6-oel7-test-pxf:$COMMIT_SHA"]
             gp7_centos7_pxf_sha[label="gpdb7-centos7-test-pxf:$COMMIT_SHA"]
             gp7_rhel8_pxf_sha[label="gpdb7-rhel8-test-pxf:$COMMIT_SHA"]
+            gp7_rocky8_pxf_sha[label="gpdb7-rocky8-test-pxf:$COMMIT_SHA"]
             gp7_ubuntu18_pxf_sha[label="gpdb7-ubuntu18.04-test-pxf:$COMMIT_SHA"]
 
             gp5_centos7_pxf_latest[label="gpdb5-centos7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
@@ -81,11 +84,13 @@ digraph pxf_container_image_flow {
             gp6_oel7_pxf_latest[label="gpdb6-oel7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp7_centos7_pxf_latest[label="gpdb7-centos7-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp7_rhel8_pxf_latest[label="gpdb7-rhel8-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
+            gp7_rocky8_pxf_latest[label="gpdb7-rocky8-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
             gp7_ubuntu18_pxf_latest[label="gpdb7-ubuntu18.04-test-pxf:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
         }
 
         rpm_centos7_latest[label="rpmrebuild-centos7:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
         rpm_rhel8_latest[label="rpmrebuild-rhel8:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
+        rpm_rocky8_latest[label="rpmrebuild-rocky8:latest" style=filled fillcolor="#6c71c4" fontcolor=white]
     }
 
     subgraph cluster_pipelines {
@@ -167,6 +172,10 @@ digraph pxf_container_image_flow {
     gp7_rhel8_dockerfile -> gp7_rhel8_pxf_sha[label="CloudBuild"]
     gp7_rhel8_pxf_sha -> gp7_rhel8_pxf_latest[label="tag (concourse pipeline)"]
 
+    gp7_rocky8_latest -> gp7_rocky8_dockerfile
+    gp7_rocky8_dockerfile -> gp7_rocky8_pxf_sha[label="CloudBuild"]
+    gp7_rocky8_pxf_sha -> gp7_rocky8_pxf_latest[label="tag (concourse pipeline)"]
+
     gp7_ubuntu18_latest -> gp7_ubuntu18_dockerfile
     gp7_ubuntu18_dockerfile -> gp7_ubuntu18_pxf_sha[label="CloudBuild"]
     gp7_ubuntu18_pxf_sha -> gp7_ubuntu18_pxf_latest[label="tag (concourse pipeline)"]
@@ -175,7 +184,9 @@ digraph pxf_container_image_flow {
     rpm_docker_centos7 -> rpm_centos7_latest
 
     gp6_rhel8_latest -> rpm_docker_rhel8
+    gp7_rocky8_latest -> rpm_docker_rhel8
     rpm_docker_rhel8 -> rpm_rhel8_latest
+    rpm_docker_rhel8 -> rpm_rocky8_latest
 
     gp5_centos7_pxf_latest -> mapr_dockerfile
     gp6_centos7_pxf_latest -> mapr_dockerfile
@@ -215,11 +226,16 @@ digraph pxf_container_image_flow {
     gp7_rhel8_pxf_latest -> build
     gp7_rhel8_pxf_latest -> pr
 
+    gp7_rocky8_pxf_latest -> certification
+    gp7_rocky8_pxf_latest -> build
+    gp7_rocky8_pxf_latest -> pr
+
     gp7_ubuntu18_pxf_latest -> build
     gp7_ubuntu18_pxf_latest -> pr
 
     rpm_centos7_latest -> build
     rpm_rhel8_latest -> build
+    rpm_rocky8_latest -> build
 
     gp6_centos7_pxf_mapr_latest -> build[label="Conditionally added based off mapr variable"]
 

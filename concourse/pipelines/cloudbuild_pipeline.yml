@@ -62,6 +62,7 @@ resources:
         - images/docker/gpdb6/gpdb6-rhel8-test
         - images/docker/gpdb7/gpdb7-centos7-test
         - images/docker/gpdb7/gpdb7-rhel8-test
+        - images/docker/gpdb7/gpdb7-rocky8-test
 
 ## ======================================================================
 ## JOBS
@@ -108,7 +109,7 @@ jobs:
         GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-        IMAGE_LIST: "gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-rhel8-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf gpdb7-centos7-test-pxf gpdb7-rhel8-test-pxf gpdb7-ubuntu18.04-test-pxf"
+        IMAGE_LIST: "gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-rhel8-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf gpdb7-centos7-test-pxf gpdb7-rhel8-test-pxf gpdb7-rocky8-test-pxf gpdb7-ubuntu18.04-test-pxf"
       config:
         platform: linux
         inputs:

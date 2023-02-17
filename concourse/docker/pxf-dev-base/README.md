@@ -137,6 +137,19 @@ command to build the image:
       .
     popd
 
+### Docker gpdb7-rhel8-test-pxf-image image
+
+Build this image for Greenplum 7 running on Rocky 8. Run the following
+command to build the image:
+
+    pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
+    docker build \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-rocky8-test:latest \
+      --tag=gpdb7-rocky8-test-pxf \
+      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/rocky8/Dockerfile \
+      .
+    popd
+
 ### Docker gpdb7-ubuntu18.04-test-pxf-image image
 
 Build this image for Greenplum 7 running on Ubuntu 18.04. Run the following
