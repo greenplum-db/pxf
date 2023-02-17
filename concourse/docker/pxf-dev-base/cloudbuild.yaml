@@ -216,7 +216,7 @@ steps:
   id: gpdb7-rocky8-test-pxf-image
   args:
     - 'build'
-    - '--build-arg=BASE_IMAGE=${_PRIVATE_BASE_IMAGE_REPOSITORY}/gpdb7-rocky8-test:latest'
+    - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-rocky8-test:latest'
     - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:$COMMIT_SHA'
     - '--cache-from'
     - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:latest'
