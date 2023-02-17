@@ -32,7 +32,7 @@ steps:
   id: rpmrebuild-rocky8-image
   args:
     - 'build'
-    - '--build-arg=BASE_IMAGE=${_PRIVATE_BASE_IMAGE_REPOSITORY}/gpdb7-rocky8-test:latest'
+    - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-rocky8-test:latest'
     - '--tag=gcr.io/$PROJECT_ID/rpmrebuild-rocky8:latest'
     - '-f'
     - 'concourse/docker/rpmrebuild/rhel/Dockerfile'
