@@ -5,5 +5,4 @@
 -- # create a match/subs
 --
 -- end_matchsubs
-
 SELECT * from writable_avro_primitive_user_provided_schema_on_hcfs_readable ORDER BY type_int;

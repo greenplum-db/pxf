@@ -5,5 +5,4 @@
 -- # create a match/subs
 --
 -- end_matchsubs
-
 SELECT * from writable_avro_primitive_no_compression_readable ORDER BY type_int;

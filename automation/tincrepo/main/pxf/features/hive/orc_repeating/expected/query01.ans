@@ -1,7 +1,6 @@
 -- start_ignore
 -- end_ignore
 -- @description query01 for PXF Hive ORC vectorized with repeating data cases
-
 \pset null 'NIL'
 Null display is "NIL".
 SELECT * FROM pxf_hivevectorizedorc_repeating_no_nulls ORDER BY t1;

@@ -1,7 +1,4 @@
 -- @description query01 test altering table, dropping columns during write
--- start_matchsubs
---
--- end_matchsubs
 
 -- Insert all columns
 INSERT INTO pxf_alter_write_parquet_table
