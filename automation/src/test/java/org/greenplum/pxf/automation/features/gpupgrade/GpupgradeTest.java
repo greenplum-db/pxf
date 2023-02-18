@@ -38,7 +38,7 @@ public class GpupgradeTest extends BaseFunctionality {
     public void testGpdbUpgradeScenario() throws Exception {
 
         // Skipping this test for GP7 since this isn't passing for GP7
-        if(gpdb.getVersion() >= 7)
+        if (gpdb.getVersion() >= 7)
             throw new SkipException("Skipping testGpdbUpgradeScenario for GPDB7");
 
         runTincTest("pxf.features.gpupgrade.step_1_before_running_pxf_pre_gpupgrade.runTest");
