@@ -361,11 +361,11 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
         if (index >= myData->nColumns)
         {
             ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-                    errmsg("unpack_delimited: Column mismatch, index:%d >= nColumns:%d, more columns than expect", index, myData->nColumns)));
+                    errmsg("unpack_delimited: Column mismatch, index:%d >= nColumns:%d, more columns than expected", index, myData->nColumns)));
         }
         if (start == NULL) {
             ereport(ERROR, (errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
-                    errmsg("unpack_delimited: start is a null value, index:%d >= nColumns:%d, more columns than expect", index, myData->nColumns)));
+                    errmsg("unpack_delimited: start is a null value, index:%d >= nColumns:%d, more columns than expected", index, myData->nColumns)));
         }
 
         if (myData->situation == WITH_QUOTE && *(start-1) != *(myData->quote))
@@ -413,7 +413,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
     if (index < myData->nColumns)
     {
         ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-                errmsg("unpack_delimited: Column mismatch, index:%d < nColumns:%d, less columns than expect", index, myData->nColumns)));
+                errmsg("unpack_delimited: Column mismatch, index:%d < nColumns:%d, less columns than expected", index, myData->nColumns)));
     }
 }
 
@@ -432,7 +432,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
     /* Must be called via the external table format manager */
     if (!CALLED_AS_FORMATTER(fcinfo))
     {
-        elog(ERROR, "multibyte_delim_import: not called by format manager");
+        elog(ERROR, "cannot execute pxfdelimited_import outside format manager");
     }
 
     tupdesc = FORMATTER_GET_TUPDESC(fcinfo);
@@ -441,12 +441,16 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
     ncolumns = tupdesc->natts;
     myData = (format_delimiter_state *) FORMATTER_GET_USER_CTX(fcinfo);
 
+    /*
+     * Initialize the context structure
+     */
     if (myData == NULL)
     {
         myData = new_format_delimiter_state(fcinfo);
         FORMATTER_SET_USER_CTX(fcinfo, myData);
     }
 
+    // TODO: update this error message for PXF
     if (myData->desc->natts != ncolumns)
         elog(ERROR, "multibyte_delim_import: unexpected change of output record type");
 
@@ -537,7 +541,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
         PG_RE_THROW();
     }
     PG_END_TRY();
-    //data buffer contains a complete message, set the formatter databuf coursor
+    //data buffer contains a complete message, set the formatter databuf cursor
     FORMATTER_SET_DATACURSOR(fcinfo, data_cur + whole_line_len);
     /* ======================================================================= */
     MemoryContextSwitchTo(oldcontext);
