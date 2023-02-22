@@ -7,6 +7,7 @@ import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
 import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -73,6 +74,10 @@ public class DatabaseEncodingTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "security"})
     public void writeReadOtherEncoding() throws Exception {
+        //TODO: revert once gp-exttable-fdw fix goes in
+        if (gpdb.getVersion() >= 7) {
+            throw new SkipException("Skipping for GP7, need to revert after the fix");
+        }
 
         String filename = "write_read_other_encoding";
         prepareWritableExternalTable(nonUtf8Gpdb, "db_encoding_write_other", hdfsPath + filename);
@@ -101,6 +106,10 @@ public class DatabaseEncodingTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security"})
     public void writeOtherEncodingReadUTF8() throws Exception {
+        //TODO: revert once gp-exttable-fdw fix goes in
+        if (gpdb.getVersion() >= 7) {
+            throw new SkipException("Skipping for GP7, need to revert after the fix");
+        }
 
         String filename = "write_other_encoding_read_utf8";
         prepareWritableExternalTable(nonUtf8Gpdb, "db_encoding_write_other", hdfsPath + filename);
