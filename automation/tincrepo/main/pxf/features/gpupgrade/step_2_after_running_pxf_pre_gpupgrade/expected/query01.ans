@@ -34,12 +34,13 @@ FROM pg_catalog.pg_extension AS e
     INNER JOIN pg_catalog.pg_proc AS p ON (p.oid = d.objid)
 WHERE d.deptype = 'e' AND e.extname = 'pxf'
 ORDER BY 1;
-      proname       |            prosrc            | probin
---------------------+------------------------------+--------
- pxf_read           | pxfprotocol_import           | pxf
- pxf_validate       | pxfprotocol_validate_urls    | pxf
- pxf_write          | pxfprotocol_export           | pxf
- pxfwritable_export | gpdbwritableformatter_export | pxf
- pxfwritable_import | gpdbwritableformatter_import | pxf
-(5 rows)
+       proname       |            prosrc            | probin
+---------------------+------------------------------+--------
+ pxf_read            | pxfprotocol_import           | pxf
+ pxf_validate        | pxfprotocol_validate_urls    | pxf
+ pxf_write           | pxfprotocol_export           | pxf
+ pxfdelimited_import | multibyte_delim_import       | pxf
+ pxfwritable_export  | gpdbwritableformatter_export | pxf
+ pxfwritable_import  | gpdbwritableformatter_import | pxf
+(6 rows)
 

@@ -34,12 +34,13 @@ FROM pg_catalog.pg_extension AS e
     INNER JOIN pg_catalog.pg_proc AS p ON (p.oid = d.objid)
 WHERE d.deptype = 'e' AND e.extname = 'pxf'
 ORDER BY 1;
-      proname       |            prosrc            |              probin
---------------------+------------------------------+----------------------------------
- pxf_read           | pxfprotocol_import           | $PXF_HOME/gpextable/pxf
- pxf_validate       | pxfprotocol_validate_urls    | $PXF_HOME/gpextable/pxf
- pxf_write          | pxfprotocol_export           | $PXF_HOME/gpextable/pxf
- pxfwritable_export | gpdbwritableformatter_export | $PXF_HOME/gpextable/pxf
- pxfwritable_import | gpdbwritableformatter_import | $PXF_HOME/gpextable/pxf
-(5 rows)
+       proname       |            prosrc            |             probin
+---------------------+------------------------------+----------------------------------
+ pxf_read            | pxfprotocol_import           | $PXF_HOME/gpextable/pxf
+ pxf_validate        | pxfprotocol_validate_urls    | $PXF_HOME/gpextable/pxf
+ pxf_write           | pxfprotocol_export           | $PXF_HOME/gpextable/pxf
+ pxfdelimited_import | multibyte_delim_import       | $PXF_HOME/gpextable/pxf
+ pxfwritable_export  | gpdbwritableformatter_export | $PXF_HOME/gpextable/pxf
+ pxfwritable_import  | gpdbwritableformatter_import | $PXF_HOME/gpextable/pxf
+(6 rows)
 
