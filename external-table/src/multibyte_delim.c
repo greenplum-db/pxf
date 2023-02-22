@@ -322,15 +322,6 @@ find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
     return p;
 }
 
-void refresh_current_pos(int whole_line_len, format_delimiter_state *myData)
-{
-    myData->current_pos += whole_line_len;
-    if(myData->current_pos >= myData->length)//if we consume all the data to the header, reset the progress indicator
-    {
-        myData->current_pos = myData->length = 0;
-    }
-}
-
 void
 unpack_delimited(char *data, int len, format_delimiter_state *myData)
 {
@@ -470,26 +461,14 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
     oldcontext = MemoryContextSwitchTo(m);
 
     FORMATTER_SET_DATACURSOR(fcinfo, data_cur);
-    myData->length = 2000;
-    myData->current_pos = 0;
-
 
     char* line_border = NULL;
     bool last_line = false; //whether we treat the left data as a row
     line_border = find_first_ins_for_multiline(myData->eol, data_buf + data_cur, data_buf + data_len, myData);
     if (line_border == NULL)
     {
-        //we have all data in buffer so we assume the left data is the last line
-        if(data_len - data_cur >= myData->length - myData->current_pos)
-        {
-            line_border = data_buf + data_cur + myData->length - myData->current_pos;
-            last_line = true;
-        }
-        else
-        {
-            MemoryContextSwitchTo(oldcontext);
-            FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
-        }
+        MemoryContextSwitchTo(oldcontext);
+        FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
     }
 
     int eol_len = (last_line ? 0 : strlen(myData->eol)); //if we are handling the last line, perhaps there is no eol
@@ -516,7 +495,6 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
         {
             MemoryContextSwitchTo(oldcontext);
             FORMATTER_SET_BAD_ROW_DATA(fcinfo, data_buf + data_cur, whole_line_len);
-            refresh_current_pos(whole_line_len, myData);
             ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION), errmsg("there is not a whole line for this data part")));
         }
         else
@@ -530,14 +508,12 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
     {
         // Get a complete message, unpack to myData->values and myData->nulls
         unpack_delimited(data_buf + data_cur, whole_line_len - eol_len, myData);
-        refresh_current_pos(whole_line_len, myData);
     }
     PG_CATCH();
     {
         MemoryContextSwitchTo(oldcontext);
 
         FORMATTER_SET_BAD_ROW_DATA(fcinfo, data_buf + data_cur, whole_line_len);
-        refresh_current_pos(whole_line_len, myData);
 
         PG_RE_THROW();
     }
