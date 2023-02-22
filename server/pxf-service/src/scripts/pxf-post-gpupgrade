@@ -112,6 +112,10 @@ psql --no-align --tuples-only --command "SELECT datname FROM pg_catalog.pg_datab
 		CREATE OR REPLACE FUNCTION pg_catalog.pxfwritable_export(record) RETURNS bytea
 		AS '${PXF_HOME}/gpextable/pxf', 'gpdbwritableformatter_export'
 		LANGUAGE C STABLE;
+
+		CREATE OR REPLACE FUNCTION pg_catalog.pxfdelimited_import() RETURNS record
+		AS '${PXF_HOME}/gpextable/pxf', 'multibyte_delim_import'
+		LANGUAGE C STABLE;
 	END_OF_SQL
 done
 
