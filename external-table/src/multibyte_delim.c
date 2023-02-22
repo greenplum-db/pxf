@@ -188,7 +188,7 @@ new_format_delimiter_state(FunctionCallInfo fcinfo)
     return fmt_state;
 }
 
-char*
+static char*
 remove_escape(char* start, int len, format_delimiter_state *myData)
 {
     char* buf = palloc(len + 1);
@@ -254,7 +254,8 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
 }
 
 //we count the quote, we need every column with two quote, return the pos of eol
-char* find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
+static char*
+find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
     int column_cnt = myData->desc->natts;
     int delimiter_len = strlen(myData->delimiter);
     int eol_len = strlen(myData->eol);
