@@ -54,12 +54,13 @@ public abstract class CsvUtils {
 	 * @param targetCsvFile to write the data Table
 	 * @throws IOException
 	 */
-	public static void writeTableToCsvFile(Table table, String targetCsvFile)
+	public static void writeTableToCsvFileOptions(Table table, String targetCsvFile,
+												  char delimiter, char quotechar,
+												  char escapechar, String eol)
 			throws IOException {
 
 		// create CsvWriter using FileWriter
-		CSVWriter csvWriter = new CSVWriter(new FileWriter(targetCsvFile));
-
+		CSVWriter csvWriter = new CSVWriter(new FileWriter(targetCsvFile), delimiter, quotechar, escapechar, eol);
 		try {
 			// go over list and write each inner list to csv file
 			for (List<String> currentList : table.getData()) {
@@ -74,5 +75,24 @@ public abstract class CsvUtils {
 			csvWriter.flush();
 			csvWriter.close();
 		}
+	}
+
+	/**
+	 * Write {@link Table} to a CSV file.
+	 *
+	 * @param table {@link Table} contains required data list to write to CSV file
+	 * @param targetCsvFile to write the data Table
+	 * @throws IOException
+	 */
+	public static void writeTableToCsvFile(Table table, String targetCsvFile)
+		throws IOException {
+
+		writeTableToCsvFileOptions(
+				table,
+				targetCsvFile,
+				CSVWriter.DEFAULT_SEPARATOR,
+				CSVWriter.DEFAULT_QUOTE_CHARACTER,
+				CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+				CSVWriter.DEFAULT_LINE_END);
 	}
 }
