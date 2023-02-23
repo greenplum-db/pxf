@@ -25,9 +25,9 @@ SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 <= 5 ORDER BY t0;
 
-SELECT t0, b2, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue, b2 HAVING AVG(a1) < 5 ORDER BY t0;
+SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
 
-SELECT * FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
+SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 2 OR a1 >= 8 ORDER BY t0;
 
@@ -58,9 +58,9 @@ SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 <= 5 ORDER BY t0;
 
-SELECT t0, b2, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue, b2 HAVING AVG(a1) < 5 ORDER BY t0;
+SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
 
-SELECT * FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
+SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 2 OR a1 >= 8 ORDER BY t0;
 

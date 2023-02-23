@@ -111,20 +111,20 @@ SELECT t0, colprojvalue FROM test_column_projection WHERE a1 <= 5 ORDER BY t0;
  F  | t0|a1|colprojvalue
 (6 rows)
 
-SELECT t0, b2, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue, b2 HAVING AVG(a1) < 5 ORDER BY t0;
-t0 | b2 |     colprojvalue
-----+----+-----------------------
- A  | t  | t0|a1|b2|colprojvalue
- B  | f  | t0|a1|b2|colprojvalue
- C  | t  | t0|a1|b2|colprojvalue
- D  | f  | t0|a1|b2|colprojvalue
- E  | t  | t0|a1|b2|colprojvalue
+SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|a1|colprojvalue
+ B  | t0|a1|colprojvalue
+ C  | t0|a1|colprojvalue
+ D  | t0|a1|colprojvalue
+ E  | t0|a1|colprojvalue
 (5 rows)
 
-SELECT * FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
- t0 | a1 | b2 |     colprojvalue     | key | value
-----+----+----+----------------------+-----+-------
- A  |  0 | t  | No Column Projection | A   |    50
+SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
+ value |  colprojvalue
+-------+-----------------
+    50 | t0|colprojvalue
 (1 row)
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 2 OR a1 >= 8 ORDER BY t0;
@@ -282,20 +282,20 @@ SELECT t0, colprojvalue FROM test_column_projection WHERE a1 <= 5 ORDER BY t0;
  F  | t0|a1|colprojvalue
 (6 rows)
 
-SELECT t0, b2, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue, b2 HAVING AVG(a1) < 5 ORDER BY t0;
- t0 | b2 |     colprojvalue
-----+----+----------------------
- A  | t  | No Column Projection
- B  | f  | No Column Projection
- C  | t  | No Column Projection
- D  | f  | No Column Projection
- E  | t  | No Column Projection
+SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|a1|colprojvalue
+ B  | t0|a1|colprojvalue
+ C  | t0|a1|colprojvalue
+ D  | t0|a1|colprojvalue
+ E  | t0|a1|colprojvalue
 (5 rows)
 
-SELECT * FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
- t0 | a1 | b2 |     colprojvalue     | key | value
-----+----+----+----------------------+-----+-------
- A  |  0 | t  | No Column Projection | A   |    50
+SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
+ value |  colprojvalue
+-------+-----------------
+    50 | t0|colprojvalue
 (1 row)
 
 SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 2 OR a1 >= 8 ORDER BY t0;
