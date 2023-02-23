@@ -241,11 +241,16 @@ configure(javaProjects) {
             extendsFrom annotationProcessor
         }
 
+        // create a full list of dependencies shipped with PXF to make sure we give proper attribution
         licenseScanner {
             extendsFrom runtimeClasspath
+            // runtimeClasspath includes development-only dependencies, explicitly exclude them here
             exclude group: 'org.springframework.boot', module: 'spring-boot-devtools'
             exclude group: 'com.fasterxml.jackson', module: 'jackson-bom'
+            // some dependencies shipped with PXF were not automatically included, include them here
             dependencies {
+                // declare the dependency spring-boot-loader in the scope of the license scanner configuration
+                // https://docs.gradle.org/current/userguide/declaring_dependencies.html#sec:resolvable-consumable-configs
                 licenseScanner('org.springframework.boot:spring-boot-loader')
             }
         }
