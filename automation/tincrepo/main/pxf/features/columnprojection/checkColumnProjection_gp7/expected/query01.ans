@@ -1,0 +1,358 @@
+-- start_ignore
+-- end_ignore
+-- start_ignore
+DROP TABLE IF EXISTS t0_values;
+DROP TABLE
+CREATE TABLE t0_values(key char(1), value int) DISTRIBUTED BY (key);
+CREATE TABLE
+INSERT INTO t0_values VALUES('A', 50);
+INSERT 0 1
+-- end_ignore
+-- @description query01 for PXF Column Projection Support
+SET optimizer = off;
+SET
+SELECT * FROM test_column_projection ORDER BY t0;
+ t0 | a1 | b2 |     colprojvalue
+----+----+----+----------------------
+ A  |  0 | t  | No Column Projection
+ B  |  1 | f  | No Column Projection
+ C  |  2 | t  | No Column Projection
+ D  |  3 | f  | No Column Projection
+ E  |  4 | t  | No Column Projection
+ F  |  5 | f  | No Column Projection
+ G  |  6 | t  | No Column Projection
+ H  |  7 | f  | No Column Projection
+ I  |  8 | t  | No Column Projection
+ J  |  9 | f  | No Column Projection
+(10 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection ORDER BY t0;
+ t0 |  colprojvalue
+----+-----------------
+ A  | t0|colprojvalue
+ B  | t0|colprojvalue
+ C  | t0|colprojvalue
+ D  | t0|colprojvalue
+ E  | t0|colprojvalue
+ F  | t0|colprojvalue
+ G  | t0|colprojvalue
+ H  | t0|colprojvalue
+ I  | t0|colprojvalue
+ J  | t0|colprojvalue
+(10 rows)
+
+SELECT colprojvalue FROM test_column_projection ORDER BY t0;
+  colprojvalue
+-----------------
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+(10 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|b2|colprojvalue
+ C  | t0|b2|colprojvalue
+ E  | t0|b2|colprojvalue
+ G  | t0|b2|colprojvalue
+ I  | t0|b2|colprojvalue
+(5 rows)
+
+SELECT t0, a1, colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+ t0 | a1 |     colprojvalue
+----+----+-----------------------
+ B  |  1 | t0|a1|b2|colprojvalue
+ D  |  3 | t0|a1|b2|colprojvalue
+(2 rows)
+
+SELECT round(sqrt(a1)::numeric, 5), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+  round  |     colprojvalue
+---------+-----------------------
+ 1.00000 | t0|a1|b2|colprojvalue
+ 1.73205 | t0|a1|b2|colprojvalue
+(2 rows)
+
+SELECT round(sqrt(a1)::numeric, 5), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
+  round  |     colprojvalue
+---------+-----------------------
+ 1.00000 | t0|a1|b2|colprojvalue
+ 1.73205 | t0|a1|b2|colprojvalue
+ 2.23607 | t0|a1|b2|colprojvalue
+ 2.64575 | t0|a1|b2|colprojvalue
+ 3.00000 | t0|a1|b2|colprojvalue
+(5 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|a1|colprojvalue
+ B  | t0|a1|colprojvalue
+ C  | t0|a1|colprojvalue
+ D  | t0|a1|colprojvalue
+ E  | t0|a1|colprojvalue
+(5 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE a1 <= 5 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|a1|colprojvalue
+ B  | t0|a1|colprojvalue
+ C  | t0|a1|colprojvalue
+ D  | t0|a1|colprojvalue
+ E  | t0|a1|colprojvalue
+ F  | t0|a1|colprojvalue
+(6 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
+ t0 |    colprojvalue
+----+----------------------
+ A  | No Column Projection
+ B  | No Column Projection
+ C  | No Column Projection
+ D  | No Column Projection
+ E  | No Column Projection
+(5 rows)
+
+SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
+ value |  colprojvalue
+-------+----------------------
+    50 | No Column Projection
+(1 row)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 2 OR a1 >= 8 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|a1|colprojvalue
+ B  | t0|a1|colprojvalue
+ I  | t0|a1|colprojvalue
+ J  | t0|a1|colprojvalue
+(4 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE sqrt(a1) > 1 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ C  | t0|a1|colprojvalue
+ D  | t0|a1|colprojvalue
+ E  | t0|a1|colprojvalue
+ F  | t0|a1|colprojvalue
+ G  | t0|a1|colprojvalue
+ H  | t0|a1|colprojvalue
+ I  | t0|a1|colprojvalue
+ J  | t0|a1|colprojvalue
+(8 rows)
+
+SELECT t0, colprojvalue, round(sqrt(a1)::numeric, 5) FROM test_column_projection ORDER BY t0;
+ t0 |    colprojvalue    |  round
+----+--------------------+---------
+ A  | t0|a1|colprojvalue | 0.00000
+ B  | t0|a1|colprojvalue | 1.00000
+ C  | t0|a1|colprojvalue | 1.41421
+ D  | t0|a1|colprojvalue | 1.73205
+ E  | t0|a1|colprojvalue | 2.00000
+ F  | t0|a1|colprojvalue | 2.23607
+ G  | t0|a1|colprojvalue | 2.44949
+ H  | t0|a1|colprojvalue | 2.64575
+ I  | t0|a1|colprojvalue | 2.82843
+ J  | t0|a1|colprojvalue | 3.00000
+(10 rows)
+
+-- Casting boolean column to int
+SELECT t0, colprojvalue, sqrt(b2::int) FROM test_column_projection ORDER BY t0;
+ t0 |    colprojvalue    | sqrt
+----+--------------------+------
+ A  | t0|b2|colprojvalue |    1
+ B  | t0|b2|colprojvalue |    0
+ C  | t0|b2|colprojvalue |    1
+ D  | t0|b2|colprojvalue |    0
+ E  | t0|b2|colprojvalue |    1
+ F  | t0|b2|colprojvalue |    0
+ G  | t0|b2|colprojvalue |    1
+ H  | t0|b2|colprojvalue |    0
+ I  | t0|b2|colprojvalue |    1
+ J  | t0|b2|colprojvalue |    0
+(10 rows)
+
+SET optimizer = on;
+SET
+SELECT * FROM test_column_projection ORDER BY t0;
+ t0 | a1 | b2 |     colprojvalue
+----+----+----+----------------------
+ A  |  0 | t  | No Column Projection
+ B  |  1 | f  | No Column Projection
+ C  |  2 | t  | No Column Projection
+ D  |  3 | f  | No Column Projection
+ E  |  4 | t  | No Column Projection
+ F  |  5 | f  | No Column Projection
+ G  |  6 | t  | No Column Projection
+ H  |  7 | f  | No Column Projection
+ I  |  8 | t  | No Column Projection
+ J  |  9 | f  | No Column Projection
+(10 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection ORDER BY t0;
+ t0 |  colprojvalue
+----+-----------------
+ A  | t0|colprojvalue
+ B  | t0|colprojvalue
+ C  | t0|colprojvalue
+ D  | t0|colprojvalue
+ E  | t0|colprojvalue
+ F  | t0|colprojvalue
+ G  | t0|colprojvalue
+ H  | t0|colprojvalue
+ I  | t0|colprojvalue
+ J  | t0|colprojvalue
+(10 rows)
+
+SELECT colprojvalue FROM test_column_projection ORDER BY t0;
+  colprojvalue
+-----------------
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+ t0|colprojvalue
+(10 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE b2 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|b2|colprojvalue
+ C  | t0|b2|colprojvalue
+ E  | t0|b2|colprojvalue
+ G  | t0|b2|colprojvalue
+ I  | t0|b2|colprojvalue
+(5 rows)
+
+SELECT t0, a1, colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+ t0 | a1 |     colprojvalue
+----+----+-----------------------
+ B  |  1 | t0|a1|b2|colprojvalue
+ D  |  3 | t0|a1|b2|colprojvalue
+(2 rows)
+
+SELECT round(sqrt(a1)::numeric, 5), colprojvalue FROM test_column_projection WHERE a1 < 5 AND b2 = false ORDER BY t0;
+  round  |     colprojvalue
+---------+-----------------------
+ 1.00000 | t0|a1|b2|colprojvalue
+ 1.73205 | t0|a1|b2|colprojvalue
+(2 rows)
+
+SELECT round(sqrt(a1)::numeric, 5), colprojvalue FROM test_column_projection WHERE b2 = false ORDER BY t0;
+  round  |     colprojvalue
+---------+-----------------------
+ 1.00000 | t0|a1|b2|colprojvalue
+ 1.73205 | t0|a1|b2|colprojvalue
+ 2.23607 | t0|a1|b2|colprojvalue
+ 2.64575 | t0|a1|b2|colprojvalue
+ 3.00000 | t0|a1|b2|colprojvalue
+(5 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 5 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|a1|colprojvalue
+ B  | t0|a1|colprojvalue
+ C  | t0|a1|colprojvalue
+ D  | t0|a1|colprojvalue
+ E  | t0|a1|colprojvalue
+(5 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE a1 <= 5 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|a1|colprojvalue
+ B  | t0|a1|colprojvalue
+ C  | t0|a1|colprojvalue
+ D  | t0|a1|colprojvalue
+ E  | t0|a1|colprojvalue
+ F  | t0|a1|colprojvalue
+(6 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|a1|colprojvalue
+ B  | t0|a1|colprojvalue
+ C  | t0|a1|colprojvalue
+ D  | t0|a1|colprojvalue
+ E  | t0|a1|colprojvalue
+(5 rows)
+
+SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
+ value |  colprojvalue
+-------+-----------------
+    50 | t0|colprojvalue
+(1 row)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE a1 < 2 OR a1 >= 8 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ A  | t0|a1|colprojvalue
+ B  | t0|a1|colprojvalue
+ I  | t0|a1|colprojvalue
+ J  | t0|a1|colprojvalue
+(4 rows)
+
+SELECT t0, colprojvalue FROM test_column_projection WHERE sqrt(a1) > 1 ORDER BY t0;
+ t0 |    colprojvalue
+----+--------------------
+ C  | t0|a1|colprojvalue
+ D  | t0|a1|colprojvalue
+ E  | t0|a1|colprojvalue
+ F  | t0|a1|colprojvalue
+ G  | t0|a1|colprojvalue
+ H  | t0|a1|colprojvalue
+ I  | t0|a1|colprojvalue
+ J  | t0|a1|colprojvalue
+(8 rows)
+
+SELECT t0, colprojvalue, round(sqrt(a1)::numeric, 5) FROM test_column_projection ORDER BY t0;
+ t0 |    colprojvalue    |  round
+----+--------------------+---------
+ A  | t0|a1|colprojvalue | 0.00000
+ B  | t0|a1|colprojvalue | 1.00000
+ C  | t0|a1|colprojvalue | 1.41421
+ D  | t0|a1|colprojvalue | 1.73205
+ E  | t0|a1|colprojvalue | 2.00000
+ F  | t0|a1|colprojvalue | 2.23607
+ G  | t0|a1|colprojvalue | 2.44949
+ H  | t0|a1|colprojvalue | 2.64575
+ I  | t0|a1|colprojvalue | 2.82843
+ J  | t0|a1|colprojvalue | 3.00000
+(10 rows)
+
+-- Casting boolean column to int
+SELECT t0, colprojvalue, sqrt(b2::int) FROM test_column_projection ORDER BY t0;
+ t0 |    colprojvalue    | sqrt
+----+--------------------+------
+ A  | t0|b2|colprojvalue |    1
+ B  | t0|b2|colprojvalue |    0
+ C  | t0|b2|colprojvalue |    1
+ D  | t0|b2|colprojvalue |    0
+ E  | t0|b2|colprojvalue |    1
+ F  | t0|b2|colprojvalue |    0
+ G  | t0|b2|colprojvalue |    1
+ H  | t0|b2|colprojvalue |    0
+ I  | t0|b2|colprojvalue |    1
+ J  | t0|b2|colprojvalue |    0
+(10 rows)
+
+-- cleanup
+-- start_ignore
+DROP TABLE IF EXISTS t0_values;
+DROP TABLE
+-- end_ignore

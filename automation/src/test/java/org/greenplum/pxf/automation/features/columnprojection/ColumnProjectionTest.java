@@ -50,6 +50,13 @@ public class ColumnProjectionTest extends BaseFeature {
         pxfExternalTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         gpdb.createTableAndVerify(pxfExternalTable);
 
-        runTincTest("pxf.features.columnprojection.checkColumnProjection.runTest");
+        // TODO: revert when 2 queries with GP7 planner start propagating projection info to foreign scans
+        // SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
+        // SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
+        if (gpdb.getVersion() >= 7) {
+            runTincTest("pxf.features.columnprojection.checkColumnProjection_gp7.runTest");
+        } else {
+            runTincTest("pxf.features.columnprojection.checkColumnProjection.runTest");
+        }
     }
 }
