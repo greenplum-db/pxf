@@ -75,7 +75,7 @@ public class JdbcAccessorTest {
         accessor.afterPropertiesSet();
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> accessor.openForWrite());
-        assertEquals("specifying query name in data path is not supported for JDBC writable external tables", e.getMessage());
+        assertEquals("aspecifying query name in data path is not supported for JDBC writable external tables", e.getMessage());
     }
 
     @Test
