@@ -254,17 +254,14 @@ configure(javaProjects) {
         // slightly modified from https://stackoverflow.com/a/36130467
         afterSuite { desc, result ->
             if (!desc.parent) { // will match the outermost suite
-                def output = "${project.name} Test Results: ${result.resultType} " +
+                def suiteSummary = "${project.name} Test Results: ${result.resultType} " +
                         "(${result.testCount} tests, " +
                         "${result.successfulTestCount} passed, " +
                         "${result.failedTestCount} failed, " +
                         "${result.skippedTestCount} skipped)"
-                def startItem = '│ ', endItem = ' │'
-                def repeatLength = startItem.length() + output.length() + endItem.length() - 2
-                println('\n' + '┌' + ('-' * repeatLength) + '┐' +
-                        '\n' + startItem + output + endItem +
-                        '\n' + '└' + ('-' * repeatLength) + '┘')
+                printResults(suiteSummary)
 
+                // add results to combined total
                 totalTests += result.testCount
                 totalSuccesses += result.successfulTestCount
                 totalFailures += result.failedTestCount
@@ -282,30 +279,20 @@ ext {
 }
 
 gradle.buildFinished {
-    def summary = "Total Results: " +
+    def combinedSummary = "Total Results: " +
             "${totalTests} tests, " +
             "${totalSuccesses} passed, " +
             "${totalFailures} failed, " +
             "${totalSkipped} skipped"
-    def startItem = '│ ', endItem = ' │'
-    def repeatLength = startItem.length() + summary.length() + endItem.length() - 2
-    println('\n' + '┌' + ('-' * repeatLength) + '┐' +
-            '\n' + startItem + summary + endItem +
-            '\n' + '└' + ('-' * repeatLength) + '┘')
+    printResults(combinedSummary)
 }
 
-private static void printResults(allResults) {
-    def maxLength = allResults*.readLines().flatten().collect { it.length() }.max()
-
-    println "┌${"${"─" * maxLength}"}┐"
-
-    println allResults.collect {
-        it.readLines().collect {
-            "│" + it + " " * (maxLength - it.length()) + "│"
-        }.join("\n")
-    }.join("\n├${"${"─" * maxLength}"}┤\n")
-
-    println "└${"${"─" * maxLength}"}┘"
+private static void printResults(result) {
+    def startItem = '│ ', endItem = ' │'
+    def repeatLength = startItem.length() + result.length() + endItem.length() - 2
+    println('\n' + '┌' + ('-' * repeatLength) + '┐' +
+            '\n' + startItem + result + endItem +
+            '\n' + '└' + ('-' * repeatLength) + '┘')
 }
 
 
