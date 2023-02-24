@@ -248,8 +248,7 @@ configure(javaProjects) {
 
     test {
         testLogging {
-            events "failed", "standardError"
-            exceptionFormat "full"
+            events "failed"
         }
 
         afterSuite { desc, result ->
