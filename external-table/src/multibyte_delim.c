@@ -101,12 +101,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         }
         else if (strcmp(key, "eol") == 0)
         {
-            fmt_state->eol = pg_server_to_any(value, strlen(value), table_encoding);
-        }
-        else if (strcmp(key, "eol_prefix") == 0)
-        {
-            // Note: We assume EOL of the file will always be \n
-            fmt_state->eol_prefix = pg_server_to_any(value, strlen(value), table_encoding);
+            fmt_state->eol = value;
         }
         else if (strcmp(key, "quote") == 0)
         {
@@ -118,15 +113,19 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         }
     }
 
-    if (fmt_state->eol == NULL)
+    if (fmt_state->eol != NULL)
+    {
+        // eol can only be LF, CRLF or CR. Any other option will be considered invalid.
+        if (!(strcmp(fmt_state->eol, "\n") == 0 || strcmp(fmt_state->eol, "\r") == 0 || strcmp(fmt_state->eol, "\r\n") == 0))
+        {
+            ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("eol can only be LF, CRLF, or CR")));
+        }
+    }
+    else
     {
         fmt_state->eol = "\n";
-    }
-    if (fmt_state->eol_prefix != NULL)
-    {
-        char* new_eol = (char*)palloc(strlen(fmt_state->eol_prefix) + strlen(fmt_state->eol));
-        sprintf(new_eol, "%s%s", fmt_state->eol_prefix, fmt_state->eol);
-        fmt_state->eol = new_eol;
+        ereport(WARNING, (errcode(ERRCODE_UNDEFINED_PARAMETER), errmsg("eol as not provided, set to \n")));
+
     }
 
     //with quote, we must also have escape
