@@ -51,6 +51,83 @@ idea {
     }
 }
 
+
+
+ext {
+    testsResults = [] // Container for tests summaries
+    totalTests = 0L
+    totalSuccesses = 0L
+    totalFailures = 0L
+    totalSkipped = 0L
+}
+
+allprojects { project ->
+    tasks.withType(Test) { testTask ->
+
+        testLogging {
+            events "failed"
+        }
+
+        ignoreFailures = true // Always try to run all tests for all modules
+
+        afterSuite { desc, result ->
+
+            if (desc.parent) return // Only summarize results for whole modules
+
+            String summary = "${testTask.project.name}:${testTask.name} results: ${result.resultType} " +
+                    "(" +
+                    "${result.testCount} tests, " +
+                    "${result.successfulTestCount} successes, " +
+                    "${result.failedTestCount} failures, " +
+                    "${result.skippedTestCount} skipped" +
+                    ") "
+            rootProject.totalTests += result.testCount
+            rootProject.totalSuccesses += result.successfulTestCount
+            rootProject.totalFailures += result.failedTestCount
+            rootProject.totalSkipped += result.skippedTestCount
+
+            // Add reports in `testsResults`, keep failed suites at the end
+            if (result.resultType == TestResult.ResultType.SUCCESS) {
+                rootProject.testsResults.add(0, summary)
+            } else {
+                rootProject.testsResults += summary
+            }
+        }
+    }
+}
+
+
+gradle.buildFinished {
+    def allResults = rootProject.ext.testsResults
+    def allTests = rootProject.ext.totalTests
+    def allSuccesses = rootProject.ext.totalSuccesses
+    def allFailures = rootProject.ext.totalFailures
+    def allSkipped = rootProject.ext.totalSkipped
+    String summary = "Combined results: " +
+            "${allTests} tests, " +
+            "${allSuccesses} successes, " +
+            "${allFailures} failures, " +
+            "${allSkipped} skipped"
+    if (!allResults.isEmpty()) {
+        printResults allResults
+        println(summary)
+    }
+}
+
+private static void printResults(allResults) {
+    def maxLength = allResults*.readLines().flatten().collect { it.length() }.max()
+
+    println "┌${"${"─" * maxLength}"}┐"
+
+    println allResults.collect {
+        it.readLines().collect {
+            "│" + it + " " * (maxLength - it.length()) + "│"
+        }.join("\n")
+    }.join("\n├${"${"─" * maxLength}"}┤\n")
+
+    println "└${"${"─" * maxLength}"}┘"
+}
+
 configure(javaProjects) {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
