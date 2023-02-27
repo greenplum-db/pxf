@@ -33,6 +33,11 @@ pxf_gp6_ubuntu18_releng_url="${RELENG_DROP_URL}/gpdb6/pxf-gp6-${version}-2-ubunt
 pxf_gp6_osl_releng_url="${RELENG_OSL_DROP_URL}/gpdb6/${PXF_OSL_FILE_PREFIX}_${version}_GA.txt"
 pxf_gp6_odp_releng_url="${RELENG_ODP_DROP_URL}/gpdb6/${PXF_ODP_FILE_PREFIX}-${version}-ODP.tar.gz"
 
+# compute artifact URLs for GPDB7
+pxf_gp7_el8_releng_url="${RELENG_DROP_URL}/gpdb7/pxf-gp7-${version}-2.el8.x86_64.rpm"
+pxf_gp7_osl_releng_url="${RELENG_OSL_DROP_URL}/gpdb7/${PXF_OSL_FILE_PREFIX}_${version}_GA.txt"
+pxf_gp7_odp_releng_url="${RELENG_ODP_DROP_URL}/gpdb7/${PXF_ODP_FILE_PREFIX}-${version}-ODP.tar.gz"
+
 echo "Generating Slack Message"
 
 # generate Slack message
@@ -56,6 +61,11 @@ The GPDB6 artifacts are:
 * ${pxf_gp6_ubuntu18_releng_url}
 * ${pxf_gp6_osl_releng_url}
 * ${pxf_gp6_odp_releng_url}
+
+The GPDB7 artifacts are:
+* ${pxf_gp7_el8_releng_url}
+* ${pxf_gp7_osl_releng_url}
+* ${pxf_gp7_odp_releng_url}
 
 Can you please upload the artifacts and the OSL / ODP files to the Greenplum Tanzu Network Release for our product, PXF?
 The OSL file should appear as "Open Source Licenses for PXF ${version}".

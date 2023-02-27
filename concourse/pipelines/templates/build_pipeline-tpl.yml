@@ -1763,19 +1763,19 @@ jobs:
       REDHAT_MAJOR_VERSION: 7
 {% endfor %}
 {% set gp_ver = 6 %}
-  - task: Add OSL file to PXF-GP6 RPM on RHEL8
+  - task: Add OSL file to PXF-GP[[gp_ver]] RPM on RHEL8
     image: rpmrebuild-rhel8-image
     file: pxf_src/concourse/tasks/add_osl_rpm.yml
     params:
       GP_VER: [[gp_ver]]
       REDHAT_MAJOR_VERSION: 8
-  - task: Add OSL file to PXF-GP6 DEB on Ubuntu 18.04
+  - task: Add OSL file to PXF-GP[[gp_ver]] DEB on Ubuntu 18.04
     file: pxf_src/concourse/tasks/add_osl_deb.yml
-    image: gpdb6-pxf-dev-ubuntu18-image
+    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     params:
       GP_VER: [[gp_ver]]
 {% set gp_ver = 7 %}
-  - task: Add OSL file to PXF-GP6 RPM on RHEL8
+  - task: Add OSL file to PXF-GP[[gp_ver]] RPM on RHEL8
     image: rpmrebuild-rocky8-image
     file: pxf_src/concourse/tasks/add_osl_rpm.yml
     params:
