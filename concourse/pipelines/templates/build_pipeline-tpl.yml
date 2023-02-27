@@ -10,16 +10,18 @@ groups:
   jobs:
   - Testing Gate for PXF-GP
 {% set gp_ver = None %}
-{% for gp_ver in range(5, 8) %}
+{% for gp_ver in range(5, 7) %}
   - Build PXF-GP[[gp_ver]] on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
 {% endfor %}
-  - Test PXF-GP6-HDP2 on OEL7
 {% set gp_ver = 6 %}
-  - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
+  - Test PXF-GP[[gp_ver]]-HDP2 on OEL7
   - Build PXF-GP[[gp_ver]] on Ubuntu18
-  - Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
+  - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
+{% for gp_ver in range(6, 8) %}
   - Build PXF-GP[[gp_ver]] on RHEL8
+  - Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
+{% endfor %}
 {% set gp_ver = None %}
 {% for gp_ver in range(5, 7) %}
   - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL7
@@ -47,7 +49,7 @@ groups:
   - Publish_PXF-GP5_and_PXF-GP6_Artifacts_to_GP-RelEng
 
 {% set gp_ver = None %}
-{% for gp_ver in range(5, 8) %}
+{% for gp_ver in range(5, 7) %}
 - name: GP[[gp_ver]] on RHEL7
   jobs:
   - Build PXF-GP[[gp_ver]] on RHEL7
@@ -63,11 +65,12 @@ groups:
   - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
   - Build PXF-GP[[gp_ver]] on Ubuntu18
 {% set gp_ver = None %}
-{% set gp_ver = 6 %}
+{% for gp_ver in range(6, 8) %}
 - name: GP[[gp_ver]] on RHEL8
   jobs:
   - Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
   - Build PXF-GP[[gp_ver]] on RHEL8
+{% endfor %}
 {% set gp_ver = None %}
 {% set gp_ver = 6 %}
 - name: PXF Tests - GP[[gp_ver]] on RHEL7
@@ -298,33 +301,31 @@ resources:
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(.*)-2-ubuntu18.04-amd64.deb
 
-- name: pxf_gp5_osl_to_releng
+- name: pxf_gp7_rhel8_release_to_releng
   type: gcs
   source:
     bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb5/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb7/pxf-gp7-(.*)-2.el8.x86_64.rpm
 
-- name: pxf_gp5_odp_to_releng
+{% set gp_ver = None %}
+{% for gp_ver in range(5, 8) %}
+- name: pxf_gp[[ gp_ver ]]_osl_to_releng
   type: gcs
   source:
     bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb5/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
+    regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb[[ gp_ver ]]/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
 
-- name: pxf_gp6_osl_to_releng
+- name: pxf_gp[[ gp_ver ]]_odp_to_releng
   type: gcs
   source:
     bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb6/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
+    regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb[[ gp_ver ]]/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
+{% endfor %}
+{% set gp_ver = None %}
 
-- name: pxf_gp6_odp_to_releng
-  type: gcs
-  source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb6/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
 
 ## ---------- RelEng Drop Artifacts for tarballs ----------
 - name: pxf_gp5_tarball_release_to_releng
@@ -353,7 +354,7 @@ resources:
 ## ---------- Docker Images ----------
 {% set gp_ver = None %}
 
-{% for gp_ver in range(5, 8) %}
+{% for gp_ver in range(5, 7) %}
 - name: gpdb[[gp_ver]]-pxf-dev-centos7-image
   type: registry-image
   icon: docker
@@ -362,17 +363,22 @@ resources:
     tag: latest
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endfor %} {# gp5, gp6, and gp7 #}
+{% endfor %} {# gp5, gp6 #}
 
-{% set gp_ver = 6 %}
+{% for gp_ver in range(6, 8) %}
 - name: gpdb[[gp_ver]]-pxf-dev-rhel8-image
   type: registry-image
   icon: docker
   source:
+{% if gp_ver == 6 %}
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rhel8-test-pxf
+{% else %}
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rocky8-test-pxf
+{% endif %}
     tag: latest
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+{% endfor %} {# gp6, gp7 #}
 {% set gp_ver = None %}
 
 - name: gpdb6-pxf-dev-oel7-image
@@ -418,6 +424,15 @@ resources:
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/rpmrebuild-rhel8
+    tag: latest
+    username: _json_key
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+
+- name: rpmrebuild-rocky8-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/rpmrebuild-rocky8
     tag: latest
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
@@ -493,14 +508,14 @@ resources:
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
 
-## ---------- Greenplum 7 Alpha Builds ----------
-- name: gpdb7_rhel7_rpm_latest-0
+## ---------- Greenplum 7 Beta Builds ----------
+- name: gpdb7_rhel8_rpm_latest-0
   type: gcs
   icon: google-drive
   source:
-    bucket: ((ud/pxf/[[ environment ]]/gp7-alpha-releng-drop-bucket-name))
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/master/greenplum-db-(7.*)-rhel7-x86_64.rpm
+    regexp: server/published/main/greenplum-db-(7.*)-rocky8-x86_64.rpm
 
 ## ---------- PXF 5 (for GPDB 6) Artifact ---------------
 - name: pxf5_gp6_rhel7_released
@@ -513,7 +528,7 @@ resources:
 ## ---------- PXF Build Artifacts ----------
 {% set gp_ver = None %}
 
-{% for gp_ver in range(5, 8) %}
+{% for gp_ver in range(5, 7) %}
 - name: pxf_gp[[gp_ver]]_tarball_rhel7
   type: gcs
   icon: google-drive
@@ -532,6 +547,7 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
 
+{% for gp_ver in range(6, 8) %}
 - name: pxf_gp[[gp_ver]]_tarball_rhel8
   type: gcs
   icon: google-drive
@@ -539,6 +555,7 @@ resources:
     bucket: ((ud/pxf/common/build-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
+{% endfor %}
 {% set gp_ver = None %}
 
 ## ---------- Auxiliary Resources ----------
@@ -576,7 +593,7 @@ resources:
 ## ======================================================================
 jobs:
 ## ---------- Centos 7 Swimlane ----------
-{% for gp_ver in range(5, 8) %}
+{% for gp_ver in range(5, 7) %}
 - name: Build PXF-GP[[gp_ver]] on RHEL7
   plan:
   - in_parallel:
@@ -619,15 +636,9 @@ jobs:
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
-{% if gp_ver == 7 %}
-      GROUP: fdw_gpdb_schedule
-      HADOOP_JAVA_HOME: /usr/lib/jvm/jre-1.8.0-openjdk
-      PG_REGRESS: true
-{% else %}
       GROUP: gpdb,proxy,profile
-{% endif %}
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% endfor %} {# gp_ver 5, 6, and 7 #}
+{% endfor %} {# gp_ver 5 and 6 #}
 
 - name: Test PXF-GP6-HDP2 on OEL7
   plan:
@@ -703,8 +714,8 @@ jobs:
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
 {% set gp_ver = None %}
 
-  ## ---------- RHEL 8 Swimlane ----------
-{% set gp_ver = 6 %}
+## ---------- RHEL 8 / Rocky 8 Swimlane ----------
+{% for gp_ver in range(6, 8) %}
 - name: Build PXF-GP[[gp_ver]] on RHEL8
   plan:
   - in_parallel:
@@ -749,6 +760,7 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+{% endfor %} {# gp_ver 6 and 7 #}
 {% set gp_ver = None %}
 
 ## ---------- Testing Gate ----------
@@ -763,10 +775,10 @@ jobs:
 {% endfor %}
       - Test PXF-GP6-HDP2 on OEL7
 {% set gp_ver = None %}
-{% set gp_ver = 6 %}
-      - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
+      - Test PXF-GP6-HDP2 on Ubuntu18
+{% for gp_ver in range(6, 8) %}
       - Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
-{% set gp_ver = None %}
+{% endfor %}
     - get: pxf_gp5_tarball_rhel7
       passed: [Test PXF-GP5-HDP2 on RHEL7]
     - get: gpdb5_rhel7_rpm_latest-0
@@ -788,6 +800,11 @@ jobs:
       passed:
       - Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2 on OEL7
+{% set gp_ver = 7 %}
+    - get: pxf_gp[[gp_ver]]_tarball_rhel8
+      passed: [Test PXF-GP[[gp_ver]]-HDP2 on RHEL8]
+    - get: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+      passed: [Test PXF-GP[[gp_ver]]-HDP2 on RHEL8]
 {% set gp_ver = None %}
 
 ## ---------- Extended Tests ----------
@@ -1513,6 +1530,10 @@ jobs:
       - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+{% set gp_ver = 7 %}
+    - get: pxf_gp[[gp_ver]]_tarball_rhel8
+      passed:
+      - Testing Gate for PXF-GP
 {% set gp_ver = None %}
 
 ## ---------- Compatibility Testing ----------
@@ -1686,6 +1707,12 @@ jobs:
       passed:
       - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL8
 {% set gp_ver = None %}
+{% set gp_ver = 7 %}
+    - get: pxf_gp[[gp_ver]]_tarball_rhel8
+      trigger: true
+      passed:
+      - Compatibility Gate for PXF-GP
+{% set gp_ver = None %}
     - get: google-cloud-sdk-slim-image
   - task: Promote PXF-GP5 and PXF-GP6 Artifacts
     image: google-cloud-sdk-slim-image
@@ -1715,6 +1742,7 @@ jobs:
     - get: google-cloud-sdk-slim-image
     - get: rpmrebuild-centos7-image
     - get: rpmrebuild-rhel8-image
+    - get: rpmrebuild-rocky8-image
     - get: gpdb6-pxf-dev-ubuntu18-image
   - task: Get PXF-GP5 and PXF-GP6 Artifacts from Releases Directory
     image: google-cloud-sdk-slim-image
@@ -1746,6 +1774,13 @@ jobs:
     image: gpdb6-pxf-dev-ubuntu18-image
     params:
       GP_VER: [[gp_ver]]
+{% set gp_ver = 7 %}
+  - task: Add OSL file to PXF-GP6 RPM on RHEL8
+    image: rpmrebuild-rocky8-image
+    file: pxf_src/concourse/tasks/add_osl_rpm.yml
+    params:
+      GP_VER: [[gp_ver]]
+      REDHAT_MAJOR_VERSION: 8
 {% set gp_ver = None %}
 {% for gp_ver in range(5, 7) %}
   - task: Generate PXF binary tarball from PXF-GP[[gp_ver]] on RHEL7 RPM
@@ -1778,24 +1813,23 @@ jobs:
     - put: pxf_gp6_ubuntu18_release_to_releng
       params:
         file: pxf_artifacts/licensed/pxf-gp6-*-2-ubuntu18.04-amd64.deb
+    - put: pxf_gp7_rhel8_release_to_releng
+      params:
+        file: pxf_artifacts/licensed/pxf-gp7-*-2.el8.x86_64.rpm
     - put: pxf_gp5_tarball_release_to_releng
       params:
         file: pxf_artifacts/licensed/gp5/pxf-gp5-*-el7.x86_64.tar.gz
     - put: pxf_gp6_tarball_release_to_releng
       params:
         file: pxf_artifacts/licensed/gp6/pxf-gp6-*-el7.x86_64.tar.gz
-    - put: pxf_gp5_odp_to_releng
+{% for gp_ver in range(5, 8) %}
+    - put: pxf_gp[[gp_ver]]_odp_to_releng
       params:
         file: pxf_artifacts/((ud/pxf/common/odp-file-prefix))*.tar.gz
-    - put: pxf_gp5_osl_to_releng
+    - put: pxf_gp[[gp_ver]]_osl_to_releng
       params:
         file: pxf_artifacts/((ud/pxf/common/osl-file-prefix))*.txt
-    - put: pxf_gp6_odp_to_releng
-      params:
-        file: pxf_artifacts/((ud/pxf/common/odp-file-prefix))*.tar.gz
-    - put: pxf_gp6_osl_to_releng
-      params:
-        file: pxf_artifacts/((ud/pxf/common/osl-file-prefix))*.txt
+{% endfor %}
 {% if slack_notification %}
   - put: notify-releng
     params:
