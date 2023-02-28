@@ -124,8 +124,6 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
     else
     {
         fmt_state->eol = "\n";
-        ereport(WARNING, (errcode(ERRCODE_UNDEFINED_PARAMETER), errmsg("eol as not provided, set to \n")));
-
     }
 
     //with quote, we must also have escape
