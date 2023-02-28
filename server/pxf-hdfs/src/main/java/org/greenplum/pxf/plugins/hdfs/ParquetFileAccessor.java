@@ -552,6 +552,12 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     precision = columnTypeModifiers[0];
                     scale = columnTypeModifiers[1];
                 }
+
+                // precision is defined but precision >  HiveDecimal.MAX_PRECISION
+                if (precision > HiveDecimal.MAX_PRECISION) {
+                    throw new UnsupportedTypeException(String.format("Numeric precision overflow. Numeric precision %d exceeds the maximum numeric precision %d.", precision, HiveDecimal.MAX_PRECISION));
+                }
+
                 primitiveTypeName = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
                 logicalTypeAnnotation = DecimalLogicalTypeAnnotation.decimalType(scale, precision);
                 length = PRECISION_TO_BYTE_COUNT[precision - 1];
