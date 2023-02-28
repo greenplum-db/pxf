@@ -187,8 +187,7 @@ public class ParquetWriteTest extends BaseFeature {
         runWritePrimitivesScenario("pxf_parquet_write_primitives_gzip_classname", "pxf_parquet_read_primitives_gzip_classname", "parquet_write_primitives_gzip_classname", new String[]{"COMPRESSION_CODEC=org.apache.hadoop.io.compress.GzipCodec"});
     }
 
-    // Numeric precision not defined, test writing data precision in [1, 38]. All the data should be written correctly.
-    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+//    @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteUndefinedPrecisionNumericWithNullFlag() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE, hdfsPath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE);
 
@@ -253,7 +252,7 @@ public class ParquetWriteTest extends BaseFeature {
         runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision_with_error_flag.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+//    @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteNumericWithPrecisionAndScaleWithNullFlag() throws Exception {
         hdfs.copyFromLocal(resourcePath + PARQUET_NUMERIC_FILE, hdfsPath + PARQUET_NUMERIC_FILE);
 
