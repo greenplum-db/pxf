@@ -1,9 +1,12 @@
 package org.greenplum.pxf.automation.utils.csv;
 
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -45,6 +48,22 @@ public abstract class CsvUtils {
 		}
 
 		return dataTable;
+	}
+	/**
+	 * Update the delimiter in a CSV file
+	 *
+	 * @param originalDelim Original single char delimiter
+	 * @param newDelimiter Desired multi-char delimiter
+	 * @throws IOException
+	 */
+	public static void updateDelim(String targetCsvFile, char originalDelim, String newDelimiter)
+			throws IOException {
+
+		Path path = Paths.get(targetCsvFile);
+
+		String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+		content = content.replace(String.valueOf(originalDelim), newDelimiter);
+		Files.write(path, content.getBytes(StandardCharsets.UTF_8));
 	}
 
 	/**
