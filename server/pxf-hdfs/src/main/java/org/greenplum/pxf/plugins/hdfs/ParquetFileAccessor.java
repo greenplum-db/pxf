@@ -553,11 +553,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     scale = columnTypeModifiers[1];
                 }
 
-                // precision is defined but precision >  HiveDecimal.MAX_PRECISION i.e., 38
-                // this error will be thrown no matter what decimal overflow option is
+                // precision is defined but precision >  HiveDecimal.MAX_PRECISION
                 if (precision > HiveDecimal.MAX_PRECISION) {
-                    throw new UnsupportedTypeException(String.format("Column %s is defined as NUMERIC with precision %d " +
-                            "which exceeds maximum supported precision %d.", columnName, precision, HiveDecimal.MAX_PRECISION));
+                    throw new UnsupportedTypeException(String.format("Numeric precision overflow. Numeric precision %d exceeds the maximum numeric precision %d.", precision, HiveDecimal.MAX_PRECISION));
                 }
 
                 primitiveTypeName = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;

@@ -276,6 +276,12 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private byte[] getFixedLenByteArray(String value, Type type, String columnName) {
         // From org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
         DecimalLogicalTypeAnnotation typeAnnotation = (DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
+
+//        // precision is not defined but the data size >  HiveDecimal.MAX_PRECISION
+        if (value.length() > HiveDecimal.MAX_PRECISION) {
+            throw new UnsupportedTypeException(String.format("Data size of data %s exceeds the maximum numeric precision %d.", value, HiveDecimal.MAX_PRECISION));
+        }
+
         int precision = Math.min(HiveDecimal.MAX_PRECISION, typeAnnotation.getPrecision());
         int scale = Math.min(HiveDecimal.MAX_SCALE, typeAnnotation.getScale());
 

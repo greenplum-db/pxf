@@ -189,17 +189,35 @@ public class ParquetWriteTest extends BaseFeature {
 
     // Numeric precision not defined, test writing data precision in [1, 38]. All the data should be written correctly.
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
-    public void parquetWriteUndefinedPrecisionNumeric() throws Exception {
-        String filePathName = "/numeric/undefined_precision_numeric.csv";
-        String fileName = "parquet_write_undefined_precision_numeric";
-        String writableExternalTableName = "pxf_parquet_write_undefined_precision_numeric";
-        prepareNumericWritableExtTable(filePathName, fileName, writableExternalTableName, false, false);
+    public void parquetWriteUndefinedPrecisionNumericWithNullFlag() throws Exception {
+        hdfs.copyFromLocal(resourcePath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE, hdfsPath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE);
 
+        Table gpdbUndefinedPrecisionNumericTable = new Table(NUMERIC_UNDEFINED_PRECISION_TABLE, UNDEFINED_PRECISION_NUMERIC);
+        gpdbUndefinedPrecisionNumericTable.setDistributionFields(new String[]{"description"});
+        gpdb.createTableAndVerify(gpdbUndefinedPrecisionNumericTable);
+        gpdb.copyFromFile(gpdbUndefinedPrecisionNumericTable, new File(localDataResourcesFolder
+                + "/numeric/undefined_precision_numeric.csv"), "E','", true);
+
+        String filename = "parquet_write_undefined_precision_numeric_null_flag";
+        prepareWritableExternalTable("pxf_parquet_write_undefined_precision_numeric_null_flag",
+                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename, null);
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setFormatter("pxfwritable_export");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
+
+        gpdb.createTableAndVerify(exTable);
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT * FROM " + NUMERIC_UNDEFINED_PRECISION_TABLE);
-        prepareReadableExternalTable("pxf_parquet_read_undefined_precision_numeric",
-                UNDEFINED_PRECISION_NUMERIC, hdfsPath + fileName);
 
-        runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision.runTest");
+        prepareReadableExternalTable("pxf_parquet_read_undefined_precision_numeric_null_flag",
+                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename);
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setFormatter("pxfwritable_import");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
+        gpdb.createTableAndVerify(exTable);
+
+        runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision_with_null_flag.runTest");
     }
 
     // Numeric precision not defined, test round flag when data precision overflow. An error should be thrown
@@ -214,11 +232,30 @@ public class ParquetWriteTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
-    public void parquetWriteNumericWithPrecisionAndScale() throws Exception {
-        String filePathName = "/numeric/numeric_with_precision.csv";
-        String fileName = "parquet_write_numeric";
-        String writableExternalTableName = "pxf_parquet_write_numeric";
-        prepareNumericWritableExtTable(filePathName, fileName, writableExternalTableName, true, false);
+    public void parquetWriteUndefinedPrecisionNumericWithErrorFlag() throws Exception {
+        hdfs.copyFromLocal(resourcePath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE, hdfsPath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE);
+
+        Table gpdbUndefinedPrecisionNumericTable = new Table(NUMERIC_UNDEFINED_PRECISION_TABLE, UNDEFINED_PRECISION_NUMERIC);
+        gpdbUndefinedPrecisionNumericTable.setDistributionFields(new String[]{"description"});
+        gpdb.createTableAndVerify(gpdbUndefinedPrecisionNumericTable);
+        gpdb.copyFromFile(gpdbUndefinedPrecisionNumericTable, new File(localDataResourcesFolder
+                + "/numeric/undefined_precision_numeric_1.csv"), "E','", true);
+
+        String filename = "parquet_write_undefined_precision_numeric_error_flag";
+        prepareWritableExternalTable("pxf_parquet_write_undefined_precision_numeric_error_flag",
+                UNDEFINED_PRECISION_NUMERIC, hdfsPath + filename, null);
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setFormatter("pxfwritable_export");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
+
+        gpdb.createTableAndVerify(exTable);
+        runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision_with_error_flag.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void parquetWriteNumericWithPrecisionAndScaleWithNullFlag() throws Exception {
+        hdfs.copyFromLocal(resourcePath + PARQUET_NUMERIC_FILE, hdfsPath + PARQUET_NUMERIC_FILE);
 
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT * FROM " + NUMERIC_TABLE);
         prepareReadableExternalTable("pxf_parquet_read_numeric",
@@ -262,6 +299,22 @@ public class ParquetWriteTest extends BaseFeature {
                 UNDEFINED_PRECISION_NUMERIC, hdfsPath + fileName);
 
         runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision_large_scale.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void parquetWriteNumericWithPrecisionAndScaleWithErrorFlag() throws Exception {
+        hdfs.copyFromLocal(resourcePath + PARQUET_NUMERIC_FILE, hdfsPath + PARQUET_NUMERIC_FILE);
+
+        Table gpdbNumericWithPrecisionScaleTable = new Table(NUMERIC_TABLE, PARQUET_TABLE_DECIMAL_COLUMNS_LARGE_PRECISION);
+        gpdbNumericWithPrecisionScaleTable.setDistributionFields(new String[]{"description"});
+        gpdb.createTableAndVerify(gpdbNumericWithPrecisionScaleTable);
+        gpdb.copyFromFile(gpdbNumericWithPrecisionScaleTable, new File(localDataResourcesFolder
+                + "/numeric/numeric_with_precision_1.csv"), "E','", true);
+
+        String filename = "parquet_write_defined_precision_numeric_error_flag";
+        prepareWritableExternalTable("parquet_write_defined_precision_numeric_error_flag",
+                PARQUET_TABLE_DECIMAL_COLUMNS_LARGE_PRECISION, hdfsPath + filename, null);
+        runTincTest("pxf.features.parquet.decimal.numeric_with_error_flag.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
