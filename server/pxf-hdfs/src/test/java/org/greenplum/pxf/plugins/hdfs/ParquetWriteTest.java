@@ -915,6 +915,30 @@ public class ParquetWriteTest {
     }
 
     @Test
+    public void testWriteInvalidNumeric() throws Exception {
+        String path = temp + "/out/invalid_numeric/";
+        // precision is 38 and scale is 18
+        columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", new Integer[]{38, 18}));
+
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123469");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+
+        String value = "123456789.01234567890.123456789012345678";
+
+        // write parquet file with numeric values
+        List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
+        Exception exception = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+        assertEquals(String.format("Invalid numeric %s", value), exception.getMessage());
+    }
+
+    @Test
     public void testWriteIntArray() throws Exception {
         String path = temp + "/out/int_array/";
 
