@@ -9,6 +9,7 @@ inputs:
 - name: pxf_gp6_tarball_rhel7
 - name: pxf_gp6_tarball_rhel8
 - name: pxf_gp6_tarball_ubuntu18
+- name: pxf_gp7_tarball_rhel8
 
 params:
   ENVIRONMENT:

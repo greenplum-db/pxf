@@ -227,6 +227,14 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
+- name: gp6-python-libs
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    versioned_file: automation-dependencies/gp6-python-libs.tar.gz
+
 ## ---------- Single Cluster tarballs ----------
 - name: singlecluster-hdp2
   type: gcs
@@ -449,7 +457,7 @@ resources:
   icon: docker
   source:
     repository: google/cloud-sdk
-    tag: slim
+    tag: 402.0.0-slim
 
 {% if slack_notification %}
 - name: slack-alert
@@ -750,6 +758,9 @@ jobs:
     - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
       passed: [Build PXF-GP[[gp_ver]] on RHEL8]
     - get: pxf-automation-dependencies
+{% if gp_ver == 7 %}
+    - get: gp6-python-libs
+{% endif %}
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
