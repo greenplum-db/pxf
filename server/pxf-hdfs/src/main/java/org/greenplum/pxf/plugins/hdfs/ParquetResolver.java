@@ -21,6 +21,7 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
@@ -259,9 +260,14 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private byte[] getFixedLenByteArray(String value, Type type) {
         // From org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
         DecimalLogicalTypeAnnotation typeAnnotation = (DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
+        
+        if (!NumberUtils.isNumber(value)) {
+            throw new UnsupportedTypeException(String.format("Invalid numeric %s", value));
+        }
 
-//        // precision is not defined but the data size >  HiveDecimal.MAX_PRECISION
-        if (value.length() > HiveDecimal.MAX_PRECISION) {
+        int dataPrecision = NumberUtils.createBigDecimal(value).precision();
+        // precision is not defined in GP table but the data precision >  HiveDecimal.MAX_PRECISION
+        if (dataPrecision > HiveDecimal.MAX_PRECISION) {
             throw new UnsupportedTypeException(String.format("Data size of data %s exceeds the maximum numeric precision %d.", value, HiveDecimal.MAX_PRECISION));
         }
 
