@@ -127,7 +127,7 @@ public class Gpdb extends DbSystemObject {
 	public void createDataBase(String schemaName, boolean ignoreFail) throws Exception {
 
 		runQuery("CREATE DATABASE " + schemaName, ignoreFail, false);
-		alterDatabase(schemaName, ignoreFail);
+		setDatabaseLevelGUCsForTesting(schemaName, ignoreFail);
 	}
 
 	@Override
@@ -144,10 +144,10 @@ public class Gpdb extends DbSystemObject {
 		}
 
 		runQuery(createStatement, ignoreFail, false);
-		alterDatabase(schemaName, ignoreFail);
+		setDatabaseLevelGUCsForTesting(schemaName, ignoreFail);
 	}
 
-	private void alterDatabase(String schemaName, boolean ignoreFail) throws Exception {
+	private void setDatabaseLevelGUCsForTesting(String schemaName, boolean ignoreFail) throws Exception {
 
 		runQuery("ALTER DATABASE " + schemaName + " SET bytea_output TO 'escape'", ignoreFail, false);
 

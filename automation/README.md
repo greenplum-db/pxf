@@ -141,7 +141,7 @@ b) only have 1 jar file inside `/usr/local/pxf/application/`
 
 ### Running automation tests for GPDB7
 Tinc only runs with Python 2 so it won't work with the Python 3 libraries that come with GP7.
-We will copy the required Python 2 libraries from GP6 in order to run tinc against GP7.
+We use the required Python 2 libraries from GP6 in order to run tinc against GP7.
 
 To support running the tests for GPDB 7, export PXF_AUTOMATION_TINC_DEPS to point to GPDB6 python libs.
 

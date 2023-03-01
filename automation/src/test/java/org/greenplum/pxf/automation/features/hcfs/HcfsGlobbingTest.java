@@ -92,10 +92,12 @@ public class HcfsGlobbingTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void testJavaRegexSpecialChars() throws Exception {
-        // The earlier glob (.|+)* is failing for GP7 with this error:
+        // The earlier path (.|+)bc and the glob value (.|+)* is failing for GP7 with this error:
         // select * from hcfs_glob_java_regex_special_chars;
         // ERROR:  invalid URI '+)*?PROFILE=hdfs:text' : undefined structure
-        // Since it doesn't like the pipe | in the URI, changing this test a bit to remove the pipe 
+        // due to the fact that the current implementation of gp_exttable_fdw that supports external tables in GP7
+        // treats the pipe "|" symbol in the value of LOCATION clause as a separator for the list of URLs
+        // So we have to change this test to remove the pipe symbol from our file names and glob values
         prepareTestScenario("java_regex_special_chars", "(.+)bc", "abc", null, null, "(.+)*");
         runTestScenario("java_regex_special_chars");
     }
