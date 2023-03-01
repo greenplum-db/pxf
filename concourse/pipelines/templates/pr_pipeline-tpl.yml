@@ -301,4 +301,3 @@ jobs:
       run:
         path: pxf_src/concourse/scripts/test.bash
 {% set gp_ver = None %}
-
