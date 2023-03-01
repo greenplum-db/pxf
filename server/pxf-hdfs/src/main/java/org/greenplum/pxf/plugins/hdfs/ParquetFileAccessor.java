@@ -64,7 +64,9 @@ import org.greenplum.pxf.plugins.hdfs.filter.BPCharOperatorTransformer;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPruner;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetUtilities;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetWriteDecimalOverflowOption;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -553,8 +555,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     scale = columnTypeModifiers[1];
                 }
 
+                ParquetUtilities parquetUtilities = new ParquetUtilities(new PgUtilities());
                 // precision is defined but precision >  HiveDecimal.MAX_PRECISION
-                if (precision > HiveDecimal.MAX_PRECISION) {
+                String decimalOverflowOption = parquetUtilities.parseDecimalOverflowOption(configuration);
+                if (precision > HiveDecimal.MAX_PRECISION && decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
                     throw new UnsupportedTypeException(String.format("Numeric precision overflow. Numeric precision %d exceeds the maximum numeric precision %d.", precision, HiveDecimal.MAX_PRECISION));
                 }
 
