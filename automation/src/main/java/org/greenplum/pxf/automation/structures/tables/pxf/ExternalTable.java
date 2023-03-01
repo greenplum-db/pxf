@@ -254,7 +254,11 @@ public abstract class ExternalTable extends Table {
                 createStatement += ", ";
             }
             String newLineCharacter = getNewLine();
-            createStatement += " NEWLINE" + formatterOptionDeclarer + "'" + newLineCharacter + "'";
+            if (isMultibyteFormatter) {
+                createStatement += " NEWLINE" + formatterOptionDeclarer + "E'" + newLineCharacter + "'";
+            } else {
+                createStatement += " NEWLINE" + formatterOptionDeclarer + "'" + newLineCharacter + "'";
+            }
         }
 
         if (hasDelimiterOrEscapeOrNewLine || isMultibyteFormatter) {

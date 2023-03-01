@@ -223,6 +223,26 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // run the query skipping the first 10 lines of the text
         runTincTest("pxf.features.multibyte_delimiter.multi_char.runTest");
     }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readCsvTwoByteDelimiterWithCRLF() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_twobyte_withcrlf_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setDelimiter("¤");
+        exTable.setNewLine("\\r\\n");
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\r\n");
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_crlf.runTest");
+    }
+
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readCsvTwoByteDelimiterWithQuote() throws Exception {
         // set profile and format
@@ -248,13 +268,13 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setName("pxf_multibyte_twobyte_withquote_withescape_data");
         exTable.setProfile(protocol.value() + ":csv");
         exTable.setDelimiter("¤");
-        exTable.setQuote("\"");
-        exTable.setEscape("\"");
+        exTable.setQuote("|");
+        exTable.setEscape("\\");
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', '|', '\\', CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 

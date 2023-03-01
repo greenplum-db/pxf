@@ -99,7 +99,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         {
             fmt_state->delimiter = pg_server_to_any(value, strlen(value), table_encoding);
         }
-        else if (strcmp(key, "eol") == 0)
+        else if (strcmp(key, "newline") == 0)
         {
             fmt_state->eol = value;
         }
@@ -118,7 +118,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         // eol can only be LF, CRLF or CR. Any other option will be considered invalid.
         if (!(strcmp(fmt_state->eol, "\n") == 0 || strcmp(fmt_state->eol, "\r") == 0 || strcmp(fmt_state->eol, "\r\n") == 0))
         {
-            ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("eol can only be LF, CRLF, or CR")));
+            ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("NEWLINE can only be LF, CRLF, or CR")));
         }
     }
     else
