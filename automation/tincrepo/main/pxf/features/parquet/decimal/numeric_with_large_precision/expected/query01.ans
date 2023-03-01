@@ -1,7 +1,7 @@
 -- start_ignore
 -- end_ignore
--- @description query01 for writing defined precision numeric with ERROR flag on. When try to write a numeric with precision > HiveDecimal.MAX_PRECISION, an error will be thrown.
-INSERT INTO parquet_write_defined_precision_numeric_error_flag SELECT * FROM numeric_precision;
+-- @description query01 for writing defined precision numeric with pxf.parquet.write.decimal.overflow = error. When try to write a numeric with precision > HiveDecimal.MAX_PRECISION, an error will be thrown.
+INSERT INTO parquet_write_defined_large_precision_numeric SELECT * FROM numeric_precision;
 ERROR:  PXF server error : Numeric precision overflow. Numeric precision 90 exceeds the maximum numeric precision 38.
 
 
