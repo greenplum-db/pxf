@@ -41,6 +41,7 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetUtilities;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetWriteDecimalOverflowOption;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
@@ -265,9 +266,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             throw new UnsupportedTypeException(String.format("Invalid numeric %s", value));
         }
 
+        String decimalOverflowOption = parquetUtilities.parseDecimalOverflowOption(configuration);
         int dataPrecision = NumberUtils.createBigDecimal(value).precision();
-        // precision is not defined in GP table but the data precision >  HiveDecimal.MAX_PRECISION
-        if (dataPrecision > HiveDecimal.MAX_PRECISION) {
+        // error option is on, precision is not defined in GP table and the data precision >  HiveDecimal.MAX_PRECISION
+        if (dataPrecision > HiveDecimal.MAX_PRECISION && decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
             throw new UnsupportedTypeException(String.format("Data size of data %s exceeds the maximum numeric precision %d.", value, HiveDecimal.MAX_PRECISION));
         }
 
