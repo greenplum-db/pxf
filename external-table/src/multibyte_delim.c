@@ -131,12 +131,13 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
     {
         if (strlen(fmt_state->quote) != 1)
         {
-            ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("quote option wrong length")));
+            ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("quote option must be a single character")));
         }
 
         if (fmt_state->escape == NULL)
         {
-            ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("with quote but without escape option")));
+            // postgres defaults the escape value to be the same as quote if it is not set: https://www.postgresql.org/docs/9.4/sql-copy.html
+            fmt_state->escape = fmt_state->quote;
         }
     }
 
@@ -147,7 +148,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 
     if(fmt_state->escape != NULL && strlen(fmt_state->escape) != 1)
     {
-        ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("escape option wrong length")));
+        ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("escape option must be a single character")));
     }
 
     fmt_state->situation = (fmt_state->quote != NULL ? WITH_QUOTE : WITHOUT_QUOTE);

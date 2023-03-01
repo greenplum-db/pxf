@@ -315,7 +315,7 @@ public abstract class ExternalTable extends Table {
     }
 
     public void setQuote(String quote) {
-        this.escape = quote;
+        this.quote = quote;
     }
 
     public void setNewLine(String newLine) {
