@@ -1,6 +1,6 @@
 from mpp.models import SQLConcurrencyTestCase
 
-class ParquetNumericWithErrorFlag(SQLConcurrencyTestCase):
+class ParquetNumericWithLargePrecision(SQLConcurrencyTestCase):
     """
     @db_name pxfautomation
     @concurrency 1

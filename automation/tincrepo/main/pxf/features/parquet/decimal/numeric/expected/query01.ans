@@ -1,7 +1,7 @@
 -- start_ignore
 -- end_ignore
--- @description query01 for writing defined precision numeric with NULL flag on. When try to write a numeric with precision > HiveDecimal.MAX_PRECISION, the numeric will be set to NULL
-SELECT a, b, c, d, e, f, g, h FROM pxf_parquet_read_numeric_with_null ORDER BY description;
+-- @description query01 for writing defined precision numeric with pxf.parquet.write.decimal.overflow = ignore. When try to write a numeric with precision > HiveDecimal.MAX_PRECISION, the numeric will be set to NULL
+SELECT a, b, c, d, e, f, g, h FROM pxf_parquet_read_numeric ORDER BY description;
     a    |       b        |           c           |             d              |                e                 |                  f                   |                    g                     |                     h                     
 ---------+----------------+-----------------------+----------------------------+----------------------------------+--------------------------------------+------------------------------------------+-------------------------------------------
     0.00 |  1234567890.12 |  0.123456789012345678 |  95162384.7951623847951623 |  9876543210987654321098765.43210 |  1592.634871592634871592634871592634 |  7410258963852014796374102589.6328931478 |  0.45612398707410963258015926348791374682
