@@ -57,16 +57,18 @@ public class ParquetResolverTest {
     private RequestContext context;
     private MessageType schema;
     private String localTimestampString;
+    private Configuration configuration;
 
     @BeforeEach
     public void setup() {
         resolver = new ParquetResolver();
         context = new RequestContext();
+        configuration = new Configuration();
         schema = new MessageType("test");
         context.setMetadata(schema);
         context.setConfig("default");
         context.setUser("test-user");
-
+        context.setConfiguration(configuration);
         // for test cases that test conversions against server's time zone
         Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
         ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
