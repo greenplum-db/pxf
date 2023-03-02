@@ -1,0 +1,17 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for reading undefined precision numeric with scale overflow. Values should be rounded off.
+SELECT * FROM pxf_parquet_read_undefined_precision_numeric_large_scale ORDER BY description;
+ description |        value
+-------------+----------------------
+ 001         | 1.123456789012345678
+ 002         | 1.123456789012345678
+ 003         | 1.123456789012345678
+ 004         | 1.123456789012345678
+ 005         | 1.123456789012345679
+ 006         | 1.123456789012345679
+ 007         | 1.123456789012345679
+ 008         | 1.123456789012345679
+ 009         | 1.123456789012345679
+ 010         | 1.123456789012345678
+(10 rows)
