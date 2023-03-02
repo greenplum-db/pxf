@@ -23,6 +23,14 @@ count_of_escape(char* p, char* left_border, char escape)
     return count;
 }
 
+/**
+ * Find the first occurrence of the target given a pointer to the beginning of the string and a pointer to the end of the string
+ * @param target the character to find
+ * @param left_border where to start searching
+ * @param right_border where to stop searching
+ * @param myData struct containing formatter option information
+ * @return pointer to the character immediately after the first instance of the target
+ */
 static char*
 find_first_ins_for_multiline(char* target, char* left_border, char* right_border, format_delimiter_state *myData)
 {
@@ -78,6 +86,16 @@ find_first_ins_for_multiline(char* target, char* left_border, char* right_border
     return ret;
 }
 
+/**
+ * Set the values in the format_delimiter_state struct with all our formatter options
+ *
+ * This function assumes that the values for delimiter, quote and escape are stored in the
+ * server encoding. It converts the values to the table encoding and writes it into the
+ * format_delimiter_state struct
+ *
+ * @param fcinfo
+ * @param fmt_state
+ */
 static void
 get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 {
@@ -99,6 +117,8 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         {
             fmt_state->delimiter = pg_server_to_any(value, strlen(value), table_encoding);
         }
+        // use newline option as this is something already present in PXF instead of introducing "eol"
+        // however, the value itself will be saved into eol
         else if (strcmp(key, "newline") == 0)
         {
             fmt_state->eol = value;
@@ -115,7 +135,9 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 
     if (fmt_state->eol != NULL)
     {
-        // eol can only be LF, CRLF or CR. Any other option will be considered invalid.
+        // COPY command internally can dynamically determine new line breaks as either LF, CRLF or CR.
+        // Emulate this behavior as best we can by only allowing these three values.
+        // Warning: this requires that the entire file is lines terminated in the same way. (LF is used throughout the entire file)
         if (!(strcmp(fmt_state->eol, "\n") == 0 || strcmp(fmt_state->eol, "\r") == 0 || strcmp(fmt_state->eol, "\r\n") == 0))
         {
             ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("NEWLINE can only be LF, CRLF, or CR")));
@@ -126,7 +148,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         fmt_state->eol = "\n";
     }
 
-    //with quote, we must also have escape
+    //with quote, we must also have escape set it to the default if it is not provided. This is similar behavior to COPY
     if (fmt_state->quote != NULL)
     {
         if (strlen(fmt_state->quote) != 1)
@@ -143,7 +165,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 
     if (fmt_state->delimiter == NULL || (fmt_state->delimiter)[0] == '\0')
     {
-        ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("Missing delimiter option")));
+        ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("missing delimiter option")));
     }
 
     if(fmt_state->escape != NULL && strlen(fmt_state->escape) != 1)
@@ -162,6 +184,11 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
     }
 }
 
+/**
+ * Initialize the format_delimiter_state struct
+ * @param fcinfo
+ * @return
+ */
 static format_delimiter_state*
 new_format_delimiter_state(FunctionCallInfo fcinfo)
 {
@@ -186,6 +213,13 @@ new_format_delimiter_state(FunctionCallInfo fcinfo)
     return fmt_state;
 }
 
+/**
+ * Helper function to handle any escaping that needs to be done
+ * @param start pointer to the beginning of the buffer
+ * @param len total length of the buffer
+ * @param myData struct containing formatter options
+ * @return a new buffer containing a copy of the string that has been properly escaped
+ */
 static char*
 remove_escape(char* start, int len, format_delimiter_state *myData)
 {
@@ -198,7 +232,7 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
     {
         if(start[i] == *(myData->escape))
         {
-            if(myData->situation == WITH_QUOTE) //with quote, we only escape 'escape' iself and quote
+            if(myData->situation == WITH_QUOTE) // with quote, we only escape 'escape' itself and quote
             {
                 if(i + 1 < len && (start[i+1] == *(myData->escape) || start[i+1] == *(myData->quote)))
                 {
@@ -210,7 +244,7 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
                     buf[j++] = start[i++];
                 }
             }
-            else //without quote, we escape delimiter, eol and 'escape' itself
+            else // without quote, we escape delimiter, eol and 'escape' itself
             {
                 if(i + 1 < len && start[i+1] == *(myData->escape))
                 {
@@ -229,13 +263,13 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
                     i = i + delimiter_len + 1;
                     j += delimiter_len;
                 }
-                else //we permit this, escape nothing
+                else // we permit this, escape nothing
                 {
                     buf[j++] = start[i++];
                 }
             }
         }
-            //the former 'if' will found all 'escape + quote', so if we get into this 'if', we meet a quote not after a escape
+            // the former 'if' will find all 'escape + quote', so if we get into this 'if', we meet a quote not after an escape
         else if(myData->situation == WITH_QUOTE && start[i] == *(myData->quote))
         {
             ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION), errmsg("remove_escape: the quote needs escape")));
@@ -251,7 +285,14 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
     return buf;
 }
 
-//we count the quote, we need every column with two quote, return the pos of eol
+/**
+ * we count the quote, we need every column with two quote, return the pos of eol
+ * This function ensures that the data in the buffer is indeed a complete row that can be parsed.
+ * @param data the pointer to the start of the buffer
+ * @param data_border the pointer to where the line/row should end
+ * @param myData the struct containing formatter options
+ * @return
+ */
 static char*
 find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
     int column_cnt = myData->desc->natts;
@@ -275,7 +316,7 @@ find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
                 ++p;
             }
 
-            //if we didn't found the right quote in the buf
+            // if we didn't find the right quote in the buf
             if(p >= data_border)
             {
                 return NULL;
@@ -294,13 +335,13 @@ find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
             break;
         }
 
-        //we needn't check delimiter after the last column
+        // we needn't check delimiter after the last column
         if(i == column_cnt - 1)
         {
             break;
         }
 
-        //here should be a delimiter
+        // here should be a delimiter
         ++p;
         if(p > data_border - delimiter_len ||
            (p <= data_border - delimiter_len && memcmp(p, myData->delimiter, delimiter_len) != 0) )
@@ -310,7 +351,7 @@ find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
         p += delimiter_len;
     }
 
-    //we need an eol except that here is the end of buf where no need an eol
+    // we need an eol except that here is the end of buf where no need an eol
     ++p;
     if(p > data_border - eol_len ||
        (p <= data_border - eol_len && memcmp(p, myData->eol, eol_len) != 0) )
@@ -320,6 +361,12 @@ find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
     return p;
 }
 
+/**
+ * Given a pointer to the beginning of a buffer and a length, parse the buffer into individual columns
+ * @param data the pointer to the start of the buffer
+ * @param len total length of the buffer
+ * @param myData struct containing formatter options. it is also where the parsed data will go
+ */
 void
 unpack_delimited(char *data, int len, format_delimiter_state *myData)
 {
@@ -329,7 +376,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
     StringInfo buf = makeStringInfo();
     int index = 0;
     int delimiter_len = strlen(myData->delimiter);
-    int two_quote_len = (myData->situation == WITH_QUOTE ? 2 : 0); //the last quote of this column and the first quote of next column
+    int two_quote_len = (myData->situation == WITH_QUOTE ? 2 : 0); // the last quote of this column and the first quote of next column
 
     if(myData->situation == WITH_QUOTE)
     {
@@ -407,6 +454,10 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
     }
 }
 
+/**
+ * Main formatter function.
+ * @return
+ */
 Datum
 multibyte_delim_import(PG_FUNCTION_ARGS)
 {
