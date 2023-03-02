@@ -88,9 +88,9 @@
         <name>pxf.parquet.write.decimal.overflow</name>
         <value>error</value>
         <description>
-            Specifies whether the PXF Parquet writer should error out when writing numeric values with precision
-            greater than Hive's maximum precision. If set to false, PXF Parquet writer will set the values to NULL,
-            which is consistent with Hive's behavior.
+            Specifies whether the PXF Parquet writer should error out or ignore values when writing decimal values with overflow.
+            If set to error, an error will be thrown when seeing an overflowing value, and the writing is incomplete.
+            If set to ignore, the overflowing value will be skipped, and writing will success but some data are missing.
         </description>
     </property>
 

@@ -22,6 +22,7 @@ package org.greenplum.pxf.plugins.hdfs;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.commons.lang.math.NumberUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
@@ -61,6 +62,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     // used to distinguish string pattern between type "timestamp" ("2019-03-14 14:10:28")
     // and type "timestamp with time zone" ("2019-03-14 14:10:28+07:30")
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
+    public static final String CONFIG_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION = "pxf.parquet.write.decimal.overflow";
     private static final PgUtilities pgUtilities = new PgUtilities();
     private final ObjectMapper mapper = new ObjectMapper();
     private final ParquetUtilities parquetUtilities = new ParquetUtilities(pgUtilities);
@@ -266,7 +268,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             throw new UnsupportedTypeException(String.format("Invalid numeric %s", value));
         }
 
-        String decimalOverflowOption = parquetUtilities.parseDecimalOverflowOption(configuration);
+        String decimalOverflowOption = parseDecimalOverflowOption(configuration);
         int dataPrecision = NumberUtils.createBigDecimal(value).precision();
         // error option is on, precision is not defined in GP table and the data precision >  HiveDecimal.MAX_PRECISION
         if (dataPrecision > HiveDecimal.MAX_PRECISION && decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
@@ -369,5 +371,19 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             field.val = converter.getValue(group, columnIndex, 0, type);
         }
         return field;
+    }
+
+    /**
+     * Returns server configuration value for pxf.parquet.write.decimal.overflow.
+     *
+     * @param configuration
+     * @return String value for pxf.parquet.write.decimal.overflow. Must be "error" or "ignore"
+     */
+    public String parseDecimalOverflowOption(Configuration configuration) {
+        String decimalOverflowOption = configuration.get(CONFIG_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION, "error");
+        if (!decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.IGNORE.getValue()) && !decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
+            throw new UnsupportedTypeException(String.format("Invalid pxf.parquet.write.decimal.overflow value %s. Values must be %s or %s", decimalOverflowOption, ParquetWriteDecimalOverflowOption.ERROR.getValue(), ParquetWriteDecimalOverflowOption.IGNORE.getValue()));
+        }
+        return decimalOverflowOption;
     }
 }
