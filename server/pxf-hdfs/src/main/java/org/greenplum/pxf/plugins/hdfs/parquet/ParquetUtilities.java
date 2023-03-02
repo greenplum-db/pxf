@@ -18,7 +18,9 @@ import java.util.List;
  * Utility methods for converting Postgres types text format into Java objects according to primitiveTypeName
  */
 public class ParquetUtilities {
+
     private static final Logger LOG = LoggerFactory.getLogger(ParquetUtilities.class);
+
     private final PgUtilities pgUtilities;
 
     public ParquetUtilities(PgUtilities pgUtilities) {
