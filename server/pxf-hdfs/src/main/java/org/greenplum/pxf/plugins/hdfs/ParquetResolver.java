@@ -270,68 +270,34 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }
     }
 
-    private byte[] getFixedLenByteArray(String value, Type type, String columnName) {
-        // From org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
-        DecimalLogicalTypeAnnotation typeAnnotation = (DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
-        
+
+    private byte[] getFixedLenByteArray(String value, Type type) {
         if (!NumberUtils.isNumber(value)) {
             throw new UnsupportedTypeException(String.format("Invalid numeric %s", value));
         }
 
-        String decimalOverflowOption = parseDecimalOverflowOption(configuration);
-        int dataPrecision = NumberUtils.createBigDecimal(value).precision();
-        // error option is on, precision is not defined in GP table and the data precision >  HiveDecimal.MAX_PRECISION
-        if (dataPrecision > HiveDecimal.MAX_PRECISION && decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
-            throw new UnsupportedTypeException(String.format("Data size of data %s exceeds the maximum numeric precision %d.", value, HiveDecimal.MAX_PRECISION));
-        }
-
+        // From org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
+        DecimalLogicalTypeAnnotation typeAnnotation = (DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
         int precision = Math.min(HiveDecimal.MAX_PRECISION, typeAnnotation.getPrecision());
         int scale = Math.min(HiveDecimal.MAX_SCALE, typeAnnotation.getScale());
 
-        /*
-        When this column is defined as NUMERIC(precision,scale) in Greenplum, Greenplum will handle writing values with overflow.
-        When this column is defined as NUMERIC in Greenplum, the column type will be treated as a Parquet DECIMAL(38,18),
-        and HiveDecimal.create has different behaviors for different types of overflow:
+        BigDecimal bigDecimal = NumberUtils.createBigDecimal(value);
+        int dataPrecision = bigDecimal.precision();
+        int dataScale = bigDecimal.scale();
 
-        (1) When the data integer digit count (data precision - data scale) is greater than 38,
-        HiveDecimal.create will return a null value. To make the behavior consistent with Hive's behavior
-        when storing on a Parquet-backed table, we store the value as null.
-        For example, the integer digit count of 1234567890123456789012345678901234567890.123 is 40,
-        which is greater than 38. HiveDecimal.create returns null.
-
-        (2) When data integer digit count is not greater than 38,
-        and the overall data precision is greater than 38,
-        HiveDecimal.create will return a rounded-off value to fit in the Hive maximum supported precision 38.
-        For example, the integer digit count of 1234567890123456789012345.12345678901234567890 is 25 which is less than 38,
-        but its overall precision is 45 which is greater than 38.
-        Then data will be created as a rounded value 1234567890123456789012345.1234567890123
-
-        (3) When data integer digit count is not greater than 38,
-        and the overall data precision is not greater than 38,
-        HiveDecimal.create will return the same decimal value as provided.
-        For example, 123456.123456 can fit in DECIMAL(38,18) without any data loss, so the data will be created as the same
-         */
-        // HiveDecimal.create will return a decimal value which can fit in DECIMAL(38)
-        HiveDecimal parsedValue = HiveDecimal.create(value);
-        if (parsedValue == null) {
-            if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
-                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
-                        value, columnName, precision));
-            }
-
-            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum precision {} and has been stored as NULL.",
-                    value, columnName, precision);
-
-            if (!isPrecisionOverflowWarningLogged) {
-                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision {} " +
-                                "and have been stored as NULL. Enable TRACE log level for row-level details.",
-                        columnName, precision);
-                isPrecisionOverflowWarningLogged = true;
-            }
-            return null;
+        String decimalOverflowOption = parseDecimalOverflowOption(configuration);
+        // data precision overflow and decimal overflow option is error
+        if (dataPrecision > HiveDecimal.MAX_PRECISION && decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
+            throw new UnsupportedTypeException(String.format("Data size of data %s exceeds the maximum numeric precision %d.",
+                    value, HiveDecimal.MAX_PRECISION));
         }
 
-        // At this point data can fit in precision 38, but still need enforcePrecisionScale to check whether it can fit in scale 18
+        //  data integer digit count overflow and decimal overflow option is error
+        if ((dataPrecision - dataScale > precision - scale) && decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
+            throw new UnsupportedTypeException(String.format("Integer digit count of data %s overflows. GP table column precision is %d, " +
+                    "scale is %d. The max integer digit count is %d", value, precision, scale, precision - scale));
+        }
+
         HiveDecimal hiveDecimal = HiveDecimal.enforcePrecisionScale(
                 parsedValue,
                 precision,
