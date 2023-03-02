@@ -1,20 +1,20 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
 /**
- * Parquet writer server configuration for switching between error out and ignore values when writing decimal values with overflow
+ * Parquet server configuration options for property pxf.parquet.write.decimal.overflow
  */
 public enum ParquetWriteDecimalOverflowOption {
     ERROR("error"),
     IGNORE("ignore");
 
-    private String decimalOverflowOption = "";
+    private String value = "";
 
     private ParquetWriteDecimalOverflowOption(String decimalOverflowOption) {
-        this.decimalOverflowOption = decimalOverflowOption;
+        this.value = decimalOverflowOption;
     }
 
     public String getValue() {
-        return decimalOverflowOption;
+        return value;
     }
 }
 

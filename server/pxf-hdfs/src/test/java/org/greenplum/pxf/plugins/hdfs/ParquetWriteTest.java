@@ -33,6 +33,8 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetWriteDecimalOverflowOption;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -1912,12 +1914,29 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        String value = "123456789.01234567890.123456789012345678";
 
         // write parquet file with numeric values
-        List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
-        Exception exception = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-        assertEquals(String.format("Invalid numeric %s", value), exception.getMessage());
+        String[] values = new String[]{
+                "123456789.01234567890.123456789012345678",
+                "22.234(5)",
+                "333.3#4567",
+                "4444.456*789",
+                "55555.567!8901",
+                "666666.6789&apple0123",
+                "7777777.7890123orange45",
+                "12345678901234567banana890.123456789012345678",
+                "1234567890123456789012345.1234567890123cherry4567812",
+                "22.2peach2"
+        };
+
+        // write parquet file with numeric values
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
+            Exception exception = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+            assertEquals(String.format("Invalid numeric %s", value), exception.getMessage());
+        }
+
+        accessor.closeForWrite();
     }
 
     // Numeric precision not defined, test ignore flag when data precision overflow. Data should be skipped
@@ -2200,9 +2219,9 @@ public class ParquetWriteTest {
             int maxIntegerDigitCount = HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE;
             if (integerDigitCount > maxIntegerDigitCount) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("Integer digit count of data %s overflows. GP table column precision is %d, " +
-                                "scale is %d. The max integer digit count is %d", value, HiveDecimal.SYSTEM_DEFAULT_PRECISION,
-                        HiveDecimal.SYSTEM_DEFAULT_SCALE, maxIntegerDigitCount), e.getMessage());
+                assertEquals(String.format("Integer digit count of data %s overflows. " +
+                                "Your integer digit count is %d. The max integer digit count is %d",
+                        value, integerDigitCount, maxIntegerDigitCount), e.getMessage());
             } else {
                 OneRow rowToWrite = resolver.setFields(record);
                 assertTrue(accessor.writeNextObject(rowToWrite));
@@ -2329,9 +2348,8 @@ public class ParquetWriteTest {
             int maxIntegerDigitCount = precision - scale;
             if (integerDigitCount > maxIntegerDigitCount) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("Integer digit count of data %s overflows. GP table column precision is %d, " +
-                                "scale is %d. The max integer digit count is %d",
-                        value, precision, scale, maxIntegerDigitCount), e.getMessage());
+                assertEquals(String.format("Integer digit count of data %s overflows. " +
+                        "Your integer digit count is %d. The max integer digit count is %d", value, integerDigitCount, maxIntegerDigitCount), e.getMessage());
             } else {
                 OneRow rowToWrite = resolver.setFields(record);
                 assertTrue(accessor.writeNextObject(rowToWrite));
@@ -2412,6 +2430,82 @@ public class ParquetWriteTest {
         assertEquals(new BigDecimal("12345.12345"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
         assertNull(fileReader.read());
         fileReader.close();
+    }
+
+    @Test
+    public void testValidnessOfDecimalOverflowOption() throws Exception {
+        String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_error_flag/";
+        int precision = 38, scale = 18;
+        columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", new Integer[]{precision, scale}));
+
+        configuration.set("pxf.parquet.write.decimal.overflow", "errore");
+        context.setConfiguration(configuration);
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123490");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+
+        String[] values = new String[]{
+                "1234567890123456.1",
+                "1234567890123456.12",
+                "1234567890123456.123",
+                "1234567890123456.1234",
+                "1234567890123456.12345",
+                "123456789012345.1",
+                "123456789012345.12",
+                "123456789012345.123",
+                "123456789012345.1234",
+                "123456789012345.12345",
+        };
+
+        String decimalOverflowOption = "errore";
+        configuration.set("pxf.parquet.write.decimal.overflow", decimalOverflowOption);
+        context.setConfiguration(configuration);
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
+            Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+            assertEquals(String.format("Invalid pxf.parquet.write.decimal.overflow value: %s. Values must be %s or %s",
+                    decimalOverflowOption, ParquetWriteDecimalOverflowOption.ERROR.getValue(), ParquetWriteDecimalOverflowOption.IGNORE.getValue()), e.getMessage());
+        }
+        accessor.closeForWrite();
+
+        decimalOverflowOption = "ERROR";
+        configuration.set("pxf.parquet.write.decimal.overflow", decimalOverflowOption);
+        context.setConfiguration(configuration);
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
+        accessor.closeForWrite();
+
+
+        decimalOverflowOption = " error";
+        configuration.set("pxf.parquet.write.decimal.overflow", decimalOverflowOption);
+        context.setConfiguration(configuration);
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
+            Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+            assertEquals(String.format("Invalid pxf.parquet.write.decimal.overflow value: %s. Values must be %s or %s",
+                    decimalOverflowOption, ParquetWriteDecimalOverflowOption.ERROR.getValue(), ParquetWriteDecimalOverflowOption.IGNORE.getValue()), e.getMessage());
+        }
+        accessor.closeForWrite();
+
+        decimalOverflowOption = "error ";
+        configuration.set("pxf.parquet.write.decimal.overflow", decimalOverflowOption);
+        context.setConfiguration(configuration);
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
+            Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+            assertEquals(String.format("Invalid pxf.parquet.write.decimal.overflow value: %s. Values must be %s or %s",
+                    decimalOverflowOption, ParquetWriteDecimalOverflowOption.ERROR.getValue(), ParquetWriteDecimalOverflowOption.IGNORE.getValue()), e.getMessage());
+        }
+        accessor.closeForWrite();
     }
 
     private MessageType validateFooter(Path parquetFile) throws IOException {
