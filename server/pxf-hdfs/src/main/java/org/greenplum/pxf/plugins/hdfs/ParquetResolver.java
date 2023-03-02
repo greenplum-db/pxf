@@ -46,6 +46,7 @@ import org.greenplum.pxf.plugins.hdfs.parquet.ParquetWriteDecimalOverflowOption;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
@@ -261,22 +262,32 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     }
 
     private byte[] getFixedLenByteArray(String value, Type type) {
-        // From org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
-        DecimalLogicalTypeAnnotation typeAnnotation = (DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
-        
         if (!NumberUtils.isNumber(value)) {
             throw new UnsupportedTypeException(String.format("Invalid numeric %s", value));
         }
 
-        String decimalOverflowOption = parseDecimalOverflowOption(configuration);
-        int dataPrecision = NumberUtils.createBigDecimal(value).precision();
-        // error option is on, precision is not defined in GP table and the data precision >  HiveDecimal.MAX_PRECISION
-        if (dataPrecision > HiveDecimal.MAX_PRECISION && decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
-            throw new UnsupportedTypeException(String.format("Data size of data %s exceeds the maximum numeric precision %d.", value, HiveDecimal.MAX_PRECISION));
-        }
-
+        // From org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
+        DecimalLogicalTypeAnnotation typeAnnotation = (DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
         int precision = Math.min(HiveDecimal.MAX_PRECISION, typeAnnotation.getPrecision());
         int scale = Math.min(HiveDecimal.MAX_SCALE, typeAnnotation.getScale());
+
+        BigDecimal bigDecimal = NumberUtils.createBigDecimal(value);
+        int dataPrecision = bigDecimal.precision();
+        int dataScale = bigDecimal.scale();
+
+        String decimalOverflowOption = parseDecimalOverflowOption(configuration);
+        // data precision overflow and decimal overflow option is error
+        if (dataPrecision > HiveDecimal.MAX_PRECISION && decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
+            throw new UnsupportedTypeException(String.format("Data size of data %s exceeds the maximum numeric precision %d.",
+                    value, HiveDecimal.MAX_PRECISION));
+        }
+
+        //  data integer digit count overflow and decimal overflow option is error
+        if ((dataPrecision - dataScale > precision - scale) && decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
+            throw new UnsupportedTypeException(String.format("Integer digit count of data %s overflows. GP table column precision is %d, " +
+                    "scale is %d. The max integer digit count is %d", value, precision, scale, precision - scale));
+        }
+
         HiveDecimal hiveDecimal = HiveDecimal.enforcePrecisionScale(
                 HiveDecimal.create(value),
                 precision,
