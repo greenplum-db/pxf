@@ -1,12 +1,10 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
-import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +18,6 @@ import java.util.List;
  * Utility methods for converting Postgres types text format into Java objects according to primitiveTypeName
  */
 public class ParquetUtilities {
-
-    public static final String CONFIG_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION = "pxf.parquet.write.decimal.overflow";
     private static final Logger LOG = LoggerFactory.getLogger(ParquetUtilities.class);
     private final PgUtilities pgUtilities;
 
@@ -127,19 +123,5 @@ public class ParquetUtilities {
         } else {
             return "Unexpected state since PXF generated the Parquet schema.";
         }
-    }
-
-    /**
-     * Returns server configuration value for pxf.parquet.write.decimal.overflow.
-     *
-     * @param configuration
-     * @return String value for pxf.parquet.write.decimal.overflow. Must be "error" or "ignore"
-     */
-    public String parseDecimalOverflowOption(Configuration configuration) {
-        String decimalOverflowOption = configuration.get(CONFIG_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION, "error");
-        if (!decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.IGNORE.getValue()) && !decimalOverflowOption.equals(ParquetWriteDecimalOverflowOption.ERROR.getValue())) {
-            throw new UnsupportedTypeException(String.format("Invalid pxf.parquet.write.decimal.overflow value %s. Values must be %s or %s", decimalOverflowOption, ParquetWriteDecimalOverflowOption.ERROR.getValue(), ParquetWriteDecimalOverflowOption.IGNORE.getValue()));
-        }
-        return decimalOverflowOption;
     }
 }
