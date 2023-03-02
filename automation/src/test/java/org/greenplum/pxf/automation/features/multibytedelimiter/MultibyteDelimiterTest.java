@@ -282,6 +282,28 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote_and_escape.runTest");
     }
 
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readBzip2CompressedCsvTwoByteDelimiter() throws Exception {
+        BZip2Codec codec = new BZip2Codec();
+        codec.setConf(hdfs.getConfiguration());
+        char c = 'a';
+
+        for (int i = 0; i < 10; i++, c++) {
+            Table dataTable = getSmallData(StringUtils.repeat(String.valueOf(c), 2), 10);
+            hdfs.writeTableToFile(hdfs.getWorkingDirectory() + "/bzip2/" + c + "_" + fileName + ".bz2",
+                    dataTable, "¤", StandardCharsets.UTF_8, codec);
+        }
+
+        exTable =
+                TableFactory.getPxfReadableCSVTable("pxf_multibyte_twobyte_withbzip2_data", SMALL_DATA_FIELDS,
+                        protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory()) + "/bzip2/", "¤");
+        exTable.setFormat("CUSTOM");
+        exTable.setFormatter("pxfdelimited_import");
+        gpdb.createTableAndVerify(exTable);
+
+        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_bzip2.runTest");
+    }
+
 //    /**
 //     * Read multiple CSV files with headers from HCFS using *:text profile and
 //     * CSV format.
