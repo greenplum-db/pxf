@@ -64,9 +64,7 @@ import org.greenplum.pxf.plugins.hdfs.filter.BPCharOperatorTransformer;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPruner;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetUtilities;
-import org.greenplum.pxf.plugins.hdfs.parquet.ParquetWriteDecimalOverflowOption;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
 import java.io.InputStream;
