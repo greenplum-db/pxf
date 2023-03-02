@@ -5,12 +5,6 @@
 
 Datum multibyte_delim_import(PG_FUNCTION_ARGS);
 
-typedef struct {
-    uint16_t magic;
-    uint16_t flag;
-    uint32_t length;
-} delimiter_header;
-
 static int
 count_of_escape(char* p, char* left_border, char escape)
 {
