@@ -202,8 +202,6 @@ new_format_delimiter_state(FunctionCallInfo fcinfo)
     get_config(fcinfo, fmt_state);
 
     fmt_state->nColumns = nColumns;
-    fmt_state->length = 0;
-    fmt_state->current_pos = 0;
     return fmt_state;
 }
 

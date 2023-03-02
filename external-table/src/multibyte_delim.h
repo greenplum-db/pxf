@@ -39,14 +39,8 @@ typedef struct {
     char*               eol;
     char*               quote;
     char*               escape;
-    char*               quote_delimiter;//these two only for searching for border, not in the config file
+    char*               quote_delimiter; // these two only for searching for border, not in the config file
     char*               quote_eol;
-    uint32_t            length;
-    /*
-      when handling multiple line with one header, one line one call,
-      so we need remember the pos of next line in header's length next time.
-    */
-    uint32_t            current_pos;
     int                 nColumns;
     DelimitedSituation  situation;
 } format_delimiter_state;
