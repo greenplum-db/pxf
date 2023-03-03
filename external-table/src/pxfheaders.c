@@ -48,7 +48,7 @@ static bool needToIterateTargetList(List *targetList, int *varNumbers);
 static Node *getTargetListEntryExpression(ListCell *lc1);
 static int  getNumSimpleVars(ProjectionInfo *projInfo);
 #if PG_VERSION_NUM < 120000
-static char *parse_formatter_name(char *fmtstr, char **formatter_name);
+static char *parse_formatter_name(char *fmtstr);
 #endif
 #if PG_VERSION_NUM < 90400
 /*
@@ -629,29 +629,14 @@ add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri)
  */
 #if PG_VERSION_NUM < 120000
 static char *
-parse_formatter_name(char *fmtstr, char **formatter_name)
+parse_formatter_name(char *fmtstr)
 {
-
-    bool		formatter_found = false;
-    char        *format_options = NULL;
     char        *result = NULL;
+
     if ((result = strstr(fmtstr, "pxfdelimited_import")) != NULL)
     {
-        *formatter_name = DelimitedFormatterName;
-        formatter_found = true;
-
-        // remove the formatter and multibyte_delim_import aspects of the string
-        //"multibyte_delim_import' delimiter ','"
-        // copy only last part
-        // format_options = "delimiter ','"
-
+        return DelimitedFormatterName;
     }
-    else
-    {
-        return fmtstr;
-    }
-
-    return format_options;
 }
 #endif
 
