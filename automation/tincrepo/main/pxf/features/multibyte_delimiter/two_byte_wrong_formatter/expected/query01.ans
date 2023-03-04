@@ -1,0 +1,8 @@
+-- start_ignore
+-- m/DETAIL/
+-- s/DETAIL/CONTEXT/
+-- end_ignore
+-- @description query01 for PXF Multibyte delimiter, 2-byte delim cases with wrong formatter provided
+SELECT * from pxf_multibyte_twobyte_wrongformatter_data ORDER BY n1;
+ERROR:  unpack_delimited: Column mismatch, index:1 < nColumns:22, less columns than expected
+CONTEXT:  External table pxf_multibyte_twobyte_wrongformatter_data

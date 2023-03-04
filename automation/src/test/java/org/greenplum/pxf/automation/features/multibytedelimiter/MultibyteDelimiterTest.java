@@ -149,6 +149,43 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readCsvTwoByteDelimiterDelimNotProvided() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_twobyte_nodelim_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setDelimiter(null);
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.two_byte_no_delim.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readCsvTwoByteDelimiterWrongFormatter() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_twobyte_wrongformatter_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setDelimiter("¤");
+        exTable.setDelimiter("pxfwritable_import");
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.two_byte_wrong_formatter.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readCsvThreeByteDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_threebyte_data");
