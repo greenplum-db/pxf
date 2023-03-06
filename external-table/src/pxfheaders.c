@@ -36,7 +36,8 @@
 static void add_alignment_size_httpheader(CHURL_HEADERS headers);
 static void add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel);
 static void add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri);
-static char *get_format_name(char fmtcode);
+static char *get_format_name(ExtTableEntry *exttbl);
+static bool isFormatterPxfWritable(ExtTableEntry *exttbl);
 static void add_projection_desc_httpheaders(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
 static bool add_attnums_from_targetList(Node *node, List *attnums);
 static void add_projection_index_header(CHURL_HEADERS pVoid, StringInfoData data, int attno, char number[32]);
@@ -89,8 +90,8 @@ build_http_headers(PxfInputData *input)
 		ListCell   *option;
 		List	   *copyFmtOpts = NIL;
 
-		/* pxf treats CSV as TEXT */
-		char *format = get_format_name(exttbl->fmtcode);
+		/* pxf treats everything but pxfwritable_[import|export] as TEXT (even CSV) */
+		char *format = get_format_name(exttbl);
 
 		churl_headers_append(headers, "X-GP-FORMAT", format);
 
@@ -617,30 +618,74 @@ add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri)
 }
 
 /*
- * Converts a character code for the format name into a string of format definition
+ * Converts a character code for the format name and the formatter name into a string
+ * that represents PXF transport format (TEXT or GPDBWritable)
  */
 static char *
-get_format_name(char fmtcode)
+get_format_name(ExtTableEntry *exttbl)
 {
 	char	   *formatName = NULL;
 
-	if (fmttype_is_text(fmtcode) || fmttype_is_csv(fmtcode))
+	if (fmttype_is_text(exttbl->fmtcode) || fmttype_is_csv(exttbl->fmtcode))
 	{
 		formatName = TextFormatName;
 	}
-	else if (fmttype_is_custom(fmtcode))
+	else if (fmttype_is_custom(exttbl->fmtcode))
 	{
-		formatName = GpdbWritableFormatName;
+		// need to determine if the formatter is pxfwritable_import or pxfwritable_export which requires
+		// us to send to PXF the value of on-the-wire format as "GPDBWritable"
+		if (isFormatterPxfWritable(exttbl)) {
+			formatName = GpdbWritableFormatName;
+		}
+		else
+		{
+			// treat other custom formatters (such as 'fixed_in') as TEXT for PXF transport
+			formatName = TextFormatName;
+		}
 	}
 	else
 	{
 		ereport(ERROR,
 				(errcode(ERRCODE_INTERNAL_ERROR),
 				 errmsg("unable to get format name for format code: %c",
-						fmtcode)));
+						exttbl->fmtcode)));
 	}
 
 	return formatName;
+}
+
+/*
+ * Checks if the custom formatter specified for the table starts with pxfwritable_ prefix
+ */
+static bool
+isFormatterPxfWritable(ExtTableEntry *exttbl)
+{
+	char *formatterNameSearchString = NULL;
+
+#if PG_VERSION_NUM >= 120000
+	// for GP7 the custom formatter name is among all other options of the corresponding foreign table
+	ListCell   *option;
+	foreach (option, exttbl->options) {
+		DefElem *defel = (DefElem *) lfirst(option);
+		if (strcmp(defel->defname, "formatter") == 0) {
+			formatterNameSearchString = defGetString(defel);
+			break;
+		}
+	}
+#else
+	// we only have a serialized string of formatter options, parsing it requires porting a lot of code from GP6
+	// instead, we will only search for occurrence of the "pxfwritable_" prefix in the whole string
+	formatterNameSearchString = exttbl->fmtopts;
+#endif
+
+	if (!formatterNameSearchString || !strlen(formatterNameSearchString))
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_INTERNAL_ERROR),
+						errmsg("cannot determine the name of a custom formatter")));
+	}
+
+	return strstr(formatterNameSearchString, PXFWritableFormatterPrefix) != NULL;
 }
 
 /*
