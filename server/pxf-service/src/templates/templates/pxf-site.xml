@@ -88,9 +88,12 @@
         <name>pxf.parquet.write.decimal.overflow</name>
         <value>error</value>
         <description>
-            Specifies whether the PXF Parquet writer should error out or ignore values when writing decimal values with overflow.
-            If set to error, an error will be thrown when seeing an overflowing value, and the writing is incomplete.
-            If set to ignore, the overflowing value will be skipped, and writing will success but some data are missing.
+            Specifies whether the PXF Parquet writer should error out or ignore numeric values that exceed maximum column precision.
+            If set to error, an error will be reported when a numeric value exceeds maximum column precision and the transaction will fail,
+            potentially leaving incomplete dataset in the external system.
+            If set to ignore, NULL values will be stored for numeric values that exceeds maximum column precision,
+            the transaction will succeed, but the resulting dataset in the external system will have NULL values
+            instead of the original ones where modifications took place.
         </description>
     </property>
 
