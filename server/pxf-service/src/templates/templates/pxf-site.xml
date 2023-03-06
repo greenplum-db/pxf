@@ -88,7 +88,7 @@
         <name>pxf.parquet.write.decimal.overflow</name>
         <value>error</value>
         <description>
-            Specifies whether the PXF Parquet writer should error out or ignore numeric values that exceed maximum column precision.
+            Specifies whether the PXF Parquet profiles should error out or ignore (convert to null) numeric values that exceed maximum column precision.
             If set to error, an error will be reported when a numeric value exceeds maximum column precision and the transaction will fail,
             potentially leaving incomplete dataset in the external system.
             If set to ignore, NULL values will be stored for numeric values that exceeds maximum column precision,
