@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.io.api.Binary;
@@ -45,7 +46,6 @@ import org.greenplum.pxf.plugins.hdfs.parquet.ParquetUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
@@ -74,17 +74,13 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private SimpleGroupFactory groupFactory;
     private List<ColumnDescriptor> columnDescriptors;
 
-    private boolean isDecimalOverflowOptionError = false;
-    private boolean isDecimalOverflowOptionRound = false;
-    private boolean isPrecisionOverflowWarningLogged = false;
-    private boolean isIntegerDigitCountOverflowWarningLogged = false;
-    private boolean isScaleOverflowWarningLogged = false;
+    private boolean isDecimalOverflowOptionError;
 
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
-        parseDecimalOverflowOption(configuration);
+        isDecimalOverflowOptionError = parseDecimalOverflowOption(configuration).equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR);
     }
 
     /**
@@ -278,22 +274,33 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         int precision = Math.min(HiveDecimal.MAX_PRECISION, typeAnnotation.getPrecision());
         int scale = Math.min(HiveDecimal.MAX_SCALE, typeAnnotation.getScale());
 
-        String decimalOverflowOption = parseDecimalOverflowOption(configuration);
+        // It will return a decimal value which can fit in DECIMAL(precision)
         HiveDecimal parsedValue = HiveDecimal.create(value);
 
-        // if data precision overflow, HiveDecimal.create(value) will round off the value
-        // so that it can fit into the maximum supported precision
-        if (!parsedValue.toString().equals(new BigDecimal(value).stripTrailingZeros().toString())) {
-            if (decimalOverflowOption.equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR)) {
-                throw new UnsupportedTypeException(String.format("Data %s is a NUMERIC value with undefined precision." +
-                                "The data size exceeds the maximum supported precision %d. Query failed.",
+        // When this column is defined as NUMERIC, HiveDecimal.create has different behaviors:
+        // (1) When the data integer digit count is greater than the precision defined above,
+        // HiveDecimal.create will return a null value. To make the behavior consistent with Hive's behavior
+        // when storing on a Parquet-backed table, we store the value as null.
+        // (2) When data integer digit count is not greater than the precision defined above,
+        // and the overall data precision is greater than the precision defined above,
+        // HiveDecimal.create will return a rounded-off value to fit in the Hive maximum supported precision.
+        // (3) When data integer digit count is not greater than the precision defined above,
+        // and the overall data precision is not greater than the precision defined above,
+        // HiveDecimal.create will return the same decimal value as provided
+        if (parsedValue == null) {
+            if (isDecimalOverflowOptionError) {
+                throw new UnsupportedTypeException(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
+                                "The data integer digit count exceeds the maximum supported precision %d. Query failed.",
                         value, HiveDecimal.MAX_PRECISION));
             }
-            LOG.warn(String.format("Data %s is a NUMERIC value with undefined precision." +
-                            "The data size exceeds the maximum supported precision %d. Query continues.",
+            LOG.warn(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
+                            "The data integer digit count exceeds the maximum supported precision %d. " +
+                            "Data will be stored as NULL.",
                     value, HiveDecimal.MAX_PRECISION));
+            return null;
         }
 
+        // Enforce the DECIMAL(precision) into DECIMAL(precision, scale)
         HiveDecimal hiveDecimal = HiveDecimal.enforcePrecisionScale(
                 parsedValue,
                 precision,
@@ -310,23 +317,18 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         So it cannot fit in DECIMAL(38,18) and Null is returned.
          */
         if (hiveDecimal == null) {
-            // When integer digit count is greater than maximum supported integer digit count (precision - scale),
+            // When data integer digit count is greater than the maximum supported integer digit count (precision - scale),
             // enforcePrecisionScale will return null, it means we cannot store the value in Parquet because we have
-            // exceeded the integer digit count. To make the behavior consistent with Hive's behavior
+            // exceeded the maximum integer digit count. To make the behavior consistent with Hive's behavior
             // when storing on a Parquet-backed table, we store the value as null.
-            if (decimalOverflowOption.equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR)) {
+            if (isDecimalOverflowOptionError) {
                 throw new UnsupportedTypeException(String.format("Integer digit count of data %s exceeds " +
                         "the maximum supported integer digit count %d. Query failed.", value, precision - scale));
             }
             LOG.warn(String.format("Integer digit count of data %s exceeds " +
-                    "the maximum supported integer digit count %d. Data will be stored as NULL. Query continues.", value, precision - scale));
+                            "the maximum supported integer digit count %d. Data will be stored as NULL.",
+                    value, precision - scale));
             return null;
-        }
-
-        if (hiveDecimal.toString().equals(value)) {
-            // When scale is greater than maximum supported scale, value will be stored as a rounded-off value
-            LOG.warn(String.format("Scale of data %s exceeds the maximum supported scale %d. " +
-                    "Data will be stored as rounded-off value. Query continues.", value, scale));
         }
 
         byte[] decimalBytes = hiveDecimal.bigIntegerBytesScaled(scale);
@@ -417,11 +419,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      * @return String value for pxf.parquet.write.decimal.overflow. Must be "error" or "ignore"
      */
     public String parseDecimalOverflowOption(Configuration configuration) {
-        String decimalOverflowOption = configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, "error").toLowerCase();
-        if (!decimalOverflowOption.equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE) && !decimalOverflowOption.equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR)) {
-            throw new UnsupportedTypeException(String.format("Invalid pxf.parquet.write.decimal.overflow value: %s. Values must be %s or %s",
-                    decimalOverflowOption, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR));
+        String decimalOverflowOption = configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, "error");
+        if (StringUtils.equalsIgnoreCase(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE, decimalOverflowOption)) {
+            return PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE;
         }
-        return decimalOverflowOption;
+        return PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR;
     }
 }
