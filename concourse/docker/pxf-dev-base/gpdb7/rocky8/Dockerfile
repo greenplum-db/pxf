@@ -2,6 +2,13 @@ ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-rocky8-test:latest
 
 FROM ${BASE_IMAGE}
 
+ARG GO_VERSION
+
+# install Go utilities
+RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
+    && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
+    && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tgz && rm go.tgz
+
 # add minio software
 RUN useradd -s /sbin/nologin -d /opt/minio minio \
     && mkdir -p /opt/minio/bin \

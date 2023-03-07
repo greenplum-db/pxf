@@ -7,7 +7,7 @@ ARG GO_VERSION
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go.tgz && rm go.tgz
+    && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tgz && rm go.tgz
 
 # install dependencies that are missing on the base images
 # install a specific version of perl for tinc

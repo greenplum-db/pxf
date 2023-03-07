@@ -7,7 +7,7 @@ ARG GO_VERSION
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go.tgz && rm go.tgz
+    && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tgz && rm go.tgz
 
 # add Java 11
 RUN wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz \

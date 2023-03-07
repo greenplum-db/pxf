@@ -2,6 +2,13 @@ ARG BASE_IMAGE=gcr.io/data-gpdb-private-images/gpdb6-rhel8-test:latest
 
 FROM ${BASE_IMAGE}
 
+ARG GO_VERSION
+
+# install Go utilities
+RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
+    && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
+    && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tgz && rm go.tgz
+
 # add Java 11
 RUN wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz \
     && mkdir -p /usr/lib/jvm \
