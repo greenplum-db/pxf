@@ -2283,6 +2283,131 @@ public class ParquetWriteTest {
         writeNumericValues(values, configurationOption, columnName, precision, scale);
     }
 
+    // Test data scale overflow.  Data should be rounded off
+    @Test
+    public void testWriteNumericWithPrecisionScaleOverflowWithRoundFlag() throws Exception {
+        String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_ignore_flag/";
+        int precision = 20, scale = 5;
+        columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", new Integer[]{precision, scale}));
+
+        String decimalOverflowOption = "round";
+        configuration.set("pxf.parquet.write.decimal.overflow", decimalOverflowOption);
+        context.setConfiguration(configuration);
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123490");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+
+        String[] values = new String[]{
+                "12345.111111",
+                "12345.222222",
+                "12345.333333",
+                "12345.444444",
+                "12345.555555",
+                "12345.1",
+                "12345.12",
+                "12345.123",
+                "12345.1234",
+                "12345.12345"
+        };
+
+        // write parquet file with numeric values
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
+            OneRow rowToWrite = resolver.setFields(record);
+            assertTrue(accessor.writeNextObject(rowToWrite));
+        }
+
+        accessor.closeForWrite();
+
+        // Validate write
+        Path expectedFile = new Path(HcfsType.FILE.getUriForWrite(context) + ".snappy.parquet");
+        assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
+
+        MessageType schema = validateFooter(expectedFile);
+
+        ParquetReader<Group> fileReader = ParquetReader.builder(new GroupReadSupport(), expectedFile)
+                .withConf(configuration)
+                .build();
+
+        // Physical type is FIXED_LEN_BYTE_ARRAY
+        assertNotNull(schema.getColumns());
+        assertEquals(1, schema.getColumns().size());
+        Type type = schema.getType(0);
+        assertEquals(PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, type.asPrimitiveType().getPrimitiveTypeName());
+        assertTrue(type.getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation);
+        assertEquals(precision, ((DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation()).getPrecision());
+        assertEquals(scale, ((DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation()).getScale());
+
+        assertEquals(new BigDecimal("12345.11111"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertEquals(new BigDecimal("12345.22222"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertEquals(new BigDecimal("12345.33333"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertEquals(new BigDecimal("12345.44444"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertEquals(new BigDecimal("12345.55556"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertEquals(new BigDecimal("12345.10000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertEquals(new BigDecimal("12345.12000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertEquals(new BigDecimal("12345.12300"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertEquals(new BigDecimal("12345.12340"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertEquals(new BigDecimal("12345.12345"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), scale));
+        assertNull(fileReader.read());
+        fileReader.close();
+    }
+
+    // Test data scale overflow.  Data should be rounded off
+    @Test
+    public void testWriteNumericWithPrecisionScaleOverflowWithErrorFlag() throws Exception {
+        String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_ignore_flag/";
+        int precision = 20, scale = 5;
+        columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", new Integer[]{precision, scale}));
+
+        String decimalOverflowOption = "error";
+        configuration.set("pxf.parquet.write.decimal.overflow", decimalOverflowOption);
+        context.setConfiguration(configuration);
+        context.setDataSource(path);
+        context.setTransactionId("XID-XYZ-123490");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        assertTrue(accessor.openForWrite());
+
+        String[] values = new String[]{
+                "12345.111111",
+                "12345.222222",
+                "12345.333333",
+                "12345.444444",
+                "12345.555555",
+                "12345.1",
+                "12345.12",
+                "12345.123",
+                "12345.1234",
+                "12345.12345"
+        };
+
+        // write parquet file with numeric values
+        for (String value : values) {
+            BigDecimal bigDecimal = new BigDecimal(value);
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
+            if (bigDecimal.scale() > scale) {
+                Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+                assertEquals(String.format("The scale of the numeric data %s is %d, which exceeds the maximum supported scale %d. Data accuracy is lost. Query failed.",
+                        value, bigDecimal.scale(), scale), e.getMessage());
+            } else {
+                OneRow rowToWrite = resolver.setFields(record);
+                assertTrue(accessor.writeNextObject(rowToWrite));
+            }
+        }
+
+        accessor.closeForWrite();
+    }
+
     private MessageType validateFooter(Path parquetFile) throws IOException {
         return validateFooter(parquetFile, 1, 10);
     }
