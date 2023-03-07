@@ -2009,14 +2009,14 @@ public class ParquetWriteTest {
             if (bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.MAX_PRECISION) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
                 assertEquals(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
-                                "The data integer digit count exceeds the maximum supported precision %d. Query failed.",
-                        value, HiveDecimal.MAX_PRECISION), e.getMessage());
+                                "The data integer digit count is %d, which exceeds the maximum supported precision %d. Query failed.",
+                        value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.MAX_PRECISION), e.getMessage());
             } else if (bigDecimal.precision() > HiveDecimal.MAX_PRECISION &&
                     bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("Integer digit count of data %s exceeds " +
-                        "the maximum supported integer digit count %d. Query failed.",
-                        value, HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE), e.getMessage());
+                assertEquals(String.format("Integer digit count of data %s is %d, which exceeds " +
+                                "the maximum supported integer digit count %d. Query failed.",
+                        value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE), e.getMessage());
             } else {
                 OneRow rowToWrite = resolver.setFields(record);
                 assertTrue(accessor.writeNextObject(rowToWrite));
@@ -2185,9 +2185,9 @@ public class ParquetWriteTest {
             int maxIntegerDigitCount = HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE;
             if (integerDigitCount > maxIntegerDigitCount) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("Integer digit count of data %s exceeds " +
+                assertEquals(String.format("Integer digit count of data %s is %d, which exceeds " +
                                 "the maximum supported integer digit count %d. Query failed.",
-                        value, maxIntegerDigitCount), e.getMessage());
+                        value, integerDigitCount, maxIntegerDigitCount), e.getMessage());
             } else {
                 OneRow rowToWrite = resolver.setFields(record);
                 assertTrue(accessor.writeNextObject(rowToWrite));
@@ -2314,8 +2314,9 @@ public class ParquetWriteTest {
             int maxIntegerDigitCount = precision - scale;
             if (integerDigitCount > maxIntegerDigitCount) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("Integer digit count of data %s exceeds " +
-                        "the maximum supported integer digit count %d. Query failed.", value, maxIntegerDigitCount), e.getMessage());
+                assertEquals(String.format("Integer digit count of data %s is %d, which exceeds " +
+                                "the maximum supported integer digit count %d. Query failed.",
+                        value, bigDecimal.precision() - bigDecimal.scale(), precision - scale), e.getMessage());
             } else {
                 OneRow rowToWrite = resolver.setFields(record);
                 assertTrue(accessor.writeNextObject(rowToWrite));
@@ -2423,11 +2424,11 @@ public class ParquetWriteTest {
                 "1234567890123456789012345678901234567890.123",
                 "1234567890123456789012345678901234567890.1234",
                 "1234567890123456789012345678901234567890.12345",
-                "1234567890.123451",
-                "1234567890.1234512",
-                "1234567890.12345123",
-                "1234567890.123451234",
-                "1234567890.1234512345",
+                "12345678901234567890123.123451",
+                "12345678901234567890123.1234512",
+                "12345678901234567890123.12345123",
+                "12345678901234567890123.123451234",
+                "12345678901234567890123.1234512345",
         };
 
         String decimalOverflowOption = "errore";
@@ -2439,8 +2440,14 @@ public class ParquetWriteTest {
             if (bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.MAX_PRECISION) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
                 assertEquals(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
-                                "The data integer digit count exceeds the maximum supported precision %d. Query failed.",
-                        value, HiveDecimal.MAX_PRECISION), e.getMessage());
+                                "The data integer digit count is %d, which exceeds the maximum supported precision %d. Query failed.",
+                        value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.MAX_PRECISION), e.getMessage());
+            } else if (bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE) {
+                Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+                assertEquals(String.format("Integer digit count of data %s is %d, which exceeds " +
+                                        "the maximum supported integer digit count %d. Query failed.",
+                                value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE),
+                        e.getMessage());
             } else {
                 resolver.setFields(record);
             }
@@ -2461,6 +2468,33 @@ public class ParquetWriteTest {
         }
         accessor.closeForWrite();
 
+        decimalOverflowOption = "round";
+        configuration.set("pxf.parquet.write.decimal.overflow", decimalOverflowOption);
+        context.setConfiguration(configuration);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
+            BigDecimal bigDecimal = new BigDecimal(value);
+            if (bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.MAX_PRECISION) {
+                Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+                assertEquals(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
+                                "The data integer digit count is %d, which exceeds the maximum supported precision %d. Query failed.",
+                        value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.MAX_PRECISION), e.getMessage());
+            } else if (bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE) {
+                Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+                assertEquals(String.format("Integer digit count of data %s is %d, which exceeds " +
+                                        "the maximum supported integer digit count %d. Query failed.",
+                                value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE),
+                        e.getMessage());
+            } else {
+                resolver.setFields(record);
+            }
+        }
+        accessor.closeForWrite();
+
 
         decimalOverflowOption = "true";
         configuration.set("pxf.parquet.write.decimal.overflow", decimalOverflowOption);
@@ -2475,8 +2509,14 @@ public class ParquetWriteTest {
             if (bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.MAX_PRECISION) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
                 assertEquals(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
-                                "The data integer digit count exceeds the maximum supported precision %d. Query failed.",
-                        value, HiveDecimal.MAX_PRECISION), e.getMessage());
+                                "The data integer digit count is %d, which exceeds the maximum supported precision %d. Query failed.",
+                        value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.MAX_PRECISION), e.getMessage());
+            } else if (bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE) {
+                Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+                assertEquals(String.format("Integer digit count of data %s is %d, which exceeds " +
+                                        "the maximum supported integer digit count %d. Query failed.",
+                                value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE),
+                        e.getMessage());
             } else {
                 resolver.setFields(record);
             }
@@ -2496,8 +2536,14 @@ public class ParquetWriteTest {
             if (bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.MAX_PRECISION) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
                 assertEquals(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
-                                "The data integer digit count exceeds the maximum supported precision %d. Query failed.",
-                        value, HiveDecimal.MAX_PRECISION), e.getMessage());
+                                "The data integer digit count is %d, which exceeds the maximum supported precision %d. Query failed.",
+                        value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.MAX_PRECISION), e.getMessage());
+            } else if (bigDecimal.precision() - bigDecimal.scale() > HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE) {
+                Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
+                assertEquals(String.format("Integer digit count of data %s is %d, which exceeds " +
+                                        "the maximum supported integer digit count %d. Query failed.",
+                                value, bigDecimal.precision() - bigDecimal.scale(), HiveDecimal.SYSTEM_DEFAULT_PRECISION - HiveDecimal.SYSTEM_DEFAULT_SCALE),
+                        e.getMessage());
             } else {
                 resolver.setFields(record);
             }
