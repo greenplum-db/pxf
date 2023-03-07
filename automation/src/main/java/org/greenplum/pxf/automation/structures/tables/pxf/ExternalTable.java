@@ -4,7 +4,10 @@ import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represent GPDB -> PXF external table.
@@ -28,6 +31,8 @@ public abstract class ExternalTable extends Table {
     private String format;
 
     private String formatter;
+
+    private List<String> formatterOptions = new ArrayList<>();
 
     private String delimiter;
 
@@ -183,7 +188,12 @@ public abstract class ExternalTable extends Table {
         }
 
         if (getFormatter() != null) {
-            createStatment += " (formatter='" + getFormatter() + "')";
+            createStatment += " (formatter='" + getFormatter() + "'";
+            if (formatterOptions.size() > 0) {
+                createStatment += ", ";
+                createStatment += formatterOptions.stream().collect(Collectors.joining(", "));
+            }
+            createStatment += ")";
         }
 
         boolean hasDelimiterOrEscapeOrNewLine =
@@ -415,5 +425,15 @@ public abstract class ExternalTable extends Table {
 
     public void setExternalDataSchema(String externalDataSchema) {
         this.externalDataSchema = externalDataSchema;
+    }
+
+    public void addFormatterOption(String formatterOption) {
+        this.formatterOptions.add(formatterOption);
+    }
+
+    public void setFormatterOptions(String[] formatterOptions) {
+        for (String option : formatterOptions) {
+            addFormatterOption(option);
+        }
     }
 }
