@@ -86,14 +86,15 @@
 
     <property>
         <name>pxf.parquet.write.decimal.overflow</name>
-        <value>error</value>
+        <value>round</value>
         <description>
-            Specifies whether the PXF Parquet profiles should error out or ignore (convert to null) numeric values that exceed maximum column precision.
+            Specifies whether the PXF Parquet profiles should error out, or log out rounded values, or ignore numeric values (convert to null) that exceed maximum column precision.
             If set to error, an error will be reported when a numeric value exceeds maximum column precision and the transaction will fail,
             potentially leaving incomplete dataset in the external system.
-            If set to ignore, NULL values will be stored for numeric values that exceeds maximum column precision,
-            the transaction will succeed, but the resulting dataset in the external system will have NULL values
-            instead of the original ones where modifications took place.
+            If set to round, a warning will be reported when a precision overflowed value can be rounded and fit in the provided precision;
+            or an error will be reported if it cannot been rounded, then transaction will fail and potentially leave incomplete dataset in the external system.
+            If set to ignore, no warnings about rounded values, and NULL values will be stored for numeric values that exceeds maximum column precision,
+            the transaction will succeed, but the resulting dataset in the external system will have NULL values instead of the original ones where modifications took place.
         </description>
     </property>
 
