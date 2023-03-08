@@ -88,13 +88,13 @@
         <name>pxf.parquet.write.decimal.overflow</name>
         <value>round</value>
         <description>
-            Specifies whether the PXF Parquet profiles should error out, or log out rounded values, or ignore numeric values (convert to null) that exceed maximum column precision.
+            Specifies whether the PXF Parquet profiles should error out, or log a warning about values have been rounded, or ignore numeric values (convert to null) that exceed maximum column precision 38.
             If set to error, an error will be reported when a numeric value exceeds maximum column precision and the transaction will fail,
-            potentially leaving incomplete dataset in the external system.
-            If set to round, a warning will be reported when a precision overflowed value can be rounded and fit in the provided precision;
-            or an error will be reported if it cannot been rounded, then transaction will fail and potentially leave incomplete dataset in the external system.
-            If set to ignore, no warnings about rounded values, and NULL values will be stored for numeric values that exceeds maximum column precision,
-            the transaction will succeed, but the resulting dataset in the external system will have NULL values instead of the original ones where modifications took place.
+            potentially leaving an incomplete dataset in the external system.
+            If set to round, a warning will be reported when a value with precision overflow can be rounded and fit in the provided precision;
+            or an error will be reported if data cannot been rounded, then transaction will fail and potentially leave an incomplete dataset in the external system.
+            If set to ignore, there will be no warnings about rounded values, and NULL values will be stored for numeric values that exceeds maximum column precision.
+            The transaction will succeed, but the resulting dataset in the external system will have NULL values instead of the original ones where modifications took place.
         </description>
     </property>
 
