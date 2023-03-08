@@ -75,7 +75,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
     private boolean isDecimalOverflowOptionError;
     private boolean isDecimalOverflowOptionRound;
+    private boolean isPrecisionOverflowWarningLogged;
+    private boolean isIntegerDigitCountOverflowWarningLogged;
     private boolean isScaleOverflowWarningLogged;
+
 
     @Override
     public void afterPropertiesSet() {
@@ -83,7 +86,10 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         columnDescriptors = context.getTupleDescription();
         isDecimalOverflowOptionError = parseDecimalOverflowOption(configuration).equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR);
         isDecimalOverflowOptionRound = parseDecimalOverflowOption(configuration).equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND);
+        isPrecisionOverflowWarningLogged = false;
+        isIntegerDigitCountOverflowWarningLogged = false;
         isScaleOverflowWarningLogged = false;
+
     }
 
     /**
@@ -281,38 +287,45 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         When this column is defined as NUMERIC, the column type will be treated as DECIMAL(38,18),
         and HiveDecimal.create has different behaviors for different types of overflow:
 
-        (1) When the data integer digit count is greater than the precision defined above,
+        (1) When the data integer digit count is greater than 38,
         HiveDecimal.create will return a null value. To make the behavior consistent with Hive's behavior
         when storing on a Parquet-backed table, we store the value as null.
         For example, the integer digit count of 1234567890123456789012345678901234567890.123 is 40,
         which is greater than 38. HiveDecimal.create returns null.
 
-        (2) When data integer digit count is not greater than the precision defined above,
-        and the overall data precision is greater than the precision defined above,
-        HiveDecimal.create will return a rounded-off value to fit in the Hive maximum supported precision.
+        (2) When data integer digit count is not greater than 38,
+        and the overall data precision is greater than 38,
+        HiveDecimal.create will return a rounded-off value to fit in the Hive maximum supported precision 38.
         For example, the integer digit count of 1234567890123456789012345.12345678901234567890 is 25 which is less than 38,
         but its overall precision is 45 which is greater than 38.
         Then data will be created as a rounded value 1234567890123456789012345.1234567890123
 
-        (3) When data integer digit count is not greater than the precision defined above,
-        and the overall data precision is not greater than the precision defined above,
+        (3) When data integer digit count is not greater than 38,
+        and the overall data precision is not greater than 38,
         HiveDecimal.create will return the same decimal value as provided.
         For example, 123456.123456 can fit in DECIMAL(38,18) without and data loss, so the data will be created as the same
          */
-        // HiveDecimal.create will return a decimal value which can fit in DECIMAL(precision)
+        // HiveDecimal.create will return a decimal value which can fit in DECIMAL(38)
         HiveDecimal parsedValue = HiveDecimal.create(value);
 
         if (parsedValue == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
-                throw new UnsupportedTypeException(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
+                throw new UnsupportedTypeException(String.format("Data %s is in a column defined as NUMERIC with undefined precision. " +
                                 "The data integer digit count exceeds the maximum supported precision %d. Query failed.",
                         value, HiveDecimal.MAX_PRECISION));
             }
 
-            LOG.warn(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
+            LOG.trace(String.format("Data %s is in a column defined as NUMERIC with undefined precision. " +
                             "The data integer digit count exceeds the maximum supported precision %d. " +
                             "Data will be stored as NULL.",
                     value, HiveDecimal.MAX_PRECISION));
+
+            if (!isPrecisionOverflowWarningLogged) {
+                LOG.warn("There are some uncleaned data in column defined as NUMERIC with undefined precision. " +
+                        "The integer digit counts of these data exceed the maximum supported precision. " +
+                        "Data will be stored as NULL.");
+                isPrecisionOverflowWarningLogged = true;
+            }
             return null;
         }
 
@@ -323,9 +336,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 scale);
 
         /*
-        At this point data can fit in precision 38, but still need enforcePrecisionScale to check whether it can fit in scale 18.
-
-        When data integer digit count is greater than the maximum supported integer digit count (precision - scale),
+        When data integer digit count is greater than the maximum supported integer digit count 20 (precision - scale),
         enforcePrecisionScale will return null, it means we cannot store the value in Parquet because we have
         exceeded the maximum integer digit count. To make the behavior consistent with Hive's behavior
         when storing on a Parquet-backed table, we store the value as null.
@@ -341,14 +352,21 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                         value, precision - scale));
             }
 
-            LOG.warn(String.format("Integer digit count of data %s exceeds " +
+            LOG.trace(String.format("Integer digit count of data %s exceeds " +
                             "the maximum supported integer digit count %d. Data will be stored as NULL.",
                     value, precision - scale));
+
+            if (!isIntegerDigitCountOverflowWarningLogged) {
+                LOG.warn("There are some uncleaned data in column defined as NUMERIC with undefined precision. " +
+                        " Integer digit counts of these data exceed the maximum supported integer digit count. " +
+                        "Data will be stored as NULL.");
+                isIntegerDigitCountOverflowWarningLogged = true;
+            }
             return null;
         }
 
         BigDecimal accurateDecimal = new BigDecimal(value);
-        // At this point data may be rounded off
+        // At this point data can fit in DECIMAL(38,18), but may have been rounded off
         if ((isDecimalOverflowOptionError || isDecimalOverflowOptionRound) && accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
             if (isDecimalOverflowOptionError) {
                 throw new UnsupportedTypeException(String.format("The scale of the numeric data %s is %d, which exceeds the maximum supported scale %d. Data accuracy is lost. Query failed.",
@@ -359,7 +377,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     value, accurateDecimal.scale(), scale));
 
             if (!isScaleOverflowWarningLogged) {
-                LOG.warn("Scale overflowed values are rounded off");
+                LOG.warn("There are some uncleaned data in column defined as NUMERIC with undefined precision. " +
+                        "Scales of these data exceed the maximum supported scale. " +
+                        "Data will be rounded off");
                 isScaleOverflowWarningLogged = true;
             }
         }
