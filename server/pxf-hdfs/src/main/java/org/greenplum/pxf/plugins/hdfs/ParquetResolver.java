@@ -77,6 +77,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
     private boolean isDecimalOverflowOptionError;
     private boolean isDecimalOverflowOptionRound;
+    private boolean isScaleOverflowWarningLogged;
 
 
     @Override
@@ -85,6 +86,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         columnDescriptors = context.getTupleDescription();
         isDecimalOverflowOptionError = parseDecimalOverflowOption(configuration).equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR);
         isDecimalOverflowOptionRound = parseDecimalOverflowOption(configuration).equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND);
+        isScaleOverflowWarningLogged = false;
     }
 
     /**
@@ -302,18 +304,18 @@ public class ParquetResolver extends BasePlugin implements Resolver {
          */
         // HiveDecimal.create will return a decimal value which can fit in DECIMAL(precision)
         HiveDecimal parsedValue = HiveDecimal.create(value);
-        BigDecimal accurateDecimal = new BigDecimal(value);
 
         if (parsedValue == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
                 throw new UnsupportedTypeException(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
-                                "The data integer digit count is %d, which exceeds the maximum supported precision %d. Query failed.",
-                        value, accurateDecimal.precision() - accurateDecimal.scale(), HiveDecimal.MAX_PRECISION));
+                                "The data integer digit count exceeds the maximum supported precision %d. Query failed.",
+                        value, HiveDecimal.MAX_PRECISION));
             }
+
             LOG.warn(String.format("Data %s is in a column defined as NUMERIC with undefined precision." +
-                            "The data integer digit count is %d, which exceeds the maximum supported precision %d. " +
+                            "The data integer digit count exceeds the maximum supported precision %d. " +
                             "Data will be stored as NULL.",
-                    value, accurateDecimal.precision() - accurateDecimal.scale(), HiveDecimal.MAX_PRECISION));
+                    value, HiveDecimal.MAX_PRECISION));
             return null;
         }
 
@@ -337,25 +339,31 @@ public class ParquetResolver extends BasePlugin implements Resolver {
          */
         if (hiveDecimal == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
-                throw new UnsupportedTypeException(String.format("Integer digit count of data %s is %d, which exceeds " +
+                throw new UnsupportedTypeException(String.format("Integer digit count of data %s exceeds " +
                                 "the maximum supported integer digit count %d. Query failed.",
-                        value, accurateDecimal.precision() - accurateDecimal.scale(), precision - scale));
+                        value, precision - scale));
             }
-            LOG.warn(String.format("Integer digit count of data %s is %d, which exceeds " +
+
+            LOG.warn(String.format("Integer digit count of data %s exceeds " +
                             "the maximum supported integer digit count %d. Data will be stored as NULL.",
-                    value, accurateDecimal.precision() - accurateDecimal.scale(), precision - scale));
+                    value, precision - scale));
             return null;
         }
 
+        BigDecimal accurateDecimal = new BigDecimal(value);
         // At this point data may be rounded off
-        if (accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
+        if ((isDecimalOverflowOptionError || isDecimalOverflowOptionRound) && accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
             if (isDecimalOverflowOptionError) {
                 throw new UnsupportedTypeException(String.format("The scale of the numeric data %s is %d, which exceeds the maximum supported scale %d. Data accuracy is lost. Query failed.",
                         value, accurateDecimal.scale(), scale));
             }
-            if (isDecimalOverflowOptionRound) {
-                LOG.warn(String.format("The scale of the numeric data %s is %d, which exceeds the maximum supported scale %d. Data will be rounded off.",
-                        value, accurateDecimal.scale(), scale));
+
+            LOG.trace(String.format("The scale of the numeric data %s is %d, which exceeds the maximum supported scale %d. Data will be rounded off.",
+                    value, accurateDecimal.scale(), scale));
+
+            if (!isScaleOverflowWarningLogged) {
+                LOG.warn("Scale overflowed values are rounded off");
+                isScaleOverflowWarningLogged = true;
             }
         }
 
