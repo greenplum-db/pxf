@@ -81,7 +81,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private boolean isIntegerDigitCountOverflowWarningLogged;
     private boolean isScaleOverflowWarningLogged;
 
-
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
