@@ -407,6 +407,15 @@ public abstract class ExternalTable extends Table {
         }
     }
 
+    public void addUserParameter(String userParameter) {
+        if (userParameters == null) {
+            userParameters = new String[] {userParameter};
+        } else {
+            userParameters = Arrays.copyOf(userParameters, userParameters.length + 1);
+            userParameters[userParameters.length - 1] = userParameter;
+        }
+    }
+
     protected String[] getUserParameters() {
         return userParameters;
     }
