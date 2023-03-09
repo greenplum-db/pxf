@@ -12,7 +12,7 @@ This developer note will guide you through the process of creating a Google Clou
 
     **NOTE:** After running the script, but before creating the PXF server config, replace `bradford-local-cluster-m` with `bradford-local-cluster-m.c.data-gpdb-ud.internal` for `hive.metastore.uris` in `dataproc_env_files/conf/hive-site.xml`
 
-1. SSH into cluster code (e.g., `gcloud compute ssh bradford-local-cluster-m`) and created a PXF service principal named `rosie`
+1. SSH into cluster code (e.g., `gcloud compute ssh bradford-local-cluster-m --zone=us-west1`) and created a PXF service principal named `${USER}`
 
     ```sh
     sudo kadmin.local -q "add_principal -nokey ${USER}"
@@ -37,7 +37,7 @@ This developer note will guide you through the process of creating a Google Clou
     * `krb5-user` on Debian-based distros
     * `krb5-workstation` and `krb5-libs` on RHEL7-based distros
 
-1. Verify that Kerberos is working
+1. Verify that Kerberos is working on your local machine
 
     ```sh
     export KRB5_CONFIG="${PWD}/dataproc_env_files/krb5.conf"
@@ -75,17 +75,20 @@ This developer note will guide you through the process of creating a Google Clou
 
 ## Hive Setup
 
-1. SSH into cluster node (e.g., `bradford-local-cluster-m`) and connect to Hive
+1. SSH into cluster node (e.g., `bradford-local-cluster-m`), run any kinit and then connect to Hive
 
     ```sh
+    gcloud compute ssh bradford-local-cluster-m --zone=us-west1
+    kinit -kt pxf.service.keytab ${USER}
+    klist
     hive
     ```
 
 1. Create a table
 
     ```sql
-    CREATE TABLE gh_909_parquet (col1 INTEGER, col2 STRING) STORED AS PARQUET;
-    INSERT INTO gh_909_parquet VALUES
+    CREATE TABLE foo (col1 INTEGER, col2 STRING);
+    INSERT INTO foo VALUES
         (1, 'hive row 1'),
         (2, 'hive row 2'),
         (3, 'hive row 3'),
@@ -98,20 +101,19 @@ This developer note will guide you through the process of creating a Google Clou
         (10, 'hive row 10');
     ```
 
-1. Create a copy of the data in HDFS
+1. Create a copy of the data in HDFS so that we are looking at a Hive Unmanaged Table
 
     ```sh
-    hdfs dfs -cp /user/hive/warehouse/gh_909_parquet /tmp/
+    hdfs dfs -cp /user/hive/warehouse/foo /tmp/
     ```
 
 1. Create an external Hive table
 
     ```sql
-    CREATE EXTERNAL TABLE gh_909_parquet_ext (col1 INTEGER, col2 STRING)
-    STORED AS PARQUET
-    LOCATION 'hdfs:///tmp/gh_909_parquet';
+    CREATE EXTERNAL TABLE foo_ext (col1 INTEGER, col2 STRING)
+    LOCATION 'hdfs:///tmp/foo';
 
-    SELECT * FROM gh_909_parquet_ext;
+    SELECT * FROM foo_ext;
     -- OK
     -- 1    hive row 1
     -- 2    hive row 2
@@ -128,50 +130,14 @@ This developer note will guide you through the process of creating a Google Clou
 
 ## Greenplum Setup
 
-1. Create a writable external table to generate parquet data in Google Cloud Storage
-
-    ```sh
-    mkdir ${PXF_BASE}/servers/gh_909_gs
-    cp ${PXF_HOME}/templates/gs-site.xml ${PXF_BASE}/servers/gh_909_gs
-    # retrieve ud/pxf/secrets/gsc-ci-service-account-key from Vault and save it somewhere
-    # update 'google.cloud.auth.service.account.json.keyfile' in gs-site.xml
-    ```
+1. Create a readable external table using the `hdfs:text` profile; the location is set to the HDFS directory in Dataproc that contains the Hive table's data
 
     ```sql
-    CREATE WRITABLE EXTERNAL TABLE pxf_gs_parquet_gh_909_w(col1 int, col2 text)
-    LOCATION ('pxf://data-gpdb-ud-bradford_scratch/tmp/bradford_gh_909?PROFILE=gs:parquet&SERVER=gh_909_gs')
-    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
+    CREATE READABLE EXTERNAL TABLE pxf_hdfs_foo_k8s_r(col1 int, col2 text)
+    LOCATION ('pxf://tmp/foo?PROFILE=hdfs:text&SERVER=dataproc')
+    FORMAT 'TEXT';
 
-    INSERT INTO pxf_gs_parquet_gh_909_w SELECT i, 'gs row ' || i FROM generate_series(1,10) i;
-
-    CREATE READABLE EXTERNAL TABLE pxf_gs_parquet_gh_909_r(col1 int, col2 text)
-    LOCATION ('pxf://data-gpdb-ud-bradford_scratch/tmp/bradford_gh_909?PROFILE=gs:parquet&SERVER=gh_909_gs')
-    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
-
-    SELECT * FROM pxf_gs_parquet_gh_909_r ORDER BY col1;
-    --  col1 |   col2
-    -- ------+-----------
-    --     1 | gs row 1
-    --     2 | gs row 2
-    --     3 | gs row 3
-    --     4 | gs row 4
-    --     5 | gs row 5
-    --     6 | gs row 6
-    --     7 | gs row 7
-    --     8 | gs row 8
-    --     9 | gs row 9
-    --    10 | gs row 10
-    -- (10 rows)
-    ```
-
-1. Create a readable external table using the `hdfs:parquet` profile; the location is set to the HDFS directory that contains the Hive table's parquet-formatted data
-
-    ```sql
-    CREATE READABLE EXTERNAL TABLE pxf_hdfs_parquet_gh_909_r(col1 int, col2 text)
-    LOCATION ('pxf://tmp/gh_909_parquet?PROFILE=hdfs:parquet&SERVER=dataproc')
-    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
-
-    SELECT * FROM pxf_hdfs_parquet_gh_909_r ORDER BY col1;
+    SELECT * FROM pxf_hdfs_foo_k8s_r ORDER BY col1;
     --  col1 |    col2
     -- ------+-------------
     --     1 | hive row 1
@@ -185,43 +151,12 @@ This developer note will guide you through the process of creating a Google Clou
     --     9 | hive row 9
     --    10 | hive row 10
     -- (10 rows)
-    ```
-
-1. Create a readable external table using the `hive` profile
-
-    ```sql
-    CREATE READABLE EXTERNAL TABLE pxf_hive_gh_909_r(col1 int, col2 text)
-    LOCATION ('pxf://gh_909_parquet_ext?PROFILE=hive&SERVER=dataproc')
-    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
-
-    SELECT * FROM pxf_hive_gh_909_r ORDER BY col1;
-    --  col1 |    col2
-    -- ------+-------------
-    --     1 | hive row 1
-    --     2 | hive row 2
-    --     3 | hive row 3
-    --     4 | hive row 4
-    --     5 | hive row 5
-    --     6 | hive row 6
-    --     7 | hive row 7
-    --     8 | hive row 8
-    --     9 | hive row 9
-    --    10 | hive row 10
-    -- (10 rows)
-    ```
-
-1. Attempt to reproduce the issue reported in GitHub 909
-
-    ```sql
-    SELECT * FROM pxf_gs_parquet_gh_909_r ORDER BY col1;
-    SELECT * FROM pxf_hive_gh_909_r ORDER BY col1;
-    SELECT * FROM pxf_gs_parquet_gh_909_r ORDER BY col1;
     ```
 
 ## Clean-Up
 
-1. Stop PXF, remove `-Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf` from `PXF_JVM_OPTS` in `$PXF_BASE/conf/pxf-env.sh`, and delete `${PXF_BASE}/conf/krb5.conf`
-2. Run `./dataproc-cluster.bash --destory`
+1. Stop PXF, remove `-Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf` from `PXF_JVM_OPTS` in `$PXF_BASE/conf/pxf-env.sh`, and delete `${PXF_BASE}/conf/krb5.conf` as well as `${PXF_BASE}/keytabs/pxf.service.keytab`
+2. Run `./dataproc-cluster.bash --destroy`
 
 <!-- link ids -->
 [0]: https://linux.die.net/man/5/krb5.conf
