@@ -313,18 +313,17 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
         if (parsedValue == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
-                throw new UnsupportedTypeException(String.format("Data %s is in a column defined as NUMERIC with undefined precision. " +
-                                "The data integer digit count exceeds the maximum supported precision %d. Query failed.",
+                throw new UnsupportedTypeException(String.format("The integer digit count of data %s in " +
+                                "a NUMERIC column exceeds the maximum supported precision %d. Query failed.",
                         value, HiveDecimal.MAX_PRECISION));
             }
 
-            LOG.trace(String.format("Data %s is in a column defined as NUMERIC with undefined precision. " +
-                            "The data integer digit count exceeds the maximum supported precision %d. " +
-                            "Data will be stored as NULL.",
+            LOG.trace(String.format("The integer digit count of  data %s in " +
+                            "a NUMERIC column exceeds the maximum supported precision %d. Data will be stored as NULL.",
                     value, HiveDecimal.MAX_PRECISION));
 
             if (!isPrecisionOverflowWarningLogged) {
-                LOG.warn("There are some uncleaned data in column defined as NUMERIC with undefined precision. " +
+                LOG.warn("There are some uncleaned data in a column defined as NUMERIC with undefined precision. " +
                         "The integer digit counts of these data exceed the maximum supported precision. " +
                         "Data will be stored as NULL.");
                 isPrecisionOverflowWarningLogged = true;
@@ -350,18 +349,18 @@ public class ParquetResolver extends BasePlugin implements Resolver {
          */
         if (hiveDecimal == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
-                throw new UnsupportedTypeException(String.format("Integer digit count of data %s exceeds " +
+                throw new UnsupportedTypeException(String.format("The integer digit count of data %s in a NUMERIC column exceeds " +
                                 "the maximum supported integer digit count %d. Query failed.",
                         value, precision - scale));
             }
 
-            LOG.trace(String.format("Integer digit count of data %s exceeds " +
+            LOG.trace(String.format("The integer digit count of data %s in a NUMERIC column exceeds " +
                             "the maximum supported integer digit count %d. Data will be stored as NULL.",
                     value, precision - scale));
 
             if (!isIntegerDigitCountOverflowWarningLogged) {
-                LOG.warn("There are some uncleaned data in column defined as NUMERIC with undefined precision. " +
-                        " Integer digit counts of these data exceed the maximum supported integer digit count. " +
+                LOG.warn("There are some uncleaned data in a column defined as NUMERIC with undefined precision. " +
+                        "The integer digit counts of these data exceed the maximum supported integer digit count. " +
                         "Data will be stored as NULL.");
                 isIntegerDigitCountOverflowWarningLogged = true;
             }
@@ -372,17 +371,16 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         // At this point data can fit in DECIMAL(38,18), but may have been rounded off
         if ((isDecimalOverflowOptionError || isDecimalOverflowOptionRound) && accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
             if (isDecimalOverflowOptionError) {
-                throw new UnsupportedTypeException(String.format("The scale of the numeric data %s is %d, which exceeds the maximum supported scale %d. Data accuracy is lost. Query failed.",
-                        value, accurateDecimal.scale(), scale));
+                throw new UnsupportedTypeException(String.format("The scale of the numeric data %s in a NUMERIC column " +
+                                "exceeds the maximum supported scale %d. Data accuracy is lost. Query failed.", value, scale));
             }
 
-            LOG.trace(String.format("The scale of the numeric data %s is %d, which exceeds the maximum supported scale %d. Data will be rounded off.",
-                    value, accurateDecimal.scale(), scale));
+            LOG.trace(String.format("The scale of the numeric data %s in a NUMERIC column exceeds the maximum supported scale %d. " +
+                            "Data will be rounded off.", value, scale));
 
             if (!isScaleOverflowWarningLogged) {
-                LOG.warn("There are some uncleaned data in column defined as NUMERIC with undefined precision. " +
-                        "Scales of these data exceed the maximum supported scale. " +
-                        "Data will be rounded off");
+                LOG.warn("There are some uncleaned data in a column defined as NUMERIC with undefined precision. " +
+                        "The scales of these data exceed the maximum supported scale. Data will be rounded off");
                 isScaleOverflowWarningLogged = true;
             }
         }
