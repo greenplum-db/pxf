@@ -94,7 +94,7 @@ PXF initialized successfully on ${num_hosts} out of ${num_hosts} hosts"
 
 control_file_content=\
 "directory = '/usr/local/pxf-gp6/gpextable/'
-default_version = '2.0'
+default_version = '2.1'
 comment = 'Extension which allows to access unmanaged data'
 module_pathname = '/usr/local/pxf-gp6/gpextable/pxf'
 superuser = true
