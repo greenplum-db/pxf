@@ -2,4 +2,4 @@
 -- end_ignore
 -- @description query01 for writing undefined precision numeric with pxf.parquet.write.decimal.overflow = error. When try to write a numeric with integerDigitCount > maxIntegerDigitCount, an error will be thrown.
 INSERT INTO parquet_write_undefined_precision_numeric_large_integer_digit SELECT * FROM numeric_undefined_precision;
-ERROR:  PXF server error : Integer digit count of data 1234567890123456789012345.1234567890 exceeds the maximum supported integer digit count 20. Query failed.
+ERROR:  PXF server error : The integer digit count of data 1234567890123456789012345.1234567890 in a NUMERIC column exceeds the maximum supported integer digit count 20. Query failed.
