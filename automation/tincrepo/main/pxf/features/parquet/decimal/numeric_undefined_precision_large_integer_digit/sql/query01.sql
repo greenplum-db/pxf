@@ -1,2 +1,2 @@
--- @description query01 for writing undefined precision numeric with pxf.parquet.write.decimal.overflow = error. When try to write a numeric with integerDigitCount > maxIntegerDigitCount, an error will be thrown.
+-- @description query01 for writing undefined precision numeric with pxf.parquet.write.decimal.overflow = round. When try to write a numeric with integerDigitCount > 20, an error will be thrown.
 INSERT INTO parquet_write_undefined_precision_numeric_large_integer_digit SELECT * FROM numeric_undefined_precision;
