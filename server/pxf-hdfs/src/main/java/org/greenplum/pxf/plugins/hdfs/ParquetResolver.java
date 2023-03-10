@@ -75,22 +75,17 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private SimpleGroupFactory groupFactory;
     private List<ColumnDescriptor> columnDescriptors;
 
-    private boolean isDecimalOverflowOptionError;
-    private boolean isDecimalOverflowOptionRound;
-    private boolean isPrecisionOverflowWarningLogged;
-    private boolean isIntegerDigitCountOverflowWarningLogged;
-    private boolean isScaleOverflowWarningLogged;
+    private boolean isDecimalOverflowOptionError = false;
+    private boolean isDecimalOverflowOptionRound = false;
+    private boolean isPrecisionOverflowWarningLogged = false;
+    private boolean isIntegerDigitCountOverflowWarningLogged = false;
+    private boolean isScaleOverflowWarningLogged = false;
 
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
-        isDecimalOverflowOptionError = parseDecimalOverflowOption(configuration).equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR);
-        isDecimalOverflowOptionRound = parseDecimalOverflowOption(configuration).equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND);
-        isPrecisionOverflowWarningLogged = false;
-        isIntegerDigitCountOverflowWarningLogged = false;
-        isScaleOverflowWarningLogged = false;
-
+        parseDecimalOverflowOption(configuration);
     }
 
     /**
@@ -308,22 +303,20 @@ public class ParquetResolver extends BasePlugin implements Resolver {
          */
         // HiveDecimal.create will return a decimal value which can fit in DECIMAL(38)
         HiveDecimal parsedValue = HiveDecimal.create(value);
-
+        String columnName = columnDescriptors.get(0).columnName();
         if (parsedValue == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
-                throw new UnsupportedTypeException(String.format("The integer digit count of data %s in " +
-                                "a NUMERIC column exceeds the maximum supported precision %d. Query failed.",
-                        value, HiveDecimal.MAX_PRECISION));
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
+                        value, columnName, precision));
             }
 
-            LOG.trace(String.format("The integer digit count of  data %s in " +
-                            "a NUMERIC column exceeds the maximum supported precision %d. Data will be stored as NULL.",
-                    value, HiveDecimal.MAX_PRECISION));
+            LOG.trace(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d and has been stored as NULL.",
+                    value, columnName, precision));
 
             if (!isPrecisionOverflowWarningLogged) {
-                LOG.warn("There are some uncleaned data in a column defined as NUMERIC with undefined precision. " +
-                        "The integer digit counts of these data exceed the maximum supported precision. " +
-                        "Data will be stored as NULL.");
+                LOG.warn(String.format("There are rows where for the NUMERIC column %s the values exceed maximum precision %d " +
+                                "and have been stored as NULL. Enable TRACE log level for row-level details.",
+                        columnName, precision));
                 isPrecisionOverflowWarningLogged = true;
             }
             return null;
@@ -347,19 +340,17 @@ public class ParquetResolver extends BasePlugin implements Resolver {
          */
         if (hiveDecimal == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
-                throw new UnsupportedTypeException(String.format("The integer digit count of data %s in a NUMERIC column exceeds " +
-                                "the maximum supported integer digit count %d. Query failed.",
-                        value, precision - scale));
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
+                        value, columnName, precision, scale));
             }
 
-            LOG.trace(String.format("The integer digit count of data %s in a NUMERIC column exceeds " +
-                            "the maximum supported integer digit count %d. Data will be stored as NULL.",
-                    value, precision - scale));
+            LOG.trace(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d) and has been stored as NULL.",
+                    value, columnName, precision, scale));
 
             if (!isIntegerDigitCountOverflowWarningLogged) {
-                LOG.warn("There are some uncleaned data in a column defined as NUMERIC with undefined precision. " +
-                        "The integer digit counts of these data exceed the maximum supported integer digit count. " +
-                        "Data will be stored as NULL.");
+                LOG.warn(String.format("There are rows where for the NUMERIC column %s the values exceed maximum precision and scale (%d,%d) " +
+                                "and have been stored as NULL. Enable TRACE log level for row-level details.",
+                        columnName, precision, scale));
                 isIntegerDigitCountOverflowWarningLogged = true;
             }
             return null;
@@ -369,16 +360,17 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         // At this point data can fit in DECIMAL(38,18), but may have been rounded off
         if ((isDecimalOverflowOptionError || isDecimalOverflowOptionRound) && accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
             if (isDecimalOverflowOptionError) {
-                throw new UnsupportedTypeException(String.format("The scale of the numeric data %s in a NUMERIC column " +
-                                "exceeds the maximum supported scale %d. Data accuracy is lost. Query failed.", value, scale));
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum scale %d.",
+                        value, columnName, scale));
             }
 
-            LOG.trace(String.format("The scale of the numeric data %s in a NUMERIC column exceeds the maximum supported scale %d. " +
-                            "Data will be rounded off.", value, scale));
+            LOG.trace(String.format("The value %s for the NUMERIC column %s exceeds maximum scale %d and has been rounded off.",
+                    value, columnName, scale));
 
             if (!isScaleOverflowWarningLogged) {
-                LOG.warn("There are some uncleaned data in a column defined as NUMERIC with undefined precision. " +
-                        "The scales of these data exceed the maximum supported scale. Data will be rounded off");
+                LOG.warn(String.format("There are rows where for the NUMERIC column %s the values exceed maximum scale %d " +
+                                "and have been rounded off. Enable TRACE log level for row-level details.",
+                        columnName, scale));
                 isScaleOverflowWarningLogged = true;
             }
         }
@@ -465,18 +457,23 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     }
 
     /**
-     * Returns server configuration value for pxf.parquet.write.decimal.overflow.
+     * Sets configuration variables based on server configuration properties of pxf.parquet.write.decimal.overflow.
      *
      * @param configuration contains server configuration properties
-     * @return String value for pxf.parquet.write.decimal.overflow. Must be "error", "round" or "ignore"
      */
-    public String parseDecimalOverflowOption(Configuration configuration) {
-        String decimalOverflowOption = configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, "round");
+    public void parseDecimalOverflowOption(Configuration configuration) {
+        String decimalOverflowOption = configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND);
         if (StringUtils.equalsIgnoreCase(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE, decimalOverflowOption)) {
-            return PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE;
+            isDecimalOverflowOptionRound = false;
+            isDecimalOverflowOptionError = false;
+            return;
         } else if (StringUtils.equalsIgnoreCase(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR, decimalOverflowOption)) {
-            return PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR;
+            isDecimalOverflowOptionError = true;
+            isDecimalOverflowOptionRound = false;
+            return;
         }
-        return PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND;
+        // if configuration value is not "error", "round" or "ignore", use default option "round"
+        isDecimalOverflowOptionRound = true;
+        isDecimalOverflowOptionError = false;
     }
 }
