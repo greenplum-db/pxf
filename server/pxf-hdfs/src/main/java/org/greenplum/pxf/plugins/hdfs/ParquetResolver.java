@@ -272,7 +272,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         }
     }
 
-    private byte[] getFixedLenByteArray(String value, Type type) {
+    private byte[] getFixedLenByteArray(String value, Type type, String columnName) {
         // From org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter#decimalToBinary
         DecimalLogicalTypeAnnotation typeAnnotation = (DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
         int precision = Math.min(HiveDecimal.MAX_PRECISION, typeAnnotation.getPrecision());
@@ -303,7 +303,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
          */
         // HiveDecimal.create will return a decimal value which can fit in DECIMAL(38)
         HiveDecimal parsedValue = HiveDecimal.create(value);
-        String columnName = columnDescriptors.get(0).columnName();
         if (parsedValue == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
                 throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
@@ -464,16 +463,12 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     public void parseDecimalOverflowOption(Configuration configuration) {
         String decimalOverflowOption = configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND);
         if (StringUtils.equalsIgnoreCase(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE, decimalOverflowOption)) {
-            isDecimalOverflowOptionRound = false;
-            isDecimalOverflowOptionError = false;
             return;
         } else if (StringUtils.equalsIgnoreCase(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR, decimalOverflowOption)) {
             isDecimalOverflowOptionError = true;
-            isDecimalOverflowOptionRound = false;
             return;
         }
         // if configuration value is not "error", "round" or "ignore", use default option "round"
         isDecimalOverflowOptionRound = true;
-        isDecimalOverflowOptionError = false;
     }
 }
