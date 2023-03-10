@@ -26,6 +26,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static java.lang.Thread.sleep;
 import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEMA;
 
 /**
@@ -250,6 +251,10 @@ public class MultibyteDelimiterTest extends BaseFeature {
         CsvUtils.updateDelim(tempLocalDataPath, '|', "DELIM");
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+        // wait a bit for async write in previous steps to finish
+        if (protocol == ProtocolEnum.FILE) {
+            sleep(10000);
+        }
 
         // create a new table with the SKIP_HEADER_COUNT parameter
         exTable.setName("pxf_multibyte_multichar_data_with_skip");
