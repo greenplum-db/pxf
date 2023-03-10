@@ -32,7 +32,6 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
-import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -77,7 +76,6 @@ public class ParquetWriteTest {
     private Resolver resolver;
     private RequestContext context;
     private Configuration configuration;
-    private PgArrayBuilder pgArrayBuilder = null;
 
     @BeforeEach
     public void setup() {
