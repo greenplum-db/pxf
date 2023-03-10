@@ -1902,7 +1902,7 @@ public class ParquetWriteTest {
         // precision and scale are not defined. Precision should be set to 38, scale should be set to 18
         String configurationOption = "ignore";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, null, path, "XID-XYZ-123490");
+        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123490");
 
         String[] values = new String[]{
                 "1.2",
@@ -1940,7 +1940,7 @@ public class ParquetWriteTest {
         // precision and scale are not defined. Precision should be set to 38, scale should be set to 18
         String configurationOption = "error";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, null, path, "XID-XYZ-123491");
+        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123491");
 
         String[] values = new String[]{
                 "1.2",
@@ -1966,7 +1966,7 @@ public class ParquetWriteTest {
         int precision = 90, scale = 18;
         String configurationOption = "ignore";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, new Integer[]{precision, scale}, path, "XID-XYZ-123492");
+        setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123492");
         Exception e = assertThrows(UnsupportedTypeException.class, () -> accessor.openForWrite());
         assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
     }
@@ -1979,7 +1979,7 @@ public class ParquetWriteTest {
         int precision = 90, scale = 18;
         String configurationOption = "error";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, new Integer[]{precision, scale}, path, "XID-XYZ-123493");
+        setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123493");
         Exception e = assertThrows(UnsupportedTypeException.class, () -> accessor.openForWrite());
         assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
     }
@@ -1991,7 +1991,7 @@ public class ParquetWriteTest {
         // precision and scale are not defined. Precision should be set to 38, scale should be set to 18
         String configurationOption = "ignore";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, null, path, "XID-XYZ-123494");
+        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123494");
 
         String[] values = new String[]{
                 "123456789012345678901.12345678",
@@ -2029,7 +2029,7 @@ public class ParquetWriteTest {
         // precision and scale are not defined. Precision should be set to 38, scale should be set to 18
         String configurationOption = "error";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, null, path, "XID-XYZ-123495");
+        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123495");
 
         String[] values = new String[]{
                 "123456789012345678901.12345678",
@@ -2053,7 +2053,7 @@ public class ParquetWriteTest {
         int precision = 20, scale = 5;
         String configurationOption = "ignore";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, new Integer[]{precision, scale}, path, "XID-XYZ-123497");
+        setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123497");
 
         String[] values = new String[]{
                 "1234567890123456.1",
@@ -2091,7 +2091,7 @@ public class ParquetWriteTest {
         int precision = 20, scale = 5;
         String configurationOption = "error";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, new Integer[]{precision, scale}, path, "XID-XYZ-123498");
+        setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123498");
 
         String[] values = new String[]{
                 "1234567890123456.1",
@@ -2115,7 +2115,7 @@ public class ParquetWriteTest {
         int precision = 20, scale = 5;
         String configurationOption = "ignore";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, new Integer[]{precision, scale}, path, "XID-XYZ-123499");
+        setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123499");
 
         String[] values = new String[]{
                 "12345.111111",
@@ -2149,10 +2149,6 @@ public class ParquetWriteTest {
     @Test
     public void testValidnessOfDecimalOverflowOption() throws Exception {
         String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_error_flag/";
-        String configurationOption = "errore";
-        String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, null, path, "XID-XYZ-123500");
-
         String[] values = new String[]{
                 "1234567890123456789012345678901234567890.1",
                 "1234567890123456789012345678901234567890.12",
@@ -2165,26 +2161,31 @@ public class ParquetWriteTest {
                 "12345678901234567890123.123451234",
                 "12345678901234567890123.1234512345",
         };
+        String columnName = "dec1";
+
+        setup();
+        String configurationOption = "ERROR";
+        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123500");
         writeNumericValues(values, configurationOption, columnName, 38, 18);
 
         setup();
         configurationOption = "ignore";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, null, path, "XID-XYZ-123501");
+        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123501");
+        writeNumericValues(values, configurationOption, columnName, 38, 18);
+
+        setup();
+        configurationOption = "IGNORE";
+        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123502");
         writeNumericValues(values, configurationOption, columnName, 38, 18);
 
         setup();
         configurationOption = "round";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, null, path, "XID-XYZ-123502");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-
-        setup();
-        configurationOption = "true";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, null, path, "XID-XYZ-123503");
+        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123503");
         writeNumericValues(values, configurationOption, columnName, 38, 18);
 
         setup();
         configurationOption = "false";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, null, path, "XID-XYZ-123504");
+        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123504");
         writeNumericValues(values, configurationOption, columnName, 38, 18);
     }
 
@@ -2195,7 +2196,7 @@ public class ParquetWriteTest {
         int precision = 20, scale = 5;
         String configurationOption = "round";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, new Integer[]{precision, scale}, path, "XID-XYZ-123505");
+        setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123505");
 
         String[] values = new String[]{
                 "12345.111111",
@@ -2233,7 +2234,7 @@ public class ParquetWriteTest {
         int precision = 20, scale = 5;
         String configurationOption = "error";
         String columnName = "dec1";
-        setUpConfigurationValueAndNumericType(configurationOption, columnName, new Integer[]{precision, scale}, path, "XID-XYZ-123505");
+        setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123505");
 
         String[] values = new String[]{
                 "12345.111111",
@@ -2382,7 +2383,7 @@ public class ParquetWriteTest {
         }
     }
 
-    private void setUpConfigurationValueAndNumericType(String configurationValue, String columnName, Integer[] typemods, String path, String transactionId) {
+    private void setUpConfigurationValueAndNumericType(String configurationValue, Integer[] typemods, String path, String transactionId) {
         columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", typemods));
 
         configuration.set("pxf.parquet.write.decimal.overflow", configurationValue);
@@ -2394,15 +2395,23 @@ public class ParquetWriteTest {
         accessor.afterPropertiesSet();
         resolver.setRequestContext(context);
 
-        resolver.afterPropertiesSet();
+        if (!org.apache.hadoop.util.StringUtils.equalsIgnoreCase("error", configurationValue) &&
+                !org.apache.hadoop.util.StringUtils.equalsIgnoreCase("round", configurationValue) &&
+                !org.apache.hadoop.util.StringUtils.equalsIgnoreCase("ignore", configurationValue)) {
+            Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.afterPropertiesSet());
+            assertEquals(String.format("Invalid configuration value %s for " +
+                    "pxf.parquet.write.decimal.overflow. Valid values are error, round, and ignore.", configurationValue), e.getMessage());
+        } else {
+            resolver.afterPropertiesSet();
+        }
     }
 
     private void writeNumericValues(String[] values, String configurationOption, String columnName, int precision, int scale) throws Exception {
-        if (configurationOption.equals("error")) {
+        if (StringUtils.equalsIgnoreCase("error", configurationOption)) {
             writeNumericValuesErrorFlag(values, columnName, precision, scale);
-        } else if (configurationOption.equals("ignore")) {
+        } else if (StringUtils.equalsIgnoreCase("ignore", configurationOption)) {
             writeNumericValuesIgnoreFlag(values);
-        } else {
+        } else if (StringUtils.equalsIgnoreCase("round", configurationOption)) {
             writeNumericValuesRoundFlag(values, columnName, precision, scale);
         }
     }
