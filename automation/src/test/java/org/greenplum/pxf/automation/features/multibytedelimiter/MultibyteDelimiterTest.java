@@ -126,7 +126,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readCsvTwoByteDelimiter() throws Exception {
+    public void readTwoByteDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_data");
         exTable.setProfile(protocol.value() + ":csv");
@@ -150,7 +150,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readCsvTwoByteDelimiterDelimNotProvided() throws Exception {
+    public void readTwoByteDelimiterDelimNotProvided() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_nodelim_data");
         exTable.setProfile(protocol.value() + ":csv");
@@ -168,7 +168,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readCsvTwoByteDelimiterWrongFormatter() throws Exception {
+    public void readTwoByteDelimiterWrongFormatter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrongformatter_data");
         exTable.setProfile(protocol.value() + ":csv");
@@ -187,7 +187,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readCsvThreeByteDelimiter() throws Exception {
+    public void readThreeByteDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_threebyte_data");
         exTable.setProfile(protocol.value() + ":csv");
@@ -211,7 +211,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readCsvFourByteDelimiter() throws Exception {
+    public void readFourByteDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_fourbyte_data");
         exTable.setProfile(protocol.value() + ":csv");
@@ -237,7 +237,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readCsvMultiCharStringDelimiter() throws Exception {
+    public void readMultiCharStringDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_multichar_data");
         exTable.setProfile(protocol.value() + ":csv");
@@ -267,7 +267,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readCsvTwoByteDelimiterWithCRLF() throws Exception {
+    public void readTwoByteDelimiterWithCRLF() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withcrlf_data");
         exTable.setProfile(protocol.value() + ":csv");
@@ -286,7 +286,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readCsvTwoByteDelimiterWithQuote() throws Exception {
+    public void readTwoByteDelimiterWithQuote() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withquote_data");
         exTable.setProfile(protocol.value() + ":csv");
@@ -305,7 +305,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readCsvTwoByteDelimiterWithQuoteAndEscape() throws Exception {
+    public void readTwoByteDelimiterWithQuoteAndEscape() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withquote_withescape_data");
         exTable.setProfile(protocol.value() + ":csv");
