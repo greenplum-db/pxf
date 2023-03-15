@@ -202,7 +202,7 @@ public class ParquetWriteTest extends BaseFeature {
         runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision.runTest");
     }
 
-    // Numeric precision not defined, test error flag when data precision overflow. An error should be thrown
+    // Numeric precision not defined, test round flag when data precision overflow. An error should be thrown
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteUndefinedPrecisionNumericWithDataPrecisionOverflow() throws Exception {
         String filePathName = "/numeric/undefined_precision_numeric_with_large_data_precision.csv";
@@ -227,7 +227,7 @@ public class ParquetWriteTest extends BaseFeature {
         runTincTest("pxf.features.parquet.decimal.numeric.runTest");
     }
 
-    // Numeric precision defined, when provided precision overflow. An error should be thrown with either error flag or ignore flag
+    // Numeric precision defined, when provided precision overflow. An error should be thrown with either error flag, round flag or ignore flag
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteNumericWithPrecisionOverflowAndScale() throws Exception {
         String filePathName = "/numeric/numeric_with_large_precision.csv";
@@ -238,7 +238,7 @@ public class ParquetWriteTest extends BaseFeature {
         runTincTest("pxf.features.parquet.decimal.numeric_with_large_precision.runTest");
     }
 
-    // Numeric precision not defined, test error flag when data integer digits overflow. An error should be thrown
+    // Numeric precision not defined, test round flag when data integer digits overflow. An error should be thrown
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void parquetWriteUndefinedPrecisionNumericWithIntegerDigitsOverflow() throws Exception {
         String filePathName = "/numeric/undefined_precision_numeric_with_large_integer_digit.csv";
