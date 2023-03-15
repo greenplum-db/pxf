@@ -1,7 +1,7 @@
 -- @description query01 for PXF Multibyte delimiter differentEncoding case
 
-SELECT * from pxf_multibyte_small_data ORDER BY num1;
- num1 |                 word                 
+SELECT * from pxf_multibyte_encoding ORDER BY num1;
+ num1 |                 word
 ------+--------------------------------------
     3 | règles d'automation
     4 | tá sé seo le tástáil dea-

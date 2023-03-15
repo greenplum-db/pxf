@@ -363,32 +363,82 @@ public class MultibyteDelimiterTest extends BaseFeature {
         }
     }
 
+//    @Test(groups = {"features", "gpdb", "security"})
+//    public void readMultiBlockedMultiLinedCsv() throws Exception {
+//        // prepare local CSV file
+//        dataTable = new Table("dataTable", null);
+//        String tempLocalDataPath = dataTempFolder + "/data.csv";
+//        // prepare template data of 10 lines
+//        FileFormatsUtils.prepareData(new QuotedLineTextPreparer(), 10,
+//                dataTable);
+//        // multiply it to file
+//        FileFormatsUtils.prepareDataFile(dataTable, 32, tempLocalDataPath, "¤");
+//        // copy local file to HDFS
+//        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+//        // define and create external table
+//        exTable = TableFactory.getPxfReadableCSVTable("pxf_multi_csv", new String[]{
+//                        "num1 int",
+//                        "word text",
+//                        "num2 int"},
+//                protocol.getExternalTablePath(hdfs.getBasePath(), hdfsFilePath), "¤");
+//        exTable.setProfile(protocol.value() + ":text:multi");
+//        exTable.setFormat("CUSTOM");
+//        exTable.setFormatter("pxfdelimited_import");
+//        exTable.setDelimiter("¤");
+//        gpdb.createTableAndVerify(exTable);
+//        // Verify results
+//        runTincTest("pxf.features.multibyte_delimiter.multiblocked_csv_data.runTest");
+//    }
+
+//    @Test(groups = {"features", "gpdb", "hdfs", "security"})
+//    public void readMultiLineCsvFilesWithSkipHeaderCount() throws Exception {
+//        String hdfs_dir = hdfs.getWorkingDirectory() + "/csv_files_with_header/multi_line_csv_with_header.csv";
+//        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/multi_line_csv_with_header.csv", hdfs_dir);
+//
+//        // define and create external table
+//        exTable = TableFactory.getPxfReadableCSVTable("pxf_multi_csv_with_header", new String[]{
+//                        "num1 int",
+//                        "word text",
+//                        "num2 int"},
+//                protocol.getExternalTablePath(hdfs.getBasePath(), hdfs_dir), "¤");
+//        exTable.setProfile(protocol.value() + ":text:multi");
+//        exTable.setFormat("CUSTOM");
+//        exTable.setFormatter("pxfdelimited_import");
+//        exTable.setDelimiter("¤");
+//        exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=1"});
+//        gpdb.createTableAndVerify(exTable);
+//        // Verify results
+//        runTincTest("pxf.features.multibyte_delimiter.multiline_csv_data_with_header.runTest");
+//    }
+//
 //    /**
-//     * Read multiple CSV files with headers from HCFS using *:text profile and
-//     * CSV format.
+//     * Read the multi-line CSV file with headers from HDFS using *:text:multi profile and
+//     * CSV format and SKIP_HEADER_COUNT=1 and FILE_AS_ROW flag set to True.
 //     *
 //     * @throws Exception when the test fails
 //     */
-//    @Test(groups = {"features", "gpdb", "hcfs", "security"})
-//    public void readCsvFilesWithHeader() throws Exception {
-//        // set profile and format
-//        prepareReadableTable("pxf_hcfs_csv_files_with_header", LINEITEM_SCHEMA, hdfs.getWorkingDirectory() + "/csv_files_with_header", "CSV");
-//        exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=1"});
-//        exTable.setDelimiter("|");
-//        // create external table
+//    @Test(groups = {"features", "gpdb", "hdfs", "security"})
+//    public void readMultiLineCsvFileAsRowSkipHeaderCount() throws Exception {
+//        String hdfs_dir = hdfs.getWorkingDirectory() + "/csv_files_with_header/multi_line_csv_with_header.csv";
+//        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/multi_line_csv_with_header.csv", hdfs_dir);
+//
+//        // define and create external table
+//        exTable = TableFactory.getPxfReadableCSVTable("pxf_file_as_row_with_header", new String[]{
+//                        "data text"},
+//                protocol.getExternalTablePath(hdfs.getBasePath(), hdfs_dir), ",");
+//
+//        exTable.setProfile(protocol.value() + ":text:multi");
+//        exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=1","FILE_AS_ROW=true"});
 //        gpdb.createTableAndVerify(exTable);
-//        // copy local CSV to HCFS
-//        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/sample1.csv", hdfs.getWorkingDirectory() + "/csv_files_with_header/sample1.csv");
-//        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/sample2.csv", hdfs.getWorkingDirectory() + "/csv_files_with_header/sample2.csv");
-//        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/sample3.csv", hdfs.getWorkingDirectory() + "/csv_files_with_header/sample3.csv");
-//        // verify results
-//        runTincTest("pxf.features.hdfs.readable.text.csv_files_with_header.runTest");
+//        // Verify results
+//        runTincTest("pxf.features.hdfs.readable.text.multiline_file_as_row_with_header.runTest");
 //    }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readFileWithLatin1Encoding() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
+        exTable.setName("pxf_multibyte_encoding");
         exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setProfile(protocol.value() + ":text");
         exTable.setDelimiter("¤");

@@ -1,3 +1,3 @@
 -- @description query01 for PXF Multibyte delimiter differentEncoding case
 
-SELECT * from pxf_multibyte_small_data ORDER BY num1;
+SELECT * from pxf_multibyte_encoding ORDER BY num1;
