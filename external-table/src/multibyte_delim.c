@@ -105,11 +105,11 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
     {
         char* key = FORMATTER_GET_NTH_ARG_KEY(fcinfo, i);
         char* value = FORMATTER_GET_NTH_ARG_VAL(fcinfo, i);
-        int table_encoding = ((FormatterData*) fcinfo->context)->fmt_external_encoding;
+        fmt_state->table_encoding = ((FormatterData*) fcinfo->context)->fmt_external_encoding;
 
         if (strcmp(key, "delimiter") == 0)
         {
-            fmt_state->delimiter = pg_server_to_any(value, strlen(value), table_encoding);
+            fmt_state->delimiter = pg_server_to_any(value, strlen(value), fmt_state->table_encoding);
         }
         // use newline option as this is something already present in PXF instead of introducing "eol"
         // however, the value itself will be saved into eol
@@ -119,11 +119,11 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         }
         else if (strcmp(key, "quote") == 0)
         {
-            fmt_state->quote = pg_server_to_any(value, strlen(value), table_encoding);
+            fmt_state->quote = pg_server_to_any(value, strlen(value), fmt_state->table_encoding);
         }
         else if (strcmp(key, "escape") == 0)
         {
-            fmt_state->escape = pg_server_to_any(value, strlen(value), table_encoding);
+            fmt_state->escape = pg_server_to_any(value, strlen(value), fmt_state->table_encoding);
         }
     }
 
@@ -427,11 +427,13 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
                 pfree(removeEscapeBuf);
             }
 
+            // if a table encoding is provided, then we assume that the file (and thus the data stream) is in that encoding
+            //  and we will need to convert the data stream from the table encoding into the server encoding
             myData->values[index] = InputFunctionCall(&myData->conv_functions[index],
 #if PG_VERSION_NUM >= 120000
-                                                      buf->data, myData->typioparams[index], myData->desc->attrs[index].atttypmod);
+                                                      pg_any_to_server(buf->data, column_len, myData->table_encoding), myData->typioparams[index], myData->desc->attrs[index].atttypmod);
 #else
-                                                      buf->data, myData->typioparams[index], myData->desc->attrs[index]->atttypmod);
+                                                      pg_any_to_server(buf->data, column_len, myData->table_encoding), myData->typioparams[index], myData->desc->attrs[index]->atttypmod);
 #endif
             myData->nulls[index] = false;
         }

@@ -95,7 +95,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         dataTable = new Table("dataTable", null);
         FileFormatsUtils.prepareData(new CustomTextPreparer(), 100, dataTable);
         // default definition of external table
-        exTable = TableFactory.getPxfReadableTextTable("pxf_hdfs_small_data",
+        exTable = TableFactory.getPxfReadableTextTable("pxf_multibyte_small_data",
                 new String[]{
                         "s1 text",
                         "s2 text",
@@ -368,11 +368,26 @@ public class MultibyteDelimiterTest extends BaseFeature {
 //        runTincTest("pxf.features.hdfs.readable.text.csv_files_with_header.runTest");
 //    }
 
-    private void prepareReadableTable(String name, String[] fields, String path, String format) {
-        exTable.setName(name);
-        exTable.setFormat(format);
-        exTable.setPath(protocol.getExternalTablePath(hdfs.getBasePath(), path));
-        exTable.setFields(fields);
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readFileWithLatin1Encoding() throws Exception {
+        ProtocolEnum protocol = ProtocolUtils.getProtocol();
+        // define and create external table
+        exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setProfile(protocol.value() + ":text");
+        exTable.setDelimiter("¤");
+        exTable.setEncoding("LATIN1");
+        gpdb.createTableAndVerify(exTable);
+        // prepare data and write to HDFS
+        dataTable = new Table("data", null);
+        dataTable.addRow(new String[]{"4", "tá sé seo le tástáil dea-"});
+        dataTable.addRow(new String[]{"3", "règles d'automation"});
+        dataTable.addRow(new String[]{
+                "5",
+                "minden amire szüksége van a szeretet"});
+        hdfs.writeTableToFile(hdfsFilePath, dataTable, "¤",
+                StandardCharsets.ISO_8859_1);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.encoding.runTest");
     }
 }
