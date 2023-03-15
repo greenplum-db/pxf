@@ -14,12 +14,14 @@ import org.greenplum.pxf.automation.structures.tables.pxf.ErrorTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.csv.CsvUtils;
+import org.greenplum.pxf.automation.utils.exception.ExceptionUtils;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
 import org.junit.Assert;
+import org.postgresql.util.PSQLException;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -346,6 +348,21 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_bzip2.runTest");
     }
 
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void invalidCodePoint() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_invalid_codepoint_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setDelimiter("E\'\\xA4\'");
+        // create external table
+        try {
+            gpdb.createTableAndVerify(exTable);
+            Assert.fail("Insert data should fail because of unsupported type");
+        } catch (PSQLException e) {
+            ExceptionUtils.validate(null, e, new PSQLException("ERROR.*invalid byte sequence for encoding.*?", null), true);
+        }
+    }
+
 //    /**
 //     * Read multiple CSV files with headers from HCFS using *:text profile and
 //     * CSV format.
@@ -390,4 +407,29 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding.runTest");
     }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readFileWithLatin1EncodingByteRepresentation() throws Exception {
+        ProtocolEnum protocol = ProtocolUtils.getProtocol();
+        // define and create external table
+        exTable.setName("pxf_multibyte_encoding_bytes");
+        exTable.setFields(new String[]{"num1 int", "word text"});
+        exTable.setProfile(protocol.value() + ":text");
+        exTable.setDelimiter("E\'\\xC2\\xA4\'");
+        exTable.setEncoding("LATIN1");
+        gpdb.createTableAndVerify(exTable);
+        // prepare data and write to HDFS
+        dataTable = new Table("data", null);
+        dataTable.addRow(new String[]{"4", "tá sé seo le tástáil dea-"});
+        dataTable.addRow(new String[]{"3", "règles d'automation"});
+        dataTable.addRow(new String[]{
+                "5",
+                "minden amire szüksége van a szeretet"});
+        hdfs.writeTableToFile(hdfsFilePath, dataTable, "¤",
+                StandardCharsets.ISO_8859_1);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.encoding_bytes.runTest");
+    }
+
 }
