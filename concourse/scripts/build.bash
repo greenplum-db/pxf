@@ -11,7 +11,15 @@ GPDB_VERSION=$(<"${GPDB_PKG_DIR}/version")
 function install_gpdb() {
     local pkg_file
     if command -v rpm; then
-        pkg_file=$(find "${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-r*-x86_64.rpm")
+        # For GP7 and above, a new rhel8 & rocky8 distro identifier
+        # (el8) has been introduced.
+        if [[ ${GPDB_VERSION%%.*} -ge 7 ]]; then
+            DISTRO_MATCHING_PATTERN="el"
+        else
+            DISTRO_MATCHING_PATTERN="r"
+        fi
+        pkg_file=$(find "${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-${DISTRO_MATCHING_PATTERN}*-x86_64.rpm")
+
         echo "Installing RPM ${pkg_file}..."
         rpm --quiet -ivh "${pkg_file}" >/dev/null
     elif command -v apt-get; then
