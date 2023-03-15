@@ -42,6 +42,7 @@ public class HcfsFixedTest extends BaseFeature {
     private static final String fixedSmallCorrectFileName = "fixed_small_correct.txt";
     private static final String fixedSmallCorrectGzipFileName = "fixed_small_correct.txt.gz";
     private static final String fixedSmallCorrectCustomDelimFileName = "fixed_small_correct_custom_delim.txt";
+    private static final String fixedSmallCorrectCRDelimFileName = "fixed_small_correct_cr_delim.txt";
     private static final String fixedSmallCorrectCRLFDelimFileName = "fixed_small_correct_crlf_delim.txt";
 
     private String hdfsPath;
@@ -61,6 +62,7 @@ public class HcfsFixedTest extends BaseFeature {
         hdfs.copyFromLocal(resourcePath + fixedSmallCorrectFileName, hdfsPath + "lines/nocomp/" + fixedSmallCorrectFileName);
         hdfs.copyFromLocal(resourcePath + fixedSmallCorrectGzipFileName, hdfsPath + "lines/gzip/" + fixedSmallCorrectGzipFileName);
         hdfs.copyFromLocal(resourcePath + fixedSmallCorrectCustomDelimFileName, hdfsPath + fixedSmallCorrectCustomDelimFileName);
+        hdfs.copyFromLocal(resourcePath + fixedSmallCorrectCRDelimFileName, hdfsPath + fixedSmallCorrectCRDelimFileName);
         hdfs.copyFromLocal(resourcePath + fixedSmallCorrectCRLFDelimFileName, hdfsPath + fixedSmallCorrectCRLFDelimFileName);
     }
 
@@ -82,7 +84,6 @@ public class HcfsFixedTest extends BaseFeature {
         prepareReadableTable("fixed_in_small_correct", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + "lines/nocomp/" + fixedSmallCorrectFileName);
         gpdb.createTableAndVerify(exTable);
-        // Verify results
         runTincTest("pxf.features.hcfs.fixed.read.small_data_correct.runTest");
     }
 
@@ -91,7 +92,6 @@ public class HcfsFixedTest extends BaseFeature {
         prepareReadableTable("fixed_in_small_correct_gzip", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + "lines/gzip/" + fixedSmallCorrectGzipFileName);
         gpdb.createTableAndVerify(exTable);
-        // Verify results
         runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_gzip.runTest");
     }
 
@@ -100,31 +100,64 @@ public class HcfsFixedTest extends BaseFeature {
         prepareReadableTable("fixed_in_small_correct_mixed", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + "lines");
         gpdb.createTableAndVerify(exTable);
-        // Verify results
         runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_mixed.runTest");
     }
 
+    // ========== Delimiter Tests ==========
+
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readFixedFile_CustomLineDelimiter() throws Exception {
+        // table without NEWLINE option header - reads the whole file as a single line
         prepareReadableTable("fixed_in_small_correct_custom_delim", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + fixedSmallCorrectCustomDelimFileName);
         exTable.addFormatterOption("line_delim='@#$'");
         gpdb.createTableAndVerify(exTable);
-        // Verify results
+
+        // table with NEWLINE option header -- returns an ERROR as PXF only allows CR/LF/CRLF as new line separator values
+        prepareReadableTable("fixed_in_small_correct_custom_delim_header", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
+                hdfsPath + fixedSmallCorrectCustomDelimFileName);
+        exTable.addFormatterOption("line_delim='@#$'");
+        exTable.addUserParameter("NEWLINE=@#$");
+        gpdb.createTableAndVerify(exTable);
+
         runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_custom_delim.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readFixedFile_CRLineDelimiter() throws Exception {
+        // table without NEWLINE option header - returns data but issues a warning
+        prepareReadableTable("fixed_in_small_correct_cr_delim", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
+                hdfsPath + fixedSmallCorrectCRDelimFileName);
+        exTable.addFormatterOption("line_delim=E'\\r'");
+        gpdb.createTableAndVerify(exTable);
+
+        // table with NEWLINE option header
+        prepareReadableTable("fixed_in_small_correct_cr_delim_header", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
+                hdfsPath + fixedSmallCorrectCRDelimFileName);
+        exTable.addFormatterOption("line_delim=E'\\r'");
+        exTable.addUserParameter("NEWLINE=cr");
+        gpdb.createTableAndVerify(exTable);
+
+        runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_cr_delim.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readFixedFile_CRLFLineDelimiter() throws Exception {
+        // table without NEWLINE option header
+        // there is no need to add exTable.addUserParameter("NEWLINE=crlf"); since CR character will be preserved
+        // and LF will be added back by PXF (by default) and both of them will be removed by the formatter
         prepareReadableTable("fixed_in_small_correct_crlf_delim", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + fixedSmallCorrectCRLFDelimFileName);
-        exTable.addFormatterOption("line_delim='\r\n'");
-        /*
-            there is no need to add exTable.addUserParameter("NEWLINE=crlf"); since CR character will be preserved
-            and LF will be added back by PXF (by default) and both of them will be removed by the formatter
-         */
+        exTable.addFormatterOption("line_delim=E'\\r\\n'");
         gpdb.createTableAndVerify(exTable);
-        // Verify results
+
+        // table with NEWLINE option header
+        prepareReadableTable("fixed_in_small_correct_crlf_delim_header", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
+                hdfsPath + fixedSmallCorrectCRLFDelimFileName);
+        exTable.addFormatterOption("line_delim=E'\\r\\n'");
+        exTable.addUserParameter("NEWLINE=crlf");
+        gpdb.createTableAndVerify(exTable);
+
         runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_crlf_delim.runTest");
     }
 
