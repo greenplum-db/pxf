@@ -429,17 +429,13 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 
             // if a table encoding is provided, then we assume that the file (and thus the data stream) is in that encoding
             //  and we will need to convert the data stream from the table encoding into the server encoding
-#if PG_VERSION_NUM <= 90400
-            Oid proc = FindDefaultConversionProc(myData->table_encoding, GetDatabaseEncoding());
-#endif
-
             myData->values[index] = InputFunctionCall(&myData->conv_functions[index],
 #if PG_VERSION_NUM >= 120000
                                                       pg_any_to_server(buf->data, column_len, myData->table_encoding), myData->typioparams[index], myData->desc->attrs[index].atttypmod);
 #elif PG_VERSION_NUM >= 90400
                                                       pg_any_to_server(buf->data, column_len, myData->table_encoding), myData->typioparams[index], myData->desc->attrs[index]->atttypmod);
 #else
-                                                      pg_custom_to_server(buf->data, column_len, myData->table_encoding, proc),
+                                                      pg_do_encoding_conversion(buf->data, column_len, myData->table_encoding, GetDatabaseEncoding()),
                                                       myData->typioparams[index], myData->desc->attrs[index]->atttypmod);
 #endif
             myData->nulls[index] = false;
