@@ -5,5 +5,8 @@
 -- m/GP_IGNORE: WARNING.*/
 -- s/GP_IGNORE: WARNING/WARNING/
 --
+-- m/^CONTEXT.*/
+-- s/CONTEXT.*//
+--
 -- end_matchsubs
 select * from fixed_in_small_correct_cr_delim order by s1;

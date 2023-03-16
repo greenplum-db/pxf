@@ -5,10 +5,12 @@
 -- m/GP_IGNORE: WARNING.*/
 -- s/GP_IGNORE: WARNING/WARNING/
 --
+-- m/^CONTEXT.*/
+-- s/CONTEXT.*//
+--
 -- end_matchsubs
 select * from fixed_in_small_correct_cr_delim order by s1;
 WARNING:  unexpected end of file
-CONTEXT:  External table fixed_in_small_correct_cr_delim
      s1     |  s2  |   s3   |         dt          | n1 | n2  |   n3   |  n4   |   n5    |   n6    |     n7
 ------------+------+--------+---------------------+----+-----+--------+-------+---------+---------+------------
  aaa        | twoa | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
