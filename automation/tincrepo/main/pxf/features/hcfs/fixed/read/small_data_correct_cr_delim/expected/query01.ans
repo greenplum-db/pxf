@@ -2,8 +2,8 @@
 --
 -- start_matchsubs
 --
--- m/GP_IGNORE: WARNING.*/
--- s/GP_IGNORE: WARNING/WARNING/
+-- m/.*WARNING.*/
+-- s/^.*//
 --
 -- m/^CONTEXT.*/
 -- s/CONTEXT.*//
