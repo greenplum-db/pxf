@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.5.1 (03/19/2023)
+
+### Enhancements:
+
+- [#857](https://github.com/greenplum-db/pxf/pull/857) Changes for supporting PXF for GP7.
+- [#900](https://github.com/greenplum-db/pxf/pull/900) Added error handling for FDW read flow
+- [#943](https://github.com/greenplum-db/pxf/pull/943) Upgrade gp-common-go-libs to 1.0.11
+
 ## 6.5.0 (12/21/2022)
 
 ### Enhancements:
