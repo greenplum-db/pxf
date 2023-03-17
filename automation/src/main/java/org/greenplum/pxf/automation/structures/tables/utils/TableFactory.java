@@ -299,13 +299,13 @@ public abstract class TableFactory {
      * @param fileFormat format of the file being written
      * @return PXF Writable External or Foreign table
      */
-    public static ReadableExternalTable getPxfHcfsWritableTable(String name,
+    public static WritableExternalTable getPxfHcfsWritableTable(String name,
                                                                 String[] fields,
                                                                 String path,
                                                                 String hcfsBasePath,
                                                                 String fileFormat) {
         String effectivePath = ProtocolUtils.getProtocol().getExternalTablePath(hcfsBasePath, path);
-        ReadableExternalTable exTable = getWritableExternalOrForeignTable(name, fields, effectivePath, "custom");
+        WritableExternalTable exTable = getWritableExternalOrForeignTable(name, fields, effectivePath, "custom");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":" + fileFormat);
         exTable.setFormatter("pxfwritable_export");
         return exTable;

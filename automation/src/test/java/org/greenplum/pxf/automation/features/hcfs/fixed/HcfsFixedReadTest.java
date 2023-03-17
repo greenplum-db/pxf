@@ -1,15 +1,15 @@
-package org.greenplum.pxf.automation.features.hcfs;
+package org.greenplum.pxf.automation.features.hcfs.fixed;
 
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.testng.annotations.Test;
 
 /**
- * Functional Test for fixed data format text files in HCFS
+ * Functional Test for reading fixed data format text files in HCFS
  * The dataset is based on a set of tests available in Greenplum
  * https://github.com/greenplum-db/gpdb/blob/main/contrib/formatter_fixedwidth/data/fixedwidth_small_correct.tbl
  */
-public class HcfsFixedTest extends BaseFeature {
+public class HcfsFixedReadTest extends BaseFeature {
 
     private static final String[] SMALL_DATA_FIELDS = new String[]{
             "s1 char(10)",
@@ -53,7 +53,7 @@ public class HcfsFixedTest extends BaseFeature {
      */
     @Override
     public void beforeClass() throws Exception {
-        // path for storing data on HDFS (for processing by PXF)
+        // path for storing data on HCFS (for processing by PXF)
         hdfsPath = hdfs.getWorkingDirectory() + "/readableFixed/";
 
         // location of the data files
