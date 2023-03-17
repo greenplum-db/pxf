@@ -488,7 +488,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setProfile(protocol.value() + ":text");
         exTable.setDelimiter("¤");
         exTable.setQuote("|");
-        exTable.setEscape("¿");
+        exTable.setEscape("\"");
         exTable.setEncoding("LATIN1");
         gpdb.createTableAndVerify(exTable);
         // prepare data and write to HDFS
@@ -503,7 +503,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
-                '¤', '|', '¿', CSVWriter.DEFAULT_LINE_END);
+                '¤', '|', '\"', CSVWriter.DEFAULT_LINE_END);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote_escape.runTest");
