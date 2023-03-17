@@ -42,8 +42,11 @@ typedef struct {
     char*               quote_delimiter; // these two only for searching for border, not in the config file
     char*               quote_eol;
     int                 nColumns;
-    int                 table_encoding;
     DelimitedSituation  situation;
+
+    int                 external_encoding;	   /* remote side's character encoding */
+    FmgrInfo            *enc_conversion_proc;   /* conv proc from exttbl encoding to
+                                                   server or the other way around */
 } format_delimiter_state;
 
 extern void

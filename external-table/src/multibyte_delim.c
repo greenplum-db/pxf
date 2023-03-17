@@ -105,11 +105,10 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
     {
         char* key = FORMATTER_GET_NTH_ARG_KEY(fcinfo, i);
         char* value = FORMATTER_GET_NTH_ARG_VAL(fcinfo, i);
-        fmt_state->table_encoding = ((FormatterData*) fcinfo->context)->fmt_external_encoding;
 
         if (strcmp(key, "delimiter") == 0)
         {
-            fmt_state->delimiter = pg_server_to_any(value, strlen(value), fmt_state->table_encoding);
+            fmt_state->delimiter = value;
         }
         // use newline option as this is something already present in PXF instead of introducing "eol"
         // however, the value itself will be saved into eol
@@ -119,11 +118,11 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         }
         else if (strcmp(key, "quote") == 0)
         {
-            fmt_state->quote = pg_server_to_any(value, strlen(value), fmt_state->table_encoding);
+            fmt_state->quote = value;
         }
         else if (strcmp(key, "escape") == 0)
         {
-            fmt_state->escape = pg_server_to_any(value, strlen(value), fmt_state->table_encoding);
+            fmt_state->escape = value;
         }
     }
 
@@ -202,6 +201,9 @@ new_format_delimiter_state(FunctionCallInfo fcinfo)
     get_config(fcinfo, fmt_state);
 
     fmt_state->nColumns = nColumns;
+
+    fmt_state->external_encoding = FORMATTER_GET_EXTENCODING(fcinfo);
+    fmt_state->enc_conversion_proc = ((FormatterData*) fcinfo->context)->fmt_conversion_proc;
     return fmt_state;
 }
 
@@ -430,14 +432,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
             // if a table encoding is provided, then we assume that the file (and thus the data stream) is in that encoding
             //  and we will need to convert the data stream from the table encoding into the server encoding
             myData->values[index] = InputFunctionCall(&myData->conv_functions[index],
-#if PG_VERSION_NUM >= 120000
-                                                      pg_any_to_server(buf->data, column_len, myData->table_encoding), myData->typioparams[index], myData->desc->attrs[index].atttypmod);
-#elif PG_VERSION_NUM >= 90400
-                                                      pg_any_to_server(buf->data, column_len, myData->table_encoding), myData->typioparams[index], myData->desc->attrs[index]->atttypmod);
-#else
-                                                      pg_do_encoding_conversion(buf->data, column_len, myData->table_encoding, GetDatabaseEncoding()),
-                                                      myData->typioparams[index], myData->desc->attrs[index]->atttypmod);
-#endif
+                    buf->data, myData->typioparams[index], TupleDescAttr(myData->desc, index)->atttypmod);
             myData->nulls[index] = false;
         }
         index++;
@@ -552,8 +547,32 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 
     PG_TRY();
     {
-        // Get a complete message, unpack to myData->values and myData->nulls
-        unpack_delimited(data_buf + data_cur, whole_line_len - eol_len, myData);
+        // Convert input data encoding to server encoding
+        char* encoded = data_buf + data_cur;
+        int len = whole_line_len - eol_len;
+
+        if (myData->external_encoding != GetDatabaseEncoding())
+        {
+            encoded = pg_custom_to_server(data_buf + data_cur,
+                                          whole_line_len - eol_len,
+                                          myData->external_encoding,
+                                          myData->enc_conversion_proc);
+            len = strlen(encoded);
+            // Get a complete message, unpack to myData->values and myData->nulls
+            unpack_delimited(encoded, len, myData);
+
+            // Make sure the conversion actually happened.
+            if (encoded != data_buf + data_cur)
+            {
+                // Memory needs to be released after encoding conversion.
+                pfree(encoded);
+            }
+        }
+        else
+        {
+            // Get a complete message, unpack to myData->values and myData->nulls
+            unpack_delimited(data_buf + data_cur, whole_line_len - eol_len, myData);
+        }
     }
     PG_CATCH();
     {
