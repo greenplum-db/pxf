@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.lang.Thread.sleep;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Functional Test for writing fixed data format text files to HCFS
@@ -57,7 +59,6 @@ public class HcfsFixedWriteTest extends BaseWritableFeature {
     private String hdfsPath;
     private ProtocolEnum protocol;
 
-
     /**
      * Prepare all components and all data flow (Hdfs to GPDB)
      */
@@ -78,108 +79,85 @@ public class HcfsFixedWriteTest extends BaseWritableFeature {
     }
 
     /**
-     * Before every method determine default hdfs data Path, default data, and
-     * default external table structure. Each case change it according to it
-     * needs.
-     */
-    @Override
-    protected void beforeMethod() throws Exception {
-        super.beforeMethod();
-    }
-
-    /**
      * Write fixed width formatted file to HCFS using *:fixed profile and fixedwidth_in format
      * and then read it back using PXF readable external table for verification.
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void writeFixedFile_NoCompression() throws Exception {
-        String targetDataDir = hdfsPath + "lines/nocomp/";
-        prepareWritableTable("fixed_out_small_correct_write", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS, targetDataDir);
-        gpdb.createTableAndVerify(writableExTable);
-
-        insertDataIntoWritableTable();
-
-        prepareReadableTable("fixed_out_small_correct_read", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS, targetDataDir);
-        gpdb.createTableAndVerify(readableExTable);
-
-        runTincTest("pxf.features.hcfs.fixed.write.small_data_correct.runTest");
-    }
-
-/*
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readFixedFile_GzipCompression() throws Exception {
-        prepareReadableTable("fixed_in_small_correct_gzip", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
-                hdfsPath + "lines/gzip/" + fixedSmallCorrectGzipFileName);
-        gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_gzip.runTest");
+        runScenario("default", null, null, false);
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readFixedFiles_WithAndWithoutCompression() throws Exception {
-        prepareReadableTable("fixed_in_small_correct_mixed", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
-                hdfsPath + "lines");
-        gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_mixed.runTest");
+    public void writeFixedFile_GzipCompression() throws Exception {
+        runScenario("gzip", null, null, true);
     }
 
     // ========== Delimiter Tests ==========
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readFixedFile_CustomLineDelimiter() throws Exception {
-        // table without NEWLINE option header - reads the whole file as a single line
-        prepareReadableTable("fixed_in_small_correct_custom_delim", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
-                hdfsPath + fixedSmallCorrectCustomDelimFileName);
-        exTable.addFormatterOption("line_delim='@#$'");
-        gpdb.createTableAndVerify(exTable);
-
-        // table with NEWLINE option header -- returns an ERROR as PXF only allows CR/LF/CRLF as new line separator values
-        prepareReadableTable("fixed_in_small_correct_custom_delim_header", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
-                hdfsPath + fixedSmallCorrectCustomDelimFileName);
-        exTable.addFormatterOption("line_delim='@#$'");
-        exTable.addUserParameter("NEWLINE=@#$");
-        gpdb.createTableAndVerify(exTable);
-
-        runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_custom_delim.runTest");
+    public void writeFixedFile_CustomLineDelimiter() throws Exception {
+        runScenario("custom_delim", "@#$", "@#$", false);
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readFixedFile_CRLineDelimiter() throws Exception {
-        // table without NEWLINE option header - returns data but issues a warning
-        prepareReadableTable("fixed_in_small_correct_cr_delim", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
-                hdfsPath + fixedSmallCorrectCRDelimFileName);
-        exTable.addFormatterOption("line_delim=E'\\r'");
-        gpdb.createTableAndVerify(exTable);
-
-        // table with NEWLINE option header
-        prepareReadableTable("fixed_in_small_correct_cr_delim_header", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
-                hdfsPath + fixedSmallCorrectCRDelimFileName);
-        exTable.addFormatterOption("line_delim=E'\\r'");
-        exTable.addUserParameter("NEWLINE=cr");
-        gpdb.createTableAndVerify(exTable);
-
-        runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_cr_delim.runTest");
+    public void writeFixedFile_CRLineDelimiter() throws Exception {
+        runScenario("cr_delim", "\\r", "cr", false);
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readFixedFile_CRLFLineDelimiter() throws Exception {
-        // table without NEWLINE option header
-        // there is no need to add exTable.addUserParameter("NEWLINE=crlf"); since CR character will be preserved
-        // and LF will be added back by PXF (by default) and both of them will be removed by the formatter
-        prepareReadableTable("fixed_in_small_correct_crlf_delim", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
-                hdfsPath + fixedSmallCorrectCRLFDelimFileName);
-        exTable.addFormatterOption("line_delim=E'\\r\\n'");
-        gpdb.createTableAndVerify(exTable);
-
-        // table with NEWLINE option header
-        prepareReadableTable("fixed_in_small_correct_crlf_delim_header", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
-                hdfsPath + fixedSmallCorrectCRLFDelimFileName);
-        exTable.addFormatterOption("line_delim=E'\\r\\n'");
-        exTable.addUserParameter("NEWLINE=crlf");
-        gpdb.createTableAndVerify(exTable);
-
-        runTincTest("pxf.features.hcfs.fixed.read.small_data_correct_crlf_delim.runTest");
+    public void writeFixedFile_CRLFLineDelimiter() throws Exception {
+        runScenario("crlf_delim", "\\r\\n", "crlf", false);
     }
-*/
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void writeFixedFile_LFLineDelimiter() throws Exception {
+        // this is also a default case, but let's check if delimiters are declared explicitly
+        runScenario("lf_delim", "\\n", "lf", false);
+    }
+
+    /**
+     * Runs a test scenario of inserting data from Greenplum internal table into a PXF writable external table
+     * and then reading it back using PXF readable external table in the Tinc test
+     * @param name name of the scenario, used by convention in names of external tables and tinc tests
+     * @param formatterDelimiter delimiter value to specify for fixedwidth formatter
+     * @param pxfDelimiter delimiter value to specify for PXF external table NEWLINE option
+     * @param compression true if compression should be use for writable table, false otherwise
+     * @throws Exception if any operation fails
+     */
+    private void runScenario(String name, String formatterDelimiter, String pxfDelimiter, boolean compression) throws Exception {
+        String targetDataDir = hdfsPath + name + "/";
+        String formatterDelimiterOption = (formatterDelimiter == null) ? null : String.format("line_delim=E'%s'", formatterDelimiter);
+
+        prepareWritableTable("fixed_out_small_correct_" + name + "_write", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS, targetDataDir);
+        if (formatterDelimiter != null) {
+            writableExTable.addFormatterOption(formatterDelimiterOption);
+        }
+        if (compression) {
+            writableExTable.setCompressionCodec("org.apache.hadoop.io.compress.GzipCodec");
+        }
+        gpdb.createTableAndVerify(writableExTable);
+
+        insertDataIntoWritableTable();
+
+        // verify all written file names end with ".gz" that would indicate that compression worked
+        if (compression) {
+            List<String> files = hdfs.list(targetDataDir);
+            assertNotNull(files);
+            assertTrue(files.size() > 0);
+            assertTrue(files.stream().allMatch(file -> file.endsWith(".gz")));
+        }
+
+        prepareReadableTable("fixed_out_small_correct_" + name + "_read", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS, targetDataDir);
+        if (formatterDelimiter != null) {
+            readableExTable.addFormatterOption(formatterDelimiterOption);
+        }
+        if (pxfDelimiter != null) {
+            readableExTable.addUserParameter("NEWLINE=" + pxfDelimiter);
+        }
+        gpdb.createTableAndVerify(readableExTable);
+
+        runTincTest("pxf.features.hcfs.fixed.write.small_data_correct_" + name + ".runTest");
+    }
 
     /**
      * Prepares a set of data with 9 rows from a row template to correspond to "fixed_small_correct.txt" dataset
@@ -207,7 +185,6 @@ public class HcfsFixedWriteTest extends BaseWritableFeature {
             sleep(10000);
         }
     }
-
 
     private void prepareReadableTable(String name, String[] fields, String[] formatterOptions, String path) {
         // default external table with common settings
