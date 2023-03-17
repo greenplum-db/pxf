@@ -496,6 +496,32 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
     data_len = FORMATTER_GET_DATALEN(fcinfo);
     data_cur = FORMATTER_GET_DATACURSOR(fcinfo);
 
+	int	remaining = data_len - data_cur;
+
+	/*
+	 * NOTE: Unexpected EOF Error Handling
+	 *
+	 * The first time we noticed an unexpected EOF, we'll set the datacursor
+	 * forward and then raise the error. But then, the framework will still
+	 * call the formatter the function again. Now, the formatter function will
+	 * be provided with a zero length data buffer. In this case, we should not
+	 * raise an error again, but simply return "NEED MORE DATA". This is how
+	 * the formatter framework works.
+	 */
+	if (remaining == 0 && FORMATTER_GET_SAW_EOF(fcinfo))
+		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
+
+	if (remaining < 4)
+	{
+		if (FORMATTER_GET_SAW_EOF(fcinfo))
+		{
+			FORMATTER_SET_BAD_ROW_DATA(fcinfo, data_buf + data_cur, remaining);
+			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
+							errmsg("unexpected end of file (multibyte case)")));
+		}
+		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
+	}
+
     /* start clean */
     MemSet(myData->values, 0, ncolumns * sizeof(Datum));
     MemSet(myData->nulls, true, ncolumns * sizeof(bool));
