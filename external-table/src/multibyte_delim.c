@@ -432,7 +432,11 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
             // if a table encoding is provided, then we assume that the file (and thus the data stream) is in that encoding
             //  and we will need to convert the data stream from the table encoding into the server encoding
             myData->values[index] = InputFunctionCall(&myData->conv_functions[index],
+#if PG_VERSION_NUM >= 90600
                     buf->data, myData->typioparams[index], TupleDescAttr(myData->desc, index)->atttypmod);
+#else
+                    buf->data, myData->typioparams[index], myData->desc->attrs[index]->atttypmod);
+#endif
             myData->nulls[index] = false;
         }
         index++;
