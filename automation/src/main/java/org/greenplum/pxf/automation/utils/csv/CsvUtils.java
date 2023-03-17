@@ -1,8 +1,10 @@
 package org.greenplum.pxf.automation.utils.csv;
 
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -80,7 +82,7 @@ public abstract class CsvUtils {
 			throws IOException {
 
 		// create CsvWriter using FileWriter
-		CSVWriter csvWriter = new CSVWriter(new FileWriter(targetCsvFile, charset), delimiter, quotechar, escapechar, eol);
+		CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(new FileOutputStream(targetCsvFile), charset), delimiter, quotechar, escapechar, eol);
 		try {
 			// go over list and write each inner list to csv file
 			for (List<String> currentList : table.getData()) {
