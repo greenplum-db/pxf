@@ -137,7 +137,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -161,7 +162,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -180,7 +182,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -198,7 +201,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '停', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '停', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -222,7 +226,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '|', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '|', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // replace pipe delimiter with actual delimiter
         CsvUtils.updateDelim(tempLocalDataPath, '|', "\uD83D\uDE42");
         // copy local CSV to HDFS
@@ -252,7 +257,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '|', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '|', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // replace pipe delimiter with actual delimiter
         CsvUtils.updateDelim(tempLocalDataPath, '|', "DELIM");
         // copy local CSV to HDFS
@@ -283,7 +289,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\r\n");
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\r\n");
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -302,7 +309,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -322,12 +330,32 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, '¤', '|', '\\', CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', '|', '\\', CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote_and_escape.runTest");
+    }
+
+    // users should still be able to use a normal delimiter with this formatter
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readOneByteDelimiter() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_onebyte_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setDelimiter("|");
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '|', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.one_byte.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -384,8 +412,11 @@ public class MultibyteDelimiterTest extends BaseFeature {
         dataTable.addRow(new String[]{
                 "5",
                 "minden amire szüksége van a szeretet"});
-        hdfs.writeTableToFile(hdfsFilePath, dataTable, "¤",
-                StandardCharsets.ISO_8859_1);
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+                '¤', ' ', ' ', CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding.runTest");
@@ -408,11 +439,73 @@ public class MultibyteDelimiterTest extends BaseFeature {
         dataTable.addRow(new String[]{
                 "5",
                 "minden amire szüksége van a szeretet"});
-        hdfs.writeTableToFile(hdfsFilePath, dataTable, "¤",
-                StandardCharsets.ISO_8859_1);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+                '¤', ' ', ' ', CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding_bytes.runTest");
     }
 
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readFileWithLatin1EncodingWithQuote() throws Exception {
+        ProtocolEnum protocol = ProtocolUtils.getProtocol();
+        // define and create external table
+        exTable.setName("pxf_multibyte_encoding_quote");
+        exTable.setFields(new String[]{"num1 int", "word text"});
+        exTable.setProfile(protocol.value() + ":text");
+        exTable.setDelimiter("¤");
+        exTable.setQuote("|");
+        exTable.setEncoding("LATIN1");
+        gpdb.createTableAndVerify(exTable);
+        // prepare data and write to HDFS
+        dataTable = new Table("data", null);
+        dataTable.addRow(new String[]{"4", "tá sé seo le tástáil dea-"});
+        dataTable.addRow(new String[]{"3", "règles d'automation"});
+        dataTable.addRow(new String[]{
+                "5",
+                "minden amire szüksége van a szeretet"});
+        hdfs.writeTableToFile(hdfsFilePath, dataTable, "¤",
+                StandardCharsets.ISO_8859_1);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+                '¤', '|', ' ', CSVWriter.DEFAULT_LINE_END);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.encoding_quote.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readFileWithLatin1EncodingWithQuoteAndEscape() throws Exception {
+        ProtocolEnum protocol = ProtocolUtils.getProtocol();
+        // define and create external table
+        exTable.setName("pxf_multibyte_encoding_quote_escape");
+        exTable.setFields(new String[]{"num1 int", "word text"});
+        exTable.setProfile(protocol.value() + ":text");
+        exTable.setDelimiter("¤");
+        exTable.setQuote("|");
+        exTable.setEscape("¿");
+        exTable.setEncoding("LATIN1");
+        gpdb.createTableAndVerify(exTable);
+        // prepare data and write to HDFS
+        dataTable = new Table("data", null);
+        dataTable.addRow(new String[]{"4", "tá sé seo le tástáil dea-"});
+        dataTable.addRow(new String[]{"3", "règles d'automation"});
+        dataTable.addRow(new String[]{
+                "5",
+                "minden amire szüksége van a szeretet"});
+        hdfs.writeTableToFile(hdfsFilePath, dataTable, "¤",
+                StandardCharsets.ISO_8859_1);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+                '¤', '|', '¿', CSVWriter.DEFAULT_LINE_END);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.encoding_quote_escape.runTest");
+    }
 }

@@ -3,6 +3,7 @@ package org.greenplum.pxf.automation.utils.csv;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -73,13 +74,13 @@ public abstract class CsvUtils {
 	 * @param targetCsvFile to write the data Table
 	 * @throws IOException
 	 */
-	public static void writeTableToCsvFileOptions(Table table, String targetCsvFile,
+	public static void writeTableToCsvFileOptions(Table table, String targetCsvFile, Charset charset,
 												  char delimiter, char quotechar,
 												  char escapechar, String eol)
 			throws IOException {
 
 		// create CsvWriter using FileWriter
-		CSVWriter csvWriter = new CSVWriter(new FileWriter(targetCsvFile), delimiter, quotechar, escapechar, eol);
+		CSVWriter csvWriter = new CSVWriter(new FileWriter(targetCsvFile, charset), delimiter, quotechar, escapechar, eol);
 		try {
 			// go over list and write each inner list to csv file
 			for (List<String> currentList : table.getData()) {
@@ -109,6 +110,7 @@ public abstract class CsvUtils {
 		writeTableToCsvFileOptions(
 				table,
 				targetCsvFile,
+				StandardCharsets.UTF_8,
 				CSVWriter.DEFAULT_SEPARATOR,
 				CSVWriter.DEFAULT_QUOTE_CHARACTER,
 				CSVWriter.DEFAULT_ESCAPE_CHARACTER,

@@ -1,0 +1,9 @@
+-- @description query01 for PXF Multibyte delimiter differentEncoding case with quotes
+
+SELECT * from pxf_multibyte_encoding_quote ORDER BY num1;
+ num1 |                 word
+------+--------------------------------------
+    3 | règles d'automation
+    4 | tá sé seo le tástáil dea-
+    5 | minden amire szüksége van a szeretet
+(3 rows)
