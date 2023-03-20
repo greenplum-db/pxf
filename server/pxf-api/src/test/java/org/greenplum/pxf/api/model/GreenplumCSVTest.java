@@ -251,7 +251,7 @@ public class GreenplumCSVTest {
     }
 
     @Test
-    public void testCsvOptionWithNewlineValid() {
+    public void testCsvOptionWithNewlineSpecial() {
         gpCSV.withNewline("\n");
         assertEquals("\n", gpCSV.getNewline());
         gpCSV.withNewline("\r");
@@ -273,10 +273,12 @@ public class GreenplumCSVTest {
     }
 
     @Test
-    public void testCsvOptionWithNewlineInvalid() {
-        Exception e = assertThrows(IllegalArgumentException.class,
-                () -> gpCSV.withNewline("\\\\"));
-        assertEquals("invalid newline character '\\\\'. Only LF, CR, or CRLF are supported for newline.", e.getMessage());
+    public void testCsvOptionWithNewlineCustom() {
+        gpCSV.withNewline("\\\\");
+        assertEquals("\\\\", gpCSV.getNewline());
+
+        gpCSV.withNewline("abc");
+        assertEquals("abc", gpCSV.getNewline());
     }
 
     @Test

@@ -107,13 +107,13 @@ public class HcfsFixedReadTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readFixedFile_CustomLineDelimiter() throws Exception {
-        // table without NEWLINE option header - reads the whole file as a single line
+        // table without NEWLINE option header - reads the whole file as a single line, might be a problem
         prepareReadableTable("fixed_in_small_correct_custom_delim", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + fixedSmallCorrectCustomDelimFileName);
         exTable.addFormatterOption("line_delim='@#$'");
         gpdb.createTableAndVerify(exTable);
 
-        // table with NEWLINE option header -- returns an ERROR as PXF only allows CR/LF/CRLF as new line separator values
+        // table with NEWLINE option header -- correct way - streams lines one by one
         prepareReadableTable("fixed_in_small_correct_custom_delim_header", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + fixedSmallCorrectCustomDelimFileName);
         exTable.addFormatterOption("line_delim='@#$'");

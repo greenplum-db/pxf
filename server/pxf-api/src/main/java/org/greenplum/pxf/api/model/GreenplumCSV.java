@@ -126,8 +126,7 @@ public class GreenplumCSV {
     }
 
     /**
-     * Set newline character for parsing CSV with designated newline character. Will
-     * raise IllegalArgumentException if the input is not supported newline character.
+     * Set newline character for parsing CSV with designated newline character.
      * Empty string input will be ignored.
      *
      * @param newline the newline character to be set
@@ -135,10 +134,10 @@ public class GreenplumCSV {
      */
     public GreenplumCSV withNewline(String newline) {
         if (StringUtils.isNotEmpty(newline)) {
-            // validate that it is \n or \r or \r\n
-            // Greenplum only supports LF (Line feed, 0x0A), CR
-            // (Carriage return, 0x0D), or CRLF (Carriage return plus line
-            // feed, 0x0D 0x0A) as newline characters
+            // translate literal representation (CR. LF, CRLF) for (\r , \n , \r\n)
+            // Greenplum TEXT / CSV formatter only supports CR (Carriage return, 0x0D), LF (Line feed, 0x0A), or
+            // CRLF (Carriage return plus line feed, 0x0D 0x0A) as newline characters
+            // but the "fixedwidth" formatter supports custom line delimiters
 
             switch (newline.toLowerCase()) {
                 case "cr":
@@ -153,15 +152,8 @@ public class GreenplumCSV {
                     this.newline = "\r\n";
                     break;
 
-                case "\n":
-                case "\r":
-                case "\r\n":
-                    this.newline = newline;
-                    break;
-
                 default:
-                    throw new IllegalArgumentException(String.format(
-                            "invalid newline character '%s'. Only LF, CR, or CRLF are supported for newline.", newline));
+                    this.newline = newline;
             }
         }
         this.newlineLength = newline != null ? newline.length() : 0;

@@ -1,4 +1,15 @@
 -- @description query01 tests reading a small data set from fixed width text files with custom record delimiter
 select * from fixed_out_small_correct_custom_delim_read order by s1;
-ERROR:  PXF server error : invalid newline character '@#$'. Only LF, CR, or CRLF are supported for newline.
-CONTEXT:  External table fixed_out_small_correct_custom_delim_read
+     s1     |  s2  |   s3   |         dt          | n1 | n2  |   n3   |  n4   |   n5    |   n6    |     n7
+------------+------+--------+---------------------+----+-----+--------+-------+---------+---------+------------
+ aaa        | twoa | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+ bbb        | twob | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+ ccc        | twoc | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+ ddd        | twod | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+ eee        | twoe | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+ fff        | twof | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+ ggg        | twog | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+ hhh        | twoh | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+ iii        | twoi | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+ jjj        | twoj | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
+(10 rows)
