@@ -475,6 +475,11 @@ public class MultibyteDelimiterTest extends BaseFeature {
         CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
                 '¤', '|', ' ', CSVWriter.DEFAULT_LINE_END);
 
+        // wait a bit for async write in previous steps to finish
+        if (protocol == ProtocolEnum.FILE) {
+            sleep(10000);
+        }
+
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote.runTest");
     }
@@ -504,6 +509,11 @@ public class MultibyteDelimiterTest extends BaseFeature {
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
                 '¤', '|', '\"', CSVWriter.DEFAULT_LINE_END);
+
+        // wait a bit for async write in previous steps to finish
+        if (protocol == ProtocolEnum.FILE) {
+            sleep(10000);
+        }
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote_escape.runTest");
