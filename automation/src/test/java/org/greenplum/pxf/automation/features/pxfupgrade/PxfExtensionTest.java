@@ -17,27 +17,30 @@ public class PxfExtensionTest extends BaseFunctionality {
     };
 
     private ReadableExternalTable externalTable;
+    private String lastDb;
 
     @Override
     protected void beforeMethod() throws Exception {
         super.beforeMethod();
-        gpdb.createDataBase("pxfupgradetest", false);
+        lastDb = gpdb.getDb();
+        gpdb.createDataBase("extension_tests", false);
+        gpdb.setDb("extension_tests");
     }
 
     @Override
     protected void afterMethod() throws Exception {
         if (gpdb != null) {
-            gpdb.dropDataBase("pxfupgradetest", true, false);
+            gpdb.dropDataBase("extension_tests", true, false);
+            gpdb.setDb(lastDb);
         }
         super.afterMethod();
     }
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfInstallScenario() throws Exception {
-        gpdb.setDb("pxfupgradetest");
         // drop the existing extension
         gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
-        runTincTest("pxf.features.pxfupgrade.install.step_1_no_pxf.runTest");
+        runTincTest("pxf.features.extension_tests.install.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf");
         // create a regular external table
@@ -46,49 +49,45 @@ public class PxfExtensionTest extends BaseFunctionality {
         // create an external table with the multibyte formatter
         String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
-        runTincTest("pxf.features.pxfupgrade.install.step_2_create_extension.runTest");
-
+        runTincTest("pxf.features.extension_tests.install.step_2_create_extension.runTest");
     }
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfUpgradeScenario() throws Exception {
-        gpdb.setDb("pxfupgradetest");
         // drop the existing extension
         gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
-        runTincTest("pxf.features.pxfupgrade.upgrade.step_1_no_pxf.runTest");
+        runTincTest("pxf.features.extension_tests.upgrade.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf VERSION \"2.0\"");
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
-        runTincTest("pxf.features.pxfupgrade.upgrade.step_2_create_extension_with_older_pxf_version.runTest");
+        runTincTest("pxf.features.extension_tests.upgrade.step_2_create_extension_with_older_pxf_version.runTest");
 
         // create an external table with the multibyte formatter
         String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
         gpdb.runQuery("ALTER EXTENSION pxf UPDATE");
-        runTincTest("pxf.features.pxfupgrade.upgrade.step_3_after_alter_extension.runTest");
-
+        runTincTest("pxf.features.extension_tests.upgrade.step_3_after_alter_extension.runTest");
     }
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfUpgradeScenarioExplicitVersion() throws Exception {
-        gpdb.setDb("pxfupgradetest");
         // drop the existing extension
         gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
-        runTincTest("pxf.features.pxfupgrade.explicit_upgrade.step_1_no_pxf.runTest");
+        runTincTest("pxf.features.extension_tests.explicit_upgrade.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf VERSION \"2.0\"");
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
-        runTincTest("pxf.features.pxfupgrade.explicit_upgrade.step_2_create_extension_with_older_pxf_version.runTest");
+        runTincTest("pxf.features.extension_tests.explicit_upgrade.step_2_create_extension_with_older_pxf_version.runTest");
 
         // create an external table with the multibyte formatter
         String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
         gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \"2.1\"");
-        runTincTest("pxf.features.pxfupgrade.explicit_upgrade.step_3_after_alter_extension.runTest");
-
+        runTincTest("pxf.features.extension_tests.explicit_upgrade.step_3_after_alter_extension.runTest");
     }
+
     private String prepareData(boolean multi) throws Exception {
         Table smallData = getSmallData("", 10);
         String location;
