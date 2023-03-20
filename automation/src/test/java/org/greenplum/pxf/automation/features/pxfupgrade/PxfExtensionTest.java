@@ -4,10 +4,9 @@ import org.greenplum.pxf.automation.BaseFunctionality;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
-import org.testng.SkipException;
 import org.testng.annotations.Test;
 
-public class PxfupgradeTest extends BaseFunctionality {
+public class PxfExtensionTest extends BaseFunctionality {
 
     public static final String[] FIELDS = {
             "name    text",
