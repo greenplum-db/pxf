@@ -34,62 +34,84 @@ public class PxfupgradeTest extends BaseFunctionality {
     }
 
     @Test(groups = {"features", "gpdb"})
-    public void testPXFInstallScenario() throws Exception {
+    public void testPxfInstallScenario() throws Exception {
         gpdb.setDb("pxfupgradetest");
         // drop the existing extension
-        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to external table pxf_upgrade_test", false, true);
+        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
         runTincTest("pxf.features.pxfupgrade.install.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf");
-        String location = prepareData();
-        createReadablePxfTable("default", location);
+        // create a regular external table
+        String location = prepareData(false);
+        createReadablePxfTable("default", location, false);
+        // create an external table with the multibyte formatter
+        String location_multi = prepareData(true);
+        createReadablePxfTable("default", location_multi, true);
         runTincTest("pxf.features.pxfupgrade.install.step_2_create_extension.runTest");
 
     }
 
     @Test(groups = {"features", "gpdb"})
-    public void testPXFUpgradeScenario() throws Exception {
+    public void testPxfUpgradeScenario() throws Exception {
         gpdb.setDb("pxfupgradetest");
         // drop the existing extension
-        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to external table pxf_upgrade_test", false, true);
+        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
         runTincTest("pxf.features.pxfupgrade.upgrade.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf VERSION \"2.0\"");
-        String location = prepareData();
-        createReadablePxfTable("default", location);
+        String location = prepareData(false);
+        createReadablePxfTable("default", location, false);
         runTincTest("pxf.features.pxfupgrade.upgrade.step_2_create_extension_with_older_pxf_version.runTest");
 
+        // create an external table with the multibyte formatter
+        String location_multi = prepareData(true);
+        createReadablePxfTable("default", location_multi, true);
         gpdb.runQuery("ALTER EXTENSION pxf UPDATE");
         runTincTest("pxf.features.pxfupgrade.upgrade.step_3_after_alter_extension.runTest");
 
     }
 
     @Test(groups = {"features", "gpdb"})
-    public void testPXFUpgradeScenarioExplicitVersion() throws Exception {
+    public void testPxfUpgradeScenarioExplicitVersion() throws Exception {
         gpdb.setDb("pxfupgradetest");
         // drop the existing extension
-        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to external table pxf_upgrade_test", false, true);
+        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
         runTincTest("pxf.features.pxfupgrade.explicit_upgrade.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf VERSION \"2.0\"");
-        String location = prepareData();
-        createReadablePxfTable("default", location);
+        String location = prepareData(false);
+        createReadablePxfTable("default", location, false);
         runTincTest("pxf.features.pxfupgrade.explicit_upgrade.step_2_create_extension_with_older_pxf_version.runTest");
 
+        // create an external table with the multibyte formatter
+        String location_multi = prepareData(true);
+        createReadablePxfTable("default", location_multi, true);
         gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \"2.1\"");
         runTincTest("pxf.features.pxfupgrade.explicit_upgrade.step_3_after_alter_extension.runTest");
 
     }
-    private String prepareData() throws Exception {
+    private String prepareData(boolean multi) throws Exception {
         Table smallData = getSmallData("", 10);
-        String location = hdfs.getWorkingDirectory() + "/gpupgrade-test-data.txt";
-        hdfs.writeTableToFile(location, smallData, ",");
+        String location;
+        if (multi) {
+            location = hdfs.getWorkingDirectory() + "/gpupgrade-test-data_multibyte.txt";
+            hdfs.writeTableToFile(location, smallData, "停");
+        } else {
+            location = hdfs.getWorkingDirectory() + "/gpupgrade-test-data.txt";
+            hdfs.writeTableToFile(location, smallData, ",");
+        }
 
         return location;
     }
 
-    private void createReadablePxfTable(String serverName, String location) throws Exception {
-        externalTable = TableFactory.getPxfReadableTextTable("pxf_upgrade_test", FIELDS, location, ",");
+    private void createReadablePxfTable(String serverName, String location, boolean multi) throws Exception {
+        if (multi) {
+            externalTable = TableFactory.getPxfReadableTextTable("pxf_upgrade_test_multibyte", FIELDS, location, "停");
+            externalTable.setFormat("CUSTOM");
+            externalTable.setFormatter("pxfdelimited_import");
+        } else {
+            externalTable = TableFactory.getPxfReadableTextTable("pxf_upgrade_test", FIELDS, location, ",");
+        }
         externalTable.setHost(pxfHost);
         externalTable.setPort(pxfPort);
         externalTable.setServer("SERVER=" + serverName);

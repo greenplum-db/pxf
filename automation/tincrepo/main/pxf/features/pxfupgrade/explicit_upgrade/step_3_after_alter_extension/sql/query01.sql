@@ -17,3 +17,5 @@ WHERE d.deptype = 'e' AND e.extname = 'pxf'
 ORDER BY 1;
 
 SELECT * FROM pxf_upgrade_test;
+
+SELECT * FROM pxf_upgrade_test_multibyte;
