@@ -468,17 +468,11 @@ public class MultibyteDelimiterTest extends BaseFeature {
         dataTable.addRow(new String[]{
                 "5",
                 "minden amire szüksége van a szeretet"});
-        hdfs.writeTableToFile(hdfsFilePath, dataTable, "¤",
-                StandardCharsets.ISO_8859_1);
-        // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
-                '¤', '|', ' ', CSVWriter.DEFAULT_LINE_END);
-
-        // wait a bit for async write in previous steps to finish
-        if (protocol == ProtocolEnum.FILE) {
-            sleep(10000);
-        }
+                '¤', '|', '|', CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote.runTest");
@@ -503,17 +497,12 @@ public class MultibyteDelimiterTest extends BaseFeature {
         dataTable.addRow(new String[]{
                 "5",
                 "minden amire szüksége van a szeretet"});
-        hdfs.writeTableToFile(hdfsFilePath, dataTable, "¤",
-                StandardCharsets.ISO_8859_1);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
                 '¤', '|', '\"', CSVWriter.DEFAULT_LINE_END);
-
-        // wait a bit for async write in previous steps to finish
-        if (protocol == ProtocolEnum.FILE) {
-            sleep(10000);
-        }
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote_escape.runTest");
