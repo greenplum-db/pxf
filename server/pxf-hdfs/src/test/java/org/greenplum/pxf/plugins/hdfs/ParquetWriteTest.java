@@ -845,7 +845,8 @@ public class ParquetWriteTest {
     @Test
     public void testWriteNumeric() throws Exception {
         String path = temp + "/out/numeric/";
-        int precision = 38, scale = 18;
+        int precision = 38;
+        int scale = 18;
         columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", new Integer[]{precision, scale}));
 
         context.setDataSource(path);
@@ -1963,7 +1964,8 @@ public class ParquetWriteTest {
     public void testWriteNumericWithPrecisionOverflowWithIgnoreFlag() {
         String path = temp + "/out/numeric_with_large_precision_with_ignore_flag/";
         // precision and scale are defined.
-        int precision = 90, scale = 18;
+        int precision = 90;
+        int scale = 18;
         String configurationOption = "ignore";
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123492");
@@ -1976,7 +1978,8 @@ public class ParquetWriteTest {
     public void testWriteNumericWithPrecisionOverflowWithErrorFlag() {
         String path = temp + "/out/numeric_with_undefined_precision_with_error_flag/";
         /// precision and scale are defined.
-        int precision = 90, scale = 18;
+        int precision = 90;
+        int scale = 18;
         String configurationOption = "error";
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123493");
@@ -2050,7 +2053,8 @@ public class ParquetWriteTest {
     @Test
     public void testWriteNumericWithPrecisionIntegerOverflowWithIgnoreFlag() throws Exception {
         String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_ignore_flag/";
-        int precision = 20, scale = 5;
+        int precision = 20;
+        int scale = 5;
         String configurationOption = "ignore";
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123497");
@@ -2088,7 +2092,8 @@ public class ParquetWriteTest {
     @Test
     public void testWriteNumericWithPrecisionIntegerOverflowWithErrorFlag() throws Exception {
         String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_error_flag/";
-        int precision = 20, scale = 5;
+        int precision = 20;
+        int scale = 5;
         String configurationOption = "error";
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123498");
@@ -2112,7 +2117,8 @@ public class ParquetWriteTest {
     @Test
     public void testWriteNumericWithPrecisionScaleOverflowWithIgnoreFlag() throws Exception {
         String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_ignore_flag/";
-        int precision = 20, scale = 5;
+        int precision = 20;
+        int scale = 5;
         String configurationOption = "ignore";
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123499");
@@ -2193,7 +2199,8 @@ public class ParquetWriteTest {
     @Test
     public void testWriteNumericWithPrecisionScaleOverflowWithRoundFlag() throws Exception {
         String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_ignore_flag/";
-        int precision = 20, scale = 5;
+        int precision = 20;
+        int scale = 5;
         String configurationOption = "round";
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123505");
@@ -2231,7 +2238,8 @@ public class ParquetWriteTest {
     @Test
     public void testWriteNumericWithPrecisionScaleOverflowWithErrorFlag() throws Exception {
         String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_ignore_flag/";
-        int precision = 20, scale = 5;
+        int precision = 20;
+        int scale = 5;
         String configurationOption = "error";
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123505");
