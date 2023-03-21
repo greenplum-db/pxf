@@ -147,7 +147,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=10"});
         // create external table
         gpdb.createTableAndVerify(exTable);
-        // run the query skipping the first 10 lines of the text
+
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte.runTest");
     }
@@ -211,8 +211,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=10"});
         // create external table
         gpdb.createTableAndVerify(exTable);
+
         // verify results
-        // run the query skipping the first 10 lines of the text
         runTincTest("pxf.features.multibyte_delimiter.three_byte.runTest");
     }
 
@@ -242,8 +242,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=10"});
         // create external table
         gpdb.createTableAndVerify(exTable);
+
         // verify results
-        // run the query skipping the first 10 lines of the text
         runTincTest("pxf.features.multibyte_delimiter.four_byte.runTest");
     }
 
@@ -273,8 +273,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=10"});
         // create external table
         gpdb.createTableAndVerify(exTable);
+
         // verify results
-        // run the query skipping the first 10 lines of the text
         runTincTest("pxf.features.multibyte_delimiter.multi_char.runTest");
     }
 
@@ -419,6 +419,62 @@ public class MultibyteDelimiterTest extends BaseFeature {
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.one_byte.runTest");
+    }
+
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readOneCol() throws Exception {
+        // set profile and format
+        exTable = TableFactory.getPxfReadableTextTable("pxf_multibyte_onecol_data",
+                new String[]{"s1 text"},
+                protocol.getExternalTablePath(hdfs.getBasePath(), hdfsFilePath),
+                "¤");
+        exTable.setFormat("CUSTOM");
+        exTable.setFormatter("pxfdelimited_import");
+        exTable.setProfile(protocol.value() + ":csv");
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // prepare data and write to HDFS
+        dataTable = new Table("data", null);
+        dataTable.addRow(new String[]{"tá sé seo le tástáil dea-"});
+        dataTable.addRow(new String[]{"règles d'automation"});
+        dataTable.addRow(new String[]{"minden amire szüksége van a szeretet"});
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+                '¤', ' ', ' ', CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.one_col.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readOneColQuote() throws Exception {
+        // set profile and format
+        exTable = TableFactory.getPxfReadableTextTable("pxf_multibyte_onecol_quote_data",
+                new String[]{"s1 text"},
+                protocol.getExternalTablePath(hdfs.getBasePath(), hdfsFilePath),
+                "¤");
+        exTable.setFormat("CUSTOM");
+        exTable.setFormatter("pxfdelimited_import");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setQuote("|");
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // prepare data and write to HDFS
+        dataTable = new Table("data", null);
+        dataTable.addRow(new String[]{"tá sé seo le tástáil dea-"});
+        dataTable.addRow(new String[]{"règles d'automation"});
+        dataTable.addRow(new String[]{"minden amire szüksége van a szeretet"});
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+                '¤', '|', ' ', CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.one_col_quote.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})

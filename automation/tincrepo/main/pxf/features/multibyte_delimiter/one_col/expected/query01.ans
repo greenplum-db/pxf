@@ -1,0 +1,11 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for PXF Multibyte delimiter, one col
+SELECT * from pxf_multibyte_onecol_data ORDER BY s1;
+                    s1
+-------------------------------------------
+  minden  amire  szksge  van  a  szeretet
+  rgles  d'automation
+  t  s  seo  le  tstil  dea-
+(3 rows)
+
