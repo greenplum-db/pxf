@@ -362,7 +362,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithWrongEscape() throws Exception {
         // set profile and format
-        exTable.setName("pxf_multibyte_twobyte_wrong_quote_data");
+        exTable.setName("pxf_multibyte_twobyte_wrong_escape_data");
         exTable.setProfile(protocol.value() + ":csv");
         exTable.setDelimiter("¤");
         exTable.setQuote("|");
@@ -370,6 +370,28 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
+        dataTable.addRow(new String[]{"s_101",
+                "s_1001",
+                "s_10001",
+                "2299-11-28 05:46:40",
+                "101",
+                "1001",
+                "10001",
+                "10001",
+                "10001",
+                "10001",
+                "10001",
+                "s_101 | escaped!",
+                "s_1001",
+                "s_10001",
+                "2299-11-28 05:46:40",
+                "101",
+                "1001",
+                "10001",
+                "10001",
+                "10001",
+                "10001",
+                "10001"});
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
                 '¤', '|', '\\', CSVWriter.DEFAULT_LINE_END);;

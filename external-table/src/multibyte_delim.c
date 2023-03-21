@@ -268,7 +268,9 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
             // the former 'if' will find all 'escape + quote', so if we get into this 'if', we meet a quote not after an escape
         else if(myData->situation == WITH_QUOTE && start[i] == *(myData->quote))
         {
-            ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION), errmsg("remove_escape: the quote needs escape")));
+            ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
+                            errmsg("remove_escape: the quote needs escape"),
+                            errhint("Is the `escape` value in the format options set correctly?")));
         }
         else
         {
