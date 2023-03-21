@@ -82,7 +82,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         // create an external table with the multibyte formatter
         String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
-        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \"2.1\"");
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \'2.1\'");
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_3_after_alter_extension.runTest");
     }
 
