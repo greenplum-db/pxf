@@ -20,22 +20,20 @@ public class PxfExtensionTest extends BaseFunctionality {
     private String lastDb;
 
     @Override
-    protected void beforeMethod() throws Exception {
-        super.beforeMethod();
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         lastDb = gpdb.getDb();
         gpdb.createDataBase("extension_tests", false);
-        gpdb.setDb("extension_tests");
     }
 
     @Override
-    protected void afterMethod() throws Exception {
+    protected void afterClass() throws Exception {
         if (gpdb != null) {
             gpdb.dropDataBase("extension_tests", true, false);
             gpdb.setDb(lastDb);
         }
-        super.afterMethod();
+        super.afterClass();
     }
-
     @Test(groups = {"features", "gpdb"})
     public void testPxfInstallScenario() throws Exception {
         // drop the existing extension
