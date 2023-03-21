@@ -513,27 +513,24 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	 * raise an error again, but simply return "NEED MORE DATA". This is how
 	 * the formatter framework works.
 	 */
-	if (remaining == 0 && FORMATTER_GET_SAW_EOF(fcinfo))
-		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
-
-	if (remaining != 0 && FORMATTER_GET_SAW_EOF(fcinfo))
+	if (FORMATTER_GET_SAW_EOF(fcinfo))
 	{
-		if (!myData->saw_delim && ncolumns > 1)
-		{
-			if (myData->quote_delimiter != NULL)
-			{
-				ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-						errmsg("quoted delimiter (%s) not found", myData->quote_delimiter),
-						errhint("Are the DELIMITER and QUOTE values correct? "
-						"Make sure there are no whitespaces between the QUOTE and DELIMITER values in the data.")));
-			}
-		}
-		else
-		{
-			FORMATTER_SET_BAD_ROW_DATA(fcinfo, data_buf + data_cur, remaining);
-			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-							errmsg("unexpected end of file (multibyte case)")));
-		}
+        if (remaining != 0 && !myData->saw_delim && ncolumns > 1)
+        {
+            if (myData->quote_delimiter != NULL)
+            {
+                ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
+                        errmsg("quoted delimiter (%s) not found", myData->quote_delimiter),
+                        errhint("Check the format options in the table definition. "
+                        "Additionally, make sure there are no whitespaces between the QUOTE and DELIMITER values in the data.")));
+            }
+        }
+        else
+        {
+            FORMATTER_SET_BAD_ROW_DATA(fcinfo, data_buf + data_cur, remaining);
+            ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
+                            errmsg("unexpected end of file (multibyte case)")));
+        }
 
 		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
 	}
