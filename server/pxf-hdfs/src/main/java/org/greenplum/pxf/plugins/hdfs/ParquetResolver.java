@@ -465,13 +465,18 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     public void parseDecimalOverflowOption(Configuration configuration) {
         String decimalOverflowOption = configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND).toLowerCase();
 
-        if (decimalOverflowOption.equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR)) {
-            isDecimalOverflowOptionError = true;
-        } else if (decimalOverflowOption.equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND)) {
-            isDecimalOverflowOptionRound = true;
-        } else if (!decimalOverflowOption.equals(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE)) {
-            throw new UnsupportedTypeException(String.format("Invalid configuration value %s for " +
-                    "pxf.parquet.write.decimal.overflow. Valid values are error, round, and ignore.", decimalOverflowOption));
+        switch (configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND).toLowerCase()) {
+            case PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR:
+                isDecimalOverflowOptionError = true;
+                break;
+            case PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND:
+                isDecimalOverflowOptionRound = true;
+                break;
+            case PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE:
+                break;
+            default:
+                throw new UnsupportedTypeException(String.format("Invalid configuration value %s for " +
+                        "pxf.parquet.write.decimal.overflow. Valid values are error, round, and ignore.", decimalOverflowOption));
         }
     }
 }
