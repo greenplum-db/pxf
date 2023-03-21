@@ -56,7 +56,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
         runTincTest("pxf.features.extension_tests.upgrade.step_1_no_pxf.runTest");
 
-        gpdb.runQuery("CREATE EXTENSION pxf VERSION \"2.0\"");
+        gpdb.runQuery("CREATE EXTENSION pxf VERSION \'2.0\'");
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         runTincTest("pxf.features.extension_tests.upgrade.step_2_create_extension_with_older_pxf_version.runTest");
@@ -74,7 +74,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_1_no_pxf.runTest");
 
-        gpdb.runQuery("CREATE EXTENSION pxf VERSION \"2.0\"");
+        gpdb.runQuery("CREATE EXTENSION pxf VERSION \'2.0\'");
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_2_create_extension_with_older_pxf_version.runTest");
