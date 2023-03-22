@@ -280,11 +280,11 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         int scale = Math.min(HiveDecimal.MAX_SCALE, typeAnnotation.getScale());
 
         /*
-        When this column is defined as NUMERIC(precision,scale), GPDB will handle writing values with overflow.
-        When this column is defined as NUMERIC, the column type will be treated as DECIMAL(38,18),
+        When this column is defined as NUMERIC(precision,scale) in Greenplum, Greenplum will handle writing values with overflow.
+        When this column is defined as NUMERIC in Greenplum, the column type will be treated as a Parquet DECIMAL(38,18),
         and HiveDecimal.create has different behaviors for different types of overflow:
 
-        (1) When the data integer digit count is greater than 38,
+        (1) When the data integer digit count (data precision - data scale) is greater than 38,
         HiveDecimal.create will return a null value. To make the behavior consistent with Hive's behavior
         when storing on a Parquet-backed table, we store the value as null.
         For example, the integer digit count of 1234567890123456789012345678901234567890.123 is 40,
@@ -300,7 +300,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         (3) When data integer digit count is not greater than 38,
         and the overall data precision is not greater than 38,
         HiveDecimal.create will return the same decimal value as provided.
-        For example, 123456.123456 can fit in DECIMAL(38,18) without and data loss, so the data will be created as the same
+        For example, 123456.123456 can fit in DECIMAL(38,18) without any data loss, so the data will be created as the same
          */
         // HiveDecimal.create will return a decimal value which can fit in DECIMAL(38)
         HiveDecimal parsedValue = HiveDecimal.create(value);
@@ -310,8 +310,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                         value, columnName, precision));
             }
 
-            LOG.trace(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d and has been stored as NULL.",
-                    value, columnName, precision));
+            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum precision {} and has been stored as NULL.",
+                    value, columnName, precision);
 
             if (!isPrecisionOverflowWarningLogged) {
                 LOG.warn(String.format("There are rows where for the NUMERIC column %s the values exceed maximum precision %d " +
@@ -329,7 +329,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 scale);
 
         /*
-        When data integer digit count is greater than the maximum supported integer digit count 20 (precision - scale),
+        When data integer digit count is greater than the maximum supported integer digit count 20 (38 - 18),
         enforcePrecisionScale will return null, it means we cannot store the value in Parquet because we have
         exceeded the maximum integer digit count. To make the behavior consistent with Hive's behavior
         when storing on a Parquet-backed table, we store the value as null.
@@ -344,8 +344,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                         value, columnName, precision, scale));
             }
 
-            LOG.trace(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d) and has been stored as NULL.",
-                    value, columnName, precision, scale));
+            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum precision and scale ({},{}) and has been stored as NULL.",
+                    value, columnName, precision, scale);
 
             if (!isIntegerDigitCountOverflowWarningLogged) {
                 LOG.warn(String.format("There are rows where for the NUMERIC column %s the values exceed maximum precision and scale (%d,%d) " +
@@ -364,8 +364,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                         value, columnName, scale));
             }
 
-            LOG.trace(String.format("The value %s for the NUMERIC column %s exceeds maximum scale %d and has been rounded off.",
-                    value, columnName, scale));
+            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum scale {} and has been rounded off.",
+                    value, columnName, scale);
 
             if (!isScaleOverflowWarningLogged) {
                 LOG.warn(String.format("There are rows where for the NUMERIC column %s the values exceed maximum scale %d " +
@@ -463,8 +463,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      */
     public void parseDecimalOverflowOption(Configuration configuration) {
         String decimalOverflowOption = configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND).toLowerCase();
-
-        switch (configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND).toLowerCase()) {
+        switch (decimalOverflowOption) {
             case PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR:
                 isDecimalOverflowOptionError = true;
                 break;
