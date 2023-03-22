@@ -87,7 +87,6 @@ public class PxfExtensionTest extends BaseFunctionality {
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_3_after_alter_extension.runTest");
     }
 
-
     @Test(groups = {"features", "gpdb"})
     public void testPxfDowngradeScenario() throws Exception {
         // drop the existing extension
@@ -105,6 +104,23 @@ public class PxfExtensionTest extends BaseFunctionality {
         gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \'2.0\'");
         runTincTest("pxf.features.extension_tests.downgrade.step_3_after_alter_extension_downgrade.runTest");
     }
+
+    @Test(groups = {"features", "gpdb"})
+    public void testPxfDowngradeThenUpgradeAgain() throws Exception {
+        String location = prepareData(false);
+        createReadablePxfTable("default", location, false);
+        // create an external table with the multibyte formatter
+        String location_multi = prepareData(true);
+        createReadablePxfTable("default", location_multi, true);
+        runTincTest("pxf.features.extension_tests.downgrade_then_upgrade.step_1_check_extension.runTest");
+
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \'2.0\'");
+        runTincTest("pxf.features.extension_tests.downgrade_then_upgrade.step_2_after_alter_extension_downgrade.runTest");
+
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \'2.1\'");
+        runTincTest("pxf.features.extension_tests.downgrade_then_upgrade.step_3_after_alter_extension_upgrade.runTest");
+    }
+
     private String prepareData(boolean multi) throws Exception {
         Table smallData = getSmallData("", 10);
         String location;
