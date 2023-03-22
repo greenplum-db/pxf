@@ -146,20 +146,20 @@ By default, PXF does not bundle the LZO compression library. If the Hadoop clust
 
 Snappy compression requires an executable temporary directory in which to load its native library. If you are using PXF to read a snappy-compressed Avro, ORC, or Parquet file and encounter the error `java.lang.NoClassDefFoundError: Could not initialize class org.xerial.snappy.Snappy`, the temporary directory used by Snappy (default is `/tmp`) may not be executable.
 
-To remedy this situation, specify a writable directory for the Snappy `tempdir`. This procedure involves stopping PXF, updating PXF configuration, synchronizing the configuration change, and then restarting PXF as follows:
+To remedy this situation, specify an executable directory for the Snappy `tempdir`. This procedure involves stopping PXF, updating PXF configuration, synchronizing the configuration change, and then restarting PXF as follows:
 
-1. Determine if the `/tmp` directory is writable:
+1. Determine if the `/tmp` directory is executable:
 
     ``` shell
     $ mount | grep '/tmp'
     tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noexec,seclabel)
     ```
 
-    A `noexec` option in the `mount` output indicates the directory is not writable.
+    A `noexec` option in the `mount` output indicates that the directory is not executable.
 
     Perform this check on each Greenplum Database host.
 
-1. If the `mount` command output for `/tmp` does not include `noexec`, the directory is writable. Exit this procedure, the workaround will not address your issue.
+1. If the `mount` command output for `/tmp` does not include `noexec`, the directory is executable. Exit this procedure, the workaround will not address your issue.
 
     If the `mount` command output for `/tmp` includes `noexec`, continue.
 
@@ -184,7 +184,7 @@ To remedy this situation, specify a writable directory for the Snappy `tempdir`.
     export PXF_JVM_OPTS="-Xmx2g -Xms1g -Dorg.xerial.snappy.tempdir=${PXF_BASE}/run"
     ```
 
-    This option sets the Snappy temporary directory to `${PXF_BASE}/run`, a writable directory accessible by PXF.
+    This option sets the Snappy temporary directory to `${PXF_BASE}/run`, a executable directory accessible by PXF.
 
 1.  Synchronize the PXF configuration and then restart PXF:
 
