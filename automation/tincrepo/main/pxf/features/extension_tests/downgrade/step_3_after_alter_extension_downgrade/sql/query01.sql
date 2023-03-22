@@ -1,4 +1,4 @@
--- @description query01 for PXF gpupgrade test on small data
+-- @description query01 for PXF downgrade test on small data
 -- start_matchsubs
 --
 -- m{.*/usr/local/pxf-(dev|gp\d).*}
@@ -20,3 +20,5 @@ WHERE d.deptype = 'e' AND e.extname = 'pxf'
 ORDER BY 1;
 
 SELECT * FROM pxf_upgrade_test;
+
+SELECT * FROM pxf_upgrade_test_multibyte;

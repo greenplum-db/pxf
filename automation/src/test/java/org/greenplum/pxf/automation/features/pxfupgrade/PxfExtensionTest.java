@@ -23,6 +23,7 @@ public class PxfExtensionTest extends BaseFunctionality {
     public void beforeClass() throws Exception {
         super.beforeClass();
         lastDb = gpdb.getDb();
+        gpdb.dropDataBase("extension_tests", true, true);
         gpdb.createDataBase("extension_tests", false);
     }
 
@@ -86,6 +87,24 @@ public class PxfExtensionTest extends BaseFunctionality {
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_3_after_alter_extension.runTest");
     }
 
+
+    @Test(groups = {"features", "gpdb"})
+    public void testPxfDowngradeScenario() throws Exception {
+        // drop the existing extension
+        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
+        runTincTest("pxf.features.extension_tests.downgrade.step_1_no_pxf.runTest");
+
+        gpdb.runQuery("CREATE EXTENSION pxf");
+        String location = prepareData(false);
+        createReadablePxfTable("default", location, false);
+        // create an external table with the multibyte formatter
+        String location_multi = prepareData(true);
+        createReadablePxfTable("default", location_multi, true);
+        runTincTest("pxf.features.extension_tests.downgrade.step_2_create_extension.runTest");
+
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \'2.0\'");
+        runTincTest("pxf.features.extension_tests.downgrade.step_3_after_alter_extension_downgrade.runTest");
+    }
     private String prepareData(boolean multi) throws Exception {
         Table smallData = getSmallData("", 10);
         String location;
