@@ -144,7 +144,7 @@ By default, PXF does not bundle the LZO compression library. If the Hadoop clust
 
 ## <a id="snappy-init"></a>Addressing a Snappy Compression Initialization Error
 
-Snappy compression requires a writable temporary directory in which to load its native library. If you are using PXF to read a snappy-compressed Avro, ORC, or parquet file and encounter the error `java.lang.NoClassDefFoundError: Could not initialize class org.xerial.snappy.Snappy`, the temporary directory used by Snappy (default is `/tmp`) may not be writable.
+Snappy compression requires an executable temporary directory in which to load its native library. If you are using PXF to read a snappy-compressed Avro, ORC, or Parquet file and encounter the error `java.lang.NoClassDefFoundError: Could not initialize class org.xerial.snappy.Snappy`, the temporary directory used by Snappy (default is `/tmp`) may not be executable.
 
 To remedy this situation, specify a writable directory for the Snappy `tempdir`. This procedure involves stopping PXF, updating PXF configuration, synchronizing the configuration change, and then restarting PXF as follows:
 
