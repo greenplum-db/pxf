@@ -47,6 +47,7 @@ typedef struct {
     int                 external_encoding;	   /* remote side's character encoding */
     FmgrInfo            *enc_conversion_proc;   /* conv proc from exttbl encoding to
                                                    server or the other way around */
+   bool                 saw_delim;
 } format_delimiter_state;
 
 extern void

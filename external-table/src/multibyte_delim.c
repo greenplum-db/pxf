@@ -204,6 +204,8 @@ new_format_delimiter_state(FunctionCallInfo fcinfo)
 
     fmt_state->external_encoding = FORMATTER_GET_EXTENCODING(fcinfo);
     fmt_state->enc_conversion_proc = ((FormatterData*) fcinfo->context)->fmt_conversion_proc;
+
+    fmt_state->saw_delim = false;
     return fmt_state;
 }
 
@@ -410,6 +412,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
         if (location != NULL && location < end)
         {
             end = location;
+            myData->saw_delim = true;
         }
         int column_len = end - start;
         if (column_len == 0)
@@ -511,14 +514,25 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	if (remaining == 0 && FORMATTER_GET_SAW_EOF(fcinfo))
 		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
 
-	if (remaining < 4)
+	if (remaining != 0 && FORMATTER_GET_SAW_EOF(fcinfo))
 	{
-		if (FORMATTER_GET_SAW_EOF(fcinfo))
+		if (!myData->saw_delim && ncolumns > 1)
+		{
+			if (myData->quote_delimiter != NULL)
+			{
+				ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
+						errmsg("quoted delimiter (%s) not found", myData->quote_delimiter),
+						errhint("Are the DELIMITER and QUOTE values correct? "
+						"Make sure there are no whitespaces between the QUOTE and DELIMITER values in the data.")));
+			}
+		}
+		else
 		{
 			FORMATTER_SET_BAD_ROW_DATA(fcinfo, data_buf + data_cur, remaining);
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
 							errmsg("unexpected end of file (multibyte case)")));
 		}
+
 		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
 	}
 

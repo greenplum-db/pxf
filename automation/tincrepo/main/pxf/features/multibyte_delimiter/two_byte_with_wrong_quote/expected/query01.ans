@@ -1,0 +1,6 @@
+-- @description query01 for PXF Multibyte delimiter, 2-byte delim with quote cases
+
+SELECT * from pxf_multibyte_twobyte_wrong_quote_data ORDER BY n1;
+ERROR:  quoted delimiter (|¤) not found
+HINT:  Are the DELIMITER and QUOTE values correct? Make sure there are no whitespaces between the QUOTE and DELIMITER values in the data.
+CONTEXT:  External table pxf_multibyte_twobyte_wrong_quote_data
