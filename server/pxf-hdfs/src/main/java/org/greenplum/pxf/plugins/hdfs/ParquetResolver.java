@@ -316,9 +316,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     value, columnName, precision);
 
             if (!isPrecisionOverflowWarningLogged) {
-                LOG.warn(String.format("There are rows where for the NUMERIC column %s the values exceed maximum precision %d " +
+                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision {} " +
                                 "and have been stored as NULL. Enable TRACE log level for row-level details.",
-                        columnName, precision));
+                        columnName, precision);
                 isPrecisionOverflowWarningLogged = true;
             }
             return null;
@@ -350,9 +350,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     value, columnName, precision, scale);
 
             if (!isIntegerDigitCountOverflowWarningLogged) {
-                LOG.warn(String.format("There are rows where for the NUMERIC column %s the values exceed maximum precision and scale (%d,%d) " +
+                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision and scale ({},{}) " +
                                 "and have been stored as NULL. Enable TRACE log level for row-level details.",
-                        columnName, precision, scale));
+                        columnName, precision, scale);
                 isIntegerDigitCountOverflowWarningLogged = true;
             }
             return null;
@@ -370,9 +370,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     value, columnName, scale);
 
             if (!isScaleOverflowWarningLogged) {
-                LOG.warn(String.format("There are rows where for the NUMERIC column %s the values exceed maximum scale %d " +
+                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum scale {} " +
                                 "and have been rounded off. Enable TRACE log level for row-level details.",
-                        columnName, scale));
+                        columnName, scale);
                 isScaleOverflowWarningLogged = true;
             }
         }
