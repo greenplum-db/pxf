@@ -82,8 +82,8 @@ it:
 	make -C automation TEST=$(TEST)
 
 install:
-ifneq ($(SKIP_FDW_PACKAGE_REASON),)
-	@echo "Skipping installing FDW extension because $(SKIP_FDW_PACKAGE_REASON)"
+ifneq ($(SKIP_FDW_BUILD_REASON),)
+	@echo "Skipping installing FDW extension because $(SKIP_FDW_BUILD_REASON)"
 	$(eval PXF_MODULES := $(filter-out fdw,$(PXF_MODULES)))
 endif
 	set -e ;\
