@@ -1,7 +1,7 @@
 from mpp.models import SQLTestCase
 from mpp.models import SQLConcurrencyTestCase
 
-class PxfMultibyteTwoByteWithWrongQuote(SQLConcurrencyTestCase):
+class PxfMultibyteTwoByteWithWrongQuote_5X(SQLConcurrencyTestCase):
     """
     @db_name pxfautomation
     @concurrency 1

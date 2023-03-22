@@ -2,5 +2,5 @@
 
 SELECT * from pxf_multibyte_twobyte_wrong_quote_data ORDER BY n1;
 ERROR:  quoted delimiter (|¤) not found
-HINT:  Check the format options in the table definition. Additionall, make sure there are no whitespaces between the QUOTE and DELIMITER values in the data.
+HINT:  Check the format options in the table definition. Additionally, make sure there are no whitespaces between the QUOTE and DELIMITER values in the data.
 CONTEXT:  External table pxf_multibyte_twobyte_wrong_quote_data

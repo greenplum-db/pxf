@@ -299,6 +299,25 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readTwoByteDelimiterWithWrongDelimiter() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_twobyte_wrong_delim_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setDelimiter("停");
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', ' ', ' ', CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_delim.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithQuote() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withquote_data");
@@ -335,7 +354,15 @@ public class MultibyteDelimiterTest extends BaseFeature {
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_quote.runTest");
+        // in newer versions of GP6 and in GP7, GPDB calls into the formatter one more time to handle EOF properly
+        // however, this is not the case for GP5 and for versions of GP6 older than 6.24.???
+        // therefore, we must run 2 different sets of tests to check for the expected error
+        // TODO: when a version of GP6 gets released with the custom formatter fix, change this if condition
+        if (gpdb.getVersion() > 6) {
+            runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_quote.runTest");
+        } else {
+            runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_quote_5X.runTest");
+        }
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
