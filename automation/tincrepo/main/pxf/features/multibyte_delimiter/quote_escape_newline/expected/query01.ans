@@ -1,0 +1,6 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for PXF Multibyte delimiter, 2-byte delim with wrong escape case
+SELECT * from pxf_multibyte_quote_escape_newline_data ORDER BY n1;
+ERROR:  NEWLINE can only be LF, CRLF, or CR (multibyte_delim.c:xxx)
+CONTEXT:  External table pxf_multibyte_quote_escape_newline_data

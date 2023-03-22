@@ -478,7 +478,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readBzip2CompressedCsvTwoByteDelimiter() throws Exception {
+    public void readBzip2CompressedCsv() throws Exception {
         BZip2Codec codec = new BZip2Codec();
         codec.setConf(hdfs.getConfiguration());
         char c = 'a';
@@ -497,6 +497,50 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_bzip2.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readTwoByteWithQuoteEscapeNewLine() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_quote_escape_newline_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setDelimiter("¤");
+        exTable.setQuote("|");
+        exTable.setEscape("\\");
+        exTable.setNewLine("EOL");
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        dataTable.addRow(new String[]{"s_101",
+                "s_1001",
+                "s_10001",
+                "2299-11-28 05:46:40",
+                "101",
+                "1001",
+                "10001",
+                "10001",
+                "10001",
+                "10001",
+                "10001",
+                "s_101 | escaped!",
+                "s_1001",
+                "s_10001",
+                "2299-11-28 05:46:40",
+                "101",
+                "1001",
+                "10001",
+                "10001",
+                "10001",
+                "10001",
+                "10001"});
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', '|', '\\', "EOL");;
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.quote_escape_newline.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
