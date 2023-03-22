@@ -142,6 +142,57 @@ By default, PXF does not bundle the LZO compression library. If the Hadoop clust
 
 1. Re-run the query.
 
+## <a id="snappy-init"></a>Addressing a Snappy Compression Initialization Error
+
+Snappy compression requires a writable temporary directory in which to load its native library. If you are using PXF to read a snappy-compressed Avro, ORC, or parquet file and encounter the error `java.lang.NoClassDefFoundError: Could not initialize class org.xerial.snappy.Snappy`, the temporary directory used by Snappy (default is `/tmp`) may not be writable.
+
+To remedy this situation, specify a writable directory for the Snappy `tempdir`. This procedure involves stopping PXF, updating PXF configuration, synchronizing the configuration change, and then restarting PXF as follows:
+
+1. Determine if the `/tmp` directory is writable:
+
+    ``` shell
+    $ mount | grep '/tmp'
+    tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noexec,seclabel)
+    ```
+
+    A `noexec` option in the `mount` output indicates the directory is not writable.
+
+    Perform this check on each Greenplum Database host.
+
+1. If the `mount` command output for `/tmp` does not include `noexec`, the directory is writable. Exit this procedure, the workaround will not address your issue.
+
+    If the `mount` command output for `/tmp` includes `noexec`, continue.
+
+1. Log in to the Greenplum Database master host.
+
+1. Stop PXF on each Greenplum Database host:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster stop
+    ```
+
+1.  Locate the `pxf-env.sh` file in your PXF installation. If you did not relocate `$PXF_BASE`, the file is located here:
+
+    ``` pre
+    /usr/local/pxf-gp6/conf/pxf-env.sh
+    ```
+
+1.  Open `pxf-env.sh` in the editor of your choice, and add `-Dorg.xerial.snappy.tempdir=${PXF_BASE}/run` to the `PXF_JVM_OPTS` setting. For example:
+
+    ``` shell
+    # Memory
+    export PXF_JVM_OPTS="-Xmx2g -Xms1g -Dorg.xerial.snappy.tempdir=${PXF_BASE}/run"
+    ```
+
+    This option sets the Snappy temporary directory to `${PXF_BASE}/run`, a writable directory accessible by PXF.
+
+1.  Synchronize the PXF configuration and then restart PXF:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster start
+    ```
+
 ## <a id="hiveorcnulls"></a>Reading from a Hive table STORED AS ORC Returns NULLs
 
 If you are using PXF to read from a Hive table `STORED AS ORC` and one or more columns that have values are returned as NULLs, there may be a case sensitivity issue between the column names specified in the Hive table definition and those specified in the ORC embedded schema definition. This might happen if the table has been created and populated by another system such as Spark.
