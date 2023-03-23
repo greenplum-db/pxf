@@ -103,6 +103,15 @@ public class HcfsFixedwidthReadTest extends BaseFeature {
         runTincTest("pxf.features.hcfs.fixedwidth.read.small_data_correct_mixed.runTest");
     }
 
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readFixedwidthFile_AlternatingCaseDDL() throws Exception {
+        prepareReadableTable("fixedwidth_in_small_correct_alternating_case_ddl", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
+                hdfsPath + "lines/nocomp/" + fixedwidthSmallCorrectFileName);
+        exTable.setFormatterMixedCase(true);
+        gpdb.createTableAndVerify(exTable);
+        runTincTest("pxf.features.hcfs.fixedwidth.read.small_data_correct_alternating_case_ddl.runTest");
+    }
+
     // ========== Delimiter Tests ==========
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})

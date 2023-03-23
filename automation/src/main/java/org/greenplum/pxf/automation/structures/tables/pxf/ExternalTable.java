@@ -56,6 +56,8 @@ public abstract class ExternalTable extends Table {
 
     private String externalDataSchema;
 
+    private boolean formatterMixedCase = false; // whether to mangle FORMATTER word into mixed case for testing
+
     public ExternalTable(String name, String[] fields, String path,
                          String format) {
         super(name, fields);
@@ -188,7 +190,8 @@ public abstract class ExternalTable extends Table {
         }
 
         if (getFormatter() != null) {
-            createStatment += " (formatter='" + getFormatter() + "'";
+            String formatterOption = isFormatterMixedCase() ? "FoRmAtTeR" : "formatter";
+            createStatment += String.format(" (%s='%s'", formatterOption, getFormatter());
             if (formatterOptions.size() > 0) {
                 createStatment += ", ";
                 createStatment += formatterOptions.stream().collect(Collectors.joining(", "));
@@ -444,5 +447,13 @@ public abstract class ExternalTable extends Table {
         for (String option : formatterOptions) {
             addFormatterOption(option);
         }
+    }
+
+    public boolean isFormatterMixedCase() {
+        return formatterMixedCase;
+    }
+
+    public void setFormatterMixedCase(boolean formatterMixedCase) {
+        this.formatterMixedCase = formatterMixedCase;
     }
 }
