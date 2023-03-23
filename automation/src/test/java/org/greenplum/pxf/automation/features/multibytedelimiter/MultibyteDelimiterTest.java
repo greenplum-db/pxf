@@ -153,45 +153,6 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readTwoByteDelimiterDelimNotProvided() throws Exception {
-        // set profile and format
-        exTable.setName("pxf_multibyte_twobyte_nodelim_data");
-        exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter(null);
-        // create external table
-        gpdb.createTableAndVerify(exTable);
-        // create local CSV file
-        String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
-        // copy local CSV to HDFS
-        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
-
-        // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_no_delim.runTest");
-    }
-
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readTwoByteDelimiterWrongFormatter() throws Exception {
-        // set profile and format
-        exTable.setName("pxf_multibyte_twobyte_wrongformatter_data");
-        exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("¤");
-        exTable.setDelimiter("pxfwritable_import");
-        // create external table
-        gpdb.createTableAndVerify(exTable);
-        // create local CSV file
-        String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
-        // copy local CSV to HDFS
-        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
-
-        // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_wrong_formatter.runTest");
-    }
-
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readThreeByteDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_threebyte_data");
@@ -296,6 +257,45 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_crlf.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readTwoByteDelimiterWrongFormatter() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_twobyte_wrongformatter_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setDelimiter("¤");
+        exTable.setDelimiter("pxfwritable_import");
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.two_byte_wrong_formatter.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readTwoByteDelimiterDelimNotProvided() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_twobyte_nodelim_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setDelimiter(null);
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.two_byte_no_delim.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -586,7 +586,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readFileWithLatin1Encoding() throws Exception {
+    public void readFileWithLatin1EncodingTextProfile() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
         exTable.setName("pxf_multibyte_encoding");
@@ -613,7 +613,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readFileWithLatin1EncodingByteRepresentation() throws Exception {
+    public void readFileWithLatin1EncodingByteRepresentationTextProfile() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
         exTable.setName("pxf_multibyte_encoding_bytes");
@@ -641,7 +641,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readFileWithLatin1EncodingWithQuote() throws Exception {
+    public void readFileWithLatin1EncodingWithQuoteTextProfile() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
         exTable.setName("pxf_multibyte_encoding_quote");
@@ -669,7 +669,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void readFileWithLatin1EncodingWithQuoteAndEscape() throws Exception {
+    public void readFileWithLatin1EncodingWithQuoteAndEscapeTextProfile() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
         exTable.setName("pxf_multibyte_encoding_quote_escape");
