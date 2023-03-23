@@ -37,10 +37,6 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfInstallScenario() throws Exception {
-        // drop the existing extension
-//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
-        runTincTest("pxf.features.extension_tests.install.step_1_no_pxf.runTest");
-
         gpdb.runQuery("CREATE EXTENSION pxf");
         // create a regular external table
         String location = prepareData(false);
@@ -53,10 +49,6 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfUpgradeScenario() throws Exception {
-        // drop the existing extension
-//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
-        runTincTest("pxf.features.extension_tests.upgrade.step_1_no_pxf.runTest");
-
         gpdb.runQuery("CREATE EXTENSION pxf VERSION \'2.0\'");
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
@@ -71,10 +63,6 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfUpgradeScenarioExplicitVersion() throws Exception {
-        // drop the existing extension
-//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
-        runTincTest("pxf.features.extension_tests.explicit_upgrade.step_1_no_pxf.runTest");
-
         gpdb.runQuery("CREATE EXTENSION pxf VERSION \'2.0\'");
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
@@ -89,10 +77,6 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfDowngradeScenario() throws Exception {
-        // drop the existing extension
-//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
-        runTincTest("pxf.features.extension_tests.downgrade.step_1_no_pxf.runTest");
-
         gpdb.runQuery("CREATE EXTENSION pxf");
 
         String location = prepareData(false);
@@ -108,7 +92,6 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfDowngradeThenUpgradeAgain() throws Exception {
-//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
         gpdb.runQuery("CREATE EXTENSION pxf");
 
         String location = prepareData(false);
