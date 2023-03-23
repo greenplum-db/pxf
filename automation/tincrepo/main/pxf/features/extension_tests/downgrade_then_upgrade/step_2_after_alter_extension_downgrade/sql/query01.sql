@@ -10,6 +10,9 @@
 -- m{.*\"pxfdelimited_import\".*}
 -- s{\"pxfdelimited_import\"}{pxfdelimited_import}
 --
+-- m{.*found\.*}
+-- s{found\.}{found}
+--
 -- end_matchsubs
 SELECT extversion FROM pg_extension WHERE extname = 'pxf';
 
