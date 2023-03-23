@@ -262,7 +262,7 @@ under the License.
         </plugins>
     </profile>
     <profile>
-        <name>hdfs:fixed</name>
+        <name>hdfs:fixedwidth</name>
         <description>This profile is suitable for using when reading fixed field length single line records
             from plain text files on HDFS.
         </description>
@@ -324,7 +324,7 @@ under the License.
         </optionMappings>
     </profile>
     <profile>
-        <name>s3:fixed</name>
+        <name>s3:fixedwidth</name>
         <description>This profile is suitable for using when reading fixed field length single line records
             from plain text files on S3.
         </description>
@@ -378,7 +378,7 @@ under the License.
         <protocol>adl</protocol>
     </profile>
     <profile>
-        <name>adl:fixed</name>
+        <name>adl:fixedwidth</name>
         <description>This profile is suitable for using when reading fixed field length single line records
             from plain text files on Azure Data Lake
         </description>
@@ -427,7 +427,7 @@ under the License.
         <protocol>wasbs</protocol>
     </profile>
     <profile>
-        <name>wasbs:fixed</name>
+        <name>wasbs:fixedwidth</name>
         <description>This profile is suitable for using when reading fixed field length single line records
             from plain text files on Azure Blob Storage
         </description>
@@ -476,7 +476,7 @@ under the License.
         <protocol>gs</protocol>
     </profile>
     <profile>
-        <name>gs:fixed</name>
+        <name>gs:fixedwidth</name>
         <description>This profile is suitable for using when reading fixed field length single line records
             from plain text files on Google Cloud Storage
         </description>
@@ -522,7 +522,7 @@ under the License.
         </plugins>
     </profile>
     <profile>
-        <name>file:fixed</name>
+        <name>file:fixedwidth</name>
         <description>This profile is suitable for using when reading fixed field length single line records
             from plain text files on network mounted filesystems.
         </description>

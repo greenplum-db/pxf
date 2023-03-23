@@ -1,0 +1,3 @@
+-- @description query01 tests reading a small data set from fixed width text file with custom record delimiter
+
+select * from fixedwidth_in_small_correct_custom_delim order by s1;

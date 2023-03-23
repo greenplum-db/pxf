@@ -639,7 +639,7 @@ get_format_name(ExtTableEntry *exttbl)
 		}
 		else
 		{
-			// treat other custom formatters (such as 'fixed_in') as TEXT for PXF transport
+			// treat other custom formatters (such as 'fixedwidth_in') as TEXT for PXF transport
 			formatName = TextFormatName;
 		}
 	}
