@@ -7,6 +7,9 @@
 -- m{.*\$libdir/pxf.*}
 -- s{\$libdir}{\$PXF_HOME/gpextable}
 --
+-- m{.*\"pxfdelimited_import\".*}
+-- s{\"pxfdelimited_import\"}{pxfdelimited_import}
+--
 -- end_matchsubs
 SELECT extversion FROM pg_extension WHERE extname = 'pxf';
 
