@@ -107,6 +107,9 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfDowngradeThenUpgradeAgain() throws Exception {
+        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
+        gpdb.runQuery("CREATE EXTENSION pxf");
+
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         // create an external table with the multibyte formatter
