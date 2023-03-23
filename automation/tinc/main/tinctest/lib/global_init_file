@@ -71,4 +71,8 @@ s/, record/, line/
 m/invalid input syntax for type/
 s/invalid input syntax for type/invalid input syntax for/
 
+# ignore resource queue notice for GP6
+m/NOTICE: resource queue required – using default resource queue.*/
+s/.*//g
+
 -- end_matchsubs

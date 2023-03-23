@@ -21,7 +21,7 @@ GRANT
 \set OLD_GP_USER :USER
 DROP ROLE IF EXISTS testuser;
 DROP ROLE
-CREATE ROLE testuser LOGIN RESOURCE QUEUE pg_default;
+CREATE ROLE testuser LOGIN;
 CREATE ROLE
 \connect - testuser
 SELECT * FROM pxf_proxy_hive_small_data_prohibited ORDER BY name;

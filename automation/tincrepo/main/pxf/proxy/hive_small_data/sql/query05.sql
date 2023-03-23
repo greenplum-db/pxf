@@ -29,7 +29,7 @@ SELECT * FROM pxf_proxy_hive_small_data_prohibited_no_impersonation ORDER BY nam
 
 \set OLD_GP_USER :USER
 DROP ROLE IF EXISTS testuser;
-CREATE ROLE testuser LOGIN RESOURCE QUEUE pg_default;
+CREATE ROLE testuser LOGIN;
 
 \connect - testuser
 SELECT * FROM pxf_proxy_hive_small_data_prohibited_no_impersonation ORDER BY name;

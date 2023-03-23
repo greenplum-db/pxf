@@ -9,7 +9,7 @@
 GRANT ALL ON TABLE pxf_jdbc_readable_overrideddl TO PUBLIC;
 \set OLD_GP_USER :USER
 DROP ROLE IF EXISTS testuser;
-CREATE ROLE testuser LOGIN RESOURCE QUEUE pg_default;
+CREATE ROLE testuser LOGIN;
 
 \connect - testuser
 SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin, 'escape') FROM pxf_jdbc_readable_overrideddl ORDER BY t1;

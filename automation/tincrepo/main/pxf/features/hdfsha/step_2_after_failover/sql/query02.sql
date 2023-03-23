@@ -11,7 +11,7 @@ GRANT ALL ON TABLE pxf_hdfsha_hdfs_ipa TO PUBLIC;
 
 \set OLD_GP_USER :USER
 DROP ROLE IF EXISTS testuser;
-CREATE ROLE testuser LOGIN RESOURCE QUEUE pg_default;
+CREATE ROLE testuser LOGIN;
 
 \connect - testuser
 SELECT * FROM pxf_hdfsha_hdfs_ipa ORDER BY name;
