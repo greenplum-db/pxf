@@ -99,6 +99,17 @@ build_http_headers(PxfInputData *input)
 		/* pxf treats everything but pxfwritable_[import|export] as TEXT (even CSV) */
 		char *format = get_format_name(exttbl);
 
+        if (strcmp(format, "pxfdelimited_import") == 0 &&
+                (strstr(input->gphduri->profile, "text") == NULL ||
+                 strstr(input->gphduri->profile, "csv") == NULL))
+        {
+            ereport(ERROR,
+                    (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+                     errmsg("\"pxfdelimited_import\" is not a valid formatter for given PXF profile (%s).", input->gphduri->profile),
+                     errhint("The \"pxfdelimited_import\" formatter only works with *:text or *:csv profiles. "
+                             "Please double check the external table definition.")));
+        }
+		char *format = get_format_name(exttbl->fmtcode, formatter_name);
 		churl_headers_append(headers, "X-GP-FORMAT", format);
 
 		/* Parse fmtOptString here */
