@@ -5,6 +5,9 @@
 -- s{/usr/local/pxf-(dev|gp\d)}{\$PXF_HOME}
 --
 -- end_matchsubs
+-- start_ignore
+\c pxfautomation_extension
+-- end_ignore
 
 SHOW dynamic_library_path;
 

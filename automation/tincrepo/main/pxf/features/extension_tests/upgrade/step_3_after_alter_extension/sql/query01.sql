@@ -8,6 +8,10 @@
 -- s{\$libdir}{\$PXF_HOME/gpextable}
 --
 -- end_matchsubs
+-- start_ignore
+\c pxfautomation_extension
+-- end_ignore
+
 SELECT extversion FROM pg_extension WHERE extname = 'pxf';
 
 SHOW dynamic_library_path;

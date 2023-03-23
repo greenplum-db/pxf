@@ -11,6 +11,10 @@
 --
 -- end_matchsubs
 -- @description query01 for PXF upgrade test on small data
+-- start_ignore
+\c pxfautomation_extension
+-- end_ignore
+
 SELECT extversion FROM pg_extension WHERE extname = 'pxf';
  extversion
 ------------

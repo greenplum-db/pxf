@@ -1,4 +1,4 @@
-package org.greenplum.pxf.automation.features.pxfupgrade;
+package org.greenplum.pxf.automation.features.extension;
 
 import org.greenplum.pxf.automation.BaseFunctionality;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
@@ -23,22 +23,22 @@ public class PxfExtensionTest extends BaseFunctionality {
     public void beforeClass() throws Exception {
         super.beforeClass();
         lastDb = gpdb.getDb();
-        gpdb.dropDataBase("extension_tests", true, true);
-        gpdb.createDataBase("extension_tests", false);
+        gpdb.dropDataBase("pxfautomation_extension", true, true);
+        gpdb.createDataBase("pxfautomation_extension", false);
+        gpdb.setDb("pxfautomation_extension");
+        gpdb.connectToDataBase("pxfautomation_extension");
     }
 
     @Override
-    protected void afterClass() throws Exception {
-        if (gpdb != null) {
-            gpdb.dropDataBase("extension_tests", true, false);
-            gpdb.setDb(lastDb);
-        }
-        super.afterClass();
+    public void beforeMethod() throws Exception {
+        gpdb.connectToDataBase("pxfautomation_extension");
+        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
     }
+
     @Test(groups = {"features", "gpdb"})
     public void testPxfInstallScenario() throws Exception {
         // drop the existing extension
-        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
+//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
         runTincTest("pxf.features.extension_tests.install.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf");
@@ -54,7 +54,7 @@ public class PxfExtensionTest extends BaseFunctionality {
     @Test(groups = {"features", "gpdb"})
     public void testPxfUpgradeScenario() throws Exception {
         // drop the existing extension
-        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
+//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
         runTincTest("pxf.features.extension_tests.upgrade.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf VERSION \'2.0\'");
@@ -72,7 +72,7 @@ public class PxfExtensionTest extends BaseFunctionality {
     @Test(groups = {"features", "gpdb"})
     public void testPxfUpgradeScenarioExplicitVersion() throws Exception {
         // drop the existing extension
-        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
+//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf VERSION \'2.0\'");
@@ -90,10 +90,11 @@ public class PxfExtensionTest extends BaseFunctionality {
     @Test(groups = {"features", "gpdb"})
     public void testPxfDowngradeScenario() throws Exception {
         // drop the existing extension
-        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
+//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
         runTincTest("pxf.features.extension_tests.downgrade.step_1_no_pxf.runTest");
 
         gpdb.runQuery("CREATE EXTENSION pxf");
+
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         // create an external table with the multibyte formatter
@@ -107,7 +108,7 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfDowngradeThenUpgradeAgain() throws Exception {
-        gpdb.runQueryWithExpectedWarning("DROP EXTENSION pxf CASCADE", "drop cascades to *", true, true);
+//        gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
         gpdb.runQuery("CREATE EXTENSION pxf");
 
         String location = prepareData(false);
