@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.features.hdfs;
 
+import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.datapreparer.CustomSequencePreparer;
 import org.greenplum.pxf.automation.datapreparer.CustomTextPreparer;
@@ -44,6 +45,7 @@ import java.sql.SQLWarning;
  * <li>performance 10TB.</li>
  * </ul>
  */
+@WorksWithFDW
 public class HdfsAnalyzeTest extends BaseFeature {
 
     private String resourcePath;
@@ -647,7 +649,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
     }
 
     /**
-     * Create a table with STATS-MAX-FRAGMENTS parameter, and check that the
+     * Create a table with STATS_MAX_FRAGMENTS parameter, and check that the
      * number of returned fragments does not exceed this number when querying
      * the table.
      *
@@ -679,15 +681,15 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setPath(protocol.getExternalTablePath(hdfs.getBasePath(), csvPathAll));
 
         exTable.setUserParameters(new String[] {
-                "STATS-MAX-FRAGMENTS=2",
-                "STATS-SAMPLE-RATIO=1.00" });
+                "STATS_MAX_FRAGMENTS=2",
+                "STATS_SAMPLE_RATIO=1.00" });
 
         gpdb.createTableAndVerify(exTable);
 
         ReportUtils.report(
                 null,
                 getClass(),
-                "Query table to check STATS-MAX-FRAGMENTS parameter - only 2 fragments should be returned.");
+                "Query table to check STATS_MAX_FRAGMENTS parameter - only 2 fragments should be returned.");
         gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
                 + " ORDER BY n1");
 
@@ -697,7 +699,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
     }
 
     /**
-     * Create a table with STATS-SAMPLE-RATIO parameter, and check that the
+     * Create a table with STATS_SAMPLE_RATIO parameter, and check that the
      * number of returned records matches the ratio.
      *
      * @throws Exception if test failed to run
@@ -720,15 +722,15 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setPath(protocol.getExternalTablePath(hdfs.getBasePath(), csvPath));
 
         exTable.setUserParameters(new String[] {
-                "STATS-MAX-FRAGMENTS=100",
-                "STATS-SAMPLE-RATIO=0.0010" });
+                "STATS_MAX_FRAGMENTS=100",
+                "STATS_SAMPLE_RATIO=0.0010" });
 
         gpdb.createTableAndVerify(exTable);
 
         ReportUtils.startLevel(
                 null,
                 getClass(),
-                "Query table to check STATS-SAMPLE-RATIO parameter - only 1 record should be returned.");
+                "Query table to check STATS_SAMPLE_RATIO parameter - only 1 record should be returned.");
         gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         int countResult = Integer.parseInt(exTable.getData().get(0).get(0));
@@ -736,15 +738,15 @@ public class HdfsAnalyzeTest extends BaseFeature {
         ReportUtils.stopLevel(null);
 
         exTable.setUserParameters(new String[] {
-                "STATS-MAX-FRAGMENTS=100",
-                "STATS-SAMPLE-RATIO=0.05" });
+                "STATS_MAX_FRAGMENTS=100",
+                "STATS_SAMPLE_RATIO=0.05" });
 
         gpdb.createTableAndVerify(exTable);
 
         ReportUtils.startLevel(
                 null,
                 getClass(),
-                "Query table to check STATS-SAMPLE-RATIO parameter - only 50 records should be returned.");
+                "Query table to check STATS_SAMPLE_RATIO parameter - only 50 records should be returned.");
         gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         countResult = Integer.parseInt(exTable.getData().get(0).get(0));
@@ -752,15 +754,15 @@ public class HdfsAnalyzeTest extends BaseFeature {
         ReportUtils.stopLevel(null);
 
         exTable.setUserParameters(new String[] {
-                "STATS-MAX-FRAGMENTS=100",
-                "STATS-SAMPLE-RATIO=0.935" });
+                "STATS_MAX_FRAGMENTS=100",
+                "STATS_SAMPLE_RATIO=0.935" });
 
         gpdb.createTableAndVerify(exTable);
 
         ReportUtils.startLevel(
                 null,
                 getClass(),
-                "Query table to check STATS-SAMPLE-RATIO parameter - only 935 record should be returned.");
+                "Query table to check STATS_SAMPLE_RATIO parameter - only 935 record should be returned.");
         gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         countResult = Integer.parseInt(exTable.getData().get(0).get(0));

@@ -43,35 +43,35 @@ public class RequestContextTest {
     public void testStatsMaxFragmentsFailsOnZero() {
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> context.setStatsMaxFragments(0));
-        assertEquals("Wrong value '0'. STATS-MAX-FRAGMENTS must be a positive integer", e.getMessage());
+        assertEquals("Wrong value '0'. STATS_MAX_FRAGMENTS must be a positive integer", e.getMessage());
     }
 
     @Test
     public void testStatsMaxFragmentsFailsOnNegative() {
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> context.setStatsMaxFragments(-1));
-        assertEquals("Wrong value '-1'. STATS-MAX-FRAGMENTS must be a positive integer", e.getMessage());
+        assertEquals("Wrong value '-1'. STATS_MAX_FRAGMENTS must be a positive integer", e.getMessage());
     }
 
     @Test
     public void testStatsSampleRatioFailsOnOver1() {
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> context.setStatsSampleRatio(1.1f));
-        assertEquals("Wrong value '1.1'. STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0", e.getMessage());
+        assertEquals("Wrong value '1.1'. STATS_SAMPLE_RATIO must be a value between 0.0001 and 1.0", e.getMessage());
     }
 
     @Test
     public void testStatsSampleRatioFailsOnZero() {
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> context.setStatsSampleRatio(0));
-        assertEquals("Wrong value '0.0'. STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0", e.getMessage());
+        assertEquals("Wrong value '0.0'. STATS_SAMPLE_RATIO must be a value between 0.0001 and 1.0", e.getMessage());
     }
 
     @Test
     public void testStatsSampleRatioFailsOnLessThanOneTenThousand() {
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> context.setStatsSampleRatio(0.00005f));
-        assertEquals("Wrong value '5.0E-5'. STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0", e.getMessage());
+        assertEquals("Wrong value '5.0E-5'. STATS_SAMPLE_RATIO must be a value between 0.0001 and 1.0", e.getMessage());
     }
 
     @Test
@@ -81,7 +81,7 @@ public class RequestContextTest {
         context.setStatsMaxFragments(5);
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> context.validate());
-        assertEquals("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together", e.getMessage());
+        assertEquals("Missing parameter: STATS_SAMPLE_RATIO and STATS_MAX_FRAGMENTS must be set together", e.getMessage());
     }
 
     @Test
@@ -91,7 +91,7 @@ public class RequestContextTest {
         context.setStatsSampleRatio(0.1f);
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> context.validate());
-        assertEquals("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together", e.getMessage());
+        assertEquals("Missing parameter: STATS_SAMPLE_RATIO and STATS_MAX_FRAGMENTS must be set together", e.getMessage());
     }
 
     @Test

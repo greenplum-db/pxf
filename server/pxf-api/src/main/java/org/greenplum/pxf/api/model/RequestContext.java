@@ -521,7 +521,7 @@ public class RequestContext {
         this.statsMaxFragments = statsMaxFragments;
         if (statsMaxFragments <= 0) {
             throw new IllegalArgumentException(String
-                    .format("Wrong value '%d'. STATS-MAX-FRAGMENTS must be a positive integer",
+                    .format("Wrong value '%d'. STATS_MAX_FRAGMENTS must be a positive integer",
                             statsMaxFragments));
         }
     }
@@ -533,13 +533,13 @@ public class RequestContext {
                     "Wrong value '"
                             + statsSampleRatio
                             + "'. "
-                            + "STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0");
+                            + "STATS_SAMPLE_RATIO must be a value between 0.0001 and 1.0");
         }
     }
 
     public void validate() {
         if ((statsSampleRatio > 0) != (statsMaxFragments > 0)) {
-            fail("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together");
+            fail("Missing parameter: STATS_SAMPLE_RATIO and STATS_MAX_FRAGMENTS must be set together");
         }
 
         if (requestType == RequestType.READ_BRIDGE) {

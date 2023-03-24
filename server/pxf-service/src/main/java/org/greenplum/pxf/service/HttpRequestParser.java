@@ -152,12 +152,18 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         String config = params.removeUserProperty("CONFIG");
         context.setConfig(StringUtils.isNotBlank(config) ? config : context.getServerName());
 
-        String maxFrags = params.removeUserProperty("STATS-MAX-FRAGMENTS");
+        // STATS-MAX-FRAGMENTS is deprecated in favor of STATS_MAX_FRAGMENTS for FDW options support
+        String maxFrags = StringUtils.defaultString(
+                params.removeUserProperty("STATS_MAX_FRAGMENTS"),
+                params.removeUserProperty("STATS-MAX-FRAGMENTS"));
         if (!StringUtils.isBlank(maxFrags)) {
             context.setStatsMaxFragments(Integer.parseInt(maxFrags));
         }
 
-        String sampleRatioStr = params.removeUserProperty("STATS-SAMPLE-RATIO");
+        // STATS-SAMPLE-RATIO is deprecated in favor of STATS_SAMPLE_RATIO for FDW options support
+        String sampleRatioStr = StringUtils.defaultString(
+                params.removeUserProperty("STATS_SAMPLE_RATIO"),
+                params.removeUserProperty("STATS-SAMPLE-RATIO"));
         if (!StringUtils.isBlank(sampleRatioStr)) {
             context.setStatsSampleRatio(Float.parseFloat(sampleRatioStr));
         }
