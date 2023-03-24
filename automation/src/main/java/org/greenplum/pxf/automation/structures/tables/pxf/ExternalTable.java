@@ -39,8 +39,6 @@ public abstract class ExternalTable extends Table {
 
     private String escape;
 
-    private String quote;
-
     private String newLine;
 
     private String[] userParameters;
@@ -181,105 +179,79 @@ public abstract class ExternalTable extends Table {
 
     @Override
     public String constructCreateStmt() {
-        boolean isMultibyteFormatter = false;
-        String createStatement = "";
-        String formatterOptionDeclarer = " ";
+        String createStatment = "";
 
-        createStatement += createHeader();
-        createStatement += createFields();
-        createStatement += createLocation();
+        createStatment += createHeader();
+        createStatment += createFields();
+        createStatment += createLocation();
 
         if (getFormat() != null) {
-            createStatement += " FORMAT '" + getFormat() + "'";
+            createStatment += " FORMAT '" + getFormat() + "'";
 
         }
 
         if (getFormatter() != null) {
             String formatterOption = isFormatterMixedCase() ? "FoRmAtTeR" : "formatter";
-            createStatement += String.format(" (%s='%s'", formatterOption, getFormatter());
+            createStatment += String.format(" (%s='%s'", formatterOption, getFormatter());
             if (formatterOptions.size() > 0) {
-                createStatement += ", ";
-                createStatement += formatterOptions.stream().collect(Collectors.joining(", "));
+                createStatment += ", ";
+                createStatment += formatterOptions.stream().collect(Collectors.joining(", "));
             }
-            createStatement += ")";
+            createStatment += ")";
         }
 
         boolean hasDelimiterOrEscapeOrNewLine =
                 getDelimiter() != null || getEscape() != null || getNewLine() != null;
 
         if (hasDelimiterOrEscapeOrNewLine) {
-            if (!isMultibyteFormatter) {
-                createStatement += " (";
-            }
+            createStatment += " (";
         }
 
         if (getDelimiter() != null) {
-            if (isMultibyteFormatter) {
-                createStatement += ", ";
-            }
+
             // if Escape character, no need for "'"
             String parsedDelimiter = getDelimiter();
             if (!parsedDelimiter.startsWith("E")) {
                 parsedDelimiter = "'" + parsedDelimiter + "'";
             }
-            createStatement += " DELIMITER" + formatterOptionDeclarer + parsedDelimiter ;
+            createStatment += " DELIMITER " + parsedDelimiter ;
         }
 
         if (getEscape() != null) {
-            if (isMultibyteFormatter) {
-                createStatement += ", ";
-            }
+
             // if Escape character, no need for "'"
             String parsedEscapeCharacter = getEscape();
             if (!parsedEscapeCharacter.startsWith("E")) {
                 parsedEscapeCharacter = "'" + parsedEscapeCharacter + "'";
             }
-            createStatement += " ESCAPE" + formatterOptionDeclarer + parsedEscapeCharacter;
-        }
-
-        if (getQuote() != null) {
-            if (isMultibyteFormatter) {
-                createStatement += ", ";
-            }
-            // if Escape character, no need for "'"
-            String parsedQuoteCharacter = getQuote();
-            if (!parsedQuoteCharacter.startsWith("E")) {
-                parsedQuoteCharacter = "'" + parsedQuoteCharacter + "'";
-            }
-            createStatement += " QUOTE" + formatterOptionDeclarer + parsedQuoteCharacter;
+            createStatment += " ESCAPE " + parsedEscapeCharacter;
         }
 
         if (getNewLine() != null) {
-            if (isMultibyteFormatter) {
-                createStatement += ", ";
-            }
+
             String newLineCharacter = getNewLine();
-            if (isMultibyteFormatter) {
-                createStatement += " NEWLINE" + formatterOptionDeclarer + "E'" + newLineCharacter + "'";
-            } else {
-                createStatement += " NEWLINE" + formatterOptionDeclarer + "'" + newLineCharacter + "'";
-            }
+            createStatment += " NEWLINE '" + newLineCharacter + "'";
         }
 
-        if (hasDelimiterOrEscapeOrNewLine || isMultibyteFormatter) {
-            createStatement += ")";
+        if (hasDelimiterOrEscapeOrNewLine) {
+            createStatment += ")";
         }
 
         if (getEncoding() != null) {
-            createStatement += " ENCODING '" + getEncoding() + "'";
+            createStatment += " ENCODING '" + getEncoding() + "'";
         }
 
         if (getErrorTable() != null) {
-            createStatement += " LOG ERRORS";
+            createStatment += " LOG ERRORS";
         }
 
         if (getSegmentRejectLimit() > 0) {
-            createStatement += " SEGMENT REJECT LIMIT "
+            createStatment += " SEGMENT REJECT LIMIT "
                     + getSegmentRejectLimit() + " "
                     + getSegmentRejectLimitType();
         }
 
-        return createStatement;
+        return createStatment;
     }
 
     public String getHost() {
@@ -306,20 +278,12 @@ public abstract class ExternalTable extends Table {
         return escape;
     }
 
-    public String getQuote() {
-        return quote;
-    }
-
     public void setDelimiter(String delimiter) {
         this.delimiter = delimiter;
     }
 
     public void setEscape(String escape) {
         this.escape = escape;
-    }
-
-    public void setQuote(String quote) {
-        this.quote = quote;
     }
 
     public void setNewLine(String newLine) {

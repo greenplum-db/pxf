@@ -4,5 +4,5 @@
 -- end_ignore
 -- @description query01 for PXF Multibyte delimiter, 2-byte delim cases with wrong formatter provided
 SELECT * from pxf_multibyte_twobyte_wrongformatter_data ORDER BY n1;
-ERROR:  unpack_delimited: Column mismatch, index:1 < nColumns:22, less columns than expected
+ERROR:  Record has 1 fields but the schema size is 22  (seg1 slice1 127.0.0.1:6003 pid=51272)
 CONTEXT:  External table pxf_multibyte_twobyte_wrongformatter_data

@@ -47,8 +47,6 @@ static List *getTargetList(ProjectionInfo *projInfo);
 static bool needToIterateTargetList(List *targetList, int *varNumbers);
 static Node *getTargetListEntryExpression(ListCell *lc1);
 static int  getNumSimpleVars(ProjectionInfo *projInfo);
-#if PG_VERSION_NUM < 120000
-#endif
 #if PG_VERSION_NUM < 90400
 /*
  * this function is copied from Greenplum 6 (6X_STABLE branch) code
@@ -82,10 +80,6 @@ build_http_headers(PxfInputData *input)
 	ProjectionInfo *proj_info = input->proj_info;
 	const char	   *relname;
 	char		   *relnamespace = NULL;
-    char           *formatter_name = NULL;
-#if PG_VERSION_NUM < 120000
-    char           *format_options = NULL;
-#endif
 
 	relname = gphduri->data;
 	if (rel != NULL)
@@ -98,26 +92,25 @@ build_http_headers(PxfInputData *input)
 		/* pxf treats everything but pxfwritable_[import|export] as TEXT (even CSV) */
 		char *format = get_format_name(exttbl);
 
-        if (strcmp(format, "pxfdelimited_import") == 0 &&
-                (strstr(input->gphduri->profile, "text") == NULL ||
-                 strstr(input->gphduri->profile, "csv") == NULL))
-        {
-            ereport(ERROR,
-                    (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-                     errmsg("\"pxfdelimited_import\" is not a valid formatter for given PXF profile (%s).", input->gphduri->profile),
-                     errhint("The \"pxfdelimited_import\" formatter only works with *:text or *:csv profiles. "
-                             "Please double check the external table definition.")));
-        }
+//        if (strcmp(format, "pxfdelimited_import") == 0 &&
+//                !(strstr(input->gphduri->profile, "text") == NULL ||
+//                 strstr(input->gphduri->profile, "csv") == NULL))
+//        {
+//            ereport(ERROR,
+//                    (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+//                     errmsg("\"pxfdelimited_import\" is not a valid formatter for given PXF profile (%s).", input->gphduri->profile),
+//                     errhint("The \"pxfdelimited_import\" formatter only works with *:text or *:csv profiles. "
+//                             "Please double check the external table definition.")));
+//        }
 		churl_headers_append(headers, "X-GP-FORMAT", format);
 
 		/* Parse fmtOptString here */
-		// can't do this for CUSTOM format with pxfdelimited_import formatter due to parseCopyFormatString's internal check
 		if (fmttype_is_text(exttbl->fmtcode) || fmttype_is_csv(exttbl->fmtcode))
 		{
 #if PG_VERSION_NUM >= 120000
 			copyFmtOpts = exttbl->options;
 #else
-			copyFmtOpts = parseCopyFormatString(rel, format_options, exttbl->fmtcode);
+			copyFmtOpts = parseCopyFormatString(rel, exttbl->fmtopts, exttbl->fmtcode);
 #endif
 		}
 
@@ -665,7 +658,6 @@ get_format_name(ExtTableEntry *exttbl)
 				(errcode(ERRCODE_INTERNAL_ERROR),
 				 errmsg("unable to get format name for format code: %c",
 						exttbl->fmtcode)));
-	}
 	}
 
 	return formatName;

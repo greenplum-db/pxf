@@ -2,34 +2,25 @@ package org.greenplum.pxf.automation.features.multibytedelimiter;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.SystemUtils;
 import org.apache.hadoop.io.compress.BZip2Codec;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.datapreparer.CustomTextPreparer;
-import org.greenplum.pxf.automation.datapreparer.QuotedLineTextPreparer;
-import org.greenplum.pxf.automation.enums.EnumPxfDefaultProfiles;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
-import org.greenplum.pxf.automation.structures.tables.pxf.ErrorTable;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.csv.CsvUtils;
 import org.greenplum.pxf.automation.utils.exception.ExceptionUtils;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
-import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
-import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
 import org.junit.Assert;
 import org.postgresql.util.PSQLException;
 import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import static java.lang.Thread.sleep;
-import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEMA;
 
 /**
  * Collection of Test cases for PXF ability to read Text/CSV files from HDFS.
@@ -122,7 +113,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
                         "n16 int",
                         "n17 int"},
                 protocol.getExternalTablePath(hdfs.getBasePath(), hdfsFilePath),
-                ",");
+                null);
         exTable.setFormat("CUSTOM");
         exTable.setFormatter("pxfdelimited_import");
     }
@@ -132,7 +123,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("¤");
+        exTable.addFormatterOption("delimiter='¤'");
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -157,7 +148,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_threebyte_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("停");
+        exTable.addFormatterOption("delimiter='停'");
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -182,7 +173,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_fourbyte_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("\uD83D\uDE42");
+        exTable.addFormatterOption("delimiter='\uD83D\uDE42'");
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -213,7 +204,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_multichar_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("DELIM");
+        exTable.addFormatterOption("delimiter='DELIM'");
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -244,8 +235,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withcrlf_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("¤");
-        exTable.setNewLine("\\r\\n");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "NEWLINE=E'\\r\\n'"});
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -264,8 +254,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrongformatter_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("¤");
-        exTable.setDelimiter("pxfwritable_import");
+        exTable.addFormatterOption("delimiter='¤'");
+        exTable.setFormatter("pxfwritable_import");
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -284,7 +274,6 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_nodelim_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter(null);
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -303,7 +292,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrong_delim_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("停");
+        exTable.addFormatterOption("delimiter='停'");
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -322,8 +311,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withquote_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("¤");
-        exTable.setQuote("\"");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='\"'"});
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -342,8 +330,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrong_quote_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("¤");
-        exTable.setQuote("|");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='|'"});
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -370,9 +357,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withquote_withescape_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("¤");
-        exTable.setQuote("|");
-        exTable.setEscape("\\");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='|'", "escape='\\'"});
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -391,9 +376,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrong_escape_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("¤");
-        exTable.setQuote("|");
-        exTable.setEscape("#");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='|'", "escape='#'"});
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -435,7 +418,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_onebyte_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("|");
+        exTable.addFormatterOption("delimiter='|'");
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -455,10 +438,11 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable = TableFactory.getPxfReadableTextTable("pxf_multibyte_onecol_data",
                 new String[]{"s1 text"},
                 protocol.getExternalTablePath(hdfs.getBasePath(), hdfsFilePath),
-                "¤");
+                null);
         exTable.setFormat("CUSTOM");
         exTable.setFormatter("pxfdelimited_import");
         exTable.setProfile(protocol.value() + ":csv");
+        exTable.addFormatterOption("delimiter='¤'");
         // create external table
         gpdb.createTableAndVerify(exTable);
         // prepare data and write to HDFS
@@ -482,11 +466,11 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable = TableFactory.getPxfReadableTextTable("pxf_multibyte_onecol_quote_data",
                 new String[]{"s1 text"},
                 protocol.getExternalTablePath(hdfs.getBasePath(), hdfsFilePath),
-                "¤");
+                null);
         exTable.setFormat("CUSTOM");
         exTable.setFormatter("pxfdelimited_import");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setQuote("|");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='|'"});
         // create external table
         gpdb.createTableAndVerify(exTable);
         // prepare data and write to HDFS
@@ -518,9 +502,10 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
         exTable =
                 TableFactory.getPxfReadableCSVTable("pxf_multibyte_twobyte_withbzip2_data", SMALL_DATA_FIELDS,
-                        protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory()) + "/bzip2/", "¤");
+                        protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory()) + "/bzip2/", null);
         exTable.setFormat("CUSTOM");
         exTable.setFormatter("pxfdelimited_import");
+        exTable.addFormatterOption("delimiter='¤'");
         gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_bzip2.runTest");
@@ -531,10 +516,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_quote_escape_newline_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("¤");
-        exTable.setQuote("|");
-        exTable.setEscape("\\");
-        exTable.setNewLine("EOL");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='|'", "escape='\\'", "NEWLINE='EOL'"});
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
@@ -575,7 +557,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_invalid_codepoint_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setDelimiter("E\'\\xA4\'");
+        exTable.addFormatterOption("delimiter=E'\\xA4'");
         // create external table
         try {
             gpdb.createTableAndVerify(exTable);
@@ -592,7 +574,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setName("pxf_multibyte_encoding");
         exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setProfile(protocol.value() + ":text");
-        exTable.setDelimiter("¤");
+        exTable.addFormatterOption("delimiter='¤'");
         exTable.setEncoding("LATIN1");
         gpdb.createTableAndVerify(exTable);
         // prepare data and write to HDFS
@@ -619,7 +601,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setName("pxf_multibyte_encoding_bytes");
         exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setProfile(protocol.value() + ":text");
-        exTable.setDelimiter("E\'\\xC2\\xA4\'");
+        exTable.addFormatterOption("delimiter=E'\\xC2\\xA4'");
         exTable.setEncoding("LATIN1");
         gpdb.createTableAndVerify(exTable);
         // prepare data and write to HDFS
@@ -647,8 +629,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setName("pxf_multibyte_encoding_quote");
         exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setProfile(protocol.value() + ":text");
-        exTable.setDelimiter("¤");
-        exTable.setQuote("|");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='|'"});
         exTable.setEncoding("LATIN1");
         gpdb.createTableAndVerify(exTable);
         // prepare data and write to HDFS
@@ -675,9 +656,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setName("pxf_multibyte_encoding_quote_escape");
         exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setProfile(protocol.value() + ":text");
-        exTable.setDelimiter("¤");
-        exTable.setQuote("|");
-        exTable.setEscape("\"");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='|'", "escape='\"'"});
         exTable.setEncoding("LATIN1");
         gpdb.createTableAndVerify(exTable);
         // prepare data and write to HDFS
