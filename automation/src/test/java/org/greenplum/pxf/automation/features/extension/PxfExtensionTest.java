@@ -124,9 +124,10 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     private void createReadablePxfTable(String serverName, String location, boolean multi) throws Exception {
         if (multi) {
-            externalTable = TableFactory.getPxfReadableTextTable("pxf_upgrade_test_multibyte", FIELDS, location, "停");
+            externalTable = TableFactory.getPxfReadableTextTable("pxf_upgrade_test_multibyte", FIELDS, location, null);
             externalTable.setFormat("CUSTOM");
             externalTable.setFormatter("pxfdelimited_import");
+            externalTable.addFormatterOption("delimiter='停'");
         } else {
             externalTable = TableFactory.getPxfReadableTextTable("pxf_upgrade_test", FIELDS, location, ",");
         }

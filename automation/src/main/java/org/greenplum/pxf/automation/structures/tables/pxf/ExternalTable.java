@@ -1,6 +1,5 @@
 package org.greenplum.pxf.automation.structures.tables.pxf;
 
-import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
