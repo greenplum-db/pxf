@@ -27,7 +27,6 @@ import static java.lang.Thread.sleep;
 /**
  * Testing cases for PXF Writable feature for Text formats (Text, CSV) and compressions.
  */
-@WorksWithFDW
 public class HdfsWritableTextTest extends BaseWritableFeature {
 
     private static final String COMPRESSION_CODEC = "org.apache.hadoop.io.compress.DefaultCodec";
