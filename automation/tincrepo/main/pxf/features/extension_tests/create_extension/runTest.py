@@ -1,7 +1,7 @@
 from mpp.models import SQLTestCase
 from mpp.models import SQLConcurrencyTestCase
 
-class PxfUpgradeStep3AfterAlterExtensionExplicitVersion(SQLConcurrencyTestCase):
+class PxfCreateExtension(SQLConcurrencyTestCase):
     """
     @db_name pxfautomation
     @concurrency 1
