@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.hdfs;
  * under the License.
  */
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Writable;
@@ -60,7 +61,8 @@ public class WritableResolver extends BasePlugin implements Resolver {
      */
     @Override
     public void afterPropertiesSet() {
-        String schemaName = this.context.getOption("DATA-SCHEMA");
+        // DATA-SCHEMA option is deprecated in favor of DATA_SCHEMA to support FDW foreign table definitions
+        String schemaName = StringUtils.defaultString(context.getOption("DATA_SCHEMA"), context.getOption("DATA-SCHEMA"));
 
         /* Testing that the schema name was supplied by the user - schema is an optional property. */
         if (schemaName == null) {

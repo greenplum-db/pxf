@@ -84,44 +84,6 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     }
 
     /**
-     * Insert data using "THREAD-SAFE=FALSE" option literally
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void textFormatInsertThreadSafeFalse() throws Exception {
-
-        String hdfsPath = hdfsWritePath + "/text_format_thread_safe_false";
-        writableExTable = prepareWritableTable("pxf_text_format_thread_safe_false", hdfsPath, null, null, new String[]{"THREAD-SAFE=FALSE"});
-
-        insertData(dataTable, writableExTable, InsertionMethod.INSERT);
-        verifyResult(hdfsPath, dataTable);
-    }
-
-    /**
-     * Insert data using 2 Writable tables using "THREAD-SAFE=FALSE" and the
-     * other "THREAD-SAFE=TRUE"
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void textFormatInsertDifferentThreadSafeStates() throws Exception {
-
-        String hdfsPath = hdfsWritePath + "/text_format_insert_different_thread_safe_states";
-        writableExTable =
-                prepareWritableTable("pxf_text_format_insert_thread_safe_true", hdfsPath, null);
-        WritableExternalTable writableExTableFalseThreadSafe =
-                prepareWritableTable("pxf_text_format_insert_thread_safe_false", hdfsPath, null, null, new String[]{"THREAD-SAFE=FALSE"});
-
-        insertData(dataTable, writableExTable, InsertionMethod.INSERT);
-        insertData(dataTable, writableExTableFalseThreadSafe, InsertionMethod.INSERT);
-        Table pumpedDataTable = new Table("pumped_data_table", null);
-        pumpedDataTable.setData(dataTable.getData());
-        pumpedDataTable.pumpUpTableData(2);
-        verifyResult(hdfsPath, pumpedDataTable);
-    }
-
-    /**
      * Insert data using "org.apache.hadoop.io.compress.DefaultCodec" codec.
      *
      * @throws Exception if test fails to run
@@ -378,7 +340,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     public void textFormatBZip2Insert() throws Exception {
 
         String hdfsPath = hdfsWritePath + "/bzip2_format_using_insert";
-        writableExTable = prepareWritableBZip2Table("pxf_bzip2_format_using_insert", hdfsPath, null);
+        writableExTable = prepareWritableBZip2Table("pxf_bzip2_format_using_insert", hdfsPath);
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         verifyResult(hdfsPath, dataTable, EnumCompressionTypes.BZip2);
@@ -393,7 +355,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     public void textFormatBZip2CopyFromStdin() throws Exception {
 
         String hdfsPath = hdfsWritePath + "/copy_from_stdin_bzip2";
-        writableExTable = prepareWritableBZip2Table("pxf_copy_from_stdin_bzip2", hdfsPath, null);
+        writableExTable = prepareWritableBZip2Table("pxf_copy_from_stdin_bzip2", hdfsPath);
 
         insertData(dataTable, writableExTable, InsertionMethod.COPY);
         verifyResult(hdfsPath, dataTable, EnumCompressionTypes.BZip2);
@@ -475,7 +437,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         readableExTable = prepareReadableTable("pxf_insert_bzip2_from_table_r", sourcePath);
 
         String hdfsPath = hdfsWritePath + "/insert_bzip2_from_table";
-        writableExTable = prepareWritableBZip2Table("pxf_insert_bzip2_from_table_w", hdfsPath, null);
+        writableExTable = prepareWritableBZip2Table("pxf_insert_bzip2_from_table_w", hdfsPath);
 
         insertData(readableExTable, writableExTable, InsertionMethod.INSERT_FROM_TABLE);
         verifyResult(hdfsPath, dataTable, EnumCompressionTypes.BZip2);
@@ -555,7 +517,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         FileFormatsUtils.prepareDataFile(data, 15000, multiBlockedLocalFilePath);
 
         String hdfsPath = hdfsWritePath + "/copy_from_file_multi_block_bzip2";
-        writableExTable = prepareWritableBZip2Table("pxf_text_multi_block_bzip2_w", hdfsPath, new String[]{"THREAD-SAFE=FALSE"});
+        writableExTable = prepareWritableBZip2Table("pxf_text_multi_block_bzip2_w", hdfsPath);
 
         gpdb.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
 
@@ -722,12 +684,9 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         return table;
     }
 
-    private WritableExternalTable prepareWritableBZip2Table(String name, String path, String[] userParameters) throws Exception {
+    private WritableExternalTable prepareWritableBZip2Table(String name, String path) throws Exception {
         WritableExternalTable table = TableFactory.getPxfWritableBZip2Table(name, gpdbTableFields,
                 protocol.getExternalTablePath(hdfs.getBasePath(), path), ",");
-        if (userParameters != null) {
-            table.setUserParameters(userParameters);
-        }
         createTable(table);
         return table;
     }

@@ -98,7 +98,7 @@ public class ForeignTable extends WritableExternalTable {
         // combined in a single set, so the net result is the same, other than testing option precedence rules
 
         if (getDataSchema() != null) {
-            appendOption(joiner, "DATA-SCHEMA", getDataSchema());
+            appendOption(joiner, "DATA_SCHEMA", getDataSchema()); // new option name is DATA_SCHEMA
         }
 
         if (getExternalDataSchema() != null) {

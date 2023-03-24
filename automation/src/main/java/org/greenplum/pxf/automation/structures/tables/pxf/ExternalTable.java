@@ -136,6 +136,8 @@ public abstract class ExternalTable extends Table {
         }
 
         if (getDataSchema() != null) {
+            // even though the new option name is DATA_SCHEMA, we can still use DATA-SCHEMA for an external table
+            // to test backward compatibility
             appendParameter(sb, "DATA-SCHEMA=" + getDataSchema());
         }
 
