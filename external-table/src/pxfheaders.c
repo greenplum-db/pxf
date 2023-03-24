@@ -48,7 +48,6 @@ static bool needToIterateTargetList(List *targetList, int *varNumbers);
 static Node *getTargetListEntryExpression(ListCell *lc1);
 static int  getNumSimpleVars(ProjectionInfo *projInfo);
 #if PG_VERSION_NUM < 120000
-static char *parse_formatter_name(char *fmtstr, char **formatter_name);
 #endif
 #if PG_VERSION_NUM < 90400
 /*
@@ -109,7 +108,6 @@ build_http_headers(PxfInputData *input)
                      errhint("The \"pxfdelimited_import\" formatter only works with *:text or *:csv profiles. "
                              "Please double check the external table definition.")));
         }
-		char *format = get_format_name(exttbl->fmtcode, formatter_name);
 		churl_headers_append(headers, "X-GP-FORMAT", format);
 
 		/* Parse fmtOptString here */
@@ -634,37 +632,6 @@ add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri)
 		pfree(x_gp_key);
 	}
 }
-
-/*
- * Checks for the multibyte delimiter
- */
-#if PG_VERSION_NUM < 120000
-static char *
-parse_formatter_name(char *fmtstr, char **formatter_name)
-{
-
-    bool		formatter_found = false;
-    char        *format_options = NULL;
-    char        *result = NULL;
-    if ((result = strstr(fmtstr, "pxfdelimited_import")) != NULL)
-    {
-        *formatter_name = DelimitedFormatterName;
-        formatter_found = true;
-
-        // remove the formatter and multibyte_delim_import aspects of the string
-        //"multibyte_delim_import' delimiter ','"
-        // copy only last part
-        // format_options = "delimiter ','"
-
-    }
-    else
-    {
-        return fmtstr;
-    }
-
-    return format_options;
-}
-#endif
 
 /*
  * Converts a character code for the format name and the formatter name into a string
