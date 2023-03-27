@@ -92,9 +92,10 @@ build_http_headers(PxfInputData *input)
 		List	   *copyFmtOpts = NIL;
 		char		   *formatter_name = getFormatterString(exttbl);
 
-		if (strstr(formatter_name, "pxfdelimited_import") != NULL &&
+		if (formatter_name != NULL &&
+			strstr(formatter_name, "pxfdelimited_import") != NULL &&
 			(strstr(input->gphduri->profile, "text") == NULL &&
-			 strstr(input->gphduri->profile, "csv") == NULL))
+				strstr(input->gphduri->profile, "csv") == NULL))
 		{
 			ereport(ERROR,
 					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
@@ -667,6 +668,11 @@ get_format_name(ExtTableEntry *exttbl)
 	return formatName;
 }
 
+/*
+ * Returns the name of the formatter (GP7)
+ * Returns the string container formatter information (GP6 & GP5)
+ * Returns NULL otherwise
+ */
 static char*
 getFormatterString(ExtTableEntry *exttbl)
 {
@@ -688,13 +694,6 @@ getFormatterString(ExtTableEntry *exttbl)
 	formatterNameSearchString = exttbl->fmtopts;
 #endif
 
-	if (!formatterNameSearchString || !strlen(formatterNameSearchString))
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_INTERNAL_ERROR),
-						errmsg("cannot determine the name of a custom formatter")));
-	}
-
 	return formatterNameSearchString;
 }
 
@@ -704,7 +703,16 @@ getFormatterString(ExtTableEntry *exttbl)
 static bool
 isFormatterPxfWritable(ExtTableEntry *exttbl)
 {
-	return strstr(getFormatterString(exttbl), PXFWritableFormatterPrefix) != NULL;
+	char *formatterNameSearchString = getFormatterString(exttbl);
+
+	if (!formatterNameSearchString || !strlen(formatterNameSearchString))
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_INTERNAL_ERROR),
+						errmsg("cannot determine the name of a custom formatter")));
+	}
+
+	return strstr(formatterNameSearchString, PXFWritableFormatterPrefix) != NULL;
 }
 
 /*
