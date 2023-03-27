@@ -37,6 +37,7 @@ static void add_alignment_size_httpheader(CHURL_HEADERS headers);
 static void add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel);
 static void add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri);
 static char *get_format_name(ExtTableEntry *exttbl);
+static char *getFormatterString(ExtTableEntry *exttbl);
 static bool isFormatterPxfWritable(ExtTableEntry *exttbl);
 static void add_projection_desc_httpheaders(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
 static bool add_attnums_from_targetList(Node *node, List *attnums);
@@ -89,6 +90,18 @@ build_http_headers(PxfInputData *input)
 		ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
 		ListCell   *option;
 		List	   *copyFmtOpts = NIL;
+		char		   *formatter_name = getFormatterString(exttbl);
+
+		if (strstr(formatter_name, "pxfdelimited_import") != NULL &&
+			(strstr(input->gphduri->profile, "text") == NULL &&
+			 strstr(input->gphduri->profile, "csv") == NULL))
+		{
+			ereport(ERROR,
+					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					 errmsg("\"pxfdelimited_import\" is not a valid formatter for the given PXF profile (%s).", input->gphduri->profile),
+					 errhint("The \"pxfdelimited_import\" formatter only works with *:text or *:csv profiles. "
+							 "Please double check the external table definition.")));
+		}
 
 		/* pxf treats everything but pxfwritable_[import|export] as TEXT (even CSV) */
 		char *format = get_format_name(exttbl);
@@ -654,11 +667,8 @@ get_format_name(ExtTableEntry *exttbl)
 	return formatName;
 }
 
-/*
- * Checks if the custom formatter specified for the table starts with pxfwritable_ prefix
- */
-static bool
-isFormatterPxfWritable(ExtTableEntry *exttbl)
+static char*
+getFormatterString(ExtTableEntry *exttbl)
 {
 	char *formatterNameSearchString = NULL;
 
@@ -685,7 +695,16 @@ isFormatterPxfWritable(ExtTableEntry *exttbl)
 						errmsg("cannot determine the name of a custom formatter")));
 	}
 
-	return strstr(formatterNameSearchString, PXFWritableFormatterPrefix) != NULL;
+	return formatterNameSearchString;
+}
+
+/*
+ * Checks if the custom formatter specified for the table starts with pxfwritable_ prefix
+ */
+static bool
+isFormatterPxfWritable(ExtTableEntry *exttbl)
+{
+	return strstr(getFormatterString(exttbl), PXFWritableFormatterPrefix) != NULL;
 }
 
 /*

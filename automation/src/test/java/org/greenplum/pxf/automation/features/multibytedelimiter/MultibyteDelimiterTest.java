@@ -83,7 +83,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     protected void beforeMethod() throws Exception {
         super.beforeMethod();
         // path for storing data on HDFS
-        hdfsFilePath = hdfs.getWorkingDirectory() + "/data";
+        hdfsFilePath = hdfs.getWorkingDirectory() + "/multibyteDelimiter";
         // prepare data in table
         dataTable = new Table("dataTable", null);
         FileFormatsUtils.prepareData(new CustomTextPreparer(), 100, dataTable);
@@ -675,5 +675,26 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote_escape.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void wrongProfileWithFormatter() throws Exception {
+        ProtocolEnum protocol = ProtocolUtils.getProtocol();
+        // define and create external table
+        exTable.setName("pxf_multibyte_wrong_profile");
+        exTable.setFields(new String[]{"name text", "age int"});
+        exTable.setProfile(protocol.value() + ":avro");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='|'", "escape='\"'"});
+        gpdb.createTableAndVerify(exTable);
+        // prepare data and write to HDFS
+        gpdb.createTableAndVerify(exTable);
+        // location of schema and data files
+        String absolutePath = getClass().getClassLoader().getResource("data").getPath();
+        String resourcePath = absolutePath + "/avro/";
+        hdfs.writeAvroFileFromJson(hdfsFilePath + "simple.avro",
+                "file://" + resourcePath + "simple.avsc",
+                "file://" + resourcePath + "simple.json", null);
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.wrong_profile.runTest");
     }
 }

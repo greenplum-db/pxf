@@ -1,0 +1,14 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for PXF Multibyte delimiter, wrong profile case
+
+-- start_matchsubs
+--
+-- m/\((.*):avro\)/
+-- s/\((.*):avro\)/\(XXX:avro\)/
+--
+-- end_matchsubs
+SELECT * from pxf_multibyte_wrong_profile ORDER BY age;
+ERROR:  "pxfdelimited_import" is not a valid formatter for the given PXF profile (XXX:avro).
+HINT:  The "pxfdelimited_import" formatter only works with *:text or *:csv profiles. Please double check the external table definition.
+CONTEXT:  External table pxf_multibyte_wrong_profile
