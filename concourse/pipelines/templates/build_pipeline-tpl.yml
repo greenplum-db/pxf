@@ -1480,6 +1480,8 @@ jobs:
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       PXF_VERSION: 6.5.1
   - task: Basic functionality tests for PXF 6.5.1
+    input_mapping:
+      pxf_tarball: pxf_tarball_ignore # do not install from the artifact
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
@@ -1493,6 +1495,7 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: oldExtensionUpgrade
       PXF_JVM_OPTS: ((pxf-jvm-opts))
+      PXF_VERSION: 6.5.1
   - task: Upgrade to PXF 6 Latest
     input_mapping:
       terraform: terraform_gpdb
