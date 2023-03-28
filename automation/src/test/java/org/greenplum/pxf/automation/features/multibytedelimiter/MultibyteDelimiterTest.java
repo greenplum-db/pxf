@@ -157,6 +157,10 @@ public class MultibyteDelimiterTest extends BaseFeature {
                 '停', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+        // wait a bit for async write in previous steps to finish
+        if (protocol == ProtocolEnum.FILE) {
+            sleep(10000);
+        }
 
         // create a new table with the SKIP_HEADER_COUNT parameter
         exTable.setName("pxf_multibyte_threebyte_data_with_skip");
