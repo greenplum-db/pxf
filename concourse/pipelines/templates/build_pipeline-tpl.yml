@@ -1490,20 +1490,18 @@ jobs:
       IMPERSONATION: false
       KERBEROS: ((kerberos-enabled))
       GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-      GP_VER: [ [ gp_ver ] ]
+      GP_VER: [[gp_ver]]
       GROUP: oldExtensionUpgrade
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-  - task: Setup PXF 6 Latest
+  - task: Upgrade to PXF 6 Latest
     input_mapping:
       terraform: terraform_gpdb
-    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
+    file: pxf_src/concourse/tasks/upgrade_pxf_on_ccp.yml
     image: ccp-7-image
     params:
-      IMPERSONATION: false
-      INSTALL_GPHDFS: false
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: [[gp_ver]]
-      KERBEROS: ((kerberos-enabled))
-      PXF_JVM_OPTS: ((pxf-jvm-opts))
+      PXF_BASE_DIR: /home/gpadmin/pxf-boot
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
