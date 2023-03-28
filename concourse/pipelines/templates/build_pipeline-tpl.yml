@@ -529,7 +529,7 @@ resources:
 - name: pxf5_gp6_rhel7_released
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
+    bucket: ((ud/pxf/prod/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
 
@@ -537,9 +537,9 @@ resources:
 - name: pxf6_5_1_gp6_rhel7_released
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
+    bucket: ((ud/pxf/prod/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-6.5.1-2.el7.x86_64.rpm
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(6.5.*)-2.el7.x86_64.rpm
 
 ## ---------- PXF Build Artifacts ----------
 {% set gp_ver = None %}
