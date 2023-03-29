@@ -62,6 +62,11 @@ function upgrade_pxf() {
 		echoGreen "ALTER EXTENSION pxf UPDATE - for testupgrade database"
 		ssh "${COORDINATOR_HOSTNAME}" "source ${GPHOME}/greenplum_path.sh && psql -d testupgrade -c 'ALTER EXTENSION pxf UPDATE'"
 	fi
+
+	if [[ ${PXF_VERSION} == "6.5.1" ]]; then
+		echoGreen "ALTER EXTENSION pxf UPDATE - for PXF 6 extension upgrade"
+		ssh "${COORDINATOR_HOSTNAME}" "source ${GPHOME}/greenplum_path.sh && psql -c 'ALTER EXTENSION pxf UPDATE'"
+	fi
 }
 
 function _main() {
