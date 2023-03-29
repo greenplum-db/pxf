@@ -32,6 +32,5 @@ params:
   PXF_JVM_OPTS:
   PXF_VERSION: 6
   SECRET_ACCESS_KEY:
-  PXF_ALREADY_INSTALLED: false
 run:
   path: pxf_src/concourse/scripts/test_pxf_multinode.bash

@@ -538,11 +538,18 @@ function _main() {
 		sed -i "/<name>hbase.zookeeper.quorum<\/name>/ {n; s/127.0.0.1/${hadoop_ip}/}" \
 			"${LOCAL_GPHD_ROOT}/hbase/conf/hbase-site.xml"
 	fi
+
 	if [[ ${PXF_COMPONENT} == "true" ]]; then
 		install_gpdb_package
 		setup_gpadmin_user
-		if [[ ${PXF_ALREADY_INSTALLED} == "false" ]]; then
+		if [[ -d pxf_tarball ]]; then
 			install_pxf_tarball
+		elif [[ -d pxf_artifact ]]; then
+			cp pxf_artifact/*.rpm /tmp/pxf_installer
+			cp pxf_src/package/install_rpm /tmp/pxf_installer/install_component
+		else
+			echo "Unable to find a suitable PXF installer"
+			exit 1
 		fi
 	else
 		install_gpdb_binary # Installs the GPDB Binary on the container
