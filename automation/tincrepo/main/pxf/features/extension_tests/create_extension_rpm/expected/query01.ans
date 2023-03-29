@@ -17,7 +17,7 @@
 SELECT extversion FROM pg_extension WHERE extname = 'pxf';
  extversion
 ------------
- 2.1
+ 2.0
 (1 row)
 
 SHOW dynamic_library_path;
