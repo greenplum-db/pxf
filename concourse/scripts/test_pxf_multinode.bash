@@ -542,15 +542,7 @@ function _main() {
 	if [[ ${PXF_COMPONENT} == "true" ]]; then
 		install_gpdb_package
 		setup_gpadmin_user
-		if [[ -d pxf_tarball ]]; then
-			install_pxf_tarball
-		elif [[ -d pxf_artifact ]]; then
-			cp pxf_artifact/*.rpm /tmp/pxf_installer
-			cp pxf_src/package/install_rpm /tmp/pxf_installer/install_component
-		else
-			echo "Unable to find a suitable PXF installer"
-			exit 1
-		fi
+		install_pxf_tarball
 	else
 		install_gpdb_binary # Installs the GPDB Binary on the container
 		setup_gpadmin_user
