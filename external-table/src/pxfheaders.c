@@ -670,7 +670,7 @@ get_format_name(ExtTableEntry *exttbl)
 
 /*
  * Returns the name of the formatter (GP7)
- * Returns the string container formatter information (GP6 & GP5)
+ * Returns the string containing all format options information (GP6 & GP5)
  * Returns NULL otherwise
  */
 static char*
@@ -689,8 +689,8 @@ getFormatterString(ExtTableEntry *exttbl)
 		}
 	}
 #else
-	// we only have a serialized string of formatter options, parsing it requires porting a lot of code from GP6
-	// instead, we will only search for occurrence of the "pxfwritable_" prefix in the whole string
+	// for GP5 and Gp6, we only have a serialized string of formatter options,
+	// parsing it requires porting a lot of code from GP6 so return the entire serialized string
 	formatterNameSearchString = exttbl->fmtopts;
 #endif
 
