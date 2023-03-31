@@ -35,7 +35,6 @@ typedef struct {
     FmgrInfo            *conv_functions;
     Oid                 *typioparams;
     char*               delimiter;
-    char*               eol_prefix;
     char*               eol;
     char*               quote;
     char*               escape;

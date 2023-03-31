@@ -239,7 +239,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withcrlf_data");
         exTable.setProfile(protocol.value() + ":csv");
-        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "NEWLINE=E'\\r\\n'"});
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "NEWLINE='CRLF'"});
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file

@@ -94,7 +94,6 @@ static void
 get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 {
     fmt_state->delimiter = NULL;
-    fmt_state->eol_prefix = NULL;
     fmt_state->eol = NULL;
     fmt_state->quote = NULL;
     fmt_state->escape = NULL;
@@ -110,11 +109,29 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         {
             fmt_state->delimiter = value;
         }
-        // use newline option as this is something already present in PXF instead of introducing "eol"
-        // however, the value itself will be saved into eol
         else if (strcmp(key, "newline") == 0)
         {
-            fmt_state->eol = value;
+            if (pg_strcasecmp(value, "lf") == 0)
+            {
+                fmt_state->eol = "\n";
+            }
+            else if (pg_strcasecmp(value, "cr") == 0)
+            {
+                fmt_state->eol = "\r";
+            }
+            else if (pg_strcasecmp(value, "crlf") == 0)
+            {
+                fmt_state->eol = "\r\n";
+            }
+            else
+            {
+                // COPY command internally can dynamically determine new line breaks as either LF, CRLF or CR.
+                // Emulate this behavior as best we can by only allowing these three values.
+                // Warning: this requires that the entire file is lines terminated in the same way.
+                // (LF is used throughout the entire file)
+                ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("NEWLINE can only be LF, CRLF, or CR")));
+            }
+
         }
         else if (strcmp(key, "quote") == 0)
         {
@@ -126,17 +143,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         }
     }
 
-    if (fmt_state->eol != NULL)
-    {
-        // COPY command internally can dynamically determine new line breaks as either LF, CRLF or CR.
-        // Emulate this behavior as best we can by only allowing these three values.
-        // Warning: this requires that the entire file is lines terminated in the same way. (LF is used throughout the entire file)
-        if (!(strcmp(fmt_state->eol, "\n") == 0 || strcmp(fmt_state->eol, "\r") == 0 || strcmp(fmt_state->eol, "\r\n") == 0))
-        {
-            ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("NEWLINE can only be LF, CRLF, or CR")));
-        }
-    }
-    else
+    if (fmt_state->eol == NULL)
     {
         fmt_state->eol = "\n";
     }
