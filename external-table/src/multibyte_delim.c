@@ -125,9 +125,10 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
             }
             else
             {
-                // COPY command internally can dynamically determine new line breaks as either LF, CRLF or CR.
-                // Emulate this behavior as best we can by only allowing these three values.
-                // Warning: this requires that the entire file is lines terminated in the same way.
+                // GPDB COPY command allows for a NEWLINE option with the following 3 values: LF, CRLF or CR.
+                // When set, these values get interpolated correctly
+                // Emulate this behavior by only allowing these three values for the multibyte delimiter formatter
+                // Warning: this requires that the entire file has lines terminated in the same way.
                 // (LF is used throughout the entire file)
                 ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("NEWLINE can only be LF, CRLF, or CR")));
             }
@@ -145,6 +146,8 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 
     if (fmt_state->eol == NULL)
     {
+        // while GPDB COPY framework has the ability to read the first row of data to dynamically determine
+        // the newline type, we cannot do that here. Instead, assume a default value of LF
         fmt_state->eol = "\n";
     }
 

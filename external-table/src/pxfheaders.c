@@ -92,6 +92,8 @@ build_http_headers(PxfInputData *input)
 		List	   *copyFmtOpts = NIL;
 		char		   *formatter_name = getFormatterString(exttbl);
 
+		// in the case of pxfdelimited_import formatter, the only viable profiles are TEXT and CSV.
+		// error out early here if the profile is not accepted
 		if (formatter_name != NULL &&
 			strstr(formatter_name, "pxfdelimited_import") != NULL &&
 			(strstr(input->gphduri->profile, "text") == NULL &&
