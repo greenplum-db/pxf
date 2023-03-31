@@ -110,9 +110,9 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         {
             fmt_state->delimiter = value;
         }
-        // use line_delim option for consistency (fixed width formatter uses the same)
+        // use newline option as this is something already present in PXF instead of introducing "eol"
         // however, the value itself will be saved into eol
-        else if (strcmp(key, "line_delim") == 0)
+        else if (strcmp(key, "newline") == 0)
         {
             fmt_state->eol = value;
         }
