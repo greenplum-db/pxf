@@ -126,7 +126,17 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
         }
     }
 
-    if (fmt_state->eol == NULL)
+    if (fmt_state->eol != NULL)
+    {
+        // COPY command internally can dynamically determine new line breaks as either LF, CRLF or CR.
+        // Emulate this behavior as best we can by only allowing these three values.
+        // Warning: this requires that the entire file is lines terminated in the same way. (LF is used throughout the entire file)
+        if (!(strcmp(fmt_state->eol, "\n") == 0 || strcmp(fmt_state->eol, "\r") == 0 || strcmp(fmt_state->eol, "\r\n") == 0))
+        {
+            ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("NEWLINE can only be LF, CRLF, or CR")));
+        }
+    }
+    else
     {
         fmt_state->eol = "\n";
     }
