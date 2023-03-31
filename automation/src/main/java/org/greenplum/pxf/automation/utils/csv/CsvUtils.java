@@ -52,7 +52,9 @@ public abstract class CsvUtils {
 		return dataTable;
 	}
 	/**
-	 * Update the delimiter in a CSV file
+	 * Update the delimiter in a CSV file. This helper function is required as CSVWriter only allows
+	 * for single-character delimiters. As such, for test cases that have multi-character delimiters
+	 * we have to update the delimiter in the file after the CSV has been created
 	 *
 	 * @param originalDelim Original single char delimiter
 	 * @param newDelimiter Desired multi-char delimiter
@@ -99,7 +101,7 @@ public abstract class CsvUtils {
 	}
 
 	/**
-	 * Write {@link Table} to a CSV file.
+	 * Write {@link Table} to a CSV file with the default separator (delimiter), quote, escape and eol values
 	 *
 	 * @param table {@link Table} contains required data list to write to CSV file
 	 * @param targetCsvFile to write the data Table

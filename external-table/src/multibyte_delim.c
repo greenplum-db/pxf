@@ -502,7 +502,6 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
         FORMATTER_SET_USER_CTX(fcinfo, myData);
     }
 
-    // TODO: update this error message for PXF
     if (myData->desc->natts != ncolumns)
         elog(ERROR, "multibyte_delim_import: unexpected change of output record type");
 

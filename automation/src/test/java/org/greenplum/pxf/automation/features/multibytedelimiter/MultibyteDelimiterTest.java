@@ -23,23 +23,9 @@ import java.nio.charset.StandardCharsets;
 import static java.lang.Thread.sleep;
 
 /**
- * Collection of Test cases for PXF ability to read Text/CSV files from HDFS.
- * Relates to cases located in "PXF Test Suite" in testrail:
- * https://testrail.greenplum.com/index.php?/suites/view/1099 in
- * "HDFS Readable - Text/CSV" section.
+ * Collection of Test cases for PXF ability to read Text/CSV files with pxfdelimited_import.
  */
 public class MultibyteDelimiterTest extends BaseFeature {
-
-    private static final String SUFFIX_CLASS = ".class";
-
-    public static final String[] SMALL_DATA_FIELDS = {
-            "name text",
-            "num integer",
-            "dub double precision",
-            "longNum bigint",
-            "bool boolean"
-    };
-
     ProtocolEnum protocol;
 
     // holds data for file generation
@@ -48,9 +34,28 @@ public class MultibyteDelimiterTest extends BaseFeature {
     String hdfsFilePath = "";
 
     String testPackageLocation = "/org/greenplum/pxf/automation/testplugin/";
-    String testPackage = "org.greenplum.pxf.automation.testplugin.";
-
-    String throwOn10000Accessor = "ThrowOn10000Accessor";
+    private static final  String[] ROW_WITH_ESCAPE = {"s_101",
+            "s_1001",
+            "s_10001",
+            "2299-11-28 05:46:40",
+            "101",
+            "1001",
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "s_101 | escaped!",
+            "s_1001",
+            "s_10001",
+            "2299-11-28 05:46:40",
+            "101",
+            "1001",
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "10001"};
 
     /**
      * Prepare all components and all data flow (Hdfs to GPDB)
@@ -61,11 +66,6 @@ public class MultibyteDelimiterTest extends BaseFeature {
         String resourcePath = "target/classes" + testPackageLocation;
 
         String newPath = "/tmp/publicstage/pxf";
-        // copy additional plugins classes to cluster nodes, used for filter
-        // pushdown cases
-        cluster.copyFileToNodes(new File(resourcePath + throwOn10000Accessor
-                + SUFFIX_CLASS).getAbsolutePath(), newPath
-                + testPackageLocation, true, false);
 
         // add new path to classpath file and restart PXF service
         cluster.addPathToPxfClassPath(newPath);
@@ -384,28 +384,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
-        dataTable.addRow(new String[]{"s_101",
-                "s_1001",
-                "s_10001",
-                "2299-11-28 05:46:40",
-                "101",
-                "1001",
-                "10001",
-                "10001",
-                "10001",
-                "10001",
-                "10001",
-                "s_101 | escaped!",
-                "s_1001",
-                "s_10001",
-                "2299-11-28 05:46:40",
-                "101",
-                "1001",
-                "10001",
-                "10001",
-                "10001",
-                "10001",
-                "10001"});
+        dataTable.addRow(ROW_WITH_ESCAPE);
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
                 '¤', '|', '\\', CSVWriter.DEFAULT_LINE_END);;
@@ -504,9 +483,16 @@ public class MultibyteDelimiterTest extends BaseFeature {
                     dataTable, "¤", StandardCharsets.UTF_8, codec);
         }
 
-        exTable =
-                TableFactory.getPxfReadableCSVTable("pxf_multibyte_twobyte_withbzip2_data", SMALL_DATA_FIELDS,
-                        protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory()) + "/bzip2/", null);
+        exTable = TableFactory.getPxfReadableCSVTable("pxf_multibyte_twobyte_withbzip2_data",
+                new String[] {
+                        "name text",
+                        "num integer",
+                        "dub double precision",
+                        "longNum bigint",
+                        "bool boolean"
+                },
+                protocol.getExternalTablePath(hdfs.getBasePath(),
+                hdfs.getWorkingDirectory()) + "/bzip2/", null);
         exTable.setFormat("CUSTOM");
         exTable.setFormatter("pxfdelimited_import");
         exTable.addFormatterOption("delimiter='¤'");
@@ -524,28 +510,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
-        dataTable.addRow(new String[]{"s_101",
-                "s_1001",
-                "s_10001",
-                "2299-11-28 05:46:40",
-                "101",
-                "1001",
-                "10001",
-                "10001",
-                "10001",
-                "10001",
-                "10001",
-                "s_101 | escaped!",
-                "s_1001",
-                "s_10001",
-                "2299-11-28 05:46:40",
-                "101",
-                "1001",
-                "10001",
-                "10001",
-                "10001",
-                "10001",
-                "10001"});
+        dataTable.addRow(ROW_WITH_ESCAPE);
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
                 '¤', '|', '\\', "EOL");;
