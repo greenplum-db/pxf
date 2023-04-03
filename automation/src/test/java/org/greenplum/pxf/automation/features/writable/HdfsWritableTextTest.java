@@ -1,6 +1,5 @@
 package org.greenplum.pxf.automation.features.writable;
 
-import annotations.WorksWithFDW;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.datapreparer.writable.WritableDataPreparer;
 import org.greenplum.pxf.automation.enums.EnumCompressionTypes;
