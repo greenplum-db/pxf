@@ -81,7 +81,7 @@ CREATE EXTERNAL TABLE ext_part_87 (id int, some_date date)
 FORMAT 'CUSTOM' (formatter = 'pxfwritable_import');
 ```
 
-The `IGNORE_MISSING_PATH` custom option applies only to file-based profiles, including `*:text`, `*:parquet`, `*:avro`, `*:json`, `*:AvroSequenceFile`, and `*:SequenceFile`. This option is *not available* when the external table specifies the `hbase`, `hive[:*]`, or `jdbc` profiles, or when reading from S3 using S3-Select.
+The `IGNORE_MISSING_PATH` custom option applies only to file-based profiles, including `*:text`, `*:fixedwidth`, `*:parquet`, `*:avro`, `*:json`, `*:AvroSequenceFile`, and `*:SequenceFile`. This option is *not available* when the external table specifies the `hbase`, `hive[:*]`, or `jdbc` profiles, or when reading from S3 using S3-Select.
 
 
 ## <a id="hive-metastore"></a>Addressing Hive MetaStore Connection Errors
