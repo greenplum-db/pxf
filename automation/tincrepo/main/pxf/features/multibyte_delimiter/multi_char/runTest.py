@@ -1,7 +1,7 @@
 from mpp.models import SQLTestCase
 from mpp.models import SQLConcurrencyTestCase
 
-class PxfMultibyteFourByteDelimiterData(SQLConcurrencyTestCase):
+class PxfMultibyteMultiCharByteDelimiterData(SQLConcurrencyTestCase):
     """
     @db_name pxfautomation
     @concurrency 1

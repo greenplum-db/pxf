@@ -3,7 +3,6 @@ package org.greenplum.pxf.automation.features.multibytedelimiter;
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.compress.BZip2Codec;
-import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.datapreparer.CustomTextPreparer;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
@@ -61,15 +60,6 @@ public class MultibyteDelimiterTest extends BaseFeature {
      */
     @Override
     public void beforeClass() throws Exception {
-        // location of test plugin files
-        String resourcePath = "target/classes" + testPackageLocation;
-
-        String newPath = "/tmp/publicstage/pxf";
-
-        // add new path to classpath file and restart PXF service
-        cluster.addPathToPxfClassPath(newPath);
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
-
         protocol = ProtocolUtils.getProtocol();
     }
 
@@ -117,7 +107,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         exTable.setFormatter("pxfdelimited_import");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_data");
@@ -142,7 +132,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readThreeByteDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_threebyte_data");
@@ -171,7 +161,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.three_byte.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readFourByteDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_fourbyte_data");
@@ -202,7 +192,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.four_byte.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readMultiCharStringDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_multichar_data");
@@ -233,7 +223,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.multi_char.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithCRLF() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withcrlf_data");
@@ -252,7 +242,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_crlf.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWrongFormatter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrongformatter_data");
@@ -272,7 +262,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte_wrong_formatter.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterDelimNotProvided() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_nodelim_data");
@@ -290,7 +280,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte_no_delim.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithWrongDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrong_delim_data");
@@ -309,7 +299,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_delim.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithQuote() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withquote_data");
@@ -328,7 +318,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithWrongQuote() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrong_quote_data");
@@ -355,7 +345,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         }
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithQuoteAndEscape() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_withquote_withescape_data");
@@ -374,7 +364,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote_and_escape.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithWrongEscape() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrong_escape_data");
@@ -395,7 +385,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     // users should still be able to use a normal delimiter with this formatter
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readOneByteDelimiter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_onebyte_data");
@@ -414,7 +404,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readOneCol() throws Exception {
         // set profile and format
         exTable = TableFactory.getPxfReadableTextTable("pxf_multibyte_onecol_data",
@@ -442,7 +432,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.one_col.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readOneColQuote() throws Exception {
         // set profile and format
         exTable = TableFactory.getPxfReadableTextTable("pxf_multibyte_onecol_quote_data",
@@ -470,7 +460,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.one_col_quote.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readBzip2CompressedCsv() throws Exception {
         BZip2Codec codec = new BZip2Codec();
         codec.setConf(hdfs.getConfiguration());
@@ -500,7 +490,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_bzip2.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteWithQuoteEscapeNewLine() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_quote_escape_newline_data");
@@ -520,7 +510,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.quote_escape_newline.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void invalidCodePoint() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_invalid_codepoint_data");
@@ -535,7 +525,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         }
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readFileWithLatin1EncodingTextProfile() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
@@ -562,7 +552,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.encoding.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readFileWithLatin1EncodingByteRepresentationTextProfile() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
@@ -590,7 +580,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.encoding_bytes.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readFileWithLatin1EncodingWithQuoteTextProfile() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
@@ -617,7 +607,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readFileWithLatin1EncodingWithQuoteAndEscapeTextProfile() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
@@ -645,7 +635,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote_escape.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void wrongProfileWithFormatter() throws Exception {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
