@@ -123,7 +123,7 @@ public class Gpdb extends DbSystemObject {
                 + source.getName());
     }
 
-	public void connectToDataBase(String schemaName) throws Exception {
+	public void connectToDataBase() throws Exception {
 		super.close();
 		address = "jdbc:postgresql://" + getHost() + ":" + getPort() + "/" + getDb();
 		connect();

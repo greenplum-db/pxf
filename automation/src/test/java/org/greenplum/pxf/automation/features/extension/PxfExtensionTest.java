@@ -17,21 +17,30 @@ public class PxfExtensionTest extends BaseFunctionality {
     };
 
     private ReadableExternalTable externalTable;
-    private String lastDb;
+    private String location;
+    private String location_multi;
 
     @Override
     public void beforeClass() throws Exception {
         super.beforeClass();
-        lastDb = gpdb.getDb();
         gpdb.dropDataBase("pxfautomation_extension", true, true);
         gpdb.createDataBase("pxfautomation_extension", false);
         gpdb.setDb("pxfautomation_extension");
-        gpdb.connectToDataBase("pxfautomation_extension");
+        gpdb.connectToDataBase();
+
+        Table smallData = getSmallData("", 10);
+
+        location = hdfs.getWorkingDirectory() + "/upgrade-test-data.txt";
+        hdfs.writeTableToFile(location, smallData, ",");
+
+        location_multi = hdfs.getWorkingDirectory() + "/upgrade-test-data_multibyte.txt";
+        hdfs.writeTableToFile(location_multi, smallData, "停");
     }
 
     @Override
     public void beforeMethod() throws Exception {
-        gpdb.connectToDataBase("pxfautomation_extension");
+        gpdb.setDb("pxfautomation_extension");
+        gpdb.connectToDataBase();
         gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
     }
 
@@ -39,10 +48,8 @@ public class PxfExtensionTest extends BaseFunctionality {
     public void testPxfCreateExtension() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf");
         // create a regular external table
-        String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         // create an external table with the multibyte formatter
-        String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
         runTincTest("pxf.features.extension_tests.create_extension.runTest");
     }
@@ -51,10 +58,8 @@ public class PxfExtensionTest extends BaseFunctionality {
     public void testPxfCreateExtensionOldRPM() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf");
         // create a regular external table
-        String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         // create an external table with the multibyte formatter
-        String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
         runTincTest("pxf.features.extension_tests.create_extension_rpm.runTest");
     }
@@ -62,12 +67,10 @@ public class PxfExtensionTest extends BaseFunctionality {
     @Test(groups = {"features", "gpdb"})
     public void testPxfUpgrade() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf VERSION '2.0'");
-        String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         runTincTest("pxf.features.extension_tests.upgrade.step_1_create_extension_with_older_pxf_version.runTest");
 
         // create an external table with the multibyte formatter
-        String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
         gpdb.runQuery("ALTER EXTENSION pxf UPDATE");
         runTincTest("pxf.features.extension_tests.upgrade.step_2_after_alter_extension.runTest");
@@ -76,12 +79,10 @@ public class PxfExtensionTest extends BaseFunctionality {
     @Test(groups = {"features", "gpdb"})
     public void testPxfExplicitUpgrade() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf VERSION '2.0'");
-        String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_1_create_extension_with_older_pxf_version.runTest");
 
         // create an external table with the multibyte formatter
-        String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
         gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO '2.1'");
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_2_after_alter_extension.runTest");
@@ -91,10 +92,8 @@ public class PxfExtensionTest extends BaseFunctionality {
     public void testPxfDowngrade() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf");
 
-        String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         // create an external table with the multibyte formatter
-        String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
         runTincTest("pxf.features.extension_tests.downgrade.step_1_create_extension.runTest");
 
@@ -106,10 +105,8 @@ public class PxfExtensionTest extends BaseFunctionality {
     public void testPxfDowngradeThenUpgradeAgain() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf");
 
-        String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         // create an external table with the multibyte formatter
-        String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
         runTincTest("pxf.features.extension_tests.downgrade_then_upgrade.step_1_check_extension.runTest");
 
@@ -118,20 +115,6 @@ public class PxfExtensionTest extends BaseFunctionality {
 
         gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO '2.1'");
         runTincTest("pxf.features.extension_tests.downgrade_then_upgrade.step_3_after_alter_extension_upgrade.runTest");
-    }
-
-    private String prepareData(boolean multi) throws Exception {
-        Table smallData = getSmallData("", 10);
-        String location;
-        if (multi) {
-            location = hdfs.getWorkingDirectory() + "/gpupgrade-test-data_multibyte.txt";
-            hdfs.writeTableToFile(location, smallData, "停");
-        } else {
-            location = hdfs.getWorkingDirectory() + "/gpupgrade-test-data.txt";
-            hdfs.writeTableToFile(location, smallData, ",");
-        }
-
-        return location;
     }
 
     private void createReadablePxfTable(String serverName, String location, boolean multi) throws Exception {

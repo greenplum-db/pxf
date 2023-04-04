@@ -29,6 +29,6 @@ FROM pg_catalog.pg_extension AS e
 WHERE d.deptype = 'e' AND e.extname = 'pxf'
 ORDER BY 1;
 
-SELECT * FROM pxf_upgrade_test;
+SELECT * FROM pxf_upgrade_test ORDER BY num;
 
-SELECT * FROM pxf_upgrade_test_multibyte;
+SELECT * FROM pxf_upgrade_test_multibyte ORDER BY num;

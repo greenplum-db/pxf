@@ -42,7 +42,7 @@ ORDER BY 1;
  pxfwritable_import  | gpdbwritableformatter_import | $PXF_HOME/gpextable/pxf
 (6 rows)
 
-SELECT * FROM pxf_upgrade_test;
+SELECT * FROM pxf_upgrade_test ORDER BY num;
   name  | num | dub |    longnum    | bool
 --------+-----+-----+---------------+------
  row_1  |   1 |   1 |  100000000000 | f
@@ -57,7 +57,7 @@ SELECT * FROM pxf_upgrade_test;
  row_10 |  10 |  10 | 1000000000000 | t
 (10 rows)
 
-SELECT * FROM pxf_upgrade_test_multibyte;
+SELECT * FROM pxf_upgrade_test_multibyte ORDER BY num;
   name  | num | dub |    longnum    | bool
 --------+-----+-----+---------------+------
  row_1  |   1 |   1 |  100000000000 | f

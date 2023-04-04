@@ -41,7 +41,8 @@ ORDER BY 1;
  pxfwritable_export | gpdbwritableformatter_export | $PXF_HOME/gpextable/pxf
  pxfwritable_import | gpdbwritableformatter_import | $PXF_HOME/gpextable/pxf
 (5 rows)
-SELECT * FROM pxf_upgrade_test;
+
+SELECT * FROM pxf_upgrade_test ORDER BY num;
   name  | num | dub |    longnum    | bool
 --------+-----+-----+---------------+------
  row_1  |   1 |   1 |  100000000000 | f
