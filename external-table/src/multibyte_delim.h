@@ -22,33 +22,33 @@
 //PG_MODULE_MAGIC;
 PG_FUNCTION_INFO_V1(multibyte_delim_import);
 
-typedef enum DelimitedSituation
-{
-    WITHOUT_QUOTE,
-    WITH_QUOTE
+typedef enum DelimitedSituation {
+	WITHOUT_QUOTE,
+	WITH_QUOTE
 } DelimitedSituation;
 
 typedef struct {
-    TupleDesc desc;
-    Datum               *values;
-    bool                *nulls;
-    FmgrInfo            *conv_functions;
-    Oid                 *typioparams;
-    char*               delimiter;
-    char*               eol;
-    char*               quote;
-    char*               escape;
-    char*               quote_delimiter; // these two only for searching for border, not in the config file
-    char*               quote_eol;
-    int                 nColumns;
-    DelimitedSituation  situation;
+	TupleDesc desc;
+	Datum *values;
+	bool *nulls;
+	FmgrInfo *conv_functions;
+	Oid *typioparams;
+	char *delimiter;
+	char *eol;
+	char *quote;
+	char *escape;
+	char *quote_delimiter; // these two only for searching for border, not in the config file
+	char *quote_eol;
+	int nColumns;
+	DelimitedSituation situation;
 
-    int                 external_encoding;	   /* remote side's character encoding */
-    FmgrInfo            *enc_conversion_proc;   /* conv proc from exttbl encoding to
-                                                   server or the other way around */
-   bool                 saw_delim;
+	int external_encoding;				/* remote side's character encoding */
+	FmgrInfo *enc_conversion_proc;		/* conv proc from exttbl encoding to
+										server or the other way around */
+	bool saw_delim;
 } format_delimiter_state;
 
 extern void
 unpack_delimited(char *data, int len, format_delimiter_state *myData);
+
 #endif
