@@ -481,11 +481,10 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
     int                 data_cur;
     int                 data_len;
 
-    /* Must be called via the external table format manager */
-    if (!CALLED_AS_FORMATTER(fcinfo))
-    {
-        elog(ERROR, "cannot execute pxfdelimited_import outside format manager");
-    }
+	/* Must be called via the external table format manager */
+	if (!CALLED_AS_FORMATTER(fcinfo))
+		ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+						errmsg("cannot execute multibyte_delim_import outside format manager")));
 
     tupdesc = FORMATTER_GET_TUPDESC(fcinfo);
 

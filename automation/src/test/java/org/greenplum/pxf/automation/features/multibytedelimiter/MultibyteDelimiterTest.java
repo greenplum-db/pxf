@@ -17,7 +17,6 @@ import org.junit.Assert;
 import org.postgresql.util.PSQLException;
 import org.testng.annotations.Test;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 
 import static java.lang.Thread.sleep;
@@ -128,8 +127,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -153,8 +152,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '停', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '停', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // wait a bit for async write in previous steps to finish
@@ -182,8 +181,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '|', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '|', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // replace pipe delimiter with actual delimiter
         CsvUtils.updateDelim(tempLocalDataPath, '|', "\uD83D\uDE42");
         // copy local CSV to HDFS
@@ -213,8 +212,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '|', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '|', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // replace pipe delimiter with actual delimiter
         CsvUtils.updateDelim(tempLocalDataPath, '|', "DELIM");
         // copy local CSV to HDFS
@@ -244,8 +243,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\r\n");
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, "\r\n");
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -264,8 +263,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -282,8 +281,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '¤', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -301,8 +300,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '¤', ' ', ' ', CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -320,7 +319,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
                 '¤', CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
@@ -339,7 +338,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
                 '¤', CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
@@ -366,7 +365,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
                 '¤', '|', '\\', CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
@@ -386,7 +385,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // create local CSV file
         dataTable.addRow(ROW_WITH_ESCAPE);
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
                 '¤', '|', '\\', CSVWriter.DEFAULT_LINE_END);;
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
@@ -406,8 +405,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
-                '|', ' ', CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '|', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // verify results
@@ -434,8 +433,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         dataTable.addRow(new String[]{"règles d'automation"});
         dataTable.addRow(new String[]{"minden amire szüksége van a szeretet"});
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
-                '¤', ' ', ' ', CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -462,8 +461,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
         dataTable.addRow(new String[]{"règles d'automation"});
         dataTable.addRow(new String[]{"minden amire szüksége van a szeretet"});
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
-                '¤', '|', ' ', CSVWriter.DEFAULT_LINE_END);
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', '|', CSVWriter.NO_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
 
@@ -512,7 +511,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // create local CSV file
         dataTable.addRow(ROW_WITH_ESCAPE);
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
                 '¤', '|', '\\', "EOL");;
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
@@ -554,7 +553,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
                 "5",
                 "minden amire szüksége van a szeretet"});
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
                 '¤', ' ', ' ', CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
@@ -582,7 +581,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
                 "minden amire szüksége van a szeretet"});
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
                 '¤', ' ', ' ', CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
@@ -609,7 +608,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
                 "5",
                 "minden amire szüksége van a szeretet"});
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
                 '¤', '|', '|', CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
@@ -637,7 +636,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
                 "minden amire szüksége van a szeretet"});
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
-        CsvUtils.writeTableToCsvFileOptions(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.ISO_8859_1,
                 '¤', '|', '\"', CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);

@@ -77,9 +77,9 @@ public abstract class CsvUtils {
 	 * @param targetCsvFile to write the data Table
 	 * @throws IOException
 	 */
-	public static void writeTableToCsvFileOptions(Table table, String targetCsvFile, Charset charset,
-												  char delimiter, char quotechar,
-												  char escapechar, String eol)
+	public static void writeTableToCsvFile(Table table, String targetCsvFile, Charset charset,
+										   char delimiter, char quotechar,
+										   char escapechar, String eol)
 			throws IOException {
 
 		// create CsvWriter using FileWriter
@@ -110,7 +110,7 @@ public abstract class CsvUtils {
 	public static void writeTableToCsvFile(Table table, String targetCsvFile)
 		throws IOException {
 
-		writeTableToCsvFileOptions(
+		writeTableToCsvFile(
 				table,
 				targetCsvFile,
 				StandardCharsets.UTF_8,

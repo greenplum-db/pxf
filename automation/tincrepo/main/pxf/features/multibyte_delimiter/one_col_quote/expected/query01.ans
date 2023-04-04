@@ -4,8 +4,8 @@
 SELECT * from pxf_multibyte_onecol_quote_data ORDER BY s1;
                     s1
 -------------------------------------------
-  minden  amire  szksge  van  a  szeretet
-  rgles  d'automation
-  t  s  seo  le  tstil  dea-
+ minden amire szüksége van a szeretet
+ règles d'automation
+ tá sé seo le tástáil dea-
 (3 rows)
 

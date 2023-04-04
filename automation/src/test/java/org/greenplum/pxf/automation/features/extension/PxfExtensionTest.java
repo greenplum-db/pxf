@@ -61,7 +61,7 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfUpgrade() throws Exception {
-        gpdb.runQuery("CREATE EXTENSION pxf VERSION \'2.0\'");
+        gpdb.runQuery("CREATE EXTENSION pxf VERSION '2.0'");
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         runTincTest("pxf.features.extension_tests.upgrade.step_1_create_extension_with_older_pxf_version.runTest");
@@ -75,7 +75,7 @@ public class PxfExtensionTest extends BaseFunctionality {
 
     @Test(groups = {"features", "gpdb"})
     public void testPxfExplicitUpgrade() throws Exception {
-        gpdb.runQuery("CREATE EXTENSION pxf VERSION \'2.0\'");
+        gpdb.runQuery("CREATE EXTENSION pxf VERSION '2.0'");
         String location = prepareData(false);
         createReadablePxfTable("default", location, false);
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_1_create_extension_with_older_pxf_version.runTest");
@@ -83,7 +83,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         // create an external table with the multibyte formatter
         String location_multi = prepareData(true);
         createReadablePxfTable("default", location_multi, true);
-        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \'2.1\'");
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO '2.1'");
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_2_after_alter_extension.runTest");
     }
 
@@ -98,7 +98,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         createReadablePxfTable("default", location_multi, true);
         runTincTest("pxf.features.extension_tests.downgrade.step_1_create_extension.runTest");
 
-        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \'2.0\'");
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO '2.0'");
         runTincTest("pxf.features.extension_tests.downgrade.step_2_after_alter_extension_downgrade.runTest");
     }
 
@@ -113,10 +113,10 @@ public class PxfExtensionTest extends BaseFunctionality {
         createReadablePxfTable("default", location_multi, true);
         runTincTest("pxf.features.extension_tests.downgrade_then_upgrade.step_1_check_extension.runTest");
 
-        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \'2.0\'");
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO '2.0'");
         runTincTest("pxf.features.extension_tests.downgrade_then_upgrade.step_2_after_alter_extension_downgrade.runTest");
 
-        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO \'2.1\'");
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO '2.1'");
         runTincTest("pxf.features.extension_tests.downgrade_then_upgrade.step_3_after_alter_extension_upgrade.runTest");
     }
 
