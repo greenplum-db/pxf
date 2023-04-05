@@ -257,9 +257,7 @@ A precision overflow condition can result when:
 - You define a `NUMERIC(<precision>)` column with a `<precision>` greater than 38; for example, `NUMERIC(55)`.
 - You define a `NUMERIC(<precision>, <scale>)` column and the integer digit count of a value is greater than `<precision> - <scale>`. For example, you define a `NUMERIC(20,4)` column and the value is `12345678901234567.12`.
 
-PXF can take one of three actions when it detects an overflow while writing numeric data to a Parquet file: round the value (the default), return an error, or ignore the overflow.
-
-The `pxf.parquet.write.decimal.overflow` property in the `pxf-site.xml` server configuration file directs the action that PXF takes when it encounters an overflow. Valid values for this property follow:
+PXF can take one of three actions when it detects an overflow while writing numeric data to a Parquet file: round the value (the default), return an error, or ignore the overflow. The `pxf.parquet.write.decimal.overflow` property in the `pxf-site.xml` server configuration governs PXF's action in this circumstance; valid values for this property follow:
 
 | Value  | PXF Action |
 |-------|-------------------------------------|
