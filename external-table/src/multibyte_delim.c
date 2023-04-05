@@ -555,7 +555,6 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	FORMATTER_SET_DATACURSOR(fcinfo, data_cur);
 
 	char* line_border = NULL;
-	bool last_line = false; //whether we treat the left data as a row
 	line_border = find_first_ins_for_multiline(myData->eol, data_buf + data_cur, data_buf + data_len, myData);
 	if (line_border == NULL)
 	{
@@ -563,7 +562,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
 	}
 
-	int eol_len = (last_line ? 0 : strlen(myData->eol)); //if we are handling the last line, perhaps there is no eol
+	int eol_len = strlen(myData->eol); //if we are handling the last line, perhaps there is no eol
 	int delimiter_len = strlen(myData->delimiter);
 	int whole_line_len = line_border - data_buf - data_cur + eol_len; //we count the eol_len;
 
@@ -575,9 +574,8 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	 *  these will confuse us, so we need count the quote to find a whole line to find the real end of the line
 	 *  in the former situation, `"\n` is in the beginning
 	 *  in the latter situation, there must be a delimiter like `;` before `"\n`
-	 *  if `last_line', we haven't found `"\n`, so we needn't check this
 	 */
-	if(myData->situation == WITH_QUOTE && !last_line &&
+	if(myData->situation == WITH_QUOTE &&
 	   (line_border == data_buf + data_cur + 1 || memcmp(line_border - 1  - delimiter_len, myData->delimiter, delimiter_len) == 0) )
 	{
 		char* real_line_border = find_whole_line(data_buf + data_cur, data_buf + data_len, myData);
