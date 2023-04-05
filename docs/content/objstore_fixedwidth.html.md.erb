@@ -193,7 +193,7 @@ Perform the following procedure to create a Greenplum Database writable external
     ``` sql
     postgres=# CREATE WRITABLE EXTERNAL TABLE pxf_s3_fixedwidth_w(location text, month text, num_orders int, total_sales float8)
                  LOCATION ('pxf://BUCKET/pxf_examples/fixedwidth_write?PROFILE=s3:fixedwidth&SERVER=s3srvcfg')
-               FORMAT 'CUSTOM' (formatter='fixedwidth_out', location='15', month='4', num_orders='6', total_sales='10', line_delim=E'\n');
+               FORMAT 'CUSTOM' (formatter='fixedwidth_out', location='15', month='4', num_orders='6', total_sales='10');
     ```
     
 2. Write a few individual records to the `fixedwidth_write` S3 directory by `INSERT`ing into the `pxf_s3_fixedwidth_w` table:
