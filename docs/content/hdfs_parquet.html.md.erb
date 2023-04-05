@@ -253,7 +253,7 @@ When you define a `NUMERIC` column in an external table without specifying a pre
 
 A precision overflow condition can result when:
 
-- You define a `NUMERIC` column in the external table, and a value exceeds 20 (38 - 18) integer digits.
+- You define a `NUMERIC` column in the external table, and the integer digit count of a value exceeds maximum precision 38. For example, `1234567890123456789012345678901234567890.12345`.
 - You define a `NUMERIC(<precision>)` column with a `<precision>` greater than 38. For example, `NUMERIC(55)`.
 - You define a `NUMERIC(<precision>, <scale>)` column and the integer digit count of a value is greater than `<precision> - <scale>`. For example, you define a `NUMERIC(20,4)` column and the value is `12345678901234567.12`.
 
