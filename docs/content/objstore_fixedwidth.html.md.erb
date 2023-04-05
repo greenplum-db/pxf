@@ -113,7 +113,7 @@ Procedure:
 
     ``` sql
     postgres=# CREATE EXTERNAL TABLE pxf_s3_fixedwidth_r(location text, month text, num_orders int, total_sales float8)
-                 LOCATION ('pxf://data/pxf_examples/pxf_s3_fixedwidth.txt?PROFILE=s3:fixedwidth&SERVER=s3srvcfg')
+                 LOCATION ('pxf://data/pxf_examples/pxf_s3_fixedwidth.txt?PROFILE=s3:fixedwidth&SERVER=s3srvcfg&NEWLINE=CRLF')
                FORMAT 'CUSTOM' (formatter='fixedwidth_in', location='15', month='4', num_orders='6', total_sales='10', line_delim=E'\r\n');
     ```
               
