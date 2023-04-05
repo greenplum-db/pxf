@@ -41,6 +41,7 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.anyInt;
@@ -482,6 +483,15 @@ public class JdbcBasePluginTest {
         connProps.setProperty("bar", "bar-val");
 
         verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, false, null, null);
+    }
+
+    @Test
+    public void testDateWideRangeFromConfiguration() throws SQLException {
+        configuration.set("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        configuration.set("jdbc.url", "test-url");
+        configuration.set("jdbc.date.wide-range", "true");
+        JdbcBasePlugin plugin = getPlugin(mockConnectionManager, mockSecureLogin, context);
+        assertTrue(plugin.isDateWideRange);
     }
 
     private JdbcBasePlugin getPlugin(ConnectionManager mockConnectionManager, SecureLogin mockSecureLogin, RequestContext context) {
