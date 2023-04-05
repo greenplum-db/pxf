@@ -112,7 +112,7 @@ You configure properties in the `pxf-site.xml` file for a PXF server when one or
 | pxf.fs.basePath | Identifies the base path or share point on the remote file system. This property is applicable when the server configuration is used with a profile that accesses a file. | None; this property is commented out by default. |
 | pxf.ppd.hive<sup>1</sup> | Specifies whether or not predicate pushdown is enabled for queries on external tables that specify the `hive`, `hive:rc`, or `hive:orc` profiles. | True; predicate pushdown is enabled. |
 | pxf.sasl.connection.retries | Specifies the maximum number of times that PXF retries a SASL connection request after a refused connection returns a `GSS initiate failed` error. | 5 |
-| pxf.parquet.write.decimal.overflow | Specifies the action that PXF takes when numeric data that it writes to a Parquet file exceeds the maximum precision of 38 and [overflows](hdfs_parquet.html#overflow). | round |
+| pxf.parquet.write.decimal.overflow | Specifies the action (round, error, ignore) that PXF takes when numeric data that it writes to a Parquet file exceeds the maximum precision of 38 and [overflows](hdfs_parquet.html#overflow). | round |
 
 </br><sup>1</sup>&nbsp;Should you need to, you can override this setting on a per-table basis by specifying the `&PPD=<boolean>` option in the `LOCATION` clause when you create the external table.
 
