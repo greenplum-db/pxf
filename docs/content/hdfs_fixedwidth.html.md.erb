@@ -28,7 +28,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | \<path&#8209;to&#8209;hdfs&#8209;file\>    | The path to the directory or file in the HDFS data store. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers \<path&#8209;to&#8209;hdfs&#8209;file\> to be relative to the base path specified. Otherwise, PXF considers it to be an absolute path. \<path&#8209;to&#8209;hdfs&#8209;file\> must not specify a relative path nor include the dollar sign (`$`) character. |
 | PROFILE    | Use `PROFILE=hdfs:fixedwidth` when \<path-to-hdfs-file\> references fixed-width text data. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
-| NEWLINE=\<bytecode\>    | When `line_delim` contains `\r`, `\r\n`, or a set of custom escape characters, you must set `<bytecode>` to `CR`, `CRLF`, or the set of bytecode characters, respectively. |
+| NEWLINE=\<bytecode\>    | When the `line_delim` formatter option contains `\r`, `\r\n`, or a set of custom escape characters, you must set `<bytecode>` to `CR`, `CRLF`, or the set of bytecode characters, respectively. |
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty dataset. |
 | FORMAT 'CUSTOM' | Use `FORMAT` '`CUSTOM`' with `FORMATTER='fixedwidth_in'` (read). |
 | \<field_name>='\<width>'    | The name and the width of the field. For example: `first_name='15'` specifies that the `first_name` field is `15` characters long. By default, when the field value is less than `<width>` size, Greenplum Database expects the field to be right-padded with spaces to that size. |
@@ -44,7 +44,7 @@ Refer to the Greenplum Database [fixed width custom formatter documentation](htt
 
 ## <a id="about_lineend"></a>About the line_delim and NEWLINE Formatter Options
 
-By default, Greenplum Database uses the `\n` (LF) character for the new line delimiter. When the line delimiter for the external file is also `\n`, you need not specify the `line_delim` option. If the `line_delim` option is provided and contains `\r` (CR), `\r\n` (CRLF), or a set of custom escape characters, you must specify the `NEWLINE` formatter option, and set the value to `CR`, `CRLF` or the set of bytecode characters, respectively.
+By default, Greenplum Database uses the `\n` (LF) character for the new line delimiter. When the line delimiter for the external file is also `\n`, you need not specify the `line_delim` option. If the `line_delim` option is provided and contains `\r` (CR), `\r\n` (CRLF), or a set of custom escape characters, you must specify the `NEWLINE` option in the external table `LOCATION` clause, and set the value to `CR`, `CRLF` or the set of bytecode characters, respectively.
 
 Refer to the Greenplum Database [fixed width custom formatter documentation](https://docs.vmware.com/en/VMware-Tanzu-Greenplum/6/greenplum-database/GUID-admin_guide-load-topics-g-importing-and-exporting-fixed-width-data.html) for more information about the formatter options.
 
@@ -137,7 +137,7 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://doc
 | \<path&#8209;to&#8209;hdfs&#8209;dir\>    | The path to the directory in the HDFS data store. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers \<path&#8209;to&#8209;hdfs&#8209;dir\> to be relative to the base path specified. Otherwise, PXF considers it to be an absolute path. \<path&#8209;to&#8209;hdfs&#8209;dir\> must not specify a relative path nor include the dollar sign (`$`) character. |
 | PROFILE    | Use `PROFILE=hdfs:fixedwidth` to write fixed-width data to \<path-to-hdfs-file\>. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
-| NEWLINE=\<bytecode\>    | When `line_delim` contains `\r`, `\r\n`, or a set of custom escape characters, you must set `<bytecode>` to `CR`, `CRLF` or the set of bytecode characters, respectively. |
+| NEWLINE=\<bytecode\>    | When the `line_delim` formatter option contains `\r`, `\r\n`, or a set of custom escape characters, you must set `<bytecode>` to `CR`, `CRLF` or the set of bytecode characters, respectively. |
 | \<write&#8209;option\>=\<value\>  | \<write-option\>s are described below.|
 | FORMAT 'CUSTOM' | Use `FORMAT` '`CUSTOM`' with `FORMATTER='fixedwidth_out'` (write). |
 | \<field_name>='\<width>'    | The name and the width of the field. For example: `first_name='15'` specifies that the `first_name` field is `15` characters long. By default, when writing to the external file and the field value is less than `<width>` size, Greenplum Database right-pads the field with spaces to `<width>` size. |
