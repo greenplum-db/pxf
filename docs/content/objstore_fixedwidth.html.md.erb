@@ -182,8 +182,6 @@ This example utilizes the data schema introduced in [Example: Reading Fixed-Widt
 | number_of_orders | 6 | int |
 | total_sales | 10 | float8 |
 
-This example also optionally uses the Greenplum Database external table named `pxf_s3_fixedwidth_r` that you created in that exercise.
-
 #### <a id="fixedwidth_write_proc" class="no-quick-link"></a>Procedure
 
 Perform the following procedure to create a Greenplum Database writable external table utilizing the same data schema as described above. You will use the PXF `s3:fixedwidth` profile to write data to S3. You will also create a separate, readable external table to read the data that you wrote to #3.
@@ -203,12 +201,6 @@ Perform the following procedure to create a Greenplum Database writable external
     postgres=# INSERT INTO pxf_s3_fixedwidth_w VALUES ( 'Cleveland', 'Oct', 3812, 96645.37 );
     ```
 
-3. (Optional) Insert the data from the `pxf_s3_fixedwidth_r` table that you created in [Example: Reading Fixed-Width Text Data on S3](#fixedwidth_read_example) into `pxf_s3_fixedwidth_w`:
-
-    ``` sql
-    postgres=# INSERT INTO pxf_s3_fixedwidth_w SELECT * FROM pxf_s3_fixedwidth_r;
-    ```
-
 5. Greenplum Database does not support directly querying a writable external table. To query the data that you just added to S3, you must create a readable external Greenplum Database table that references the S3 directory:
 
     ``` sql
@@ -226,14 +218,8 @@ Perform the following procedure to create a Greenplum Database writable external
     ``` pre
      location  | month | num_orders | total_sales 
     -----------+-------+------------+-------------
-     Rome      | Mar   |         87 |     1557.39
      Frankfurt | Mar   |        777 |     3956.98
-     Prague    | Jan   |        101 |     4875.33
-     Bangalore | May   |        317 |     8936.99
-     Beijing   | Jul   |        411 |    11600.67
      Cleveland | Oct   |       3812 |    96645.37
-    (6 rows)
+    (2 rows)
     ```
-
-    The `pxf_s3_fixedwidth_r2` table includes the records you individually inserted, as well as the full contents of the `pxf_s3_fixedwidth_r` table if you chose to perform the optional step.
 
