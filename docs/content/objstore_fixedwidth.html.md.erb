@@ -196,7 +196,7 @@ Perform the following procedure to create a Greenplum Database writable external
                FORMAT 'CUSTOM' (formatter='fixedwidth_out', location='15', month='4', num_orders='6', total_sales='10');
     ```
     
-2. Write a few individual records to the `fixedwidth_write` S3 directory by `INSERT`ing into the `pxf_s3_fixedwidth_w` table:
+2. Write a few individual records to the `fixedwidth_write` S3 directory by using the `INSERT` command on the `pxf_s3_fixedwidth_w` table:
 
     ``` sql
     postgres=# INSERT INTO pxf_s3_fixedwidth_w VALUES ( 'Frankfurt', 'Mar', 777, 3956.98 );

@@ -166,7 +166,7 @@ This example also optionally uses the Greenplum Database external table named `p
 
 #### <a id="fixedwidth_write_proc" class="no-quick-link"></a>Procedure
 
-Perform the following procedure to create a Greenplum Database writable external table utilizing the same data schema as described above.You will use the PXF `hdfs:fixedwidth` profile and the default PXF server to write data to the underlying HDFS directory. You will also create a separate, readable external table to read the data that you wrote to the HDFS directory.
+Perform the following procedure to create a Greenplum Database writable external table utilizing the same data schema as described above. You will use the PXF `hdfs:fixedwidth` profile and the default PXF server to write data to the underlying HDFS directory. You will also create a separate, readable external table to read the data that you wrote to the HDFS directory.
 
 1. Create a Greenplum Database writable external table utilizing the data schema described above. Write to the HDFS directory `/data/pxf_examples/fixedwidth_write`. Create the table specifying `\n` as the line delimiter:
 
@@ -176,7 +176,7 @@ Perform the following procedure to create a Greenplum Database writable external
                FORMAT 'CUSTOM' (formatter='fixedwidth_out', location='15', month='4', num_orders='6', total_sales='10');
     ```
     
-2. Write a few individual records to the `fixedwidth_write` HDFS directory by `INSERT`ing into the `pxf_hdfs_fixedwidth_w` table:
+2. Write a few individual records to the `fixedwidth_write` HDFS directory by using the `INSERT` command on the `pxf_hdfs_fixedwidth_w` table:
 
     ``` sql
     postgres=# INSERT INTO pxf_hdfs_fixedwidth_w VALUES ( 'Frankfurt', 'Mar', 777, 3956.98 );
@@ -189,7 +189,7 @@ Perform the following procedure to create a Greenplum Database writable external
     postgres=# INSERT INTO pxf_hdfs_fixedwidth_w SELECT * FROM pxf_hdfs_fixedwidth_r;
     ```
 
-4. In another terminal window, display the data that you just added to HDFS by `cat`ing the contents of the `fixedwidth_write` directory:
+4. In another terminal window, use the `cat` command on the `fixedwidth_write` directory to display the data that you just added to HDFS:
 
     ``` shell
     $ hdfs dfs -cat /data/pxf_examples/fixedwidth_write/*
