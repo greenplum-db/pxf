@@ -265,6 +265,5 @@ PXF can take one of three actions when it detects an overflow while writing nume
 | `error` | PXF reports an error when it encounters an overflow, and the transaction fails. |
 | `ignore` | PXF writes a NULL value. (This was PXF's behavior prior to version 6.6.0.) |
 
-PXF always reports an exception when it detects an overflow, regardless of the `pxf.parquet.write.decimal.overflow` property setting.
-
+PXF always logs an warning when it detects an overflow, regardless of the `pxf.parquet.write.decimal.overflow` property setting.
 
