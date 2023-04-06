@@ -2,7 +2,7 @@
 title: Reading and Writing Fixed-Width Text Data
 ---
 
-The PXF HDFS Connector supports reading and writing fixed-width text using the Greenplum Database [fixed width custom formatter](https://docs.vmware.com/en/VMware-Tanzu-Greenplum/6/greenplum-database/GUID-admin_guide-load-topics-g-importing-and-exporting-fixed-width-data.html). This section describes how to use PXF to access fixed-width text, including how to create, query, and insert data into an external table that references files in the HDFS data store.
+The PXF HDFS Connector supports reading and writing fixed-width text using the Greenplum Database [fixed width custom formatter](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/admin_guide-load-topics-g-importing-and-exporting-fixed-width-data.html). This section describes how to use PXF to access fixed-width text, including how to create, query, and insert data into an external table that references files in the HDFS data store.
 
 PXF supports reading or writing fixed-width text that is compressed with the `default`, `bzip2`, and `gzip` codecs.
 
@@ -21,7 +21,7 @@ LOCATION ('pxf://<path-to-hdfs-file>?PROFILE=hdfs:fixedwidth[&SERVER=<server_nam
 FORMAT 'CUSTOM' (FORMATTER='fixedwidth_in', <field_name>='<width>' [, ...] [, line_delim[=|<space>][E]'<delim_value>']);
 ```
 
-The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Tanzu-Greenplum/6/greenplum-database/GUID-ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) command are described in the table below.
+The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) command are described in the table below.
 
 | Keyword  | Value |
 |-------|-------------------------------------|
@@ -40,13 +40,13 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 
 Greenplum Database loads all fields in a line of fixed-width data in their physical order. The `<field_name>`s that you specify in the `FORMAT` options must match the order that you define the columns in the `CREATE [WRITABLE] EXTERNAL TABLE` command. You specify the size of each field in the `<width>` value.
 
-Refer to the Greenplum Database [fixed width custom formatter documentation](https://docs.vmware.com/en/VMware-Tanzu-Greenplum/6/greenplum-database/GUID-admin_guide-load-topics-g-importing-and-exporting-fixed-width-data.html) for more information about the formatter options.
+Refer to the Greenplum Database [fixed width custom formatter documentation](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/admin_guide-load-topics-g-importing-and-exporting-fixed-width-data.html) for more information about the formatter options.
 
 ## <a id="about_lineend"></a>About the line_delim and NEWLINE Formatter Options
 
 By default, Greenplum Database uses the `\n` (LF) character for the new line delimiter. When the line delimiter for the external file is also `\n`, you need not specify the `line_delim` option. If the `line_delim` option is provided and contains `\r` (CR), `\r\n` (CRLF), or a set of custom escape characters, you must specify the `NEWLINE` option in the external table `LOCATION` clause, and set the value to `CR`, `CRLF` or the set of bytecode characters, respectively.
 
-Refer to the Greenplum Database [fixed width custom formatter documentation](https://docs.vmware.com/en/VMware-Tanzu-Greenplum/6/greenplum-database/GUID-admin_guide-load-topics-g-importing-and-exporting-fixed-width-data.html) for more information about the formatter options.
+Refer to the Greenplum Database [fixed width custom formatter documentation](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/admin_guide-load-topics-g-importing-and-exporting-fixed-width-data.html) for more information about the formatter options.
 
 ## <a id="fixedwidth_read_example"></a>Example: Reading Fixed-Width Text Data on HDFS
 
@@ -130,7 +130,7 @@ FORMAT 'CUSTOM' (FORMATTER='fixedwidth_out' [, <field_name>='<width>'] [, ...] [
 [DISTRIBUTED BY (<column_name> [, ... ] ) | DISTRIBUTED RANDOMLY];
 ```
 
-The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Tanzu-Greenplum/6/greenplum-database/GUID-ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) command are described in the table below.
+The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) command are described in the table below.
 
 | Keyword  | Value |
 |-------|-------------------------------------|
