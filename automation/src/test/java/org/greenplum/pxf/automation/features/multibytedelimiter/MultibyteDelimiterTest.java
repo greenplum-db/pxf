@@ -243,6 +243,26 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
+    public void readTwoByteDelimiterWithCR() throws Exception {
+        // set profile and format
+        exTable.setName("pxf_multibyte_twobyte_withcr_data");
+        exTable.setProfile(protocol.value() + ":csv");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "NEWLINE='CR'"});
+        exTable.setUserParameters(new String[] {"NEWLINE=CR"});
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, "\r");
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_cr.runTest");
+    }
+
+    @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWrongFormatter() throws Exception {
         // set profile and format
         exTable.setName("pxf_multibyte_twobyte_wrongformatter_data");
