@@ -44,7 +44,7 @@ Refer to the Greenplum Database [fixed width custom formatter documentation](htt
 
 ## <a id="about_lineend"></a>About the line_delim and NEWLINE Formatter Options
 
-By default, Greenplum Database uses the `\n` (LF) character for the new line delimiter. When the line delimiter for the external file is also `\n`, you need not specify the `line_delim` option. If the `line_delim` option is provided and contains `\r` (CR), `\r\n` (CRLF), or a set of custom escape characters, you must specify the `NEWLINE` option in the external table `LOCATION` clause, and set the value to `CR`, `CRLF` or the set of bytecode characters, respectively.
+By default, Greenplum Database uses the `\n` (LF) character for the new line delimiter. When the line delimiter for the external file is also `\n`, you need not specify the `line_delim` option. If the `line_delim` formatter option is provided and contains `\r` (CR), `\r\n` (CRLF), or a set of custom escape characters, you must specify the `NEWLINE` option in the external table `LOCATION` clause, and set the value to `CR`, `CRLF` or the set of bytecode characters, respectively.
 
 Refer to the Greenplum Database [fixed width custom formatter documentation](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/admin_guide-load-topics-g-importing-and-exporting-fixed-width-data.html) for more information about the formatter options.
 
