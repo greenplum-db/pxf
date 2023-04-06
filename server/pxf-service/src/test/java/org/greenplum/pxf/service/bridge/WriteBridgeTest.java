@@ -3,6 +3,7 @@ package org.greenplum.pxf.service.bridge;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.serde.RecordReaderFactory;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,8 @@ public class WriteBridgeTest {
     @Mock
     private BasePluginFactory mockPluginFactory;
     @Mock
+    private RecordReaderFactory mockRecordReaderFactory;
+    @Mock
     private Accessor mockAccessor1;
     @Mock
     private Accessor mockAccessor2;
@@ -47,8 +50,8 @@ public class WriteBridgeTest {
         configuration = new Configuration();
         configuration.set("hadoop.security.authentication", "kerberos");
         context.setConfiguration(configuration);
-        context.setAccessor("org.greenplum.pxf.api.model.Accessor");
-        context.setAccessor("org.greenplum.pxf.api.model.Resolver");
+        context.setAccessor("org.greenplum.pxf.service.bridge.TestAccessor");
+        context.setResolver("org.greenplum.pxf.service.bridge.TestResolver");
     }
 
     @Test
@@ -57,7 +60,7 @@ public class WriteBridgeTest {
         when(mockAccessor1.openForWrite()).thenThrow(new IOException("Something Else"));
 
         // constructor will call into mock factories, that's why we do not create WriteBridge in @Before method
-        bridge = new WriteBridge(mockPluginFactory, context, handler);
+        bridge = createWriteBridge();
         Exception e = assertThrows(IOException.class, () -> bridge.beginIteration());
         assertEquals("Something Else", e.getMessage());
 
@@ -76,7 +79,7 @@ public class WriteBridgeTest {
         when(mockAccessor2.openForWrite()).thenReturn(true);
 
         // constructor will call into mock factories, that's why we do not create WriteBridge in @Before method
-        bridge = new WriteBridge(mockPluginFactory, context, handler);
+        bridge = createWriteBridge();
         boolean result = bridge.beginIteration();
         assertTrue(result);
 
@@ -100,7 +103,7 @@ public class WriteBridgeTest {
         when(mockAccessor3.openForWrite()).thenReturn(true);
 
         // constructor will call into mock factories, that's why we do not create WriteBridge in @Before method
-        bridge = new WriteBridge(mockPluginFactory, context, handler);
+        bridge = createWriteBridge();
         boolean result = bridge.beginIteration();
         assertTrue(result);
 
@@ -126,7 +129,7 @@ public class WriteBridgeTest {
         when(mockAccessor3.openForWrite()).thenThrow(new IOException("GSS initiate failed"));
 
         // constructor will call into mock factories, that's why we do not create WriteBridge in @Before method
-        bridge = new WriteBridge(mockPluginFactory, context, handler);
+        bridge = createWriteBridge();
         Exception e = assertThrows(IOException.class, () -> bridge.beginIteration());
         assertEquals("GSS initiate failed", e.getMessage());
 
@@ -142,9 +145,17 @@ public class WriteBridgeTest {
 
     @Test
     public void testGetNextIsNotSupported() {
-        bridge = new WriteBridge(mockPluginFactory, context, handler);
+        when(mockPluginFactory.getPlugin(context, context.getAccessor())).thenReturn(mockAccessor1);
+        bridge = createWriteBridge();
 
         Exception e = assertThrows(UnsupportedOperationException.class, () -> bridge.getNext());
         assertEquals("Current operation is not supported", e.getMessage());
+    }
+
+    private WriteBridge createWriteBridge() {
+        // resolver will be inspected for annotation, so we need to have a real object here
+        when(mockPluginFactory.getPlugin(context, "org.greenplum.pxf.service.bridge.TestResolver"))
+                .thenReturn(new TestResolver());
+        return new WriteBridge(mockPluginFactory, mockRecordReaderFactory, context, handler);
     }
 }

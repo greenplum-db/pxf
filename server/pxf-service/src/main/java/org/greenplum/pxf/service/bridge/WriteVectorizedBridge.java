@@ -5,6 +5,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.WriteVectorizedResolver;
+import org.greenplum.pxf.service.serde.RecordReaderFactory;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 
@@ -21,11 +22,13 @@ public class WriteVectorizedBridge extends WriteBridge {
     /**
      * Creates a new instance of the bridge.
      * @param pluginFactory plugin factory
+     * @param recordReaderFactory factory for creating a record reader to deserialize incoming data
      * @param context request context
      * @param failureHandler failure handler
      */
-    public WriteVectorizedBridge(BasePluginFactory pluginFactory, RequestContext context, GSSFailureHandler failureHandler) {
-        super(pluginFactory, context, failureHandler);
+    public WriteVectorizedBridge(BasePluginFactory pluginFactory, RecordReaderFactory recordReaderFactory,
+                                 RequestContext context, GSSFailureHandler failureHandler) {
+        super(pluginFactory, recordReaderFactory, context, failureHandler);
     }
 
     /**
@@ -42,7 +45,7 @@ public class WriteVectorizedBridge extends WriteBridge {
         List<List<OneField>> batch = new ArrayList<>(batchSize);
         int recordCount = 0;
         while (recordCount < batchSize) {
-            List<OneField> record = inputBuilder.makeInput(databaseEncoding, outputFormat, inputStream);
+            List<OneField> record = recordReader.readRecord(inputStream);
             if (record == null) {
                 break; // no more records to read
             }

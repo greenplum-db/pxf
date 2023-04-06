@@ -3,6 +3,7 @@ package org.greenplum.pxf.service.bridge;
 import org.greenplum.pxf.api.model.GreenplumCSV;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
+import org.greenplum.pxf.service.serde.RecordReaderFactory;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,8 @@ public class SimpleBridgeFactoryTest {
     @Mock
     private BasePluginFactory mockPluginFactory;
     @Mock
+    private RecordReaderFactory mockRecordReaderFactory;
+    @Mock
     private GSSFailureHandler mockFailureHandler;
     @Mock
     private RequestContext mockRequestContext;
@@ -33,13 +36,17 @@ public class SimpleBridgeFactoryTest {
 
     @BeforeEach
     public void setup() {
-        factory = new SimpleBridgeFactory(mockPluginFactory, mockFailureHandler);
+        factory = new SimpleBridgeFactory(mockPluginFactory, mockRecordReaderFactory, mockFailureHandler);
     }
 
     @Test
     public void testWriteVectorized() {
         when(mockRequestContext.getRequestType()).thenReturn(RequestContext.RequestType.WRITE_BRIDGE);
         when(mockRequestContext.getResolver()).thenReturn("org.greenplum.pxf.service.bridge.TestWriteVectorizedResolver");
+        when(mockPluginFactory.getPlugin(mockRequestContext, null)).thenReturn(null); // accessor
+        // resolver will be inspected for annotation, so we need to have a real object here
+        when(mockPluginFactory.getPlugin(mockRequestContext, "org.greenplum.pxf.service.bridge.TestWriteVectorizedResolver"))
+                .thenReturn(new TestWriteVectorizedResolver());
         bridge = factory.getBridge(mockRequestContext);
         assertTrue(bridge instanceof WriteVectorizedBridge);
     }
@@ -48,6 +55,10 @@ public class SimpleBridgeFactoryTest {
     public void testWrite() {
         when(mockRequestContext.getRequestType()).thenReturn(RequestContext.RequestType.WRITE_BRIDGE);
         when(mockRequestContext.getResolver()).thenReturn("org.greenplum.pxf.service.bridge.TestResolver");
+        when(mockPluginFactory.getPlugin(mockRequestContext, null)).thenReturn(null); // accessor
+        // resolver will be inspected for annotation, so we need to have a real object here
+        when(mockPluginFactory.getPlugin(mockRequestContext, "org.greenplum.pxf.service.bridge.TestResolver"))
+                .thenReturn(new TestResolver());
         bridge = factory.getBridge(mockRequestContext);
         assertTrue(bridge instanceof WriteBridge);
         assertFalse(bridge instanceof WriteVectorizedBridge);

@@ -23,9 +23,11 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.Writable;
+import org.greenplum.pxf.api.model.InputStreamHandler;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.service.BridgeInputBuilder;
+import org.greenplum.pxf.service.serde.RecordReader;
+import org.greenplum.pxf.service.serde.RecordReaderFactory;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 
@@ -33,22 +35,33 @@ import java.io.DataInputStream;
 import java.nio.charset.Charset;
 import java.util.List;
 
-/*
- * WriteBridge class creates appropriate accessor and resolver.
- * It reads data from inputStream by the resolver,
- * and writes it to the Hadoop storage with the accessor.
+/**
+ * WriteBridge orchestrates writing data received from GPDB into an external system. It provides methods
+ * to start and stop the iteration process as well as the iterative method to read database table tuples
+ * from the input stream, transform them with a resolver and store them into the external system using an accessor.
  */
 public class WriteBridge extends BaseBridge {
 
-    protected final BridgeInputBuilder inputBuilder;
     protected final OutputFormat outputFormat;
     protected final Charset databaseEncoding;
+    protected final RecordReader recordReader;
 
-    public WriteBridge(BasePluginFactory pluginFactory, RequestContext context, GSSFailureHandler failureHandler) {
+    /**
+     * Creates a new instance
+     * @param pluginFactory factory for creating plugins
+     * @param recordReaderFactory factory for creating a record reader to deserialize incoming data
+     * @param context request context
+     * @param failureHandler failure handler for GSS errors
+     */
+    public WriteBridge(BasePluginFactory pluginFactory, RecordReaderFactory recordReaderFactory,
+                       RequestContext context, GSSFailureHandler failureHandler) {
         super(pluginFactory, context, failureHandler);
-        this.inputBuilder = new BridgeInputBuilder();
         this.outputFormat = context.getOutputFormat();
         this.databaseEncoding = context.getDatabaseEncoding();
+
+        // create record reader for incoming data deserialization
+        this.recordReader = recordReaderFactory.getRecordReader(context,
+                resolver.getClass().isAnnotationPresent(InputStreamHandler.class));
     }
 
     /**
@@ -60,14 +73,19 @@ public class WriteBridge extends BaseBridge {
         return failureHandler.execute(context.getConfiguration(), "begin iteration", () -> accessor.openForWrite(), this::beforeRetryCallback);
     }
 
-    /*
-     * Read data from stream, convert it using Resolver into OneRow object, and
-     * pass to WriteAccessor to write into file.
+    /**
+     * Reads a record (usually a database table tuple) from the input stream using an InputBuilder,
+     * converts it into OneRow object (a representation suitable for the external system) using a Resolver,
+     * and stores it into the external system using an Accessor.
+     * @param inputStream input stream containing data
+     * @return true if data was read and processed, false if there was no more data to read
+     * @throws BadRecordException if accessor failed to write the data
+     * @throws Exception if any operation failed
      */
     @Override
     public boolean setNext(DataInputStream inputStream) throws Exception {
 
-        List<OneField> record = inputBuilder.makeInput(databaseEncoding, outputFormat, inputStream);
+        List<OneField> record = recordReader.readRecord(inputStream);
         if (record == null) {
             return false;
         }
@@ -82,8 +100,8 @@ public class WriteBridge extends BaseBridge {
         return true;
     }
 
-    /*
-     * Close the underlying resource
+    /**
+     * {@inheritDoc}
      */
     public void endIteration() throws Exception {
         try {

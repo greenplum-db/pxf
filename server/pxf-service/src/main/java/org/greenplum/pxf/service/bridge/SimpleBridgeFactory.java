@@ -4,6 +4,7 @@ import org.greenplum.pxf.api.model.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.WriteVectorizedResolver;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.serde.RecordReaderFactory;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.springframework.stereotype.Component;
@@ -12,10 +13,12 @@ import org.springframework.stereotype.Component;
 public class SimpleBridgeFactory implements BridgeFactory {
 
     private final BasePluginFactory pluginFactory;
+    private final RecordReaderFactory recordReaderFactory;
     private final GSSFailureHandler failureHandler;
 
-    public SimpleBridgeFactory(BasePluginFactory pluginFactory, GSSFailureHandler failureHandler) {
+    public SimpleBridgeFactory(BasePluginFactory pluginFactory, RecordReaderFactory recordReaderFactory, GSSFailureHandler failureHandler) {
         this.pluginFactory = pluginFactory;
+        this.recordReaderFactory = recordReaderFactory;
         this.failureHandler = failureHandler;
     }
 
@@ -28,9 +31,9 @@ public class SimpleBridgeFactory implements BridgeFactory {
         Bridge bridge;
         if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
             if (useWriteVectorization(context)) {
-                bridge = new WriteVectorizedBridge(pluginFactory, context, failureHandler);
+                bridge = new WriteVectorizedBridge(pluginFactory, recordReaderFactory, context, failureHandler);
             } else {
-                bridge = new WriteBridge(pluginFactory, context, failureHandler);
+                bridge = new WriteBridge(pluginFactory, recordReaderFactory, context, failureHandler);
             }
         } else if (context.getRequestType() != RequestContext.RequestType.READ_BRIDGE) {
             throw new UnsupportedOperationException("Current Operation is not supported");

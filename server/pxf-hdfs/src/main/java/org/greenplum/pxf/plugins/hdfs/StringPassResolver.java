@@ -23,6 +23,7 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.InputStreamHandler;
 import org.greenplum.pxf.api.model.Resolver;
 
 import java.io.InputStream;
@@ -37,6 +38,7 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  * String records. StringPassResolver implements {@link Resolver}
  * interface. Returns strings as-is.
  */
+@InputStreamHandler
 public class StringPassResolver extends BasePlugin implements Resolver {
     // for write
     private final OneRow oneRow = new OneRow();
