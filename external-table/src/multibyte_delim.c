@@ -198,7 +198,7 @@ new_format_delimiter_state(FunctionCallInfo fcinfo)
 	format_delimiter_state *fmt_state;
 	TupleDesc desc = FORMATTER_GET_TUPDESC(fcinfo);
 
-	fmt_state = (format_delimiter_state*)palloc(sizeof(format_delimiter_state));
+	fmt_state = (format_delimiter_state*)palloc0(sizeof(format_delimiter_state));
 	fmt_state->desc = desc;
 
 	int nColumns = desc->natts;
