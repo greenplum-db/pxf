@@ -38,6 +38,7 @@ static void add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel);
 static void add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri);
 static char *get_format_name(ExtTableEntry *exttbl);
 static char *getFormatterString(ExtTableEntry *exttbl);
+static bool isFormatterPxfDelimited(ExtTableEntry *exttbl);
 static bool isFormatterPxfWritable(ExtTableEntry *exttbl);
 static void add_projection_desc_httpheaders(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
 static bool add_attnums_from_targetList(Node *node, List *attnums);
@@ -90,14 +91,12 @@ build_http_headers(PxfInputData *input)
 		ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
 		ListCell   *option;
 		List	   *copyFmtOpts = NIL;
-		char		   *formatter_name = getFormatterString(exttbl);
 
 		// in the case of pxfdelimited_import formatter, the only viable profiles are TEXT and CSV.
 		// error out early here if the profile is not accepted
-		if (formatter_name != NULL &&
-			strstr(formatter_name, "pxfdelimited_import") != NULL &&
-			(strstr(input->gphduri->profile, "text") == NULL &&
-				strstr(input->gphduri->profile, "csv") == NULL))
+		if (isFormatterPxfDelimited(exttbl) &&
+			(!strstr(input->gphduri->profile, ":text") &&
+				!strstr(input->gphduri->profile, ":csv")))
 		{
 			ereport(ERROR,
 					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
@@ -699,6 +698,23 @@ getFormatterString(ExtTableEntry *exttbl)
 	return formatterNameSearchString;
 }
 
+/*
+ * Checks if the custom formatter specified for the table starts with pxfwritable_ prefix
+ */
+static bool
+isFormatterPxfDelimited(ExtTableEntry *exttbl)
+{
+	char *formatterNameSearchString = getFormatterString(exttbl);
+
+	if (!formatterNameSearchString || !strlen(formatterNameSearchString))
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_INTERNAL_ERROR),
+						errmsg("cannot determine the name of a custom formatter")));
+	}
+
+	return strstr(formatterNameSearchString, "pxfdelimited_import") != NULL;
+}
 /*
  * Checks if the custom formatter specified for the table starts with pxfwritable_ prefix
  */
