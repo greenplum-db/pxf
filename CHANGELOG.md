@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.6.0 (04/06/2023)
+
+### Enhancements:
+
+- [#949](https://github.com/greenplum-db/pxf/pull/949) Support for fixedwidth formatter with new `*:fixedwidth` PXF profiles
+- [#954](https://github.com/greenplum-db/pxf/pull/954) Update table options names to not include dash character
+- [#955](https://github.com/greenplum-db/pxf/pull/955) Bump jackson-databind from 2.13.4.1 to 2.13.4.2 in /automation
+
+### Bug Fixes:
+
+- [#940](https://github.com/greenplum-db/pxf/pull/940) Introduced options to handle decimal overflow when writing Parquet files
+
 ## 6.5.1 (03/19/2023)
 
 ### Enhancements:
