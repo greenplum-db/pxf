@@ -354,6 +354,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // create external table
         gpdb.createTableAndVerify(exTable);
         // create local CSV file
+        dataTable.addRow(ROW_WITH_ESCAPE);
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
                 '¤', '|', '\\', CSVWriter.DEFAULT_LINE_END);
