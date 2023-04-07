@@ -3,12 +3,14 @@
 #include "multibyte_delim.h"
 #include "stdio.h"
 
+PG_FUNCTION_INFO_V1(multibyte_delim_import);
 Datum multibyte_delim_import(PG_FUNCTION_ARGS);
 
 static int
 count_of_escape(char* p, char* left_border, char escape)
 {
 	int count = 0;
+	// count the number of continuous `escape` values in front of p
 	while(p >= left_border && *p == escape)
 	{
 		++count;
@@ -31,6 +33,7 @@ find_first_ins_for_multiline(char* target, char* left_border, char* right_border
 	char* t = target;
 	char* ret = NULL;
 
+	// we assume that the target will only be delimiter or eol
 	if (myData->situation == WITH_QUOTE)
 	{
 		if (strcmp(target, myData->delimiter) == 0)
@@ -46,6 +49,7 @@ find_first_ins_for_multiline(char* target, char* left_border, char* right_border
 	char* start_pos = left_border;
 	while(1)
 	{
+		// find the first instance of the garget value
 		char* p = strstr(start_pos, t);
 		if (p == NULL || p > right_border - strlen(t))
 		{
@@ -54,6 +58,7 @@ find_first_ins_for_multiline(char* target, char* left_border, char* right_border
 
 		int escape_count = 0;
 
+		// make sure that the value found is an escaped representation of the given target
 		if(myData->escape != NULL)
 		{
 			escape_count = count_of_escape(p-1, left_border, *(myData->escape));
@@ -66,12 +71,13 @@ find_first_ins_for_multiline(char* target, char* left_border, char* right_border
 		}
 		else
 		{
+			// the value found was an escaped representation of the given target, thus continue searching
 			start_pos = p + strlen(t);
 			continue;
 		}
 	}
 
-	//we found a 'quote+eol', 'ret' is pointing to quote. we should return the data border that just after the quote
+	// we found a 'quote+eol', 'ret' is pointing to quote. we should return the data border that just after the quote
 	if (myData->situation == WITH_QUOTE && strcmp(target, myData->eol) == 0 && ret)
 	{
 		++ret;
@@ -151,7 +157,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 		fmt_state->eol = "\n";
 	}
 
-	//with quote, we must also have escape set it to the default if it is not provided. This is similar behavior to COPY
+	// with quote, we must also have escape set it to the default if it is not provided. This is similar behavior to COPY
 	if (fmt_state->quote != NULL)
 	{
 		if (strlen(fmt_state->quote) != 1)
@@ -245,7 +251,7 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
 					buf[j++] = start[i+1];
 					i = i + 2;
 				}
-				else //before: \a, after: \a
+				else // before: \a, after: \a
 				{
 					buf[j++] = start[i++];
 				}
@@ -296,6 +302,7 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
 /**
  * we count the quote, we need every column with two quote, return the pos of eol
  * This function ensures that the data in the buffer is indeed a complete row that can be parsed.
+ * This function is only called when there is a quote value
  * @param data the pointer to the start of the buffer
  * @param data_border the pointer to where the line/row should end
  * @param myData the struct containing formatter options
@@ -310,7 +317,8 @@ find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
 	char* p = data;
 	for(int i = 0; i < column_cnt; ++i)
 	{
-		//first, we check the left quote
+		// first, we check the left quote
+		// if there is no left quote, then there is something wrong with the data
 		if(*p != *(myData->quote))
 		{
 			return NULL;
@@ -319,6 +327,7 @@ find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
 		++p;
 		while(1)
 		{
+			// read until we see a quote value
 			while(p < data_border && *p != *(myData->quote))
 			{
 				++p;
@@ -330,6 +339,7 @@ find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
 				return NULL;
 			}
 
+			// make sure that the quote we found is not escaped
 			if(myData->escape != NULL)
 			{
 				int cnt = count_of_escape(p-1, data, *(myData->escape));
@@ -394,7 +404,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 					errmsg("unpack_delimited: missing quote in row head or tail")));
 		}
 
-		//exclude the first and the last quote
+		// exclude the first and the last quote
 		++start;
 		--len;
 	}
@@ -437,15 +447,13 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 			{
 				appendBinaryStringInfo(buf, start, column_len);
 			}
-			else //escape the data
+			else // escape the data
 			{
 				char* removeEscapeBuf = remove_escape(start, column_len, myData);
 				appendBinaryStringInfo(buf, removeEscapeBuf, strlen(removeEscapeBuf));
 				pfree(removeEscapeBuf);
 			}
 
-			// if a table encoding is provided, then we assume that the file (and thus the data stream) is in that encoding
-			//  and we will need to convert the data stream from the table encoding into the server encoding
 			myData->values[index] = InputFunctionCall(&myData->conv_functions[index],
 #if PG_VERSION_NUM >= 90600
 					buf->data, myData->typioparams[index], TupleDescAttr(myData->desc, index)->atttypmod);
@@ -554,6 +562,9 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 
 	FORMATTER_SET_DATACURSOR(fcinfo, data_cur);
 
+	/*
+	 * find the first instance of the `eol` character to get an entire row
+	 */
 	char* line_border = NULL;
 	line_border = find_first_ins_for_multiline(myData->eol, data_buf + data_cur, data_buf + data_len, myData);
 	if (line_border == NULL)
@@ -562,25 +573,34 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
 	}
 
-	int eol_len = strlen(myData->eol); //if we are handling the last line, perhaps there is no eol
+	int eol_len = strlen(myData->eol); // if we are handling the last line, perhaps there is no eol
 	int delimiter_len = strlen(myData->delimiter);
-	int whole_line_len = line_border - data_buf - data_cur + eol_len; //we count the eol_len;
+	int whole_line_len = line_border - data_buf - data_cur + eol_len; // we count the eol_len;
 
 	/*
-	 *  when we found a quote+eol like `"\n`, we hope it is the last part of `" ";" ";" "\n`
-	 *  the end mark of the line.
-	 *  but it may be the middle part of `" ";"\n ";" "\n`
-	 *  or the first part of `"\n ";" ";" "\n`.
-	 *  these will confuse us, so we need count the quote to find a whole line to find the real end of the line
-	 *  in the former situation, `"\n` is in the beginning
-	 *  in the latter situation, there must be a delimiter like `;` before `"\n`
+	 *  If we have quote = `"` and delimiter = `;`
+	 *  when we found a quote+eol like `"\n`, there are 2 possibilities:
+	 *  1. We are inside a quoted string that contains the eol value
+	 *  	a) part of a value in the middle of the line ex: `" ";"\n ";" "\n`
+	 *  	b) at the front of the line ex: `"\n ";" ";" "\n`.
+	 *  2. We have found the true eol ex: `" ";" ";" "\n`
+	 *
+	 *  As such, we need to make sure that we correctly find the eol marker and are not taking
+	 *  any value inside quotes as the eol
+	 *
+	 *  The two cases that we need to pay special attention to is option 1b and option 2.
+	 *  	in the former situation, `"\n` is in the beginning
+	 *  	in the latter situation, there must be a delimiter like `;` before `"\n`
 	 */
 	if(myData->situation == WITH_QUOTE &&
 	   (line_border == data_buf + data_cur + 1 || memcmp(line_border - 1  - delimiter_len, myData->delimiter, delimiter_len) == 0) )
 	{
+		/*
+		 * Go through the data_buf and ensure that we have the correct number of quotes and handle
+		 */
 		char* real_line_border = find_whole_line(data_buf + data_cur, data_buf + data_len, myData);
 
-		//if we can't find a whole line by counting quote, we treat this part of data as bad data
+		// if we can't find a whole line by counting quote, we treat this part of data as bad data
 		if(real_line_border == NULL)
 		{
 			MemoryContextSwitchTo(oldcontext);
@@ -590,7 +610,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 		else
 		{
 			line_border = real_line_border;
-			whole_line_len = line_border - data_buf - data_cur + eol_len;//line_border changed
+			whole_line_len = line_border - data_buf - data_cur + eol_len; // line_border changed
 		}
 	}
 

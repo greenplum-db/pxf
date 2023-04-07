@@ -20,7 +20,6 @@
 
 /* Do the module magic dance */
 //PG_MODULE_MAGIC;
-PG_FUNCTION_INFO_V1(multibyte_delim_import);
 
 typedef enum DelimitedSituation {
 	WITHOUT_QUOTE,
@@ -37,8 +36,8 @@ typedef struct {
 	char *eol;
 	char *quote;
 	char *escape;
-	char *quote_delimiter; // these two only for searching for border, not in the config file
-	char *quote_eol;
+	char *quote_delimiter; /* only for searching for border, not in the config file */
+	char *quote_eol; /* only for searching for border, not in the config file */
 	int nColumns;
 	DelimitedSituation situation;
 
