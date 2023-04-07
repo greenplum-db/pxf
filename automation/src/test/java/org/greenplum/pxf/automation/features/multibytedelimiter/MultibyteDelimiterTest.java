@@ -355,10 +355,9 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
         // verify results
         // in newer versions of GP6 and in GP7, GPDB calls into the formatter one more time to handle EOF properly
-        // however, this is not the case for GP5 and for versions of GP6 older than 6.24.???
+        // however, this is not the case for GP5 and for versions of GP6 older than 6.24.0
         // therefore, we must run 2 different sets of tests to check for the expected error
-        // TODO: when a version of GP6 gets released with the custom formatter fix, change this if condition
-        if (gpdb.getVersion() > 6) {
+        if (gpdb.getVersion() >= 6) {
             runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_quote.runTest");
         } else {
             runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_quote_5X.runTest");
