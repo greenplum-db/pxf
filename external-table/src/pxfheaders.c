@@ -94,7 +94,8 @@ build_http_headers(PxfInputData *input)
 
 		// in the case of pxfdelimited_import formatter, the only viable profiles are TEXT and CSV.
 		// error out early here if the profile is not accepted
-		if (isFormatterPxfDelimited(exttbl) &&
+		if (getFormatterString(exttbl) != NULL &&
+		    isFormatterPxfDelimited(exttbl) &&
 			(!strstr(input->gphduri->profile, ":text") &&
 				!strstr(input->gphduri->profile, ":csv")))
 		{
@@ -690,7 +691,7 @@ getFormatterString(ExtTableEntry *exttbl)
 		}
 	}
 #else
-	// for GP5 and Gp6, we only have a serialized string of formatter options,
+	// for GP5 and GP6, we only have a serialized string of formatter options,
 	// parsing it requires porting a lot of code from GP6 so return the entire serialized string
 	formatterNameSearchString = exttbl->fmtopts;
 #endif
@@ -699,7 +700,7 @@ getFormatterString(ExtTableEntry *exttbl)
 }
 
 /*
- * Checks if the custom formatter specified for the table starts with pxfwritable_ prefix
+ * Checks if the custom formatter specified for the table is pxfdelimited_import
  */
 static bool
 isFormatterPxfDelimited(ExtTableEntry *exttbl)
