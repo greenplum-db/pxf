@@ -333,6 +333,10 @@ public class MultibyteDelimiterTest extends BaseFeature {
                 '¤', CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+        // wait a bit for async write in previous steps to finish
+        if (protocol == ProtocolEnum.FILE) {
+            sleep(10000);
+        }
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote.runTest");
@@ -399,6 +403,10 @@ public class MultibyteDelimiterTest extends BaseFeature {
                 '¤', '|', '\\', CSVWriter.DEFAULT_LINE_END);;
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+        // wait a bit for async write in previous steps to finish
+        if (protocol == ProtocolEnum.FILE) {
+            sleep(10000);
+        }
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_escape.runTest");
