@@ -1,7 +1,10 @@
 package org.greenplum.pxf.automation.features.hcfs;
 
+import annotations.FailsWithFDW;
+import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
+import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -9,6 +12,7 @@ import org.testng.annotations.Test;
 /**
  * Functional File as Row Test
  */
+@WorksWithFDW
 public class FileAsRowTest extends BaseFeature {
 
     private static final String emptyTextFile = "empty";
@@ -63,6 +67,9 @@ public class FileAsRowTest extends BaseFeature {
                 hdfsBasePath + multiLineTextFile, srcPaths);
     }
 
+    // This Test is Failing for GP6 FDW with the error :
+    // ERROR: set-valued function called in context that cannot accept a set
+    @FailsWithFDW
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void testMultilineJsonFile() throws Exception {
         String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
@@ -131,7 +138,7 @@ public class FileAsRowTest extends BaseFeature {
         String tableName = "file_as_row_" + name;
 
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
-        exTable = new ReadableExternalTable(tableName, fields, protocol.getExternalTablePath(hdfs.getBasePath(), locationPath), "CSV");
+        exTable = TableFactory.getPxfReadableCSVTable(tableName, fields, protocol.getExternalTablePath(hdfs.getBasePath(), locationPath), ",");
         exTable.setProfile(protocol.value() + ":text:multi");
         exTable.setUserParameters(new String[]{"FILE_AS_ROW=true"});
         gpdb.createTableAndVerify(exTable);

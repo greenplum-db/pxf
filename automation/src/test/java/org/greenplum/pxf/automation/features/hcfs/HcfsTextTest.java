@@ -1,8 +1,8 @@
 package org.greenplum.pxf.automation.features.hcfs;
 
-
+import annotations.FailsWithFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
+import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 /**
  * Functional Text Files Test in HCFS
  */
+@FailsWithFDW
 public class HcfsTextTest extends BaseFeature {
 
     private static final String[] PXF_SINGLE_COL = {"text_blob text"};
@@ -44,7 +45,7 @@ public class HcfsTextTest extends BaseFeature {
 
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         String tableName = "hcfs_text_" + name;
-        exTable = new ReadableExternalTable(tableName, fields, protocol.getExternalTablePath(hdfs.getBasePath(), hdfsPath), "TEXT");
+        exTable = TableFactory.getPxfReadableTextTable(tableName, fields, protocol.getExternalTablePath(hdfs.getBasePath(), hdfsPath), delimiter);
         exTable.setProfile(protocol.value() + ":text");
 
         if (delimiter != null) {

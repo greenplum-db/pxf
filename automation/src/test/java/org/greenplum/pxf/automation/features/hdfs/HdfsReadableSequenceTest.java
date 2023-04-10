@@ -1,10 +1,11 @@
 package org.greenplum.pxf.automation.features.hdfs;
 
+import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.datapreparer.CustomSequencePreparer;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
+import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
@@ -15,6 +16,7 @@ import java.io.File;
 /**
  * Collection of Test cases for PXF ability to read SequenceFile.
  */
+@WorksWithFDW
 public class HdfsReadableSequenceTest extends BaseFeature {
 
     private String hdfsPath;
@@ -107,14 +109,11 @@ public class HdfsReadableSequenceTest extends BaseFeature {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
 
         // default external table with common settings
-        exTable = new ReadableExternalTable("writable_in_sequence", null, "",
-                "custom");
+        exTable = TableFactory.getPxfReadableSequenceTable("writable_in_sequence", null, "",
+                schemaPackage + customSchemaFileName);
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        exTable.setProfile(protocol.value() + ":SequenceFile");
-        exTable.setFormatter("pxfwritable_import");
         exTable.setFields(customWritableFields);
-        exTable.setDataSchema(schemaPackage + customSchemaFileName);
         exTable.setPath(protocol.getExternalTablePath(hdfs.getBasePath(), hdfsPath + writableInsideSequenceFileName));
 
         gpdb.createTableAndVerify(exTable);

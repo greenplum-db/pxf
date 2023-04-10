@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.features.general;
 
+import annotations.FailsWithFDW;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
@@ -8,6 +9,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 
 /** Tests how failures are handled **/
+@FailsWithFDW
 public class FailOverTest extends BaseFeature {
 
     String testPackageLocation = "/org/greenplum/pxf/automation/testplugin/";
