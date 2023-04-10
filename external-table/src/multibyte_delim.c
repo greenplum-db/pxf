@@ -6,11 +6,19 @@
 PG_FUNCTION_INFO_V1(multibyte_delim_import);
 Datum multibyte_delim_import(PG_FUNCTION_ARGS);
 
+/**
+ * Helper function to count the number of escapes (from right to left) given a pointer to the current location in the string
+ * and a pointer to the beginning of the string
+ *
+ * @param p where to start searching
+ * @param left_border where to stop searching
+ * @param escape the escape char to look for
+ * @return the number of continuous escape characters found
+ */
 static int
 count_of_escape(char* p, char* left_border, char escape)
 {
 	int count = 0;
-	// count the number of continuous `escape` values in front of p
 	while(p >= left_border && *p == escape)
 	{
 		++count;
@@ -49,16 +57,17 @@ find_first_ins_for_multiline(char* target, char* left_border, char* right_border
 	char* start_pos = left_border;
 	while(1)
 	{
-		// find the first instance of the garget value
+		// find the first instance of the target value
 		char* p = strstr(start_pos, t);
 		if (p == NULL || p > right_border - strlen(t))
 		{
+			// nothing found or the entire target is not within the bounds dictated
 			break;
 		}
 
 		int escape_count = 0;
 
-		// make sure that the value found is an escaped representation of the given target
+		// make sure that the value found is not an escaped representation of the given target
 		if(myData->escape != NULL)
 		{
 			escape_count = count_of_escape(p-1, left_border, *(myData->escape));
@@ -162,7 +171,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 	{
 		if (strlen(fmt_state->quote) != 1)
 		{
-			ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("quote option must be a single character")));
+			ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("quote must be a single one-byte character")));
 		}
 
 		if (fmt_state->escape == NULL)
@@ -174,12 +183,14 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 
 	if (fmt_state->delimiter == NULL || (fmt_state->delimiter)[0] == '\0')
 	{
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("missing delimiter option")));
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+						errmsg("missing delimiter option"),
+						errhint("Please specify a delimiter value in the table definition.")));
 	}
 
 	if(fmt_state->escape != NULL && strlen(fmt_state->escape) != 1)
 	{
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("escape option must be a single character")));
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("escape must be a single one-byte character")));
 	}
 
 	fmt_state->situation = (fmt_state->quote != NULL ? WITH_QUOTE : WITHOUT_QUOTE);
@@ -285,7 +296,7 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
 		else if(myData->situation == WITH_QUOTE && start[i] == *(myData->quote))
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-							errmsg("remove_escape: the quote needs escape"),
+							errmsg("the quote needs escape"),
 							errhint("Is the `escape` value in the format options set correctly?")));
 		}
 		else
@@ -401,7 +412,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 		if(*data != *(myData->quote) || data[len-1] != *(myData->quote))
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-					errmsg("unpack_delimited: missing quote in row head or tail")));
+					errmsg("missing quote in row head or tail")));
 		}
 
 		// exclude the first and the last quote
@@ -416,17 +427,17 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 		if (index >= myData->nColumns)
 		{
 			ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-					errmsg("unpack_delimited: Column mismatch, index:%d >= nColumns:%d, more columns than expected", index, myData->nColumns)));
+					errmsg("expected %d columns but found %d", myData->nColumns, index)));
 		}
 		if (start == NULL) {
 			ereport(ERROR, (errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
-					errmsg("unpack_delimited: start is a null value, index:%d >= nColumns:%d, more columns than expected", index, myData->nColumns)));
+					errmsg("expected %d columns but found %d", myData->nColumns, index)));
 		}
 
 		if (myData->situation == WITH_QUOTE && *(start-1) != *(myData->quote))
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-					errmsg("unpack_delimited: missing quote before some column")));
+					errmsg("missing quote before some column")));
 		}
 
 		location = find_first_ins_for_multiline(myData->delimiter, start, data + len, myData);
@@ -469,7 +480,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 	if (index < myData->nColumns)
 	{
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				errmsg("unpack_delimited: Column mismatch, index:%d < nColumns:%d, less columns than expected", index, myData->nColumns)));
+				errmsg("expected %d columns but found %d", myData->nColumns, index)));
 	}
 }
 
