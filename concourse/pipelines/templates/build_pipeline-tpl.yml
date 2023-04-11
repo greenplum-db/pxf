@@ -533,13 +533,14 @@ resources:
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
 
-## ---------- PXF 6.5.1 (for GPDB 6) Artifact ---------------
-- name: pxf6_5_1_gp6_rhel7_released
+## ---------- PXF 6.6 (for GPDB 6) Artifact ---------------
+## This is the last known minor version containing PXF extension 2.0
+- name: pxf6_6_gp6_rhel7_released
   type: gcs
   source:
     bucket: ((ud/pxf/prod/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(6.5.*)-2.el7.x86_64.rpm
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(6.6.*)-2.el7.x86_64.rpm
 
 ## ---------- PXF Build Artifacts ----------
 {% set gp_ver = None %}
@@ -1341,7 +1342,6 @@ jobs:
       GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: [[gp_ver]]
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
-      EXISTING_PXF_VERSION: 5
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
@@ -1375,8 +1375,6 @@ jobs:
     - get: pxf_src
       passed: [Testing Gate for PXF-GP]
       trigger: true
-    - get: pxf_artifact
-      resource: pxf6_5_1_gp6_rhel7_released # for upgrade test
     - get: pxf_tarball
       resource: pxf_gp[[gp_ver]]_tarball_rhel7
       passed: [Testing Gate for PXF-GP]
@@ -1467,10 +1465,9 @@ jobs:
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
-  - task: Setup PXF 6.5.1
+  - task: Setup PXF
     input_mapping:
       terraform: terraform_gpdb
-      pxf_tarball: pxf_tarball_ignore # do not install from the artifact
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
@@ -1479,31 +1476,6 @@ jobs:
       GP_VER: [[gp_ver]]
       KERBEROS: ((kerberos-enabled))
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-      PXF_VERSION: 6.5.1
-  - task: Extension Test for PXF 6.5.1
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
-    attempts: 1
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      HIVE_VERSION: 2
-      IMPERSONATION: false
-      KERBEROS: ((kerberos-enabled))
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-      GP_VER: [[gp_ver]]
-      GROUP: oldExtensionUpgrade
-      PXF_JVM_OPTS: ((pxf-jvm-opts))
-  - task: Upgrade to PXF Latest
-    input_mapping:
-      terraform: terraform_gpdb
-    file: pxf_src/concourse/tasks/upgrade_pxf_on_ccp.yml
-    image: ccp-7-image
-    params:
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-      GP_VER: [[gp_ver]]
-      PXF_BASE_DIR: /usr/local/pxf-gp[[gp_ver]]
-      EXISTING_PXF_VERSION: 6.5.1
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
@@ -1516,7 +1488,7 @@ jobs:
       KERBEROS: ((kerberos-enabled))
       GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: [[gp_ver]]
-      GROUP: security,multiClusterSecurity,extensionUpgrade
+      GROUP: security,multiClusterSecurity
       PXF_JVM_OPTS: ((pxf-jvm-opts))
   - task: Test PXF CLI
     on_success:

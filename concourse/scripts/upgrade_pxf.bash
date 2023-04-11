@@ -21,7 +21,7 @@ PXF_BASE_DIR=${PXF_BASE_DIR:-$PXF_HOME}
 echoGreen() { echo $'\e[0;32m'"$1"$'\e[0m'; }
 
 function upgrade_pxf() {
-	echoGreen "Stopping PXF ${EXISTING_PXF_VERSION}"
+	echoGreen "Stopping PXF 5"
 	ssh "${COORDINATOR_HOSTNAME}" "${PXF5_HOME}/bin/pxf version && ${PXF5_HOME}/bin/pxf cluster stop"
 
 	echoGreen "Installing PXF 6"
@@ -50,25 +50,14 @@ function upgrade_pxf() {
 		"
 	fi
 
-	if [[ ${EXISTING_PXF_VERSION} == "5" ]]; then
-		echoGreen "Perform PXF migrate from PXF_CONF=~gpadmin/pxf to PXF_BASE_DIR=${PXF_BASE_DIR}"
-		ssh "${COORDINATOR_HOSTNAME}" "PXF_BASE=${PXF_BASE_DIR} PXF_CONF=~gpadmin/pxf ${PXF_HOME}/bin/pxf cluster migrate"
-	fi
+	echoGreen "Perform PXF migrate from PXF_CONF=~gpadmin/pxf to PXF_BASE_DIR=${PXF_BASE_DIR}"
+	ssh "${COORDINATOR_HOSTNAME}" "PXF_BASE=${PXF_BASE_DIR} PXF_CONF=~gpadmin/pxf ${PXF_HOME}/bin/pxf cluster migrate"
 
 	echoGreen "Starting PXF 6"
 	ssh "${COORDINATOR_HOSTNAME}" "PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster start"
 
-	if [[ ${EXISTING_PXF_VERSION} == "5" ]]; then
-		echoGreen "ALTER EXTENSION pxf UPDATE - for testupgrade database"
-		ssh "${COORDINATOR_HOSTNAME}" "source ${GPHOME}/greenplum_path.sh && psql -d testupgrade -c 'ALTER EXTENSION pxf UPDATE'"
-	fi
-
-	if [[ ${EXISTING_PXF_VERSION} == "6.5.1" ]]; then
-		echoGreen "ALTER EXTENSION pxf UPDATE - for multibyte delimiter tests"
-		ssh "${COORDINATOR_HOSTNAME}" "source ${GPHOME}/greenplum_path.sh && psql -d template1 -c 'ALTER EXTENSION pxf UPDATE'"
-		ssh "${COORDINATOR_HOSTNAME}" "source ${GPHOME}/greenplum_path.sh && psql -d pxfautomation -c 'ALTER EXTENSION pxf UPDATE'"
-		ssh "${COORDINATOR_HOSTNAME}" "source ${GPHOME}/greenplum_path.sh && psql -d pxfautomation_encoding -c 'SELECT * FROM pg_extension'"
-	fi
+	echoGreen "ALTER EXTENSION pxf UPDATE - for testupgrade database"
+	ssh "${COORDINATOR_HOSTNAME}" "source ${GPHOME}/greenplum_path.sh && psql -d testupgrade -c 'ALTER EXTENSION pxf UPDATE'"
 }
 
 function _main() {
