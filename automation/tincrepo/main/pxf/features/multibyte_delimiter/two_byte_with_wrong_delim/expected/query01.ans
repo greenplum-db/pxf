@@ -2,5 +2,5 @@
 -- end_ignore
 -- @description query01 for PXF Multibyte delimiter, 2-byte delim with wrong delim case
 SELECT * from pxf_multibyte_twobyte_wrong_delim_data ORDER BY n1;
-ERROR:  unpack_delimited: Column mismatch, index:1 < nColumns:22, less columns than expected  (seg0 slice1 127.0.0.1:6002 pid=33135)
+ERROR:  expected 22 columns but found 1
 CONTEXT:  External table pxf_multibyte_twobyte_wrong_delim_data

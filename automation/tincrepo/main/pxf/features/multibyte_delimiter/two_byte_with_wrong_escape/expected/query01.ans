@@ -1,6 +1,6 @@
 -- @description query01 for PXF Multibyte delimiter, 2-byte delim with wrong escape cases
 
 SELECT * from pxf_multibyte_twobyte_wrong_escape_data ORDER BY n1;
-ERROR:  remove_escape: the quote needs escape
+ERROR:  the quote needs escape
 HINT:  Is the `escape` value in the format options set correctly?
 CONTEXT:  External table pxf_multibyte_twobyte_wrong_escape_data
