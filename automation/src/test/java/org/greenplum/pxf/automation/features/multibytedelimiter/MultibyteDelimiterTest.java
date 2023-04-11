@@ -591,7 +591,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readFileWithLatin1EncodingWithQuoteAndEscapeTextProfile() throws Exception {
-        updateExternalTableOptions("pxf_multibyte_encoding_quote", new String[] {"delimiter='¤'", "quote='|'", "escape='\"'"}, ":text");
+        updateExternalTableOptions("pxf_multibyte_encoding_quote_escape", new String[] {"delimiter='¤'", "quote='|'", "escape='\"'"}, ":text");
         exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setEncoding("LATIN1");
 
