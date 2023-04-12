@@ -4,20 +4,30 @@ image_resource:
   type: registry-image
 
 inputs:
-- name: pxf_src
-- name: pxf_tarball
-- name: gpdb_package
-- name: singlecluster
-  optional: true
+  - name: pxf_package
+  - name: pxf_src
+  - name: gpdb_package
+  - name: singlecluster
+    optional: true
+  - name: pxf-automation-dependencies
+    optional: true
 
 params:
-  AWS_SECRET_ACCESS_KEY:
-  AWS_ACCESS_KEY_ID:
-  AWS_DEFAULT_REGION:
-  BUCKET_NAME:
-  BUCKET_PATH:
+  ACCESS_KEY_ID:
+  BASE_PATH:
   GP_VER:
-  SKIP_HADOOP_SETUP:
-  PXF_COMPONENT: true
+  GROUP: smoke
+  HADOOP_CLIENT: HDP
+  IMPERSONATION: true
+  PGPORT: 5432
+  PXF_BASE_DIR:
+  SECRET_ACCESS_KEY:
+  TEST_ENV:
+  TEST_OS:
+  RUN_JDK_VERSION: 8
+  PROTOCOL:
+  PG_REGRESS:
+  USE_FDW: false
 
-run:    pxf_src/concourse/scripts/install_pxf.bash
+run:
+  path: pxf_src/concourse/scripts/test.bash

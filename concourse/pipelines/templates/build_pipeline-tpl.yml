@@ -995,7 +995,7 @@ jobs:
     - get: pxf_src
       passed: [Testing Gate for PXF-GP]
       trigger: true
-    - get: pxf_artifact
+    - get: pxf_package
       resource: pxf6_6_gp6_rhel7_released # for upgrade test
     - get: pxf_tarball
       resource: pxf_gp[[gp_ver]]_tarball_rhel7
