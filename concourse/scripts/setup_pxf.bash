@@ -142,7 +142,7 @@ function _main() {
 	# Install GPDB
 	install_gpdb_package
 
-	install_pxf_tarball
+	install_pxf_package
 
 	inflate_singlecluster
 	if [[ ${HADOOP_CLIENT} != HDP_KERBEROS && -z ${PROTOCOL} ]]; then
