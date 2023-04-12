@@ -289,9 +289,9 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/gpdb6/greenplum-db-(6.*)-rhel8-x86_64.rpm
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-(6.*)-rhel8-x86_64.rpm
 {% set gp_ver = None %}
 
 ## ---------- Greenplum 7 Beta Builds ----------
@@ -301,7 +301,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/main/greenplum-db-(7.*)-el8-x86_64.rpm
+    regexp: server/released/main/greenplum-db-(7.*)-el8-x86_64.rpm
 
 ## ---------- PXF 5 Artifact ---------------
 {% if multinode %}

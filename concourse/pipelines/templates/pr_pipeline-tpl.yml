@@ -131,7 +131,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/main/greenplum-db-(7.*)-el8-x86_64.rpm
+    regexp: server/released/main/greenplum-db-(7.*)-el8-x86_64.rpm
 
 ## ======================================================================
 ## JOBS
