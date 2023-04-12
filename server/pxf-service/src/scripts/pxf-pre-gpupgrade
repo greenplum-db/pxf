@@ -47,8 +47,9 @@ EOF
 
 pxf_gpdb_major_version="$(awk 'BEGIN { FS = "=" } /gpdb.major-version/{ print $2 }' "${PXF_HOME}/gpextable/metadata")"
 gp_version="$(psql --no-align --tuples-only --command 'SELECT substring(version(), $$.*Greenplum Database (.*) build.*$$)')"
+pxf_version="$(cat $PXF_HOME/version)"
 
-echo "PXF compiled against GPDB major version '${pxf_gpdb_major_version}'" >>"${log_file}"
+echo "PXF ${pxf_version} compiled against GPDB major version '${pxf_gpdb_major_version}'" >>"${log_file}"
 echo "Running GPDB cluster is version '${gp_version}'" >>"${log_file}"
 
 if [[ "${pxf_gpdb_major_version}" != "${gp_version%%.*}" ]]; then
@@ -112,11 +113,16 @@ psql --no-align --tuples-only --command "SELECT datname FROM pg_catalog.pg_datab
 		CREATE OR REPLACE FUNCTION pg_catalog.pxfwritable_export(record) RETURNS bytea
 		AS 'pxf', 'gpdbwritableformatter_export'
 		LANGUAGE C STABLE;
+	END_OF_SQL
 
+# PXF 6.7.X introduces a new version of the PXF extension with a new function, only update the function if it exists
+  if [[ ${pxf_version} < 6.7 ]]; then
+  psql --dbname="${dbname}" --set ON_ERROR_STOP=on &>>"${log_file}" <<-END_OF_SQL
 		CREATE OR REPLACE FUNCTION pg_catalog.pxfdelimited_import() RETURNS record
 		AS 'pxf', 'multibyte_delim_import'
 		LANGUAGE C STABLE;
 	END_OF_SQL
+  fi
 done
 
 echo "Success" | tee -a "${log_file}"
