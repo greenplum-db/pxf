@@ -30,4 +30,4 @@ params:
   USE_FDW: false
 
 run:
-  path: pxf_src/concourse/scripts/test.bash
+  path: pxf_src/concourse/scripts/setup_pxf.bash

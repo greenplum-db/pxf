@@ -16,18 +16,19 @@ echoRed() { echo $'\e[0;31m'"$1"$'\e[0m'; }
 echoGreen() { echo $'\e[0;32m'"$1"$'\e[0m'; }
 
 function upgrade_pxf() {
+	su gpadmin -c
+
   existing_pxf_version=$(cat $PXF_HOME/version)
 	echoGreen "Stopping PXF ${existing_pxf_version}"
-	ssh "${COORDINATOR_HOSTNAME}" "${PXF_HOME}/bin/pxf version && ${PXF_HOME}/bin/pxf cluster stop"
+	${PXF_HOME}/bin/pxf version && ${PXF_HOME}/bin/pxf cluster stop
 
 	echoGreen "Installing Newer Version of PXF 6"
-	ssh "${COORDINATOR_HOSTNAME}" "
-		source ${GPHOME}/greenplum_path.sh &&
-		export JAVA_HOME=/usr/lib/jvm/jre &&
-		gpscp -f ~gpadmin/hostfile_all -v -u centos -r ~/pxf_tarball centos@=: &&
-		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'tar -xzf ~centos/pxf_tarball/pxf-*.tar.gz -C /tmp' &&
-		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo GPHOME=${GPHOME} /tmp/pxf*/install_component'
-	"
+	source ${GPHOME}/greenplum_path.sh &&
+	export JAVA_HOME=/usr/lib/jvm/jre &&
+	gpscp -f ~gpadmin/hostfile_all -v -u centos -r ~/pxf_tarball centos@=: &&
+	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'tar -xzf ~centos/pxf_tarball/pxf-*.tar.gz -C /tmp' &&
+	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo GPHOME=${GPHOME} /tmp/pxf*/install_component'
+
 
 	echoGreen "Change ownership of PXF 6 directory to gpadmin"
 	ssh "${COORDINATOR_HOSTNAME}" "source ${GPHOME}/greenplum_path.sh && gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo chown -R gpadmin:gpadmin ${PXF_HOME}'"
@@ -49,6 +50,8 @@ function upgrade_pxf() {
 
 	if [[ ${existing_pxf_version} >= ${updated_pxf_version} ]]; then
 	  echoRed "Existing version of PXF (${existing_pxf_version}) is greater than or equal to the new version (${updated_pxf_version})"
+	fi
+
 	PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster start
 
   echoGreen "ALTER EXTENSION pxf UPDATE - for multibyte delimiter tests"

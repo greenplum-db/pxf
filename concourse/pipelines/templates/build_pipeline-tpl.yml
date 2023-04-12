@@ -1018,7 +1018,7 @@ jobs:
   - task: Upgrade to PXF Latest
     input_mapping:
       terraform: terraform_gpdb
-    file: pxf_src/concourse/tasks/update_pxf_minor_version.bash
+    file: pxf_src/concourse/tasks/update_minor_version.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
