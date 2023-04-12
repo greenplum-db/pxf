@@ -471,7 +471,7 @@ resources:
     url: ((ud/pxf/secrets/ud-pipeline-bot-gp-releng-webhook))
 {% endif %}
 
-## ---------- Product Packages ----------
+## ---------- Greenplum Packages ----------
 {% set gp_ver = 5 %}
 {% for i in range(num_gpdb5_versions) %}
 - name: gpdb[[gp_ver]]_rhel7_rpm_latest-[[i]]
@@ -480,7 +480,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
 {% endfor %} {# range(num_gpdb5_versions) #}
 {% set gp_ver = None %}
 
@@ -492,7 +492,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
   type: gcs
@@ -500,7 +500,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-ubuntu18.04-amd64.deb
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
 
@@ -512,7 +512,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel8-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel8-x86_64.rpm
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
 
