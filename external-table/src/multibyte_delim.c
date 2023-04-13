@@ -16,7 +16,7 @@ Datum multibyte_delim_import(PG_FUNCTION_ARGS);
  * @return the number of continuous escape characters found
  */
 static int
-count_of_escape(char* p, char* left_border, char escape)
+count_of_escape(char *p, char *left_border, char escape)
 {
 	int count = 0;
 	while(p >= left_border && *p == escape)
@@ -35,11 +35,11 @@ count_of_escape(char* p, char* left_border, char escape)
  * @param myData struct containing formatter option information
  * @return pointer to the character immediately after the first instance of the target
  */
-static char*
-find_first_ins_for_multiline(char* target, char* left_border, char* right_border, format_delimiter_state *myData)
+static char *
+find_first_ins_for_multiline(char *target, char *left_border, char *right_border, format_delimiter_state *myData)
 {
-	char* t = target;
-	char* ret = NULL;
+	char *t = target;
+	char *ret = NULL;
 
 	// we assume that the target will only be delimiter or eol
 	if (myData->situation == WITH_QUOTE)
@@ -54,11 +54,11 @@ find_first_ins_for_multiline(char* target, char* left_border, char* right_border
 		}
 	}
 
-	char* start_pos = left_border;
+	char *start_pos = left_border;
 	while(1)
 	{
 		// find the first instance of the target value
-		char* p = strstr(start_pos, t);
+		char *p = strstr(start_pos, t);
 		if (p == NULL || p > right_border - strlen(t))
 		{
 			// nothing found or the entire target is not within the bounds dictated
@@ -106,7 +106,7 @@ find_first_ins_for_multiline(char* target, char* left_border, char* right_border
  * @param fmt_state
  */
 static void
-get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
+get_config(FunctionCallInfo fcinfo, format_delimiter_state *fmt_state)
 {
 	fmt_state->delimiter = NULL;
 	fmt_state->eol = NULL;
@@ -117,8 +117,8 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
 
 	for (int i = 1; i <= nargs; i++)
 	{
-		char* key = FORMATTER_GET_NTH_ARG_KEY(fcinfo, i);
-		char* value = FORMATTER_GET_NTH_ARG_VAL(fcinfo, i);
+		char *key = FORMATTER_GET_NTH_ARG_KEY(fcinfo, i);
+		char *value = FORMATTER_GET_NTH_ARG_VAL(fcinfo, i);
 
 		if (strcmp(key, "delimiter") == 0)
 		{
@@ -209,7 +209,7 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state* fmt_state)
  * @param fcinfo
  * @return
  */
-static format_delimiter_state*
+static format_delimiter_state *
 new_format_delimiter_state(FunctionCallInfo fcinfo)
 {
 	format_delimiter_state *fmt_state;
@@ -243,10 +243,10 @@ new_format_delimiter_state(FunctionCallInfo fcinfo)
  * @param myData struct containing formatter options
  * @return a new buffer containing a copy of the string that has been properly escaped
  */
-static char*
-remove_escape(char* start, int len, format_delimiter_state *myData)
+static char *
+remove_escape(char *start, int len, format_delimiter_state *myData)
 {
-	char* buf = palloc(len + 1);
+	char *buf = palloc(len + 1);
 	int j = 0;
 	int eol_len = strlen(myData->eol);
 	int delimiter_len = strlen(myData->delimiter);
@@ -319,13 +319,13 @@ remove_escape(char* start, int len, format_delimiter_state *myData)
  * @param myData the struct containing formatter options
  * @return
  */
-static char*
-find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
+static char *
+find_whole_line(char *data, char *data_border, format_delimiter_state *myData) {
 	int column_cnt = myData->desc->natts;
 	int delimiter_len = strlen(myData->delimiter);
 	int eol_len = strlen(myData->eol);
 
-	char* p = data;
+	char *p = data;
 	for(int i = 0; i < column_cnt; ++i)
 	{
 		// first, we check the left quote
@@ -399,9 +399,9 @@ find_whole_line(char* data, char* data_border, format_delimiter_state *myData) {
 void
 unpack_delimited(char *data, int len, format_delimiter_state *myData)
 {
-	char* start = (char*)data;
-	char* location = (char*)data;
-	char* end = (char*)data;
+	char *start = (char*)data;
+	char *location = (char*)data;
+	char *end = (char*)data;
 	StringInfo buf = makeStringInfo();
 	int index = 0;
 	int delimiter_len = strlen(myData->delimiter);
@@ -460,7 +460,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 			}
 			else // escape the data
 			{
-				char* removeEscapeBuf = remove_escape(start, column_len, myData);
+				char *removeEscapeBuf = remove_escape(start, column_len, myData);
 				appendBinaryStringInfo(buf, removeEscapeBuf, strlen(removeEscapeBuf));
 				pfree(removeEscapeBuf);
 			}
@@ -576,7 +576,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	/*
 	 * find the first instance of the `eol` character to get an entire row
 	 */
-	char* line_border = NULL;
+	char *line_border = NULL;
 	line_border = find_first_ins_for_multiline(myData->eol, data_buf + data_cur, data_buf + data_len, myData);
 	if (line_border == NULL)
 	{
@@ -609,7 +609,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 		/*
 		 * Go through the data_buf and ensure that we have the correct number of quotes and handle
 		 */
-		char* real_line_border = find_whole_line(data_buf + data_cur, data_buf + data_len, myData);
+		char *real_line_border = find_whole_line(data_buf + data_cur, data_buf + data_len, myData);
 
 		// if we can't find a whole line by counting quote, we treat this part of data as bad data
 		if(real_line_border == NULL)
@@ -628,7 +628,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	PG_TRY();
 	{
 		// Convert input data encoding to server encoding
-		char* encoded = data_buf + data_cur;
+		char *encoded = data_buf + data_cur;
 		int len = whole_line_len - eol_len;
 
 		if (myData->external_encoding != GetDatabaseEncoding())
