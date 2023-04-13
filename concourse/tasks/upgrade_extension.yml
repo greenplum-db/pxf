@@ -17,7 +17,9 @@ params:
   INITIAL_GROUP: oldExtensionUpgrade
   GROUP: smoke
   HADOOP_CLIENT: HDP
+  IMPERSONATION: true
   PGPORT: 5432
+  PXF_BASE_DIR:
   PROTOCOL:
   USE_FDW: false
 
