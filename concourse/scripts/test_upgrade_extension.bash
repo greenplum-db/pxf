@@ -2,9 +2,6 @@
 
 set -exo pipefail
 
-CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "${CWDIR}/update_pxf_minor_version.bash"
-
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # make sure GP_VER is set so that we know what PXF_HOME will be
@@ -15,7 +12,7 @@ export GPHOME=/usr/local/greenplum-db
 export PXF_HOME=/usr/local/pxf-gp${GP_VER}
 
 source "${CWDIR}/pxf_common.bash"
-PG_REGRESS=${PG_REGRESS:-false}
+source "${CWDIR}/update_pxf_minor_version.bash"
 
 export GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
@@ -78,10 +75,6 @@ function run_pxf_automation() {
 	chown gpadmin:gpadmin ~gpadmin/run_pxf_automation_test.sh
 	chmod a+x ~gpadmin/run_pxf_automation_test.sh
 
-	if [[ ${ACCEPTANCE} == true ]]; then
-		echo 'Acceptance test pipeline'
-		exit 1
-	fi
 
 	su gpadmin -c ~gpadmin/run_pxf_automation_test.sh
 }
@@ -108,32 +101,6 @@ function setup_hadoop() {
 	start_hadoop_services "${hdfsrepo}"
 }
 
-function configure_sut() {
-	[[ -d /tmp/build/ ]] && AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
-	if [[ -n $AMBARI_DIR ]]; then
-		REALM=$(< "$AMBARI_DIR"/REALM)
-		HADOOP_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-1 | awk '{print $1}')
-		HADOOP_USER=$(< "$AMBARI_DIR"/HADOOP_USER)
-		HBASE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-3 | awk '{print $1}')
-		HIVE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $1}')
-		HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
-		KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.c.${GOOGLE_PROJECT_ID}.internal@${REALM};saslQop=auth" # quoted because of semicolon
-		# Add ambari hostfile to /etc/hosts
-		sudo tee --append /etc/hosts < "$AMBARI_DIR"/etc_hostfile
-		sudo cp "$AMBARI_DIR"/krb5.conf /etc/krb5.conf
-		# Replace host, principal, and root path values in the SUT file
-		sed -i \
-			-e "/<hdfs>/,/<\/hdfs/ s|<host>localhost</host>|<host>${HADOOP_IP}</host>|g" \
-			-e "/<hive>/,/<\/hive/ s|<host>localhost</host>|<host>${HIVE_IP}</host>|g" \
-			-e "/<hbase>/,/<\/hbase/ s|<host>localhost</host>|<host>${HBASE_IP}</host>|g" \
-			-e "s|</hdfs>|<hadoopRoot>$AMBARI_DIR</hadoopRoot></hdfs>|g" \
-			-e "s|</hbase>|<hbaseRoot>$AMBARI_DIR</hbaseRoot></hbase>|g" \
-			-e "s|</cluster>|<hiveBaseHdfsDirectory>/warehouse/tablespace/managed/hive/</hiveBaseHdfsDirectory><testKerberosPrincipal>${HADOOP_USER}@${REALM}</testKerberosPrincipal></cluster>|g" \
-			-e "s|</hive>|<kerberosPrincipal>${KERBERIZED_HADOOP_URI}</kerberosPrincipal><userName>hive</userName></hive>|g" \
-			pxf_src/automation/src/test/resources/sut/default.xml
-	fi
-}
-
 function _main() {
 	# kill the sshd background process when this script exits. Otherwise, the
 	# concourse build will run forever.
@@ -148,11 +115,9 @@ function _main() {
 	install_pxf_package
 
 	inflate_singlecluster
-	if [[ ${HADOOP_CLIENT} != HDP_KERBEROS && -z ${PROTOCOL} ]]; then
-		# Setup Hadoop before creating GPDB cluster to use system python for yum install
-		# Must be after installing GPDB to transfer hbase jar
-		setup_hadoop "${GPHD_ROOT}"
-	fi
+	# Setup Hadoop before creating GPDB cluster to use system python for yum install
+	# Must be after installing GPDB to transfer hbase jar
+	setup_hadoop "${GPHD_ROOT}"
 
 	# initialize GPDB as gpadmin user
 	su gpadmin -c "${CWDIR}/initialize_gpdb.bash"
@@ -161,60 +126,32 @@ function _main() {
 	configure_pxf_server
 
 	local HCFS_BUCKET # team-specific bucket names
-	case ${PROTOCOL} in
-		s3)
-			echo 'Using S3 protocol'
-			;;
-		minio)
-			echo 'Using Minio with S3 protocol'
-			setup_minio
-			;;
-		gs)
-			echo 'Using GS protocol'
-			echo "${GOOGLE_CREDENTIALS}" > /tmp/gsc-ci-service-account.key.json
-			;;
-		adl)
-			echo 'Using ADL protocol'
-			;;
-		wasbs)
-			echo 'Using WASBS protocol'
-			;;
-		*) # no protocol, presumably
-			configure_pxf_default_server
-			configure_pxf_s3_server
-			;;
-	esac
+	configure_pxf_default_server
 
 	start_pxf_server
 
 	# Create fat jar for automation
 	generate_extras_fat_jar
 
-	configure_sut
-
 	inflate_dependencies
 
 	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src
 
 	# Run tests
-	if [[ -n ${INITIAL_GROUP} ]]; then
-		if [[ $PG_REGRESS == true ]]; then
-			run_pg_regress
-		else
-			run_pxf_automation
-		fi
+	if [[ -n ${FIRST_GROUP} ]]; then
+		GROUP=${FIRST_GROUP}
+		run_pxf_automation
 	fi
 
 	# Upgrade to latest PXF
 	upgrade_pxf
 
 	# Run tests
-	if [[ -n ${GROUP} ]]; then
-		if [[ $PG_REGRESS == true ]]; then
-			run_pg_regress
-		else
-			run_pxf_automation
-		fi
+	if [[ -n ${SECOND_GROUP} ]]; then
+		GROUP=${SECOND_GROUP}
+		run_pxf_automation
+	else
+		echo "No second group to be tested"
 	fi
 }
 

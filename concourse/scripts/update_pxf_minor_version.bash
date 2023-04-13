@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -euxo pipefail
-
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 GPHOME=/usr/local/greenplum-db-devel

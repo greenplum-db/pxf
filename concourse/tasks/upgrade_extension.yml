@@ -14,7 +14,8 @@ inputs:
 
 params:
   GP_VER:
-  INITIAL_GROUP: oldExtensionUpgrade
+  FIRST_GROUP:
+  SECOND_GROUP:
   GROUP: smoke
   HADOOP_CLIENT: HDP
   IMPERSONATION: true
