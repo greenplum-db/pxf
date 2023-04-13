@@ -57,9 +57,3 @@ function upgrade_pxf() {
   source ${GPHOME}/greenplum_path.sh && psql -d pxfautomation -c 'ALTER EXTENSION pxf UPDATE'
   source ${GPHOME}/greenplum_path.sh && psql -d pxfautomation_encoding -c 'SELECT * FROM pg_extension'
 }
-
-function _main() {
-	upgrade_pxf
-}
-
-_main
