@@ -5,6 +5,7 @@ image_resource:
 
 inputs:
   - name: pxf_package
+  - name: pxf_tarball
   - name: pxf_src
   - name: gpdb_package
   - name: singlecluster

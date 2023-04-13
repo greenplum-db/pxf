@@ -23,7 +23,7 @@ function upgrade_pxf() {
 	install_pxf_tarball
 
 	echoGreen "Check the PXF 6 version"
-	${PXF_HOME}/bin/pxf version
+	su gpadmin -c "${PXF_HOME}/bin/pxf version"
 
 	echoGreen "Register the PXF extension into Greenplum"
 	GPHOME=${GPHOME} ${PXF_HOME}/bin/pxf cluster register
