@@ -2,6 +2,9 @@
 
 set -exo pipefail
 
+CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "${CWDIR}/update_pxf_minor_version.bash"
+
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # make sure GP_VER is set so that we know what PXF_HOME will be
@@ -192,6 +195,18 @@ function _main() {
 	inflate_dependencies
 
 	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src
+
+	# Run tests
+	if [[ -n ${INITIAL_GROUP} ]]; then
+		if [[ $PG_REGRESS == true ]]; then
+			run_pg_regress
+		else
+			run_pxf_automation
+		fi
+	fi
+
+	# Upgrade to latest PXF
+	upgrade_pxf
 
 	# Run tests
 	if [[ -n ${GROUP} ]]; then

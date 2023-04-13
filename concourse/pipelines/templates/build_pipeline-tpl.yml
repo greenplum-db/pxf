@@ -1007,26 +1007,8 @@ jobs:
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: Setup PXF 6.6 # install PXF with extension 2.0
-    file: pxf_src/concourse/tasks/setup_pxf.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: oldExtensionUpgrade
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-  - task: Upgrade to PXF Latest
-    input_mapping:
-      terraform: terraform_gpdb
-    file: pxf_src/concourse/tasks/update_minor_version.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-      GP_VER: [[gp_ver]]
-      PXF_BASE_DIR: /usr/local/pxf-gp[[gp_ver]]
-      EXISTING_PXF_VERSION: 6.6
   - task: Test PXF-GP[[gp_ver]]-HDP2-New-Extension on RHEL7
-    file: pxf_src/concourse/tasks/test.yml
+    file: pxf_src/concourse/tasks/upgrade_extension.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
