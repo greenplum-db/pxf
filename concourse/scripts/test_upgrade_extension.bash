@@ -28,16 +28,6 @@ function run_pxf_automation() {
 	chmod a+w pxf_src/automation /singlecluster || true
 	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
 
-	local extension_name="pxf"
-	if [[ ${USE_FDW} == "true" ]]; then
-		extension_name="pxf_fdw"
-	fi
-
-	#TODO: remove once exttable tests with GP7 are set
-	if [[ ${GROUP} == fdw_gpdb_schedule ]]; then
-		extension_name="pxf_fdw"
-	fi
-
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
 		#!/usr/bin/env bash
 		set -exo pipefail
@@ -122,6 +112,17 @@ function _main() {
 	# Run tests
 	if [[ -n ${FIRST_GROUP} ]]; then
 		# first time running automation so create the extension
+
+		local extension_name="pxf"
+		if [[ ${USE_FDW} == "true" ]]; then
+			extension_name="pxf_fdw"
+		fi
+
+		#TODO: remove once exttable tests with GP7 are set
+		if [[ ${GROUP} == fdw_gpdb_schedule ]]; then
+			extension_name="pxf_fdw"
+		fi
+
 		su gpadmin -c "
 			source '${GPHOME}/greenplum_path.sh' &&
 			psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION ${extension_name}'
