@@ -38,14 +38,6 @@ function run_pxf_automation() {
 		extension_name="pxf_fdw"
 	fi
 
-	su gpadmin -c "
-		source '${GPHOME}/greenplum_path.sh' &&
-		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION ${extension_name}'
-	"
-	# prepare certification output directory
-	mkdir -p certification
-	chmod a+w certification
-
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
 		#!/usr/bin/env bash
 		set -exo pipefail
@@ -60,21 +52,10 @@ function run_pxf_automation() {
 
 		cd pxf_src/automation
 		time make GROUP=${GROUP} test
-
-		# if the test is successful, create certification file
-		gpdb_build_from_sql=\$(psql -c 'select version()' | grep Greenplum | cut -d ' ' -f 6,8)
-		gpdb_build_clean=\${gpdb_build_from_sql%)}
-		pxf_version=\$(< ${PXF_HOME}/version)
-		echo "GPDB-\${gpdb_build_clean/ commit:/-}-PXF-\${pxf_version}" > "${PWD}/certification/certification.txt"
-		echo
-		echo '****************************************************************************************************'
-		echo "Wrote certification : \$(< ${PWD}/certification/certification.txt)"
-		echo '****************************************************************************************************'
 	EOF
 
 	chown gpadmin:gpadmin ~gpadmin/run_pxf_automation_test.sh
 	chmod a+x ~gpadmin/run_pxf_automation_test.sh
-
 
 	su gpadmin -c ~gpadmin/run_pxf_automation_test.sh
 }
@@ -112,6 +93,7 @@ function _main() {
 	# Install GPDB
 	install_gpdb_package
 
+	# Install older version of PXF from RPM package
 	install_pxf_package
 
 	inflate_singlecluster
@@ -139,6 +121,11 @@ function _main() {
 
 	# Run tests
 	if [[ -n ${FIRST_GROUP} ]]; then
+		# first time running automation so create the extension
+		su gpadmin -c "
+			source '${GPHOME}/greenplum_path.sh' &&
+			psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION ${extension_name}'
+		"
 		GROUP=${FIRST_GROUP}
 		run_pxf_automation
 	fi
@@ -152,10 +139,12 @@ function _main() {
 	echo
 	echo
 
+	# Upgrade from older version of PXF to newer version of PXF present in the tarball
 	upgrade_pxf
 
 	# Run tests
 	if [[ -n ${SECOND_GROUP} ]]; then
+		# second time running automation so extension should already exist
 		GROUP=${SECOND_GROUP}
 		run_pxf_automation
 	else

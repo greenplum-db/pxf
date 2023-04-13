@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "${SCRIPT_DIR}/pxf_common.bash"
 
 GPHOME=/usr/local/greenplum-db-devel
 
@@ -16,7 +17,7 @@ echoGreen() { echo $'\e[0;32m'"$1"$'\e[0m'; }
 function upgrade_pxf() {
 	existing_pxf_version=$(cat $PXF_HOME/version)
 	echoGreen "Stopping PXF ${existing_pxf_version}"
-	${PXF_HOME}/bin/pxf version && ${PXF_HOME}/bin/pxf cluster stop
+	su gpadmin -c "${PXF_HOME}/bin/pxf version && ${PXF_HOME}/bin/pxf cluster stop"
 
 	echoGreen "Installing Newer Version of PXF 6"
 	install_pxf_tarball
