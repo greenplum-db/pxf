@@ -1,3 +1,5 @@
+-- start_ignore
+-- end_ignore
 -- @description query01 for PXF gpupgrade test on small data
 -- start_matchsubs
 --
@@ -5,6 +7,12 @@
 -- s{/usr/local/pxf-(dev|gp\d)}{\$PXF_HOME}
 --
 -- end_matchsubs
+SELECT extname, extversion FROM pg_catalog.pg_extension WHERE extname = 'pxf';
+ extname | extversion
+---------+------------
+ pxf     | 2.1
+(1 row)
+
 SELECT * FROM pxf_gpupgrade_test;
   name  | num | dub |    longnum    | bool
 --------+-----+-----+---------------+------

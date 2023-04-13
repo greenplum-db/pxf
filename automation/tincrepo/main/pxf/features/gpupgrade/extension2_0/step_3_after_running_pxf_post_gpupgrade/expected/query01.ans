@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF gpupgrade test on small data
 -- start_matchsubs
 --
@@ -7,6 +5,12 @@
 -- s{/usr/local/pxf-(dev|gp\d)}{\$PXF_HOME}
 --
 -- end_matchsubs
+SELECT extname, extversion FROM pg_catalog.pg_extension WHERE extname = 'pxf';
+ extname | extversion
+---------+------------
+ pxf     | 2.0
+(1 row)
+
 SELECT * FROM pxf_gpupgrade_test;
   name  | num | dub |    longnum    | bool
 --------+-----+-----+---------------+------
@@ -41,6 +45,5 @@ ORDER BY 1;
  pxf_write           | pxfprotocol_export           | $PXF_HOME/gpextable/pxf
  pxfdelimited_import | multibyte_delim_import       | $PXF_HOME/gpextable/pxf
  pxfwritable_export  | gpdbwritableformatter_export | $PXF_HOME/gpextable/pxf
- pxfwritable_import  | gpdbwritableformatter_import | $PXF_HOME/gpextable/pxf
-(6 rows)
+(5 rows)
 

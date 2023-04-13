@@ -7,6 +7,12 @@
 -- s{/usr/local/pxf-(dev|gp\d)}{\$PXF_HOME}
 --
 -- end_matchsubs
+SELECT extname, extversion FROM pg_catalog.pg_extension WHERE extname = 'pxf';
+ extname | extversion
+---------+------------
+ pxf     | 2.0
+(1 row)
+
 SELECT * FROM pxf_gpupgrade_test;
   name  | num | dub |    longnum    | bool
 --------+-----+-----+---------------+------
@@ -25,7 +31,7 @@ SELECT * FROM pxf_gpupgrade_test;
 SHOW dynamic_library_path;
  dynamic_library_path
 ----------------------
- $PXF_HOME/gpextable:$libdir
+ $libdir
 (1 row)
 
 SELECT p.proname, p.prosrc, p.probin
@@ -34,13 +40,12 @@ FROM pg_catalog.pg_extension AS e
     INNER JOIN pg_catalog.pg_proc AS p ON (p.oid = d.objid)
 WHERE d.deptype = 'e' AND e.extname = 'pxf'
 ORDER BY 1;
-       proname       |            prosrc            | probin
----------------------+------------------------------+--------
- pxf_read            | pxfprotocol_import           | pxf
- pxf_validate        | pxfprotocol_validate_urls    | pxf
- pxf_write           | pxfprotocol_export           | pxf
- pxfdelimited_import | multibyte_delim_import       | pxf
- pxfwritable_export  | gpdbwritableformatter_export | pxf
- pxfwritable_import  | gpdbwritableformatter_import | pxf
-(6 rows)
+       proname       |            prosrc            |             probin
+---------------------+------------------------------+----------------------------------
+ pxf_read            | pxfprotocol_import           | $PXF_HOME/gpextable/pxf
+ pxf_validate        | pxfprotocol_validate_urls    | $PXF_HOME/gpextable/pxf
+ pxf_write           | pxfprotocol_export           | $PXF_HOME/gpextable/pxf
+ pxfdelimited_import | multibyte_delim_import       | $PXF_HOME/gpextable/pxf
+ pxfwritable_export  | gpdbwritableformatter_export | $PXF_HOME/gpextable/pxf
+(5 rows)
 

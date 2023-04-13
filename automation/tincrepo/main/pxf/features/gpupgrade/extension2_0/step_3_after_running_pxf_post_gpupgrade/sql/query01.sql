@@ -6,6 +6,8 @@
 --
 -- end_matchsubs
 
+SELECT extname, extversion FROM pg_catalog.pg_extension WHERE extname = 'pxf';
+
 SELECT * FROM pxf_gpupgrade_test;
 
 SHOW dynamic_library_path;
