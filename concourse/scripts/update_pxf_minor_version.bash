@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-source "${SCRIPT_DIR}/pxf_common.bash"
 
 GPHOME=/usr/local/greenplum-db-devel
 
@@ -26,7 +25,7 @@ function upgrade_pxf() {
 	su gpadmin -c "${PXF_HOME}/bin/pxf version"
 
 	echoGreen "Register the PXF extension into Greenplum"
-	GPHOME=${GPHOME} ${PXF_HOME}/bin/pxf cluster register
+	su gpadmin -c "GPHOME=${GPHOME} ${PXF_HOME}/bin/pxf cluster register"
 
 	if [[ "${PXF_BASE_DIR}" != "${PXF_HOME}" ]]; then
 		echoGreen "Prepare PXF in ${PXF_BASE_DIR}"
