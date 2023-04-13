@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "${SCRIPT_DIR}/pxf_common.bash"
 
 GPHOME=/usr/local/greenplum-db-devel
 
@@ -19,15 +20,7 @@ function upgrade_pxf() {
 	${PXF_HOME}/bin/pxf version && ${PXF_HOME}/bin/pxf cluster stop
 
 	echoGreen "Installing Newer Version of PXF 6"
-	source ${GPHOME}/greenplum_path.sh &&
-	export JAVA_HOME=/usr/lib/jvm/jre &&
-	gpscp -f ~gpadmin/hostfile_all -v -u centos -r ~/pxf_tarball centos@=: &&
-	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'tar -xzf ~centos/pxf_tarball/pxf-*.tar.gz -C /tmp' &&
-	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo GPHOME=${GPHOME} /tmp/pxf*/install_component'
-
-
-	echoGreen "Change ownership of PXF 6 directory to gpadmin"
-	source ${GPHOME}/greenplum_path.sh && gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo chown -R gpadmin:gpadmin ${PXF_HOME}'
+	install_pxf_tarball
 
 	echoGreen "Check the PXF 6 version"
 	${PXF_HOME}/bin/pxf version
