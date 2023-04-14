@@ -424,7 +424,8 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 		if(*data != *(myData->quote) || data[len-1] != *(myData->quote))
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-					errmsg("missing quote in row head or tail")));
+					errmsg("Missing quote in row head or tail"),
+					errhint("Please verify that are columns in the data are properly quoted.")));
 		}
 
 		// exclude the first and the last quote
@@ -444,14 +445,15 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 		}
 		if (start == NULL) {
 			ereport(ERROR, (errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
-					errmsg("Unexpected null value found while trying to read data", myData->nColumns, index),
+					errmsg("Unexpected null value found while trying to read data"),
 					errhint("Please verify the number of columns in the table definition.")));
 		}
 
 		if (myData->situation == WITH_QUOTE && *(start-1) != *(myData->quote))
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-					errmsg("missing quote before some column")));
+					errmsg("Missing quote before some column"),
+					errhint("Please verify that are columns in the data are properly quoted.")));
 		}
 
 		location = find_first_ins_for_multiline(myData->delimiter, start, data + len, myData);
@@ -536,7 +538,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	}
 
 	if (myData->desc->natts != ncolumns)
-		elog(ERROR, "multibyte_delim_import: unexpected change of output record type");
+		elog(ERROR, "Unexpected change of output record type, expected %d but found %d columns", myData->desc->natts, ncolumns);
 
 	/* get our input data buf and number of valid bytes in it */
 	data_buf = FORMATTER_GET_DATABUF(fcinfo);
@@ -631,7 +633,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 		{
 			MemoryContextSwitchTo(oldcontext);
 			FORMATTER_SET_BAD_ROW_DATA(fcinfo, data_buf + data_cur, whole_line_len);
-			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION), errmsg("there is not a whole line for this data part")));
+			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION), errmsg("Unable to find a row of data")));
 		}
 		else
 		{
