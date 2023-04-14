@@ -2,5 +2,5 @@
 -- end_ignore
 -- @description query01 for PXF Multibyte delimiter, 2-byte delim with wrong delim case
 SELECT * from pxf_multibyte_twobyte_wrong_delim_data ORDER BY n1;
-ERROR:  expected 22 columns but found 1
+ERROR:  Expected 22 columns in row but found 1
 CONTEXT:  External table pxf_multibyte_twobyte_wrong_delim_data
