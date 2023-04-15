@@ -45,6 +45,7 @@ typedef struct {
 	FmgrInfo *enc_conversion_proc;		/* conv proc from exttbl encoding to
 										server or the other way around */
 	bool saw_delim;
+	bool saw_eol;
 } format_delimiter_state;
 
 extern void

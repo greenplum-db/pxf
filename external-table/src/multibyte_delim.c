@@ -233,6 +233,7 @@ new_format_delimiter_state(FunctionCallInfo fcinfo)
 	fmt_state->enc_conversion_proc = ((FormatterData*) fcinfo->context)->fmt_conversion_proc;
 
 	fmt_state->saw_delim = false;
+	fmt_state->saw_eol = false;
 	return fmt_state;
 }
 
@@ -497,7 +498,8 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 	{
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("Expected %d columns in row but found %d", myData->nColumns, index),
-				errhint("Please verify the number of columns in the table definition.")));
+				myData->saw_delim ? errhint("Please verify the number of columns in the table definition.")
+									: errhint("Is the `delimiter` value in the format options set correctly?")));
 	}
 }
 
@@ -557,26 +559,33 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	 * raise an error again, but simply return "NEED MORE DATA". This is how
 	 * the formatter framework works.
 	 */
+	if (remaining ==0 && FORMATTER_GET_SAW_EOF(fcinfo))
+		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
+
 	if (FORMATTER_GET_SAW_EOF(fcinfo))
 	{
-		if (remaining != 0 && !myData->saw_delim && ncolumns > 1)
+		// when the quote value is set, we expect all the columns to be quoted and there
+		// to be no extraneous characters between the quote value and the delimiter value
+		// or the quote value and the eol value
+		// it's possible that we read the entire file but did not find the expected `quote + eol` or
+		// `quote + delimiter` values. Throw an appropriate error in such cases
+		if (remaining != 0 && myData->situation == WITH_QUOTE)
 		{
-			if (myData->quote_delimiter != NULL)
+			if (!myData->saw_eol || (!myData->saw_delim && ncolumns > 1))
 			{
 				ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
-						errmsg("quoted delimiter (%s) not found", myData->quote_delimiter),
+						errmsg("Did not find expected `%s` character when `quote` value was provided", myData->saw_eol ? "delimiter" : "newline"),
 						errhint("Check the format options in the table definition. "
-						"Additionally, make sure there are no whitespaces between the QUOTE and DELIMITER values in the data.")));
+						"Additionally, make sure there are no extraneous characters between the `quote` and `%s` values in the data.", myData->saw_eol ? "delimiter" : "newline")));
 			}
 		}
 		else
 		{
+			// otherwise, the EOF found is indeed unexpected
 			FORMATTER_SET_BAD_ROW_DATA(fcinfo, data_buf + data_cur, remaining);
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
 							errmsg("unexpected end of file (multibyte case)")));
 		}
-
-		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
 	}
 
 	/* start clean */
@@ -600,7 +609,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 		MemoryContextSwitchTo(oldcontext);
 		FORMATTER_RETURN_NOTIFICATION(fcinfo, FMT_NEED_MORE_DATA);
 	}
-
+    myData->saw_eol = true;
 	int eol_len = strlen(myData->eol); // if we are handling the last line, perhaps there is no eol
 	int delimiter_len = strlen(myData->delimiter);
 	int whole_line_len = line_border - data_buf - data_cur + eol_len; // we count the eol_len;
@@ -631,6 +640,8 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 		// if we can't find a whole line by counting quote, we treat this part of data as bad data
 		if(real_line_border == NULL)
 		{
+			// the eol we saw was not a true eol
+			myData->saw_eol = false;
 			MemoryContextSwitchTo(oldcontext);
 			FORMATTER_SET_BAD_ROW_DATA(fcinfo, data_buf + data_cur, whole_line_len);
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION), errmsg("Unable to find a row of data")));

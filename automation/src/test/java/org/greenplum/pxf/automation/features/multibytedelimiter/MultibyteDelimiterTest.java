@@ -229,7 +229,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithCRLF() throws Exception {
-        updateExternalTableOptions("pxf_multibyte_twobyte_withcrlf_data", new String[] {"delimiter='¤'", "NEWLINE='CRLF'"}, ":csv");
+        updateExternalTableOptions("pxf_multibyte_twobyte_withcrlf_data", new String[] {"delimiter='¤'", "newline='CRLF'"}, ":csv");
 
         // create external table
         gpdb.createTableAndVerify(exTable);
@@ -246,7 +246,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithCR() throws Exception {
-        updateExternalTableOptions("pxf_multibyte_twobyte_withcr_data", new String[] {"delimiter='¤'", "NEWLINE='CR'"}, ":csv");
+        updateExternalTableOptions("pxf_multibyte_twobyte_withcr_data", new String[] {"delimiter='¤'", "newline='CR'"}, ":csv");
         exTable.setUserParameters(new String[] {"NEWLINE=CR"});
 
         // create external table
@@ -333,6 +333,30 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote.runTest");
+    }
+
+    @Test(groups = {"gpdb", "hcfs", "security"})
+    public void readTwoByteDelimiterWithWrongEol() throws Exception {
+        updateExternalTableOptions("pxf_multibyte_twobyte_wrong_eol_data", new String[] {"delimiter='¤'", "quote='|'", "newline='CR'"}, ":csv");
+
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // create local CSV file
+        String tempLocalDataPath = dataTempFolder + "/data.csv";
+        CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath, StandardCharsets.UTF_8,
+                '¤', CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+        // copy local CSV to HDFS
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+
+        // verify results
+        // in newer versions of GP6 and in GP7, GPDB calls into the formatter one more time to handle EOF properly
+        // however, this is not the case for GP5 and for versions of GP6 older than 6.24.0
+        // therefore, we must run 2 different sets of tests to check for the expected error
+        if (gpdb.getVersion() >= 6) {
+            runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_eol.runTest");
+        } else {
+            runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_eol_5X.runTest");
+        }
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -505,7 +529,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteWithQuoteEscapeNewLine() throws Exception {
-        updateExternalTableOptions("pxf_multibyte_quote_escape_newline_data", new String[] {"delimiter='¤'", "quote='|'", "escape='\\'", "NEWLINE='EOL'"}, ":csv");
+        updateExternalTableOptions("pxf_multibyte_quote_escape_newline_data", new String[] {"delimiter='¤'", "quote='|'", "escape='\\'", "newline='EOL'"}, ":csv");
 
         // create external table
         gpdb.createTableAndVerify(exTable);
