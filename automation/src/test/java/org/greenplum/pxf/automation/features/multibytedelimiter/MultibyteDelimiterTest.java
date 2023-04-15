@@ -155,9 +155,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // wait a bit for async write in previous steps to finish
-        if (protocol == ProtocolEnum.FILE) {
-            sleep(10000);
-        }
+        sleep(10000);
 
         // create a new table with the SKIP_HEADER_COUNT parameter
         exTable.setName("pxf_multibyte_threebyte_data_with_skip");
@@ -184,9 +182,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // wait a bit for async write in previous steps to finish
-        if (protocol == ProtocolEnum.FILE) {
-            sleep(10000);
-        }
+        sleep(10000);
 
         // create a new table with the SKIP_HEADER_COUNT parameter
         exTable.setName("pxf_multibyte_fourbyte_data_with_skip");
@@ -213,9 +209,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // wait a bit for async write in previous steps to finish
-        if (protocol == ProtocolEnum.FILE) {
-            sleep(10000);
-        }
+        sleep(10000);
 
         // create a new table with the SKIP_HEADER_COUNT parameter
         exTable.setName("pxf_multibyte_multichar_data_with_skip");
@@ -327,9 +321,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // wait a bit for async write in previous steps to finish
-        if (protocol == ProtocolEnum.FILE) {
-            sleep(10000);
-        }
+        sleep(10000);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote.runTest");
@@ -415,9 +407,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // wait a bit for async write in previous steps to finish
-        if (protocol == ProtocolEnum.FILE) {
-            sleep(10000);
-        }
+        sleep(10000);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_escape.runTest");
