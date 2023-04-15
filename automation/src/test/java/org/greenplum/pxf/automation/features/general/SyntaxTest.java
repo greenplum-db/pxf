@@ -1,6 +1,5 @@
 package org.greenplum.pxf.automation.features.general;
 
-import annotations.SkipForFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
 
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
@@ -22,7 +21,6 @@ import java.sql.Types;
 /**
  * Test correct syntax when creating and querying PXF tables
  */
-@SkipForFDW
 public class SyntaxTest extends BaseFeature {
 
     ReadableExternalTable exTable;

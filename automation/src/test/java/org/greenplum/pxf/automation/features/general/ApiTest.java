@@ -1,6 +1,5 @@
 package org.greenplum.pxf.automation.features.general;
 
-import annotations.SkipForFDW;
 import jsystem.framework.system.SystemManagerImpl;
 
 import org.testng.Assert;
@@ -13,7 +12,6 @@ import org.greenplum.pxf.automation.features.BaseFeature;
 /**
  * Test PXF API
  */
-@SkipForFDW
 public class ApiTest extends BaseFeature {
 
     Pxf pxf;

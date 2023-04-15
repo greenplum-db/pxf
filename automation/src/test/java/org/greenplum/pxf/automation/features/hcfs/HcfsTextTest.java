@@ -1,8 +1,9 @@
 package org.greenplum.pxf.automation.features.hcfs;
 
-import annotations.FailsWithFDW;
+import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
+import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -10,7 +11,7 @@ import org.testng.annotations.Test;
 /**
  * Functional Text Files Test in HCFS
  */
-@FailsWithFDW
+@WorksWithFDW
 public class HcfsTextTest extends BaseFeature {
 
     private static final String[] PXF_SINGLE_COL = {"text_blob text"};
@@ -49,6 +50,16 @@ public class HcfsTextTest extends BaseFeature {
         exTable.setProfile(protocol.value() + ":text");
 
         if (delimiter != null) {
+            /* This sets delimiter 'OFF' which doesn't work for FDW. So Skipping it setting explicitly for FDW
+             *
+             * CREATE FOREIGN TABLE hcfs_text_delimiter_off (text_blob text) SERVER default_hdfs
+             * OPTIONS (resource 'tmp/pxf_automation_data/b6afbc30-2a0e-40a8-9c4c-61a54be173e5/hcfs-text/no-delimiter',format 'text',delimiter 'OFF');
+             * CREATE FOREIGN TABLE
+             * pxfautomation=# select * from hcfs_text_delimiter_off;
+             * ERROR:  using no delimiter is only supported for external tables
+             */
+            if(delimiter == "OFF" && FDWUtils.useFDW)
+                return;
             exTable.setDelimiter(delimiter);
         }
 

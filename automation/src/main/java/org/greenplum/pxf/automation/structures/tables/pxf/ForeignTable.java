@@ -72,7 +72,7 @@ public class ForeignTable extends WritableExternalTable {
 
         if (getEscape() != null) {
             // if Escape character, no need for "'"
-            appendOption(joiner,"delimiter", getEscape(), !getEscape().startsWith("E"));
+            appendOption(joiner,"escape", getEscape(), !getEscape().startsWith("E"));
         }
 
         if (getNewLine() != null) {
