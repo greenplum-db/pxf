@@ -6,6 +6,8 @@
 PG_FUNCTION_INFO_V1(multibyte_delim_import);
 Datum multibyte_delim_import(PG_FUNCTION_ARGS);
 
+#define is_even(cnt) (cnt % 2 == 0)
+
 /**
  * Helper function to count the number of occurrences of a given character (from right to left) given a pointer to the current location in the string
  * and a pointer to the beginning of the string
@@ -42,7 +44,7 @@ find_first_ins_for_multiline(char *target, char *left_border, char *right_border
 	char *ret = NULL;
 
 	// we assume that the target will only be delimiter or eol
-	if (myData->situation == WITH_QUOTE)
+	if (myData->quote != NULL)
 	{
 		if (strcmp(target, myData->delimiter) == 0)
 		{
@@ -70,10 +72,11 @@ find_first_ins_for_multiline(char *target, char *left_border, char *right_border
 		// make sure that the value found is not an escaped representation of the given target
 		if(myData->escape != NULL)
 		{
-			escape_count = count_preceding_occurrences_of_char(p-1, left_border, *(myData->escape));
+			escape_count = count_preceding_occurrences_of_char(p-1, left_border, *myData->escape);
 		}
 
-		if(escape_count % 2 == 0)
+		// if the count is even, then the value found is not escaped
+		if(is_even(escape_count))
 		{
 			ret = p;
 			break;
@@ -87,7 +90,7 @@ find_first_ins_for_multiline(char *target, char *left_border, char *right_border
 	}
 
 	// we found a 'quote+eol', 'ret' is pointing to quote. we should return the data border that just after the quote
-	if (myData->situation == WITH_QUOTE && strcmp(target, myData->eol) == 0 && ret)
+	if (myData->quote != NULL && strcmp(target, myData->eol) == 0 && ret)
 	{
 		++ret;
 	}
@@ -179,9 +182,15 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state *fmt_state)
 			// postgres defaults the escape value to be the same as quote if it is not set: https://www.postgresql.org/docs/9.4/sql-copy.html
 			fmt_state->escape = fmt_state->quote;
 		}
+
+		fmt_state->quote_delimiter = palloc(strlen(fmt_state->delimiter) + 2);
+		sprintf(fmt_state->quote_delimiter, "%c%s", *fmt_state->quote, fmt_state->delimiter);
+
+		fmt_state->quote_eol = palloc(strlen(fmt_state->eol) + 2);
+		sprintf(fmt_state->quote_eol, "%c%s", *fmt_state->quote, fmt_state->eol);
 	}
 
-	if (fmt_state->delimiter == NULL || *(fmt_state->delimiter) == '\0')
+	if (fmt_state->delimiter == NULL || *fmt_state->delimiter == '\0')
 	{
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
 						errmsg("missing delimiter option"),
@@ -191,16 +200,6 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state *fmt_state)
 	if (fmt_state->escape != NULL && strlen(fmt_state->escape) != 1)
 	{
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("escape must be a single one-byte character")));
-	}
-
-	fmt_state->situation = (fmt_state->quote != NULL ? WITH_QUOTE : WITHOUT_QUOTE);
-
-	if (fmt_state->situation == WITH_QUOTE) {
-		fmt_state->quote_delimiter = palloc(strlen(fmt_state->delimiter) + 2);
-		sprintf(fmt_state->quote_delimiter, "%c%s", *(fmt_state->quote), fmt_state->delimiter);
-
-		fmt_state->quote_eol = palloc(strlen(fmt_state->eol) + 2);
-		sprintf(fmt_state->quote_eol, "%c%s", *(fmt_state->quote), fmt_state->eol);
 	}
 }
 
@@ -255,16 +254,16 @@ unescape_data(char *start, int len, format_delimiter_state *myData)
 
 	for (int i = 0; i < len;)
 	{
-		if (start[i] == *(myData->escape))
+		if (start[i] == *myData->escape)
 		{
 			// when the data is quoted, we do not worry about special characters
 			// so we only need to unescape 'escape' itself and the quote value
 			// the examples below assume escape=\ and quote=" and delimiter=,
-			if (myData->situation == WITH_QUOTE)
+			if (myData->quote != NULL)
 			{
 				// before: `\"hello, my name is jane\" she said. let's escape something \\`
 				// after: `"hello, my name is jane" she said. let's escape something \`
-				if (i + 1 < len && (start[i+1] == *(myData->escape) || start[i+1] == *(myData->quote)))
+				if (i + 1 < len && (start[i+1] == *myData->escape || start[i+1] == *myData->quote))
 				{
 					buf[j++] = start[i+1];
 					i = i + 2;
@@ -277,7 +276,7 @@ unescape_data(char *start, int len, format_delimiter_state *myData)
 			// if the data is not quoted, then we need to handle delimiter, eol and `escape` itself
 			else
 			{
-				if (i + 1 < len && start[i+1] == *(myData->escape))
+				if (i + 1 < len && start[i+1] == *myData->escape)
 				{
 					buf[j++] = start[i+1];
 					i = i + 2;
@@ -305,8 +304,8 @@ unescape_data(char *start, int len, format_delimiter_state *myData)
 				}
 			}
 		}
-		// the data can only start with a quote character if WITH_QUOTE=false
-		else if (myData->situation == WITH_QUOTE && start[i] == *(myData->quote))
+		// the data can only start with a quote character if myData->quote == NULL
+		else if (myData->quote != NULL && start[i] == *myData->quote)
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
 							errmsg("Found an unescaped quote character"),
@@ -343,7 +342,7 @@ find_whole_line(char *data, char *data_border, format_delimiter_state *myData) {
 	{
 		// first, we check the left quote
 		// if there is no left quote, then there is something wrong with the data
-		if(*p != *(myData->quote))
+		if(*p != *myData->quote)
 		{
 			return NULL;
 		}
@@ -352,7 +351,7 @@ find_whole_line(char *data, char *data_border, format_delimiter_state *myData) {
 		while(1)
 		{
 			// read until we see a quote value
-			while(p < data_border && *p != *(myData->quote))
+			while(p < data_border && *p != *myData->quote)
 			{
 				++p;
 			}
@@ -366,8 +365,9 @@ find_whole_line(char *data, char *data_border, format_delimiter_state *myData) {
 			// make sure that the quote we found is not escaped
 			if(myData->escape != NULL)
 			{
-				int cnt = count_preceding_occurrences_of_char(p-1, data, *(myData->escape));
-				if(cnt % 2 == 1)
+				int cnt = count_preceding_occurrences_of_char(p-1, data, *myData->escape);
+				// if the count is odd, then the quote found is escaped so continue until we find the next one
+				if(!is_even(cnt))
 				{
 					++p;
 					continue;
@@ -418,11 +418,11 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 	StringInfo buf = makeStringInfo();
 	int index = 0;
 	int delimiter_len = strlen(myData->delimiter);
-	int two_quote_len = (myData->situation == WITH_QUOTE ? 2 : 0); // the last quote of this column and the first quote of next column
+	int two_quote_len = (myData->quote != NULL ? 2 : 0); // the last quote of this column and the first quote of next column
 
-	if(myData->situation == WITH_QUOTE)
+	if(myData->quote != NULL)
 	{
-		if(*data != *(myData->quote) || data[len-1] != *(myData->quote))
+		if(*data != *myData->quote || data[len-1] != *myData->quote)
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
 					errmsg("Missing quote in row head or tail"),
@@ -450,7 +450,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
 					errhint("Please verify the number of columns in the table definition.")));
 		}
 
-		if (myData->situation == WITH_QUOTE && *(start-1) != *(myData->quote))
+		if (myData->quote != NULL && *(start-1) != *myData->quote)
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
 					errmsg("Missing quote before some column"),
@@ -569,7 +569,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 		// or the quote value and the eol value
 		// it's possible that we read the entire file but did not find the expected `quote + eol` or
 		// `quote + delimiter` values. Throw an appropriate error in such cases
-		if (remaining != 0 && myData->situation == WITH_QUOTE)
+		if (remaining != 0 && myData->quote != NULL)
 		{
 			if (!myData->saw_eol || (!myData->saw_delim && ncolumns > 1))
 			{
@@ -629,7 +629,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	 *  	in the former situation, `"\n` is in the beginning
 	 *  	in the latter situation, there must be a delimiter like `;` before `"\n`
 	 */
-	if(myData->situation == WITH_QUOTE &&
+	if(myData->quote != NULL &&
 	   (line_border == data_buf + data_cur + 1 || memcmp(line_border - 1  - delimiter_len, myData->delimiter, delimiter_len) == 0) )
 	{
 		/*

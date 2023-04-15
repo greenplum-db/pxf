@@ -21,11 +21,6 @@
 /* Do the module magic dance */
 //PG_MODULE_MAGIC;
 
-typedef enum DelimitedSituation {
-	WITHOUT_QUOTE,
-	WITH_QUOTE
-} DelimitedSituation;
-
 typedef struct {
 	TupleDesc desc;
 	Datum *values;
@@ -39,7 +34,6 @@ typedef struct {
 	char *quote_delimiter; /* only for searching for border, not in the config file */
 	char *quote_eol; /* only for searching for border, not in the config file */
 	int nColumns;
-	DelimitedSituation situation;
 
 	int external_encoding;				/* remote side's character encoding */
 	FmgrInfo *enc_conversion_proc;		/* conv proc from exttbl encoding to
