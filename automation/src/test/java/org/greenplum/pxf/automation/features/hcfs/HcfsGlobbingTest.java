@@ -61,7 +61,6 @@ public class HcfsGlobbingTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void testEscapeSpecialCharacters() throws Exception {
-        //FDW also adds an escape backslash from its side. If we are passing }\{bc, it will be }\\{bc in FDW. However, in external table it runs as expected.
         String escapeGlob = FDWUtils.useFDW ? "ab\\[c.d" : "ab\\\\[c.d";
         prepareTestScenario("escape_special_characters", "ab[c.d", null, null, null, escapeGlob);
         runTestScenario("escape_special_characters");
@@ -91,7 +90,19 @@ public class HcfsGlobbingTest extends BaseFeature {
         // test ill-formed curly
         prepareTestScenario("match_string_from_string_set_4", "match_string_from_string_set_11", null, null, null, null, "}{bc");
 
-        //FDW also adds an escape backslash from its side. If we are passing }\{bc, it will be }\\{bc in FDW. However, in external table it runs as expected.
+        // External Table adds (escape) E to the location which escapes the backslash while FDW doesn't add E to the resource.
+        // For e.g:
+        // FDW:
+        // CREATE FOREIGN TABLE hcfs_glob_escape_special_characters (name text, num integer, dub double precision, longNum bigint, bool boolean)
+        // SERVER default_hdfs OPTIONS
+        // (resource 'tmp/pxf_automation_data/4ab38346-079f-4a93-bd7f-fe3ab366182e/escape_special_characters/ab\\[c.d',format 'text',delimiter ',');
+        //
+        // External Table:
+        // CREATE EXTERNAL TABLE hcfs_glob_escape_special_characters (name text, num integer, dub double precision, longNum bigint, bool boolean)
+        // LOCATION (E'pxf://tmp/pxf_automation_data/51752ebe-8c1f-4788-b639-fb6344e2eff5/escape_special_characters/ab\\[c.d?PROFILE=hdfs:text')
+        // FORMAT 'Text' ( DELIMITER ',')
+        //
+        // So using the escaped glob for FDW.
         String escapeGlob = FDWUtils.useFDW ? "}\\{bc" : "}\\\\{bc";
         // test escape curly
         prepareTestScenario("match_string_from_string_set_12", "}{bc", "}bc", null, null, escapeGlob);
