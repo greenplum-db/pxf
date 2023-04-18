@@ -45,7 +45,7 @@ ORDER BY 1;
  pxf_read            | pxfprotocol_import           | pxf
  pxf_validate        | pxfprotocol_validate_urls    | pxf
  pxf_write           | pxfprotocol_export           | pxf
- pxfdelimited_import | multibyte_delim_import       | pxf
+ pxfdelimited_import | pxfdelimited_import          | pxf
  pxfwritable_export  | gpdbwritableformatter_export | pxf
  pxfwritable_import  | gpdbwritableformatter_import | pxf
 (6 rows)

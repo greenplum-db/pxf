@@ -119,7 +119,7 @@ psql --no-align --tuples-only --command "SELECT datname FROM pg_catalog.pg_datab
     if [[ $(psql --dbname="${dbname}" --no-align --tuples-only --command "SELECT extversion FROM pg_catalog.pg_extension WHERE extname = 'pxf'") > 2.0 ]]; then
     psql --dbname="${dbname}" --set ON_ERROR_STOP=on &>>"${log_file}" <<-END_OF_SQL
 		CREATE OR REPLACE FUNCTION pg_catalog.pxfdelimited_import() RETURNS record
-		AS 'pxf', 'multibyte_delim_import'
+		AS 'pxf', 'pxfdelimited_import'
 		LANGUAGE C STABLE;
 	END_OF_SQL
     fi

@@ -1,7 +1,7 @@
 // Portions Copyright (c) 2023 VMware, Inc. or its affiliates.
 
-#ifndef MULTIBYTE_DELIM_H
-#define MULTIBYTE_DELIM_H
+#ifndef PXFDELIMITED_FORMATTER_H
+#define PXFDELIMITED_FORMATTER_H
 
 #include "postgres.h"
 

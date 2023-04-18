@@ -1,10 +1,10 @@
 // Portions Copyright (c) 2023 VMware, Inc. or its affiliates.
 
-#include "multibyte_delim.h"
+#include "pxfdelimited_formatter.h"
 #include "stdio.h"
 
-PG_FUNCTION_INFO_V1(multibyte_delim_import);
-Datum multibyte_delim_import(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(pxfdelimited_import);
+Datum pxfdelimited_import(PG_FUNCTION_ARGS);
 
 #define is_even(cnt) (cnt % 2 == 0)
 
@@ -510,7 +510,7 @@ unpack_delimited(char *data, int len, format_delimiter_state *myData)
  * @return
  */
 Datum
-multibyte_delim_import(PG_FUNCTION_ARGS)
+pxfdelimited_import(PG_FUNCTION_ARGS)
 {
 	HeapTuple		   tuple;
 	TupleDesc		   tupdesc;
@@ -524,7 +524,7 @@ multibyte_delim_import(PG_FUNCTION_ARGS)
 	/* Must be called via the external table format manager */
 	if (!CALLED_AS_FORMATTER(fcinfo))
 		ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-						errmsg("cannot execute multibyte_delim_import outside format manager")));
+						errmsg("cannot execute pxfdelimited_import outside format manager")));
 
 	tupdesc = FORMATTER_GET_TUPDESC(fcinfo);
 
