@@ -146,7 +146,9 @@ pxf_fdw_handler(PG_FUNCTION_ARGS)
 	 * taken
 	 */
 	fdw_routine->PlanForeignModify = NULL;
+#if PG_VERSION_NUM >= 120000
 	fdw_routine->BeginForeignInsert = pxfBeginForeignInsert;
+#endif
 	fdw_routine->BeginForeignModify = pxfBeginForeignModify;
 	fdw_routine->ExecForeignInsert = pxfExecForeignInsert;
 
@@ -156,7 +158,9 @@ pxf_fdw_handler(PG_FUNCTION_ARGS)
 	 */
 	fdw_routine->ExecForeignUpdate = NULL;
 	fdw_routine->ExecForeignDelete = NULL;
+#if PG_VERSION_NUM >= 120000
 	fdw_routine->EndForeignInsert = pxfEndForeignInsert;
+#endif
 	fdw_routine->EndForeignModify = pxfEndForeignModify;
 	fdw_routine->IsForeignRelUpdatable = pxfIsForeignRelUpdatable;
 

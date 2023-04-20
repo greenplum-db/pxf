@@ -112,16 +112,18 @@ public class Gpdb extends DbSystemObject {
 
 	/**
 	 * Copies data from source table into target table
-	 * @param source
-	 * @param target
-	 * @throws Exception
+	 * @param source source table
+	 * @param target target table
+	 * @throws Exception if the operation fails
 	 */
-    public void copyData(Table source, Table target) throws Exception {
+	public void copyData(Table source, Table target) throws Exception {
 
+		copyData(source, target, false);
+	}
+	public void copyData(Table source, Table target, boolean ignoreFail) throws Exception {
 
-        runQuery("INSERT INTO " + target.getName() + " SELECT * FROM "
-                + source.getName());
-    }
+		runQuery("INSERT INTO " + target.getName() + " SELECT * FROM " + source.getName(), ignoreFail, false);
+	}
 
 	@Override
 	public void createDataBase(String schemaName, boolean ignoreFail) throws Exception {
