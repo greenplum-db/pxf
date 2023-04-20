@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api;
+package org.greenplum.pxf.service.serde;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

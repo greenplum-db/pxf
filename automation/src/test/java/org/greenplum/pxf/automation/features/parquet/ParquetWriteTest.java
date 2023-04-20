@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.features.parquet;
 
+import annotations.WorksWithFDW;
 import com.google.common.collect.Lists;
 import jsystem.framework.system.SystemManagerImpl;
 import org.apache.commons.lang.StringUtils;
@@ -23,6 +24,7 @@ import java.util.StringJoiner;
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;
 
+@WorksWithFDW
 public class ParquetWriteTest extends BaseFeature {
     private static final String NUMERIC_TABLE = "numeric_precision";
     private static final String NUMERIC_UNDEFINED_PRECISION_TABLE = "numeric_undefined_precision";

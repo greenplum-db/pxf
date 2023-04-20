@@ -252,6 +252,7 @@ public abstract class ExternalTable extends Table {
                     + getSegmentRejectLimitType();
         }
 
+        createStatment += distribution();
         return createStatment;
     }
 

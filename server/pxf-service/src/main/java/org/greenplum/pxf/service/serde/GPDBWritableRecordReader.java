@@ -1,6 +1,5 @@
 package org.greenplum.pxf.service.serde;
 
-import org.greenplum.pxf.api.GPDBWritableMapper;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.GPDBWritable;
 import org.greenplum.pxf.api.model.RequestContext;

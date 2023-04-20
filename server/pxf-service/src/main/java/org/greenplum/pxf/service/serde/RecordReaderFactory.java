@@ -2,10 +2,18 @@ package org.greenplum.pxf.service.serde;
 
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RecordReaderFactory {
+
+    private final PgUtilities pgUtilities;
+
+    public RecordReaderFactory(PgUtilities pgUtilities) {
+        this.pgUtilities = pgUtilities;
+    }
 
     public RecordReader getRecordReader(RequestContext context, boolean canHandleInputStream) {
         switch (context.getOutputFormat()) {
@@ -24,7 +32,7 @@ public class RecordReaderFactory {
                     */
                     return new StreamRecordReader(context);
                 } else {
-                    return new TextRecordReader(context);
+                    return new TextRecordReader(context, pgUtilities);
                 }
             default:
                 // in case there are more formats in the future and this class is not updated

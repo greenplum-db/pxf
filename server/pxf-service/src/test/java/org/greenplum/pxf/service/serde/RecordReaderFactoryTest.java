@@ -2,6 +2,7 @@ package org.greenplum.pxf.service.serde;
 
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +16,7 @@ public class RecordReaderFactoryTest {
     @BeforeEach
     public void before() {
         context = new RequestContext();
-        factory = new RecordReaderFactory();
+        factory = new RecordReaderFactory(new PgUtilities());
     }
 
     @Test

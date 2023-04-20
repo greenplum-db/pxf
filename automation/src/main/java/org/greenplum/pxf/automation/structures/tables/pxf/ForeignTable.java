@@ -16,7 +16,8 @@ public class ForeignTable extends WritableExternalTable {
                 .append(createHeader())
                 .append(createFields())
                 .append(createServer())
-                .append(createOptions());
+                .append(createOptions())
+                .append(distribution());
         return builder.toString();
     }
 
@@ -53,6 +54,9 @@ public class ForeignTable extends WritableExternalTable {
             appendOption(joiner, "format", formatOption);
         }
 
+        if (getCompressionCodec() != null) {
+            appendOption(joiner, "compression_codec", getCompressionCodec());
+        }
         // process F/A/R as options, they are used in tests to test column projection / predicate pushdown
         if (getFragmenter() != null) {
             appendOption(joiner, "fragmenter", getFragmenter());

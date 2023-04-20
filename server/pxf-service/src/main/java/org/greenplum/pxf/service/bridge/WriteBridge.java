@@ -94,10 +94,9 @@ public class WriteBridge extends BaseBridge {
         if (onerow == null) {
             return false;
         }
-        if (!accessor.writeNextObject(onerow)) {
-            throw new BadRecordException();
-        }
-        return true;
+        // TODO: can we do this ?
+        // if accessor fails to write data it should throw an exception, if nothing was written, then there's no more data
+        return accessor.writeNextObject(onerow);
     }
 
     /**

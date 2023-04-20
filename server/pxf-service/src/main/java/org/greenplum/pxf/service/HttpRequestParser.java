@@ -2,6 +2,7 @@ package org.greenplum.pxf.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.model.GreenplumCSV;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -255,12 +256,30 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     }
 
     private void parseGreenplumCSV(RequestMap params, RequestContext context) {
-        context.getGreenplumCSV()
-                .withDelimiter(params.removeUserProperty("DELIMITER"))
-                .withEscapeChar(params.removeUserProperty("ESCAPE"))
-                .withNewline(params.removeUserProperty("NEWLINE"))
-                .withQuoteChar(params.removeUserProperty("QUOTE"))
-                .withValueOfNull(params.removeUserProperty("NULL"));
+        // TODO: produce one with different defaults for TEXT vs CSV
+        GreenplumCSV greenplumCSV = context.getGreenplumCSV();
+
+        // override format options if they are specified in the request
+        String delimiter = params.removeUserProperty("DELIMITER");
+        if (delimiter != null) {
+            greenplumCSV.withDelimiter(delimiter);
+        }
+        String escape = params.removeUserProperty("ESCAPE");
+        if (escape != null) {
+            greenplumCSV.withEscapeChar(escape);
+        }
+        String newline = params.removeUserProperty("NEWLINE");
+        if (newline != null) {
+            greenplumCSV.withNewline(newline);
+        }
+        String quote = params.removeUserProperty("QUOTE");
+        if (quote != null) {
+            greenplumCSV.withQuoteChar(quote);
+        }
+        String nullValue = params.removeUserProperty("NULL");
+        if (nullValue != null) {
+            greenplumCSV.withValueOfNull(nullValue);
+        }
     }
 
     /**

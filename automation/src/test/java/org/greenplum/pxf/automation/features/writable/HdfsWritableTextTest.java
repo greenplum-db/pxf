@@ -1,5 +1,7 @@
 package org.greenplum.pxf.automation.features.writable;
 
+import annotations.SkipForFDW;
+import annotations.WorksWithFDW;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.datapreparer.writable.WritableDataPreparer;
 import org.greenplum.pxf.automation.enums.EnumCompressionTypes;
@@ -9,6 +11,7 @@ import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
+import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
@@ -26,6 +29,7 @@ import static java.lang.Thread.sleep;
 /**
  * Testing cases for PXF Writable feature for Text formats (Text, CSV) and compressions.
  */
+@WorksWithFDW
 public class HdfsWritableTextTest extends BaseWritableFeature {
 
     private static final String COMPRESSION_CODEC = "org.apache.hadoop.io.compress.DefaultCodec";
@@ -73,7 +77,13 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + "/text_format_no_profile";
         writableExTable = prepareWritableTable("pxf_text_format_no_profile", hdfsPath, null);
-        writableExTable.setProfile(null);
+        if (FDWUtils.useFDW) {
+            // FDW does not really allow empty format, so we use special "test:text" profile that gets ignored
+            writableExTable.setFormat("text");
+            writableExTable.setProfile("test:text");
+        } else {
+            writableExTable.setProfile(null);
+        }
         writableExTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
         writableExTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         writableExTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
@@ -541,7 +551,9 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      * The test creates a writable external table, copies the data into it, then
      * uses a readable external table to compare the data with the original.
      */
-    @Test(groups = {"features"})
+    // FDW does not yet support DITRIBUTED BY on foreign tables, we can't guarantee only 1 segment will write data
+    @SkipForFDW
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void veryLongRecords() throws Exception {
 
         final String[][] data = new String[][]{
@@ -558,21 +570,20 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         dataTable.addRows(data);
 
         String hdfsPath = hdfsWritePath + writableTableName + "_verylongrecord";
+        writableExTable = prepareWritableTable("pxf_text_very_long_records_w", hdfsPath, "CSV");
         writableExTable.setFields(fields);
-        writableExTable.setName("verylongrecordexport");
-        writableExTable.setPath(hdfsPath);
-        writableExTable.setFormat("CSV");
         writableExTable.setDistributionFields(new String[]{"key"});
         gpdb.createTableAndVerify(writableExTable);
+        insertData(dataTable, writableExTable, InsertionMethod.INSERT);
 
-        gpdb.insertData(dataTable, writableExTable);
+        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
+            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+            sleep(10000);
+        }
         Assert.assertEquals("More than one segment wrote to " + hdfsPath,
                 1, hdfs.list(hdfsPath).size());
 
-        readableExTable.setFields(fields);
-        readableExTable.setPath(hdfsPath);
-        readableExTable.setName("verylongrecordimport");
-        readableExTable.setFormat("csv");
+        readableExTable = TableFactory.getPxfReadableCSVTable("pxf_text_very_long_records_r", fields, hdfsPath, ",");
         gpdb.createTableAndVerify(readableExTable);
 
         gpdb.queryResults(readableExTable,
