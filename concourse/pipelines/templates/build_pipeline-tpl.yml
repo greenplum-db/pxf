@@ -1551,6 +1551,7 @@ jobs:
       - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+      - Test PXF-GP[[gp_ver]]-HDP2-Upgrade-Extension on RHEL7
       trigger: true
 {% set gp_ver = None %}
 {% set gp_ver = 5 %}

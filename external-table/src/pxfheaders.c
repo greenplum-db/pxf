@@ -92,18 +92,19 @@ build_http_headers(PxfInputData *input)
 		ListCell   *option;
 		List	   *copyFmtOpts = NIL;
 
-		// in the case of pxfdelimited_import formatter, the only viable profiles are TEXT and CSV.
+		// in the case of PxfDelimitedFormatter formatter, the only viable profiles are *:text and *:csv.
 		// error out early here if the profile is not accepted
-		if (getFormatterString(exttbl) != NULL &&
+		if (getFormatterString(exttbl) && // if the formatter string is non empty
 		    isFormatterPxfDelimited(exttbl) &&
-			(!strstr(input->gphduri->profile, ":text") &&
+			(input->gphduri->profile && // if the profile is non empty
+				!strstr(input->gphduri->profile, ":text") &&
 				!strstr(input->gphduri->profile, ":csv")))
 		{
 			ereport(ERROR,
 					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-					 errmsg("\"pxfdelimited_import\" is not a valid formatter for the given PXF profile (%s).", input->gphduri->profile),
-					 errhint("The \"pxfdelimited_import\" formatter only works with *:text or *:csv profiles. "
-							 "Please double check the external table definition.")));
+					 errmsg("%s is not a valid formatter for the given PXF profile (%s).", PxfDelimitedFormatter, input->gphduri->profile),
+					 errhint("The %s formatter only works with *:text or *:csv profiles. "
+							 "Please double check the external table definition.", PxfDelimitedFormatter)));
 		}
 
 		/* pxf treats everything but pxfwritable_[import|export] as TEXT (even CSV) */
@@ -714,7 +715,7 @@ isFormatterPxfDelimited(ExtTableEntry *exttbl)
 						errmsg("cannot determine the name of a custom formatter")));
 	}
 
-	return strstr(formatterNameSearchString, "pxfdelimited_import") != NULL;
+	return strstr(formatterNameSearchString, PxfDelimitedFormatter) != NULL;
 }
 /*
  * Checks if the custom formatter specified for the table starts with pxfwritable_ prefix

@@ -44,7 +44,7 @@ count_preceding_occurrences_of_char(char *p, char *left_border, char val)
  * @return pointer to the character immediately after the first instance of the target
  */
 static char *
-find_first_ins_for_multiline(char *target, char *left_border, char *right_border, format_delimiter_state *myData)
+find_first_ins_for_multiline(char *target, char *left_border, char *right_border, pxfdelimited_state *myData)
 {
 	char *t = target;
 	char *ret = NULL;
@@ -105,17 +105,17 @@ find_first_ins_for_multiline(char *target, char *left_border, char *right_border
 }
 
 /**
- * Set the values in the format_delimiter_state struct with all our formatter options
+ * Set the values in the pxfdelimited_state struct with all our formatter options
  *
  * This function assumes that the values for delimiter, quote and escape are stored in the
  * server encoding. It converts the values to the table encoding and writes it into the
- * format_delimiter_state struct
+ * pxfdelimited_state struct
  *
  * @param fcinfo
  * @param fmt_state
  */
 static void
-get_config(FunctionCallInfo fcinfo, format_delimiter_state *fmt_state)
+get_config(FunctionCallInfo fcinfo, pxfdelimited_state *fmt_state)
 {
 	fmt_state->delimiter = NULL;
 	fmt_state->eol = NULL;
@@ -210,17 +210,17 @@ get_config(FunctionCallInfo fcinfo, format_delimiter_state *fmt_state)
 }
 
 /**
- * Initialize the format_delimiter_state struct
+ * Initialize the pxfdelimited_state struct
  * @param fcinfo
  * @return
  */
-static format_delimiter_state *
-new_format_delimiter_state(FunctionCallInfo fcinfo)
+static pxfdelimited_state *
+new_pxfdelimited_state(FunctionCallInfo fcinfo)
 {
-	format_delimiter_state *fmt_state;
+	pxfdelimited_state *fmt_state;
 	TupleDesc desc = FORMATTER_GET_TUPDESC(fcinfo);
 
-	fmt_state = (format_delimiter_state*)palloc0(sizeof(format_delimiter_state));
+	fmt_state = (pxfdelimited_state*)palloc0(sizeof(pxfdelimited_state));
 	fmt_state->desc = desc;
 
 	int nColumns = desc->natts;
@@ -251,7 +251,7 @@ new_format_delimiter_state(FunctionCallInfo fcinfo)
  * @return a new buffer containing a copy of the string that has been properly unescaped
  */
 static char *
-unescape_data(char *start, int len, format_delimiter_state *myData)
+unescape_data(char *start, int len, pxfdelimited_state *myData)
 {
 	char *buf = palloc(len + 1);
 	int j = 0;
@@ -338,7 +338,7 @@ unescape_data(char *start, int len, format_delimiter_state *myData)
  * @return
  */
 static char *
-find_whole_line(char *data, char *data_border, format_delimiter_state *myData) {
+find_whole_line(char *data, char *data_border, pxfdelimited_state *myData) {
 	int column_cnt = myData->desc->natts;
 	int delimiter_len = strlen(myData->delimiter);
 	int eol_len = strlen(myData->eol);
@@ -416,7 +416,7 @@ find_whole_line(char *data, char *data_border, format_delimiter_state *myData) {
  * @param myData struct containing formatter options. it is also where the parsed data will go
  */
 void
-unpack_delimited(char *data, int len, format_delimiter_state *myData)
+unpack_delimited(char *data, int len, pxfdelimited_state *myData)
 {
 	char *start = (char*)data;
 	char *location = (char*)data;
@@ -515,7 +515,7 @@ pxfdelimited_import(PG_FUNCTION_ARGS)
 	HeapTuple		   tuple;
 	TupleDesc		   tupdesc;
 	MemoryContext	   m, oldcontext;
-	format_delimiter_state		   *myData;
+	pxfdelimited_state		   *myData;
 	char			   *data_buf;
 	int				 ncolumns = 0;
 	int				 data_cur;
@@ -530,14 +530,14 @@ pxfdelimited_import(PG_FUNCTION_ARGS)
 
 	/* Get our internal description of the formatter */
 	ncolumns = tupdesc->natts;
-	myData = (format_delimiter_state *) FORMATTER_GET_USER_CTX(fcinfo);
+	myData = (pxfdelimited_state *) FORMATTER_GET_USER_CTX(fcinfo);
 
 	/*
 	 * Initialize the context structure
 	 */
 	if (myData == NULL)
 	{
-		myData = new_format_delimiter_state(fcinfo);
+		myData = new_pxfdelimited_state(fcinfo);
 		FORMATTER_SET_USER_CTX(fcinfo, myData);
 	}
 

@@ -18,9 +18,6 @@
 
 #include "lib/stringinfo.h"
 
-/* Do the module magic dance */
-//PG_MODULE_MAGIC;
-
 typedef struct {
 	TupleDesc desc;
 	Datum *values;
@@ -40,9 +37,9 @@ typedef struct {
 										server or the other way around */
 	bool saw_delim;
 	bool saw_eol;
-} format_delimiter_state;
+} pxfdelimited_state;
 
 extern void
-unpack_delimited(char *data, int len, format_delimiter_state *myData);
+unpack_delimited(char *data, int len, pxfdelimited_state *myData);
 
 #endif

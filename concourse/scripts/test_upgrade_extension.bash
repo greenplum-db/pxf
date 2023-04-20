@@ -21,8 +21,6 @@ export YARN_HEAPSIZE=512
 export GPHD_ROOT=/singlecluster
 export PGPORT=${PGPORT:-5432}
 
-PXF_GIT_URL="https://github.com/greenplum-db/pxf.git"
-
 function run_pxf_automation() {
 	# Let's make sure that automation/singlecluster directories are writeable
 	chmod a+w pxf_src/automation /singlecluster || true
@@ -59,18 +57,6 @@ function generate_extras_fat_jar() {
 	popd
 }
 
-function setup_hadoop() {
-	local hdfsrepo=$1
-
-	[[ -z ${GROUP} ]] && return 0
-
-	export SLAVES=1
-	setup_impersonation "${hdfsrepo}"
-	if grep 'hadoop-3' "${hdfsrepo}/versions.txt"; then
-		adjust_for_hadoop3 "${hdfsrepo}"
-	fi
-	start_hadoop_services "${hdfsrepo}"
-}
 
 function _main() {
 	# kill the sshd background process when this script exits. Otherwise, the
@@ -114,13 +100,9 @@ function _main() {
 		# first time running automation so create the extension
 
 		local extension_name="pxf"
-		if [[ ${USE_FDW} == "true" ]]; then
-			extension_name="pxf_fdw"
-		fi
-
-		#TODO: remove once exttable tests with GP7 are set
-		if [[ ${GROUP} == fdw_gpdb_schedule ]]; then
-			extension_name="pxf_fdw"
+		if [[ ${USE_FDW} == true ]]; then
+		  echo "The extension tests should not be run with pxf_fdw."
+			exit 1
 		fi
 
 		su gpadmin -c "

@@ -49,7 +49,7 @@ pxf_gpdb_major_version="$(awk 'BEGIN { FS = "=" } /gpdb.major-version/{ print $2
 gp_version="$(psql --no-align --tuples-only --command 'SELECT substring(version(), $$.*Greenplum Database (.*) build.*$$)')"
 pxf_version="$(cat $PXF_HOME/version)"
 
-echo "PXF compiled against GPDB major version '${pxf_gpdb_major_version}'" >>"${log_file}"
+echo "PXF ${pxf_version} compiled against GPDB major version '${pxf_gpdb_major_version}'" >>"${log_file}"
 echo "Running GPDB cluster is version '${gp_version}'" >>"${log_file}"
 
 if [[ "${pxf_gpdb_major_version}" != "${gp_version%%.*}" ]]; then

@@ -392,6 +392,19 @@ function setup_impersonation() {
 	fi
 }
 
+function setup_hadoop() {
+	local hdfsrepo=$1
+
+	[[ -z ${GROUP} ]] && return 0
+
+	export SLAVES=1
+	setup_impersonation "${hdfsrepo}"
+	if grep 'hadoop-3' "${hdfsrepo}/versions.txt"; then
+		adjust_for_hadoop3 "${hdfsrepo}"
+	fi
+	start_hadoop_services "${hdfsrepo}"
+}
+
 function adjust_for_hadoop3() {
 	local GPHD_ROOT=${1}
 
