@@ -1013,8 +1013,8 @@ jobs:
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
-      FIRST_GROUP: oldExtensionUpgrade
-      SECOND_GROUP: extensionUpgrade
+      GROUP: pxfCExtensionVersion2
+      SECOND_GROUP: upgradePxfCExtension
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
 
 ## ---------- FILE tests -----------------

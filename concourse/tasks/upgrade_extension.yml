@@ -15,7 +15,6 @@ inputs:
 
 params:
   GP_VER:
-  FIRST_GROUP:
   SECOND_GROUP:
   GROUP: smoke
   HADOOP_CLIENT: HDP
@@ -26,4 +25,9 @@ params:
   USE_FDW: false
 
 run:
-  path: pxf_src/concourse/scripts/test_upgrade_extension.bash
+  path: sh
+  args:
+    - -exc
+    - |
+      pxf_src/concourse/scripts/test.bash || exit 1
+      pxf_src/concourse/scripts/test_upgrade_extension.bash

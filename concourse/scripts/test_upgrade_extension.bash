@@ -10,9 +10,9 @@ CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # set our own GPHOME for RPM-based installs before sourcing common script
 export GPHOME=/usr/local/greenplum-db
 export PXF_HOME=/usr/local/pxf-gp${GP_VER}
+export PXF_BASE_DIR=${PXF_BASE_DIR:-$PXF_HOME}
 
 source "${CWDIR}/pxf_common.bash"
-source "${CWDIR}/update_pxf_minor_version.bash"
 
 export GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
@@ -21,97 +21,48 @@ export YARN_HEAPSIZE=512
 export GPHD_ROOT=/singlecluster
 export PGPORT=${PGPORT:-5432}
 
-function run_pxf_automation() {
-	# Let's make sure that automation/singlecluster directories are writeable
-	chmod a+w pxf_src/automation /singlecluster || true
-	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
+# ANSI Colors
+echoRed() { echo $'\e[0;31m'"$1"$'\e[0m'; }
+echoGreen() { echo $'\e[0;32m'"$1"$'\e[0m'; }
 
-	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
-		#!/usr/bin/env bash
-		set -exo pipefail
+function upgrade_pxf() {
+	existing_pxf_version=$(cat $PXF_HOME/version)
+	echoGreen "Stopping PXF ${existing_pxf_version}"
+	su gpadmin -c "${PXF_HOME}/bin/pxf version && ${PXF_HOME}/bin/pxf cluster stop"
 
-		source ~gpadmin/.pxfrc
+	echoGreen "Installing Newer Version of PXF 6"
+	install_pxf_tarball
 
-		export PATH=\$PATH:${GPHD_ROOT}/bin
-		export GPHD_ROOT=${GPHD_ROOT}
-		export PXF_HOME=${PXF_HOME}
-		export PGPORT=${PGPORT}
-		export USE_FDW=${USE_FDW}
+	echoGreen "Check the PXF 6 version"
+	su gpadmin -c "${PXF_HOME}/bin/pxf version"
 
-		cd pxf_src/automation
-		time make GROUP=${GROUP} test
-	EOF
+	echoGreen "Register the PXF extension into Greenplum"
+	su gpadmin -c "GPHOME=${GPHOME} ${PXF_HOME}/bin/pxf cluster register"
 
-	chown gpadmin:gpadmin ~gpadmin/run_pxf_automation_test.sh
-	chmod a+x ~gpadmin/run_pxf_automation_test.sh
+	if [[ "${PXF_BASE_DIR}" != "${PXF_HOME}" ]]; then
+		echoGreen "Prepare PXF in ${PXF_BASE_DIR}"
+		PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster prepare
+		echo \"export PXF_BASE=${PXF_BASE_DIR}\" >> ~gpadmin/.bashrc
+	fi
+	updated_pxf_version=$(cat $PXF_HOME/version)
 
-	su gpadmin -c ~gpadmin/run_pxf_automation_test.sh
+	echoGreen "Starting PXF ${updated_pxf_version}"
+
+	if [[ ${existing_pxf_version} > ${updated_pxf_version} ]]; then
+		echoRed "Existing version of PXF (${existing_pxf_version}) is greater than or equal to the new version (${updated_pxf_version})"
+	fi
+
+	su gpadmin -c "PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster start"
+
+  # the new version of PXF brought in a new version of the extension. For databases that already had PXF installed,
+  # we need to explicitly upgrade the PXF extension to the new version
+	echoGreen "ALTER EXTENSION pxf UPDATE - for multibyte delimiter tests"
+	su gpadmin -c "source ${GPHOME}/greenplum_path.sh && psql -d template1 -c 'ALTER EXTENSION pxf UPDATE' \
+																							&& psql -d pxfautomation -c 'ALTER EXTENSION pxf UPDATE' \
+																							&& psql -d pxfautomation_encoding -c 'SELECT * FROM pg_extension'"
 }
-
-function generate_extras_fat_jar() {
-	mkdir -p /tmp/fatjar
-	pushd /tmp/fatjar
-		find "${BASE_DIR}/lib" -name '*.jar' -exec jar -xf {} \;
-		jar -cf "/tmp/pxf-extras-1.0.0.jar" .
-		chown -R gpadmin:gpadmin "/tmp/pxf-extras-1.0.0.jar"
-	popd
-}
-
 
 function _main() {
-	# kill the sshd background process when this script exits. Otherwise, the
-	# concourse build will run forever.
-	# trap 'pkill sshd' EXIT
-
-	# Ping is called by gpinitsystem, which must be run by gpadmin
-	chmod u+s /bin/ping
-
-	# Install GPDB
-	install_gpdb_package
-
-	# Install older version of PXF from RPM package
-	install_pxf_package
-
-	inflate_singlecluster
-	# Setup Hadoop before creating GPDB cluster to use system python for yum install
-	# Must be after installing GPDB to transfer hbase jar
-	setup_hadoop "${GPHD_ROOT}"
-
-	# initialize GPDB as gpadmin user
-	su gpadmin -c "${CWDIR}/initialize_gpdb.bash"
-
-	add_remote_user_access_for_gpdb testuser
-	configure_pxf_server
-
-	local HCFS_BUCKET # team-specific bucket names
-	configure_pxf_default_server
-
-	start_pxf_server
-
-	# Create fat jar for automation
-	generate_extras_fat_jar
-
-	inflate_dependencies
-
-	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src
-
-	# Run tests
-	if [[ -n ${FIRST_GROUP} ]]; then
-		# first time running automation so create the extension
-
-		local extension_name="pxf"
-		if [[ ${USE_FDW} == true ]]; then
-		  echo "The extension tests should not be run with pxf_fdw."
-			exit 1
-		fi
-
-		su gpadmin -c "
-			source '${GPHOME}/greenplum_path.sh' &&
-			psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION ${extension_name}'
-		"
-		GROUP=${FIRST_GROUP}
-		run_pxf_automation
-	fi
 
 	# Upgrade to latest PXF
 	echo
