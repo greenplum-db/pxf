@@ -101,7 +101,7 @@ function run_pxf_automation() {
 
 	su gpadmin -c "
 		source '${GPHOME}/greenplum_path.sh' &&
-		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION ${extension_name}'
+		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION IF NOT EXISTS ${extension_name}'
 	"
 	# prepare certification output directory
 	mkdir -p certification

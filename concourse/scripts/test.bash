@@ -189,7 +189,7 @@ function _main() {
 	fi
 
 	# Certification jobs might install non-latest PXF, make sure automation code corresponds to what is installed
-	if [[ -f ${PXF_HOME}/commit.sha ]]; then
+	if [[ -f ${PXF_HOME}/commit.sha ]] && [[ ${ADJUST_AUTOMATION} != false ]]; then
 		adjust_automation_code
 	else
 		echo "WARNING: no commit.sha file is found in PXF_HOME=${PXF_HOME}"
