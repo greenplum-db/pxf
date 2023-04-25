@@ -5,6 +5,7 @@ import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.components.common.DbSystemObject;
 import org.greenplum.pxf.automation.components.common.ShellSystemObject;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
+import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.springframework.util.Assert;
@@ -120,9 +121,68 @@ public class Gpdb extends DbSystemObject {
 
 		copyData(source, target, false);
 	}
-	public void copyData(Table source, Table target, boolean ignoreFail) throws Exception {
 
-		runQuery("INSERT INTO " + target.getName() + " SELECT * FROM " + source.getName(), ignoreFail, false);
+	/**
+	 * Copies data from source table into target table
+	 * @param sourceName name of the source table
+	 * @param target target table
+	 * @throws Exception if the operation fails
+	 */
+	public void copyData(String sourceName, Table target) throws Exception {
+
+		copyData(sourceName, target, false);
+	}
+
+	/**
+	 * Copies data from source table into target table
+	 * @param sourceName name of the source table
+	 * @param target target table
+	 * @param columns columns to select from the source table, if null then all columns will be selected
+	 * @throws Exception if the operation fails
+	 */
+	public void copyData(String sourceName, Table target, String[] columns) throws Exception {
+
+		copyData(sourceName, target, columns,false);
+	}
+
+	/**
+	 * Copies data from source table into target table
+	 * @param source source table
+	 * @param target target table
+	 * @param ignoreFail whether to ignore any failures
+	 * @throws Exception if the operation fails
+	 */
+	public void copyData(Table source, Table target, boolean ignoreFail) throws Exception {
+		copyData(source.getName(), target, ignoreFail);
+	}
+
+	/**
+	 * Copies data from source table into target table
+	 * @param sourceName name of the source table
+	 * @param target target table
+	 * @param ignoreFail whether to ignore any failures
+	 * @throws Exception if the operation fails
+	 */
+	public void copyData(String sourceName, Table target, boolean ignoreFail) throws Exception {
+		copyData(sourceName, target, null, ignoreFail);
+	}
+
+	/**
+	 * Copies data from source table into target table with a possibility of selecting specific columns
+	 * @param sourceName name of the source table
+	 * @param target target table
+	 * @param columns columns to select from the source table, if null then all columns will be selected
+	 * @param ignoreFail whether to ignore any failures
+	 * @throws Exception if the operation fails
+	 */
+	public void copyData(String sourceName, Table target, String[] columns, boolean ignoreFail) throws Exception {
+		String columnList = (columns == null || columns.length == 0) ? "*" : String.join(",", columns);
+		String query = String.format("INSERT INTO %s SELECT %s FROM %s", target.getName(), columnList, sourceName);
+		if (target instanceof ExternalTable) {
+			runQueryInsertIntoExternalTable(query);
+		} else {
+			runQuery(query, ignoreFail, false);
+		}
 	}
 
 	@Override
@@ -322,7 +382,17 @@ public class Gpdb extends DbSystemObject {
 
 		dataStringBuilder.append("\\.");
 
-		copy(to.getName(), "STDIN", dataStringBuilder.toString(), delim, null, csv);
+		// COPY TO <foreign table> is not supported in PXF FDW with GP6, so we will have to do a workaround by
+		// creating a native table, copying data from the file into it and then performing a CTAS into the foregin table
+		if (FDWUtils.useFDW && getVersion() < 7) {
+			Table nativeTable = createTableLike(to.getName() + "_native", to);
+			// copy data into the native table
+			copy(nativeTable.getName(), "STDIN", dataStringBuilder.toString(), delim, null, csv);
+			// CTAS into the foreign table
+			copyData(nativeTable, to, true);
+		} else {
+			copy(to.getName(), "STDIN", dataStringBuilder.toString(), delim, null, csv);
+		}
 	}
 
 	/**
@@ -337,7 +407,18 @@ public class Gpdb extends DbSystemObject {
 	public void copyFromFile(Table to, File path, String delim, boolean csv) throws Exception {
 		String from = "'" + path.getAbsolutePath() + "'";
 		copyLocalFileToRemoteGpdb(from);
-		copy(to.getName(), from, null, delim, null, csv);
+
+		// COPY TO <foreign table> is not supported in PXF FDW with GP6, so we will have to do a workaround by
+		// creating a native table, copying data from the file into it and then performing a CTAS into the foreign table
+		if (FDWUtils.useFDW && getVersion() < 7) {
+			Table nativeTable = createTableLike(to.getName() + "_native", to);
+			// copy data into the native table
+			copy(nativeTable.getName(), from, null, delim, null, csv);
+			// CTAS into the foreign table
+			copyData(nativeTable, to, true);
+		} else {
+			copy(to.getName(), from, null, delim, null, csv);
+		}
 	}
 
 	private void copyLocalFileToRemoteGpdb(String from) throws Exception {
@@ -495,6 +576,27 @@ public class Gpdb extends DbSystemObject {
 		int count = res.getInt(1);
 		ReportUtils.report(report, getClass(), "Retrieved from Greenplum: [" + count + "] servers");
 		return count > 0;
+	}
+
+	/**
+	 * Create a table like the other table, only schema / distribution is copied, not the data.
+	 * @param name name of table to create
+	 * @param source source table
+	 * @return table that got created
+	 * @throws Exception if the operation fails
+	 */
+	private Table createTableLike(String name, Table source) throws Exception {
+		Table table = new Table(name, source.getFields());
+		String[] distributionFields = source.getDistributionFields();
+		if (distributionFields != null && distributionFields.length > 0) {
+			table.setDistributionFields(distributionFields);
+		} else {
+			// set distribution field as the first one so that PSQL does not issue a warning
+			// extract the name of the first table field and type, split off the type that follows the name after whitespace
+			table.setDistributionFields(new String[]{table.getFields()[0].split("\\s+")[0]});
+		}
+		createTableAndVerify(table);
+		return table;
 	}
 
 }

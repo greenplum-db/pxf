@@ -298,12 +298,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     public void textFormatGZipInsertShortname() throws Exception {
 
         String hdfsPath = hdfsWritePath + "/gzip_shortname_format_using_insert";
-        writableExTable = new WritableExternalTable("pxf_gzip_shortname_format_using_insert", gpdbTableFields,
-                protocol.getExternalTablePath(hdfs.getBasePath(), hdfsPath), "Text");
-        writableExTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
-        writableExTable.setDelimiter(",");
-        writableExTable.setCompressionCodec("gzip");
-        createTable(writableExTable);
+        writableExTable = prepareWritableGzipTable("pxf_gzip_shortname_format_using_insert", hdfsPath, "gzip");
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         verifyResult(hdfsPath, dataTable, EnumCompressionTypes.GZip);
     }
@@ -351,7 +346,6 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + "/bzip2_format_using_insert";
         writableExTable = prepareWritableBZip2Table("pxf_bzip2_format_using_insert", hdfsPath);
-
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         verifyResult(hdfsPath, dataTable, EnumCompressionTypes.BZip2);
     }
@@ -366,7 +360,6 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + "/copy_from_stdin_bzip2";
         writableExTable = prepareWritableBZip2Table("pxf_copy_from_stdin_bzip2", hdfsPath);
-
         insertData(dataTable, writableExTable, InsertionMethod.COPY);
         verifyResult(hdfsPath, dataTable, EnumCompressionTypes.BZip2);
     }
@@ -380,12 +373,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     public void textFormatBZip2CopyFromStdinShortname() throws Exception {
 
         String hdfsPath = hdfsWritePath + "/copy_from_stdin_bzip2_shortname";
-        writableExTable = new WritableExternalTable("pxf_copy_from_stdin_bzip2_shortname", gpdbTableFields,
-                protocol.getExternalTablePath(hdfs.getBasePath(), hdfsPath), "Text");
-        writableExTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
-        writableExTable.setDelimiter(",");
-        writableExTable.setCompressionCodec("bzip2");
-        createTable(writableExTable);
+        writableExTable = prepareWritableBZip2Table("pxf_copy_from_stdin_bzip2_shortname", hdfsPath, "bzip2");
         insertData(dataTable, writableExTable, InsertionMethod.COPY);
         verifyResult(hdfsPath, dataTable, EnumCompressionTypes.BZip2);
     }
@@ -659,7 +647,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
                 gpdb.copyFromStdin(data, table, ",", false);
                 break;
             case INSERT_FROM_TABLE:
-                gpdb.runQuery("INSERT INTO " + table.getName() + " SELECT * FROM " + data.getName());
+                gpdb.copyData(data, table);
                 break;
         }
     }
@@ -696,15 +684,28 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     }
 
     private WritableExternalTable prepareWritableBZip2Table(String name, String path) throws Exception {
+        return prepareWritableBZip2Table(name, path, null);
+    }
+
+    private WritableExternalTable prepareWritableBZip2Table(String name, String path, String customCodecName) throws Exception {
         WritableExternalTable table = TableFactory.getPxfWritableBZip2Table(name, gpdbTableFields,
                 protocol.getExternalTablePath(hdfs.getBasePath(), path), ",");
+        if (customCodecName != null) {
+            table.setCompressionCodec(customCodecName);
+        }
         createTable(table);
         return table;
     }
 
     private WritableExternalTable prepareWritableGzipTable(String name, String path) throws Exception {
+        return prepareWritableGzipTable(name, path, null);
+    }
+    private WritableExternalTable prepareWritableGzipTable(String name, String path, String customCodecName) throws Exception {
         WritableExternalTable table = TableFactory.getPxfWritableGzipTable(name, gpdbTableFields,
                 protocol.getExternalTablePath(hdfs.getBasePath(), path), ",");
+        if (customCodecName != null) {
+            table.setCompressionCodec(customCodecName);
+        }
         createTable(table);
         return table;
     }

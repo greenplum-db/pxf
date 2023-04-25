@@ -128,6 +128,12 @@ public class ParquetWriteTest extends BaseFeature {
             "id            INTEGER",
             "tm_arr        TIMESTAMP[]"
     };
+
+    private final String[] PARQUET_PRIMITIVE_COLUMN_NAMES = new String[]{
+    "s1", "s2", "n1", "d1", "dc1", "tm", "f", "bg", "b", "tn", "vc1", "sml", "c1", "bin"};
+
+    private final String[] PARQUET_ARRAY_COLUMN_NAMES = new String[]{"id", "bool_arr", "smallint_arr", "int_arr",
+            "bigint_arr", "real_arr", "double_arr", "text_arr", "bytea_arr", "char_arr", "varchar_arr", "numeric_arr", "date_arr"};
     private String hdfsPath;
     private ProtocolEnum protocol;
     private Hive hive;
@@ -154,11 +160,11 @@ public class ParquetWriteTest extends BaseFeature {
         runWritePrimitivesScenario("pxf_parquet_write_padded_char", "pxf_parquet_read_padded_char", "parquet_write_padded_char", null);
 
         /* 2. Insert data with chars that need padding */
-        gpdb.runQuery("INSERT INTO pxf_parquet_write_padded_char VALUES ('row25_char_needs_padding', 's_17', 11, 37, 0.123456789012345679, " +
+        gpdb.insertData(exTable, "('row25_char_needs_padding', 's_17', 11, 37, 0.123456789012345679, " +
                 "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, 'a  ', '1')");
-        gpdb.runQuery("INSERT INTO pxf_parquet_write_padded_char VALUES ('row26_char_with_tab', 's_17', 11, 37, 0.123456789012345679, " +
+        gpdb.insertData(exTable, "('row26_char_with_tab', 's_17', 11, 37, 0.123456789012345679, " +
                 "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'b\\t ', '1')");
-        gpdb.runQuery("INSERT INTO pxf_parquet_write_padded_char VALUES ('row27_char_with_newline', 's_17', 11, 37, 0.123456789012345679, " +
+        gpdb.insertData(exTable, "('row27_char_with_newline', 's_17', 11, 37, 0.123456789012345679, " +
                 "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'c\\n ', '1')");
 
         if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
@@ -197,7 +203,7 @@ public class ParquetWriteTest extends BaseFeature {
         String writableExternalTableName = "pxf_parquet_write_undefined_precision_numeric";
         prepareNumericWritableExtTable(filePathName, fileName, writableExternalTableName, false, false);
 
-        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT * FROM " + NUMERIC_UNDEFINED_PRECISION_TABLE);
+        gpdb.copyData(NUMERIC_UNDEFINED_PRECISION_TABLE, exTable);
         prepareReadableExternalTable("pxf_parquet_read_undefined_precision_numeric",
                 UNDEFINED_PRECISION_NUMERIC, hdfsPath + fileName);
 
@@ -222,7 +228,7 @@ public class ParquetWriteTest extends BaseFeature {
         String writableExternalTableName = "pxf_parquet_write_numeric";
         prepareNumericWritableExtTable(filePathName, fileName, writableExternalTableName, true, false);
 
-        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT * FROM " + NUMERIC_TABLE);
+        gpdb.copyData(NUMERIC_TABLE, exTable);
         prepareReadableExternalTable("pxf_parquet_read_numeric",
                 PARQUET_TABLE_DECIMAL_COLUMNS, hdfsPath + fileName);
 
@@ -259,7 +265,7 @@ public class ParquetWriteTest extends BaseFeature {
         String writableExternalTableName = "parquet_write_undefined_precision_numeric_large_scale";
         prepareNumericWritableExtTable(filePathName, fileName, writableExternalTableName, false, false);
 
-        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT * FROM " + NUMERIC_UNDEFINED_PRECISION_TABLE);
+        gpdb.copyData(NUMERIC_UNDEFINED_PRECISION_TABLE, exTable);
         prepareReadableExternalTable("pxf_parquet_read_undefined_precision_numeric_large_scale",
                 UNDEFINED_PRECISION_NUMERIC, hdfsPath + fileName);
 
@@ -273,8 +279,7 @@ public class ParquetWriteTest extends BaseFeature {
         String fullTestPath = hdfsPath + "parquet_write_list";
 
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
-        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, bool_arr, smallint_arr, int_arr, bigint_arr, real_arr, " +
-                "double_arr, text_arr, bytea_arr, char_arr, varchar_arr, numeric_arr, date_arr FROM " + PXF_PARQUET_LIST_TYPES);
+        gpdb.copyData(PXF_PARQUET_LIST_TYPES, exTable, PARQUET_ARRAY_COLUMN_NAMES);
 
         waitForAsyncWriteToSucceedOnHCFS("parquet_write_list");
 
@@ -292,7 +297,7 @@ public class ParquetWriteTest extends BaseFeature {
         String fullTestPath = hdfsPath + "parquet_write_timestamp_list";
 
         prepareWritableExternalTable(writeTableName, PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS, fullTestPath, null);
-        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, tm_arr FROM " + PXF_PARQUET_TIMESTAMP_LIST_TYPES);
+        gpdb.copyData(PXF_PARQUET_TIMESTAMP_LIST_TYPES, exTable, new String[]{"id", "tm_arr"});
 
         waitForAsyncWriteToSucceedOnHCFS("parquet_write_timestamp_list");
 
@@ -315,7 +320,7 @@ public class ParquetWriteTest extends BaseFeature {
         String fullTestPath = hdfsPath + "parquet_write_list_read_with_hive";
 
         prepareWritableExternalTable(writeTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath, null);
-        insertArrayDataWithoutNulls(writeTableName, 33);
+        insertArrayDataWithoutNulls(exTable, 33);
 
         // load the data into hive to check that PXF-written Parquet files can be read by other data
         String hiveExternalTableName = writeTableName + "_external";
@@ -400,9 +405,7 @@ public class ParquetWriteTest extends BaseFeature {
         // update the exTable with schema file provided
         gpdb.createTableAndVerify(exTable);
 
-        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT id, bool_arr, smallint_arr, int_arr, bigint_arr, real_arr, " +
-                "double_arr, text_arr, bytea_arr, char_arr, varchar_arr, numeric_arr, date_arr FROM " + PXF_PARQUET_LIST_TYPES);
-
+        gpdb.copyData(PXF_PARQUET_LIST_TYPES, exTable, PARQUET_ARRAY_COLUMN_NAMES);
         waitForAsyncWriteToSucceedOnHCFS("parquet_write_lists_with_user_provided_schema_file_on_hcfs");
 
         prepareReadableExternalTable(readTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath);
@@ -438,9 +441,7 @@ public class ParquetWriteTest extends BaseFeature {
                                             String filename, String[] userParameters) throws Exception {
         prepareWritableExternalTable(writeTableName,
                 PARQUET_PRIMITIVE_TABLE_COLUMNS, hdfsPath + filename, userParameters);
-        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT s1, s2, n1, d1, dc1, tm, " +
-                "f, bg, b, tn, vc1, sml, c1, bin FROM " + PXF_PARQUET_PRIMITIVE_TABLE);
-
+        gpdb.copyData(PXF_PARQUET_PRIMITIVE_TABLE, exTable, PARQUET_PRIMITIVE_COLUMN_NAMES);
         waitForAsyncWriteToSucceedOnHCFS(filename);
 
         prepareReadableExternalTable(readTableName,
@@ -480,9 +481,8 @@ public class ParquetWriteTest extends BaseFeature {
         }
     }
 
-    private void insertArrayDataWithoutNulls(String exTable, int numRows) throws Exception {
-        StringBuilder insertStatement = new StringBuilder();
-        insertStatement.append("INSERT INTO " + exTable + " VALUES ");
+    private void insertArrayDataWithoutNulls(Table exTable, int numRows) throws Exception {
+        StringBuilder values = new StringBuilder();
         for (int i = 0; i < numRows; i++) {
             StringJoiner statementBuilder = new StringJoiner(",", "(", ")")
                     .add(String.valueOf(i))    // always not-null row index, column index starts with 0 after it
@@ -499,9 +499,9 @@ public class ParquetWriteTest extends BaseFeature {
                     .add(String.format("'{12345678900000.00000%s}'", i))                             // DataType.NUMERICARRAY
                     .add(String.format("'{\"2010-01-%02d\"}'", (i % 30) + 1))                        // DataType.DATEARRAY
                     ;
-            insertStatement.append(statementBuilder.toString().concat((i < (numRows - 1)) ? "," : ";"));
+            values.append(statementBuilder.toString().concat((i < (numRows - 1)) ? "," : ""));
         }
-        gpdb.runQuery(insertStatement.toString());
+        gpdb.insertData(exTable, values.toString());
     }
 
     private void assertHiveByteaArrayData(List<List<String>> queryResultData) {
