@@ -75,6 +75,11 @@ public abstract class CsvUtils {
 	 *
 	 * @param table {@link Table} contains required data list to write to CSV file
 	 * @param targetCsvFile to write the data Table
+	 * @param charset the encoding charset to write in
+	 * @param delimiter the separator value to use between columns
+	 * @param quotechar the quote value to use for each col
+	 * @param escapechar the escape value to use
+	 * @param eol the eol value to indicate end of row
 	 * @throws IOException
 	 */
 	public static void writeTableToCsvFile(Table table, String targetCsvFile, Charset charset,
@@ -82,7 +87,7 @@ public abstract class CsvUtils {
 										   char escapechar, String eol)
 			throws IOException {
 
-		// create CsvWriter using FileWriter
+		// create CsvWriter using OutputStreamWriter to allow for user given values
 		CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(new FileOutputStream(targetCsvFile), charset), delimiter, quotechar, escapechar, eol);
 		try {
 			// go over list and write each inner list to csv file
@@ -110,6 +115,9 @@ public abstract class CsvUtils {
 	public static void writeTableToCsvFile(Table table, String targetCsvFile)
 		throws IOException {
 
+		// the default separator is ,
+		// the default quote and escape values are both "
+		// the default eol value is \n
 		writeTableToCsvFile(
 				table,
 				targetCsvFile,

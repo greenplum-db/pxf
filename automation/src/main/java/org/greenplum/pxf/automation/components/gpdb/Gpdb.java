@@ -52,9 +52,7 @@ public class Gpdb extends DbSystemObject {
 		 * connecting it.
 		 */
 		driver = "org.postgresql.Driver";
-		address = "jdbc:postgresql://" + getHost() + ":" + getPort() + "/template1";
-
-		connect();
+		connectToDataBase("template1");
 		version = determineVersion();
 
 		if (!checkDataBaseExists(getDb())) {
@@ -71,11 +69,7 @@ public class Gpdb extends DbSystemObject {
 			}
 		}
 
-		super.close();
-
-		address = "jdbc:postgresql://" + getHost() + ":" + getPort() + "/" + getDb();
-
-		connect();
+		connectToDataBase(getDb());
 
 		// Create the extensions if they don't exist
 		String extensionName = FDWUtils.useFDW ? "pxf_fdw" : "pxf";
@@ -123,9 +117,9 @@ public class Gpdb extends DbSystemObject {
                 + source.getName());
     }
 
-	public void connectToDataBase() throws Exception {
+	public void connectToDataBase(String dbName) throws Exception {
 		super.close();
-		address = "jdbc:postgresql://" + getHost() + ":" + getPort() + "/" + getDb();
+		address = "jdbc:postgresql://" + getHost() + ":" + getPort() + "/" + dbName;
 		connect();
 	}
 

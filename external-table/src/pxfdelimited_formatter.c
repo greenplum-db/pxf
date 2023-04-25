@@ -156,7 +156,6 @@ get_config(FunctionCallInfo fcinfo, pxfdelimited_state *fmt_state)
 				// (LF is used throughout the entire file)
 				ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), errmsg("NEWLINE can only be LF, CRLF, or CR")));
 			}
-
 		}
 		else if (strcmp(key, "quote") == 0)
 		{
@@ -426,13 +425,16 @@ unpack_delimited(char *data, int len, pxfdelimited_state *myData)
 	int delimiter_len = strlen(myData->delimiter);
 	int two_quote_len = (myData->quote != NULL ? 2 : 0); // the last quote of this column and the first quote of next column
 
+	char* quote_hint_msg = "Please verify that columns in the data are properly quoted.";
+	char* col_hint_msg = "Please verify the number of columns in the table definition.";
+
 	if(myData->quote != NULL)
 	{
 		if(*data != *myData->quote || data[len-1] != *myData->quote)
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
 					errmsg("Missing quote in row head or tail"),
-					errhint("Please verify that are columns in the data are properly quoted.")));
+					errhint("%s", quote_hint_msg)));
 		}
 
 		// exclude the first and the last quote
@@ -447,20 +449,20 @@ unpack_delimited(char *data, int len, pxfdelimited_state *myData)
 		if (index >= myData->nColumns)
 		{
 			ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-					errmsg("Expected %d columns in row but found %d", myData->nColumns, index),
-					errhint("Please verify the number of columns in the table definition.")));
+					errmsg("Expected %d columns but found %d in the row", myData->nColumns, index),
+					errhint("%s", col_hint_msg)));
 		}
 		if (start == NULL) {
 			ereport(ERROR, (errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
 					errmsg("Unexpected null value found while trying to read data"),
-					errhint("Please verify the number of columns in the table definition.")));
+					errhint("%s", col_hint_msg)));
 		}
 
 		if (myData->quote != NULL && *(start-1) != *myData->quote)
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
 					errmsg("Missing quote before some column"),
-					errhint("Please verify that are columns in the data are properly quoted.")));
+					errhint("%s", quote_hint_msg)));
 		}
 
 		location = find_first_ins_for_multiline(myData->delimiter, start, data + len, myData);
@@ -500,7 +502,7 @@ unpack_delimited(char *data, int len, pxfdelimited_state *myData)
 	{
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("Expected %d columns in row but found %d", myData->nColumns, index),
-				myData->saw_delim ? errhint("Please verify the number of columns in the table definition.")
+				myData->saw_delim ? errhint("%s", col_hint_msg)
 									: errhint("Is the `delimiter` value in the format options set correctly?")));
 	}
 }
@@ -512,14 +514,14 @@ unpack_delimited(char *data, int len, pxfdelimited_state *myData)
 Datum
 pxfdelimited_import(PG_FUNCTION_ARGS)
 {
-	HeapTuple		   tuple;
-	TupleDesc		   tupdesc;
-	MemoryContext	   m, oldcontext;
-	pxfdelimited_state		   *myData;
-	char			   *data_buf;
-	int				 ncolumns = 0;
-	int				 data_cur;
-	int				 data_len;
+	HeapTuple		 tuple;
+	TupleDesc		 tupdesc;
+	MemoryContext		 m, oldcontext;
+	pxfdelimited_state	 *myData;
+	char			 *data_buf;
+	int			 ncolumns = 0;
+	int			 data_cur;
+	int			 data_len;
 
 	/* Must be called via the external table format manager */
 	if (!CALLED_AS_FORMATTER(fcinfo))

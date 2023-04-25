@@ -102,8 +102,8 @@ build_http_headers(PxfInputData *input)
 		{
 			ereport(ERROR,
 					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-					 errmsg("%s is not a valid formatter for the given PXF profile (%s).", PxfDelimitedFormatter, input->gphduri->profile),
-					 errhint("The %s formatter only works with *:text or *:csv profiles. "
+					 errmsg("\"%s\"is not a valid formatter for the given PXF profile (%s).", PxfDelimitedFormatter, input->gphduri->profile),
+					 errhint("The \"%s\" formatter only works with *:text or *:csv profiles. "
 							 "Please double check the external table definition.", PxfDelimitedFormatter)));
 		}
 

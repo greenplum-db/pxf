@@ -26,7 +26,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         gpdb.dropDataBase("pxfautomation_extension", true, true);
         gpdb.createDataBase("pxfautomation_extension", false);
         gpdb.setDb("pxfautomation_extension");
-        gpdb.connectToDataBase();
+        gpdb.connectToDataBase("pxfautomation_extension");
 
         Table smallData = getSmallData("", 10);
 
@@ -40,7 +40,7 @@ public class PxfExtensionTest extends BaseFunctionality {
     @Override
     public void beforeMethod() throws Exception {
         gpdb.setDb("pxfautomation_extension");
-        gpdb.connectToDataBase();
+        gpdb.connectToDataBase("pxfautomation_extension");
         gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
     }
 
