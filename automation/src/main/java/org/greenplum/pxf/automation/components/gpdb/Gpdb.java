@@ -142,7 +142,20 @@ public class Gpdb extends DbSystemObject {
 	 */
 	public void copyData(String sourceName, Table target, String[] columns) throws Exception {
 
-		copyData(sourceName, target, columns,false);
+		copyData(sourceName, target, columns,false, null);
+	}
+
+	/**
+	 * Copies data from source table into target table
+	 * @param sourceName name of the source table
+	 * @param target target table
+	 * @param columns columns to select from the source table, if null then all columns will be selected
+	 * @param context extra context to append to the SQL query
+	 * @throws Exception if the operation fails
+	 */
+	public void copyData(String sourceName, Table target, String[] columns, String context) throws Exception {
+
+		copyData(sourceName, target, columns, false, context);
 	}
 
 	/**
@@ -164,7 +177,7 @@ public class Gpdb extends DbSystemObject {
 	 * @throws Exception if the operation fails
 	 */
 	public void copyData(String sourceName, Table target, boolean ignoreFail) throws Exception {
-		copyData(sourceName, target, null, ignoreFail);
+		copyData(sourceName, target, null, ignoreFail, null);
 	}
 
 	/**
@@ -173,11 +186,13 @@ public class Gpdb extends DbSystemObject {
 	 * @param target target table
 	 * @param columns columns to select from the source table, if null then all columns will be selected
 	 * @param ignoreFail whether to ignore any failures
+	 * @param context extra context to add to the SQL query
 	 * @throws Exception if the operation fails
 	 */
-	public void copyData(String sourceName, Table target, String[] columns, boolean ignoreFail) throws Exception {
+	public void copyData(String sourceName, Table target, String[] columns, boolean ignoreFail, String context) throws Exception {
 		String columnList = (columns == null || columns.length == 0) ? "*" : String.join(",", columns);
-		String query = String.format("INSERT INTO %s SELECT %s FROM %s", target.getName(), columnList, sourceName);
+		String query = String.format("%sINSERT INTO %s SELECT %s FROM %s",
+				StringUtils.isBlank(context) ? "" : context + "; " ,target.getName(), columnList, sourceName);
 		if (target instanceof ExternalTable) {
 			runQueryInsertIntoExternalTable(query);
 		} else {

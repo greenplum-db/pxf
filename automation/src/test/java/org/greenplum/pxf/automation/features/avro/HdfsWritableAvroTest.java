@@ -1,11 +1,10 @@
 package org.greenplum.pxf.automation.features.avro;
 
-import annotations.FailsWithFDW;
+import annotations.WorksWithFDW;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.greenplum.pxf.automation.features.BaseFeature;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
-import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
+import org.greenplum.pxf.automation.features.BaseWritableFeature;
+import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
@@ -24,10 +23,9 @@ import java.util.Objects;
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;
 
-@FailsWithFDW
-public class HdfsWritableAvroTest extends BaseFeature {
+@WorksWithFDW
+public class HdfsWritableAvroTest extends BaseWritableFeature {
 
-    private ReadableExternalTable readableExternalTable;
     private ArrayList<File> filesToDelete;
     private static final String[] AVRO_PRIMITIVE_WRITABLE_TABLE_COLS = new String[]{
             "type_int         int",
@@ -105,8 +103,7 @@ public class HdfsWritableAvroTest extends BaseFeature {
             "type_numeric_array   TEXT[]",
             "type_string_array    TEXT[]"
     };
-    private String gpdbTable;
-    private String hdfsPath;
+    private String tableNamePrefix;
     private String publicStage;
     private String resourcePath;
     private String fullTestPath;
@@ -115,7 +112,7 @@ public class HdfsWritableAvroTest extends BaseFeature {
     @Override
     public void beforeClass() throws Exception {
         // path for storing data on HDFS (for processing by PXF)
-        hdfsPath = hdfs.getWorkingDirectory() + "/writableAvro/";
+        hdfsWritePath = hdfs.getWorkingDirectory() + "/writableAvro/";
         String absolutePath = Objects.requireNonNull(getClass().getClassLoader().getResource("data")).getPath();
         resourcePath = absolutePath + "/avro/";
 
@@ -130,17 +127,16 @@ public class HdfsWritableAvroTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void generateSchemaPrimitive() throws Exception {
-        gpdbTable = "writable_avro_primitive_generate_schema";
-        fullTestPath = hdfsPath + "generate_schema_primitive_types";
-        prepareWritableExternalTable(gpdbTable, AVRO_PRIMITIVE_WRITABLE_TABLE_COLS, fullTestPath);
-        exTable.setUserParameters(new String[]{"COMPRESSION_CODEC=xz"});
+        tableNamePrefix = "writable_avro_primitive_generate_schema";
+        fullTestPath = hdfsWritePath + "generate_schema_primitive_types";
+        prepareWritableExternalTable(tableNamePrefix, AVRO_PRIMITIVE_WRITABLE_TABLE_COLS, fullTestPath);
+        writableExTable.setUserParameters(new String[]{"COMPRESSION_CODEC=xz"});
+        gpdb.createTableAndVerify(writableExTable);
 
-        prepareReadableExternalTable(gpdbTable, AVRO_PRIMITIVE_READABLE_TABLE_COLS, fullTestPath);
+        prepareReadableExternalTable(tableNamePrefix, AVRO_PRIMITIVE_READABLE_TABLE_COLS, fullTestPath);
+        gpdb.createTableAndVerify(readableExTable);
 
-        gpdb.createTableAndVerify(readableExternalTable);
-        gpdb.createTableAndVerify(exTable);
-
-        insertPrimitives(gpdbTable);
+        insertPrimitives(writableExTable);
 
         publicStage += "generateSchemaPrimitive/";
         // fetch all the segment-generated avro files and make them into json records
@@ -153,17 +149,16 @@ public class HdfsWritableAvroTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void generateSchemaPrimitive_withNoCompression() throws Exception {
-        gpdbTable = "writable_avro_primitive_no_compression";
-        fullTestPath = hdfsPath + "generate_schema_primitive_types_with_no_compression";
-        prepareWritableExternalTable(gpdbTable, AVRO_PRIMITIVE_WRITABLE_TABLE_COLS, fullTestPath);
-        exTable.setUserParameters(new String[]{"COMPRESSION_CODEC=uncompressed"});
+        tableNamePrefix = "writable_avro_primitive_no_compression";
+        fullTestPath = hdfsWritePath + "generate_schema_primitive_types_with_no_compression";
+        prepareWritableExternalTable(tableNamePrefix, AVRO_PRIMITIVE_WRITABLE_TABLE_COLS, fullTestPath);
+        writableExTable.setUserParameters(new String[]{"COMPRESSION_CODEC=uncompressed"});
+        gpdb.createTableAndVerify(writableExTable);
 
-        prepareReadableExternalTable(gpdbTable, AVRO_PRIMITIVE_READABLE_TABLE_COLS, fullTestPath);
+        prepareReadableExternalTable(tableNamePrefix, AVRO_PRIMITIVE_READABLE_TABLE_COLS, fullTestPath);
+        gpdb.createTableAndVerify(readableExTable);
 
-        gpdb.createTableAndVerify(readableExternalTable);
-        gpdb.createTableAndVerify(exTable);
-
-        insertPrimitives(gpdbTable);
+        insertPrimitives(writableExTable);
 
         publicStage += "generateSchemaPrimitive_withNoCompression/";
         // fetch all the segment-generated avro files and make them into json records
@@ -176,18 +171,17 @@ public class HdfsWritableAvroTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void generateSchemaComplex() throws Exception {
-        gpdbTable = "writable_avro_complex_generate_schema";
+        tableNamePrefix = "writable_avro_complex_generate_schema";
         createComplexTypes();
-        fullTestPath = hdfsPath + "generate_schema_complex_types";
-        prepareWritableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_WRITABLE, fullTestPath);
-        exTable.setUserParameters(new String[]{"COMPRESSION_CODEC=bzip2"});
+        fullTestPath = hdfsWritePath + "generate_schema_complex_types";
+        prepareWritableExternalTable(tableNamePrefix, AVRO_COMPLEX_TABLE_COLS_WRITABLE, fullTestPath);
+        writableExTable.setUserParameters(new String[]{"COMPRESSION_CODEC=bzip2"});
+        gpdb.createTableAndVerify(writableExTable);
 
-        prepareReadableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_W_ARRAYS_READABLE, fullTestPath);
+        prepareReadableExternalTable(tableNamePrefix, AVRO_COMPLEX_TABLE_COLS_W_ARRAYS_READABLE, fullTestPath);
+        gpdb.createTableAndVerify(readableExTable);
 
-        gpdb.createTableAndVerify(readableExternalTable);
-        gpdb.createTableAndVerify(exTable);
-
-        insertComplex(gpdbTable);
+        insertComplex(writableExTable);
 
         publicStage += "generateSchemaComplex/";
         // fetch all the segment-generated avro files and make them into json records
@@ -200,24 +194,24 @@ public class HdfsWritableAvroTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void userProvidedSchemaFileOnHcfsPrimitive() throws Exception {
-        gpdbTable = "writable_avro_primitive_user_provided_schema_on_hcfs";
-        fullTestPath = hdfsPath + "primitive_user_provided_schema_on_hcfs";
-        prepareWritableExternalTable(gpdbTable, AVRO_PRIMITIVE_WRITABLE_TABLE_COLS, fullTestPath);
-        exTable.setUserParameters(new String[]{"COMPRESSION_CODEC=snappy"});
+        tableNamePrefix = "writable_avro_primitive_user_provided_schema_on_hcfs";
+        fullTestPath = hdfsWritePath + "primitive_user_provided_schema_on_hcfs";
+        prepareWritableExternalTable(tableNamePrefix, AVRO_PRIMITIVE_WRITABLE_TABLE_COLS, fullTestPath);
+        writableExTable.setUserParameters(new String[]{"COMPRESSION_CODEC=snappy"});
 
-        prepareReadableExternalTable(gpdbTable, AVRO_PRIMITIVE_READABLE_TABLE_COLS, fullTestPath);
-        gpdb.createTableAndVerify(readableExternalTable);
-
-        String schemaPath = hdfsPath.replaceFirst("/$", "_schema/primitives_no_union.avsc");
+        String schemaPath = hdfsWritePath.replaceFirst("/$", "_schema/primitives_no_union.avsc");
         // copy a schema file to HCFS that has no UNION types, just the raw underlying types.
         // the Avro files should thus be different from those without user-provided schema
         hdfs.copyFromLocal(resourcePath + "primitives_no_union.avsc", schemaPath);
 
         schemaPath = "/" + schemaPath;
-        exTable.setExternalDataSchema(schemaPath);
-        gpdb.createTableAndVerify(exTable);
+        writableExTable.setExternalDataSchema(schemaPath);
+        gpdb.createTableAndVerify(writableExTable);
 
-        insertPrimitives(gpdbTable);
+        prepareReadableExternalTable(tableNamePrefix, AVRO_PRIMITIVE_READABLE_TABLE_COLS, fullTestPath);
+        gpdb.createTableAndVerify(readableExTable);
+
+        insertPrimitives(writableExTable);
 
         publicStage += "userProvidedSchemaFileOnHcfsPrimitive/";
         // fetch all the segment-generated avro files and make them into json records
@@ -231,16 +225,11 @@ public class HdfsWritableAvroTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void userProvidedSchemaFileOnClasspathComplexTypesAsText() throws Exception {
         createComplexTypes();
-        gpdbTable = "writable_avro_complex_user_schema_on_classpath";
-        fullTestPath = hdfsPath + "complex_user_schema_on_classpath";
-        prepareWritableExternalTable(gpdbTable,
+        tableNamePrefix = "writable_avro_complex_user_schema_on_classpath";
+        fullTestPath = hdfsWritePath + "complex_user_schema_on_classpath";
+        prepareWritableExternalTable(tableNamePrefix,
                 AVRO_COMPLEX_TABLE_COLS_WRITABLE,
                 fullTestPath);
-
-        prepareReadableExternalTable(gpdbTable,
-                AVRO_COMPLEX_TABLE_COLS_AS_TEXT_READABLE,
-                fullTestPath);
-        gpdb.createTableAndVerify(readableExternalTable);
 
         // copy a schema file to PXF's classpath on cluster that has no UNION types, just the raw underlying types.
         // the Avro files should thus be different from those without user-provided schema
@@ -253,10 +242,15 @@ public class HdfsWritableAvroTest extends BaseFeature {
         cluster.copyFileToNodes(new File(resourcePath + "complex_no_union.avro").getAbsolutePath(),
                 cluster.getPxfConfLocation(),
                 false, false);
-        exTable.setExternalDataSchema("complex_no_union.avro");
-        gpdb.createTableAndVerify(exTable);
+        writableExTable.setExternalDataSchema("complex_no_union.avro");
+        gpdb.createTableAndVerify(writableExTable);
 
-        insertComplex(gpdbTable);
+        prepareReadableExternalTable(tableNamePrefix,
+                AVRO_COMPLEX_TABLE_COLS_AS_TEXT_READABLE,
+                fullTestPath);
+        gpdb.createTableAndVerify(readableExTable);
+
+        insertComplex(writableExTable);
 
         publicStage += "userProvidedSchemaFileOnClasspathComplex/";
         // fetch all the segment-generated avro files and make them into json records
@@ -269,24 +263,24 @@ public class HdfsWritableAvroTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void userProvidedSchemaFileGPDBArraysAsAvroArraysWithNulls() throws Exception {
-        gpdbTable = "writable_avro_array_user_schema_w_nulls";
-        fullTestPath = hdfsPath + "array_user_schema_w_nulls";
-        prepareWritableExternalTable(gpdbTable,
+        tableNamePrefix = "writable_avro_array_user_schema_w_nulls";
+        fullTestPath = hdfsWritePath + "array_user_schema_w_nulls";
+        prepareWritableExternalTable(tableNamePrefix,
                 AVRO_ARRAY_TABLE_COLS_WRITABLE,
                 fullTestPath);
-
-        prepareReadableExternalTable(gpdbTable,
-                AVRO_ARRAY_TABLE_COLS_READABLE,
-                fullTestPath);
-        gpdb.createTableAndVerify(readableExternalTable);
 
         cluster.copyFileToNodes(new File(resourcePath + "array_with_nulls.avsc").getAbsolutePath(),
                 cluster.getPxfConfLocation(),
                 false, false);
-        exTable.setExternalDataSchema("array_with_nulls.avsc");
-        gpdb.createTableAndVerify(exTable);
+        writableExTable.setExternalDataSchema("array_with_nulls.avsc");
+        gpdb.createTableAndVerify(writableExTable);
 
-        insertComplexNullArrays(gpdbTable);
+        prepareReadableExternalTable(tableNamePrefix,
+                AVRO_ARRAY_TABLE_COLS_READABLE,
+                fullTestPath);
+        gpdb.createTableAndVerify(readableExTable);
+
+        insertComplexNullArrays(writableExTable);
 
         publicStage += "userProvidedSchemaArrayWithNullsComplex/";
         // fetch all the segment-generated avro files and make them into json records
@@ -299,17 +293,16 @@ public class HdfsWritableAvroTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void generateSchemaWithNullValuesComplex() throws Exception {
-        gpdbTable = "writable_avro_null_values";
+        tableNamePrefix = "writable_avro_null_values";
         createComplexTypes();
-        fullTestPath = hdfsPath + "null_values";
-        prepareWritableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_WRITABLE, fullTestPath);
+        fullTestPath = hdfsWritePath + "null_values";
+        prepareWritableExternalTable(tableNamePrefix, AVRO_COMPLEX_TABLE_COLS_WRITABLE, fullTestPath);
+        gpdb.createTableAndVerify(writableExTable);
 
-        prepareReadableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_W_ARRAYS_READABLE, fullTestPath);
+        prepareReadableExternalTable(tableNamePrefix, AVRO_COMPLEX_TABLE_COLS_W_ARRAYS_READABLE, fullTestPath);
+        gpdb.createTableAndVerify(readableExTable);
 
-        gpdb.createTableAndVerify(readableExternalTable);
-        gpdb.createTableAndVerify(exTable);
-
-        insertComplexWithNulls(gpdbTable);
+        insertComplexWithNulls(writableExTable);
 
         publicStage += "nullValues/";
         // fetch all the segment-generated avro files and make them into json records
@@ -322,10 +315,10 @@ public class HdfsWritableAvroTest extends BaseFeature {
 
     @Override
     protected void afterMethod() throws Exception {
-        super.afterMethod();
         if (ProtocolUtils.getPxfTestKeepData().equals("true")) {
             return;
         }
+        super.afterMethod();
         if (filesToDelete != null) {
             for (File file : filesToDelete) {
                 if (!file.delete()) {
@@ -349,62 +342,62 @@ public class HdfsWritableAvroTest extends BaseFeature {
         }
     }
 
-    private void insertPrimitives(String exTable) throws Exception {
-        gpdb.runQuery("INSERT INTO " + exTable + "_writable " + "SELECT " +
-                "i, " +                                             // type_int
-                "i, " +                                             // type_smallint
-                "i*100000000000, " +                                // type_long
-                "i+1.0001, " +                                      // type_float
-                "i*100000.0001, " +                                 // type_double
-                "'row_' || i::varchar(255), " +                     // type_string
-                "('bytes for ' || i::varchar(255))::bytea, " +      // type_bytes
-                "CASE WHEN (i%2) = 0 THEN TRUE ELSE FALSE END, " +  // type_boolean
-                "'character row ' || i::char(3)," +                 // type_character
-                "'character varying row ' || i::varchar(3)" +       // type_varchar
-                "from generate_series(1, 100) s(i);");
+    private void insertPrimitives(Table exTable) throws Exception {
+        gpdb.copyData("generate_series(1, 100) s(i)", exTable, new String[]{
+                "i",                                             // type_int
+                "i",                                             // type_smallint
+                "i*100000000000",                                // type_long
+                "i+1.0001",                                      // type_float
+                "i*100000.0001",                                 // type_double
+                "'row_' || i::varchar(255)",                     // type_string
+                "('bytes for ' || i::varchar(255))::bytea",      // type_bytes
+                "CASE WHEN (i%2) = 0 THEN TRUE ELSE FALSE END",  // type_boolean
+                "'character row ' || i::char(3)",                // type_character
+                "'character varying row ' || i::varchar(3)"      // type_varchar
+        });
     }
 
-    private void insertComplex(String gpdbTable) throws Exception {
-        gpdb.runQuery("SET TIMEZONE=-7;" + "INSERT INTO " + gpdbTable + "_writable " + " SELECT " +
-                "i, " +
-                "('(' || CASE WHEN (i%2) = 0 THEN FALSE ELSE TRUE END || ',' || (i*2)::VARCHAR(255) || ')')::struct, " +
-                "CASE WHEN (i%2) = 0 THEN 'sad' ELSE 'happy' END::mood," +
-                "('{' || i::VARCHAR(255) || ',' || (i*10)::VARCHAR(255) || ',' || (i*100)::VARCHAR(255) || '}')::BIGINT[], " +
-                "('{' || (i*1.0001)::VARCHAR(255) || ',' || ((i*10.00001)*10)::VARCHAR(255) || ',' || ((i*100.000001)*100)::VARCHAR(255) || '}')::NUMERIC(8,1)[], " +
-                "('{\"item ' || ((i-1)*10)::VARCHAR(255) || '\",\"item ' || (i*10)::VARCHAR(255) || '\",\"item ' || ((i+1)*10)::VARCHAR(255) || '\"}')::TEXT[], " +
-                "DATE '2001-09-28' + i, " +
-                "TIME '00:00:00' + (i::VARCHAR(255) || ' seconds')::interval, " +
-                "TIMESTAMP '2001-09-28 01:00' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval, " +
-                "TIMESTAMP WITH TIME ZONE '2001-09-28 01:00-07' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval " +
-                "FROM generate_series(1, 100) s(i);");
+    private void insertComplex(Table exTable) throws Exception {
+        gpdb.copyData("generate_series(1, 100) s(i)", exTable, new String[]{
+                "i",
+                "('(' || CASE WHEN (i%2) = 0 THEN FALSE ELSE TRUE END || ',' || (i*2)::VARCHAR(255) || ')')::struct",
+                "CASE WHEN (i%2) = 0 THEN 'sad' ELSE 'happy' END::mood",
+                "('{' || i::VARCHAR(255) || ',' || (i*10)::VARCHAR(255) || ',' || (i*100)::VARCHAR(255) || '}')::BIGINT[]",
+                "('{' || (i*1.0001)::VARCHAR(255) || ',' || ((i*10.00001)*10)::VARCHAR(255) || ',' || ((i*100.000001)*100)::VARCHAR(255) || '}')::NUMERIC(8,1)[]",
+                "('{\"item ' || ((i-1)*10)::VARCHAR(255) || '\",\"item ' || (i*10)::VARCHAR(255) || '\",\"item ' || ((i+1)*10)::VARCHAR(255) || '\"}')::TEXT[]",
+                "DATE '2001-09-28' + i",
+                "TIME '00:00:00' + (i::VARCHAR(255) || ' seconds')::interval",
+                "TIMESTAMP '2001-09-28 01:00' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval",
+                "TIMESTAMP WITH TIME ZONE '2001-09-28 01:00-07' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval"
+        }, "SET TIMEZONE=-7");
     }
 
-    private void insertComplexWithNulls(String gpdbTable) throws Exception {
-        gpdb.runQuery("SET TIMEZONE=-7;" + "INSERT INTO " + gpdbTable + "_writable " + " SELECT " +
-                "i, " +
-                "('(' || CASE WHEN (i%2) = 0 THEN FALSE ELSE TRUE END || ', ' || (i*2)::VARCHAR(255) || ')')::struct, " +
-                "CASE WHEN (i%3) = 0 THEN 'sad' WHEN (i%2) = 0 THEN 'happy' ELSE NULL END::mood, " +
-                "('{' || i::VARCHAR(255) || ',' || (i*10)::VARCHAR(255) || ',' || (i*100)::VARCHAR(255) || '}')::BIGINT[], " +
-                "('{' || (i*1.0001)::VARCHAR(255) || ',' || ((i*10.00001)*10)::VARCHAR(255) || ',' || ((i*100.000001)*100)::VARCHAR(255) || '}')::NUMERIC(8,1)[], " +
-                "('{\"item ' || ((i-1)*10)::VARCHAR(255) || '\",\"item ' || (i*10)::VARCHAR(255) || '\",\"item ' || ((i+1)*10)::VARCHAR(255) || '\"}')::TEXT[], " +
-                "DATE '2001-09-28' + i, " +
-                "TIME '00:00:00' + (i::VARCHAR(255) || ' seconds')::interval, " +
-                "TIMESTAMP '2001-09-28 01:00' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval, " +
-                "TIMESTAMP WITH TIME ZONE '2001-09-28 01:00-07' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval " +
-                "FROM generate_series(1, 100) s(i);");
+    private void insertComplexWithNulls(Table exTable) throws Exception {
+        gpdb.copyData("generate_series(1, 100) s(i)", exTable, new String[]{
+                "i",
+                "('(' || CASE WHEN (i%2) = 0 THEN FALSE ELSE TRUE END || ', ' || (i*2)::VARCHAR(255) || ')')::struct",
+                "CASE WHEN (i%3) = 0 THEN 'sad' WHEN (i%2) = 0 THEN 'happy' ELSE NULL END::mood",
+                "('{' || i::VARCHAR(255) || ',' || (i*10)::VARCHAR(255) || ',' || (i*100)::VARCHAR(255) || '}')::BIGINT[]",
+                "('{' || (i*1.0001)::VARCHAR(255) || ',' || ((i*10.00001)*10)::VARCHAR(255) || ',' || ((i*100.000001)*100)::VARCHAR(255) || '}')::NUMERIC(8,1)[]",
+                "('{\"item ' || ((i-1)*10)::VARCHAR(255) || '\",\"item ' || (i*10)::VARCHAR(255) || '\",\"item ' || ((i+1)*10)::VARCHAR(255) || '\"}')::TEXT[]",
+                "DATE '2001-09-28' + i",
+                "TIME '00:00:00' + (i::VARCHAR(255) || ' seconds')::interval",
+                "TIMESTAMP '2001-09-28 01:00' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval",
+                "TIMESTAMP WITH TIME ZONE '2001-09-28 01:00-07' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval"
+        }, "SET TIMEZONE=-7");
     }
 
     private void
-    insertComplexNullArrays(String gpdbTable) throws Exception {
-        gpdb.runQuery("INSERT INTO " + gpdbTable + "_writable " + " VALUES " +
-                "(1, NULL,            '{1.0001,10.00001,100.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}')," +
-                "(2, '{2,20,200}',    NULL,                            '{\"item 0\",\"item 10\",\"item 20\"}')," +
-                "(3, '{3,30,300}',    '{3.0001,30.00001,300.000001}',  NULL                                  )," +
-                "(4, '{NULL,40,400}', '{4.0001,40.00001,400.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}')," +
-                "(5, '{5,50,500}',    '{5.0001,NULL,500.000001}',      '{\"item 0\",\"item 10\",\"item 20\"}')," +
-                "(6, '{6,60,600}',    '{6.0001,60.00001,600.000001}',  '{\"item 0\",\"item 10\",NULL}'       )," +
-                "(7, '{7,70,700}',    '{7.0001,70.00001,700.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}');"
-        );
+    insertComplexNullArrays(Table exTable) throws Exception {
+        String data = String.join(",", new String[] {
+                "(1, NULL,            '{1.0001,10.00001,100.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}')",
+                "(2, '{2,20,200}',    NULL,                            '{\"item 0\",\"item 10\",\"item 20\"}')",
+                "(3, '{3,30,300}',    '{3.0001,30.00001,300.000001}',  NULL                                  )",
+                "(4, '{NULL,40,400}', '{4.0001,40.00001,400.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}')",
+                "(5, '{5,50,500}',    '{5.0001,NULL,500.000001}',      '{\"item 0\",\"item 10\",\"item 20\"}')",
+                "(6, '{6,60,600}',    '{6.0001,60.00001,600.000001}',  '{\"item 0\",\"item 10\",NULL}'       )",
+                "(7, '{7,70,700}',    '{7.0001,70.00001,700.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}')"});
+        gpdb.insertData(exTable, data);
     }
 
     private void fetchAndVerifyAvroHcfsFiles(String compareFile, String codec) throws Exception {
@@ -481,12 +474,12 @@ public class HdfsWritableAvroTest extends BaseFeature {
     }
 
     private void prepareWritableExternalTable(String name, String[] fields, String path) {
-        exTable = TableFactory.getPxfHcfsWritableTable(name + "_writable",
+        writableExTable = TableFactory.getPxfHcfsWritableTable(name + "_writable",
                 fields, path, hdfs.getBasePath(), "avro");
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path) {
-        readableExternalTable = TableFactory.getPxfHcfsReadableTable(name + "_readable",
+        readableExTable = TableFactory.getPxfHcfsReadableTable(name + "_readable",
                 fields, path, hdfs.getBasePath(),"avro");
     }
 }

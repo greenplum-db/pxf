@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -98,6 +99,49 @@ public class AvroResolverTest {
     }
 
     @Test
+    public void testSetFields_BytesWithByteArray() {
+        schema = getAvroSchemaForBytes();
+        context.setMetadata(schema);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        List<OneField> fields = new ArrayList<>();
+        fields.add(new OneField(DataType.BYTEA.getOID(), new byte[]{(byte) 49}));
+        OneRow row = resolver.setFields(fields);
+
+        assertNotNull(row);
+        Object data = row.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof GenericRecord);
+        GenericRecord genericRecord = (GenericRecord) data;
+
+        // assert column values
+        assertEquals(ByteBuffer.wrap(new byte[]{(byte) 49}), genericRecord.get(0));
+    }
+
+    @Test
+    public void testSetFields_BytesWithByteBuffer() {
+        schema = getAvroSchemaForBytes();
+        context.setMetadata(schema);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        List<OneField> fields = new ArrayList<>();
+        ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[]{(byte) 49});
+        fields.add(new OneField(DataType.BYTEA.getOID(), byteBuffer));
+        OneRow row = resolver.setFields(fields);
+
+        assertNotNull(row);
+        Object data = row.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof GenericRecord);
+        GenericRecord genericRecord = (GenericRecord) data;
+
+        // assert column values
+        assertSame(byteBuffer, genericRecord.get(0));
+    }
+
+    @Test
     public void testSetFields_PrimitiveNulls() throws Exception {
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
@@ -159,6 +203,56 @@ public class AvroResolverTest {
         assertEquals("DIAMONDS", genericRecord.get(3));
         assertEquals(ByteBuffer.wrap(new byte[]{'F', 'O', 'O', 'B', 'A', 'R'}), genericRecord.get(4));
         assertEquals("{key1:123456789,key2:234567890}", genericRecord.get(5));
+    }
+
+    /**
+     * Tests field processing when PXF RecordReader using GPDBWritable reads an array element and reports it
+     * as OneFiled with the TEXT OID.
+     */
+    @Test
+    public void testSetFields_IntArrayWithTextOID() {
+        schema = getAvroSchemaForIntegerArray();
+        context.setMetadata(schema);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        List<OneField> fields = new ArrayList<>();
+        fields.add(new OneField(DataType.TEXT.getOID(), "{1,2,3}"));
+        OneRow row = resolver.setFields(fields);
+
+        assertNotNull(row);
+        Object data = row.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof GenericRecord);
+        GenericRecord genericRecord = (GenericRecord) data;
+
+        // assert column values
+        assertEquals(Arrays.asList(1,2,3), genericRecord.get(0));
+    }
+
+    /**
+     * Tests field processing when PXF RecordReader using TextWritable (in FDW case) reads an array element and reports it
+     * as OneFiled with the INTARRAY OID.
+     */
+    @Test
+    public void testSetFields_IntArrayWithArrayOID() {
+        schema = getAvroSchemaForIntegerArray();
+        context.setMetadata(schema);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        List<OneField> fields = new ArrayList<>();
+        fields.add(new OneField(DataType.INT4ARRAY.getOID(), "{1,2,3}"));
+        OneRow row = resolver.setFields(fields);
+
+        assertNotNull(row);
+        Object data = row.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof GenericRecord);
+        GenericRecord genericRecord = (GenericRecord) data;
+
+        // assert column values
+        assertEquals(Arrays.asList(1,2,3), genericRecord.get(0));
     }
 
     @Test
@@ -579,6 +673,27 @@ public class AvroResolverTest {
         }
         schema.setFields(fields);
 
+        return schema;
+    }
+
+    private Schema getAvroSchemaForBytes() {
+        Schema schema = Schema.createRecord("tableName", "", "public.avro", false);
+        List<Schema.Field> fields = new ArrayList<>();
+        fields.add(new Schema.Field(Schema.Type.BYTES.getName(), Schema.create(Schema.Type.BYTES), "", null));
+        schema.setFields(fields);
+        return schema;
+    }
+
+    private Schema getAvroSchemaForIntegerArray() {
+        Schema schema = Schema.createRecord("tableName", "", "public.avro", false);
+        List<Schema.Field> fields = new ArrayList<>();
+        fields.add(new Schema.Field(
+                Schema.Type.ARRAY.getName(),
+                Schema.createArray(Schema.create(Schema.Type.INT)),
+                "",
+                null)
+        );
+        schema.setFields(fields);
         return schema;
     }
 

@@ -162,11 +162,12 @@ public class AvroResolver extends BasePlugin implements Resolver {
         for (OneField field : record) {
             if (field.type == DataType.BYTEA.getOID()) {
                 // Avro does not seem to understand regular byte arrays
-                field.val = field.val != null ? ByteBuffer.wrap((byte[]) field.val) : null;
+                field.val = (field.val == null) ? null :
+                        (field.val instanceof ByteBuffer) ? field.val : ByteBuffer.wrap((byte[]) field.val);
             } else if (field.type == DataType.SMALLINT.getOID()) {
                 // Avro doesn't have a short, just an int type
                 field.val = field.val != null ? (int) (short) field.val : null;
-            } else if (field.type == DataType.TEXT.getOID()) {
+            } else if (field.type == DataType.TEXT.getOID() || DataType.get(field.type).isArrayType()) {
                 // when field.type is TEXT, it might be an actual TEXT field or an array type
                 field.val = avroUtilities.decodeString(schema.getFields().get(cnt).schema(), (String) field.val, true, hasUserProvidedSchema);
             }
