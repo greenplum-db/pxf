@@ -44,7 +44,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         gpdb.runQuery("DROP EXTENSION IF EXISTS pxf CASCADE", true, false);
     }
 
-    @Test(groups = {"gpdb", "upgradePxfCExtension"})
+    @Test(groups = {"gpdb", "pxfCExtensionVersion2_1"})
     public void testPxfCreateExtension() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf");
         // create a regular external table
@@ -64,7 +64,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         runTincTest("pxf.features.extension_tests.create_extension_rpm.runTest");
     }
 
-    @Test(groups = {"gpdb", "upgradePxfCExtension"})
+    @Test(groups = {"gpdb", "pxfCExtensionVersion2_1"})
     public void testPxfUpgrade() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf VERSION '2.0'");
         createReadablePxfTable("default", location, false);
@@ -76,7 +76,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         runTincTest("pxf.features.extension_tests.upgrade.step_2_after_alter_extension.runTest");
     }
 
-    @Test(groups = {"gpdb", "upgradePxfCExtension"})
+    @Test(groups = {"gpdb", "pxfCExtensionVersion2_1"})
     public void testPxfExplicitUpgrade() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf VERSION '2.0'");
         createReadablePxfTable("default", location, false);
@@ -88,7 +88,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         runTincTest("pxf.features.extension_tests.explicit_upgrade.step_2_after_alter_extension.runTest");
     }
 
-    @Test(groups = {"gpdb", "upgradePxfCExtension"})
+    @Test(groups = {"gpdb", "pxfCExtensionVersion2_1"})
     public void testPxfDowngrade() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf");
 
@@ -101,7 +101,7 @@ public class PxfExtensionTest extends BaseFunctionality {
         runTincTest("pxf.features.extension_tests.downgrade.step_2_after_alter_extension_downgrade.runTest");
     }
 
-    @Test(groups = {"gpdb", "upgradePxfCExtension"})
+    @Test(groups = {"gpdb", "pxfCExtensionVersion2_1"})
     public void testPxfDowngradeThenUpgradeAgain() throws Exception {
         gpdb.runQuery("CREATE EXTENSION pxf");
 

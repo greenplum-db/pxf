@@ -15,8 +15,8 @@ inputs:
 
 params:
   GP_VER:
-  SECOND_GROUP:
-  GROUP: smoke
+  GROUP: pxfCExtensionVersion2
+  SECOND_GROUP: pxfCExtensionVersion2_1
   HADOOP_CLIENT: HDP
   IMPERSONATION: true
   ADJUST_AUTOMATION: false

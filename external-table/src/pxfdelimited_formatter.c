@@ -509,6 +509,8 @@ unpack_delimited(char *data, int len, pxfdelimited_state *myData)
 
 /**
  * Main formatter function.
+ * This function hooks into the GPDB framework
+ * in order to format the incoming data.
  * @return
  */
 Datum
