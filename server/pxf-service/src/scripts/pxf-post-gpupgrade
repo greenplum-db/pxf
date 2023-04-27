@@ -116,7 +116,7 @@ psql --no-align --tuples-only --command "SELECT datname FROM pg_catalog.pg_datab
 	END_OF_SQL
 
   # PXF extension 2.1 introduces a new function, only update the function if it exists
-  # bash and POSIX sh don't support decimals in numbers, however wwe are doing a string comparison
+  # bash and POSIX sh don't support decimals in numbers, however we are doing a string comparison
   # on the version here so let us ignore the shellcheck error
   # shellcheck disable=SC2072
   if [[ $(psql --dbname="${dbname}" --no-align --tuples-only --command "SELECT extversion FROM pg_catalog.pg_extension WHERE extname = 'pxf'") > 2.0 ]]; then

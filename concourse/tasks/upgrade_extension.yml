@@ -15,8 +15,8 @@ inputs:
 
 params:
   GP_VER:
-  GROUP: pxfCExtensionVersion2
-  SECOND_GROUP: pxfCExtensionVersion2_1
+  GROUP: pxfExtensionVersion2
+  SECOND_GROUP: pxfCxtensionVersion2_1
   HADOOP_CLIENT: HDP
   IMPERSONATION: true
   ADJUST_AUTOMATION: false

@@ -627,6 +627,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
     }
 
     private void runScenario(String tableName, CsvSpec tableSpec, Table dataTable, CsvSpec fileSpec) throws Exception {
+        exTable.setName(tableName);
+        // set the formatter options using the table spec
         if (tableSpec.delimiter != null) {
             exTable.addFormatterOption("delimiter=E'" + tableSpec.delimiter + "'");
         }
@@ -639,12 +641,11 @@ public class MultibyteDelimiterTest extends BaseFeature {
         if (tableSpec.eol != null) {
             exTable.addFormatterOption("newline='" + tableSpec.eol + "'");
         }
-        exTable.setName(tableName);
 
         // create external table
         gpdb.createTableAndVerify(exTable);
 
-        // create CSV file in hdfs
+        // create CSV file in hdfs using the provided data table and file spec
         writeCsvFileToHdfs(dataTable, fileSpec);
     }
 }

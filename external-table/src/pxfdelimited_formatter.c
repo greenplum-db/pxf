@@ -558,7 +558,7 @@ pxfdelimited_import(PG_FUNCTION_ARGS)
 	/*
 	 * NOTE: Unexpected EOF Error Handling
 	 *
-	 * The first time we noticed an unexpected EOF, we'll set the datacursor
+	 * The first time we noticed an unexpected EOF, we'll set the data cursor
 	 * forward and then raise the error. But then, the framework will still
 	 * call the formatter the function again. Now, the formatter function will
 	 * be provided with a zero length data buffer. In this case, we should not
