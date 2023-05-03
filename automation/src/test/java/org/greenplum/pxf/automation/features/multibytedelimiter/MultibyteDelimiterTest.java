@@ -200,10 +200,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
     public void readTwoByteDelimiter() throws Exception {
         // used for creating the CSV file
         CsvSpec fileSpec = new CsvSpec("¤");
-        // used for setting up formatterOptions
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
-        runScenario("pxf_multibyte_twobyte_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_twobyte_data", dataTable, fileSpec);
 
         // create a new table with the SKIP_HEADER_COUNT parameter
         exTable.setName("pxf_multibyte_twobyte_data_with_skip");
@@ -218,9 +216,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readThreeByteDelimiter() throws Exception {
         CsvSpec fileSpec = new CsvSpec("停");
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
-        runScenario("pxf_multibyte_threebyte_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_threebyte_data", dataTable, fileSpec);
 
         // create a new table with the SKIP_HEADER_COUNT parameter
         exTable.setName("pxf_multibyte_threebyte_data_with_skip");
@@ -235,9 +232,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readFourByteDelimiter() throws Exception {
         CsvSpec fileSpec = new CsvSpec("\uD83D\uDE42");
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
-        runScenario("pxf_multibyte_fourbyte_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_fourbyte_data", dataTable, fileSpec);
 
         // create a new table with the SKIP_HEADER_COUNT parameter
         exTable.setName("pxf_multibyte_fourbyte_data_with_skip");
@@ -252,9 +248,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readMultiCharStringDelimiter() throws Exception {
         CsvSpec fileSpec = new CsvSpec("DELIM");
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
-        runScenario("pxf_multibyte_multichar_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_multichar_data", dataTable, fileSpec);
 
         // create a new table with the SKIP_HEADER_COUNT parameter
         exTable.setName("pxf_multibyte_multichar_data_with_skip");
@@ -269,9 +264,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithCRLF() throws Exception {
         CsvSpec fileSpec = new CsvSpec("¤", CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, "\r\n");
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
-        runScenario("pxf_multibyte_twobyte_withcrlf_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_twobyte_withcrlf_data", dataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_crlf.runTest");
@@ -280,12 +274,11 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithCR() throws Exception {
         CsvSpec fileSpec = new CsvSpec("¤", CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, "\r");
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
         // we need to add the eol value to the URL to be able to parse the data on PXF Java side
         exTable.setUserParameters(new String[] {"NEWLINE=CR"});
 
-        runScenario("pxf_multibyte_twobyte_withcr_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_twobyte_withcr_data", dataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_cr.runTest");
@@ -294,11 +287,10 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWrongFormatter() throws Exception {
         CsvSpec fileSpec = new CsvSpec("¤");
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
         exTable.setFormatter("pxfwritable_import");
 
-        runScenario("pxf_multibyte_twobyte_wrongformatter_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_twobyte_wrongformatter_data", dataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_wrong_formatter.runTest");
@@ -333,9 +325,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithQuote() throws Exception {
         CsvSpec fileSpec = new CsvSpec("¤", CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER);
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
-        runScenario("pxf_multibyte_twobyte_withquote_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_twobyte_withquote_data", dataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote.runTest");
@@ -384,11 +375,10 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteDelimiterWithQuoteAndEscape() throws Exception {
         CsvSpec fileSpec = new CsvSpec("¤", '|', '\\');
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
         dataTable.addRow(ROW_WITH_ESCAPE);
 
-        runScenario("pxf_multibyte_twobyte_withquote_withescape_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_twobyte_withquote_withescape_data", dataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote_and_escape.runTest");
@@ -412,9 +402,8 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readOneByteDelimiter() throws Exception {
         CsvSpec fileSpec = new CsvSpec("|");
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
-        runScenario("pxf_multibyte_onebyte_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_onebyte_data", dataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.one_byte.runTest");
@@ -424,7 +413,6 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readOneCol() throws Exception {
         CsvSpec fileSpec = new CsvSpec("¤");
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
         exTable.setFields(new String[]{"s1 text"});
 
@@ -433,7 +421,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         dataTable.addRow(new String[]{"règles d'automation"});
         dataTable.addRow(new String[]{"minden amire szüksége van a szeretet"});
 
-        runScenario("pxf_multibyte_onecol_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_onecol_data", dataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.one_col.runTest");
@@ -442,7 +430,6 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readOneColQuote() throws Exception {
         CsvSpec fileSpec = new CsvSpec("¤", '|', CSVWriter.NO_ESCAPE_CHARACTER);
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
         exTable.setFields(new String[]{"s1 text"});
 
@@ -451,7 +438,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         dataTable.addRow(new String[]{"règles d'automation"});
         dataTable.addRow(new String[]{"minden amire szüksége van a szeretet"});
 
-        runScenario("pxf_multibyte_onecol_quote_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_onecol_quote_data", dataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.one_col_quote.runTest");
@@ -486,11 +473,10 @@ public class MultibyteDelimiterTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void readTwoByteWithQuoteEscapeNewLine() throws Exception {
         CsvSpec fileSpec = new CsvSpec("¤", '|', '\\', "EOL");
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
         dataTable.addRow(ROW_WITH_ESCAPE);
 
-        runScenario("pxf_multibyte_quote_escape_newline_data", tableSpec, dataTable, fileSpec);
+        runScenario("pxf_multibyte_quote_escape_newline_data", dataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.quote_escape_newline.runTest");
@@ -515,12 +501,11 @@ public class MultibyteDelimiterTest extends BaseFeature {
         CsvSpec fileSpec = new CsvSpec("¤");
         // set the encoding value since the default value in CsvSpec is UTF-8
         fileSpec.setEncoding(StandardCharsets.ISO_8859_1);
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
         exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setEncoding("LATIN1");
 
-        runScenario("pxf_multibyte_encoding", tableSpec, encodedDataTable, fileSpec);
+        runScenario("pxf_multibyte_encoding", encodedDataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding.runTest");
@@ -550,13 +535,12 @@ public class MultibyteDelimiterTest extends BaseFeature {
         CsvSpec fileSpec = new CsvSpec("¤", '|', '|');
         // set the encoding value since the default value in CsvSpec is UTF-8
         fileSpec.setEncoding(StandardCharsets.ISO_8859_1);
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
         exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setEncoding("LATIN1");
         exTable.setProfile(protocol.value() + ":text");
 
-        runScenario("pxf_multibyte_encoding_quote", tableSpec, encodedDataTable, fileSpec);
+        runScenario("pxf_multibyte_encoding_quote", encodedDataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote.runTest");
@@ -567,13 +551,12 @@ public class MultibyteDelimiterTest extends BaseFeature {
         CsvSpec fileSpec = new CsvSpec("¤", '|', '\"');
         // set the encoding value since the default value in CsvSpec is UTF-8
         fileSpec.setEncoding(StandardCharsets.ISO_8859_1);
-        CsvSpec tableSpec = fileSpec.cloneForFormatting();
 
         exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setEncoding("LATIN1");
         exTable.setProfile(protocol.value() + ":text");
 
-        runScenario("pxf_multibyte_encoding_quote_escape", tableSpec, encodedDataTable, fileSpec);
+        runScenario("pxf_multibyte_encoding_quote_escape", encodedDataTable, fileSpec);
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.encoding_quote_escape.runTest");
@@ -597,6 +580,22 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
         // verify results
         runTincTest("pxf.features.multibyte_delimiter.wrong_profile.runTest");
+    }
+
+    @Test(groups = {"gpdb", "hcfs", "security"})
+    public void noProfileWithFormatter() throws Exception {
+        exTable.setName("pxf_multibyte_no_profile");
+        exTable.setFormatterOptions(new String[] {"delimiter='¤'", "quote='|'", "escape='\"'"});
+        exTable.setProfile(null);
+        exTable.setFragmenter("default-fragmenter");
+        exTable.setAccessor("default-accessor");
+        exTable.setResolver("default-resolver");
+        exTable.setFields(new String[]{"name text", "age int"});
+
+        gpdb.createTableAndVerify(exTable);
+
+        // verify results
+        runTincTest("pxf.features.multibyte_delimiter.no_profile.runTest");
     }
 
     private void createCsvExternalTable(String name, String[] cols, String path, String[] formatterOptions) throws Exception {
@@ -647,5 +646,10 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
         // create CSV file in hdfs using the provided data table and file spec
         writeCsvFileToHdfs(dataTable, fileSpec);
+    }
+
+    private void runScenario(String tableName, Table dataTable, CsvSpec fileSpec) throws Exception {
+        runScenario(tableName, fileSpec.cloneForFormatting(), dataTable, fileSpec);
+
     }
 }

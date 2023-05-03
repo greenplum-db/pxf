@@ -95,16 +95,15 @@ build_http_headers(PxfInputData *input)
 		// in the case of PxfDelimitedFormatter formatter, the only viable profiles are *:text and *:csv.
 		// error out early here if the profile is not accepted
 		if (getFormatterString(exttbl) && // if the formatter string is non empty
-		    isFormatterPxfDelimited(exttbl) &&
-			(input->gphduri->profile && // if the profile is non empty
-				!strstr(input->gphduri->profile, ":text") &&
-				!strstr(input->gphduri->profile, ":csv")))
+			isFormatterPxfDelimited(exttbl) && // and the formatter is PxfDelimitedFormatter
+			(!input->gphduri->profile || // if the profile is empty OR
+				(!strstr(input->gphduri->profile, ":text") && // the profile is neither text
+					!strstr(input->gphduri->profile, ":csv")))) // nor csv
 		{
 			ereport(ERROR,
 					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-					 errmsg("\"%s\"is not a valid formatter for the given PXF profile (%s).", PxfDelimitedFormatter, input->gphduri->profile),
-					 errhint("The \"%s\" formatter only works with *:text or *:csv profiles. "
-							 "Please double check the external table definition.", PxfDelimitedFormatter)));
+					 errmsg("The \"%s\" formatter only works with *:text or *:csv profiles.", PxfDelimitedFormatter),
+					 errhint("Please double check the profile option in the external table definition.")));
 		}
 
 		/* pxf treats everything but pxfwritable_[import|export] as TEXT (even CSV) */

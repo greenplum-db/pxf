@@ -27,7 +27,7 @@ static int
 count_preceding_occurrences_of_char(char *p, char *left_border, char val)
 {
 	int count = 0;
-	while(p >= left_border && *p == val)
+	while (p >= left_border && *p == val)
 	{
 		++count;
 		--p;
@@ -63,7 +63,7 @@ find_first_ins_for_multiline(char *target, char *left_border, char *right_border
 	}
 
 	char *start_pos = left_border;
-	while(1)
+	while (1)
 	{
 		// find the first instance of the target value
 		char *p = strstr(start_pos, t);
@@ -76,13 +76,13 @@ find_first_ins_for_multiline(char *target, char *left_border, char *right_border
 		int escape_count = 0;
 
 		// make sure that the value found is not an escaped representation of the given target
-		if(myData->escape != NULL)
+		if (myData->escape != NULL)
 		{
 			escape_count = count_preceding_occurrences_of_char(p-1, left_border, *myData->escape);
 		}
 
 		// if the count is even, then the value found is not escaped
-		if(is_even(escape_count))
+		if (is_even(escape_count))
 		{
 			ret = p;
 			break;
@@ -343,36 +343,36 @@ find_whole_line(char *data, char *data_border, pxfdelimited_state *myData) {
 	int eol_len = strlen(myData->eol);
 
 	char *p = data;
-	for(int i = 0; i < column_cnt; ++i)
+	for (int i = 0; i < column_cnt; ++i)
 	{
 		// first, we check the left quote
 		// if there is no left quote, then there is something wrong with the data
-		if(*p != *myData->quote)
+		if (*p != *myData->quote)
 		{
 			return NULL;
 		}
 
 		++p;
-		while(1)
+		while (1)
 		{
 			// read until we see a quote value
-			while(p < data_border && *p != *myData->quote)
+			while (p < data_border && *p != *myData->quote)
 			{
 				++p;
 			}
 
 			// if we didn't find the right quote in the buf
-			if(p >= data_border)
+			if (p >= data_border)
 			{
 				return NULL;
 			}
 
 			// make sure that the quote we found is not escaped
-			if(myData->escape != NULL)
+			if (myData->escape != NULL)
 			{
 				int cnt = count_preceding_occurrences_of_char(p-1, data, *myData->escape);
 				// if the count is odd, then the quote found is escaped so continue until we find the next one
-				if(!is_even(cnt))
+				if (!is_even(cnt))
 				{
 					++p;
 					continue;
@@ -383,14 +383,14 @@ find_whole_line(char *data, char *data_border, pxfdelimited_state *myData) {
 		}
 
 		// we needn't check delimiter after the last column
-		if(i == column_cnt - 1)
+		if (i == column_cnt - 1)
 		{
 			break;
 		}
 
 		// here should be a delimiter
 		++p;
-		if(p > data_border - delimiter_len ||
+		if (p > data_border - delimiter_len ||
 		   (p <= data_border - delimiter_len && memcmp(p, myData->delimiter, delimiter_len) != 0) )
 		{
 			return NULL;
@@ -400,7 +400,7 @@ find_whole_line(char *data, char *data_border, pxfdelimited_state *myData) {
 
 	// we need an eol except that here is the end of buf where no need an eol
 	++p;
-	if(p > data_border - eol_len ||
+	if (p > data_border - eol_len ||
 	   (p <= data_border - eol_len && memcmp(p, myData->eol, eol_len) != 0) )
 	{
 		return NULL;
@@ -428,9 +428,9 @@ unpack_delimited(char *data, int len, pxfdelimited_state *myData)
 	char* quote_hint_msg = "Please verify that columns in the data are properly quoted.";
 	char* col_hint_msg = "Please verify the number of columns in the table definition.";
 
-	if(myData->quote != NULL)
+	if (myData->quote != NULL)
 	{
-		if(*data != *myData->quote || data[len-1] != *myData->quote)
+		if (*data != *myData->quote || data[len-1] != *myData->quote)
 		{
 			ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
 					errmsg("Missing quote in row head or tail"),
@@ -442,7 +442,7 @@ unpack_delimited(char *data, int len, pxfdelimited_state *myData)
 		--len;
 	}
 
-	while ( (end - (char*)data) < len)
+	while ((end - (char*)data) < len)
 	{
 		resetStringInfo(buf);
 		end = (char*)data + len;
@@ -479,7 +479,7 @@ unpack_delimited(char *data, int len, pxfdelimited_state *myData)
 		}
 		else
 		{
-			if(myData->escape == NULL)
+			if (myData->escape == NULL)
 			{
 				appendBinaryStringInfo(buf, start, column_len);
 			}
@@ -635,7 +635,7 @@ pxfdelimited_import(PG_FUNCTION_ARGS)
 	 *  	in the former situation, `"\n` is in the beginning
 	 *  	in the latter situation, there must be a delimiter like `;` before `"\n`
 	 */
-	if(myData->quote != NULL &&
+	if (myData->quote != NULL &&
 	   (line_border == data_buf + data_cur + 1 || memcmp(line_border - 1  - delimiter_len, myData->delimiter, delimiter_len) == 0) )
 	{
 		/*
@@ -644,7 +644,7 @@ pxfdelimited_import(PG_FUNCTION_ARGS)
 		char *real_line_border = find_whole_line(data_buf + data_cur, data_buf + data_len, myData);
 
 		// if we can't find a whole line by counting quote, we treat this part of data as bad data
-		if(real_line_border == NULL)
+		if (real_line_border == NULL)
 		{
 			// the eol we saw was not a true eol
 			myData->saw_eol = false;
