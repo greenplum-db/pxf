@@ -67,6 +67,10 @@ s/FOREIGN TABLE/EXTERNAL TABLE/
 m/, record \d+ of/
 s/, record/, line/
 
+# rename resource (FDW) to file (exttable)
+m/, resource/
+s/, resource/, file/
+
 # syntax mismatch error is different between exttable with GP6 and fdw with GP7
 m/invalid input syntax for type/
 s/invalid input syntax for type/invalid input syntax for/

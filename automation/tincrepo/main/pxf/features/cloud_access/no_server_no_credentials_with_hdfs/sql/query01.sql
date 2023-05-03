@@ -18,6 +18,12 @@
 -- m/CONTEXT:.*line.*/
 -- s/line \d* of //g
 --
+-- m/default_s3/
+-- s/default_s3/default/
+--
+-- m/, file.*pxf_automation_data/
+-- s/, file.*pxf_automation_data.*/pxf_automation_data/
+--
 -- end_matchsubs
 
 SELECT *  FROM cloudaccess_no_server_no_credentials_with_hdfs;

@@ -439,7 +439,7 @@ pxfBeginForeignScan(ForeignScanState *node, int eflags)
     /* Set up callback to identify error foreign relation. */
     ErrorContextCallback errcallback;
     errcallback.callback = PxfBeginScanErrorCallback;
-    errcallback.arg = (void *) relation;
+    errcallback.arg = (void *) pxfsstate;
     errcallback.previous = error_context_stack;
     error_context_stack = &errcallback;
 
@@ -953,15 +953,23 @@ BeginCopyTo(Relation forrel, List *options)
 /*
  * PXF specific error context callback for "begin foreign scan" operation.
  * It replaces the "COPY" term in the error message context with
- * the "Foreign table" term and provides the name of the foreign table
+ * the "Foreign table" term and provides the name of the foreign table and its resource option
  */
 static void
 PxfBeginScanErrorCallback(void *arg) {
-    Relation relation = (Relation) arg;
-    if (relation) {
-        errcontext("Foreign table %s", RelationGetRelationName(relation));
-        return;
-    }
+	PxfFdwScanState *pxfsstate = (PxfFdwScanState *) arg;
+	if (pxfsstate->relation) {
+		if (pxfsstate->options && pxfsstate->options->resource)
+		{
+			errcontext("Foreign table %s, resource %s",
+					   RelationGetRelationName(pxfsstate->relation), pxfsstate->options->resource);
+		}
+		else
+		{
+			errcontext("Foreign table %s", RelationGetRelationName(pxfsstate->relation));
+		}
+		return;
+	}
 }
 
 /*

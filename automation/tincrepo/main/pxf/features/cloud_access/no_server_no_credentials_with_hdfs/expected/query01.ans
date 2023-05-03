@@ -18,10 +18,16 @@
 -- m/CONTEXT:.*line.*/
 -- s/line \d* of //g
 --
+-- m/default_s3/
+-- s/default_s3/default/
+--
+-- m/, file.*pxf_automation_data/
+-- s/, file.*pxf_automation_data.*/pxf_automation_data/
+--
 -- end_matchsubs
 SELECT *  FROM cloudaccess_no_server_no_credentials_with_hdfs;
 ERROR:  PXF server error : profile 's3a' is not compatible with server's 'default' configuration ('hdfs')
 -- start_ignore
 HINT:  Ensure that 'server-dir' includes only the configuration files for profile 's3a'. Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
-DETAIL:  External table cloudaccess_no_server_no_credentials_with_hdfs, file pxf://pxf_automation_data?PROFILE=s3:text
+DETAIL:  External table cloudaccess_no_server_no_credentials_with_hdfs, file pxf_automation_data

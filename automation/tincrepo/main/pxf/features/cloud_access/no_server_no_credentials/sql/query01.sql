@@ -12,11 +12,11 @@
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/
 --
--- m/pxf:\/\/(.*)\/pxf_automation_data/
--- s/pxf:\/\/.*PROFILE/pxf:\/\/pxf_automation_data?PROFILE/
---
 -- m/CONTEXT:.*line.*/
 -- s/line \d* of //g
+--
+-- m/, file.*pxf_automation_data/
+-- s/, file.*pxf_automation_data.*/pxf_automation_data/
 --
 -- end_matchsubs
 

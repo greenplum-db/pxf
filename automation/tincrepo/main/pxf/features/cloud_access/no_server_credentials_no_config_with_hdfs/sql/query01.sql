@@ -18,6 +18,12 @@
 -- m/pxf:\/\/(.*)\/pxf_automation_data/
 -- s/pxf:\/\/.*PROFILE=s3:text&.*/pxf:\/\/pxf_automation_data?PROFILE=s3:text&ACCESS_AND_SECRET_KEY/
 --
+-- m/default_s3/
+-- s/default_s3/default/
+--
+-- m/, file.*pxf_automation_data/
+-- s/, file.*pxf_automation_data.*/pxf_automation_data/
+--
 -- end_matchsubs
 
 SELECT *  FROM cloudaccess_no_server_credentials_no_config_with_hdfs;

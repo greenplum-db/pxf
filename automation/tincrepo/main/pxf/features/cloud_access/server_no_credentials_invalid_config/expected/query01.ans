@@ -18,10 +18,13 @@
 -- m/CONTEXT:.*line.*/
 -- s/line \d* of //g
 --
+-- m/, file.*pxf_automation_data/
+-- s/, file.*pxf_automation_data.*/pxf_automation_data/
+--
 -- end_matchsubs
 SELECT *  FROM cloudaccess_server_no_credentials_invalid_config;
 ERROR:  PXF server error : com.amazonaws.services.s3.model.AmazonS3Exception: Forbidden
 -- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
-DETAIL:  External table cloudaccess_server_no_credentials_invalid_config, file pxf://pxf_automation_data?PROFILE=s3:text&server=s3-invalid
+DETAIL:  External table cloudaccess_server_no_credentials_invalid_config, file pxf_automation_data

@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.features.cloud;
 
+import annotations.WorksWithFDW;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
@@ -15,6 +16,7 @@ import java.util.UUID;
 /**
  * Functional CloudAccess Test
  */
+@WorksWithFDW
 public class CloudAccessTest extends BaseFeature {
 
     private static final String PROTOCOL_S3 = "s3a://";
@@ -115,7 +117,7 @@ public class CloudAccessTest extends BaseFeature {
 
     /*
      * The tests below are for the case where there's a Hadoop cluster configured under "default" server
-     * both without and with Kerberos security, testing that clud access works in presence of "default" server
+     * both without and with Kerberos security, testing that cloud access works in presence of "default" server
      */
 
     @Test(groups = {"gpdb", "security"})
