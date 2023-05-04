@@ -622,7 +622,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
 
         // copy local CSV to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
-        sleep(1000);
+        sleep(2500);
     }
 
     private void runScenario(String tableName, CsvSpec tableSpec, Table dataTable, CsvSpec fileSpec) throws Exception {
