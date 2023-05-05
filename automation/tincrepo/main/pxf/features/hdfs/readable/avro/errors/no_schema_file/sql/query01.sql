@@ -13,5 +13,8 @@
 -- m/(E|e)xception (r|R)eport +(m|M)essage/
 -- s/(E|e)xception (r|R)eport +(m|M)essage/exception report message/
 --
+-- m/, file .*/
+-- s/, file .*//
+--
 -- end_matchsubs
 SELECT * from avro_in_seq_no_schema;
