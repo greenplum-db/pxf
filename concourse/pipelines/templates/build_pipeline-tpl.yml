@@ -1014,7 +1014,7 @@ jobs:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
       GROUP: pxfExtensionVersion2
-      SECOND_GROUP: upgradePxfExtension
+      SECOND_GROUP: pxfExtensionVersion2_1
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
 
 ## ---------- FILE tests -----------------
