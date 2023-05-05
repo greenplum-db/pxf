@@ -2,15 +2,19 @@ package org.greenplum.pxf.automation.features.jdbc;
 
 import java.io.File;
 
+import annotations.FailsWithFDW;
+import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
+import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.testng.annotations.Test;
 
 import org.greenplum.pxf.automation.enums.EnumPartitionType;
 
 import org.greenplum.pxf.automation.features.BaseFeature;
 
+@WorksWithFDW
 public class JdbcTest extends BaseFeature {
 
     private static final String POSTGRES_DRIVER_CLASS = "org.postgresql.Driver";
@@ -156,6 +160,18 @@ public class JdbcTest extends BaseFeature {
         dataTable = new Table("data", empTableFields);
         dataTable.addRows(empRows);
         gpdb.insertData(dataTable, gpdbEmpTable);
+
+        // creating a resource (table) for FDW as it cannot read report.sql. This query is copied directly from
+        // $PXF_BASE/servers/database/reports.sql
+        if(FDWUtils.useFDW) {
+            gpdb.runQuery("DROP TABLE IF EXISTS FDW_JDBC_RESOURCE", true, false);
+            String fdw_resource_table = "CREATE TABLE FDW_JDBC_RESOURCE AS SELECT gpdb_dept.name, count(*), max(gpdb_emp.salary) " +
+                    "FROM gpdb_dept JOIN gpdb_emp " +
+                    "ON gpdb_dept.id = gpdb_emp.dept_id " +
+                    "WHERE gpdb_dept.id < 10 " +
+                    "GROUP BY gpdb_dept.name DISTRIBUTED BY (name);";
+            gpdb.runQuery(fdw_resource_table);
+        }
     }
 
     private void prepareSingleFragment() throws Exception {
@@ -355,10 +371,11 @@ public class JdbcTest extends BaseFeature {
     }
 
     private void prepareNamedQuery() throws Exception {
+        String dataSourcePath = FDWUtils.useFDW ? "FDW_JDBC_RESOURCE" : "query:report";
         pxfJdbcNamedQuery = TableFactory.getPxfJdbcReadableTable(
                 "pxf_jdbc_read_named_query",
                 NAMED_QUERY_FIELDS,
-                "query:report",
+                dataSourcePath,
                 "database");
         pxfJdbcNamedQuery.setHost(pxfHost);
         pxfJdbcNamedQuery.setPort(pxfPort);
@@ -367,7 +384,7 @@ public class JdbcTest extends BaseFeature {
         pxfJdbcNamedQuery = TableFactory.getPxfJdbcReadablePartitionedTable(
                 "pxf_jdbc_read_named_query_partitioned",
                 NAMED_QUERY_FIELDS,
-                "query:report",
+                dataSourcePath,
                 null,
                 null,
                 1,
@@ -396,21 +413,31 @@ public class JdbcTest extends BaseFeature {
         runTincTest("pxf.features.jdbc.server_config.runTest");
     }
 
+    // For external table, this test reads the data (client_min_messages and default_statistics_target)
+    // from the jdbs-site.xml and update the pg_settings.
+    // For FDW, still needs to figure out how and where to set these params to update the pg_settings.
+    @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void readViewSessionParams() throws Exception {
         runTincTest("pxf.features.jdbc.session_params.runTest");
     }
 
+    @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTable() throws Exception {
         runTincTest("pxf.features.jdbc.writable.runTest");
     }
 
+    @FailsWithFDW
+    // All the Writable Tests are failing with this Error:
+    //< ERROR:  PXF server error : class java.io.DataInputStream cannot be cast to class
+    // [B (java.io.DataInputStream and [B are in module java.base of loader 'bootstrap')
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTableNoBatch() throws Exception {
         runTincTest("pxf.features.jdbc.writable_nobatch.runTest");
     }
 
+    @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTablePool() throws Exception {
         runTincTest("pxf.features.jdbc.writable_pool.runTest");

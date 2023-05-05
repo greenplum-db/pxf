@@ -496,7 +496,7 @@ public abstract class TableFactory {
         if (user != null) {
             userParameters.add("USER=" + user);
         }
-        if (server != null) {
+        if (server != null && !FDWUtils.useFDW ) {
             userParameters.add("SERVER=" + server);
         }
         if (customParameters != null) {
