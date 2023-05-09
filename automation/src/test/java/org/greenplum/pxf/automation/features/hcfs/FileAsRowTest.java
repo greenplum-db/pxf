@@ -69,7 +69,6 @@ public class FileAsRowTest extends BaseFeature {
 
     // This Test is Failing for GP6 FDW with the error :
     // ERROR: set-valued function called in context that cannot accept a set
-    @FailsWithFDW
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void testMultilineJsonFile() throws Exception {
         String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";

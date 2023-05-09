@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.features.hcfs;
 
+import annotations.SkipForFDW;
 import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
@@ -17,6 +18,15 @@ public class HcfsTextTest extends BaseFeature {
     private static final String[] PXF_SINGLE_COL = {"text_blob text"};
     private static final String[] PXF_THREE_COLS = {"a text", "b text", "c text"};
 
+    /* Since delimiter 'OFF' doesn't work for FDW, we can skip this test for FDW.
+     *
+     * CREATE FOREIGN TABLE hcfs_text_delimiter_off (text_blob text) SERVER default_hdfs
+     * OPTIONS (resource 'tmp/pxf_automation_data/b6afbc30-2a0e-40a8-9c4c-61a54be173e5/hcfs-text/no-delimiter', format 'text', delimiter 'OFF');
+     * CREATE FOREIGN TABLE
+     * pxfautomation=# select * from hcfs_text_delimiter_off;
+     * ERROR:  using no delimiter is only supported for external tables
+     */
+    @SkipForFDW
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void testDelimiterOff() throws Exception {
         String hdfsPath = hdfs.getWorkingDirectory() + "/hcfs-text/no-delimiter";
@@ -33,6 +43,7 @@ public class HcfsTextTest extends BaseFeature {
         runTestScenario("escape_off", PXF_THREE_COLS, srcPath, hdfsPath, null, "OFF");
     }
 
+    @SkipForFDW
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void testDelimiterOffAndEscapeOff() throws Exception {
         String hdfsPath = hdfs.getWorkingDirectory() + "/hcfs-text/no-delimiter-or-escape";
@@ -50,16 +61,6 @@ public class HcfsTextTest extends BaseFeature {
         exTable.setProfile(protocol.value() + ":text");
 
         if (delimiter != null) {
-            /* This sets delimiter 'OFF' which doesn't work for FDW. So Skipping it setting explicitly for FDW
-             *
-             * CREATE FOREIGN TABLE hcfs_text_delimiter_off (text_blob text) SERVER default_hdfs
-             * OPTIONS (resource 'tmp/pxf_automation_data/b6afbc30-2a0e-40a8-9c4c-61a54be173e5/hcfs-text/no-delimiter',format 'text',delimiter 'OFF');
-             * CREATE FOREIGN TABLE
-             * pxfautomation=# select * from hcfs_text_delimiter_off;
-             * ERROR:  using no delimiter is only supported for external tables
-             */
-            if(delimiter == "OFF" && FDWUtils.useFDW)
-                return;
             exTable.setDelimiter(delimiter);
         }
 
