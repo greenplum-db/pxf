@@ -55,8 +55,8 @@ public class ColumnProjectionTest extends BaseFeature {
         // SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
         // SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
         if (gpdb.getVersion() >= 7) {
-            /** The below query is acting differently for external-table and FDW, As it is projecting for the FDW so the results are little different
-             * from the external table. The Call stack is different in case of external-table and FDW.
+            /** The below query (mentioned in above comment as well) is propagating for FDW but not for external-table, so a different test set for FDW.
+             * The Call stack is different in case of external-table and FDW.
 
              SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
              value |  colprojvalue

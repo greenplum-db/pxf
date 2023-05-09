@@ -313,7 +313,7 @@ AddTupleDescriptionToHttpHeader(CHURL_HEADERS headers, Relation rel)
 static void
 AddProjectionDescHttpHeader(CHURL_HEADERS headers, List *retrieved_attrs, Relation rel)
 {
-	ListCell	*lc ;
+	ListCell	*lc = NULL;
 	char		long_number[sizeof(int32) * 8];
 	TupleDesc	tupdesc = RelationGetDescr(rel);
 	Bitmapset	*attrs_projected = NULL;
@@ -324,10 +324,10 @@ AddProjectionDescHttpHeader(CHURL_HEADERS headers, List *retrieved_attrs, Relati
 
 	foreach(lc, retrieved_attrs)
 	{
-		int		attno = lfirst_int(lc);
+		int 	attno = lfirst_int(lc);
 
 		attrs_projected = bms_add_member(attrs_projected,
-										 attno - FirstLowInvalidHeapAttributeNumber);
+							attno - FirstLowInvalidHeapAttributeNumber);
 	}
 
 	for (int i = 1; i <= tupdesc->natts; i++)

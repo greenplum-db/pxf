@@ -92,14 +92,12 @@ public class AlterTableTest extends BaseFeature {
 
         exTable = TableFactory.getPxfReadableCustomTable(PXF_ALTER_PARQUET_TABLE,
                 PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet/" + PARQUET_PRIMITIVE_TYPES, "parquet");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        gpdb.createTableAndVerify(exTable);
+        setParamsAndVerifyTable();
 
         runTincTest("pxf.features.general.alter.pxfwritable_import.with_column_projection.runTest");
     }
 
-    // It is failing with the below class cast exception:
+    // TODO: Determine the reason why FDW is failing with the below class cast exception:
     //
     // ERROR:  PXF server error : class java.io.DataInputStream cannot be cast to class java.lang.String
     // (java.io.DataInputStream and java.lang.String are in module java.base of loader 'bootstrap')
@@ -110,26 +108,20 @@ public class AlterTableTest extends BaseFeature {
         // Create source table
         exTable = TableFactory.getPxfReadableCustomTable(PXF_PARQUET_TABLE_SOURCE,
                 PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet/" + PARQUET_PRIMITIVE_TYPES, "parquet");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        gpdb.createTableAndVerify(exTable);
+        setParamsAndVerifyTable();
 
         // Create writable table
         exTable = TableFactory.getPxfWritableTextTable(PXF_ALTER_WRITE_PARQUET_TABLE,
                 PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet-write/" + PARQUET_WRITE_PRIMITIVES, null);
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
         exTable.setFormatter("pxfwritable_export");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
         exTable.setFormat("CUSTOM");
-        gpdb.createTableAndVerify(exTable);
+        setParamsAndVerifyTable();
 
         // Create validation table
         exTable = TableFactory.getPxfReadableCustomTable(PXF_ALTER_WRITE_PARQUET_TABLE + "_r",
                 PARQUET_TABLE_SUBSET_COLUMNS, hdfsPath + "/parquet-write/" + PARQUET_WRITE_PRIMITIVES, "parquet");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        gpdb.createTableAndVerify(exTable);
+        setParamsAndVerifyTable();
 
         runTincTest("pxf.features.general.alter.pxfwritable_export.parquet.runTest");
     }
@@ -146,9 +138,7 @@ public class AlterTableTest extends BaseFeature {
                 "type_long bigint",
                 "type_bytes bytea",
                 "type_boolean bool"}, hdfsPath + "/avro/" + AVRO_TYPES_FILE_NAME + SUFFIX_AVRO, "avro");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        gpdb.createTableAndVerify(exTable);
+        setParamsAndVerifyTable();
 
         // Verify results
         runTincTest("pxf.features.general.alter.pxfwritable_import.without_column_projection.runTest");
@@ -175,10 +165,14 @@ public class AlterTableTest extends BaseFeature {
                         "longNum bigint",
                         "bool boolean"
                 }, hdfsPath + "/csv/" + fileName, ",");
+        setParamsAndVerifyTable();
+
+        runTincTest("pxf.features.general.alter.csv.runTest");
+    }
+    private void setParamsAndVerifyTable() throws Exception
+    {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
         gpdb.createTableAndVerify(exTable);
-
-        runTincTest("pxf.features.general.alter.csv.runTest");
     }
 }
