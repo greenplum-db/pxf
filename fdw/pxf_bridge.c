@@ -72,7 +72,8 @@ PxfBridgeImportStart(PxfFdwScanState *pxfsstate)
 					 pxfsstate->options,
 					 pxfsstate->relation,
 					 pxfsstate->filter_str,
-					 pxfsstate->retrieved_attrs);
+					 pxfsstate->retrieved_attrs,
+					 pxfsstate->projectionInfo);
 
 	pxfsstate->churl_handle = churl_init_download(pxfsstate->uri.data, pxfsstate->churl_headers);
 
@@ -91,6 +92,7 @@ PxfBridgeExportStart(PxfFdwModifyState *pxfmstate)
 	BuildHttpHeaders(pxfmstate->churl_headers,
 					 pxfmstate->options,
 					 pxfmstate->relation,
+					 NULL,
 					 NULL,
 					 NULL);
 	pxfmstate->churl_handle = churl_init_upload(pxfmstate->uri.data, pxfmstate->churl_headers);

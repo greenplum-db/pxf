@@ -13,17 +13,17 @@ SET optimizer = off;
 SET
 SELECT * FROM test_column_projection ORDER BY t0;
  t0 | a1 | b2 |     colprojvalue
-----+----+----+-----------------------
- A  |  0 | t  | t0|a1|b2|colprojvalue
- B  |  1 | f  | t0|a1|b2|colprojvalue
- C  |  2 | t  | t0|a1|b2|colprojvalue
- D  |  3 | f  | t0|a1|b2|colprojvalue
- E  |  4 | t  | t0|a1|b2|colprojvalue
- F  |  5 | f  | t0|a1|b2|colprojvalue
- G  |  6 | t  | t0|a1|b2|colprojvalue
- H  |  7 | f  | t0|a1|b2|colprojvalue
- I  |  8 | t  | t0|a1|b2|colprojvalue
- J  |  9 | f  | t0|a1|b2|colprojvalue
+----+----+----+----------------------
+ A  |  0 | t  | No Column Projection
+ B  |  1 | f  | No Column Projection
+ C  |  2 | t  | No Column Projection
+ D  |  3 | f  | No Column Projection
+ E  |  4 | t  | No Column Projection
+ F  |  5 | f  | No Column Projection
+ G  |  6 | t  | No Column Projection
+ H  |  7 | f  | No Column Projection
+ I  |  8 | t  | No Column Projection
+ J  |  9 | f  | No Column Projection
 (10 rows)
 
 SELECT t0, colprojvalue FROM test_column_projection ORDER BY t0;
@@ -113,12 +113,12 @@ SELECT t0, colprojvalue FROM test_column_projection WHERE a1 <= 5 ORDER BY t0;
 
 SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
  t0 |    colprojvalue
-----+--------------------
- A  | t0|a1|colprojvalue
- B  | t0|a1|colprojvalue
- C  | t0|a1|colprojvalue
- D  | t0|a1|colprojvalue
- E  | t0|a1|colprojvalue
+----+----------------------
+ A  | No Column Projection
+ B  | No Column Projection
+ C  | No Column Projection
+ D  | No Column Projection
+ E  | No Column Projection
 (5 rows)
 
 SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
@@ -184,17 +184,17 @@ SET optimizer = on;
 SET
 SELECT * FROM test_column_projection ORDER BY t0;
  t0 | a1 | b2 |     colprojvalue
-----+----+----+-----------------------
- A  |  0 | t  | t0|a1|b2|colprojvalue
- B  |  1 | f  | t0|a1|b2|colprojvalue
- C  |  2 | t  | t0|a1|b2|colprojvalue
- D  |  3 | f  | t0|a1|b2|colprojvalue
- E  |  4 | t  | t0|a1|b2|colprojvalue
- F  |  5 | f  | t0|a1|b2|colprojvalue
- G  |  6 | t  | t0|a1|b2|colprojvalue
- H  |  7 | f  | t0|a1|b2|colprojvalue
- I  |  8 | t  | t0|a1|b2|colprojvalue
- J  |  9 | f  | t0|a1|b2|colprojvalue
+----+----+----+----------------------
+ A  |  0 | t  | No Column Projection
+ B  |  1 | f  | No Column Projection
+ C  |  2 | t  | No Column Projection
+ D  |  3 | f  | No Column Projection
+ E  |  4 | t  | No Column Projection
+ F  |  5 | f  | No Column Projection
+ G  |  6 | t  | No Column Projection
+ H  |  7 | f  | No Column Projection
+ I  |  8 | t  | No Column Projection
+ J  |  9 | f  | No Column Projection
 (10 rows)
 
 SELECT t0, colprojvalue FROM test_column_projection ORDER BY t0;

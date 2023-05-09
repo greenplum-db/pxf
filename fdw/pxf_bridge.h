@@ -52,6 +52,7 @@ typedef struct PxfFdwScanState
 	List	   *retrieved_attrs;
 	PxfOptions *options;
 	CopyState	cstate;
+	ProjectionInfo *projectionInfo;
 } PxfFdwScanState;
 
 /*

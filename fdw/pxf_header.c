@@ -55,7 +55,8 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 				 PxfOptions *options,
 				 Relation relation,
 				 char *filter_string,
-				 List *retrieved_attrs)
+				 List *retrieved_attrs,
+				 ProjectionInfo *projectionInfo)
 {
 	extvar_t	 ev;
 	char		 pxfPortString[sizeof(int32) * 8];
@@ -71,10 +72,12 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 		relnamespace = GetNamespaceName(RelationGetNamespace(relation));
 	}
 
-	if (retrieved_attrs != NULL)
+	// If projectionInfo is Null, it means there should be no projection.
+	// We can skip the whole logic of adding projection desc to headers.
+	if (projectionInfo != NULL)
 	{
 		/* add the list of attrs to the projection desc http headers */
-		AddProjectionDescHttpHeader(headers, retrieved_attrs, relation);
+		AddProjectionDescHttpHeader(headers, retrieved_attrs,  relation);
 	}
 
 	/* GP cluster configuration */

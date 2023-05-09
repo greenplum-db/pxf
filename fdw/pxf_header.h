@@ -38,6 +38,7 @@ extern void BuildHttpHeaders(CHURL_HEADERS headers,
 							 PxfOptions *options,
 							 Relation relation,
 							 char *filter_string,
-							 List *retrieved_attrs);
+							 List *retrieved_attrs,
+							 ProjectionInfo *projectionInfo);
 
 #endif							/* _PXFHEADERS_H_ */

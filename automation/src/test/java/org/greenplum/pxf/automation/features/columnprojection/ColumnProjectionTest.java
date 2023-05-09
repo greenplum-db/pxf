@@ -54,25 +54,22 @@ public class ColumnProjectionTest extends BaseFeature {
         // TODO: revert when 2 queries with GP7 planner start propagating projection info to foreign scans
         // SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
         // SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
-        if (gpdb.getVersion() >= 7 && !FDWUtils.useFDW) {
-            runTincTest("pxf.features.columnprojection.checkColumnProjection_gp7.runTest");
-        } else if (FDWUtils.useFDW) {
-            /** For FDW ( irrespective of GP 6 or GP 7), the query below is projecting the columns so the results are different.
-                 SELECT * FROM test_column_projection ORDER BY t0;
-                 t0 | a1 | b2 |     colprojvalue
-                ----+----+----+-----------------------
-                 A  |  0 | t  | t0|a1|b2|colprojvalue
-                 B  |  1 | f  | t0|a1|b2|colprojvalue
-                 C  |  2 | t  | t0|a1|b2|colprojvalue
-                 D  |  3 | f  | t0|a1|b2|colprojvalue
-                 E  |  4 | t  | t0|a1|b2|colprojvalue
-                 F  |  5 | f  | t0|a1|b2|colprojvalue
-                 G  |  6 | t  | t0|a1|b2|colprojvalue
-                 H  |  7 | f  | t0|a1|b2|colprojvalue
-                 I  |  8 | t  | t0|a1|b2|colprojvalue
-                 J  |  9 | f  | t0|a1|b2|colprojvalue
+        if (gpdb.getVersion() >= 7) {
+            /** The below query is acting differently for external-table and FDW, As it is projecting for the FDW so the results are little different
+             * from the external table. The Call stack is different in case of external-table and FDW.
+
+             SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
+             value |  colprojvalue
+             -------+-----------------
+             50 | t0|colprojvalue
+             (1 row)
              **/
-            runTincTest("pxf.features.columnprojection.checkColumnProjection_fdw.runTest");
+            if (FDWUtils.useFDW) {
+                runTincTest("pxf.features.columnprojection.checkColumnProjection_fdw.runTest");
+            }
+            else {
+                runTincTest("pxf.features.columnprojection.checkColumnProjection_gp7.runTest");
+            }
         } else {
             runTincTest("pxf.features.columnprojection.checkColumnProjection.runTest");
         }
