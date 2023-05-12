@@ -7,7 +7,6 @@ import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
-import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.testng.annotations.Test;
 
 import org.greenplum.pxf.automation.enums.EnumPartitionType;
