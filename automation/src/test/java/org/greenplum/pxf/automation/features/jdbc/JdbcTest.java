@@ -160,18 +160,6 @@ public class JdbcTest extends BaseFeature {
         dataTable = new Table("data", empTableFields);
         dataTable.addRows(empRows);
         gpdb.insertData(dataTable, gpdbEmpTable);
-
-        // creating a resource (table) for FDW as it cannot read report.sql. This query is copied directly from
-        // $PXF_BASE/servers/database/reports.sql
-        if(FDWUtils.useFDW) {
-            gpdb.runQuery("DROP TABLE IF EXISTS FDW_JDBC_RESOURCE", true, false);
-            String fdw_resource_table = "CREATE TABLE FDW_JDBC_RESOURCE AS SELECT gpdb_dept.name, count(*), max(gpdb_emp.salary) " +
-                    "FROM gpdb_dept JOIN gpdb_emp " +
-                    "ON gpdb_dept.id = gpdb_emp.dept_id " +
-                    "WHERE gpdb_dept.id < 10 " +
-                    "GROUP BY gpdb_dept.name DISTRIBUTED BY (name);";
-            gpdb.runQuery(fdw_resource_table);
-        }
     }
 
     private void prepareSingleFragment() throws Exception {
@@ -371,11 +359,10 @@ public class JdbcTest extends BaseFeature {
     }
 
     private void prepareNamedQuery() throws Exception {
-        String dataSourcePath = FDWUtils.useFDW ? "FDW_JDBC_RESOURCE" : "query:report";
         pxfJdbcNamedQuery = TableFactory.getPxfJdbcReadableTable(
                 "pxf_jdbc_read_named_query",
                 NAMED_QUERY_FIELDS,
-                dataSourcePath,
+                "query:report",
                 "database");
         pxfJdbcNamedQuery.setHost(pxfHost);
         pxfJdbcNamedQuery.setPort(pxfPort);
@@ -384,7 +371,7 @@ public class JdbcTest extends BaseFeature {
         pxfJdbcNamedQuery = TableFactory.getPxfJdbcReadablePartitionedTable(
                 "pxf_jdbc_read_named_query_partitioned",
                 NAMED_QUERY_FIELDS,
-                dataSourcePath,
+                "query:report",
                 null,
                 null,
                 1,
@@ -413,10 +400,6 @@ public class JdbcTest extends BaseFeature {
         runTincTest("pxf.features.jdbc.server_config.runTest");
     }
 
-    // For external table, this test reads the data (client_min_messages and default_statistics_target)
-    // from the jdbs-site.xml and update the pg_settings.
-    // For FDW, still needs to figure out how and where to set these params to update the pg_settings.
-    @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void readViewSessionParams() throws Exception {
         runTincTest("pxf.features.jdbc.session_params.runTest");

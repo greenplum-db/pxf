@@ -174,7 +174,8 @@ public class Gpdb extends DbSystemObject {
 		"default_hdfs",
 		"default_hive",
 		"default_hbase",
-		"default_jdbc",
+		"database_jdbc",
+		"db-session-params_jdbc",
 		"default_file",
 		"default_s3",
 		"default_gs",
@@ -196,21 +197,8 @@ public class Gpdb extends DbSystemObject {
 
 			String pxfServerName = server.substring(0,server.lastIndexOf("_")); // strip protocol at the end
 			String fdwName = server.substring(server.lastIndexOf("_") + 1) + "_pxf_fdw"; // strip protocol at the end
-			String jdbc_server_string = "";
-			// We need extra information for the server default_jdbc for the tests like jdbc_driver and db_url
-			// In case of external table, this information is read directly from the jdbc-site.xml
-			if(FDWUtils.useFDW && foreignServerName.equals("default_jdbc")) {
-				// create jdbc connection string
-				jdbc_server_string = ", jdbc_driver 'org.postgresql.Driver'," +
-						"db_url 'jdbc:postgresql://localhost:7000/pxfautomation'";
-				runQuery(String.format("CREATE SERVER %s %s FOREIGN DATA WRAPPER %s OPTIONS(config '%s' " + jdbc_server_string +")",
-						option, foreignServerName, fdwName, pxfServerName), ignoreFail, false);
-			}
-			else{
-				runQuery(String.format("CREATE SERVER %s %s FOREIGN DATA WRAPPER %s OPTIONS(config '%s')",
-						option, foreignServerName, fdwName, pxfServerName), ignoreFail, false);
-			}
-
+			runQuery(String.format("CREATE SERVER %s %s FOREIGN DATA WRAPPER %s OPTIONS(config '%s')",
+					option, foreignServerName, fdwName, pxfServerName), ignoreFail, false);
 			runQuery(String.format("CREATE USER MAPPING %s FOR CURRENT_USER SERVER %s", option, foreignServerName),
 					ignoreFail, false);
 		}

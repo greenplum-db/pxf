@@ -39,7 +39,7 @@ public class ForeignTable extends WritableExternalTable {
         String[] serverParameters = StringUtils.defaultIfBlank(getServer(), "default").split("=");
         // getServer() might return a string "server=<..>", strip the prefix
         int index = serverParameters.length > 1 ? 1 : 0;
-        return String.format(" SERVER %s_%s", serverParameters[index], getProtocol());
+        return String.format(" SERVER %s_%s", serverParameters[index].replace("-","_"), getProtocol());
     }
 
     protected String createOptions() {
