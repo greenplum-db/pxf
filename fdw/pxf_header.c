@@ -77,7 +77,7 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 	if (projectionInfo != NULL)
 	{
 		/* add the list of attrs to the projection desc http headers */
-		AddProjectionDescHttpHeader(headers, retrieved_attrs,  relation);
+		AddProjectionDescHttpHeader(headers, retrieved_attrs, relation);
 	}
 
 	/* GP cluster configuration */
@@ -332,16 +332,17 @@ AddProjectionDescHttpHeader(CHURL_HEADERS headers, List *retrieved_attrs, Relati
 
 	for (int i = 1; i <= tupdesc->natts; i++)
 	{
-		// Dropped attributes count needs for proper indexing of the projected columns.
-		// For eg:
-		//  ---------------------------------------------
-		// |  col1  |  col2 (dropped)  |  col3  |  col4  |
-		//  ---------------------------------------------
-		//
-		// We use 0-based indexing and since col2 was dropped,
-		// the indices for col3 and col4 get shifted by -1.
-		// Let's assume that col1 and col4 are projected, the reported projected
-		// indices will then be 0, 2.
+		/* Dropped attributes count needs for proper indexing of the projected columns.
+		* For eg:
+		*  ---------------------------------------------
+		* |  col1  |  col2 (dropped)  |  col3  |  col4  |
+		*  ---------------------------------------------
+		*
+		* We use 0-based indexing and since col2 was dropped,
+		* the indices for col3 and col4 get shifted by -1.
+		* Let's assume that col1 and col4 are projected, the reported projected
+		* indices will then be 0, 2.
+		*/
 		if (TupleDescAttr(tupdesc, i-1)->attisdropped)
 		{
 			/* keep a counter of the number of dropped attributes */

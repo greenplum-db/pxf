@@ -169,6 +169,7 @@ public class AlterTableTest extends BaseFeature {
 
         runTincTest("pxf.features.general.alter.csv.runTest");
     }
+
     private void setParamsAndVerifyTable() throws Exception
     {
         exTable.setHost(pxfHost);
