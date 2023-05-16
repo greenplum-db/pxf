@@ -20,6 +20,8 @@ package org.greenplum.pxf.api.io;
  */
 
 
+import java.util.EnumSet;
+
 /**
  * Supported Data Types and OIDs (GPDB Data Type identifiers).
  * There's a one-to-one match between a Data Type and it's corresponding OID.
@@ -71,6 +73,10 @@ public enum DataType {
     private static final DataType[] DATA_TYPES;
     private static final int[] NOT_TEXT = {BIGINT.OID, BOOLEAN.OID, BYTEA.OID,
             FLOAT8.OID, INTEGER.OID, REAL.OID, SMALLINT.OID};
+
+    // Set of types that preserve the type information when their value is deserialized,
+    // this is similar to NOT_TEXT above, but used explicitly in the deserialization case of PXF Write Flow
+    private static EnumSet<DataType> SELF_DESER_TYPES = EnumSet.of(BOOLEAN, SMALLINT, INTEGER, BIGINT, REAL, FLOAT8, BYTEA);
 
     static {
         INT2ARRAY.typeElem = SMALLINT;
@@ -190,5 +196,19 @@ public enum DataType {
 
     public boolean getNeedsEscapingInArray() {
         return needsEscapingInArray;
+    }
+
+    /**
+     * Returns the type that deserialization logic needs to report for backward compatibility with GPDBWritable,
+     * where only boolean/short/int/long/float/double/bytea are represented by their actual types
+     * and the rest of data types are represented as TEXT by the deserialization logic.
+     * @return the corresponding DataType when deserializing a value of a given type
+     */
+    public DataType getDeserializationType() {
+        if (SELF_DESER_TYPES.contains(this)) {
+            return this;          // return itself as the type that should be reported
+        } else {
+            return DataType.TEXT; // everything else is reported as TEXT once deserialized
+        }
     }
 }

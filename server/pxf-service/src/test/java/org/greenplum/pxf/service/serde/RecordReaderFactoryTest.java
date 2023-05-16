@@ -6,6 +6,8 @@ import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RecordReaderFactoryTest {
@@ -36,5 +38,12 @@ public class RecordReaderFactoryTest {
     public void testGetTestRecordReader() {
         context.setOutputFormat(OutputFormat.TEXT);
         assertTrue(factory.getRecordReader(context, false) instanceof TextRecordReader);
+    }
+
+    @Test
+    public void testGetReaderErrorNoOutputFormat() {
+        context.setOutputFormat(null);
+        Throwable thrown = assertThrows(NullPointerException.class, () -> factory.getRecordReader(context, false));
+        assertEquals("outputFormat is not set in RequestContext", thrown.getMessage());
     }
 }

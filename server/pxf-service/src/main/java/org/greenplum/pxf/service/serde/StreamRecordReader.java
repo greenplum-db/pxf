@@ -9,7 +9,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Record reader that reads stores the whole input stream as the value of the first and only field of the resulting record.
+ * A RecordReader that does not actually read data, but instead stores the whole input stream as the value of
+ * the first and only field of the resulting record. The data will be read by downstream components from the input
+ * stream directly.
+ *
+ * This is a performance optimization used, for example, by the StringPassResolver and LineBreakAccessor to not break
+ * the incoming stream into records and instead just copy incoming bytes to the external system.
  */
 public class StreamRecordReader extends BaseRecordReader implements RecordReader {
 

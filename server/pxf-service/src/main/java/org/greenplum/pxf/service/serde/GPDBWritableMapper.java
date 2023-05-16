@@ -24,7 +24,7 @@ import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.io.GPDBWritable;
 
-/*
+/**
  * Class for mapping GPDBWritable get functions to java types.
  */
 public class GPDBWritableMapper {

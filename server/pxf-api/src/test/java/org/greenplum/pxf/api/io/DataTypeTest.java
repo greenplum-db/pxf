@@ -48,6 +48,25 @@ public class DataTypeTest {
         }
     }
 
+    @Test
+    public void testDeserializationTypes() {
+        for (DataType dataType : DataType.values()) {
+            switch (dataType) {
+                case BOOLEAN:
+                case SMALLINT:
+                case INTEGER:
+                case BIGINT:
+                case FLOAT8:
+                case REAL:
+                case BYTEA:
+                    assertEquals(dataType, dataType.getDeserializationType());
+                    break;
+                default:
+                    assertEquals(DataType.TEXT, dataType.getDeserializationType());
+            }
+        }
+    }
+
     private boolean needsEscapingForElementsInArray(int oid) {
         return oid == DataType.BYTEAARRAY.getOID() || oid == DataType.TEXTARRAY.getOID() ||
                 oid == DataType.BPCHARARRAY.getOID() || oid == DataType.VARCHARARRAY.getOID() ||

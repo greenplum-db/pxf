@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Record reader that reads data from an input stream and deserializes database tuples encoded in TEXT format.
+ * A RecordReader that reads data from an input stream and deserializes database tuples encoded in TEXT format.
  */
 public class TextRecordReader extends BaseRecordReader implements RecordReader {
 
@@ -44,6 +44,7 @@ public class TextRecordReader extends BaseRecordReader implements RecordReader {
     /**
      * Creates a new instance and sets up a CSV parser and its settings
      * @param context request context
+     * @param pgUtilities an instance of utilities with helper methods for binary and array types
      */
     public TextRecordReader(RequestContext context, PgUtilities pgUtilities) {
         super(context);
@@ -57,19 +58,26 @@ public class TextRecordReader extends BaseRecordReader implements RecordReader {
         csvFormat.setQuote(greenplumCSV.getQuote());
         csvFormat.setQuoteEscape(greenplumCSV.getEscape());
 
-        // create the CSV parser with desired settings
+        // adjust parser setting to be appropriate for our on-the-wire format of CSV / TSV serialization
         CsvParserSettings parserSettings = new CsvParserSettings();
         parserSettings.setFormat(csvFormat);
-        parserSettings.setCommentProcessingEnabled(false);
-        parserSettings.setIgnoreLeadingWhitespaces(false);
-        parserSettings.setIgnoreTrailingWhitespaces(false);
-        parserSettings.setMaxColumns(1600); // to align with GP
+        parserSettings.setCommentProcessingEnabled(false);  // there should be no comments, do not waste time analyzing
+        parserSettings.setIgnoreLeadingWhitespaces(false);  // do not remove any whitespaces
+        parserSettings.setIgnoreTrailingWhitespaces(false); // do not remove any whitespaces
+        parserSettings.setMaxColumns(1600);                 // align max columns with GP spec
         // we should've set maxCharsPerColumn value to 1GB (max size in GP) or larger (for multibyte UTF8 chars)
         // but Univocity tries to allocate the buffer of this size ahead of time, which is very inefficient
         // parserSettings.setMaxCharsPerColumn(Integer.MAX_VALUE);
+
+        // create the CSV parser with desired settings
         parser = new CsvParser(parserSettings);
 
-        LOG.debug("Configured CSV Parser : {}", csvFormat);
+        if (LOG.isDebugEnabled()) {
+            // replace new line characters so that the log message takes only 1 line
+            LOG.debug("Configured CSV Parser : {}", csvFormat.toString()
+                    .replace("\n", " ")
+                    .replace("\t", "|"));
+        }
     }
 
     private void initialize() {
@@ -90,7 +98,7 @@ public class TextRecordReader extends BaseRecordReader implements RecordReader {
         FieldSet<Integer> binaryFields = metadata.convertIndexes(new BinaryConversion());
         for (int columnIndex = 0; columnIndex < numColumns; columnIndex++) {
             DataType dataType = columnDescriptors.get(columnIndex).getDataType();
-            int columnType = dataType.getOID();
+            int columnType = dataType.getDeserializationType().getOID();
             columnTypes[columnIndex] = columnType;
             javaTypes[columnIndex] = getJavaClass(dataType);
             // process value conversions
