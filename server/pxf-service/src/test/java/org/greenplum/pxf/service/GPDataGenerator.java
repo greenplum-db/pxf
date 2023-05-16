@@ -140,7 +140,7 @@ public class GPDataGenerator {
     public GPDataGenerator() {
         this.table = new LinkedList<>();
         addRow(0, -1); // add the first row without any nulls, id column is never null
-        for (int row = 1; row <= COLUMNS.length; row++) {
+        for (int row = 1; row < COLUMNS.length; row++) {
             addRow(row, row);                 // add a row with null value for the same column index as the row index
         }
     }
