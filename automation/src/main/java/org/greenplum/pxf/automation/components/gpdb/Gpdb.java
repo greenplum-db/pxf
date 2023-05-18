@@ -175,7 +175,7 @@ public class Gpdb extends DbSystemObject {
 		"default_hive",
 		"db_hive_jdbc", // Needed for JdbcHiveTest
 		"default_hbase",
-		"default_jdbc", //Needed for JdbcHiveTest and other JdbcTest which refers to the default server.
+		"default_jdbc", // Needed for JdbcHiveTest and other JdbcTest which refers to the default server.
 		"database_jdbc",
 		"db-session-params_jdbc",
 		"default_file",
