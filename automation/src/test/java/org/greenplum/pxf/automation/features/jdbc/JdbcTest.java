@@ -412,7 +412,7 @@ public class JdbcTest extends BaseFeature {
 
     @FailsWithFDW
     // All the Writable Tests are failing with this Error:
-    //< ERROR:  PXF server error : class java.io.DataInputStream cannot be cast to class
+    // ERROR:  PXF server error : class java.io.DataInputStream cannot be cast to class
     // [B (java.io.DataInputStream and [B are in module java.base of loader 'bootstrap')
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTableNoBatch() throws Exception {
