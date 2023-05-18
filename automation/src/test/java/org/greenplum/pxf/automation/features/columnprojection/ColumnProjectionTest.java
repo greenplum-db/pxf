@@ -55,7 +55,7 @@ public class ColumnProjectionTest extends BaseFeature {
         // SELECT t0, colprojvalue FROM test_column_projection GROUP BY t0, colprojvalue HAVING AVG(a1) < 5 ORDER BY t0;
         // SELECT b.value, a.colprojvalue FROM test_column_projection a JOIN t0_values b ON a.t0 = b.key;
         if (gpdb.getVersion() >= 7) {
-            /** The below query (mentioned in above comment as well) is propagating for FDW but not for external-table,
+            /* The below query (mentioned in above comment as well) is propagating for FDW but not for external-table,
              *  so use a different test set for FDW.
              * The Call stack is different in case of external-table and FDW.
 
@@ -133,7 +133,7 @@ public class ColumnProjectionTest extends BaseFeature {
              Memory used:  128000kB
              Execution Time: 117.692 ms
              (16 rows)
-             **/
+             */
             if (FDWUtils.useFDW) {
                 runTincTest("pxf.features.columnprojection.checkColumnProjection_fdw.runTest");
             }
