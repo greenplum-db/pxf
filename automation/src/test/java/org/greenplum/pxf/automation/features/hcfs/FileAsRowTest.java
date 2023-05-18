@@ -66,32 +66,33 @@ public class FileAsRowTest extends BaseFeature {
     }
 
     /*
-    * This test was running the following query which fails for GP6 FDW  with the error:
-    *
-    * select
-       json_array_elements(json_blob->'root')->'record'->'created_at' as created_at,
-       json_array_elements(json_blob->'root')->'record'->'text' as text,
-       json_array_elements(json_blob->'root')->'record'->'user'->'name' as username,
-       json_array_elements(json_blob->'root')->'record'->'user'->'screen_name' as screen_name,
-       json_array_elements(json_blob->'root')->'record'->'user'->'location' as user_location
-        from file_as_row_json;
-    * ERROR:  set-valued function called in context that cannot accept a set  (seg2 slice1 10.254.0.190:6002 pid=12873)
-       -------------------------------------------------
-    * Changing the above query a bit will make it work for both GP6/GP7 FDW and External table, however it fails for GP5
-    *
-    * -- Changed query:
-    *
-    * select data -> 'record' -> 'created_at' as created_at,
-      data -> 'record' -> 'text' as text,
-      data -> 'record' -> 'user'->'name' as username,
-      data -> 'record' -> 'user'->'screen_name' as screen_name,
-      data -> 'record' -> 'user'->'location' as user_location
-      from file_as_row_json fr, json_array_elements(fr.json_blob -> 'root') data;
-    * --
-    * Error in GP5 for this changed query:
-    * ERROR:  function expression in FROM cannot refer to other relations of same query level
-    * So branching out for GP5
-    */
+     * This test was running the following query which fails for GP6 FDW with the error:
+     *
+     *     select
+     *     json_array_elements(json_blob->'root')->'record'->'created_at' as created_at,
+     *     json_array_elements(json_blob->'root')->'record'->'text' as text,
+     *     json_array_elements(json_blob->'root')->'record'->'user'->'name' as username,
+     *     json_array_elements(json_blob->'root')->'record'->'user'->'screen_name' as screen_name,
+     *     json_array_elements(json_blob->'root')->'record'->'user'->'location' as user_location
+     *     from file_as_row_json;
+     *     ERROR:  set-valued function called in context that cannot accept a set  (seg2 slice1 10.254.0.190:6002 pid=12873)
+     *
+     * Changing the above query a bit will make it work for both GP6/GP7 FDW and External table, however it fails for GP5
+     *
+     * Changed query:
+     *
+     *     select data -> 'record' -> 'created_at' as created_at,
+     *     data -> 'record' -> 'text' as text,
+     *     data -> 'record' -> 'user'->'name' as username,
+     *     data -> 'record' -> 'user'->'screen_name' as screen_name,
+     *     data -> 'record' -> 'user'->'location' as user_location
+     *     from file_as_row_json fr, json_array_elements(fr.json_blob -> 'root') data;
+     *
+     * Error in GP5 for this changed query:
+     *     ERROR:  function expression in FROM cannot refer to other relations of same query level
+     *
+     * So run the old query for GP5 and the modified query for GP6 and GP7
+     */
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void testMultilineJsonFile() throws Exception {
         String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
