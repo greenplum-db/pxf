@@ -27,6 +27,10 @@ INSERT INTO sample_data VALUES (23, 'row-"|23|"', 23, 1000023, 5555500023, 23.00
 INSERT INTO sample_data VALUES (24, 'row-"|24|"', 24, 1000024, 5555500024, 24.0001, 3.14159265358979, '12345678900000.0000024', false, '2010-01-25', '10:11:24', '2013-07-13 21:00:05.024456', '2013-07-13 21:00:05.024123-07', 'abc', ' def ', '\x622d3234', '{t,f}', '{1,2,3}', '{1000000,2000000}', '{7777700000,7777700001}', '{123.456,789.012}', '{123.456789,789.123456}', '{12345678900000.000001,12345678900000.000001}', '{hello,world}', NULL, '{abc,defij}', '{abcde,fijkl}');
 INSERT INTO sample_data VALUES (25, 'row-"|25|"', 25, 1000025, 5555500025, 25.0001, 3.14159265358979, '12345678900000.0000025', true, '2010-01-26', '10:11:25', '2013-07-13 21:00:05.025456', '2013-07-13 21:00:05.025123-07', 'abc', ' def ', '\x622d3235', '{t,f}', '{1,2,3}', '{1000000,2000000}', '{7777700000,7777700001}', '{123.456,789.012}', '{123.456789,789.123456}', '{12345678900000.000001,12345678900000.000001}', '{hello,world}', '{11,12}', NULL, '{abcde,fijkl}');
 INSERT INTO sample_data VALUES (26, 'row-"|26|"', 26, 1000026, 5555500026, 26.0001, 3.14159265358979, '12345678900000.0000026', false, '2010-01-27', '10:11:26', '2013-07-13 21:00:05.026456', '2013-07-13 21:00:05.026123-07', 'abc', ' def ', '\x622d3236', '{t,f}', '{1,2,3}', '{1000000,2000000}', '{7777700000,7777700001}', '{123.456,789.012}', '{123.456789,789.123456}', '{12345678900000.000001,12345678900000.000001}', '{hello,world}', '{11,12}', '{abc,defij}', NULL);
-COPY (SELECT * FROM sample_data ORDER BY id) TO '/Users/adenissov/workspace/pxf/server/pxf-service/src/test/resources/data/sample_data.txt';
-COPY (SELECT * FROM sample_data ORDER BY id) TO '/Users/adenissov/workspace/pxf/server/pxf-service/src/test/resources/data/sample_data.csv' CSV;
-COPY (SELECT * FROM sample_data ORDER BY id) TO '/Users/adenissov/workspace/pxf/server/pxf-service/src/test/resources/data/sample_data_pipe.csv' CSV DELIMITER '|';
+\set data_dir `echo $HOME/workspace/pxf/server/pxf-service/src/test/resources/data/`
+\set txt_file :data_dir 'sample_data.txt'
+\set csv_file :data_dir 'sample_data.csv'
+\set pipe_csv_file :data_dir 'sample_data_pipe.csv'
+COPY (SELECT * FROM sample_data ORDER BY id) TO :'txt_file';
+COPY (SELECT * FROM sample_data ORDER BY id) TO :'csv_file' CSV;
+COPY (SELECT * FROM sample_data ORDER BY id) TO :'pipe_csv_file' CSV DELIMITER '|';

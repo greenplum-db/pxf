@@ -159,10 +159,18 @@ public abstract class DbSystemObject extends BaseSystemObject implements IDbFunc
 				dataStringBuilder.append(",");
 			}
 		}
-		insertData(target, dataStringBuilder.toString());
+		insertData(dataStringBuilder.toString(), target);
 	}
 
-	public void insertData(Table target, String data) throws Exception {
+	/**
+	 * Inserts data from the provided string into the target Table. The string is expected to contain data
+	 * in SQL format that follows the 'INSERT INTO [table] VALUES ' clause.
+	 *
+	 * @param data string containing data to insert
+	 * @param target table to insert data into, can be an internal, an external or a foreign table
+	 * @throws Exception is operation fails
+	 */
+	public void insertData(String data, Table target) throws Exception {
 		if (!data.startsWith("(")) {
 			data = "(" + data;
 		}

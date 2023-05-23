@@ -21,7 +21,6 @@ package org.greenplum.pxf.service.bridge;
 
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.InputStreamHandler;
 import org.greenplum.pxf.api.model.OutputFormat;
@@ -79,7 +78,6 @@ public class WriteBridge extends BaseBridge {
      * and stores it into the external system using an Accessor.
      * @param inputStream input stream containing data
      * @return true if data was read and processed, false if there was no more data to read
-     * @throws BadRecordException if accessor failed to write the data
      * @throws Exception if any operation failed
      */
     @Override
@@ -94,7 +92,7 @@ public class WriteBridge extends BaseBridge {
         if (onerow == null) {
             return false;
         }
-        // TODO: can we do this ?
+
         // if accessor fails to write data it should throw an exception, if nothing was written, then there's no more data
         return accessor.writeNextObject(onerow);
     }

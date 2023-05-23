@@ -40,10 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class GPDataGenerator {
 
-    // {project}/server/pxf-service/build/resources/test/data ==> {project}/server/pxf-service/src/test/resources/data
-    private static final String dir = GPDataGenerator.class.getClassLoader().getResource("data").getPath()
-            .replace("/test", "")
-            .replace("build", "src/test");
+    private static final String dir = System.getenv("HOME") + "/workspace/pxf/server/pxf-service/src/test/resources/data/";
 
     /**
      * Enum representing different formats used to export the sample data set into a file using Greenplum COPY command.
@@ -88,7 +85,7 @@ public class GPDataGenerator {
     @Data
     @AllArgsConstructor
     private static class Column {
-        String name;               // name     of the column            , used to create SQL DDL
+        String name;               // name of the column                , used to create SQL DDL
         String sqlType;            // SQL type of the column            , used to create SQL DDL
         DataType type;             // DataType of the column            , used to produce List<ColumnDescriptor> for mocking
         DataType deserializedType; // DataType of the deserialized value, used in verification of deserialized OneField types
@@ -224,7 +221,7 @@ public class GPDataGenerator {
                     }
                     // make adjustments to expected values
                     Object expected = cells.get(col);
-                    if (col == 25) {
+                    if (col == 25) { // col 25 is char_arr bpchar(5)[], we need to account for the trailing whitespace
                         expected = "{\"abc  \",defij}";
                     }
                     assertEquals(expected, field.val, String.format("Value mismatch row=%d col=%d", row, col));
@@ -236,7 +233,7 @@ public class GPDataGenerator {
     }
 
     /**
-     * Main method that generates '{project}/server/pxf-service/src/test/resources/data/sample_data.sql' file
+     * Main method that generates '$HOME/workspace/pxf/server/pxf-service/src/test/resources/data/sample_data.sql' file
      * with DDL and DML statements to create the sample dataset in a Greenplum table and copy it to a set of files
      * in different formats using the Greenplum COPY command.
      * @param args program arguments, not used
@@ -296,10 +293,16 @@ public class GPDataGenerator {
      */
     private void printCopyDataDML(PrintStream out) {
         // print out SQL DML statements
+        // use PSQL variables to dynamically determine the user's home directory and absolute path of the file
+        out.println("\\set data_dir `echo $HOME/workspace/pxf/server/pxf-service/src/test/resources/data/`");
+        out.println("\\set txt_file :data_dir 'sample_data.txt'");
+        out.println("\\set csv_file :data_dir 'sample_data.csv'");
+        out.println("\\set pipe_csv_file :data_dir 'sample_data_pipe.csv'");
+
         // use CTAS with ORDER BY to ensure an ordered set of rows in the output file
-        out.println(String.format("COPY (SELECT * FROM sample_data ORDER BY id) TO '%s/sample_data.txt';", dir));
-        out.println(String.format("COPY (SELECT * FROM sample_data ORDER BY id) TO '%s/sample_data.csv' CSV;", dir));
-        out.println(String.format("COPY (SELECT * FROM sample_data ORDER BY id) TO '%s/sample_data_pipe.csv' CSV DELIMITER '|';", dir));
+        out.println("COPY (SELECT * FROM sample_data ORDER BY id) TO :'txt_file';");
+        out.println("COPY (SELECT * FROM sample_data ORDER BY id) TO :'csv_file' CSV;");
+        out.println("COPY (SELECT * FROM sample_data ORDER BY id) TO :'pipe_csv_file' CSV DELIMITER '|';");
     }
 
 }

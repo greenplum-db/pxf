@@ -35,7 +35,7 @@ public class RecordReaderFactoryTest {
     }
 
     @Test
-    public void testGetTestRecordReader() {
+    public void testGetTextRecordReader() {
         context.setOutputFormat(OutputFormat.TEXT);
         assertTrue(factory.getRecordReader(context, false) instanceof TextRecordReader);
     }

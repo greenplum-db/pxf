@@ -16,7 +16,7 @@ import java.util.List;
  * This is a performance optimization used, for example, by the StringPassResolver and LineBreakAccessor to not break
  * the incoming stream into records and instead just copy incoming bytes to the external system.
  */
-public class StreamRecordReader extends BaseRecordReader implements RecordReader {
+public class StreamRecordReader extends BaseRecordReader {
 
     /**
      * Creates a new instance
@@ -26,6 +26,9 @@ public class StreamRecordReader extends BaseRecordReader implements RecordReader
         super(context);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<OneField> readRecord(DataInput input) {
         return Collections.singletonList(new OneField(DataType.BYTEA.getOID(), input));

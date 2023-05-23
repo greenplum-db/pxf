@@ -21,9 +21,6 @@ package org.greenplum.pxf.service.bridge;
 
 
 import org.greenplum.pxf.api.io.Writable;
-import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.Plugin;
-import org.greenplum.pxf.api.model.Resolver;
 
 import java.io.DataInputStream;
 
@@ -42,9 +39,24 @@ public interface Bridge {
      */
     boolean beginIteration() throws Exception;
 
+    /**
+     * Reads new data from the external system and wraps it such that it can be written to an OutputStream.
+     * @return the new data represented by the Writable object
+     * @throws Exception when an error occurs during the operation
+     */
     Writable getNext() throws Exception;
 
+    /**
+     * Reads new data from the provided InputStream and sends it to the external system
+     * @param inputStream the input stream to read the data from
+     * @return true if the data was read and processed, false if there is no more data to read
+     * @throws Exception when an error occurs during the operation
+     */
     boolean setNext(DataInputStream inputStream) throws Exception;
 
+    /**
+     * End the iteration for data access. Implementations need to close any underlying resources.
+     * @throws Exception when an error occurs during the operation
+     */
     void endIteration() throws Exception;
 }

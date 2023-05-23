@@ -150,7 +150,7 @@ public class Gpdb extends DbSystemObject {
 	 * @param sourceName name of the source table
 	 * @param target target table
 	 * @param columns columns to select from the source table, if null then all columns will be selected
-	 * @param context extra context to append to the SQL query
+	 * @param context extra context to add before the SQL query
 	 * @throws Exception if the operation fails
 	 */
 	public void copyData(String sourceName, Table target, String[] columns, String context) throws Exception {
@@ -181,12 +181,14 @@ public class Gpdb extends DbSystemObject {
 	}
 
 	/**
-	 * Copies data from source table into target table with a possibility of selecting specific columns
+	 * Copies data from the source table into the target table with a possibility of selecting specific columns.
+	 * If the columns are specified, the schema of the target table should correspond to the projection achieved
+	 * by specifying the columns. If the columns are not provided, all columns are selected from the source table.
 	 * @param sourceName name of the source table
 	 * @param target target table
 	 * @param columns columns to select from the source table, if null then all columns will be selected
 	 * @param ignoreFail whether to ignore any failures
-	 * @param context extra context to add to the SQL query
+	 * @param context extra context to add before the SQL query
 	 * @throws Exception if the operation fails
 	 */
 	public void copyData(String sourceName, Table target, String[] columns, boolean ignoreFail, String context) throws Exception {
@@ -377,39 +379,20 @@ public class Gpdb extends DbSystemObject {
 		}
 
 		StringBuilder dataStringBuilder = new StringBuilder();
-
 		List<List<String>> data = from.getData();
-
 		for (int i = 0; i < data.size(); i++) {
-
 			List<String> row = data.get(i);
-
 			for (int j = 0; j < row.size(); j++) {
-
 				dataStringBuilder.append(row.get(j));
-
 				if (j != row.size() - 1) {
 					dataStringBuilder.append(delimeter);
 				}
 			}
-
 			dataStringBuilder.append("\n");
-
 		}
-
 		dataStringBuilder.append("\\.");
 
-		// COPY TO <foreign table> is not supported in PXF FDW with GP6, so we will have to do a workaround by
-		// creating a native table, copying data from the file into it and then performing a CTAS into the foregin table
-		if (FDWUtils.useFDW && getVersion() < 7) {
-			Table nativeTable = createTableLike(to.getName() + "_native", to);
-			// copy data into the native table
-			copy(nativeTable.getName(), "STDIN", dataStringBuilder.toString(), delim, null, csv);
-			// CTAS into the foreign table
-			copyData(nativeTable, to, true);
-		} else {
-			copy(to.getName(), "STDIN", dataStringBuilder.toString(), delim, null, csv);
-		}
+		copyWithOptionalCTAS("STDIN", to, dataStringBuilder.toString(), delim, null, csv);
 	}
 
 	/**
@@ -424,17 +407,20 @@ public class Gpdb extends DbSystemObject {
 	public void copyFromFile(Table to, File path, String delim, boolean csv) throws Exception {
 		String from = "'" + path.getAbsolutePath() + "'";
 		copyLocalFileToRemoteGpdb(from);
+		copyWithOptionalCTAS(from, to, null, delim, null, csv);
+	}
 
+	private void copyWithOptionalCTAS(String from, Table to, String dataToCopy, String delim, String nullChar, boolean csv) throws Exception {
 		// COPY TO <foreign table> is not supported in PXF FDW with GP6, so we will have to do a workaround by
 		// creating a native table, copying data from the file into it and then performing a CTAS into the foreign table
 		if (FDWUtils.useFDW && getVersion() < 7) {
 			Table nativeTable = createTableLike(to.getName() + "_native", to);
 			// copy data into the native table
-			copy(nativeTable.getName(), from, null, delim, null, csv);
+			copy(nativeTable.getName(), from, dataToCopy, delim, null, csv);
 			// CTAS into the foreign table
 			copyData(nativeTable, to, true);
 		} else {
-			copy(to.getName(), from, null, delim, null, csv);
+			copy(to.getName(), from, dataToCopy, delim, null, csv);
 		}
 	}
 

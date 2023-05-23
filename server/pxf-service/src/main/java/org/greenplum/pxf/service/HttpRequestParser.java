@@ -259,7 +259,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         // TODO: produce one with different defaults for TEXT vs CSV
         GreenplumCSV greenplumCSV = context.getGreenplumCSV();
 
-        // override format options if they are specified in the request
+        // override default format options with values that are specified in the request
         String delimiter = params.removeUserProperty("DELIMITER");
         if (delimiter != null) {
             greenplumCSV.withDelimiter(delimiter);

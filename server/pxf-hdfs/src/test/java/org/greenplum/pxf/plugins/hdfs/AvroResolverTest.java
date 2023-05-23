@@ -207,7 +207,7 @@ public class AvroResolverTest {
 
     /**
      * Tests field processing when PXF RecordReader using GPDBWritable reads an array element and reports it
-     * as OneFiled with the TEXT OID.
+     * as OneField with the TEXT OID.
      */
     @Test
     public void testSetFields_IntArrayWithTextOID() {
@@ -232,7 +232,7 @@ public class AvroResolverTest {
 
     /**
      * Tests field processing when PXF RecordReader using TextWritable (in FDW case) reads an array element and reports it
-     * as OneFiled with the INTARRAY OID.
+     * as OneField with the INTARRAY OID.
      */
     @Test
     public void testSetFields_IntArrayWithArrayOID() {

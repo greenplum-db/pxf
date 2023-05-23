@@ -617,7 +617,7 @@ pxfBeginForeignModify(ModifyTableState *mtstate,
 static PxfFdwModifyState *
 InitForeignModify(Relation relation)
 {
-	elog(DEBUG5, "pxf_fdw: pxfBeginForeignModify starts on segment: %d", PXF_SEGMENT_ID);
+	elog(DEBUG5, "pxf_fdw: InitForeignModify starts on segment: %d", PXF_SEGMENT_ID);
 
 	ForeignTable *rel;
 	Oid			foreigntableid;
@@ -666,8 +666,7 @@ pxfExecForeignInsert(EState *estate,
 {
 	elog(DEBUG5, "pxf_fdw: pxfExecForeignInsert starts on segment: %d", PXF_SEGMENT_ID);
 
-	PxfFdwModifyState *pxfmstate;
-	pxfmstate = (PxfFdwModifyState *) resultRelInfo->ri_FdwState;
+	PxfFdwModifyState *pxfmstate = (PxfFdwModifyState *) resultRelInfo->ri_FdwState;
 	if (!pxfmstate)
 	{
 		/* state has not been initialized yet, create and store it on the first call */
@@ -718,8 +717,8 @@ pxfExecForeignInsert(EState *estate,
 }
 
 /*
- * pxfEndForeignModify
- *		Finish an insert/update/delete operation on a foreign table
+ * pxfEndForeignInsert
+ *		Finish an insert operation on a foreign table
  */
 static void
 pxfEndForeignInsert(EState *estate,
@@ -958,7 +957,7 @@ BeginCopyTo(Relation forrel, List *options)
 static void
 PxfBeginScanErrorCallback(void *arg) {
 	PxfFdwScanState *pxfsstate = (PxfFdwScanState *) arg;
-	if (pxfsstate->relation) {
+	if (pxfsstate && pxfsstate->relation) {
 		if (pxfsstate->options && pxfsstate->options->resource)
 		{
 			errcontext("Foreign table %s, resource %s",

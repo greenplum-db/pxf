@@ -30,7 +30,11 @@ import java.util.stream.IntStream;
 /**
  * A RecordReader that reads data from an input stream and deserializes database tuples encoded in TEXT format.
  */
-public class TextRecordReader extends BaseRecordReader implements RecordReader {
+public class TextRecordReader extends BaseRecordReader {
+
+    // max number of columns in a Greenplum table
+    // see MaxHeapAttributeNumber in https://github.com/greenplum-db/gpdb/blob/main/src/include/access/htup_details.h
+    private static final int MAX_COLUMNS = 1600;
 
     private final GreenplumCSV greenplumCSV;
     private final CsvParser parser;
@@ -64,7 +68,7 @@ public class TextRecordReader extends BaseRecordReader implements RecordReader {
         parserSettings.setCommentProcessingEnabled(false);  // there should be no comments, do not waste time analyzing
         parserSettings.setIgnoreLeadingWhitespaces(false);  // do not remove any whitespaces
         parserSettings.setIgnoreTrailingWhitespaces(false); // do not remove any whitespaces
-        parserSettings.setMaxColumns(1600);                 // align max columns with GP spec
+        parserSettings.setMaxColumns(MAX_COLUMNS);          // align max columns with Greenplum spec
         // we should've set maxCharsPerColumn value to 1GB (max size in GP) or larger (for multibyte UTF8 chars)
         // but Univocity tries to allocate the buffer of this size ahead of time, which is very inefficient
         // parserSettings.setMaxCharsPerColumn(Integer.MAX_VALUE);
@@ -114,6 +118,9 @@ public class TextRecordReader extends BaseRecordReader implements RecordReader {
         initialized = true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<OneField> readRecord(DataInput input) throws Exception {
         if (iterator == null) {
@@ -162,8 +169,10 @@ public class TextRecordReader extends BaseRecordReader implements RecordReader {
         switch (dataType) {
             case BOOLEAN:
                 return Boolean.class;
-//            case BYTEA:
-//                return ByteBuffer.class;
+         // this section below should've been here, but since I could not get univocity to return null value properly
+         // for the custom BinaryConversion, we treat BYTEA as a String here and will do parsing in readRecord method
+         // case BYTEA:
+         //     return ByteBuffer.class;
             case BIGINT:
                 return Long.class;
             case SMALLINT:

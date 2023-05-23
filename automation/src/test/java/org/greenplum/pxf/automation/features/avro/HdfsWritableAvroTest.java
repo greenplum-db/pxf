@@ -397,7 +397,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
                 "(5, '{5,50,500}',    '{5.0001,NULL,500.000001}',      '{\"item 0\",\"item 10\",\"item 20\"}')",
                 "(6, '{6,60,600}',    '{6.0001,60.00001,600.000001}',  '{\"item 0\",\"item 10\",NULL}'       )",
                 "(7, '{7,70,700}',    '{7.0001,70.00001,700.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}')"});
-        gpdb.insertData(exTable, data);
+        gpdb.insertData(data, exTable);
     }
 
     private void fetchAndVerifyAvroHcfsFiles(String compareFile, String codec) throws Exception {

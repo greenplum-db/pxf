@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Record reader that reads data from an input stream and deserializes database tuples encoded in GPDBWritable format.
  */
-public class GPDBWritableRecordReader extends BaseRecordReader implements RecordReader {
+public class GPDBWritableRecordReader extends BaseRecordReader {
 
     /**
      * Creates a new instance
@@ -21,6 +21,9 @@ public class GPDBWritableRecordReader extends BaseRecordReader implements Record
         super(context);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<OneField> readRecord(DataInput input) throws Exception {
         GPDBWritable gpdbWritable = new GPDBWritable(databaseEncoding);

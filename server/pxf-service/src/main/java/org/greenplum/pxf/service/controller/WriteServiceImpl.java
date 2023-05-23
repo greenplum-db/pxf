@@ -47,7 +47,7 @@ public class WriteServiceImpl extends BaseServiceImpl<OperationStats> implements
     }
 
     /**
-     * Reads the input stream, iteratively submits submits data from the stream to created bridge.
+     * Reads the input stream, iteratively submits data from the stream to created bridge.
      *
      * @param context     request context
      * @param inputStream input stream

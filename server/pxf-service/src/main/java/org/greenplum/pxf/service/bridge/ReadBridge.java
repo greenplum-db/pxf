@@ -116,8 +116,9 @@ public class ReadBridge extends BaseBridge {
     }
 
     /**
-     * Close the underlying resource
+     * {@inheritDoc}
      */
+    @Override
     public void endIteration() throws Exception {
         try {
             accessor.closeForRead();

@@ -45,7 +45,7 @@ public class RecordReaderFactory {
                     to avoid reading bytes from the inputStream here and instead pass the inputStream in the record.
                     This code used to use the Text class to read bytes until a line delimiter was found. This would cause
                     issues with wide rows that had 1MB+, because the Text code grows the array to fit data, and
-                    it does it inefficiently. We observed multiple calls to System.arraycopy in the setCapacity method
+                    it does so inefficiently. We observed multiple calls to System.arraycopy in the setCapacity method
                     for every byte after we exceeded the original buffer size. This caused terrible performance in PXF,
                     even when writing a single row to an external system.
                     */

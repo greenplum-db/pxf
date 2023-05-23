@@ -539,7 +539,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      * The test creates a writable external table, copies the data into it, then
      * uses a readable external table to compare the data with the original.
      */
-    // FDW does not yet support DITRIBUTED BY on foreign tables, we can't guarantee only 1 segment will write data
+    // FDW does not yet support DISTRIBUTED BY on foreign tables, we can't guarantee only 1 segment will write data
     @SkipForFDW
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void veryLongRecords() throws Exception {

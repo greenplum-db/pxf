@@ -16,8 +16,7 @@ public class ForeignTable extends WritableExternalTable {
                 .append(createHeader())
                 .append(createFields())
                 .append(createServer())
-                .append(createOptions())
-                .append(distribution());
+                .append(createOptions());
         return builder.toString();
     }
 
@@ -190,7 +189,8 @@ public class ForeignTable extends WritableExternalTable {
 
     private String[] getProfileParts() {
         if (getProfile() == null) {
-            // TODO: what will we do with tests that set F/A/R directly without a profile ?
+            // tests that set F/A/R directly without a profile need to be registered to 'test_fdw' created for testing
+            // specifically that defines pseudo protocol 'test'
             throw new IllegalStateException("Cannot create foreign table when profile is not specified");
         }
         return getProfile().split(":");
