@@ -367,7 +367,7 @@ Perform the following procedure to create Greenplum Database writable external t
 
 ## <a id="multibyte_delim"></a>About Reading Data Containing Multi-Byte or Multi-Character Delimiters
 
-When data contains a multi-byte delimiter or multiple delimiter characters, you can use only a `*:text` or `*:csv` PXF profile to read the text. The syntax for creating a readable external table for such data follows:
+When data contains a multi-byte delimiter or multiple delimiter characters, you can use only a `*:text` or `*:csv` PXF profile to read the data. The syntax for creating a readable external table for such data follows:
 
 ``` sql
 CREATE EXTERNAL TABLE <table_name>
@@ -383,8 +383,8 @@ PXF recognizes the following formatter options:
 | Option Name  | Description | Default Value |
 |-------|---------------|---------------|
 | DELIMITER | The single-byte or multi-byte delimiter string that separates columns. The string may be up to 32 bytes in length, and may not contain quote or escape characters. **Required** | None |
-| QUOTE | When reading CSV data with a `*:csv` profile, the single ASCII quotation character for all columns. | `"` (double quote) |
-| ESCAPE | The single ASCII character used to escape special characters (for example, the `DELIM`, `QUOTE`,  or `NEWLINE` value, or the `ESCAPE` value itself). | The `QUOTE` value. |
+| QUOTE | When reading CSV data with a `*:csv` profile, the single one-byte ASCII quotation character for all columns. | `"` (double quote) |
+| ESCAPE | The single one-byte ASCII character used to escape special characters (for example, the `DELIM`, `QUOTE`,  or `NEWLINE` value, or the `ESCAPE` value itself). | The `QUOTE` value. |
 | NEWLINE | The end-of-line indicator that designates the end of a row. Every line in the file must be terminated with the specified newline value. Valid values are `LF` (line feed, `0x0A`), `CRLF` (carriage return, `0x0D`), or `CR` (carriage return plus line feed, `0x0D` `0x0A`). | `LF` |
 
 The following sections provide further information about the delimiter, quote, and escape options.
@@ -393,7 +393,7 @@ The following sections provide further information about the delimiter, quote, a
 
 You can directly specify the delimiter or provide its byte representation.
 
-When you directly specify the delimiter, PXF converts between the file encoding and the database encoding for you. The following example directly specifies the `¤` currency symbol for the delimiter:
+When you directly specify the delimiter, Greenplum Database converts between the file encoding and the database encoding for you. The following example directly specifies the `¤` currency symbol for the delimiter:
 
 ```
 CREATE READABLE EXTERNAL TABLE mbyte_delim (id int, city text, state text)
