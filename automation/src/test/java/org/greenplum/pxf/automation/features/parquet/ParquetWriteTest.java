@@ -160,12 +160,12 @@ public class ParquetWriteTest extends BaseWritableFeature {
         runWritePrimitivesScenario("pxf_parquet_write_padded_char", "pxf_parquet_read_padded_char", "parquet_write_padded_char", null);
 
         /* 2. Insert data with chars that need padding */
-        gpdb.insertData(writableExTable, "('row25_char_needs_padding', 's_17', 11, 37, 0.123456789012345679, " +
-                "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, 'a  ', '1')");
-        gpdb.insertData(writableExTable, "('row26_char_with_tab', 's_17', 11, 37, 0.123456789012345679, " +
-                "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'b\\t ', '1')");
-        gpdb.insertData(writableExTable, "('row27_char_with_newline', 's_17', 11, 37, 0.123456789012345679, " +
-                "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'c\\n ', '1')");
+        gpdb.insertData("('row25_char_needs_padding', 's_17', 11, 37, 0.123456789012345679, " +
+                "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, 'a  ', '1')", writableExTable);
+        gpdb.insertData("('row26_char_with_tab', 's_17', 11, 37, 0.123456789012345679, " +
+                "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'b\\t ', '1')", writableExTable);
+        gpdb.insertData("('row27_char_with_newline', 's_17', 11, 37, 0.123456789012345679, " +
+                "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'c\\n ', '1')", writableExTable);
 
         if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
             // for HCFS on Cloud, wait a bit for async write in previous steps to finish
@@ -501,7 +501,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
                     ;
             values.append(statementBuilder.toString().concat((i < (numRows - 1)) ? "," : ""));
         }
-        gpdb.insertData(exTable, values.toString());
+        gpdb.insertData(values.toString(), exTable);
     }
 
     private void assertHiveByteaArrayData(List<List<String>> queryResultData) {
