@@ -4,7 +4,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
-import org.greenplum.pxf.plugins.hdfs.orc.OrcUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,20 +99,24 @@ public class DecimalUtilities {
     private BigDecimal parseDecimalStringWithHiveDecimal(String profile, String value, int precision, int scale, boolean enforcePrecisionAndScale, String columnName) {
         /*
          HiveDecimal.create has different behaviors for different types of overflow:
-         (1) When the data integer digit count (data precision - data scale) is greater than 38,
+
+         (1) Precision overflow
+         When the data integer digit count (data precision - data scale) is greater than 38,
          HiveDecimal.create will return a null value. To make the behavior consistent with Hive's behavior
          when storing on a Parquet-backed table, we store the value as null.
          For example, the integer digit count of 1234567890123456789012345678901234567890.123 is 40,
          which is greater than 38. HiveDecimal.create returns null.
 
-         (2) When data integer digit count is not greater than 38,
+         (2) Integer digit count overflow
+         When data integer digit count is not greater than 38,
          and the overall data precision is greater than 38,
          HiveDecimal.create will return a rounded-off value to fit in the Hive maximum supported precision 38.
          For example, the integer digit count of 1234567890123456789012345.12345678901234567890 is 25 which is less than 38,
          but its overall precision is 45 which is greater than 38.
          Then data will be created as a rounded value 1234567890123456789012345.1234567890123
 
-         (3) When data integer digit count is not greater than 38,
+         (3) Scale overflow
+         When data integer digit count is not greater than 38,
          and the overall data precision is not greater than 38,
          HiveDecimal.create will return the same decimal value as provided.
          For example, 123456.123456 can fit in DECIMAL(38,18) without any data loss, so the data will be created as the same
@@ -140,6 +143,12 @@ public class DecimalUtilities {
             return null;
         }
 
+        // When enforcePrecisionAndScale = true, it will have a check on integer digit count (HiveDecimal.enforcePrecisionScale),
+        // and values will be rounded with the integer digit count not greater than the max integer digit count
+        // When enforcePrecisionAndScale = false, no check on integer digit count,
+        // and values will be rounded with the integer digit count not greater than the max precision
+        // so there will be different error hints in the scale check
+        String limitationForAccurateValue = String.format("maximum precision %s", precision);
         if (enforcePrecisionAndScale) {
             // At this point data can fit in precision 38, but still need enforcePrecisionScale to check whether it can fit in scale 18
             hiveDecimal = HiveDecimal.enforcePrecisionScale(
@@ -174,23 +183,25 @@ public class DecimalUtilities {
                 }
                 return null;
             }
+
+            limitationForAccurateValue = String.format("maximum scale %s", scale);
         }
 
         BigDecimal accurateDecimal = new BigDecimal(value);
         // At this point data can fit in DECIMAL(38,18), but may have been rounded off
         if ((isDecimalOverflowOptionError || isDecimalOverflowOptionRound) && accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
             if (isDecimalOverflowOptionError) {
-                throw new UnsupportedTypeException(String.format("The value %s for the %s NUMERIC column %s exceeds maximum scale %d.",
-                        value, profile, columnName, scale));
+                throw new UnsupportedTypeException(String.format("The value %s for the %s NUMERIC column %s exceeds %s, and cannot be stored without precision loss.",
+                        value, profile, columnName, limitationForAccurateValue));
             }
 
-            LOG.trace("The value {} for the {} NUMERIC column {} exceeds maximum scale {} and has been rounded off.",
-                    value, profile, columnName, scale);
+            LOG.trace("The value {} for the {} NUMERIC column {} exceeds {} and has been rounded off.",
+                    value, profile, columnName, limitationForAccurateValue);
 
             if (!isScaleOverflowWarningLogged) {
-                LOG.warn("There are rows where for the {} NUMERIC column {} the values exceed maximum scale {} " +
+                LOG.warn("There are rows where for the {} NUMERIC column {} the values exceed {} " +
                                 "and have been rounded off. Enable TRACE log level for row-level details.",
-                        profile, columnName, scale);
+                        profile, columnName, limitationForAccurateValue);
                 isScaleOverflowWarningLogged = true;
             }
         }

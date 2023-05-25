@@ -146,7 +146,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     private List<List<OneField>> cachedBatch;
     private VectorizedRowBatch vectorizedRowBatch;
 
-    private DecimalUtilities decimalUtilities = new DecimalUtilities();
+    private final DecimalUtilities decimalUtilities = new DecimalUtilities();
     /**
      * {@inheritDoc}
      */
