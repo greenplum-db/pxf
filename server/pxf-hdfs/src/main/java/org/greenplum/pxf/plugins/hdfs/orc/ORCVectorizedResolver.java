@@ -16,8 +16,10 @@ import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.model.WriteVectorizedResolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.hdfs.utilities.DecimalUtilities;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -150,6 +152,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
         positionalAccess = context.getOption(MAP_BY_POSITION_OPTION, false);
+        decimalUtilities.parseDecimalOverflowOption(configuration, "orc", PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME);
     }
 
     /**
@@ -244,13 +247,27 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
             // fill up column vectors for the columns of the given row with record values using mapping functions
             for (OneField field : record) {
                 ColumnVector columnVector = vectorizedRowBatch.cols[columnIndex];
-                if (field.val == null) {
+                Object val = field.val;
+                if (val == null) {
                     if (columnVector.noNulls) {
                         columnVector.noNulls = false; // write only if the value is different from what we need it to be
                     }
                     columnVector.isNull[rowIndex] = true;
                 } else {
-                    writeFunctions[columnIndex].accept(columnVector, rowIndex, field.val);
+                    if (columnVector.type.name().equals("DECIMAL")) {
+                        BigDecimal convertedValue = decimalUtilities.parseDecimalString("ORC", (String) val, orcSchema.getPrecision(), orcSchema.getScale(), "");
+                        if (convertedValue == null) {
+                            // converted value can be null if the original value exceeds precision and cannot be rounded
+                            // Hive just stores NULL as the value, let's do the same
+                            columnVector.isNull[rowIndex] = true;
+                            columnVector.noNulls = false;
+                            continue;
+                        } else {
+                            val = convertedValue.toString();
+                        }
+                    }
+                    // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
+                    writeFunctions[columnIndex].accept(columnVector, rowIndex, val);
                 }
                 columnIndex++;
             }

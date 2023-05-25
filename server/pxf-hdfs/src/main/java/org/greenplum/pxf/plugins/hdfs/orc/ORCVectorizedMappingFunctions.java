@@ -492,8 +492,7 @@ class ORCVectorizedMappingFunctions {
             } else {
                 writeFunction = writeListFunctionsMap.get(childTypeDescription.getCategory());
             }
-        }
-        else {
+        } else {
             writeFunction = writeFunctionsMap.get(columnTypeCategory);
         }
         if (writeFunction == null) {
@@ -551,21 +550,13 @@ class ORCVectorizedMappingFunctions {
         writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val) -> {
             // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
             HiveDecimal convertedValue = HiveDecimal.create((String) val);
-            if (convertedValue == null) {
-                // converted value can be null if the original value exceeds precision and cannot be rounded
-                // Hive just stores NULL as the value, let's do the same
-                columnVector.isNull[row] = true;
-                columnVector.noNulls = false;
-                LOG.warn("Ignored numeric value {} as it exceeds ORC precision and cannot be rounded.", val);
-            } else {
-                ((DecimalColumnVector) columnVector).vector[row].set(convertedValue);
-            }
+            ((DecimalColumnVector) columnVector).vector[row].set(convertedValue);
         });
 
         writeFunctionsMap.put(TypeDescription.Category.VARCHAR, writeFunctionsMap.get(TypeDescription.Category.STRING));
 
         // TODO: do we need to right-trim CHAR values like we do in Parquet ?
-        writeFunctionsMap.put(TypeDescription.Category.CHAR,  writeFunctionsMap.get(TypeDescription.Category.STRING));
+        writeFunctionsMap.put(TypeDescription.Category.CHAR, writeFunctionsMap.get(TypeDescription.Category.STRING));
 
         // MAP, STRUCT, UNION - not supported by our ORCSchemaBuilder, so we do not expect to see them
 

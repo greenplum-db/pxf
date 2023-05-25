@@ -1,6 +1,7 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
 import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.jupiter.api.BeforeEach;
@@ -126,17 +127,17 @@ public class ORCSchemaBuilderTest {
         assertEquals("struct<col0:decimal(38,10)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         columnDescriptors.clear();
-        columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{20,5}));
+        columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{20, 5}));
         assertEquals("struct<col0:decimal(20,5)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision and scale are both explicit nulls, same as missing, defaults are assumed
         columnDescriptors.clear();
-        columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{null,null}));
+        columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{null, null}));
         assertEquals("struct<col0:decimal(38,10)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision is null, scale is not null, error is reported
         columnDescriptors.clear();
-        columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{null,5}));
+        columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{null, 5}));
         Exception e = assertThrows(PxfRuntimeException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
         assertEquals("Invalid modifiers: scale defined as 5 while precision is not set.", e.getMessage());
 
@@ -150,24 +151,23 @@ public class ORCSchemaBuilderTest {
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{20}));
         assertEquals("struct<col0:decimal(20,0)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
-        // precision is smaller than ORC default scale of 10, scale missing
+        // precision is smaller than ORC default scale of 10, scale missing, and we've changed the default scale from 10 to 0
+        // we will not get an error from the check (precision > 38 || scale > precision)
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{8}));
         assertEquals("struct<col0:decimal(8,0)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision is smaller than ORC default scale of 10, scale is provided
         columnDescriptors.clear();
-        columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{8,2}));
+        columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{8, 2}));
         assertEquals("struct<col0:decimal(8,2)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision is larger than ORC max of 38
+        // we've replaced the orc's error messages with our more detailed one when failed on (precision > 38 || scale > precision)
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{55}));
-        e = assertThrows(IllegalArgumentException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
-        assertEquals("precision 55 is out of range 1 .. 0", e.getMessage());
-        // that was rather unfortunate error message from ORC library, since ORC errors out with the same error message
-        // for this complex check (precision > MAX_PRECISION || scale > precision), but we'll leave it as such and
-        // have ORC perform this validation since MAX_PRECISION is not a public constant and might change in the future.
+        e = assertThrows(UnsupportedTypeException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
+        assertEquals("Column col0 is defined as NUMERIC with precision 55 which exceeds maximum supported precision 38 of ORC.", e.getMessage());
     }
 
     @Test
