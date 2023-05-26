@@ -117,10 +117,8 @@ public abstract class ORCSchemaBuilder {
 
     /**
      * Sets precision and scale for NUMERIC ORC type if a corresponding Greenplum column had modifiers
-     *
-     * @param typeDescription     ORC type description
+     * @param typeDescription ORC type description
      * @param columnTypeModifiers Greenplum type modifiers
-     * @param columnName          Greenplum column name
      * @return type description object with the specified precision and scale, if any
      */
     private static TypeDescription setPrecisionAndScale(TypeDescription typeDescription, Integer[] columnTypeModifiers, String columnName) {

@@ -321,6 +321,7 @@ public class OrcWriteTest extends BaseFeature {
 
         runTincTest("pxf.features.orc.write.decimal_with_large_precision_defined.runTest");
     }
+
     private void insertDataWithoutNulls(String exTable, int numRows) throws Exception {
         StringBuilder statementBuilder = new StringBuilder("INSERT INTO " + exTable + "_writable VALUES ");
         for (int i = 0; i < numRows; i++) {

@@ -159,7 +159,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         records.add(record);
 
         Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals("The value 123456789012345678901234567890.123456789012345 for the ORC NUMERIC column  exceeds maximum precision 38, and cannot be stored without precision loss.", e.getMessage());
+        assertEquals("The value 123456789012345678901234567890.123456789012345 for the ORC NUMERIC column col14 exceeds maximum precision 38, and cannot be stored without precision loss.", e.getMessage());
     }
 
     @Test

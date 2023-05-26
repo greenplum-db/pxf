@@ -147,7 +147,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     private List<List<OneField>> cachedBatch;
     private VectorizedRowBatch vectorizedRowBatch;
 
-    private final DecimalUtilities decimalUtilities = new DecimalUtilities();
+    private final DecimalUtilities decimalUtilities = new DecimalUtilities("ORC");
     /**
      * {@inheritDoc}
      */
@@ -156,7 +156,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
         positionalAccess = context.getOption(MAP_BY_POSITION_OPTION, false);
-        decimalUtilities.parseDecimalOverflowOption(configuration, "orc", PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME);
+        decimalUtilities.parseDecimalOverflowOption(configuration, PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME);
     }
 
     /**
@@ -259,7 +259,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     columnVector.isNull[rowIndex] = true;
                 } else {
                     if (columnVector.type.name().equals("DECIMAL")) {
-                        BigDecimal convertedValue = decimalUtilities.parseDecimalString("ORC", (String) val, orcSchema.getPrecision(), orcSchema.getScale(), "");
+                        BigDecimal convertedValue = decimalUtilities.parseDecimalString((String) val, orcSchema.getPrecision(), orcSchema.getScale(), orcSchema.getFieldNames().get(columnIndex));
                         if (convertedValue == null) {
                             // converted value can be null if the original value exceeds precision and cannot be rounded
                             // Hive just stores NULL as the value, let's do the same
