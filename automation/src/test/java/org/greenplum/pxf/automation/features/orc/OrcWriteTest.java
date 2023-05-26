@@ -47,6 +47,11 @@ public class OrcWriteTest extends BaseFeature {
             "c_timestamptz  timestamptz", // DataType.TIMESTAMP_WITH_TIME_ZONE
     };
 
+    private static final String[] ORC_DECIMAL_WITH_LARGE_PRECISION_TABLE_COLUMNS = {
+            "id             integer"        ,
+            "c_numeric      numeric(90)"     // DataType.NUMERIC
+    };
+
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS_HIVE = {
             "id                 INT"           ,
             "c_bool             BOOLEAN"       , // DataType.BOOLEAN
@@ -307,6 +312,15 @@ public class OrcWriteTest extends BaseFeature {
         runTincTest("pxf.features.orc.write.primitive_types_array_multi.runTest");
     }
 
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWriteDecimalWithLargePrecisionDefined() throws Exception {
+        gpdbTableNamePrefix = "pxf_orc_decimals_with_large_precision";
+        fullTestPath = hdfsPath + "orc_decimals_with_large_precision";
+
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_DECIMAL_WITH_LARGE_PRECISION_TABLE_COLUMNS, fullTestPath);
+
+        runTincTest("pxf.features.orc.write.decimal_with_large_precision_defined.runTest");
+    }
     private void insertDataWithoutNulls(String exTable, int numRows) throws Exception {
         StringBuilder statementBuilder = new StringBuilder("INSERT INTO " + exTable + "_writable VALUES ");
         for (int i = 0; i < numRows; i++) {

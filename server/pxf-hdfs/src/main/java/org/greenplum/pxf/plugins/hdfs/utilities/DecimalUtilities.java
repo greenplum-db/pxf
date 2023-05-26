@@ -123,7 +123,7 @@ public class DecimalUtilities {
          */
 
         // HiveDecimal.create will return a decimal value which can fit in DECIMAL(38)
-        // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
+        // also there is Decimal and Decimal64 column vectors for ORC, see TypeUtils.createColumn
         HiveDecimal hiveDecimal = HiveDecimal.create(value);
         if (hiveDecimal == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {

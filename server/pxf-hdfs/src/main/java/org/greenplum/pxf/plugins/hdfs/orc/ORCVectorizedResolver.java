@@ -105,6 +105,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
 
     private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.orc.write.decimal.overflow";
+
     /**
      * The schema used to read or write the ORC file.
      */

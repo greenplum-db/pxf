@@ -130,6 +130,7 @@ public abstract class ORCSchemaBuilder {
             if (precision != null) {
                 // In ORC code, no getter for ORC's MAX_PRECISION but there's a getter for ORC's precision.
                 // By default, ORC precision is set to a hardcoded value 38, which is same as MAX_PRECISION's value
+                // and at this point, typeDescription.getPrecision() is still the default precision 38
                 int maxPrecision = typeDescription.getPrecision();
                 // if precision provided in the table DDL exceeds the max precision, ORC will throw an exception
                 // here we provide a PXF error message containing more details
@@ -147,8 +148,8 @@ public abstract class ORCSchemaBuilder {
                 throw new PxfRuntimeException(
                         String.format("Invalid modifiers: scale defined as %d while precision is not set.", columnTypeModifiers[1]));
             }
-            // if precision was not sent, ORC defaults of (38, 10) will be assumed
         }
+        // if precision was not sent, ORC defaults of (38, 10) will be assumed
         return typeDescription;
     }
 }

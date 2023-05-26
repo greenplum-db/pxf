@@ -15,6 +15,7 @@ import org.apache.orc.TypeDescription;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
@@ -123,14 +124,42 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         records = new ArrayList<>(1);
         List<OneField> record = getRecord(0, -1);
         // reset the decimal value to a higher unsupported (>38) precision
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), "12345678901234567890123456789.0123456789"));
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), "123456789012345678901234567890.123456789012345"));
         records.add(record);
 
         OneRow batchWrapper = resolver.setFieldsForBatch(records);
         VectorizedRowBatch batch = (VectorizedRowBatch) batchWrapper.getData();
 
         // this value we expect to be rounded
-        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, new HiveDecimalWritable("12345678901234567890123456789.012345679"));
+        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, new HiveDecimalWritable("123456789012345678901234567890.123456789012345"));
+    }
+
+    @Test
+    public void testExceedingDefaultPrecisionWithRounding_ErrorOption() {
+        // simple test with hardcoded value assertions to make sure basic test logic itself is correct
+        boolean[] IS_NULL = new boolean[16]; // no nulls in test records
+        boolean[] NO_NULL = new boolean[16]; // no nulls in test records
+        Arrays.fill(NO_NULL, true);
+
+        columnDescriptors = getAllColumns();
+        context.setTupleDescription(columnDescriptors);
+        when(mockWriterOptions.getSchema()).thenReturn(getSchemaForAllColumns());
+        when(mockWriterOptions.getUseUTCTimestamp()).thenReturn(true);
+        context.setMetadata(mockWriterOptions);
+        configuration.set("pxf.orc.write.decimal.overflow", "error");
+        context.setConfiguration(configuration);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        records = new ArrayList<>(1);
+        List<OneField> record = getRecord(0, -1);
+        // reset the decimal value to a higher unsupported (>38) precision
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), "123456789012345678901234567890.123456789012345"));
+        records.add(record);
+
+        Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
+        assertEquals("The value 123456789012345678901234567890.123456789012345 for the ORC NUMERIC column  exceeds maximum precision 38, and cannot be stored without precision loss.", e.getMessage());
     }
 
     @Test
