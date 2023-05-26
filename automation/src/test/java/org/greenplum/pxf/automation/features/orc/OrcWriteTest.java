@@ -7,8 +7,6 @@ import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
-import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
@@ -320,6 +318,16 @@ public class OrcWriteTest extends BaseFeature {
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_DECIMAL_WITH_LARGE_PRECISION_TABLE_COLUMNS, fullTestPath);
 
         runTincTest("pxf.features.orc.write.decimal_with_large_precision_defined.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWriteDecimalWithLargePrecisionNotDefined() throws Exception {
+        gpdbTableNamePrefix = "pxf_orc_decimals_with_large_precision_not_defined";
+        fullTestPath = hdfsPath + "orc_decimals_with_large_precision_not_defined";
+
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+
+        runTincTest("pxf.features.orc.write.decimal_with_large_precision_not_defined.runTest");
     }
 
     private void insertDataWithoutNulls(String exTable, int numRows) throws Exception {

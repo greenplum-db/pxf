@@ -15,7 +15,7 @@ public class DecimalUtilities {
     private static final String PXF_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE = "ignore";
     private static final Logger LOG = LoggerFactory.getLogger(DecimalUtilities.class);
 
-    private String profile;
+    private final String profile;
     private boolean isDecimalOverflowOptionError;
     private boolean isDecimalOverflowOptionRound;
     private boolean isPrecisionOverflowWarningLogged;
@@ -82,9 +82,10 @@ public class DecimalUtilities {
          */
 
         if (StringUtils.equalsIgnoreCase(profile, "parquet")) {
-            if (precision > HiveDecimal.MAX_PRECISION) {
-                return parseDecimalStringWithBigDecimal();
-            }
+            //TODO: uncomment this part when working on the complete numeric fix for Parquet
+//            if (precision > HiveDecimal.MAX_PRECISION) {
+//                return parseDecimalStringWithBigDecimal();
+//            }
             return parseDecimalStringWithHiveDecimal(value, precision, scale, true, columnName);
         }
         return parseDecimalStringWithHiveDecimal(value, precision, scale, false, columnName);
@@ -131,17 +132,17 @@ public class DecimalUtilities {
         HiveDecimal hiveDecimal = HiveDecimal.create(value);
         if (hiveDecimal == null) {
             if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
-                throw new UnsupportedTypeException(String.format("The value %s for the %s NUMERIC column %s exceeds maximum precision %d.",
-                        value, profile, columnName, precision));
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision %d.",
+                        value, columnName, profile, precision));
             }
 
-            LOG.trace("The value {} for the {} NUMERIC column {} exceeds maximum precision {} and has been stored as NULL.",
-                    value, profile, columnName, precision);
+            LOG.trace("The value {} for the NUMERIC column {} using {} profile exceeds maximum precision {} and has been stored as NULL.",
+                    value, columnName, profile, precision);
 
             if (!isPrecisionOverflowWarningLogged) {
-                LOG.warn("There are rows where for the {} NUMERIC column {} the values exceed maximum precision {} " +
+                LOG.warn("There are rows where for the NUMERIC column {} using {} profile the values exceed maximum precision {} " +
                                 "and have been stored as NULL. Enable TRACE log level for row-level details.",
-                        profile, columnName, precision);
+                        columnName, profile, precision);
                 isPrecisionOverflowWarningLogged = true;
             }
             return null;
@@ -172,15 +173,15 @@ public class DecimalUtilities {
              */
             if (hiveDecimal == null) {
                 if (isDecimalOverflowOptionError || isDecimalOverflowOptionRound) {
-                    throw new UnsupportedTypeException(String.format("The value %s for the %s NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
-                            value, profile, columnName, precision, scale));
+                    throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision and scale (%d,%d).",
+                            value, columnName, profile, precision, scale));
                 }
 
-                LOG.trace("The value {} for the {} NUMERIC column {} exceeds maximum precision and scale ({},{}) and has been stored as NULL.",
-                        value, profile, columnName, precision, scale);
+                LOG.trace("The value {} for the NUMERIC column {} using {} profile exceeds maximum precision and scale ({},{}) and has been stored as NULL.",
+                        value, columnName, profile, precision, scale);
 
                 if (!isIntegerDigitCountOverflowWarningLogged) {
-                    LOG.warn("There are rows where for the {} NUMERIC column {} the values exceed maximum precision and scale ({},{}) " +
+                    LOG.warn("There are rows where for the NUMERIC column {} using {} profile the values exceed maximum precision and scale ({},{}) " +
                                     "and have been stored as NULL. Enable TRACE log level for row-level details.",
                             profile, columnName, precision, scale);
                     isIntegerDigitCountOverflowWarningLogged = true;
@@ -195,15 +196,15 @@ public class DecimalUtilities {
         // At this point data can fit in DECIMAL(38,18), but may have been rounded off
         if ((isDecimalOverflowOptionError || isDecimalOverflowOptionRound) && accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
             if (isDecimalOverflowOptionError) {
-                throw new UnsupportedTypeException(String.format("The value %s for the %s NUMERIC column %s exceeds %s, and cannot be stored without precision loss.",
-                        value, profile, columnName, limitationForAccurateValue));
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s using %s profile exceeds %s, and cannot be stored without precision loss.",
+                        value, columnName, profile, limitationForAccurateValue));
             }
 
-            LOG.trace("The value {} for the {} NUMERIC column {} exceeds {} and has been rounded off.",
-                    value, profile, columnName, limitationForAccurateValue);
+            LOG.trace("The value {} for the NUMERIC column {} using {} profile exceeds {} and has been rounded off.",
+                    value, columnName, profile, limitationForAccurateValue);
 
             if (!isScaleOverflowWarningLogged) {
-                LOG.warn("There are rows where for the {} NUMERIC column {} the values exceed {} " +
+                LOG.warn("There are rows where for the NUMERIC column {} using {} profile the values exceed {} " +
                                 "and have been rounded off. Enable TRACE log level for row-level details.",
                         profile, columnName, limitationForAccurateValue);
                 isScaleOverflowWarningLogged = true;
