@@ -77,10 +77,8 @@ public class TextRecordReader extends BaseRecordReader {
         parser = new CsvParser(parserSettings);
 
         if (LOG.isDebugEnabled()) {
-            // replace new line characters so that the log message takes only 1 line
-            LOG.debug("Configured CSV Parser : {}", csvFormat.toString()
-                    .replace("\n", " ")
-                    .replace("\t", "|"));
+            // replace new line and tab characters so that the log message takes only 1 line
+            LOG.debug("Configured CSV Parser : {}", csvFormat.toString().replaceAll("\n\t+", " | "));
         }
     }
 
