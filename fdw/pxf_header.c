@@ -74,8 +74,15 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 
 	// If projectionInfo is Null, it means there should be no projection.
 	// We can skip the whole logic of adding projection desc to headers.
+	// projectionInfo can be NULL in some cases like "SELECT * FROM"
+	// because we are selecting all the columns here.
 	if (projectionInfo != NULL)
 	{
+		//TODO retrieved_attrs contains the list of columns being retrieved
+		// Ideally this should contains the correct projectionInfo but in some cases it isn't the case.
+		// For e.g. select * from TABLE_NAME
+		// Need to figure out if we should be using the projectionInfo or retrieved_attrs here for the projection.
+
 		/* add the list of attrs to the projection desc http headers */
 		AddProjectionDescHttpHeader(headers, retrieved_attrs, relation);
 	}
