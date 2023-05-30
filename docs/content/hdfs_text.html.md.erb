@@ -367,14 +367,9 @@ Perform the following procedure to create Greenplum Database writable external t
 
 ## <a id="about_encoding"></a>About Setting the External Table Encoding
 
-When the external file encoding differs from the database encoding, you must set the external table `ENCODING` to match that of the data file, create the external table as follows.
-
-For example, if the database encoding is `UTF8`, the file encoding is `LATIN1`, and the delimiter is the `¤` currency symbol:
+When the external file encoding differs from the database encoding, you must set the external table `ENCODING` to match that of the data file. For example, if the database encoding is `UTF8`, the file encoding is `LATIN1`, and the delimiter is the `¤` currency symbol, create the external table as follows:
 
 ```
-CREATE READABLE EXTERNAL TABLE byterep_delim (id int, city text, state text)
-  LOCATION ('pxf://multibyte_example?PROFILE=hdfs:csv')
-FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import', DELIMITER='¤') ENCODING 'LATIN1';
 CREATE EXTERNAL TABLE pxf_csv_latin1(location text, month text, num_orders int, total_sales float8)
   LOCATION ('pxf://data/pxf_examples/pxf_hdfs_simple.txt?PROFILE=hdfs:csv')
 FORMAT 'CSV' ENCODING 'LATIN1';
@@ -458,6 +453,7 @@ When PXF reads data that contains a multi-byte or multi-character delimiter, its
 ### <a id="mbd_examples"></a>Examples
 
 #### <a id="qe_example"></a>Delimiter with Quoted Data
+
 Given the following sample data that uses the double-quote (`"`) quote character and the delimiter `¤`:
 
 ```
@@ -490,9 +486,14 @@ CREATE READABLE EXTERNAL TABLE mybte_delim_quoted_escaped (sentence text, num in
 FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import', DELIMITER='¤', QUOTE '"', ESCAPE '\');
 ```
 
-Given this external table definition, PXF reads the `sentence` text field as:
+With this external table definition, PXF reads the `sentence` text field as:
 
 ```
-"hello, my name is jane" she said. let's escape something \
+SELECT sentence FROM mbyte_delim_quoted_escaped;
+
+                          sentence 
+-------------------------------------------------------------
+ "hello, my name is jane" she said. let's escape something \
+(1 row)
 ```
 
