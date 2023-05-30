@@ -395,9 +395,9 @@ PXF recognizes the following formatter options when reading data that contains a
 | DELIMITER=\<delim_string\> | The single-byte or multi-byte delimiter string that separates columns. The string may be up to 32 bytes in length, and may not contain quote or escape characters. **Required** | None |
 | QUOTE=\<char\> | The single one-byte ASCII quotation character for all columns. | None |
 | ESCAPE=\<char\> | The single one-byte ASCII character used to escape special characters (for example, the `DELIM`, `QUOTE`,  or `NEWLINE` value, or the `ESCAPE` value itself). | None, or the `QUOTE` value if that is set |
-| NEWLINE=\<bytecode\> | The end-of-line indicator that designates the end of a row. Every line in the file must be terminated with the specified newline value. When you set the `NEWLINE` formatter option, you must also set `NEWLINE` in the `LOCATION` URI. Valid values are `LF` (line feed, `0x0A`), `CR` (carriage return, `0x0D`), or `CRLF` (carriage return plus line feed, `0x0D` `0x0A`). | `LF` |
+| NEWLINE=\<value\> | The end-of-line indicator that designates the end of a row. Preface the \<value\> with an `E` when the value is an escape sequence. Examples: `NEWLINE=E'\r'`, `NEWLINE 'aaa'`. | `\n` |
 
-The following sections provide further information about, and examples for, specifying the delimiter, quote, and escape options.
+The following sections provide further information about, and examples for, specifying the delimiter, quote, escape, and new line options.
 
 ### <a id="about_delim"></a>Specifying the Delimiter
 
@@ -449,6 +449,12 @@ When PXF reads data that contains a multi-byte or multi-character delimiter, its
 <sup>2</sup> All data columns must quoted when you specify a quote character.
 
 > **Note** PXF expects that there are no extraneous characters between the quote value and the delimiter value, nor between the quote value and the end-of-line value. Additionally, there must be no white space between delimiters and quotes.
+
+### <a id="about_newline"></a>About the NEWLINE Options
+
+Every line in the file must be terminated with the specified new line value.
+
+By default, PXF uses the `\n` (LF) character for the new line delimiter. When the line delimiter for the external file is also `\n`, you need not specify the `NEWLINE` formatter option. If the `NEWLINE` formatter option is provided and contains `\r` (CR), `\r\n` (CRLF), or a set of custom escape characters, you must also specify the `NEWLINE` option in the external table `LOCATION` URI, and set the value to `CR`, `CRLF` or the set of bytecode characters, respectively.
 
 ### <a id="mbd_examples"></a>Examples
 
