@@ -40,8 +40,7 @@ public class ForeignTable extends WritableExternalTable {
         // getServer() might return a string "server=<..>", strip the prefix
         int index = serverParameters.length > 1 ? 1 : 0;
         // foreign server names will have underscores instead of dashes
-        String foreignServerName = serverParameters[index].replace("-", "_");
-        return String.format(" SERVER %s_%s", foreignServerName, getProtocol());
+        return String.format(" SERVER %s_%s", serverParameters[index].replace("-","_"), getProtocol());
     }
 
     protected String createOptions() {

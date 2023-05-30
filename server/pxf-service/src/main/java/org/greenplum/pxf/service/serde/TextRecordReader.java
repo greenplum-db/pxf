@@ -21,7 +21,6 @@ import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import java.io.DataInput;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
