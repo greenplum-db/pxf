@@ -24,7 +24,7 @@ public class DecimalUtilities {
 
     /**
      *
-     * @param profile may have decimal overflow. Profiles can be ORC or Parquet
+     * @param profile can be ORC or Parquet
      */
     public DecimalUtilities(String profile) {
         this.profile = profile;
@@ -37,12 +37,17 @@ public class DecimalUtilities {
 
     /**
      * Sets configuration variables based on server configuration properties of pxf.parquet.write.decimal.overflow.
+     * *
+     * * @param configuration
+     * * @param pxfWriteDecimalOverflowPropertyName
      *
      * @param configuration                       contains server configuration properties
+     * @param profile                             can be ORC or Parquet
      * @param pxfWriteDecimalOverflowPropertyName is the property name in pxf-site.xml
      */
-    public void parseDecimalOverflowOption(Configuration configuration, String pxfWriteDecimalOverflowPropertyName) {
-        String decimalOverflowOption = configuration.get(pxfWriteDecimalOverflowPropertyName, PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND).toLowerCase();
+    public void parseDecimalOverflowOption(Configuration configuration, String profile, String pxfWriteDecimalOverflowPropertyName) {
+        String defaultOption = pxfWriteDecimalOverflowPropertyName.equalsIgnoreCase("orc") ? PXF_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE : PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND;
+        String decimalOverflowOption = configuration.get(pxfWriteDecimalOverflowPropertyName, defaultOption).toLowerCase();
         switch (decimalOverflowOption) {
             case PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR:
                 isDecimalOverflowOptionError = true;
@@ -201,7 +206,8 @@ public class DecimalUtilities {
             limitationForAccurateValue = String.format("maximum scale %s", scale);
         }
 
-        // At this point, the integer digit count must less than (precision - scale), but the total digits may still greater than precision.
+        // At this point, the integer digit count must less than (precision - scale) for Parquet or less than the precision for ORC,
+        // but the total digits may still greater than precision.
         // Here is to check whether there is a precision loss.
         BigDecimal accurateDecimal = new BigDecimal(value);
         if ((isDecimalOverflowOptionError || isDecimalOverflowOptionRound) && accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
