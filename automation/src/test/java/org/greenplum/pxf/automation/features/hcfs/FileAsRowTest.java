@@ -166,12 +166,10 @@ public class FileAsRowTest extends BaseFeature {
         exTable.setUserParameters(new String[]{"FILE_AS_ROW=true"});
         gpdb.createTableAndVerify(exTable);
 
-        if(gpdb.getVersion() < 6 && name.equals("json"))
-        {
+        if(gpdb.getVersion() < 6 && name.equals("json")) {
             runTincTest("pxf.features.hcfs.file_as_row." + name + "_gp5.runTest");
         }
-        else
-        {
+        else {
             runTincTest("pxf.features.hcfs.file_as_row." + name + ".runTest");
         }
     }
