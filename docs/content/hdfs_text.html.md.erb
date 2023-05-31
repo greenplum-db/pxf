@@ -395,7 +395,7 @@ PXF recognizes the following formatter options when reading data that contains a
 | DELIMITER=\<delim_string\> | The single-byte or multi-byte delimiter string that separates columns. The string may be up to 32 bytes in length, and may not contain quote or escape characters. **Required** | None |
 | QUOTE=\<char\> | The single one-byte ASCII quotation character for all columns. | None |
 | ESCAPE=\<char\> | The single one-byte ASCII character used to escape special characters (for example, the `DELIM`, `QUOTE`,  or `NEWLINE` value, or the `ESCAPE` value itself). | None, or the `QUOTE` value if that is set |
-| NEWLINE=\<value\> | The end-of-line indicator that designates the end of a row. Preface the \<value\> with an `E` when the value is an escape sequence. Examples: `NEWLINE=E'\r'`, `NEWLINE 'aaa'`. | `\n` |
+| NEWLINE=\<bytecode\> | The end-of-line indicator that designates the end of a row. Valid values are `LF` (line feed), `CR` (carriage return), or `CRLF` (carriage return plus line feed. | `LF` |
 
 The following sections provide further information about, and examples for, specifying the delimiter, quote, escape, and new line options.
 
@@ -452,9 +452,17 @@ When PXF reads data that contains a multi-byte or multi-character delimiter, its
 
 ### <a id="about_newline"></a>About the NEWLINE Options
 
-Every line in the file must be terminated with the specified new line value.
+PXF requires that every line in the file be terminated with the same new line value.
 
-By default, PXF uses the `\n` (LF) character for the new line delimiter. When the line delimiter for the external file is also `\n`, you need not specify the `NEWLINE` formatter option. If the `NEWLINE` formatter option is provided and contains `\r` (CR), `\r\n` (CRLF), or a set of custom escape characters, you must also specify the `NEWLINE` option in the external table `LOCATION` URI, and set the value to `CR`, `CRLF` or the set of bytecode characters, respectively.
+By default, PXF uses the line feed character (`LF`) for the new line delimiter. When the new line delimiter for the external file is also a line feed, you need not specify the `NEWLINE` formatter option.
+
+If the `NEWLINE` formatter option is provided and contains `CR` or `CRLF`, you must also specify the same `NEWLINE` option in the external table `LOCATION` URI. For example, if the new line delimiter is `CRLF`, create the external table as follows:
+
+```
+CREATE READABLE EXTERNAL TABLE mbyte_newline_crlf (id int, city text, country text)
+  LOCATION ('pxf://multibyte_example_crlf?PROFILE=hdfs:csv&NEWLINE=CRLF')
+FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import', DELIMITER='¤', NEWLINE='CRLF');
+```
 
 ### <a id="mbd_examples"></a>Examples
 
