@@ -564,7 +564,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         gpdb.createTableAndVerify(writableExTable);
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
 
-        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
+        if (protocol != ProtocolEnum.HDFS) {
             // for HCFS on Cloud, wait a bit for async write in previous steps to finish
             sleep(10000);
         }
