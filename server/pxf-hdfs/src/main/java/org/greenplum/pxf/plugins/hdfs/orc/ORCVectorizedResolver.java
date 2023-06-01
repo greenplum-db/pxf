@@ -266,7 +266,6 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                             val = convertedValue.toString();
                         }
                     }
-                    // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
                     writeFunctions[columnIndex].accept(columnVector, rowIndex, val);
                 }
                 columnIndex++;

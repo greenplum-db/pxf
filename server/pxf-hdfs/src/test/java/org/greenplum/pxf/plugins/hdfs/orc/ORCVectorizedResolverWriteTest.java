@@ -161,6 +161,37 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
     }
 
     @Test
+    public void testExceedingDefaultPrecisionWithRounding_RoundOption() {
+        // simple test with hardcoded value assertions to make sure basic test logic itself is correct
+        boolean[] IS_NULL = new boolean[16]; // no nulls in test records
+        boolean[] NO_NULL = new boolean[16]; // no nulls in test records
+        Arrays.fill(NO_NULL, true);
+
+        columnDescriptors = getAllColumns();
+        context.setTupleDescription(columnDescriptors);
+        when(mockWriterOptions.getSchema()).thenReturn(getSchemaForAllColumns());
+        when(mockWriterOptions.getUseUTCTimestamp()).thenReturn(true);
+        context.setMetadata(mockWriterOptions);
+        configuration.set("pxf.orc.write.decimal.overflow", "round");
+        context.setConfiguration(configuration);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        records = new ArrayList<>(1);
+        List<OneField> record = getRecord(0, -1);
+        // reset the decimal value to a higher unsupported (>38) precision
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), "123456789012345678901234567890.123456789012345"));
+        records.add(record);
+
+        OneRow batchWrapper = resolver.setFieldsForBatch(records);
+        VectorizedRowBatch batch = (VectorizedRowBatch) batchWrapper.getData();
+
+        // this value we expect to be rounded
+        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, new HiveDecimalWritable("123456789012345678901234567890.123456789012345"));
+    }
+
+    @Test
     public void testExceedingDefaultPrecisionNoRounding() {
         // simple test with hardcoded value assertions to make sure basic test logic itself is correct
         boolean[] IS_NULL = new boolean[16]; // no nulls in test records
@@ -190,6 +221,57 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, null);
     }
 
+    @Test
+    public void testExceedingDefaultPrecisionWithNoRounding_ErrorOption() {
+        // simple test with hardcoded value assertions to make sure basic test logic itself is correct
+        columnDescriptors = getAllColumns();
+        context.setTupleDescription(columnDescriptors);
+        when(mockWriterOptions.getSchema()).thenReturn(getSchemaForAllColumns());
+        when(mockWriterOptions.getUseUTCTimestamp()).thenReturn(true);
+        context.setMetadata(mockWriterOptions);
+        configuration.set("pxf.orc.write.decimal.overflow", "error");
+        context.setConfiguration(configuration);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        String decimalString = "123456789012345678901234567890123456789";
+        records = new ArrayList<>(1);
+        List<OneField> record = getRecord(0, -1);
+        // reset the decimal value to a higher unsupported (>38) precision
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
+        records.add(record);
+
+        Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
+        assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision 38.",
+                decimalString, "col14", "ORC"), e.getMessage());
+    }
+
+    @Test
+    public void testExceedingDefaultPrecisionWithNoRounding_RoundOption() {
+        // simple test with hardcoded value assertions to make sure basic test logic itself is correct
+        columnDescriptors = getAllColumns();
+        context.setTupleDescription(columnDescriptors);
+        when(mockWriterOptions.getSchema()).thenReturn(getSchemaForAllColumns());
+        when(mockWriterOptions.getUseUTCTimestamp()).thenReturn(true);
+        context.setMetadata(mockWriterOptions);
+        configuration.set("pxf.orc.write.decimal.overflow", "round");
+        context.setConfiguration(configuration);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        String decimalString = "123456789012345678901234567890123456789";
+        records = new ArrayList<>(1);
+        List<OneField> record = getRecord(0, -1);
+        // reset the decimal value to a higher unsupported (>38) precision
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
+        records.add(record);
+
+        Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
+        assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision 38.",
+                decimalString, "col14", "ORC"), e.getMessage());
+    }
     @Test
     public void testResolvesSingleRecord_NoNulls() {
         // simple test with hardcoded value assertions to make sure basic test logic itself is correct

@@ -101,24 +101,23 @@ public class DecimalUtilities {
      * @param value                    incoming decimal string
      * @param precision                is the decimal precision defined in the schema
      * @param scale                    is the decimal scale defined in the schema
-     * @param enforcePrecisionAndScale decides whether to enforce the decimal with the given precision and scale
+     * @param precisionAndScaleEnforced decides whether to enforce the decimal with the given precision and scale
      * @param columnName               is the name of the current column
      * @return null or a BigDecimal number meets all the requirements
      */
-    private BigDecimal parseDecimalStringWithHiveDecimal(String value, int precision, int scale, boolean enforcePrecisionAndScale, String columnName) {
+    private BigDecimal parseDecimalStringWithHiveDecimal(String value, int precision, int scale, boolean precisionAndScaleEnforced, String columnName) {
         /*
-         Greenplum will handle the overflow which integer digit count (# digits to the left side of the decimal point) of
+         Greenplum will handle the overflow which integer digit count (# digits on the left side of the decimal point) of
          the incoming value is greater than the precision defined in the column e.g., NUMERIC(precision).
-         Therefore, the following part is to deal with the integer digit count overflow when no precision is defined in
+         Therefore, the following logic is to deal with the integer digit count overflow when no precision is defined in
          the column e.g., NUMERIC.
          By default, NUMERIC will be stored as DECIMAL(38,18) in Parquet's schema, or DECIMAL(38,10) in ORC's schema.
 
-         HiveDecimal.create has different behaviors depends on whether there is an integer digit count overflow and the
-         total digits of the incoming value.
+         HiveDecimal.create has different behaviors given the integer digit count and the total digits of the incoming value.
 
          (1) integer digit count > precision defined in schema
          HiveDecimal.create will return a NULL value. To make the behavior consistent with Hive's behavior
-         when storing on a Parquet/ORC-backed table, we store the value as null.
+         when storing on a Parquet/ORC-backed table, we store the value as null when the decimal overflow option is set to 'ignore'.
          For example, the integer digit count of 1234567890123456789012345678901234567890.123 is 40,
          which is greater than 38. HiveDecimal.create returns null.
 
@@ -129,7 +128,7 @@ public class DecimalUtilities {
          Then data will be created as a rounded value 1234567890123456789012345.1234567890123
 
          (3) (Integer digit count <= precision defined in schema) && (total digits of the value <= precision defined in schema)
-         HiveDecimal.create will return exactly the same decimal value as provided.
+         HiveDecimal.create will return the decimal value as-is.
          For example, 123456.123456 can fit in DECIMAL(38,18) without any data loss.
          */
 
@@ -155,13 +154,14 @@ public class DecimalUtilities {
         }
 
         /*
-        At this point, the integer digit count must less than precision, but the total digits may still greater than precision.
-        HiveDecimal.enforcePrecisionScale has different behaviors depends on the integer digit count and the max integer digit count (precision - scale).
+        At this point, the integer digit count must less than or equal to the precision, but the total digits may still greater than the precision.
+        HiveDecimal.enforcePrecisionScale has different behaviors given the integer digit count and the max integer digit count (precision - scale).
 
         (1) integer digit count > precision - scale
-        HiveDecimal.enforcePrecisionScale returns NULL. For example, the column will be stored as DECIMAL(38,18).
-        The integer digit count of 1234567890123456789012345.12345678901234567890 is 25 which is less than 38, but it's greater
-        than the max integer digit count 20. A null value is returned.
+        HiveDecimal.enforcePrecisionScale returns NULL. To make the behavior consistent with Hive's behavior
+        when storing on a Parquet/ORC-backed table, we store the value as null when the decimal overflow option is set to 'ignore'.
+        For example, the column will be stored as DECIMAL(38,18). The integer digit count of 1234567890123456789012345.12345678901234567890
+        is 25 which is less than 38, but it's greater than the max integer digit count 20. A null value is returned.
 
         (2) (integer digit count <= precision - scale) && (total digits of the value > precision defined in schema)
         HiveDecimal.enforcePrecisionScale will return a rounded-off value to fit in the precision and scale.
@@ -170,14 +170,15 @@ public class DecimalUtilities {
         1234567890.1234567890123456789012345679
 
         (3) (integer digit count <= precision - scale) && (total digits of the value <= precision defined in schema)
-        HiveDecimal.enforcePrecisionScale will return exactly the same decimal value as provided.
-        For example, 123456.123456 can fit in DECIMAL(38,18) without any data loss.
+        HiveDecimal.enforcePrecisionScale will return exactly the decimal value as-is.
+        For example, 123456.123456 can fit in DECIMAL
+        (38,18) without any data loss.
 
         Current logic for ORC doesn't call HiveDecimal.enforcePrecisionScale but Parquet does. That will bring in the
         inconsistency in the error messages in the third check.
          */
-        String limitationForAccurateValue = String.format("maximum precision %s", precision);
-        if (enforcePrecisionAndScale) {
+        String limitationForGettingAccurateValue = String.format("maximum precision %s", precision);
+        if (precisionAndScaleEnforced) {
             // At this point data can fit in precision 38, but still need enforcePrecisionScale to check whether it can fit in scale 18
             hiveDecimal = HiveDecimal.enforcePrecisionScale(
                     hiveDecimal,
@@ -202,26 +203,27 @@ public class DecimalUtilities {
                 return null;
             }
 
-            limitationForAccurateValue = String.format("maximum scale %s", scale);
+            limitationForGettingAccurateValue = String.format("maximum scale %s", scale);
         }
 
-        // At this point, the integer digit count must less than (precision - scale) for Parquet or less than the precision for ORC,
-        // but the total digits may still greater than precision.
-        // Here is to check whether there is a precision loss.
+        // At this point, the integer digit count must less than or equal to (precision - scale) for Parquet,
+        // or less than or equal to the precision for ORC, but the total digits may still greater than precision.
+        // Here is to check whether the value has been rounded off. If the decimal overflow option is set to 'error',
+        // an exception will be thrown.
         BigDecimal accurateDecimal = new BigDecimal(value);
         if ((isDecimalOverflowOptionError || isDecimalOverflowOptionRound) && accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
             if (isDecimalOverflowOptionError) {
                 throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s using %s profile exceeds %s, and cannot be stored without precision loss.",
-                        value, columnName, profile, limitationForAccurateValue));
+                        value, columnName, profile, limitationForGettingAccurateValue));
             }
 
             LOG.trace("The value {} for the NUMERIC column {} using {} profile exceeds {} and has been rounded off.",
-                    value, columnName, profile, limitationForAccurateValue);
+                    value, columnName, profile, limitationForGettingAccurateValue);
 
             if (!isScaleOverflowWarningLogged) {
                 LOG.warn("There are rows where for the NUMERIC column {} using {} profile the values exceed {} " +
                                 "and have been rounded off. Enable TRACE log level for row-level details.",
-                        profile, columnName, limitationForAccurateValue);
+                        profile, columnName, limitationForGettingAccurateValue);
                 isScaleOverflowWarningLogged = true;
             }
         }

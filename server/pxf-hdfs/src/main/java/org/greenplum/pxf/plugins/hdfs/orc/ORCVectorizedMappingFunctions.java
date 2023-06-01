@@ -549,7 +549,7 @@ class ORCVectorizedMappingFunctions {
         });
         writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val) -> {
             if (val == null) {
-                // converted value can be null if the original value exceeds precision and cannot be rounded
+                // val can be null if the original value exceeds precision and cannot be rounded
                 // Hive just stores NULL as the value, let's do the same
                 columnVector.isNull[row] = true;
                 columnVector.noNulls = false;
