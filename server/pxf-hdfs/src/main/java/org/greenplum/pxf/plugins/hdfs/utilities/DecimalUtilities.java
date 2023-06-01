@@ -37,15 +37,11 @@ public class DecimalUtilities {
 
     /**
      * Sets configuration variables based on server configuration properties of pxf.parquet.write.decimal.overflow.
-     * *
-     * * @param configuration
-     * * @param pxfWriteDecimalOverflowPropertyName
      *
      * @param configuration                       contains server configuration properties
-     * @param profile                             can be ORC or Parquet
      * @param pxfWriteDecimalOverflowPropertyName is the property name in pxf-site.xml
      */
-    public void parseDecimalOverflowOption(Configuration configuration, String profile, String pxfWriteDecimalOverflowPropertyName) {
+    public void parseDecimalOverflowOption(Configuration configuration, String pxfWriteDecimalOverflowPropertyName) {
         String decimalOverflowOption = configuration.get(pxfWriteDecimalOverflowPropertyName, PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND).toLowerCase();
         switch (decimalOverflowOption) {
             case PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR:
@@ -98,11 +94,11 @@ public class DecimalUtilities {
     /**
      * Parse the incoming decimal string into a decimal number for ORC or Parquet profiles according to the decimal overflow options
      *
-     * @param value                    incoming decimal string
-     * @param precision                is the decimal precision defined in the schema
-     * @param scale                    is the decimal scale defined in the schema
+     * @param value                     incoming decimal string
+     * @param precision                 is the decimal precision defined in the schema
+     * @param scale                     is the decimal scale defined in the schema
      * @param precisionAndScaleEnforced decides whether to enforce the decimal with the given precision and scale
-     * @param columnName               is the name of the current column
+     * @param columnName                is the name of the current column
      * @return null or a BigDecimal number meets all the requirements
      */
     private BigDecimal parseDecimalStringWithHiveDecimal(String value, int precision, int scale, boolean precisionAndScaleEnforced, String columnName) {

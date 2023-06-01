@@ -156,7 +156,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
         positionalAccess = context.getOption(MAP_BY_POSITION_OPTION, false);
-        decimalUtilities.parseDecimalOverflowOption(configuration, "ORC", PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME);
+        decimalUtilities.parseDecimalOverflowOption(configuration, PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME);
     }
 
     /**

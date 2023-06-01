@@ -1970,7 +1970,7 @@ public class ParquetWriteTest {
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123492");
         Exception e = assertThrows(UnsupportedTypeException.class, () -> accessor.openForWrite());
-        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d for Parquet.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
+        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d of Parquet.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
     }
 
     // Numeric precision defined, test error flag when provided precision overflow. An error should be thrown
@@ -1984,7 +1984,7 @@ public class ParquetWriteTest {
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123493");
         Exception e = assertThrows(UnsupportedTypeException.class, () -> accessor.openForWrite());
-        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d for Parquet.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
+        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d of Parquet.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
     }
 
     // Numeric precision not defined, test ignore flag when data integer digits overflow. Data should be skipped
