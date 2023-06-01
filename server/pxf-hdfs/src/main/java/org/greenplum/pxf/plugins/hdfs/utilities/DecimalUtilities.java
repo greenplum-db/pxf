@@ -46,8 +46,7 @@ public class DecimalUtilities {
      * @param pxfWriteDecimalOverflowPropertyName is the property name in pxf-site.xml
      */
     public void parseDecimalOverflowOption(Configuration configuration, String profile, String pxfWriteDecimalOverflowPropertyName) {
-        String defaultOption = pxfWriteDecimalOverflowPropertyName.equalsIgnoreCase("orc") ? PXF_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE : PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND;
-        String decimalOverflowOption = configuration.get(pxfWriteDecimalOverflowPropertyName, defaultOption).toLowerCase();
+        String decimalOverflowOption = configuration.get(pxfWriteDecimalOverflowPropertyName, PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND).toLowerCase();
         switch (decimalOverflowOption) {
             case PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR:
                 isDecimalOverflowOptionError = true;
