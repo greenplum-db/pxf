@@ -439,10 +439,9 @@ When PXF reads data that contains a multi-byte or multi-character delimiter, its
 | QUOTE Set? | ESCAPE Set? | PXF Behaviour |
 |-------------|--------------|----------|
 | No<sup>1</sup> | No | PXF reads the data as-is. |
-| Yes<sup>2</sup> | Yes (the default is the quote value). | PXF reads data between the quotes as-is except for escaped characters. |
+| Yes<sup>2</sup> | Yes | PXF reads the data between quote characters as-is and un-escapes only the quote and escape characters. |
 | Yes<sup>2</sup> | No (`ESCAPE 'OFF'`) | PXF reads the data between quote characters as-is. |
 | No<sup>1</sup> | Yes | PXF reads the data as-is and un-escapes only the delimiter, newline, and escape itself. |
-| Yes<sup>2</sup> | Yes | PXF reads the data between quote characters as-is and un-escapes only the quote and escape characters. |
 
 <sup>1</sup> All data columns must be un-quoted when you do not specify a quote character.
 
