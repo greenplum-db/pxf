@@ -549,8 +549,14 @@ class ORCVectorizedMappingFunctions {
         });
         writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val) -> {
             // also there is Decimal and Decimal64 column vectors, see TypeUtils.createColumn
-            HiveDecimal convertedValue = HiveDecimal.create((String) val);
-            ((DecimalColumnVector) columnVector).vector[row].set(convertedValue);
+            if (val == null) {
+                // converted value can be null if the original value exceeds precision and cannot be rounded
+                // Hive just stores NULL as the value, let's do the same
+                columnVector.isNull[row] = true;
+                columnVector.noNulls = false;
+            } else {
+                ((DecimalColumnVector) columnVector).vector[row].set((HiveDecimal) val);
+            }
         });
 
         writeFunctionsMap.put(TypeDescription.Category.VARCHAR, writeFunctionsMap.get(TypeDescription.Category.STRING));

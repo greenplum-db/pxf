@@ -261,11 +261,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     if (columnVector.type.name().equals("DECIMAL")) {
                         BigDecimal convertedValue = decimalUtilities.parseDecimalString((String) val, orcSchema.getPrecision(), orcSchema.getScale(), orcSchema.getFieldNames().get(columnIndex));
                         if (convertedValue == null) {
-                            // converted value can be null if the original value exceeds precision and cannot be rounded
-                            // Hive just stores NULL as the value, let's do the same
-                            columnVector.isNull[rowIndex] = true;
-                            columnVector.noNulls = false;
-                            continue;
+                            val = null;
                         } else {
                             val = convertedValue.toString();
                         }
