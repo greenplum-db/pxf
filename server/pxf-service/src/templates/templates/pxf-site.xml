@@ -77,7 +77,7 @@
 
     <property>
         <name>pxf.orc.write.decimal.overflow</name>
-        <value>ignore</value>
+        <value>round</value>
         <description>
             Specifies behavior of the PXF ORC profiles when writing NUMERIC data that exceeds the maximum precision of 38. Valid values are error, round and ignore. The default value is round.
             If set to error, PXF will try to write the value without precision loss, or report an error, potentially leaving an incomplete dataset in the external system.
