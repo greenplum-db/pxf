@@ -558,8 +558,9 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         dataTable.addRows(data);
 
         String hdfsPath = hdfsWritePath + writableTableName + "_verylongrecord";
-        writableExTable = prepareWritableTable("pxf_text_very_long_records_w", hdfsPath, "CSV");
-        writableExTable.setFields(fields);
+        writableExTable = TableFactory.getPxfWritableTextTable("pxf_text_very_long_records_w", fields,
+                protocol.getExternalTablePath(hdfs.getBasePath(), hdfsPath), ",");
+        writableExTable.setFormat("CSV");
         writableExTable.setDistributionFields(new String[]{"key"});
         gpdb.createTableAndVerify(writableExTable);
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
@@ -568,14 +569,13 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
             // for HCFS on Cloud, wait a bit for async write in previous steps to finish
             sleep(10000);
         }
-        Assert.assertEquals("More than one segment wrote to " + hdfsPath,
-                1, hdfs.list(hdfsPath).size());
+        Assert.assertEquals("More than one segment wrote to " + hdfsPath,1, hdfs.list(hdfsPath).size());
 
-        readableExTable = TableFactory.getPxfReadableCSVTable("pxf_text_very_long_records_r", fields, hdfsPath, ",");
+        readableExTable = TableFactory.getPxfReadableCSVTable("pxf_text_very_long_records_r", fields,
+                protocol.getExternalTablePath(hdfs.getBasePath(), hdfsPath), ",");
         gpdb.createTableAndVerify(readableExTable);
 
-        gpdb.queryResults(readableExTable,
-                "SELECT * FROM " + readableExTable.getName() + " ORDER BY linenum");
+        gpdb.queryResults(readableExTable,"SELECT * FROM " + readableExTable.getName() + " ORDER BY linenum");
         ComparisonUtils.compareTables(readableExTable, dataTable, null);
     }
 
@@ -593,7 +593,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String localResultFile = dataTempFolder + "/" + hdfsPath.replaceAll("/", "_");
         // for HCFS on Cloud, wait a bit for async write in previous steps to finish
-        if (protocol != ProtocolEnum.HDFS && protocol != ProtocolEnum.FILE) {
+        if (protocol != ProtocolEnum.HDFS) {
             sleep(10000);
         }
         List<String> files = hdfs.list(hdfsPath);
@@ -601,11 +601,6 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         int index = 0;
         for (String file : files) {
             String pathToLocalFile = localResultFile + "/_" + index;
-            // make sure the file is available, saw flakes on Cloud that listed files were not available
-            int attempts = 0;
-            while (!hdfs.doesFileExist(file) && attempts++ < 20) {
-                sleep(1000);
-            }
             hdfs.copyToLocal(file, pathToLocalFile);
             sleep(250);
             resultTable.loadDataFromFile(pathToLocalFile, ",", 1, "UTF-8",

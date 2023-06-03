@@ -416,11 +416,6 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
             final String filePath = publicStage + fileName;
             filesToDelete.add(new File(filePath + ".avro"));
             filesToDelete.add(new File(publicStage + "." + fileName + ".avro.crc"));
-            // make sure the file is available, saw flakes on Cloud that listed files were not available
-            int attempts = 0;
-            while (!hdfs.doesFileExist(srcPath) && attempts++ < 20) {
-                sleep(1000);
-            }
             hdfs.copyToLocal(srcPath, filePath + ".avro");
             sleep(250);
             hdfs.writeJsonFileFromAvro("file://" + filePath + ".avro", filePath + ".json");
