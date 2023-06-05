@@ -114,6 +114,19 @@ After you install the new version of PXF, perform the following procedure:
         <Logger name="org.greenplum.pxf" level="${env:PXF_LOG_LEVEL:-${spring:pxf.log.level}}"/>
         ```
 
+1. **If you are upgrading <i>from</i> PXF version 6.5.x or earlier <i>to</i> PXF version 6.6.0 or later**, and you want to change the value of the new `pxf.parquet.write.decimal.overflow` property from the default of `round`, add the following to the `pxf-site.xml` file for your PXF server:
+
+    ``` pre
+    <property>
+      <name>pxf.parquet.write.decimal.overflow</name>
+      <value>NEW_VALUE</value>
+    </property>
+    ```
+
+    where `NEW_VALUE` is `error` or `ignore`.
+
+    Refer to [Understanding Overflow Conditions When Writing Numeric Data](hdfs_parquet.html#overflow) for more information about how PXF uses this property to direct its actions when it encounters a numeric overflow while writing to a Parquet file.
+
 1. Synchronize the PXF configuration from the master host to the standby master host and each Greenplum Database segment host. For example:
 
     ``` shell

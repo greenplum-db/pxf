@@ -2,6 +2,8 @@ package org.greenplum.pxf.automation.features.jdbc;
 
 import java.io.File;
 
+import annotations.FailsWithFDW;
+import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
@@ -11,6 +13,7 @@ import org.greenplum.pxf.automation.enums.EnumPartitionType;
 
 import org.greenplum.pxf.automation.features.BaseFeature;
 
+@WorksWithFDW
 public class JdbcTest extends BaseFeature {
 
     private static final String POSTGRES_DRIVER_CLASS = "org.postgresql.Driver";
@@ -401,16 +404,22 @@ public class JdbcTest extends BaseFeature {
         runTincTest("pxf.features.jdbc.session_params.runTest");
     }
 
+    @FailsWithFDW
+    // All the Writable Tests are failing with this Error:
+    // ERROR:  PXF server error : class java.io.DataInputStream cannot be cast to class
+    // [B (java.io.DataInputStream and [B are in module java.base of loader 'bootstrap')
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTable() throws Exception {
         runTincTest("pxf.features.jdbc.writable.runTest");
     }
 
+    @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTableNoBatch() throws Exception {
         runTincTest("pxf.features.jdbc.writable_nobatch.runTest");
     }
 
+    @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTablePool() throws Exception {
         runTincTest("pxf.features.jdbc.writable_pool.runTest");

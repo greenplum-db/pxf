@@ -43,6 +43,7 @@ groups:
   - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+  - Test PXF-GP[[gp_ver]]-HDP2-Upgrade-Extension on RHEL7
 {% set gp_ver = None %}
   - Compatibility Gate for PXF-GP
   - Promote PXF-GP5 and PXF-GP6 Artifacts
@@ -89,6 +90,7 @@ groups:
   - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+  - Test PXF-GP[[gp_ver]]-HDP2-Upgrade-Extension on RHEL7
 {% set gp_ver = None %}
 - name: Backwards Compatibility
   jobs:
@@ -374,15 +376,11 @@ resources:
 {% endfor %} {# gp5, gp6 #}
 
 {% for gp_ver in range(6, 8) %}
-- name: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+- name: gpdb[[gp_ver]]-pxf-dev-rocky8-image
   type: registry-image
   icon: docker
   source:
-{% if gp_ver == 6 %}
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rhel8-test-pxf
-{% else %}
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rocky8-test-pxf
-{% endif %}
     tag: latest
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
@@ -427,15 +425,6 @@ resources:
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
-- name: rpmrebuild-rhel8-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/rpmrebuild-rhel8
-    tag: latest
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-
 - name: rpmrebuild-rocky8-image
   type: registry-image
   icon: docker
@@ -471,7 +460,7 @@ resources:
     url: ((ud/pxf/secrets/ud-pipeline-bot-gp-releng-webhook))
 {% endif %}
 
-## ---------- Product Packages ----------
+## ---------- Greenplum Packages ----------
 {% set gp_ver = 5 %}
 {% for i in range(num_gpdb5_versions) %}
 - name: gpdb[[gp_ver]]_rhel7_rpm_latest-[[i]]
@@ -480,7 +469,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
 {% endfor %} {# range(num_gpdb5_versions) #}
 {% set gp_ver = None %}
 
@@ -492,7 +481,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
   type: gcs
@@ -500,7 +489,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-ubuntu18.04-amd64.deb
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
 
@@ -512,7 +501,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel8-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel8-x86_64.rpm
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
 
@@ -523,15 +512,24 @@ resources:
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/main/greenplum-db-(7.*)-el8-x86_64.rpm
+    regexp: server/released/gpdb7/greenplum-db-(7.*)-el8-x86_64.rpm
 
 ## ---------- PXF 5 (for GPDB 6) Artifact ---------------
 - name: pxf5_gp6_rhel7_released
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
+    bucket: ((ud/pxf/prod/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
+
+## ---------- PXF 6.6 (for GPDB 6) Artifact ---------------
+# This is for extension upgrade testing. PXF 6.6.X contains extension version 2.0. PXF 6.7.+ contains version 2.1
+- name: pxf6_6_gp6_rhel7_released
+  type: gcs
+  source:
+    bucket: ((ud/pxf/prod/releng-drop-bucket-name))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-(6.6.*)-2.el7.x86_64.rpm
 
 ## ---------- PXF Build Artifacts ----------
 {% set gp_ver = None %}
@@ -731,10 +729,10 @@ jobs:
       trigger: true
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-    - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     - get: pxf-build-dependencies
   - task: Build PXF-GP[[gp_ver]] on RHEL8
-    image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((ud/pxf/common/rpm-license))
@@ -755,7 +753,7 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL8]
-    - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
       passed: [Build PXF-GP[[gp_ver]] on RHEL8]
     - get: pxf-automation-dependencies
 {% if gp_ver == 7 %}
@@ -765,7 +763,7 @@ jobs:
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL8
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
@@ -976,6 +974,34 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: CDH
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+
+- name: Test PXF-GP[[gp_ver]]-HDP2-Upgrade-Extension on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP]
+      trigger: true
+    - get: pxf_package
+      resource: pxf6_6_gp6_rhel7_released # for upgrade test
+    - get: pxf_tarball
+      resource: pxf_gp[[gp_ver]]_tarball_rhel7
+      passed: [Testing Gate for PXF-GP]
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
+      passed: [Testing Gate for PXF-GP]
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: Test PXF-GP[[gp_ver]]-HDP2-New-Extension on RHEL7
+    file: pxf_src/concourse/tasks/upgrade_extension.yml
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GP_VER: [[gp_ver]]
+      GROUP: pxfExtensionVersion2
+      SECOND_GROUP: pxfExtensionVersion2_1
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
 
 ## ---------- FILE tests -----------------
@@ -1512,6 +1538,7 @@ jobs:
       - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+      - Test PXF-GP[[gp_ver]]-HDP2-Upgrade-Extension on RHEL7
       trigger: true
 {% set gp_ver = None %}
 {% set gp_ver = 5 %}
@@ -1651,7 +1678,7 @@ jobs:
     - get: pxf_tarball
       passed: [Compatibility Gate for PXF-GP]
       resource: pxf_gp[[gp_ver]]_tarball_rhel8
-    - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     - get: singlecluster
       resource: singlecluster-hdp2
 {% for i in range(1, num_gpdb6_versions) %}
@@ -1664,7 +1691,7 @@ jobs:
       steps:
 {% for i in range(1, num_gpdb6_versions) %}
       - task: Test Against Greenplum Latest - [[i]] RHEL8
-        image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+        image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
         config:
           platform: linux
           inputs:
@@ -1752,7 +1779,6 @@ jobs:
       trigger: true
     - get: google-cloud-sdk-slim-image
     - get: rpmrebuild-centos7-image
-    - get: rpmrebuild-rhel8-image
     - get: rpmrebuild-rocky8-image
     - get: gpdb6-pxf-dev-ubuntu18-image
   - task: Get PXF-GP5 and PXF-GP6 Artifacts from Releases Directory
@@ -1775,7 +1801,7 @@ jobs:
 {% endfor %}
 {% set gp_ver = 6 %}
   - task: Add OSL file to PXF-GP[[gp_ver]] RPM on RHEL8
-    image: rpmrebuild-rhel8-image
+    image: rpmrebuild-rocky8-image
     file: pxf_src/concourse/tasks/add_osl_rpm.yml
     params:
       GP_VER: [[gp_ver]]

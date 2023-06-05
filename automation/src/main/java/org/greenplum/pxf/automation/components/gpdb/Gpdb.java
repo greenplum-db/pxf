@@ -53,9 +53,7 @@ public class Gpdb extends DbSystemObject {
 		 * connecting it.
 		 */
 		driver = "org.postgresql.Driver";
-		address = "jdbc:postgresql://" + getHost() + ":" + getPort() + "/template1";
-
-		connect();
+		connectToDataBase("template1");
 		version = determineVersion();
 
 		if (!checkDataBaseExists(getDb())) {
@@ -72,11 +70,7 @@ public class Gpdb extends DbSystemObject {
 			}
 		}
 
-		super.close();
-
-		address = "jdbc:postgresql://" + getHost() + ":" + getPort() + "/" + getDb();
-
-		connect();
+		connectToDataBase(getDb());
 
 		// Create the extensions if they don't exist
 		String extensionName = FDWUtils.useFDW ? "pxf_fdw" : "pxf";
@@ -202,6 +196,12 @@ public class Gpdb extends DbSystemObject {
 		}
 	}
 
+	public void connectToDataBase(String dbName) throws Exception {
+		super.close();
+		address = "jdbc:postgresql://" + getHost() + ":" + getPort() + "/" + dbName;
+		connect();
+	}
+
 	@Override
 	public void createDataBase(String schemaName, boolean ignoreFail) throws Exception {
 
@@ -252,8 +252,11 @@ public class Gpdb extends DbSystemObject {
 		List<String> servers = Lists.newArrayList(
 		"default_hdfs",
 		"default_hive",
+		"db_hive_jdbc", // Needed for JdbcHiveTest
 		"default_hbase",
-		"default_jdbc",
+		"default_jdbc", // Needed for JdbcHiveTest and other JdbcTest which refers to the default server.
+		"database_jdbc",
+		"db-session-params_jdbc",
 		"default_file",
 		"default_s3",
 		"default_gs",

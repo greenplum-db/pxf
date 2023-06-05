@@ -1,0 +1,8 @@
+-- start_ignore
+-- m/DETAIL/
+-- s/DETAIL/CONTEXT/
+-- end_ignore
+-- @description query01 for PXF Multibyte delimiter, 2-byte delim cases with no delim provided
+SELECT * from pxf_multibyte_twobyte_nodelim_data ORDER BY n1;
+ERROR:  missing delimiter option (pxfdelimited_formatter.c:xxx)
+CONTEXT:  External table pxf_multibyte_twobyte_nodelim_data

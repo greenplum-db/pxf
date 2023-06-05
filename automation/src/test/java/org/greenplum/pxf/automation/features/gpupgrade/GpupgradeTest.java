@@ -35,19 +35,37 @@ public class GpupgradeTest extends BaseFunctionality {
     }
 
     @Test(groups = {"features", "gpdb"})
+    public void testGpdbUpgradeExtensionVersion2_0Scenario() throws Exception {
+
+        // Skipping this test for GP7 since this isn't passing for GP7
+        if (gpdb.getVersion() >= 7)
+            throw new SkipException("Skipping testGpdbUpgradeScenario for GPDB7");
+
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO '2.0'");
+        runTincTest("pxf.features.gpupgrade.extension2_0.step_1_before_running_pxf_pre_gpupgrade.runTest");
+
+        cluster.runCommand("pxf-pre-gpupgrade");
+        runTincTest("pxf.features.gpupgrade.extension2_0.step_2_after_running_pxf_pre_gpupgrade.runTest");
+
+        cluster.runCommand("pxf-post-gpupgrade");
+        runTincTest("pxf.features.gpupgrade.extension2_0.step_3_after_running_pxf_post_gpupgrade.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb"})
     public void testGpdbUpgradeScenario() throws Exception {
 
         // Skipping this test for GP7 since this isn't passing for GP7
         if (gpdb.getVersion() >= 7)
             throw new SkipException("Skipping testGpdbUpgradeScenario for GPDB7");
 
-        runTincTest("pxf.features.gpupgrade.step_1_before_running_pxf_pre_gpupgrade.runTest");
+        gpdb.runQuery("ALTER EXTENSION pxf UPDATE TO '2.1'");
+        runTincTest("pxf.features.gpupgrade.extension2_1.step_1_before_running_pxf_pre_gpupgrade.runTest");
 
         cluster.runCommand("pxf-pre-gpupgrade");
-        runTincTest("pxf.features.gpupgrade.step_2_after_running_pxf_pre_gpupgrade.runTest");
+        runTincTest("pxf.features.gpupgrade.extension2_1.step_2_after_running_pxf_pre_gpupgrade.runTest");
 
         cluster.runCommand("pxf-post-gpupgrade");
-        runTincTest("pxf.features.gpupgrade.step_3_after_running_pxf_post_gpupgrade.runTest");
+        runTincTest("pxf.features.gpupgrade.extension2_1.step_3_after_running_pxf_post_gpupgrade.runTest");
     }
 
     private String prepareData() throws Exception {

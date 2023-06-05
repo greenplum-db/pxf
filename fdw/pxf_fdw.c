@@ -435,6 +435,7 @@ pxfBeginForeignScan(ForeignScanState *node, int eflags)
 	pxfsstate->quals = quals;
 	pxfsstate->relation = relation;
 	pxfsstate->retrieved_attrs = retrieved_attrs;
+	pxfsstate->projectionInfo = node->ss.ps.ps_ProjInfo;
 
     /* Set up callback to identify error foreign relation. */
     ErrorContextCallback errcallback;

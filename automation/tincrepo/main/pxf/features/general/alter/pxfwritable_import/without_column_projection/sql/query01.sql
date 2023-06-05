@@ -7,6 +7,9 @@
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/
 --
+-- m/,.*line (.*)/
+-- s/,.*line (.*)//g
+--
 -- end_matchsubs
 
 -- sets the bytea output to the expected by the tests

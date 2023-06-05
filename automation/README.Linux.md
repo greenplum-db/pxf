@@ -1,6 +1,7 @@
 # Running Automation on Linux
 
 **Note:** This information was documented based on the steps taken to get automation running on a Debian Bookworm (12) system.
+They are intended to be used in tandem with the information in the main README file.
 
 ## Locale Setup
 
@@ -17,19 +18,6 @@ After generating the locale, restart your GPDB cluster
 source $GPHOME/greenplum_path.sh
 gpstop -a
 gpstart -a
-```
-
-## SSH Setup
-
-```sh
-sudo tee /etc/ssh/sshd_config.d/pxf-automation.conf >/dev/null <EOF
-# pxf automation uses an old SSH2 Java library that doesn't support newer KexAlgorithms
-# this assumes that /etc/ssh/sshd_config contains "Include /etc/ssh/sshd_config.d/*.conf"
-# if it doesn't, try adding this directly to /etc/ssh/sshd_config
-KexAlgorithms +diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group1-sha1
-HostKeyAlgorithms +ssh-rsa,ssh-dss
-PubkeyAcceptedAlgorithms +ssh-rsa,ssh-dss
-EOF
 ```
 
 ## Python 2 Setup

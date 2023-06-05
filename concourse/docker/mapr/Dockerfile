@@ -2,13 +2,13 @@ ARG BASE_IMAGE
 
 FROM ${BASE_IMAGE} as scratch
 
-RUN rpm --import http://package.mapr.com/releases/pub/maprgpg.key && \
+RUN rpm --import https://package.mapr.hpe.com/releases/pub/maprgpg.key && \
   groupadd -g 5000 mapr ; useradd -g 5000 -u 5000 mapr && echo -e "mapr\nmapr" | passwd mapr && \
   echo -e "[maprtech]\nname=MapR Technologies" >> /etc/yum.repos.d/maprtech.repo && \
-  echo -e "baseurl=http://package.mapr.com/releases/v5.2.2/redhat/" >> /etc/yum.repos.d/maprtech.repo && \
+  echo -e "baseurl=https://package.mapr.hpe.com/releases/v5.2.2/redhat/" >> /etc/yum.repos.d/maprtech.repo && \
   echo -e "enabled=1\ngpgcheck=0\nprotect=1\n" >> /etc/yum.repos.d/maprtech.repo && \
   echo -e "[maprecosystem]\nname=MapR Technologies" >> /etc/yum.repos.d/maprtech.repo && \
-  echo -e "baseurl=http://package.mapr.com/releases/MEP/MEP-4.1.0/redhat/" >> /etc/yum.repos.d/maprtech.repo && \
+  echo -e "baseurl=https://package.mapr.hpe.com/releases/MEP/MEP-4.1.0/redhat/" >> /etc/yum.repos.d/maprtech.repo && \
   echo -e "enabled=1\ngpgcheck=0\nprotect=1\n" >> /etc/yum.repos.d/maprtech.repo && \
   cat /etc/yum.repos.d/maprtech.repo && echo JAVA_HOME=$JAVA_HOME
 

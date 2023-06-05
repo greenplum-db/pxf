@@ -1,0 +1,18 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for PXF Multibyte delimiter, 2-byte delim with wrong quote case
+
+-- start_matchsubs
+--
+-- # create a match/subs
+
+-- m/WARNING/
+-- s/WARNING/GP_IGNORE: WARNING/
+--
+-- end_matchsubs
+SELECT * from pxf_multibyte_twobyte_wrong_quote_data ORDER BY n1;
+WARNING:  unexpected end of file
+CONTEXT:  External table pxf_multibyte_twobyte_wrong_quote_data
+ s1 | s2 | s3 | d1 | n1 | n2 | n3 | n4 | n5 | n6 | n7 | s11 | s12 | s13 | d11 | n11 | n12 | n13 | n14 | n15 | n16 | n17
+----+----+----+----+----+----+----+----+----+----+----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----
+(0 rows)

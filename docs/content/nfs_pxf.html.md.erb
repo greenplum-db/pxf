@@ -9,6 +9,7 @@ You can use PXF to read data that resides on a network file system mounted on yo
 | delimited single line text | file:text | read, write |
 | delimited single line comma-separated values of text | file:csv | read, write |
 | delimited text with quoted linefeeds | file:text:multi | read |
+| fixed width single line text | file:fixedwidth | read, write |
 | Avro | file:avro | read, write |
 | JSON | file:json | read |
 | ORC | file:orc | read, write |
@@ -99,7 +100,7 @@ FORMAT '[TEXT|CSV|CUSTOM]' (&lt;formatting-properties>);
 </pre>
 
 
-The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Tanzu-Greenplum/6/greenplum-database/GUID-ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) command are described in the table below.
+The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) command are described in the table below.
 
 | Keyword  | Value |
 |-------|-------------------------------------|

@@ -65,16 +65,16 @@ command to build the image:
       .
     popd
 
-### Docker gpdb6-rhel8-test-pxf-image image
+### Docker gpdb6-rocky8-test-pxf-image image
 
 Build this image for Greenplum 6 running on Rhel 8. Run the following
 command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-private-images/gpdb6-rhel8-test:latest \
-      --tag=gpdb6-rhel8-test-pxf \
-      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/rhel8/Dockerfile \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-rocky8-test:latest \
+      --tag=gpdb6-rocky8-test-pxf \
+      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/rocky8/Dockerfile \
       .
     popd
 
@@ -108,36 +108,7 @@ following command to build the image:
 
 ## Greenplum 7 Images
 
-### Docker gpdb7-centos7-test-pxf-image image
-
-TODO: ===> remove this if Greenplum 7 will not be supported on Centos7 <===
-
-Build this image for Greenplum 7 running on CentOS 7. Run the following
-command to build the image:
-
-    pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
-    docker build \
-      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-centos7-test:latest \
-      --build-arg=GO_VERSION=${GO_VERSION} \
-      --tag=gpdb7-centos7-test-pxf \
-      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/centos7/Dockerfile \
-      .
-    popd
-
-### Docker gpdb7-rhel8-test-pxf-image image
-
-Build this image for Greenplum 7 running on Rhel 8. Run the following
-command to build the image:
-
-    pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
-    docker build \
-      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-private-images/gpdb7-rhel8-test:latest \
-      --tag=gpdb7-rhel8-test-pxf \
-      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/rhel8/Dockerfile \
-      .
-    popd
-
-### Docker gpdb7-rhel8-test-pxf-image image
+### Docker gpdb7-rocky8-test-pxf-image image
 
 Build this image for Greenplum 7 running on Rocky 8. Run the following
 command to build the image:
@@ -147,19 +118,5 @@ command to build the image:
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-rocky8-test:latest \
       --tag=gpdb7-rocky8-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/rocky8/Dockerfile \
-      .
-    popd
-
-### Docker gpdb7-ubuntu18.04-test-pxf-image image
-
-Build this image for Greenplum 7 running on Ubuntu 18.04. Run the following
-command to build the image:
-
-    pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
-    docker build \
-      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-ubuntu18.04-test:latest \
-      --build-arg=GO_VERSION=${GO_VERSION} \
-      --tag=gpdb7-ubuntu18.04-test-pxf \
-      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/ubuntu18.04/Dockerfile \
       .
     popd

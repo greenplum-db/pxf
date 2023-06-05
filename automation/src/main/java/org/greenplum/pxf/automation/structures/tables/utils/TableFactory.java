@@ -3,6 +3,7 @@ package org.greenplum.pxf.automation.structures.tables.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.enums.EnumPartitionType;
 
 import org.greenplum.pxf.automation.enums.EnumPxfDefaultProfiles;
@@ -497,7 +498,7 @@ public abstract class TableFactory {
             userParameters.add("USER=" + user);
         }
         if (server != null) {
-            userParameters.add("SERVER=" + server);
+            exTable.setServer("SERVER=" + server);
         }
         if (customParameters != null) {
             userParameters.add(customParameters);
@@ -653,6 +654,29 @@ public abstract class TableFactory {
     public static ExternalTable getPxfJdbcWritableTable(String name, String[] fields, String dataSourcePath, String server) {
         String customParameter = server != null ? "SERVER=" + server : null;
         return getPxfJdbcWritableTable(name, fields, dataSourcePath, null, null, null, customParameter);
+    }
+
+    /**
+     * Prepares PXF Readable External or Foreign Table for custom data format.
+     *
+     * @param name name of the external table which will be generated
+     * @param fields fields of the external table
+     * @param path for external table path
+     * @param dataFormat dataFormat for the external table
+     * @return PXF Readable External or Foreign table
+     */
+    public static ReadableExternalTable getPxfReadableCustomTable(String name,
+                                                                  String[] fields,
+                                                                  String path,
+                                                                  String dataFormat) {
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, path, "CUSTOM");
+        exTable.setFormatter("pxfwritable_import");
+
+        if (StringUtils.isNotBlank(dataFormat)) {
+            exTable.setProfile(ProtocolUtils.getProtocol().value() + ":" + dataFormat);
+        }
+
+        return exTable;
     }
 
     // ============ FDW Adapter ============

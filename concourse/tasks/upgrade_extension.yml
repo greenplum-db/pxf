@@ -1,0 +1,34 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+
+inputs:
+  - name: pxf_package
+  - name: pxf_tarball
+  - name: pxf_src
+  - name: gpdb_package
+  - name: singlecluster
+    optional: true
+  - name: pxf-automation-dependencies
+    optional: true
+
+params:
+  GP_VER:
+  GROUP: pxfExtensionVersion2
+  SECOND_GROUP: pxfExtensionVersion2_1
+  HADOOP_CLIENT: HDP
+  IMPERSONATION: true
+  ADJUST_AUTOMATION: false
+  PGPORT: 5432
+  PXF_BASE_DIR:
+  PROTOCOL:
+  USE_FDW: false
+
+run:
+  path: sh
+  args:
+    - -exc
+    - |
+      pxf_src/concourse/scripts/test.bash || exit 1
+      pxf_src/concourse/scripts/test_upgrade_extension.bash

@@ -1,0 +1,52 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for PXF gpupgrade test on small data
+-- start_matchsubs
+--
+-- m{.*/usr/local/pxf-(dev|gp\d).*}
+-- s{/usr/local/pxf-(dev|gp\d)}{\$PXF_HOME}
+--
+-- end_matchsubs
+SELECT extname, extversion FROM pg_catalog.pg_extension WHERE extname = 'pxf';
+ extname | extversion
+---------+------------
+ pxf     | 2.1
+(1 row)
+
+SELECT * FROM pxf_gpupgrade_test;
+  name  | num | dub |    longnum    | bool
+--------+-----+-----+---------------+------
+ row_1  |   1 |   1 |  100000000000 | f
+ row_2  |   2 |   2 |  200000000000 | t
+ row_3  |   3 |   3 |  300000000000 | f
+ row_4  |   4 |   4 |  400000000000 | t
+ row_5  |   5 |   5 |  500000000000 | f
+ row_6  |   6 |   6 |  600000000000 | t
+ row_7  |   7 |   7 |  700000000000 | f
+ row_8  |   8 |   8 |  800000000000 | t
+ row_9  |   9 |   9 |  900000000000 | f
+ row_10 |  10 |  10 | 1000000000000 | t
+(10 rows)
+
+SHOW dynamic_library_path;
+ dynamic_library_path
+----------------------
+ $libdir
+(1 row)
+
+SELECT p.proname, p.prosrc, p.probin
+FROM pg_catalog.pg_extension AS e
+    INNER JOIN pg_catalog.pg_depend AS d ON (d.refobjid = e.oid)
+    INNER JOIN pg_catalog.pg_proc AS p ON (p.oid = d.objid)
+WHERE d.deptype = 'e' AND e.extname = 'pxf'
+ORDER BY 1;
+       proname       |            prosrc            |             probin
+---------------------+------------------------------+----------------------------------
+ pxf_read            | pxfprotocol_import           | $PXF_HOME/gpextable/pxf
+ pxf_validate        | pxfprotocol_validate_urls    | $PXF_HOME/gpextable/pxf
+ pxf_write           | pxfprotocol_export           | $PXF_HOME/gpextable/pxf
+ pxfdelimited_import | pxfdelimited_import          | $PXF_HOME/gpextable/pxf
+ pxfwritable_export  | gpdbwritableformatter_export | $PXF_HOME/gpextable/pxf
+ pxfwritable_import  | gpdbwritableformatter_import | $PXF_HOME/gpextable/pxf
+(6 rows)
+

@@ -1,5 +1,5 @@
 directory = 'extension'
-default_version = '2.0'
+default_version = '2.1'
 comment = 'Extension which allows to access unmanaged data'
 module_pathname = '$libdir/pxf'
 superuser = true

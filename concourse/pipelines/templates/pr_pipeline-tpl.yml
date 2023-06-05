@@ -58,15 +58,11 @@ resources:
 {% endfor %} {# gp5, gp6 #}
 
 {% for gp_ver in range(6, 8) %}
-- name: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+- name: gpdb[[gp_ver]]-pxf-dev-rocky8-image
   type: registry-image
   icon: docker
   source:
-{% if gp_ver == 6 %}
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rhel8-test-pxf
-{% else %}
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rocky8-test-pxf
-{% endif %}
     tag: latest
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
@@ -83,7 +79,7 @@ resources:
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
-## ---------- Product Packages ----------
+## ---------- Greenplum Packages ----------
 {% set gp_ver = 5 %}
 {% for i in range(num_gpdb5_versions) %}
 - name: gpdb[[gp_ver]]_rhel7_rpm_latest-[[i]]
@@ -92,7 +88,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
 {% endfor %} {# range(num_gpdb5_versions) #}
 {% set gp_ver = None %}
 
@@ -104,7 +100,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_rhel8_rpm_latest-[[i]]
   type: gcs
@@ -112,7 +108,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel8-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel8-x86_64.rpm
 
 - name: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
   type: gcs
@@ -120,7 +116,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-ubuntu18.04-amd64.deb
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
 
@@ -131,7 +127,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/main/greenplum-db-(7.*)-el8-x86_64.rpm
+    regexp: server/released/gpdb7/greenplum-db-(7.*)-el8-x86_64.rpm
 
 ## ======================================================================
 ## JOBS
@@ -215,18 +211,18 @@ jobs:
       trigger: true
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-    - get: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Build PXF-GP[[gp_ver]] on RHEL8
-    image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((ud/pxf/common/rpm-license))
       VENDOR: ((ud/pxf/common/rpm-vendor))
   - task: Test Against Greenplum Latest RHEL8
-    image: gpdb[[gp_ver]]-pxf-dev-rhel8-image
+    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     config:
       platform: linux
       inputs:

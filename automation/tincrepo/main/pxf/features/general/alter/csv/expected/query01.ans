@@ -18,6 +18,9 @@
 -- m/CONTEXT:.*line.*/
 -- s/line \d* of //g
 --
+-- m/tmp\/pxf_automation_data\/(.*)/
+-- s/tmp\/pxf_automation_data\/(.*)/pxf:\/\/pxf_automation_data?PROFILE=*:text/g
+--
 -- end_matchsubs
 
 -- This query should error out with invalid input syntax for integer

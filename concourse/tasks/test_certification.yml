@@ -26,6 +26,7 @@ params:
   RUN_JDK_VERSION: 8
   PROTOCOL:
   PG_REGRESS:
+  ADJUST_AUTOMATION: true
 
 run:
   path: pxf_src/concourse/scripts/test.bash

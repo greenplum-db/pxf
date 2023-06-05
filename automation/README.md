@@ -31,17 +31,19 @@ The following algorithms _must_ be included:
 - diffie-hellman-group14-sha1
 - diffie-hellman-group1-sha1
 
+We also need to ensure that the `rsa` and `dss` key algorithms are accepted for both the host and public key authentication.
 If they are not, you can enable them with the following config file:
 
 ```bash
-sudo tee -a /etc/ssh/sshd_config.d/pxf-automation-kex.conf <<EOF
+sudo tee -a /etc/ssh/sshd_config.d/pxf-automation.conf >/dev/null <<EOF
 # pxf automation uses an old SSH2 Java library that doesn't support newer KexAlgorithms
 # this assumes that /etc/ssh/sshd_config contains "Include /etc/ssh/sshd_config.d/*.conf"
 # if it doesn't, try adding this directly to /etc/ssh/sshd_config
 KexAlgorithms +diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group1-sha1
+HostKeyAlgorithms +ssh-rsa,ssh-dss
+PubkeyAcceptedAlgorithms +ssh-rsa,ssh-dss
 EOF
 ```
-
 
 Then restart sshd based on your OS.
 For MacOS, either run in terminal
@@ -135,7 +137,7 @@ If you wish to run with cache
 make OFFLINE=true
 ```
 
-Note: if you get an error saying that the jar does not exist, ensure that you have
+Note: If you get an error saying that the jar does not exist, ensure that you have
 a) installed the PXF server, and
 b) only have 1 jar file inside `/usr/local/pxf/application/`
 
@@ -309,12 +311,12 @@ You can read more about TestNG here http://testng.org/doc/index.md
     
 ## Run reports and logs
  
-Automation logs will generated into "automation-logs" directory and will be divided to directories according to each ran java classes.
+Automation logs will be generated into "automation-logs" directory and will be divided to directories according to each ran java classes.
 
 In every "class" directory will be files according to the following format: <time-stamp>_<ran method name>.log
 <img src="images/72680961.png" class="confluence-embedded-image confluence-content-image-border" width="454" height="598" />
 
-TestNg report will generated into target/surefire-reports
+TestNg report will be generated into target/surefire-reports
 <img src="images/68125531.png" class="confluence-embedded-image confluence-content-image-border" width="1084" height="612" />
 
 # IDE Setup (IntelliJ) and Automation Debugging

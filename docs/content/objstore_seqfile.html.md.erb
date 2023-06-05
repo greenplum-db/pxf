@@ -53,7 +53,7 @@ FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import'|'pxfwritable_export')
 [DISTRIBUTED BY (<column_name> [, ... ] ) | DISTRIBUTED RANDOMLY];
 ```
 
-The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Tanzu-Greenplum/6/greenplum-database/GUID-ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) command are described in the table below.
+The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) command are described in the table below.
 
 | Keyword  | Value |
 |-------|-------------------------------------|
@@ -74,7 +74,7 @@ Refer to [Example: Writing Binary Data to HDFS](hdfs_seqfile.html#write_seqfile_
 
     ``` sql
     CREATE WRITABLE EXTERNAL TABLE pxf_tbl_seqfile_s3(location text, month text, number_of_orders integer, total_sales real)
-      LOCATION ('pxf://BUCKET/pxf_examples/pxf_seqfile?PROFILE=s3:SequenceFile&DATA-SCHEMA=com.example.pxf.hdfs.writable.dataschema.PxfExample_CustomWritable&COMPRESSION_TYPE=BLOCK&COMPRESSION_CODEC=bzip2&SERVER=s3srvcfg')
+      LOCATION ('pxf://BUCKET/pxf_examples/pxf_seqfile?PROFILE=s3:SequenceFile&DATA_SCHEMA=com.example.pxf.hdfs.writable.dataschema.PxfExample_CustomWritable&COMPRESSION_TYPE=BLOCK&COMPRESSION_CODEC=bzip2&SERVER=s3srvcfg')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
 
@@ -82,7 +82,7 @@ Refer to [Example: Writing Binary Data to HDFS](hdfs_seqfile.html#write_seqfile_
 
     ``` sql
     CREATE EXTERNAL TABLE read_pxf_tbl_seqfile_s3(location text, month text, number_of_orders integer, total_sales real)
-      LOCATION ('pxf://BUCKET/pxf_examples/pxf_seqfile?PROFILE=s3:SequenceFile&DATA-SCHEMA=com.example.pxf.hdfs.writable.dataschema.PxfExample_CustomWritable&SERVER=s3srvcfg')
+      LOCATION ('pxf://BUCKET/pxf_examples/pxf_seqfile?PROFILE=s3:SequenceFile&DATA_SCHEMA=com.example.pxf.hdfs.writable.dataschema.PxfExample_CustomWritable&SERVER=s3srvcfg')
      FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 

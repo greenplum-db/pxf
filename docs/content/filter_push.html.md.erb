@@ -62,7 +62,7 @@ The following PXF profiles support some aspects of filter pushdown as well as di
 </br><sup>3</sup>&nbsp;PXF filtering is based on file-level, stripe-level, and row-level ORC statistics.
 </br><sup>4</sup>&nbsp;The PXF `jdbc` profile supports the `LIKE` operator only for `TEXT` fields.
 
-PXF does not support filter pushdown for any profile not mentioned in the table above, including: *:avro, *:AvroSequenceFile, *:SequenceFile, *:json, *:text, *:csv, and *:text:multi.
+PXF does not support filter pushdown for any profile not mentioned in the table above, including: *:avro, *:AvroSequenceFile, *:SequenceFile, *:json, *:text, *:csv, `*:fixedwidth`, and *:text:multi.
 
 To summarize, all of the following criteria must be met for filter pushdown to occur:
 

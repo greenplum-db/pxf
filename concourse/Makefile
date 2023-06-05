@@ -18,6 +18,7 @@ NUM_GPDB5_VERSIONS          ?= 10
 NUM_GPDB6_VERSIONS          ?=  9
 REDHAT_MAJOR_VERSION        ?= 7
 FLY_CMD                     ?= fly
+CHECK_CREDS                 ?= true
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
 SLACK                       ?= true
@@ -37,6 +38,11 @@ MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
 
+SET_PIPELINE := set-pipeline
+ifeq ($(CHECK_CREDS), true)
+SET_PIPELINE += --check-creds
+endif
+
 .PHONY: build certification dev pr cloudbuild longevity
 build: set-build-pipeline
 certification: set-certification-pipeline
@@ -48,6 +54,7 @@ longevity: set-longevity-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-build-pipeline
+set-build-pipeline: SLACK=true
 set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
@@ -56,8 +63,7 @@ set-build-pipeline:
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \
 		--pipeline=$(BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
@@ -78,8 +84,7 @@ set-dev-release-pipeline:
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \ \
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
@@ -117,8 +122,7 @@ set-dev-build-pipeline:
 		num_gpdb5_versions=1 \
 		num_gpdb6_versions=1 >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
@@ -131,8 +135,7 @@ set-dev-build-pipeline:
 .PHONY: set-hadoop-cluster-cleaner
 set-hadoop-cluster-cleaner:
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \
 		--pipeline=hadoop-cluster-cleaner \
 		--config=pipelines/hadoop-cluster-cleaner.yml \
 		--var=pxf-git-branch=main \
@@ -150,8 +153,7 @@ set-pr-build-pipeline:
 		num_gpdb5_versions=1 \
 		num_gpdb6_versions=1 >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \
 		--pipeline=$(PR_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
@@ -165,8 +167,7 @@ set-pr-build-pipeline:
 .PHONY: set-certification-pipeline
 set-certification-pipeline:
 	@$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \
 		--pipeline=$(CERTIFICATION_PIPELINE_NAME) \
 		--config pipelines/certification_pipeline.yml \
 		--var=pxf-git-branch=${BRANCH} \
@@ -180,8 +181,7 @@ set-certification-pipeline:
 .PHONY: set-cloudbuild-pipeline
 set-cloudbuild-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \
 		--config $(HOME)/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
 		--var pxf-git-branch=$(BRANCH) \
 		--pipeline cloudbuild
@@ -196,8 +196,7 @@ set-pivnet-pipeline:
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \
 		--pipeline=${PIVNET_PIPELINE_NAME} \
 		--config "$${PIPELINE_FILE}" \
 		--var pxf-git-branch=$(BRANCH) \
@@ -224,8 +223,7 @@ perf:
 	$(TEMPLATE_CMD) --template perf_pipeline-tpl.yml --vars \
 		redhat_major_version=$(REDHAT_MAJOR_VERSION) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/perf-settings-$(SCALE)g.yml \
 		--var pxf-git-branch=$(BRANCH) \
@@ -258,8 +256,7 @@ query-execution-parquet-1g:
 .PHONY: set-longevity-pipeline
 set-longevity-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
+		$(SET_PIPELINE) \
 		--pipeline=dev:longevity_$(YOUR_TAG)_6X_STABLE \
 		--config pipelines/longevity_pipeline.yml \
 		--load-vars-from=settings/pxf-multinode-params.yml \

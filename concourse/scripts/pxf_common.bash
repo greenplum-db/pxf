@@ -84,6 +84,66 @@ function set_env() {
 	export TIMEFORMAT=$'\e[4;33mIt took %R seconds to complete this step\e[0m';
 }
 
+function run_pxf_automation() {
+	# Let's make sure that automation/singlecluster directories are writeable
+	chmod a+w pxf_src/automation /singlecluster || true
+	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
+
+	local extension_name="pxf"
+	if [[ ${USE_FDW} == "true" ]]; then
+		extension_name="pxf_fdw"
+	fi
+
+	#TODO: remove once exttable tests with GP7 are set
+	if [[ ${GROUP} == fdw_gpdb_schedule ]]; then
+		extension_name="pxf_fdw"
+	fi
+
+	su gpadmin -c "
+		source '${GPHOME}/greenplum_path.sh' &&
+		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION IF NOT EXISTS ${extension_name}'
+	"
+	# prepare certification output directory
+	mkdir -p certification
+	chmod a+w certification
+
+	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
+		#!/usr/bin/env bash
+		set -exo pipefail
+
+		source ~gpadmin/.pxfrc
+
+		export PATH=\$PATH:${GPHD_ROOT}/bin
+		export GPHD_ROOT=${GPHD_ROOT}
+		export PXF_HOME=${PXF_HOME}
+		export PGPORT=${PGPORT}
+		export USE_FDW=${USE_FDW}
+
+		cd pxf_src/automation
+		time make GROUP=${GROUP} test
+
+		# if the test is successful, create certification file
+		gpdb_build_from_sql=\$(psql -c 'select version()' | grep Greenplum | cut -d ' ' -f 6,8)
+		gpdb_build_clean=\${gpdb_build_from_sql%)}
+		pxf_version=\$(< ${PXF_HOME}/version)
+		echo "GPDB-\${gpdb_build_clean/ commit:/-}-PXF-\${pxf_version}" > "${PWD}/certification/certification.txt"
+		echo
+		echo '****************************************************************************************************'
+		echo "Wrote certification : \$(< ${PWD}/certification/certification.txt)"
+		echo '****************************************************************************************************'
+	EOF
+
+	chown gpadmin:gpadmin ~gpadmin/run_pxf_automation_test.sh
+	chmod a+x ~gpadmin/run_pxf_automation_test.sh
+
+	if [[ ${ACCEPTANCE} == true ]]; then
+		echo 'Acceptance test pipeline'
+		exit 1
+	fi
+
+	su gpadmin -c ~gpadmin/run_pxf_automation_test.sh
+}
+
 function run_regression_test() {
 	ln -s "${PWD}/gpdb_src" ~gpadmin/gpdb_src
 	cat > ~gpadmin/run_regression_test.sh <<-EOF
@@ -390,6 +450,19 @@ function setup_impersonation() {
 	if ! find "${GPHD_ROOT}/hbase/lib" -name 'pxf-hbase-*.jar' | grep pxf-hbase; then
 		cp "${SHARE_DIR}"/pxf-hbase-*.jar "${GPHD_ROOT}/hbase/lib"
 	fi
+}
+
+function setup_hadoop() {
+	local hdfsrepo=$1
+
+	[[ -z ${GROUP} ]] && return 0
+
+	export SLAVES=1
+	setup_impersonation "${hdfsrepo}"
+	if grep 'hadoop-3' "${hdfsrepo}/versions.txt"; then
+		adjust_for_hadoop3 "${hdfsrepo}"
+	fi
+	start_hadoop_services "${hdfsrepo}"
 }
 
 function adjust_for_hadoop3() {

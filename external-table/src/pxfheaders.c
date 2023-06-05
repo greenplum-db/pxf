@@ -37,6 +37,8 @@ static void add_alignment_size_httpheader(CHURL_HEADERS headers);
 static void add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel);
 static void add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri);
 static char *get_format_name(ExtTableEntry *exttbl);
+static char *getFormatterString(ExtTableEntry *exttbl);
+static bool isFormatterPxfDelimited(ExtTableEntry *exttbl);
 static bool isFormatterPxfWritable(ExtTableEntry *exttbl);
 static void add_projection_desc_httpheaders(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
 static bool add_attnums_from_targetList(Node *node, List *attnums);
@@ -89,6 +91,20 @@ build_http_headers(PxfInputData *input)
 		ExtTableEntry *exttbl = GetExtTableEntry(rel->rd_id);
 		ListCell   *option;
 		List	   *copyFmtOpts = NIL;
+
+		// in the case of PxfDelimitedFormatter formatter, the only viable profiles are *:text and *:csv.
+		// error out early here if the profile is not accepted
+		if (getFormatterString(exttbl) && // if the formatter string is non empty
+			isFormatterPxfDelimited(exttbl) && // and the formatter is PxfDelimitedFormatter
+			(!input->gphduri->profile || // if the profile is empty OR
+				(!strstr(input->gphduri->profile, ":text") && // the profile is neither text
+					!strstr(input->gphduri->profile, ":csv")))) // nor csv
+		{
+			ereport(ERROR,
+					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					 errmsg("The \"%s\" formatter only works with *:text or *:csv profiles.", PxfDelimitedFormatter),
+					 errhint("Please double check the profile option in the external table definition.")));
+		}
 
 		/* pxf treats everything but pxfwritable_[import|export] as TEXT (even CSV) */
 		char *format = get_format_name(exttbl);
@@ -655,10 +671,12 @@ get_format_name(ExtTableEntry *exttbl)
 }
 
 /*
- * Checks if the custom formatter specified for the table starts with pxfwritable_ prefix
+ * Returns the name of the formatter (GP7)
+ * Returns the string containing all format options information (GP6 & GP5)
+ * Returns NULL otherwise
  */
-static bool
-isFormatterPxfWritable(ExtTableEntry *exttbl)
+static char*
+getFormatterString(ExtTableEntry *exttbl)
 {
 	char *formatterNameSearchString = NULL;
 
@@ -673,10 +691,38 @@ isFormatterPxfWritable(ExtTableEntry *exttbl)
 		}
 	}
 #else
-	// we only have a serialized string of formatter options, parsing it requires porting a lot of code from GP6
-	// instead, we will only search for occurrence of the "pxfwritable_" prefix in the whole string
+	// for GP5 and GP6, we only have a serialized string of formatter options,
+	// parsing it requires porting a lot of code from GP6 so return the entire serialized string
 	formatterNameSearchString = exttbl->fmtopts;
 #endif
+
+	return formatterNameSearchString;
+}
+
+/*
+ * Checks if the custom formatter specified for the table is pxfdelimited_import
+ */
+static bool
+isFormatterPxfDelimited(ExtTableEntry *exttbl)
+{
+	char *formatterNameSearchString = getFormatterString(exttbl);
+
+	if (!formatterNameSearchString || !strlen(formatterNameSearchString))
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_INTERNAL_ERROR),
+						errmsg("cannot determine the name of a custom formatter")));
+	}
+
+	return strstr(formatterNameSearchString, PxfDelimitedFormatter) != NULL;
+}
+/*
+ * Checks if the custom formatter specified for the table starts with pxfwritable_ prefix
+ */
+static bool
+isFormatterPxfWritable(ExtTableEntry *exttbl)
+{
+	char *formatterNameSearchString = getFormatterString(exttbl);
 
 	if (!formatterNameSearchString || !strlen(formatterNameSearchString))
 	{

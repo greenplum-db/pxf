@@ -23,6 +23,7 @@
 #define GpdbWritableFormatName "GPDBWritable"
 #define TextFormatName "TEXT"
 #define PXFWritableFormatterPrefix "pxfwritable_"
+#define PxfDelimitedFormatter "pxfdelimited_import"
 
 #include "libchurl.h"
 #include "pxfuriparser.h"

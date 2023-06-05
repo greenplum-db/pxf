@@ -125,19 +125,6 @@ function configure_mapr_dependencies() {
 	sed -i 's|<port>8020</port>|<port>7222</port>|' pxf_src/automation/src/test/resources/sut/default.xml
 }
 
-function setup_hadoop() {
-	local hdfsrepo=$1
-
-	[[ -z ${GROUP} ]] && return 0
-
-	export SLAVES=1
-	setup_impersonation "${hdfsrepo}"
-	if grep 'hadoop-3' "${hdfsrepo}/versions.txt"; then
-		adjust_for_hadoop3 "${hdfsrepo}"
-	fi
-	start_hadoop_services "${hdfsrepo}"
-}
-
 function configure_sut() {
 	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
 	if [[ -n $AMBARI_DIR  ]]; then

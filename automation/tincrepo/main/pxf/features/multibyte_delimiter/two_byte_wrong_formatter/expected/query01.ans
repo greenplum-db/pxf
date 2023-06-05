@@ -1,0 +1,8 @@
+-- start_ignore
+-- m/DETAIL/
+-- s/DETAIL/CONTEXT/
+-- end_ignore
+-- @description query01 for PXF Multibyte delimiter, 2-byte delim cases with wrong formatter provided
+SELECT * from pxf_multibyte_twobyte_wrongformatter_data ORDER BY n1;
+ERROR:  Record has 1 fields but the schema size is 22  (seg1 slice1 127.0.0.1:6003 pid=51272)
+CONTEXT:  External table pxf_multibyte_twobyte_wrongformatter_data

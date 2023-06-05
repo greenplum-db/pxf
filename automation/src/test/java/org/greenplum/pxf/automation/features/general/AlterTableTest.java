@@ -1,13 +1,14 @@
 package org.greenplum.pxf.automation.features.general;
 
+import annotations.FailsWithFDW;
+import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
-import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
+@WorksWithFDW
 public class AlterTableTest extends BaseFeature {
 
     private static final String AVRO_TYPES_FILE_NAME = "supported_primitive_types";
@@ -89,47 +90,38 @@ public class AlterTableTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "security"})
     public void dropAndAddColumnsPxfWritableImportWithColumnProjectionSupport() throws Exception {
 
-        exTable = new ReadableExternalTable(PXF_ALTER_PARQUET_TABLE,
-                PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet/" + PARQUET_PRIMITIVE_TYPES, "custom");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        exTable.setFormatter("pxfwritable_import");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
-
-        gpdb.createTableAndVerify(exTable);
+        exTable = TableFactory.getPxfReadableCustomTable(PXF_ALTER_PARQUET_TABLE,
+                PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet/" + PARQUET_PRIMITIVE_TYPES, "parquet");
+        setParamsAndVerifyTable();
 
         runTincTest("pxf.features.general.alter.pxfwritable_import.with_column_projection.runTest");
     }
 
+    // TODO: Determine the reason why FDW is failing with the below class cast exception:
+    //
+    // ERROR:  PXF server error : class java.io.DataInputStream cannot be cast to class java.lang.String
+    // (java.io.DataInputStream and java.lang.String are in module java.base of loader 'bootstrap')
+    @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security"})
     public void dropColumnsPxfWritableExport() throws Exception {
 
         // Create source table
-        exTable = new ReadableExternalTable(PXF_PARQUET_TABLE_SOURCE,
-                PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet/" + PARQUET_PRIMITIVE_TYPES, "custom");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        exTable.setFormatter("pxfwritable_import");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
-        gpdb.createTableAndVerify(exTable);
+        exTable = TableFactory.getPxfReadableCustomTable(PXF_PARQUET_TABLE_SOURCE,
+                PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet/" + PARQUET_PRIMITIVE_TYPES, "parquet");
+        setParamsAndVerifyTable();
 
         // Create writable table
-        exTable = new WritableExternalTable(PXF_ALTER_WRITE_PARQUET_TABLE,
-                PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet-write/" + PARQUET_WRITE_PRIMITIVES, "custom");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
+        exTable = TableFactory.getPxfWritableTextTable(PXF_ALTER_WRITE_PARQUET_TABLE,
+                PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet-write/" + PARQUET_WRITE_PRIMITIVES, null);
         exTable.setFormatter("pxfwritable_export");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
-        gpdb.createTableAndVerify(exTable);
+        exTable.setFormat("CUSTOM");
+        setParamsAndVerifyTable();
 
         // Create validation table
-        exTable = new ReadableExternalTable(PXF_ALTER_WRITE_PARQUET_TABLE + "_r",
-                PARQUET_TABLE_SUBSET_COLUMNS, hdfsPath + "/parquet-write/" + PARQUET_WRITE_PRIMITIVES, "custom");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        exTable.setFormatter("pxfwritable_import");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
-        gpdb.createTableAndVerify(exTable);
+        exTable = TableFactory.getPxfReadableCustomTable(PXF_ALTER_WRITE_PARQUET_TABLE + "_r",
+                PARQUET_TABLE_SUBSET_COLUMNS, hdfsPath + "/parquet-write/" + PARQUET_WRITE_PRIMITIVES, "parquet");
+        setParamsAndVerifyTable();
 
         runTincTest("pxf.features.general.alter.pxfwritable_export.parquet.runTest");
     }
@@ -137,7 +129,7 @@ public class AlterTableTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "security"})
     public void dropAndAddColumnsPxfWritableImportWithoutColumnProjectionSupport() throws Exception {
         // default external table with common settings
-        exTable = new ReadableExternalTable(PXF_ALTER_AVRO_TABLE, new String[]{
+        exTable = TableFactory.getPxfReadableCustomTable(PXF_ALTER_AVRO_TABLE, new String[]{
                 "type_int int",
                 "type_double float8",
                 "type_string text",
@@ -145,13 +137,8 @@ public class AlterTableTest extends BaseFeature {
                 "col_does_not_exist text",
                 "type_long bigint",
                 "type_bytes bytea",
-                "type_boolean bool"}, hdfsPath + "/avro/" + AVRO_TYPES_FILE_NAME + SUFFIX_AVRO, "custom");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        exTable.setFormatter("pxfwritable_import");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":avro");
-
-        gpdb.createTableAndVerify(exTable);
+                "type_boolean bool"}, hdfsPath + "/avro/" + AVRO_TYPES_FILE_NAME + SUFFIX_AVRO, "avro");
+        setParamsAndVerifyTable();
 
         // Verify results
         runTincTest("pxf.features.general.alter.pxfwritable_import.without_column_projection.runTest");
@@ -178,10 +165,15 @@ public class AlterTableTest extends BaseFeature {
                         "longNum bigint",
                         "bool boolean"
                 }, hdfsPath + "/csv/" + fileName, ",");
+        setParamsAndVerifyTable();
+
+        runTincTest("pxf.features.general.alter.csv.runTest");
+    }
+
+    private void setParamsAndVerifyTable() throws Exception
+    {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
         gpdb.createTableAndVerify(exTable);
-
-        runTincTest("pxf.features.general.alter.csv.runTest");
     }
 }

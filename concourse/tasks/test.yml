@@ -34,6 +34,7 @@ params:
   PROTOCOL:
   PG_REGRESS:
   USE_FDW: false
+  ADJUST_AUTOMATION: true
 
 run:
   path: pxf_src/concourse/scripts/test.bash

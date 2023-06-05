@@ -70,65 +70,6 @@ function run_pg_regress() {
 	su gpadmin -c ~gpadmin/run_pxf_automation_test.sh
 }
 
-function run_pxf_automation() {
-	# Let's make sure that automation/singlecluster directories are writeable
-	chmod a+w pxf_src/automation /singlecluster || true
-	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
-
-	local extension_name="pxf"
-	if [[ ${USE_FDW} == "true" ]]; then
-		extension_name="pxf_fdw"
-	fi
-
-	#TODO: remove once exttable tests with GP7 are set
-	if [[ ${GROUP} == fdw_gpdb_schedule ]]; then
-		extension_name="pxf_fdw"
-	fi
-
-	su gpadmin -c "
-		source '${GPHOME}/greenplum_path.sh' &&
-		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION ${extension_name}'
-	"
-	# prepare certification output directory
-	mkdir -p certification
-	chmod a+w certification
-
-	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
-		#!/usr/bin/env bash
-		set -exo pipefail
-
-		source ~gpadmin/.pxfrc
-
-		export PATH=\$PATH:${GPHD_ROOT}/bin
-		export GPHD_ROOT=${GPHD_ROOT}
-		export PXF_HOME=${PXF_HOME}
-		export PGPORT=${PGPORT}
-		export USE_FDW=${USE_FDW}
-
-		cd pxf_src/automation
-		time make GROUP=${GROUP} test
-
-		# if the test is successful, create certification file
-		gpdb_build_from_sql=\$(psql -c 'select version()' | grep Greenplum | cut -d ' ' -f 6,8)
-		gpdb_build_clean=\${gpdb_build_from_sql%)}
-		pxf_version=\$(< ${PXF_HOME}/version)
-		echo "GPDB-\${gpdb_build_clean/ commit:/-}-PXF-\${pxf_version}" > "${PWD}/certification/certification.txt"
-		echo
-		echo '****************************************************************************************************'
-		echo "Wrote certification : \$(< ${PWD}/certification/certification.txt)"
-		echo '****************************************************************************************************'
-	EOF
-
-	chown gpadmin:gpadmin ~gpadmin/run_pxf_automation_test.sh
-	chmod a+x ~gpadmin/run_pxf_automation_test.sh
-
-	if [[ ${ACCEPTANCE} == true ]]; then
-		echo 'Acceptance test pipeline'
-		exit 1
-	fi
-
-	su gpadmin -c ~gpadmin/run_pxf_automation_test.sh
-}
 
 function generate_extras_fat_jar() {
 	mkdir -p /tmp/fatjar
@@ -248,7 +189,7 @@ function _main() {
 	fi
 
 	# Certification jobs might install non-latest PXF, make sure automation code corresponds to what is installed
-	if [[ -f ${PXF_HOME}/commit.sha ]]; then
+	if [[ -f ${PXF_HOME}/commit.sha ]] && [[ ${ADJUST_AUTOMATION} != false ]]; then
 		adjust_automation_code
 	else
 		echo "WARNING: no commit.sha file is found in PXF_HOME=${PXF_HOME}"
