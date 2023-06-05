@@ -82,10 +82,8 @@ public class DecimalUtilities {
          */
 
         if (StringUtils.equalsIgnoreCase(profile, "parquet")) {
-            //TODO: uncomment this part when working on the complete numeric fix for Parquet
-//            if (precision > HiveDecimal.MAX_PRECISION) {
-//                return parseDecimalStringWithBigDecimal();
-//            }
+            // TODO: provide a logic of a parsing incoming decimal string with BigDecimal when its precision is greater than 38 for Parquet.
+            //  If the precision is smaller than or equal to 38, still parse it with HiveDecimal
             return parseDecimalStringWithHiveDecimal(value, precision, scale, true, columnName);
         }
         return parseDecimalStringWithHiveDecimal(value, precision, scale, false, columnName);
@@ -224,10 +222,5 @@ public class DecimalUtilities {
             }
         }
         return hiveDecimal.bigDecimalValue();
-    }
-
-    // TODO: implement parsing value with BigDecimal
-    private BigDecimal parseDecimalStringWithBigDecimal() {
-        return null;
     }
 }

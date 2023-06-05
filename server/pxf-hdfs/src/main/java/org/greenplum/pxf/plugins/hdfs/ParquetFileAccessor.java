@@ -555,6 +555,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
                 // precision is defined but precision >  HiveDecimal.MAX_PRECISION i.e., 38
                 // this error will be thrown no matter what decimal overflow option is
+                // TODO: replace HiveDecimal.MAX_PRECISION with some other precision
+                //  For Parquet, there is no precision limitation for decimal
+                //  https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#decimal
+                //  For postgres, although there is a precision limitation, the precision is very large
+                //  https://www.postgresql.org/docs/15/datatype-numeric.html
                 if (precision > HiveDecimal.MAX_PRECISION) {
                     throw new UnsupportedTypeException(String.format("Column %s is defined as NUMERIC with precision %d " +
                             "which exceeds maximum supported precision %d of Parquet.", columnName, precision, HiveDecimal.MAX_PRECISION));
