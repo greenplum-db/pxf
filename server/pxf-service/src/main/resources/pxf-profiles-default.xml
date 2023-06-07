@@ -43,6 +43,7 @@ under the License.
             <mapping option="batch_size" property="jdbc.statement.batchSize"/>
             <mapping option="fetch_size" property="jdbc.statement.fetchSize"/>
             <mapping option="query_timeout" property="jdbc.statement.queryTimeout"/>
+            <mapping option="date_wide_range" property="jdbc.date.wide-range"/>
         </optionMappings>
     </profile>
 

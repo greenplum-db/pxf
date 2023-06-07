@@ -23,7 +23,9 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +57,10 @@ import static java.time.format.DateTimeFormatter.ISO_OFFSET_TIME;
  * JDBC tables resolver
  */
 public class JdbcResolver extends JdbcBasePlugin implements Resolver {
+    /**
+     * LOCAL_DATE_GET_FORMATTER is used to format LocalDate to String.
+     * Examples: 2023-01-10 -> "2023-01-10 AD"; +12345-02-01 -> "12345-02-01 AD"; -0009-12-11 -> "0010-12-11 BC"
+     */
     private static final DateTimeFormatter LOCAL_DATE_GET_FORMATTER = (new DateTimeFormatterBuilder())
             .appendValue(ChronoField.YEAR_OF_ERA, 4, 9, SignStyle.NORMAL).appendLiteral("-")
             .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
@@ -62,6 +68,11 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .appendPattern(" G")
             .toFormatter();
 
+    /**
+     * LOCAL_DATE_TIME_GET_FORMATTER is used to format LocalDateTime to String.
+     * Examples: 2018-10-19T10:11 -> "2018-10-19 10:11:00 AD"; +123456-10-19T11:12:13 -> "123456-10-19 11:12:13 AD";
+     * -1233-10-19T10:11:15.456 -> "1234-10-19 10:11:15.456 BC"
+     */
     private static final DateTimeFormatter LOCAL_DATE_TIME_GET_FORMATTER = (new DateTimeFormatterBuilder())
             .appendValue(ChronoField.YEAR_OF_ERA, 4, 9, SignStyle.NORMAL).appendLiteral("-")
             .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
@@ -70,6 +81,12 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .appendPattern(" G")
             .toFormatter();
 
+
+    /**
+     * OFFSET_DATE_TIME_GET_FORMATTER is used to format OffsetDateTime to String.
+     * Examples: 1956-02-01T07:15:16Z -> "1956-02-01 07:15:16Z AD"; +12345-02-01T10:15:16Z -> "12345-02-01 10:15:16Z AD";
+     * -1999-02-01T04:15:16Z -> "2000-02-01 04:15:16Z BC"
+     */
     private static final DateTimeFormatter OFFSET_DATE_TIME_GET_FORMATTER = (new DateTimeFormatterBuilder())
             .appendValue(ChronoField.YEAR_OF_ERA, 4, 9, SignStyle.NORMAL).appendLiteral("-")
             .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
@@ -78,6 +95,10 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .appendPattern(" G")
             .toFormatter();
 
+    /**
+     * LOCAL_DATE_SET_FORMATTER is used to format String to LocalDate.
+     * Examples: "1977-12-11" -> 1977-12-11; "456789-12-11" -> +456789-12-11; "0010-12-11 BC" -> -0009-12-11
+     */
     private static final DateTimeFormatter LOCAL_DATE_SET_FORMATTER = (new DateTimeFormatterBuilder())
             .appendValue(ChronoField.YEAR_OF_ERA, 1, 9, SignStyle.NORMAL).appendLiteral('-')
             .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
@@ -85,11 +106,15 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .optionalStart().appendPattern(" G").optionalEnd()
             .toFormatter();
 
+    /**
+     * LOCAL_DATE_TIME_SET_FORMATTER is used to transfer String to LocalDateTime.
+     * Examples: "1980-08-10 17:10:20" -> 1980-08-10T17:10:20; "123456-10-19 11:12:13" -> +123456-10-19T11:12:13;
+     * "1234-10-19 10:11:15.456 BC" -> -1233-10-19T10:11:15.456
+     */
     private static final DateTimeFormatter LOCAL_DATE_TIME_SET_FORMATTER = (new DateTimeFormatterBuilder())
             .appendValue(ChronoField.YEAR_OF_ERA, 1, 9, SignStyle.NORMAL).appendLiteral('-')
             .appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, SignStyle.NORMAL).appendLiteral('-')
-            .appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NORMAL)
-            .appendLiteral(" ")
+            .appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NORMAL).appendLiteral(" ")
             .append(ISO_LOCAL_TIME)
             .optionalStart().appendPattern(" G").optionalEnd()
             .toFormatter();
@@ -111,6 +136,23 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
     );
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcResolver.class);
+
+    /**
+     * Creates a new instance of the JdbcResolver
+     */
+    public JdbcResolver() {
+        super();
+    }
+
+    /**
+     * Creates a new instance of the resolver with provided connection manager.
+     *
+     * @param connectionManager connection manager
+     * @param secureLogin       the instance of the secure login
+     */
+    JdbcResolver(ConnectionManager connectionManager, SecureLogin secureLogin) {
+        super(connectionManager, secureLogin);
+    }
 
     /**
      * getFields() implementation
@@ -390,7 +432,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         statement.setNull(i, Types.TIMESTAMP);
                     } else {
                         if (field.val instanceof LocalDateTime) {
-                            statement.setObject(i, (LocalDateTime) field.val);
+                            statement.setObject(i, field.val);
                         } else {
                             statement.setTimestamp(i, (Timestamp) field.val);
                         }
@@ -401,7 +443,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         statement.setNull(i, Types.DATE);
                     } else {
                         if (field.val instanceof LocalDate) {
-                            statement.setObject(i, (LocalDate) field.val);
+                            statement.setObject(i, field.val);
                         } else {
                             statement.setDate(i, (Date) field.val);
                         }

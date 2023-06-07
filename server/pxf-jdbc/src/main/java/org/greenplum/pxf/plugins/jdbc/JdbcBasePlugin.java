@@ -364,7 +364,8 @@ public class JdbcBasePlugin extends BasePlugin {
             poolQualifier = configuration.get(JDBC_POOL_QUALIFIER_PROPERTY_NAME);
         }
 
-        // Optional parameter. Get the flag whether the year might contain more than 4 digits in `date` or 'timestamp' or not
+        // Optional parameter to determine if the year might contain more than 4 digits in `date` or 'timestamp'.
+        // Populate from the context if it exists, otherwise pull from the configuration. The default value is false.
         String dateWideRange = context.getOption(JDBC_DATE_WIDE_RANGE);
         if (dateWideRange != null) {
             isDateWideRange = Boolean.parseBoolean(dateWideRange);
