@@ -1970,7 +1970,7 @@ public class ParquetWriteTest {
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123492");
         Exception e = assertThrows(UnsupportedTypeException.class, () -> accessor.openForWrite());
-        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d of Parquet.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
+        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
     }
 
     // Numeric precision defined, test error flag when provided precision overflow. An error should be thrown
@@ -1984,7 +1984,7 @@ public class ParquetWriteTest {
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123493");
         Exception e = assertThrows(UnsupportedTypeException.class, () -> accessor.openForWrite());
-        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d of Parquet.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
+        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
     }
 
     // Numeric precision not defined, test ignore flag when data integer digits overflow. Data should be skipped
@@ -2431,16 +2431,16 @@ public class ParquetWriteTest {
             BigDecimal bigDecimal = NumberUtils.createBigDecimal(value);
             if (bigDecimal.precision() - bigDecimal.scale() > precision) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision %d.",
-                        value, columnName, "Parquet", precision), e.getMessage());
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
+                        value, columnName, precision), e.getMessage());
             } else if (bigDecimal.precision() - bigDecimal.scale() > precision - scale) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision and scale (%d,%d).",
-                        value, columnName, "Parquet", precision, scale), e.getMessage());
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
+                        value, columnName, precision, scale), e.getMessage());
             } else if (bigDecimal.scale() > scale) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum scale %d, and cannot be stored without precision loss.",
-                        value, columnName, "Parquet", scale), e.getMessage());
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum scale %d, and cannot be stored without precision loss.",
+                        value, columnName, scale), e.getMessage());
             } else {
                 OneRow rowToWrite = resolver.setFields(record);
                 assertTrue(accessor.writeNextObject(rowToWrite));
@@ -2456,12 +2456,12 @@ public class ParquetWriteTest {
             BigDecimal bigDecimal = new BigDecimal(value);
             if (bigDecimal.precision() - bigDecimal.scale() > precision) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision %d.",
-                        value, columnName, "Parquet", precision), e.getMessage());
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
+                        value, columnName, precision), e.getMessage());
             } else if (bigDecimal.precision() - bigDecimal.scale() > precision - scale) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision and scale (%d,%d).",
-                                value, columnName, "Parquet", precision, scale),
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
+                                value, columnName, precision, scale),
                         e.getMessage());
             } else {
                 OneRow rowToWrite = resolver.setFields(record);

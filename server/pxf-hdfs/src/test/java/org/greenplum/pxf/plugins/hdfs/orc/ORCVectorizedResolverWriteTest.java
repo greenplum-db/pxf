@@ -156,8 +156,8 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         records.add(record);
 
         Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision 38, and cannot be stored without precision loss.",
-                decimalString, "col14", "ORC"), e.getMessage());
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision 38, and cannot be stored without precision loss.",
+                decimalString, "col14"), e.getMessage());
     }
 
     @Test
@@ -243,8 +243,8 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         records.add(record);
 
         Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision 38.",
-                decimalString, "col14", "ORC"), e.getMessage());
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision 38.",
+                decimalString, "col14"), e.getMessage());
     }
 
     @Test
@@ -269,8 +269,8 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         records.add(record);
 
         Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals(String.format("The value %s for the NUMERIC column %s using %s profile exceeds maximum precision 38.",
-                decimalString, "col14", "ORC"), e.getMessage());
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision 38.",
+                decimalString, "col14"), e.getMessage());
     }
     @Test
     public void testResolvesSingleRecord_NoNulls() {

@@ -134,7 +134,7 @@ public abstract class ORCSchemaBuilder {
                 // here we provide a PXF error message containing more details
                 if (precision > maxPrecision) {
                     throw new UnsupportedTypeException(String.format("Column %s is defined as NUMERIC with precision %d " +
-                            "which exceeds maximum supported precision %d of ORC.", columnName, precision, maxPrecision));
+                            "which exceeds maximum supported precision %d.", columnName, precision, maxPrecision));
                 }
                 // due to ORC code, can't set precision which is less than current scale, which is 10 by default
                 // so need to set correct scale before setting precision, default scale to 0 if missing

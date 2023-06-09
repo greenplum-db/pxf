@@ -2,4 +2,4 @@
 -- end_ignore
 -- @description query01 for writing undefined precision numeric with pxf.parquet.write.decimal.overflow = round. When try to write a numeric with data size > 38, an error will be thrown.
 INSERT INTO pxf_parquet_write_undefined_precision_numeric_large_data_length SELECT * FROM numeric_undefined_precision;
-ERROR:  PXF server error : The value 1234567890123456789012345678901234567890.12345 for the NUMERIC column value using Parquet profile exceeds maximum precision 38.
+ERROR:  PXF server error : The value 1234567890123456789012345678901234567890.12345 for the NUMERIC column value exceeds maximum precision 38.

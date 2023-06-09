@@ -21,6 +21,7 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
@@ -40,11 +41,11 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetUtilities;
+import org.greenplum.pxf.plugins.hdfs.utilities.DecimalOverflowOption;
 import org.greenplum.pxf.plugins.hdfs.utilities.DecimalUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,20 +64,24 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
 
     public static final String PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.parquet.write.decimal.overflow";
-
+    private static final String PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR = "error";
+    private static final String PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND = "round";
+    private static final String PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE = "ignore";
     private static final PgUtilities pgUtilities = new PgUtilities();
     private final ObjectMapper mapper = new ObjectMapper();
     private final ParquetUtilities parquetUtilities = new ParquetUtilities(pgUtilities);
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
     private List<ColumnDescriptor> columnDescriptors;
-    private final DecimalUtilities decimalUtilities = new DecimalUtilities("Parquet");
+
+    private DecimalUtilities decimalUtilities;
 
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
-        decimalUtilities.parseDecimalOverflowOption(configuration, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME);
+        DecimalOverflowOption decimalOverflowOption = parseDecimalOverflowOption(configuration);
+        decimalUtilities = new DecimalUtilities(decimalOverflowOption);
     }
 
     /**
@@ -269,14 +274,11 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         int precision = Math.min(HiveDecimal.MAX_PRECISION, typeAnnotation.getPrecision());
         int scale = Math.min(HiveDecimal.MAX_SCALE, typeAnnotation.getScale());
 
-        BigDecimal bigDecimal = decimalUtilities.parseDecimalString(value, precision, scale, columnName);
-
-        if (bigDecimal == null) {
+        HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(value, precision, scale, columnName);
+        if (hiveDecimal == null) {
            return null;
         }
 
-        // TODO: use non-HiveDecimal way to find out the decimalBytes when working on the complete numeric fix
-        HiveDecimal hiveDecimal = HiveDecimal.create(bigDecimal);
         byte[] decimalBytes = hiveDecimal.bigIntegerBytesScaled(scale);
 
         // Estimated number of bytes needed.
@@ -356,5 +358,26 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             field.val = converter.getValue(group, columnIndex, 0, type);
         }
         return field;
+    }
+
+    /**
+     * Return decimal overflow option based on server configuration properties of pxf.parquet.write.decimal.overflow.
+     *
+     * @param configuration contains server configuration properties
+     * @return a DecimalOverflowOption contains decimal overflow option 'error', 'round' or 'ignore'. By default is 'round'.
+     */
+    public DecimalOverflowOption parseDecimalOverflowOption(Configuration configuration) {
+        String decimalOverflowOption = configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR_WITH_ENFORCING.getDecimalOverflowOption()).toLowerCase();
+        switch (decimalOverflowOption) {
+            case PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR:
+                return DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR_WITH_ENFORCING;
+            case PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND:
+                return DecimalOverflowOption.DECIMAL_OVERFLOW_ROUND_WITH_ENFORCING;
+            case PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE:
+                return DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITH_ENFORCING;
+            default:
+                throw new UnsupportedTypeException(String.format("Invalid configuration value %s for " +
+                        "pxf.parquet.write.decimal.overflow. Valid values are error, round, and ignore.", decimalOverflowOption));
+        }
     }
 }
