@@ -322,8 +322,8 @@ public class HiveMetastoreCompatibilityTest {
 
             Table resultTable = hiveClientWrapper.getHiveTable(client, new Metadata.Item("default", name));
             assertEquals(hiveTable.getTableName(), resultTable.getTableName());
-            assertEquals(4, thriftHiveMetastoreClientMockedConstruction.constructed().size());
-            assertEquals(4, tSocketMockedConstruction.constructed().size());
+            assertEquals(5, thriftHiveMetastoreClientMockedConstruction.constructed().size());
+            assertEquals(5, tSocketMockedConstruction.constructed().size());
         }
     }
 }
