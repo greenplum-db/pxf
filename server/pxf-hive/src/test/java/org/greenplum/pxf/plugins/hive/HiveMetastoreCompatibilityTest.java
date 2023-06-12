@@ -293,16 +293,6 @@ public class HiveMetastoreCompatibilityTest {
                          }
                          return null;
                      },
-                     // placebo run through
-                     // the second to last invocation keeps getting skipped so place this here as a placebo
-                     invocation -> {
-                         if (invocation.getMethod().getName().equals("get_table_req")) {
-                             throw new TApplicationException("fallback ???");
-                         } else if (invocation.getMethod().getName().equals("get_table")) {
-                             throw new TTransportException("oops. where's the metastore? ???");
-                         }
-                         return null;
-                     },
                      // final run through (retry 3 = success)
                      invocation -> {
                          if (invocation.getMethod().getName().equals("get_table_req")) {
@@ -322,8 +312,8 @@ public class HiveMetastoreCompatibilityTest {
 
             Table resultTable = hiveClientWrapper.getHiveTable(client, new Metadata.Item("default", name));
             assertEquals(hiveTable.getTableName(), resultTable.getTableName());
-            assertEquals(5, thriftHiveMetastoreClientMockedConstruction.constructed().size());
-            assertEquals(5, tSocketMockedConstruction.constructed().size());
+            assertEquals(4, thriftHiveMetastoreClientMockedConstruction.constructed().size());
+            assertEquals(4, tSocketMockedConstruction.constructed().size());
         }
     }
 }
