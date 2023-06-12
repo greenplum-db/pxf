@@ -8,12 +8,13 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * An instance should be constructed in a profile-specific class.
  */
 public enum DecimalOverflowOption {
-    DECIMAL_OVERFLOW_ERROR_WITH_ENFORCING( "error", true),
-    DECIMAL_OVERFLOW_ERROR_WITHOUT_ENFORCING( "error", false),
-    DECIMAL_OVERFLOW_ROUND_WITH_ENFORCING("round", true),
-    DECIMAL_OVERFLOW_ROUND_WITHOUT_ENFORCING("round", false),
-    DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING("ignore", false),
-    DECIMAL_OVERFLOW_IGNORE_WITH_ENFORCING("ignore", true);
+    DECIMAL_OVERFLOW_ERROR( "error", true),
+
+    DECIMAL_OVERFLOW_ROUND("round", true),
+
+    DECIMAL_OVERFLOW_IGNORE("ignore", true),
+
+    DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING("ignore", false);
 
     private final String decimalOverflowOption;
 
@@ -44,7 +45,7 @@ public enum DecimalOverflowOption {
      * @return whether the current option is 'error' option
      */
     public boolean isOptionError() {
-        return decimalOverflowOption.equals(DECIMAL_OVERFLOW_ERROR_WITH_ENFORCING.getDecimalOverflowOption()) || decimalOverflowOption.equals(DECIMAL_OVERFLOW_ERROR_WITHOUT_ENFORCING.getDecimalOverflowOption());
+        return decimalOverflowOption.equals(DECIMAL_OVERFLOW_ERROR.getDecimalOverflowOption());
     }
 
     /**
@@ -52,15 +53,15 @@ public enum DecimalOverflowOption {
      * @return whether the current option is 'round' option
      */
     public boolean isOptionRound() {
-        return decimalOverflowOption.equals(DECIMAL_OVERFLOW_ROUND_WITH_ENFORCING.getDecimalOverflowOption()) || decimalOverflowOption.equals(DECIMAL_OVERFLOW_ROUND_WITHOUT_ENFORCING.getDecimalOverflowOption());
+        return decimalOverflowOption.equals(DECIMAL_OVERFLOW_ROUND.getDecimalOverflowOption());
     }
 
     /**
      *
-     * @return whether the current option is 'ignore' option with overflowing value not set to NULL
+     * @return whether the current option is 'ignore' option
      */
     public boolean isOptionIgnore() {
-        return decimalOverflowOption.equals(DECIMAL_OVERFLOW_IGNORE_WITH_ENFORCING.getDecimalOverflowOption()) || decimalOverflowOption.equals(DECIMAL_OVERFLOW_ERROR_WITHOUT_ENFORCING.getDecimalOverflowOption());
+        return decimalOverflowOption.equals(DECIMAL_OVERFLOW_IGNORE.getDecimalOverflowOption()) || decimalOverflowOption.equals(DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING);
     }
 
 }

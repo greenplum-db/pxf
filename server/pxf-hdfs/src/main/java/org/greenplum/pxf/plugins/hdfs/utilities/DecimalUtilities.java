@@ -105,35 +105,34 @@ public class DecimalUtilities {
         Current logic for ORC doesn't call HiveDecimal.enforcePrecisionScale but Parquet does. That will bring in the
         inconsistency in the error messages in the third check.
          */
-        String limitationForGettingAccurateValue = String.format("maximum precision %s", precision);
-        if (decimalOverflowOption.isEnforcePrecisionAndScale()) {
-            // At this point data can fit in precision 38, but still need enforcePrecisionScale to check whether it can fit in scale 18
-            hiveDecimal = HiveDecimal.enforcePrecisionScale(
-                    hiveDecimal,
-                    precision,
-                    scale);
 
-            if (hiveDecimal == null) {
-                if (decimalOverflowOption.isOptionError() || decimalOverflowOption.isOptionRound()) {
-                    throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
-                            value, columnName, precision, scale));
-                }
+        // At this point data can fit in precision 38, but still need enforcePrecisionScale to check whether it can fit in scale 18
+        HiveDecimal hiveDecimalEnforcedPrecisionAndScale = HiveDecimal.enforcePrecisionScale(
+                hiveDecimal,
+                precision,
+                scale);
 
-                LOG.trace("The value {} for the NUMERIC column {} exceeds maximum precision and scale ({},{}) and has been stored as NULL.",
-                        value, columnName, precision, scale);
-
-                if (!isIntegerDigitCountOverflowWarningLogged) {
-                    LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision and scale ({},{}) " +
-                                    "and have been stored as NULL. Enable TRACE log level for row-level details.", columnName, precision, scale);
-                    isIntegerDigitCountOverflowWarningLogged = true;
-                }
-                // if we are here, that means we are using 'ignore' option
-                // if (profile == 'ORC') -> return the value returned by HiveDecimal.create
-                // if (profile == 'Parquet') -> return null;
-                return null;
+        if (hiveDecimalEnforcedPrecisionAndScale == null) {
+            if (decimalOverflowOption.isOptionError() || decimalOverflowOption.isOptionRound()) {
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
+                        value, columnName, precision, scale));
             }
 
-            limitationForGettingAccurateValue = String.format("maximum scale %s", scale);
+            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum precision and scale ({},{}) and has been stored as NULL.",
+                    value, columnName, precision, scale);
+
+            if (!isIntegerDigitCountOverflowWarningLogged) {
+                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision and scale ({},{}) " +
+                                "and have been stored as NULL. Enable TRACE log level for row-level details.", columnName, precision, scale);
+                isIntegerDigitCountOverflowWarningLogged = true;
+            }
+            // if we are here, that means we are using 'ignore' option
+            // if old behavior was not enforcing precision and scale, we stored the unenforced value,
+            // otherwise store NULL
+            if (!decimalOverflowOption.isEnforcePrecisionAndScale()) {
+                return hiveDecimal;
+            }
+            return null;
         }
 
         // At this point, the integer digit count must less than or equal to (precision - scale) for Parquet,
@@ -141,21 +140,21 @@ public class DecimalUtilities {
         // Here is to check whether the value has been rounded off. If the decimal overflow option is set to 'error',
         // an exception will be thrown.
         BigDecimal accurateDecimal = new BigDecimal(value);
-        if ((decimalOverflowOption.isOptionError() || decimalOverflowOption.isOptionRound()) && accurateDecimal.compareTo(hiveDecimal.bigDecimalValue()) != 0) {
+        if ((decimalOverflowOption.isOptionError() || decimalOverflowOption.isOptionRound()) && accurateDecimal.compareTo(hiveDecimalEnforcedPrecisionAndScale.bigDecimalValue()) != 0) {
             if (decimalOverflowOption.isOptionError()) {
-                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds %s, and cannot be stored without precision loss.",
-                        value, columnName, limitationForGettingAccurateValue));
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %s, and cannot be stored without precision loss.",
+                        value, columnName, precision));
             }
 
-            LOG.trace("The value {} for the NUMERIC column {} exceeds {} and has been rounded off.",
-                    value, columnName, limitationForGettingAccurateValue);
+            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum precision {} and has been rounded off.",
+                    value, columnName, precision);
 
             if (!isScaleOverflowWarningLogged) {
-                LOG.warn("There are rows where for the NUMERIC column {} the values exceed {} " +
-                                "and have been rounded off. Enable TRACE log level for row-level details.", columnName, limitationForGettingAccurateValue);
+                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision {} " +
+                                "and have been rounded off. Enable TRACE log level for row-level details.", columnName, precision);
                 isScaleOverflowWarningLogged = true;
             }
         }
-        return hiveDecimal;
+        return hiveDecimalEnforcedPrecisionAndScale;
     }
 }

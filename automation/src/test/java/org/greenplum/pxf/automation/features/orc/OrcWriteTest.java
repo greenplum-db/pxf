@@ -312,8 +312,8 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWriteDecimalWithLargePrecisionDefined() throws Exception {
-        gpdbTableNamePrefix = "pxf_orc_decimals_with_large_precision";
-        fullTestPath = hdfsPath + "orc_decimals_with_large_precision";
+        gpdbTableNamePrefix = "orc_decimals_with_large_precision";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
 
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_DECIMAL_WITH_LARGE_PRECISION_TABLE_COLUMNS, fullTestPath);
 
@@ -322,12 +322,33 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWriteDecimalWithLargePrecisionNotDefined() throws Exception {
-        gpdbTableNamePrefix = "pxf_orc_decimals_with_large_precision_not_defined";
-        fullTestPath = hdfsPath + "orc_decimals_with_large_precision_not_defined";
+        gpdbTableNamePrefix = "orc_decimals_with_large_precision_not_defined";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
 
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
 
         runTincTest("pxf.features.orc.write.decimal_with_large_precision_not_defined.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWriteDecimalIntegerDigitCountOverflow() throws Exception {
+        gpdbTableNamePrefix = "orc_decimals_with_large_integer_digit_count";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
+
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+
+        runTincTest("pxf.features.orc.write.decimal_with_large_integer_digit.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWriteDecimalScaleOverflow() throws Exception {
+        gpdbTableNamePrefix = "orc_decimals_with_large_scale";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
+
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
+
+        runTincTest("pxf.features.orc.write.decimal_with_large_scale.runTest");
     }
 
     private void insertDataWithoutNulls(String exTable, int numRows) throws Exception {
