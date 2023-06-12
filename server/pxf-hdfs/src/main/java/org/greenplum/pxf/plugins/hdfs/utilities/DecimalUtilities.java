@@ -142,16 +142,16 @@ public class DecimalUtilities {
         BigDecimal accurateDecimal = new BigDecimal(value);
         if ((decimalOverflowOption.isOptionError() || decimalOverflowOption.isOptionRound()) && accurateDecimal.compareTo(hiveDecimalEnforcedPrecisionAndScale.bigDecimalValue()) != 0) {
             if (decimalOverflowOption.isOptionError()) {
-                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %s, and cannot be stored without precision loss.",
-                        value, columnName, precision));
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum scale %s, and cannot be stored without precision loss.",
+                        value, columnName, scale));
             }
 
-            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum precision {} and has been rounded off.",
-                    value, columnName, precision);
+            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum scale {} and has been rounded off.",
+                    value, columnName, scale);
 
             if (!isScaleOverflowWarningLogged) {
-                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision {} " +
-                                "and have been rounded off. Enable TRACE log level for row-level details.", columnName, precision);
+                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum scale {} " +
+                                "and have been rounded off. Enable TRACE log level for row-level details.", columnName, scale);
                 isScaleOverflowWarningLogged = true;
             }
         }
