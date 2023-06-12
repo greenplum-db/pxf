@@ -32,10 +32,13 @@ SELECT "n@m2", "t", "num 1" FROM pxf_jdbc_superset_of_fields ORDER BY "t";
 -- m/CONTEXT:.*line.*/
 -- s/line \d* of //g
 --
+-- m/CONTEXT:.*file.*/
+-- s/, file.*//g
+--
 -- end_matchsubs
 SELECT * FROM pxf_jdbc_superset_of_fields ORDER BY "t";
 ERROR: column "does_not_exist_on_source" does not exist
 -- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
-DETAIL:  External table pxf_jdbc_superset_of_fields, resource gpdb_columns
+DETAIL:  External table pxf_jdbc_superset_of_fields

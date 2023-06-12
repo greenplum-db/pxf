@@ -25,5 +25,8 @@ SELECT "n@m2", "t", "num 1" FROM pxf_jdbc_superset_of_fields ORDER BY "t";
 -- m/CONTEXT:.*line.*/
 -- s/line \d* of //g
 --
+-- m/CONTEXT:.*file.*/
+-- s/, file.*//g
+--
 -- end_matchsubs
 SELECT * FROM pxf_jdbc_superset_of_fields ORDER BY "t";
