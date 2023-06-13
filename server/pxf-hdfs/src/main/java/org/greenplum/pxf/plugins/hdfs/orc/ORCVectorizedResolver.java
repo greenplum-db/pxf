@@ -108,11 +108,6 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
 
     private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.orc.write.decimal.overflow";
 
-    private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR = "error";
-
-    private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND = "round";
-
-    private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE= "ignore";
 
     /**
      * The schema used to read or write the ORC file.
@@ -165,7 +160,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
         positionalAccess = context.getOption(MAP_BY_POSITION_OPTION, false);
-        DecimalOverflowOption decimalOverflowOption = parseDecimalOverflowOption(configuration);
+        DecimalOverflowOption decimalOverflowOption = DecimalOverflowOption.parseDecimalOverflowOption(configuration, PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, false);
         decimalUtilities = new DecimalUtilities(decimalOverflowOption);
     }
 
@@ -498,27 +493,6 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                 return getArrayDataType(typeDescription.getChildren().get(0));
             default:
                 return UNSUPPORTED_TYPE;
-        }
-    }
-
-    /**
-     * Return decimal overflow option based on server configuration properties of pxf.orc.write.decimal.overflow.
-     *
-     * @param configuration contains server configuration properties
-     * @return a DecimalOverflowOption contains decimal overflow option 'error', 'round' or 'ignore'. By default is 'round'.
-     */
-    public DecimalOverflowOption parseDecimalOverflowOption(Configuration configuration) {
-        String decimalOverflowOption = configuration.get(PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR.getDecimalOverflowOption()).toLowerCase();
-        switch (decimalOverflowOption) {
-            case PXF_ORC_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR:
-                return DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR;
-            case PXF_ORC_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND:
-                return DecimalOverflowOption.DECIMAL_OVERFLOW_ROUND;
-            case PXF_ORC_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE:
-               return DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING;
-            default:
-                throw new UnsupportedTypeException(String.format("Invalid configuration value %s for " +
-                        "pxf.orc.write.decimal.overflow. Valid values are error, round, and ignore.", decimalOverflowOption));
         }
     }
 }

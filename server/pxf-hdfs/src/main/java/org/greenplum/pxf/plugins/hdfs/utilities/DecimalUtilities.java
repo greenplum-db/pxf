@@ -27,10 +27,10 @@ public class DecimalUtilities {
     /**
      * Parse the incoming decimal string into a decimal number for ORC or Parquet profiles according to the decimal overflow options
      *
-     * @param value                     incoming decimal string
-     * @param precision                 is the decimal precision defined in the schema
-     * @param scale                     is the decimal scale defined in the schema
-     * @param columnName                is the name of the current column
+     * @param value      incoming decimal string
+     * @param precision  is the decimal precision defined in the schema
+     * @param scale      is the decimal scale defined in the schema
+     * @param columnName is the name of the current column
      * @return null or a BigDecimal number meets all the requirements
      */
     public HiveDecimal parseDecimalStringWithHiveDecimal(String value, int precision, int scale, String columnName) {
@@ -123,13 +123,13 @@ public class DecimalUtilities {
 
             if (!isIntegerDigitCountOverflowWarningLogged) {
                 LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision and scale ({},{}) " +
-                                "and have been stored as NULL. Enable TRACE log level for row-level details.", columnName, precision, scale);
+                        "and have been stored as NULL. Enable TRACE log level for row-level details.", columnName, precision, scale);
                 isIntegerDigitCountOverflowWarningLogged = true;
             }
             // if we are here, that means we are using 'ignore' option
             // if old behavior was not enforcing precision and scale, we stored the unenforced value,
             // otherwise store NULL
-            if (!decimalOverflowOption.isEnforcePrecisionAndScale()) {
+            if (!decimalOverflowOption.wasEnforcedPrecisionAndScale()) {
                 return hiveDecimal;
             }
             return null;
@@ -151,7 +151,7 @@ public class DecimalUtilities {
 
             if (!isScaleOverflowWarningLogged) {
                 LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum scale {} " +
-                                "and have been rounded off. Enable TRACE log level for row-level details.", columnName, scale);
+                        "and have been rounded off. Enable TRACE log level for row-level details.", columnName, scale);
                 isScaleOverflowWarningLogged = true;
             }
         }
