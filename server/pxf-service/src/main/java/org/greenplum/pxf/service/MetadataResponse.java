@@ -59,8 +59,10 @@ public class MetadataResponse implements StreamingResponseBody {
     @Override
     public void writeTo(OutputStream output) throws IOException {
         DataOutputStream dos = new DataOutputStream(output);
-        ObjectMapper mapper = JsonMapper.builder().configure(MapperFeature.USE_ANNOTATIONS, true).build(); // enable annotations for serialization
-        mapper.setSerializationInclusion(Include.NON_EMPTY); // ignore empty fields
+        ObjectMapper mapper = JsonMapper.builder()
+                .configure(MapperFeature.USE_ANNOTATIONS, true) // enable annotations for serialization
+                .serializationInclusion(Include.NON_EMPTY) // ignore empty fields
+                .build();
 
         if (metadataList == null || metadataList.isEmpty()) {
             dos.write(METADATA_DEFAULT_RESPONSE.getBytes());
