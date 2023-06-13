@@ -373,3 +373,139 @@ Perform the following procedure to create Greenplum Database writable external t
 
 9. To query data from the newly-created S3 directory named `pxfwrite_s3_textsimple2`, you can create a readable external Greenplum Database table as described above that references this S3 directory and specifies `FORMAT 'CSV' (delimiter=':')`.
 
+
+## <a id="multibyte_delim"></a>About Reading Data Containing Multi-Byte or Multi-Character Delimiters
+
+You can use only a `*:csv` PXF profile to read data from an object store that contains a multi-byte delimiter or multiple delimiter characters. The syntax for creating a readable external table for such data follows:
+
+``` sql
+CREATE EXTERNAL TABLE <table_name>
+    ( <column_name> <data_type> [, ...] | LIKE <other_table> )
+LOCATION ('pxf://<path-to-file>?PROFILE=<objstore>:csv[&SERVER=<server_name>][&IGNORE_MISSING_PATH=<boolean>][&SKIP_HEADER_COUNT=<numlines>][&NEWLINE=<bytecode>]')
+FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import' <option>[=|<space>][E]'<value>');
+```
+
+Note the `FORMAT` line in the syntax block. While the syntax is similar to that of reading CSV, PXF requires a custom formatter to read data containing a multi-byte or multi-character delimiter. You must specify the `'CUSTOM'` format and the `pxfdelimited_import` formatter. You must also specify a delimiter in the formatter options.
+
+PXF recognizes the following formatter options when reading data from an object store that contains a multi-byte or multi-character delimiter:
+
+| Option Name  | Value Description | Default Value |
+|-------|---------------|---------------|
+| DELIMITER=\<delim_string\> | The single-byte or multi-byte delimiter string that separates columns. The string may be up to 32 bytes in length, and may not contain quote or escape characters. **Required** | None |
+| QUOTE=\<char\> | The single one-byte ASCII quotation character for all columns. | None |
+| ESCAPE=\<char\> | The single one-byte ASCII character used to escape special characters (for example, the `DELIM`, `QUOTE`,  or `NEWLINE` value, or the `ESCAPE` value itself). | None, or the `QUOTE` value if that is set |
+| NEWLINE=\<bytecode\> | The end-of-line indicator that designates the end of a row. Valid values are `LF` (line feed), `CR` (carriage return), or `CRLF` (carriage return plus line feed. | `LF` |
+
+The following sections provide further information about, and examples for, specifying the delimiter, quote, escape, and new line options.
+
+### <a id="about_delim"></a>Specifying the Delimiter
+
+You must directly specify the delimiter or provide its byte representation. For example, given the following sample data that uses a `¤` currency symbol delimiter:
+
+```
+133¤Austin¤USA
+321¤Boston¤USA
+987¤Paris¤France
+```
+
+To read this data from S3 using a PXF server configuration named `s3srvcfg`, create the external table as follows:
+
+```
+CREATE READABLE EXTERNAL TABLE s3_mbyte_delim (id int, city text, country text)
+  LOCATION ('pxf://multibyte_currency?PROFILE=s3:csv&SERVER=s3srvcfg')
+FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import', DELIMITER='¤'); 
+```
+
+#### <a id="delim_byterep"></a>About Specifying the Byte Representation of the Delimiter
+
+You can directly specify the delimiter or provide its byte representation. If you choose to specify the byte representation of the delimiter:
+
+- You must specify the byte representation of the delimiter in `E'<value>'` format.
+- Because some characters have different byte representations in different encodings, you must specify the byte representation of the delimiter in the *database encoding*.
+
+For example, if the database encoding is `UTF8`, the file encoding is `LATIN1`, and the delimiter is the `¤` currency symbol, you must specify the `UTF8` byte representation for `¤`, which is `\xC2\xA4`:
+
+```
+CREATE READABLE EXTERNAL TABLE s3_byterep_delim (id int, city text, country text)
+  LOCATION ('pxf://multibyte_example?PROFILE=s3:csv&SERVER=s3srvcfg')
+FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import', DELIMITER=E'\xC2\xA4') ENCODING 'LATIN1';
+```
+
+### <a id="about_qe"></a>About Specifying Quote and Escape Characters
+
+When PXF reads data that contains a multi-byte or multi-character delimiter, its behavior depends on the quote and escape character settings:
+
+| QUOTE Set? | ESCAPE Set? | PXF Behaviour |
+|-------------|--------------|----------|
+| No<sup>1</sup> | No | PXF reads the data as-is. |
+| Yes<sup>2</sup> | Yes | PXF reads the data between quote characters as-is and un-escapes only the quote and escape characters. |
+| Yes<sup>2</sup> | No (`ESCAPE 'OFF'`) | PXF reads the data between quote characters as-is. |
+| No<sup>1</sup> | Yes | PXF reads the data as-is and un-escapes only the delimiter, newline, and escape itself. |
+
+<sup>1</sup> All data columns must be un-quoted when you do not specify a quote character.
+
+<sup>2</sup> All data columns must quoted when you specify a quote character.
+
+> **Note** PXF expects that there are no extraneous characters between the quote value and the delimiter value, nor between the quote value and the end-of-line value. Additionally, there must be no white space between delimiters and quotes.
+
+### <a id="about_newline"></a>About the NEWLINE Options
+
+PXF requires that every line in the file be terminated with the same new line value.
+
+By default, PXF uses the line feed character (`LF`) for the new line delimiter. When the new line delimiter for the external file is also a line feed, you need not specify the `NEWLINE` formatter option.
+
+If the `NEWLINE` formatter option is provided and contains `CR` or `CRLF`, you must also specify the same `NEWLINE` option in the external table `LOCATION` URI. For example, if the new line delimiter is `CRLF`, create the external table as follows:
+
+```
+CREATE READABLE EXTERNAL TABLE s3_mbyte_newline_crlf (id int, city text, country text)
+  LOCATION ('pxf://multibyte_example_crlf?PROFILE=s3:csv&SERVER=s3srvcfg&NEWLINE=CRLF')
+FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import', DELIMITER='¤', NEWLINE='CRLF');
+```
+
+### <a id="mbd_examples"></a>Examples
+
+#### <a id="qe_example"></a>Delimiter with Quoted Data
+
+Given the following sample data that uses the double-quote (`"`) quote character and the delimiter `¤`:
+
+```
+"133"¤"Austin"¤"USA"
+"321"¤"Boston"¤"USA"
+"987"¤"Paris"¤"France"
+```
+
+Create the external table as follows:
+
+```
+CREATE READABLE EXTERNAL TABLE s3_mbyte_delim_quoted (id int, city text, country text)
+  LOCATION ('pxf://multibyte_q?PROFILE=s3:csv&SERVER=s3srvcfg')
+FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import', DELIMITER='¤', QUOTE '"'); 
+```
+
+#### <a id="qe_example"></a>Delimiter with Quoted and Escaped Data
+
+Given the following sample data that uses the quote character `"`, the escape character `\`, and the delimiter `¤`:
+
+```
+"\"hello, my name is jane\" she said. let's escape something \\"¤"123"
+```
+
+Create the external table as follows:
+
+```
+CREATE READABLE EXTERNAL TABLE s3_mybte_delim_quoted_escaped (sentence text, num int)
+  LOCATION ('pxf://multibyte_qe?PROFILE=s3:csv&SERVER=s3srvcfg')
+FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import', DELIMITER='¤', QUOTE '"', ESCAPE '\');
+```
+
+With this external table definition, PXF reads the `sentence` text field as:
+
+```
+SELECT sentence FROM mbyte_delim_quoted_escaped;
+
+                          sentence 
+-------------------------------------------------------------
+ "hello, my name is jane" she said. let's escape something \
+(1 row)
+```
+
