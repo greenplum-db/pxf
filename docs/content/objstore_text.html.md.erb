@@ -501,7 +501,7 @@ FORMAT 'CUSTOM' (FORMATTER='pxfdelimited_import', DELIMITER='¤', QUOTE '"', ESC
 With this external table definition, PXF reads the `sentence` text field as:
 
 ```
-SELECT sentence FROM mbyte_delim_quoted_escaped;
+SELECT sentence FROM s3_mbyte_delim_quoted_escaped;
 
                           sentence 
 -------------------------------------------------------------
