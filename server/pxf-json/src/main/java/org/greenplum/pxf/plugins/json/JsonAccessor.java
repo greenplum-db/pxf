@@ -19,31 +19,75 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
+import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
+import org.greenplum.pxf.plugins.hdfs.LineBreakAccessor;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
- * This JSON accessor for PXF will read JSON data and pass it to a {@link JsonResolver}.
+ * This JSON accessor for PXF provides support for reading and writing Json formatted files.
  * <p>
- * This accessor supports a single JSON record per line, or a multi-line JSON records if the <b>IDENTIFIER</b> parameter
- * is set.
+ * For the reading use case it will read JSON data and pass it to a {@link JsonResolver}.
+ * It supports a single JSON record per line, or a multi-line JSON records if the <b>IDENTIFIER</b> parameter is set.
+ * When provided the <b>IDENTIFIER</b> indicates the member name to determine the encapsulating json object to return.
  * <p>
- * When provided the <b>IDENTIFIER</b> indicates the member name used to determine the encapsulating json object to
- * return.
+ * For the writing use case it will serialize tuple data received from {@link JsonResolver} into a JSON format and
+ * write it to a file according to the specified "LAYOUT" external table option.
+ * A layout can be either 'object' (default) or 'rows'.
+ * <p>
+ * For the 'object' layout, data in each file will look like:
+ * <pre>
+ * {"records":[
+ * {..tuple1..}
+ * ,{..tuple2..}
+ * ...
+ * ]}
+ * </pre>
+ * The file itself will be a valid parsable Json. The value of the top-level property can be customized from the default
+ * value of "records" by setting an external table option "KEY".
+ * <p>
+ * For the 'rows' layout, data in each file will look like:
+ * <pre>
+ * {..tuple1..}
+ * {..tuple2..}
+ * </pre>
+ * The file itself will not be a valid parsable Json, but each row will be a valid Json object representing a database tuple.
+ * <p>
+ * Files will be written compressed if the "COMPRESSION_CODEC" external table option is specified.
  */
-public class JsonAccessor extends HdfsSplittableDataAccessor {
+public class JsonAccessor extends LineBreakAccessor {
 
+    // parameters for read use case
     public static final String IDENTIFIER_PARAM = "IDENTIFIER";
     public static final String RECORD_MAX_LENGTH_PARAM = "MAXLENGTH";
     private static final String UNSUPPORTED_ERR_MESSAGE = "JSON accessor does not support write operation.";
+
+    // parameters for write use case
+    private static final String JSON_FILE_EXTENSION = ".json";
+    private static final String LAYOUT_PARAM = "LAYOUT";
+    private static final String LAYOUT_OBJECT_VALUE = "object";
+    private static final String LAYOUT_ROWS_VALUE = "rows";
+
+    private static final String KEY_PARAM = "KEY";
+    private static final String KEY_DEFAULT_VALUE = "records";
+
+    private static final JsonFactory jsonFactory = new JsonFactory();
+    private static final String NEWLINE = "\n"; //TODO: this can be made configurable
 
     /**
      * If provided indicates the member name which will be used to determine the encapsulating json object to return.
@@ -57,24 +101,56 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
      */
     private int maxRecordLength = Integer.MAX_VALUE;
 
+    /**
+     * whether the file to be written needs to be a fully-compliant parsable Json object rather than a set of Json rows
+     */
+    private boolean isObjectLayout;
+
+    /**
+     * for an object layout the name of the property that will have a tuple array as the value
+     */
+    private String keyName;
+    private JsonGenerator jsonGenerator;
+    private ColumnDescriptor[] columnDescriptors;
+    private boolean isFirstRecord;
+
+    private final JsonUtilities jsonUtilities;
+
+    /**
+     * Constructs a new instance of the JsonAccessor
+     */
     public JsonAccessor() {
-        // Because HdfsSplittableDataAccessor doesn't use the InputFormat we set it to null.
+        this(SpringContext.getBean(JsonUtilities.class));
+    }
+
+    JsonAccessor(JsonUtilities jsonUtilities) {
+        // we do not use InputFormat for reading, set it to null.
         super(null);
+        this.jsonUtilities = jsonUtilities;
     }
 
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
-
         if (!isEmpty(context.getOption(IDENTIFIER_PARAM))) {
-
             identifier = context.getOption(IDENTIFIER_PARAM);
-
             // If the member identifier is set then check if a record max length is defined as well.
             if (!isEmpty(context.getOption(RECORD_MAX_LENGTH_PARAM))) {
                 maxRecordLength = Integer.valueOf(context.getOption(RECORD_MAX_LENGTH_PARAM));
             }
         }
+        // store file layout and root element property name (for object layout)
+        isObjectLayout = isFileLayoutEqualToObject();
+        if (isObjectLayout) {
+            keyName = context.getOption(KEY_PARAM, KEY_DEFAULT_VALUE);
+        }
+        columnDescriptors = context.getTupleDescription().toArray(new ColumnDescriptor[0]);
+        isFirstRecord = true;
+    }
+
+    @Override
+    protected String getFileExtension() {
+        return JSON_FILE_EXTENSION;
     }
 
     @Override
@@ -89,14 +165,31 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
     }
 
     /**
-     * Opens the resource for write.
+     * Opens the resource for write and writes a header, if applicable.
      *
      * @return true if the resource is successfully opened
      * @throws Exception if opening the resource failed
      */
     @Override
-    public boolean openForWrite() {
-        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
+    public boolean openForWrite() throws IOException {
+        boolean result = super.openForWrite();
+        // this should not really happen, but complying with the interface, if the operation returned false and
+        // there was no exception, there is nothing else to do here, just propagate the result to caller
+        if (!result) {
+            return false;
+        }
+
+        // setup Json machinery, allow for use of UTF8 encoding only
+        jsonGenerator = jsonFactory.createGenerator((OutputStream) dos, JsonEncoding.UTF8);
+        jsonGenerator.setRootValueSeparator(null); // do not separate top level objects, we will add NEWLINE ourselves
+
+        // write the file header, if object layout is requested
+        if (isObjectLayout) {
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName(keyName);
+            jsonGenerator.writeStartArray();
+        }
+        return true;
     }
 
     /**
@@ -106,9 +199,35 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
      * @return true if the write succeeded
      * @throws Exception writing to the resource failed
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public boolean writeNextObject(OneRow onerow) {
-        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
+    public boolean writeNextObject(OneRow onerow) throws IOException {
+        // resolver just passed List<OneField> to us without resolving anything
+        List<OneField> record = (List<OneField>) onerow.getData();
+        if (record == null) {
+            return false;
+        }
+        // make sure the record and column list have the same size
+        if (record.size() != columnDescriptors.length) {
+            throw new PxfRuntimeException(
+                    String.format("Unexpected: number of fields in the record %d is different from number of table columns %d",
+                            record.size(), columnDescriptors.length));
+        }
+        // start each object on a new line - in object layout for all lines and in non-object for all but the first
+        if (isObjectLayout || !isFirstRecord) {
+            jsonGenerator.writeRaw(NEWLINE);
+        }
+        // no matter what the layout is we need to write an object out
+        jsonGenerator.writeStartObject();
+
+        // iterate over columns, use the generator to write properties and their values
+        int columnIndex = 0;
+        for (OneField field : record) {
+            jsonUtilities.writeField(jsonGenerator, columnDescriptors[columnIndex++], field);
+        }
+        jsonGenerator.writeEndObject();
+        isFirstRecord = false;
+        return true;
     }
 
     /**
@@ -117,7 +236,50 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
      * @throws Exception if closing the resource failed
      */
     @Override
-    public void closeForWrite() {
-        throw new UnsupportedOperationException(UNSUPPORTED_ERR_MESSAGE);
+    public void closeForWrite() throws IOException {
+        boolean caughtException = false;
+        try {
+            // write the file footer, if object layout is requested
+            if (isObjectLayout) {
+                jsonGenerator.writeRaw(NEWLINE);
+                jsonGenerator.writeEndArray();
+                jsonGenerator.writeEndObject();
+            }
+            jsonGenerator.flush();
+            super.closeForWrite(); // to flush / close the output stream
+        } catch (IOException e) {
+            // remember that the exception was caught and rethrow it to propagate upwards
+            caughtException = true;
+            throw e;
+        } finally {
+            if (jsonGenerator != null) {
+                try {
+                    jsonGenerator.close();
+                } catch (IOException e) {
+                    // generator close failed, but if there was a more important exception caught before, supress this one
+                    if (caughtException) {
+                        // supress the new exception, just log its message and let the original one propagate
+                        LOG.warn("Suppressing exception when closing Json generator: ", e.getMessage());
+                    } else {
+                        // since this is the first and only exception we see, throw it
+                        throw e;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Determines if the file layout is object layout by parsing request context LAYOUT option and validating its value.
+     * Throws an exception if the option value is not either 'object' or 'rows'.
+     * @return true if the object layout is object one, false otherwise
+     */
+    private boolean isFileLayoutEqualToObject() {
+        String layout = context.getOption(LAYOUT_PARAM, LAYOUT_OBJECT_VALUE);
+        if (!layout.equalsIgnoreCase(LAYOUT_OBJECT_VALUE) && !layout.equalsIgnoreCase(LAYOUT_ROWS_VALUE)) {
+            throw new PxfRuntimeException(String.format(
+                    "Invalid value '%s' for option 'LAYOUT', allowed values are 'object' and 'rows'", layout));
+        }
+        return layout.equalsIgnoreCase(LAYOUT_OBJECT_VALUE);
     }
 }

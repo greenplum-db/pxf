@@ -3,26 +3,26 @@
 Null display is "NIL".
 SELECT * FROM jsontest_array_as_text ORDER BY id;
  id | emp_arr | emp_obj |             num_arr              |     bool_arr      |         str_arr          |        arr_arr         |        obj_arr         |                                                 obj
-----+---------+---------+----------------------------------+-------------------+--------------------------+------------------------+------------------------+-----------------------------------------------------------------------------------------------------
-  0 | []      | {}      | [null,1,-1.3,1.2345678901234567] | [null,true,false] | [null,"hello","wor\"ld"] | [null,["a","b"],[1,2]] | [null,{"a":1},{"a":2}] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"x","data":["wow",null]}}}
-  1 | []      | {}      | [2,null,-2.3,2.234567890123457]  | [true,null,false] | ["hello",null,"wor\"ld"] | [["a","b"],null,[1,2]] | [{"a":1},null,{"a":2}] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"y","data":["wow",null]}}}
-  2 | []      | {}      | [3,-3.3,null,3.234567890123457]  | [true,false,null] | ["hello","wor\"ld",null] | [["a","b"],[1,2],null] | [{"a":1},{"a":2},null] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"z","data":["wow",null]}}}
+----+---------+---------+------------------------------------------+-------------------+--------------------------+------------------------+------------------------+-----------------------------------------------------------------------------------------------------
+  0 | []      | {}      | [null,1,-1.3,1.234567890123456789012345] | [null,true,false] | [null,"hello","wor\"ld"] | [null,["a","b"],[1,2]] | [null,{"a":1},{"a":2}] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"x","data":["wow",null]}}}
+  1 | []      | {}      | [2,null,-2.3,2.234567890123456789012345] | [true,null,false] | ["hello",null,"wor\"ld"] | [["a","b"],null,[1,2]] | [{"a":1},null,{"a":2}] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"y","data":["wow",null]}}}
+  2 | []      | {}      | [3,-3.3,null,3.234567890123456789012345] | [true,false,null] | ["hello","wor\"ld",null] | [["a","b"],[1,2],null] | [{"a":1},{"a":2},null] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"z","data":["wow",null]}}}
 (3 rows)
 
 SELECT * FROM jsontest_array_as_varchar ORDER BY id;
  id | emp_arr | emp_obj |             num_arr              |     bool_arr      |         str_arr          |        arr_arr         |        obj_arr         |                                                 obj
-----+---------+---------+----------------------------------+-------------------+--------------------------+------------------------+------------------------+-----------------------------------------------------------------------------------------------------
-  0 | []      | {}      | [null,1,-1.3,1.2345678901234567] | [null,true,false] | [null,"hello","wor\"ld"] | [null,["a","b"],[1,2]] | [null,{"a":1},{"a":2}] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"x","data":["wow",null]}}}
-  1 | []      | {}      | [2,null,-2.3,2.234567890123457]  | [true,null,false] | ["hello",null,"wor\"ld"] | [["a","b"],null,[1,2]] | [{"a":1},null,{"a":2}] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"y","data":["wow",null]}}}
-  2 | []      | {}      | [3,-3.3,null,3.234567890123457]  | [true,false,null] | ["hello","wor\"ld",null] | [["a","b"],[1,2],null] | [{"a":1},{"a":2},null] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"z","data":["wow",null]}}}
+----+---------+---------+------------------------------------------+-------------------+--------------------------+------------------------+------------------------+-----------------------------------------------------------------------------------------------------
+  0 | []      | {}      | [null,1,-1.3,1.234567890123456789012345] | [null,true,false] | [null,"hello","wor\"ld"] | [null,["a","b"],[1,2]] | [null,{"a":1},{"a":2}] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"x","data":["wow",null]}}}
+  1 | []      | {}      | [2,null,-2.3,2.234567890123456789012345] | [true,null,false] | ["hello",null,"wor\"ld"] | [["a","b"],null,[1,2]] | [{"a":1},null,{"a":2}] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"y","data":["wow",null]}}}
+  2 | []      | {}      | [3,-3.3,null,3.234567890123456789012345] | [true,false,null] | ["hello","wor\"ld",null] | [["a","b"],[1,2],null] | [{"a":1},{"a":2},null] | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"z","data":["wow",null]}}}
 (3 rows)
 
 SELECT * FROM jsontest_array_as_bpchar ORDER BY id;
  id | emp_arr |  emp_obj   |                  num_arr                   |     bool_arr      |          str_arr          |          arr_arr          |         obj_arr         |                                                 obj
 ----+---------+------------+--------------------------------------------+-------------------+---------------------------+---------------------------+-------------------------+------------------------------------------------------------------------------------------------------
-  0 | []      | {}         | [null,1,-1.3,1.2345678901234567]           | [null,true,false] | [null,"hello","wor\"ld"]  | [null,["a","b"],[1,2]]    | [null,{"a":1},{"a":2}]  | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"x","data":["wow",null]}}}
-  1 | []      | {}         | [2,null,-2.3,2.234567890123457]            | [true,null,false] | ["hello",null,"wor\"ld"]  | [["a","b"],null,[1,2]]    | [{"a":1},null,{"a":2}]  | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"y","data":["wow",null]}}}
-  2 | []      | {}         | [3,-3.3,null,3.234567890123457]            | [true,false,null] | ["hello","wor\"ld",null]  | [["a","b"],[1,2],null]    | [{"a":1},{"a":2},null]  | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"z","data":["wow",null]}}}
+  0 | []      | {}         | [null,1,-1.3,1.234567890123456789012345]   | [null,true,false] | [null,"hello","wor\"ld"]  | [null,["a","b"],[1,2]]    | [null,{"a":1},{"a":2}]  | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"x","data":["wow",null]}}}
+  1 | []      | {}         | [2,null,-2.3,2.234567890123456789012345]   | [true,null,false] | ["hello",null,"wor\"ld"]  | [["a","b"],null,[1,2]]    | [{"a":1},null,{"a":2}]  | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"y","data":["wow",null]}}}
+  2 | []      | {}         | [3,-3.3,null,3.234567890123456789012345]   | [true,false,null] | ["hello","wor\"ld",null]  | [["a","b"],[1,2],null]    | [{"a":1},{"a":2},null]  | {"level":0,"key":"a","data":{"level":1,"key":"b","data":{"level":2,"key":"z","data":["wow",null]}}}
 (3 rows)
 
 SELECT id, ((num_arr::json)->>0)::integer "num", ((bool_arr::json)->>1)::boolean "bool", (str_arr::json)->>2 "str", (arr_arr::json)->>0 "arr",

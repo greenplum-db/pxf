@@ -72,7 +72,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     public boolean openForWrite() throws Exception {
         LOG.debug("openForWrite");
         codec = getCompressionCodec(context);
-        String filename = hcfsType.getUriForWrite(context, codec);
+        String filename = hcfsType.getUriForWrite(context, null, codec);
 
         // construct the output stream
         file = new Path(filename);

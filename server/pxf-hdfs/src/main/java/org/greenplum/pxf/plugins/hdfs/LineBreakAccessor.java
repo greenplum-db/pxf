@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
@@ -49,7 +50,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     public static final boolean PXF_CHUNK_RECORD_READER_DEFAULT = false;
 
     private int skipHeaderCount;
-    private DataOutputStream dos;
+    protected DataOutputStream dos;
     private FSDataOutputStream fsdos;
     private FileSystem fs;
     private Path file;
@@ -61,10 +62,20 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
         super(new TextInputFormat());
     }
 
+    /**
+     * Protected constructor for use by subclasses that need their own input format or none at all.
+     * @param inputFormat input format to use
+     */
+    protected LineBreakAccessor(InputFormat<?, ?> inputFormat) {
+        super(inputFormat);
+    }
+
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
-        ((TextInputFormat) inputFormat).configure(jobConf);
+        if (inputFormat != null) {
+            ((TextInputFormat) inputFormat).configure(jobConf);
+        }
         skipHeaderCount = context.getFragmentIndex() == 0
                 ? context.getOption("SKIP_HEADER_COUNT", 0, true)
                 : 0;
@@ -107,7 +118,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
         // get compression codec
         CompressionCodec codec = compressCodec != null ?
                 getCodec(compressCodec) : null;
-        String fileName = hcfsType.getUriForWrite(context, codec);
+        String fileName = hcfsType.getUriForWrite(context, getFileExtension(), codec);
 
         file = new Path(fileName);
         fs = FileSystem.get(URI.create(fileName), configuration);

@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 /**
  * Tests for Json plugin to read HDFS files in JSON format.
  */
-public class JsonTest extends BaseFeature {
+public class JsonReadTest extends BaseFeature {
 
     private String hdfsPath;
     private String resourcePath;

@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.json;
  */
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.greenplum.pxf.api.OneField;
@@ -42,10 +43,21 @@ import java.util.StringJoiner;
  * This JSON resolver for PXF will decode a given object from the {@link JsonAccessor} into a row for GPDB. It will
  * decode this data into a JsonNode and walk the tree for each column. It supports normal value mapping via projections
  * and JSON array indexing.
+ * <p>
+ * For the writing use case the resolver will just pass the list of OneField objects to the {@link JsonAccessor} and will
+ * not perform a serialization of the list into a Json string as it might have been expected. This is due to the nature
+ * of accessor's implementation, where a streaming writing is performed to avoid creating intermediate Java objects.
+ * The actual deserialization logic is placed into {@link JsonUtilities} class.
  */
 public class JsonResolver extends BasePlugin implements Resolver {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    static {
+        // JSON has only floating point numbers of arbitrary precision and scale, when parsing them into Java we want
+        // to use BigDecimal to preserve precision larger than a `double` allows, especially if GP table has NUMERIC columns
+        MAPPER.configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true);
+    }
 
     private PgUtilities pgUtilities;
 
@@ -123,13 +135,14 @@ public class JsonResolver extends BasePlugin implements Resolver {
      */
     @Override
     public OneRow setFields(List<OneField> record) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("JSON resolver does not support write operation.");
+        // wrap the list into OneRow, the accessor will convert data directly to avoid creating extra objects for every row
+        return new OneRow(null, record);
     }
 
     /**
      * Iterates down the root node to the child JSON node defined by the projs path.
      *
-     * @param root  node to to start the traversal from.
+     * @param root  node to start the traversal from.
      * @param projs defines the path from the root to the desired child node.
      * @return Returns the child node defined by the root and projs path.
      */
@@ -213,7 +226,8 @@ public class JsonResolver extends BasePlugin implements Resolver {
                 oneField.val = val.asBoolean();
                 break;
             case BYTEA:
-                oneField.val = val.asText().getBytes();
+                // we assume that this is binary data that is stored as Base64 encoded in Json
+                oneField.val = val.binaryValue();
                 break;
             case FLOAT8:
                 oneField.val = val.asDouble();
@@ -230,6 +244,12 @@ public class JsonResolver extends BasePlugin implements Resolver {
             case BPCHAR:
             case TEXT:
             case VARCHAR:
+            case NUMERIC:
+            case DATE:
+            case TIME:
+            case TIMESTAMP:
+            case TIMESTAMP_WITH_TIME_ZONE:
+            case UUID:
                 oneField.val = val.isTextual() ? val.asText() : MAPPER.writeValueAsString(val);
                 break;
             case TEXTARRAY:

@@ -48,7 +48,7 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     protected JobConf jobConf;
     protected Object key, data;
     protected FileSplit fileSplit;
-    HcfsType hcfsType;
+    protected HcfsType hcfsType;
 
     /**
      * Constructs an HdfsSplittableDataAccessor
@@ -99,6 +99,15 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
      */
     abstract protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException;
+
+    /**
+     * Returns an extension to use for files being written, such as ".json". This might not be the final extension
+     * since if the compression codec is used, the compression extension (such as ".gz") will be added afterwards.
+     * @return the extension or null if no extension is needed.
+     */
+    protected String getFileExtension() {
+        return null;
+    }
 
     /**
      * Fetches one record from the file. The record is returned as a Java

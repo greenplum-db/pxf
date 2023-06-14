@@ -163,7 +163,9 @@ public class HcfsTypeTest {
         context.setSegmentId(3);
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.snappy", type.getUriForWrite(context, new SnappyCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.snappy", type.getUriForWrite(context, null, new SnappyCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.foo.snappy", type.getUriForWrite(context, "foo", new SnappyCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.foo.snappy", type.getUriForWrite(context, ".foo", new SnappyCodec()));
     }
 
     @Test
@@ -186,7 +188,9 @@ public class HcfsTypeTest {
         context.setSegmentId(3);
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.gz", type.getUriForWrite(context, new GzipCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.gz", type.getUriForWrite(context, null, new GzipCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.foo.gz", type.getUriForWrite(context, "foo", new GzipCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.foo.gz", type.getUriForWrite(context, ".foo", new GzipCodec()));
     }
 
     @Test
@@ -197,7 +201,9 @@ public class HcfsTypeTest {
         context.setSegmentId(3);
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.lzo", type.getUriForWrite(context, new LzopCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.lzo", type.getUriForWrite(context, null, new LzopCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.foo.lzo", type.getUriForWrite(context, "foo", new LzopCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.foo.lzo", type.getUriForWrite(context, ".foo", new LzopCodec()));
     }
 
     @Test
@@ -209,7 +215,7 @@ public class HcfsTypeTest {
         context.addOption("COMPRESSION_CODEC", "lzo");
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(context, null));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(context, null, null));
     }
 
     @Test
@@ -231,7 +237,9 @@ public class HcfsTypeTest {
         context.setSegmentId(2);
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_2.gz", type.getUriForWrite(context, new GzipCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_2.gz", type.getUriForWrite(context, null, new GzipCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_2.foo.gz", type.getUriForWrite(context, "foo", new GzipCodec()));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_2.foo.gz", type.getUriForWrite(context, ".foo", new GzipCodec()));
     }
 
     @Test
