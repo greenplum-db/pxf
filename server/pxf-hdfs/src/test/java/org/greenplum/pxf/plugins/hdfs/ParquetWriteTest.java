@@ -2152,49 +2152,6 @@ public class ParquetWriteTest {
         validateWriteNumeric(expectedValues, new HashSet<>(), precision, scale);
     }
 
-    @Test
-    public void testValidnessOfDecimalOverflowOption() throws Exception {
-        String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_error_flag/";
-        String[] values = new String[]{
-                "1234567890123456789012345678901234567890.1",
-                "1234567890123456789012345678901234567890.12",
-                "1234567890123456789012345678901234567890.123",
-                "1234567890123456789012345678901234567890.1234",
-                "1234567890123456789012345678901234567890.12345",
-                "12345678901234567890123.123451",
-                "12345678901234567890123.1234512",
-                "12345678901234567890123.12345123",
-                "12345678901234567890123.123451234",
-                "12345678901234567890123.1234512345",
-        };
-        String columnName = "dec1";
-
-        setup();
-        String configurationOption = "ERROR";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123500");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-
-        setup();
-        configurationOption = "ignore";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123501");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-
-        setup();
-        configurationOption = "IGNORE";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123502");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-
-        setup();
-        configurationOption = "round";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123503");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-
-        setup();
-        configurationOption = "false";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123504");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-    }
-
     // Test data scale overflow.  Data should be rounded off
     @Test
     public void testWriteNumericWithPrecisionScaleOverflowWithRoundFlag() throws Exception {

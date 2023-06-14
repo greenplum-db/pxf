@@ -30,11 +30,11 @@ public enum DecimalOverflowOption {
      * and info about whether the current profile was parsing a decimal value with precision and scale enforced in the old behavior
      *
      * @param decimalOverflowValue        is one of the supported the decimal overflow configuration value. Supported values are 'error', 'round' and 'ignore'.
-     * @param wasEnforcePrecisionAndScale tells whether using this option should enforce precision and scale when parsing decimal strings
+     * @param wasEnforcedPrecisionAndScale tells whether using this option should enforce precision and scale when parsing decimal strings
      */
-    DecimalOverflowOption(String decimalOverflowValue, boolean wasEnforcePrecisionAndScale) {
+    DecimalOverflowOption(String decimalOverflowValue, boolean wasEnforcedPrecisionAndScale) {
         this.decimalOverflowOption = decimalOverflowValue;
-        this.wasEnforcedPrecisionAndScale = wasEnforcePrecisionAndScale;
+        this.wasEnforcedPrecisionAndScale = wasEnforcedPrecisionAndScale;
     }
 
     /**
@@ -42,18 +42,18 @@ public enum DecimalOverflowOption {
      *
      * @param configuration               contains all the configuration properties of the current server
      * @param configurationPropertyName   is the decimal overflow configuration property going to be parsed
-     * @param wasEnforcePrecisionAndScale tells whether the old decimal parsing behavior of the current profile enforced precision and scale
+     * @param wasEnforcedPrecisionAndScale tells whether the old decimal parsing behavior of the current profile enforced precision and scale
      * @return a DecimalOverflowOption enum object
      */
-    public static DecimalOverflowOption parseDecimalOverflowOption(Configuration configuration, String configurationPropertyName, boolean wasEnforcePrecisionAndScale) {
-        String decimalOverflowOption = configuration.get(configurationPropertyName, DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR.getDecimalOverflowOption()).toLowerCase();
+    public static DecimalOverflowOption parseDecimalOverflowOption(Configuration configuration, String configurationPropertyName, boolean wasEnforcedPrecisionAndScale) {
+        String decimalOverflowOption = configuration.get(configurationPropertyName, DecimalOverflowOption.DECIMAL_OVERFLOW_ROUND.getDecimalOverflowOption()).toLowerCase();
         switch (decimalOverflowOption) {
             case PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ERROR:
                 return DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR;
             case PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND:
                 return DecimalOverflowOption.DECIMAL_OVERFLOW_ROUND;
             case PXF_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE:
-                if (wasEnforcePrecisionAndScale) {
+                if (wasEnforcedPrecisionAndScale) {
                     return DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE;
                 }
                 return DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING;
