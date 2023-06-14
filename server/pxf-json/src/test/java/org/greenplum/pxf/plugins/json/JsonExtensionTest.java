@@ -478,7 +478,9 @@ public class JsonExtensionTest {
     }
 
     private Accessor getReadAccessor(RequestContext data)  {
-        JsonAccessor jsonAccessor = new JsonAccessor();
+        JsonUtilities jsonUtilities = new JsonUtilities();
+        jsonUtilities.setPgUtilities(new PgUtilities());
+        JsonAccessor jsonAccessor = new JsonAccessor(jsonUtilities);
         jsonAccessor.setRequestContext(data);
         jsonAccessor.afterPropertiesSet();
         return jsonAccessor;
