@@ -11,9 +11,10 @@ select * from file_as_row_json;
 
 -- Query JSON using JSON functions
 \pset format aligned
-select data -> 'record' -> 'created_at' as created_at ,
-       data -> 'record' -> 'text' as text,
-       data -> 'record' -> 'user'->'name' as username,
-       data -> 'record' -> 'user'->'screen_name' as screen_name,
-       data -> 'record' -> 'user'->'location' as user_location
-from file_as_row_json fr, json_array_elements(fr.json_blob -> 'root') data;
+select
+       json_array_elements(json_blob->'root')->'record'->'created_at' as created_at,
+       json_array_elements(json_blob->'root')->'record'->'text' as text,
+       json_array_elements(json_blob->'root')->'record'->'user'->'name' as username,
+       json_array_elements(json_blob->'root')->'record'->'user'->'screen_name' as screen_name,
+       json_array_elements(json_blob->'root')->'record'->'user'->'location' as user_location
+from file_as_row_json;

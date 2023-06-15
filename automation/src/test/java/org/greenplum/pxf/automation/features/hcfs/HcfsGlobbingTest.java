@@ -146,6 +146,8 @@ public class HcfsGlobbingTest extends BaseFeature {
          *
          * So using the escaped glob for FDW.
          */
+        // TODO If we update the FDW logic to append E like external table to the URI, we don't have to deal it separately for FDW
+
         if (FDWUtils.useFDW)
         {
             glob = glob.replace("\\\\", "\\");

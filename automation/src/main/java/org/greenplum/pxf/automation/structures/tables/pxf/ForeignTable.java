@@ -46,6 +46,7 @@ public class ForeignTable extends WritableExternalTable {
         // foreign tables do not have locations, parameters go into options
         // path (resource option for FDW) should always be present
         StringJoiner joiner = new StringJoiner(",", " OPTIONS (", ")");
+        // TODO Add Escape E to the URI like external table It will help cases like HcfsGlobbingTest
         appendOption(joiner,"resource", getPath(), true);
 
         String formatOption = getFormatOption();
