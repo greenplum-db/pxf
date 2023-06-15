@@ -136,7 +136,7 @@ public class DecimalUtilities {
             // if we are here, that means we are using 'ignore' option
             // if old behavior was not enforcing precision and scale, we stored the unenforced value,
             // otherwise store NULL
-            return decimalOverflowOption.isStoredAsNull() ? null : hiveDecimal;
+            return decimalOverflowOption.wasEnforcedPrecisionAndScale() ? null : hiveDecimal;
         }
 
         // At this point, the integer digit count must less than or equal to (precision - scale) for Parquet,
@@ -159,6 +159,10 @@ public class DecimalUtilities {
                 isScaleOverflowWarningLogged = true;
             }
         }
-        return hiveDecimalEnforcedPrecisionAndScale;
+        // if we are here, that means we are using 'round' or 'ignore' option
+        // if the old behavior of the current profile enforced precision and scale, when scale overflow happens, the decimal part will be rounded
+        // if the old behavior of the current profile did not enforce precision and scale,
+        // when scale overflow happens, if the decimal part fails to borrow digit slots from the integer part, the decimal part will be rounded
+        return decimalOverflowOption.wasEnforcedPrecisionAndScale() ? hiveDecimalEnforcedPrecisionAndScale : hiveDecimal;
     }
 }

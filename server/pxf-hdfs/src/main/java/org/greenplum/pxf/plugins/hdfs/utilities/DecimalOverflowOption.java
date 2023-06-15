@@ -70,14 +70,9 @@ public enum DecimalOverflowOption {
     }
 
     /**
-     * If decimal overflow option is 'ignore' and the old parsing behavior of the current profile enforced
-     * precision and scale, when integer digit count is greater than (precision - scale) defined in the schema.
-     * this overflowed value should be stored as NULL.
-     *
-     * @return whether the value should be stored as NULL when integer digit count overflow happens
-     * and the decimal overflow option is set to ignore.
+     * @return whether the current profile enforced precision and scale in the old behavior
      */
-    public boolean isStoredAsNull() {
+    public boolean wasEnforcedPrecisionAndScale() {
         return wasEnforcedPrecisionAndScale;
     }
 
