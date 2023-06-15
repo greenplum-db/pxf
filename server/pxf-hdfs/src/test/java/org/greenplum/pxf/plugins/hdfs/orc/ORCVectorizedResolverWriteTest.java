@@ -292,7 +292,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         List<OneField> record = getRecord(0, -1);
         String decimalString = "1234567890.12345678901234567890123456789";
         // reset the decimal value to a higher unsupported (>38) precision
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), "1234567890.12345678901234567890123456789"));
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
         records.add(record);
 
         OneRow batchWrapper = resolver.setFieldsForBatch(records);
@@ -300,7 +300,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
 
         // this value we expect to be not set and null flag turned on
         IS_NULL[0] = false;
-        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(decimalString), 38, 10));
+        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, new HiveDecimalWritable(decimalString));
     }
 
     @Test
