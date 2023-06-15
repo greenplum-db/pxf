@@ -512,7 +512,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/released/gpdb7/greenplum-db-(7.*)-el8-x86_64.rpm
+    regexp: server/released/gpdb7/greenplum-db-7.0.0-beta.3-el8-x86_64.rpm
 
 ## ---------- PXF 5 (for GPDB 6) Artifact ---------------
 - name: pxf5_gp6_rhel7_released
