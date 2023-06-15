@@ -1,6 +1,5 @@
 package org.greenplum.pxf.plugins.hdfs.utilities;
 
-
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.slf4j.Logger;
@@ -8,6 +7,11 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 
+/**
+ * DecimalUtilities is used for parsing decimal values for PXF Parquet profile and PXF ORC profile.
+ * Parsing behaviors are different based on the decimal overflow option values.
+ * Warning logs for different types of overflow will be logged once if overflow happens.
+ */
 public class DecimalUtilities {
     private static final Logger LOG = LoggerFactory.getLogger(DecimalUtilities.class);
 
@@ -16,9 +20,12 @@ public class DecimalUtilities {
     private boolean isIntegerDigitCountOverflowWarningLogged;
     private boolean isScaleOverflowWarningLogged;
 
-
-    public DecimalUtilities(DecimalOverflowOption option) {
-        this.decimalOverflowOption = option;
+    /**
+     * Construct a DecimalUtilities object with DecimalOverflowOption information
+     * @param decimalOverflowOption is parsed by DecimalOverflowOption.parseDecimalOverflowOption
+     */
+    public DecimalUtilities(DecimalOverflowOption decimalOverflowOption) {
+        this.decimalOverflowOption = decimalOverflowOption;
         this.isPrecisionOverflowWarningLogged = false;
         this.isIntegerDigitCountOverflowWarningLogged = false;
         this.isScaleOverflowWarningLogged = false;
@@ -129,10 +136,7 @@ public class DecimalUtilities {
             // if we are here, that means we are using 'ignore' option
             // if old behavior was not enforcing precision and scale, we stored the unenforced value,
             // otherwise store NULL
-            if (!decimalOverflowOption.wasEnforcedPrecisionAndScale()) {
-                return hiveDecimal;
-            }
-            return null;
+            return decimalOverflowOption.isStoredAsNull() ? null : hiveDecimal;
         }
 
         // At this point, the integer digit count must less than or equal to (precision - scale) for Parquet,

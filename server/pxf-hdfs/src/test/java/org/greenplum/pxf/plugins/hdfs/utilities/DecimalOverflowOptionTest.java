@@ -103,7 +103,7 @@ public class DecimalOverflowOptionTest {
 
     private void assertDecimalOverflowOption(DecimalOverflowOption expectedOption, DecimalOverflowOption option) {
         assertEquals(expectedOption.getDecimalOverflowOption(), option.getDecimalOverflowOption());
-        assertEquals(expectedOption.wasEnforcedPrecisionAndScale(), option.wasEnforcedPrecisionAndScale());
+        assertEquals(expectedOption.isStoredAsNull(), option.isStoredAsNull());
         switch (expectedOption) {
             case DECIMAL_OVERFLOW_ERROR:
                 assertTrue(option.isOptionError());
@@ -116,10 +116,16 @@ public class DecimalOverflowOptionTest {
                 assertFalse(option.isOptionIgnore());
                 break;
             case DECIMAL_OVERFLOW_IGNORE:
+                assertTrue(option.isOptionIgnore());
+                assertFalse(option.isOptionError());
+                assertFalse(option.isOptionRound());
+                assertTrue(option.isStoredAsNull());
+                break;
             case DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING:
                 assertTrue(option.isOptionIgnore());
                 assertFalse(option.isOptionError());
                 assertFalse(option.isOptionRound());
+                assertFalse(option.isStoredAsNull());
                 break;
             default:
                 throw new UnsupportedTypeException(String.format("Unsupported decimal overflow option %s.", expectedOption.getDecimalOverflowOption()));

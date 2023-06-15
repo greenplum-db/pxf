@@ -1,6 +1,5 @@
 package org.greenplum.pxf.plugins.hdfs.utilities;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 
@@ -64,8 +63,6 @@ public enum DecimalOverflowOption {
     }
 
     /**
-     * Return the decimal overflow option of the current profile.
-     *
      * @return decimal overflow option of the current profile
      */
     public String getDecimalOverflowOption() {
@@ -73,11 +70,14 @@ public enum DecimalOverflowOption {
     }
 
     /**
-     * Return the info whether the old behavior of the current profile enforced precision and scale when parsing decimal strings
+     * If decimal overflow option is 'ignore' and the old parsing behavior of the current profile enforced
+     * precision and scale, when integer digit count is greater than (precision - scale) defined in the schema.
+     * this overflowed value should be stored as NULL.
      *
-     * @return whether the old behavior of the current profile enforced precision and scale when parsing decimal strings
+     * @return whether the value should be stored as NULL when integer digit count overflow happens
+     * and the decimal overflow option is set to ignore.
      */
-    public boolean wasEnforcedPrecisionAndScale() {
+    public boolean isStoredAsNull() {
         return wasEnforcedPrecisionAndScale;
     }
 
