@@ -14,6 +14,7 @@ function install_gpdb() {
         # For GP7 and above, a new rhel8 & rocky8 distro identifier
         # (el8) has been introduced.
         if [[ ${GPDB_VERSION%%.*} -ge 7 ]]; then
+            GPDB_VERSION=7.0.0-beta.3
             DISTRO_MATCHING_PATTERN="el"
         else
             DISTRO_MATCHING_PATTERN="r"
