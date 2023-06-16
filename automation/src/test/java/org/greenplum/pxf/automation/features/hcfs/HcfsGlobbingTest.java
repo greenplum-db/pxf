@@ -4,7 +4,6 @@ import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
-import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -125,33 +124,6 @@ public class HcfsGlobbingTest extends BaseFeature {
         prepareTableData(path, data2, "2b");
         prepareTableData(path, data3, "3c");
         prepareTableData(path, data4, "4d");
-        /*
-         * External Table adds (escape) E to the location which escapes the backslash while FDW doesn't add E to the resource.
-         *
-         * For e.g.:
-         *
-         * FDW:
-         *     CREATE FOREIGN TABLE hcfs_glob_escape_special_characters (name text, num integer, dub double precision, longNum bigint, bool boolean)
-         *     SERVER default_hdfs OPTIONS
-         *     (resource 'tmp/pxf_automation_data/4ab38346-079f-4a93-bd7f-fe3ab366182e/escape_special_characters/ab\\[c.d',format 'text',delimiter ',');
-         *
-         * The glob would be `ab\\[c.d`
-         *
-         * External Table:
-         *     CREATE EXTERNAL TABLE hcfs_glob_escape_special_characters (name text, num integer, dub double precision, longNum bigint, bool boolean)
-         *     LOCATION (E'pxf://tmp/pxf_automation_data/51752ebe-8c1f-4788-b639-fb6344e2eff5/escape_special_characters/ab\\[c.d?PROFILE=hdfs:text')
-         *     FORMAT 'Text' ( DELIMITER ',')
-         *
-         * The glob would be `ab\\\\[c.d` as we escape the backslash
-         *
-         * So using the escaped glob for FDW.
-         */
-        // TODO If we update the FDW logic to append E like external table to the URI, we don't have to deal it separately for FDW
-
-        if (FDWUtils.useFDW)
-        {
-            glob = glob.replace("\\\\", "\\");
-        }
 
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
 

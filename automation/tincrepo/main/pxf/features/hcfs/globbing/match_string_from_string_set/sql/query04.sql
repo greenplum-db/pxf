@@ -49,8 +49,8 @@ select * from hcfs_glob_match_string_from_string_set_10 order by name, num;
 -- m/CONTEXT:.*line.*/
 -- s/line \d* of //g
 --
--- m/, file pxf:\/\/(.*)/
--- s/, file pxf:\/\/(.*)//
+-- m/CONTEXT:.*file.*/
+-- s/, file.*//g
 --
 -- end_matchsubs
 
