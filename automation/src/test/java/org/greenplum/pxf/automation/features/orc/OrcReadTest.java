@@ -1,12 +1,14 @@
 package org.greenplum.pxf.automation.features.orc;
 
+import annotations.FailsWithFDW;
+import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
+@WorksWithFDW
 public class OrcReadTest extends BaseFeature {
 
     private static final String ORC_PRIMITIVE_TYPES = "orc_types.orc";
@@ -155,6 +157,18 @@ public class OrcReadTest extends BaseFeature {
         runTincTest("pxf.features.orc.read.multidim_list_types.runTest");
     }
 
+    /*
+     * FDW fails for the data that have NUL. This behaviour is different from external-table but same as GPDB Heap
+     * FDW Failure: invalid byte sequence for encoding "UTF8": 0x00
+     *
+     * GPDB also throws the same error when copying the data with NUL
+     *
+     * postgres=# copy test from '/Users/pandeyhi/Documents/bad_data.txt' ;
+     * ERROR:  invalid byte sequence for encoding "UTF8": 0x00
+     * TODO Do we need to do some changes to make sure the external-table behaves the same way as GPDB/FDW?
+     *
+     */
+    @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcReadStringsContainingNullByte() throws Exception {
         prepareReadableExternalTable("pxf_orc_null_in_string", ORC_NULL_IN_STRING_COLUMNS, hdfsPath + ORC_NULL_IN_STRING);

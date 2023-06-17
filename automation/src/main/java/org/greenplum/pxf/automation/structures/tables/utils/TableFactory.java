@@ -229,6 +229,27 @@ public abstract class TableFactory {
     }
 
     /**
+     * Prepares PXF Readable External or Foreign Table for TEXT data, using TEXT format and "<protocol>:text" profile.
+     *
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param format format used in the external data
+     * @return PXF Readable External or Foreign table
+     */
+    public static ReadableExternalTable getPxfReadableJsonTable(String name,
+                                                                String[] fields,
+                                                                String path,
+                                                                String format) {
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, path, format);
+        if (StringUtils.equals(format, "custom")) {
+            exTable.setFormatter("pxfwritable_import");
+        }
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
+        return exTable;
+    }
+
+    /**
      * Prepares PXF Readable External or Foreign Table for CSV data, using CSV format and "<protocol>:csv" profile.
      *
      * @param name name of the table

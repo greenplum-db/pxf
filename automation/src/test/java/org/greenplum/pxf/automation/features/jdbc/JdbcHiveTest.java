@@ -1,5 +1,7 @@
 package org.greenplum.pxf.automation.features.jdbc;
 
+import annotations.FailsWithFDW;
+import annotations.WorksWithFDW;
 import jsystem.framework.sut.SutFactory;
 import jsystem.framework.system.SystemManagerImpl;
 import jsystem.framework.system.SystemObject;
@@ -15,6 +17,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 
+@WorksWithFDW
 public class JdbcHiveTest extends BaseFeature {
 
     private static final String HIVE_JDBC_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
@@ -241,6 +244,8 @@ public class JdbcHiveTest extends BaseFeature {
         runTincTest("pxf.features.jdbc.hive.runTest");
     }
 
+    // Fails with the error: ERROR:  PXF server error : java.io.DataInputStream cannot be cast to [B
+    @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security"})
     public void jdbcHiveWrite() throws Exception {
         prepareDataForWriteTest();
@@ -266,6 +271,7 @@ public class JdbcHiveTest extends BaseFeature {
         runTincTest("pxf.features.jdbc.two_secured_hive.runTest");
     }
 
+    @FailsWithFDW
     @Test(groups = {"features", "multiClusterSecurity"})
     public void jdbcHiveWriteToTwoSecuredServers() throws Exception {
         prepareDataForWriteTest();
@@ -295,6 +301,7 @@ public class JdbcHiveTest extends BaseFeature {
         runTincTest("pxf.features.jdbc.secured_and_non_secured_hive.runTest");
     }
 
+    @FailsWithFDW
     @Test(groups = {"features", "multiClusterSecurity"})
     public void jdbcHiveWriteToSecureServerAndNonSecuredServer() throws Exception {
         if (hdfsNonSecure == null) return;
