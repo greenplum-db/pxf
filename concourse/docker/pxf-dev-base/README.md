@@ -45,6 +45,7 @@ command to build the image:
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
       --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb5-centos7-build-test:latest \
+      --build-arg=GO_VERSION=${GO_VERSION} \
       --tag=gpdb5-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb5/centos7/Dockerfile \
       .
