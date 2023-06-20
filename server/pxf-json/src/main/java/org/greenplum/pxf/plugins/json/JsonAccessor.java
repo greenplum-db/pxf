@@ -29,12 +29,15 @@ import org.apache.hadoop.mapred.LineRecordReader;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.LineBreakAccessor;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -144,6 +147,7 @@ public class JsonAccessor extends LineBreakAccessor {
         if (isObjectLayout) {
             keyName = context.getOption(KEY_PARAM, KEY_DEFAULT_VALUE);
         }
+        validateUTF8Encoding();
         columnDescriptors = context.getTupleDescription().toArray(new ColumnDescriptor[0]);
         isFirstRecord = true;
     }
@@ -256,9 +260,9 @@ public class JsonAccessor extends LineBreakAccessor {
                 try {
                     jsonGenerator.close();
                 } catch (IOException e) {
-                    // generator close failed, but if there was a more important exception caught before, supress this one
+                    // generator close failed, but if there was a more important exception caught before, suppress this one
                     if (caughtException) {
-                        // supress the new exception, just log its message and let the original one propagate
+                        // suppress the new exception, just log its message and let the original one propagate
                         LOG.warn("Suppressing exception when closing Json generator: ", e.getMessage());
                     } else {
                         // since this is the first and only exception we see, throw it
@@ -282,4 +286,25 @@ public class JsonAccessor extends LineBreakAccessor {
         }
         return layout.equalsIgnoreCase(LAYOUT_OBJECT_VALUE);
     }
+
+    /**
+     * Validates that the data being written will be in UTF8 encoding. Checks for data encoding first and if it is
+     * not specified, checks for the database encoding to make sure the effective encoding will be UTF8. Throws
+     * a PxfRuntimeException if the effective encoding is not UTF8.
+     */
+    private void validateUTF8Encoding() {
+        // make sure for write case Greenplum sends data in UTF8 encoding according to the Json standard
+        // in the case of an external table with pxfwritable_export formatter the formatter itself will enforce that
+        // the encoding is UTF8, but this check will still be relevant for FDW that is not using the formatter
+        if (context.getRequestType().equals(RequestContext.RequestType.WRITE_BRIDGE)) {
+            Charset encoding = context.getDataEncoding();
+            encoding = (encoding != null) ? encoding : context.getDatabaseEncoding();
+            if (!encoding.equals(StandardCharsets.UTF_8)) {
+                throw new PxfRuntimeException(
+                        String.format("Effective data encoding %s is not UTF8 and is not supported.", encoding),
+                        "Make sure either the database is in UTF8 or the table is defined with ENCODING 'UTF8' option.");
+            }
+        }
+    }
+
 }

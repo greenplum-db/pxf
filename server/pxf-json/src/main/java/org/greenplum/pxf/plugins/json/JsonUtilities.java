@@ -60,7 +60,7 @@ public final class JsonUtilities {
      * Can handle single-dimensional arrays by parsing the serialized array value into decoded elements and then
      * recursively invoking itself for each array element.
      * @param jsonGenerator Json generator
-     * @param dataType data type of the value
+     * @param dataType Greenplum data type of the value
      * @param value value to decode and write (can be a primitive or an array)
      * @throws IOException if writing fails
      */

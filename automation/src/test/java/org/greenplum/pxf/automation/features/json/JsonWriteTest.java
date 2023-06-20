@@ -81,6 +81,12 @@ public class JsonWriteTest extends BaseWritableFeature {
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
+    public void writePrimitiveTypesObjectWithCustomKey() throws Exception {
+        runScenario(PRIMITIVE_TYPES + "_object_key", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
+                new String[]{"KEY=tuples"}, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
+    }
+
+    @Test(groups = {"gpdb", "security", "hcfs"})
     public void writePrimitiveTypesRows() throws Exception {
         runScenario(PRIMITIVE_TYPES + "_rows", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
                 new String[]{"LAYOUT=rows"}, null, JSON_EXTENSION_ASSERTER);
@@ -102,6 +108,20 @@ public class JsonWriteTest extends BaseWritableFeature {
                 .toString();
         runScenario(PRIMITIVE_TYPES + "_escaping", ESCAPING_PRIMITIVE_TYPES_FIELDS, escapingData,
                 null, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
+    }
+
+    @Test(groups = {"gpdb", "security", "hcfs"})
+    public void errorInvalidEncoding() throws Exception {
+        // 1. prepare writable external table ready to receive data for writing from internal table
+        writableExTable = TableFactory.getPxfHcfsWritableTable(
+                "pxf_invalid_encoding_json_write", PRIMITIVE_TYPES_FIELDS, hdfsWritePath + "invalid_encoding", hdfs.getBasePath(), "json");
+        writableExTable.setEncoding("LATIN1"); // set a non-UTF8 encoding for the table
+        createTable(writableExTable);
+
+        // 2. run the Tinc test that inserts data as CTAS, which should fail and verifies the error message
+        // for external table with pxfwritable_export formatter (default setup for this test) the actual error
+        // will be produced by the formatter, not PXF, but for FDW or CSV wire format PXF error should show
+        runTincTest("pxf.features.hdfs.writable.json.invalid_encoding.runTest");
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
