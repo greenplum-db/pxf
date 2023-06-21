@@ -34,6 +34,7 @@ import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -271,7 +272,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
                 if (!val.isArray()) {
                     throw new BadRecordException(String.format("error while reading column '%s': invalid array value '%s'", columnMetadata.getColumnName(), val));
                 }
-                oneField.val = addAllFromJsonArray(val);
+                oneField.val = addAllFromJsonArray(val, type);
                 break;
             default:
                 throw new IOException("Unsupported type " + type);
@@ -326,10 +327,11 @@ public class JsonResolver extends BasePlugin implements Resolver {
      * Format the given JSON array in Postgres array syntax
      *
      * @param jsonNode the {@link JsonNode} to serialize in Postgres array syntax
+     * @param type Greenplum datatype that the value represents
      * @return a {@link String} containing the array elements in Postgre array syntax
      * @throws JsonProcessingException
      */
-    private String addAllFromJsonArray(JsonNode jsonNode) throws JsonProcessingException {
+    private String addAllFromJsonArray(JsonNode jsonNode, DataType type) throws IOException {
         StringJoiner stringJoiner = new StringJoiner(",", "{", "}");
         for (Iterator<JsonNode> i = jsonNode.elements(); i.hasNext();) {
             JsonNode element = i.next();
@@ -338,10 +340,20 @@ public class JsonResolver extends BasePlugin implements Resolver {
                     stringJoiner.add(pgUtilities.escapeArrayElement(null));
                     break;
                 case ARRAY:
-                    stringJoiner.add(addAllFromJsonArray(element));
+                    // we assume this will be a multi-dimensional array of a given Greenplum array type
+                    stringJoiner.add(addAllFromJsonArray(element, type));
+                    break;
+                case BINARY:
+                    // not sure how a parser will know when to create a binary node without a schema, but just in case
+                    stringJoiner.add(pgUtilities.encodeAndEscapeByteaHex(ByteBuffer.wrap(element.binaryValue())));
                     break;
                 case STRING:
-                    stringJoiner.add(pgUtilities.escapeArrayElement(element.asText()));
+                    // Base64-encoded binary data is stored as a string value and can be in a string node
+                    if (type.equals(DataType.BYTEAARRAY)) {
+                        stringJoiner.add(pgUtilities.encodeAndEscapeByteaHex(ByteBuffer.wrap(element.binaryValue())));
+                    } else {
+                        stringJoiner.add(pgUtilities.escapeArrayElement(element.asText()));
+                    }
                     break;
                 default:
                     stringJoiner.add(pgUtilities.escapeArrayElement(MAPPER.writeValueAsString(element)));
