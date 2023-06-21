@@ -1,6 +1,6 @@
 from mpp.models import SQLConcurrencyTestCase
 
-class OrcWriteDecimalWithLargePrecisionNotDefined(SQLConcurrencyTestCase):
+class OrcWriteDecimalWithLargeIntegerDigitCount(SQLConcurrencyTestCase):
     """
     @db_name pxfautomation
     @concurrency 1

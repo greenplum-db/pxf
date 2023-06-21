@@ -35,7 +35,7 @@ public class DecimalUtilitiesTest {
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
                 decimalStringOverflowsPrecision, columnName, precision), e.getMessage());
     }
 
@@ -45,7 +45,7 @@ public class DecimalUtilitiesTest {
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
                 decimalStringOverflowsPrecision, columnName, precision), e.getMessage());
     }
 
@@ -71,7 +71,7 @@ public class DecimalUtilitiesTest {
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
                 decimalStringOverflowsPrecisionMinusScale, columnName, precision, scale), e.getMessage());
     }
 
@@ -81,7 +81,7 @@ public class DecimalUtilitiesTest {
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
                 decimalStringOverflowsPrecisionMinusScale, columnName, precision, scale), e.getMessage());
     }
 
@@ -108,7 +108,7 @@ public class DecimalUtilitiesTest {
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum scale %s, and cannot be stored without precision loss.",
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported scale %s, and cannot be stored without precision loss.",
                 decimalStringOverflowsScale, columnName, scale), e.getMessage());
     }
 
