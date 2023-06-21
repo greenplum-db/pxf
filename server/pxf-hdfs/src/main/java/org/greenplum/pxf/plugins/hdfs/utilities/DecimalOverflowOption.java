@@ -4,9 +4,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 
 /**
- * Supported decimal overflow options for ORC and Parquet profile.
+ * Supported decimal overflow options for ORC and Parquet profiles.
  * Since the old decimal parsing logic for PXF ORC profile didn't enforce precision and scale, whereas PXF Parquet profile did,
- * 'wasEnforcedPrecisionAndScale' is used to differentiated ORC profile and Parquet profile's old behavior,
+ * 'wasEnforcedPrecisionAndScale' is used to differentiate ORC profile and Parquet profile's old behaviors,
  * and return the value getting from the old logic when decimal option is set as 'ignore'
  */
 public enum DecimalOverflowOption {
@@ -26,10 +26,10 @@ public enum DecimalOverflowOption {
 
     /**
      * Construct an enum object containing a decimal overflow configuration value
-     * and info about whether the current profile was parsing a decimal value with precision and scale enforced in the old behavior
+     * and a boolean value about whether the current profile was parsing a decimal value with precision and scale enforced in its old behavior
      *
      * @param decimalOverflowValue        is one of the supported the decimal overflow configuration value. Supported values are 'error', 'round' and 'ignore'.
-     * @param wasEnforcedPrecisionAndScale tells whether using this option should enforce precision and scale when parsing decimal strings
+     * @param wasEnforcedPrecisionAndScale tells whether the old decimal parsing behavior of the current profile enforced precision and scale
      */
     DecimalOverflowOption(String decimalOverflowValue, boolean wasEnforcedPrecisionAndScale) {
         this.decimalOverflowOption = decimalOverflowValue;
@@ -70,28 +70,28 @@ public enum DecimalOverflowOption {
     }
 
     /**
-     * @return whether the current profile enforced precision and scale in the old behavior
+     * @return whether the current profile enforced precision and scale in its old behavior
      */
     public boolean wasEnforcedPrecisionAndScale() {
         return wasEnforcedPrecisionAndScale;
     }
 
     /**
-     * @return whether the current option is 'error' option
+     * @return whether the current option is the 'error' option
      */
     public boolean isOptionError() {
         return decimalOverflowOption.equals(DECIMAL_OVERFLOW_ERROR.getDecimalOverflowOption());
     }
 
     /**
-     * @return whether the current option is 'round' option
+     * @return whether the current option is the 'round' option
      */
     public boolean isOptionRound() {
         return decimalOverflowOption.equals(DECIMAL_OVERFLOW_ROUND.getDecimalOverflowOption());
     }
 
     /**
-     * @return whether the current option is 'ignore' option
+     * @return whether the current option is the 'ignore' option
      */
     public boolean isOptionIgnore() {
         return decimalOverflowOption.equals(DECIMAL_OVERFLOW_IGNORE.getDecimalOverflowOption())

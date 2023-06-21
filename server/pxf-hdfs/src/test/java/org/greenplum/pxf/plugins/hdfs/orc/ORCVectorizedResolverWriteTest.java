@@ -42,6 +42,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
+    private static final String decimalString_exceedPrecisionMinusScale = "123456789012345678901234567890.123456789012345";
+    private static final String decimalString_exceedPrecision = "123456789012345678901234567890123456789";
+    private static final String decimalString_exceedScale = "1234567890.12345678901234567890123456789";
     private ORCVectorizedResolver resolver;
     private RequestContext context;
     private List<List<OneField>> records;
@@ -106,7 +109,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
     }
 
     @Test
-    public void testExceedingDefaultPrecisionWithRounding_IgnoreOption() {
+    public void testExceedingDefaultPrecisionMinusScale_IgnoreOption() {
         // simple test with hardcoded value assertions to make sure basic test logic itself is correct
         boolean[] IS_NULL = new boolean[16]; // no nulls in test records
         boolean[] NO_NULL = new boolean[16]; // no nulls in test records
@@ -124,18 +127,18 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         records = new ArrayList<>(1);
         List<OneField> record = getRecord(0, -1);
         // reset the decimal value to a higher unsupported (>38) precision
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), "123456789012345678901234567890.123456789012345"));
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString_exceedPrecisionMinusScale));
         records.add(record);
 
         OneRow batchWrapper = resolver.setFieldsForBatch(records);
         VectorizedRowBatch batch = (VectorizedRowBatch) batchWrapper.getData();
 
         // this value we expect to be rounded
-        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, new HiveDecimalWritable("123456789012345678901234567890.123456789012345"));
+        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, new HiveDecimalWritable(decimalString_exceedPrecisionMinusScale));
     }
 
     @Test
-    public void testExceedingDefaultPrecisionWithRounding_ErrorOption() {
+    public void testExceedingDefaultPrecisionMinusScale_ErrorOption() {
         // simple test with hardcoded value assertions to make sure basic test logic itself is correct
         columnDescriptors = getAllColumns();
         context.setTupleDescription(columnDescriptors);
@@ -148,20 +151,19 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
 
-        String decimalString = "123456789012345678901234567890.123456789012345";
         records = new ArrayList<>(1);
         List<OneField> record = getRecord(0, -1);
         // reset the decimal value to a higher unsupported (>38) precision
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString_exceedPrecisionMinusScale));
         records.add(record);
 
         Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (38,10).",
-                decimalString, "col14"), e.getMessage());
+        assertEquals(String.format("The value %s for the NUMERIC column col14 exceeds the maximum supported precision and scale (38,10).",
+                decimalString_exceedPrecisionMinusScale), e.getMessage());
     }
 
     @Test
-    public void testExceedingDefaultPrecisionWithRounding_RoundOption() {
+    public void testExceedingDefaultPrecisionMinusScale_RoundOption() {
         // simple test with hardcoded value assertions to make sure basic test logic itself is correct
         boolean[] IS_NULL = new boolean[16]; // no nulls in test records
         boolean[] NO_NULL = new boolean[16]; // no nulls in test records
@@ -181,17 +183,17 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         records = new ArrayList<>(1);
         List<OneField> record = getRecord(0, -1);
         // reset the decimal value to a higher unsupported (>38) precision
-        String decimalString = "123456789012345678901234567890.123456789012345";
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
+
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString_exceedPrecisionMinusScale));
         records.add(record);
 
         Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (38,10).",
-                decimalString, "col14"), e.getMessage());
+        assertEquals(String.format("The value %s for the NUMERIC column col14 exceeds the maximum supported precision and scale (38,10).",
+                decimalString_exceedPrecisionMinusScale), e.getMessage());
     }
 
     @Test
-    public void testExceedingDefaultPrecisionNoRounding_IgnoreOption() {
+    public void testExceedingDefaultPrecision_IgnoreOption() {
         // simple test with hardcoded value assertions to make sure basic test logic itself is correct
         boolean[] IS_NULL = new boolean[16]; // no nulls in test records
         boolean[] NO_NULL = new boolean[16]; // no nulls in test records
@@ -221,7 +223,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
     }
 
     @Test
-    public void testExceedingDefaultPrecisionWithNoRounding_ErrorOption() {
+    public void testExceedingDefaultPrecision_ErrorOption() {
         // simple test with hardcoded value assertions to make sure basic test logic itself is correct
         columnDescriptors = getAllColumns();
         context.setTupleDescription(columnDescriptors);
@@ -234,20 +236,19 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
 
-        String decimalString = "123456789012345678901234567890123456789";
         records = new ArrayList<>(1);
         List<OneField> record = getRecord(0, -1);
         // reset the decimal value to a higher unsupported (>38) precision
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString_exceedPrecision));
         records.add(record);
 
         Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision 38.",
-                decimalString, "col14"), e.getMessage());
+        assertEquals(String.format("The value %s for the NUMERIC column col14 exceeds the maximum supported precision 38.",
+                decimalString_exceedPrecision), e.getMessage());
     }
 
     @Test
-    public void testExceedingDefaultPrecisionWithNoRounding_RoundOption() {
+    public void testExceedingDefaultPrecision_RoundOption() {
         // simple test with hardcoded value assertions to make sure basic test logic itself is correct
         columnDescriptors = getAllColumns();
         context.setTupleDescription(columnDescriptors);
@@ -260,16 +261,15 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
 
-        String decimalString = "123456789012345678901234567890123456789";
         records = new ArrayList<>(1);
         List<OneField> record = getRecord(0, -1);
         // reset the decimal value to a higher unsupported (>38) precision
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString_exceedPrecision));
         records.add(record);
 
         Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision 38.",
-                decimalString, "col14"), e.getMessage());
+        assertEquals(String.format("The value %s for the NUMERIC column col14 exceeds the maximum supported precision 38.",
+                decimalString_exceedPrecision), e.getMessage());
     }
 
     @Test
@@ -290,9 +290,8 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
 
         records = new ArrayList<>(1);
         List<OneField> record = getRecord(0, -1);
-        String decimalString = "1234567890.12345678901234567890123456789";
         // reset the decimal value to a higher unsupported (>38) precision
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString_exceedScale));
         records.add(record);
 
         OneRow batchWrapper = resolver.setFieldsForBatch(records);
@@ -300,7 +299,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
 
         // this value we expect to be not set and null flag turned on
         IS_NULL[0] = false;
-        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, new HiveDecimalWritable(decimalString));
+        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, new HiveDecimalWritable(decimalString_exceedScale));
     }
 
     @Test
@@ -317,16 +316,15 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
 
-        String decimalString = "1234567890.12345678901234567890123456789";
         records = new ArrayList<>(1);
         List<OneField> record = getRecord(0, -1);
         // reset the decimal value to a higher unsupported (>38) precision
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString_exceedScale));
         records.add(record);
 
         Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFieldsForBatch(records));
-        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum scale 10, and cannot be stored without precision loss.",
-                decimalString, "col14"), e.getMessage());
+        assertEquals(String.format("The value %s for the NUMERIC column col14 exceeds the maximum supported scale 10, and cannot be stored without precision loss.",
+                decimalString_exceedScale), e.getMessage());
     }
 
     @Test
@@ -346,11 +344,10 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
 
-        String decimalString = "1234567890.12345678901234567890123456789";
         records = new ArrayList<>(1);
         List<OneField> record = getRecord(0, -1);
         // reset the decimal value to a higher unsupported (>38) precision
-        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString));
+        record.set(14, new OneField(DataType.NUMERIC.getOID(), decimalString_exceedScale));
         records.add(record);
 
         OneRow batchWrapper = resolver.setFieldsForBatch(records);
@@ -358,7 +355,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
 
         // this value we expect to be not set and null flag turned on
         IS_NULL[0] = false;
-        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(decimalString), 38, 10));
+        assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(decimalString_exceedScale), 38, 10));
     }
 
     @Test

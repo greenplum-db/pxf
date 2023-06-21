@@ -562,7 +562,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 //  https://www.postgresql.org/docs/15/datatype-numeric.html
                 if (precision > HiveDecimal.MAX_PRECISION) {
                     throw new UnsupportedTypeException(String.format("Column %s is defined as NUMERIC with precision %d " +
-                            "which exceeds maximum supported precision %d.", columnName, precision, HiveDecimal.MAX_PRECISION));
+                            "which exceeds the maximum supported precision %d.", columnName, precision, HiveDecimal.MAX_PRECISION));
                 }
 
                 primitiveTypeName = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;

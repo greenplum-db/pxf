@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 
 /**
  * DecimalUtilities is used for parsing decimal values for PXF Parquet profile and PXF ORC profile.
- * Parsing behaviors are different based on the decimal overflow option values.
- * Warning logs for different types of overflow will be logged once if overflow happens.
+ * Parsing behaviors are depending on the decimal overflow option values.
+ * Warning logs for different types of overflows will be logged only once if overflows happen.
  */
 public class DecimalUtilities {
     private static final Logger LOG = LoggerFactory.getLogger(DecimalUtilities.class);
@@ -21,7 +21,8 @@ public class DecimalUtilities {
     private boolean isScaleOverflowWarningLogged;
 
     /**
-     * Construct a DecimalUtilities object with DecimalOverflowOption information
+     * Construct a DecimalUtilities object with a DecimalOverflowOption object
+     *
      * @param decimalOverflowOption is parsed by DecimalOverflowOption.parseDecimalOverflowOption
      */
     public DecimalUtilities(DecimalOverflowOption decimalOverflowOption) {
@@ -34,11 +35,11 @@ public class DecimalUtilities {
     /**
      * Parse the incoming decimal string into a decimal number for ORC or Parquet profiles according to the decimal overflow options
      *
-     * @param value      incoming decimal string
+     * @param value      is the decimal string going to be parsed
      * @param precision  is the decimal precision defined in the schema
      * @param scale      is the decimal scale defined in the schema
      * @param columnName is the name of the current column
-     * @return null or a BigDecimal number meets all the requirements
+     * @return null or a HiveDecimal number
      */
     public HiveDecimal parseDecimalStringWithHiveDecimal(String value, int precision, int scale, String columnName) {
         /*
@@ -71,16 +72,16 @@ public class DecimalUtilities {
         // also there is Decimal and Decimal64 column vectors for ORC, see TypeUtils.createColumn
         HiveDecimal hiveDecimal = HiveDecimal.create(value);
         if (hiveDecimal == null) {
-            if (decimalOverflowOption.isOptionError() || decimalOverflowOption.isOptionRound()) {
-                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
+            if (!decimalOverflowOption.isOptionIgnore()) {
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
                         value, columnName, precision));
             }
 
-            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum precision {} and has been stored as NULL.",
+            LOG.trace("The value {} for the NUMERIC column {} exceeds the maximum supported precision {} and has been stored as NULL.",
                     value, columnName, precision);
 
             if (!isPrecisionOverflowWarningLogged) {
-                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision {} " +
+                LOG.warn("There are rows where for the NUMERIC column {} the values exceed the maximum supported precision {} " +
                                 "and have been stored as NULL. Enable TRACE log level for row-level details.",
                         columnName, precision);
                 isPrecisionOverflowWarningLogged = true;
@@ -89,7 +90,8 @@ public class DecimalUtilities {
         }
 
         /*
-        At this point, the integer digit count must less than or equal to the precision, but the total digits may still greater than the precision.
+        At this point, the integer digit count must less than or equal to the precision, but the total digits may still
+        be greater than the precision value.
         HiveDecimal.enforcePrecisionScale has different behaviors given the integer digit count and the max integer digit count (precision - scale).
 
         (1) integer digit count > precision - scale
@@ -120,41 +122,41 @@ public class DecimalUtilities {
                 scale);
 
         if (hiveDecimalEnforcedPrecisionAndScale == null) {
-            if (decimalOverflowOption.isOptionError() || decimalOverflowOption.isOptionRound()) {
-                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
+            if (!decimalOverflowOption.isOptionIgnore()) {
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
                         value, columnName, precision, scale));
             }
 
-            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum precision and scale ({},{}) and has been stored as NULL.",
+            LOG.trace("The value {} for the NUMERIC column {} exceeds the maximum supported precision and scale ({},{}) and has been stored as NULL.",
                     value, columnName, precision, scale);
 
             if (!isIntegerDigitCountOverflowWarningLogged) {
-                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum precision and scale ({},{}) " +
+                LOG.warn("There are rows where for the NUMERIC column {} the values exceed the maximum supported precision and scale ({},{}) " +
                         "and have been stored as NULL. Enable TRACE log level for row-level details.", columnName, precision, scale);
                 isIntegerDigitCountOverflowWarningLogged = true;
             }
             // if we are here, that means we are using 'ignore' option
-            // if old behavior was not enforcing precision and scale, we stored the unenforced value,
-            // otherwise store NULL
+            // if old behavior was enforcing precision and scale, we stored the value as NULL,
+            // otherwise store the unenforced value
             return decimalOverflowOption.wasEnforcedPrecisionAndScale() ? null : hiveDecimal;
         }
 
         // At this point, the integer digit count must less than or equal to (precision - scale) for Parquet,
         // or less than or equal to the precision for ORC, but the total digits may still greater than precision.
-        // Here is to check whether the value has been rounded off. If the decimal overflow option is set to 'error',
+        // Here, check whether the value has been rounded off. If the decimal overflow option is set to 'error',
         // an exception will be thrown.
         BigDecimal accurateDecimal = new BigDecimal(value);
-        if ((decimalOverflowOption.isOptionError() || decimalOverflowOption.isOptionRound()) && accurateDecimal.compareTo(hiveDecimalEnforcedPrecisionAndScale.bigDecimalValue()) != 0) {
+        if (!decimalOverflowOption.isOptionIgnore() && accurateDecimal.compareTo(hiveDecimalEnforcedPrecisionAndScale.bigDecimalValue()) != 0) {
             if (decimalOverflowOption.isOptionError()) {
-                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds maximum scale %s, and cannot be stored without precision loss.",
+                throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported scale %s, and cannot be stored without precision loss.",
                         value, columnName, scale));
             }
 
-            LOG.trace("The value {} for the NUMERIC column {} exceeds maximum scale {} and has been rounded off.",
+            LOG.trace("The value {} for the NUMERIC column {} exceeds the maximum supported scale {} and has been rounded off.",
                     value, columnName, scale);
 
             if (!isScaleOverflowWarningLogged) {
-                LOG.warn("There are rows where for the NUMERIC column {} the values exceed maximum scale {} " +
+                LOG.warn("There are rows where for the NUMERIC column {} the values exceed the maximum supported scale {} " +
                         "and have been rounded off. Enable TRACE log level for row-level details.", columnName, scale);
                 isScaleOverflowWarningLogged = true;
             }
@@ -162,7 +164,7 @@ public class DecimalUtilities {
         // if we are here, that means we are using 'round' or 'ignore' option
         // if the old behavior of the current profile enforced precision and scale, when scale overflow happens, the decimal part will be rounded
         // if the old behavior of the current profile did not enforce precision and scale,
-        // when scale overflow happens, if the decimal part fails to borrow digit slots from the integer part, the decimal part will be rounded
+        // when scale overflow happens, if the decimal part fails to borrow digit slots from the integer part, the decimal part will be rounded when first calling HiveDecimal.create
         return decimalOverflowOption.wasEnforcedPrecisionAndScale() ? hiveDecimalEnforcedPrecisionAndScale : hiveDecimal;
     }
 }

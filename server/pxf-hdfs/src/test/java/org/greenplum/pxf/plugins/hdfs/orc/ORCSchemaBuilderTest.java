@@ -167,7 +167,7 @@ public class ORCSchemaBuilderTest {
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{55}));
         e = assertThrows(UnsupportedTypeException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
-        assertEquals("Column col0 is defined as NUMERIC with precision 55 which exceeds maximum supported precision 38.", e.getMessage());
+        assertEquals("Column col0 is defined as NUMERIC with precision 55 which exceeds the maximum supported precision 38.", e.getMessage());
     }
 
     @Test

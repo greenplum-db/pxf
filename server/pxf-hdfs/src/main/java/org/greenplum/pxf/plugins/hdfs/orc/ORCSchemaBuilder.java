@@ -119,6 +119,7 @@ public abstract class ORCSchemaBuilder {
      * Sets precision and scale for NUMERIC ORC type if a corresponding Greenplum column had modifiers
      * @param typeDescription ORC type description
      * @param columnTypeModifiers Greenplum type modifiers
+     * @param columnName Greenplum column name
      * @return type description object with the specified precision and scale, if any
      */
     private static TypeDescription setPrecisionAndScale(TypeDescription typeDescription, Integer[] columnTypeModifiers, String columnName) {
@@ -126,7 +127,7 @@ public abstract class ORCSchemaBuilder {
         if (ArrayUtils.isNotEmpty(columnTypeModifiers)) {
             Integer precision = columnTypeModifiers[0];
             if (precision != null) {
-                // In ORC code, no getter for ORC's MAX_PRECISION but there's a getter for ORC's precision.
+                // In ORC code, there is no getter for ORC's MAX_PRECISION but there's a getter for ORC's precision.
                 // By default, ORC precision is set to a hardcoded value 38, which is same as MAX_PRECISION's value
                 // and at this point, typeDescription.getPrecision() is still the default precision 38
                 int maxPrecision = typeDescription.getPrecision();
@@ -134,7 +135,7 @@ public abstract class ORCSchemaBuilder {
                 // here we provide a PXF error message containing more details
                 if (precision > maxPrecision) {
                     throw new UnsupportedTypeException(String.format("Column %s is defined as NUMERIC with precision %d " +
-                            "which exceeds maximum supported precision %d.", columnName, precision, maxPrecision));
+                            "which exceeds the maximum supported precision %d.", columnName, precision, maxPrecision));
                 }
                 // due to ORC code, can't set precision which is less than current scale, which is 10 by default
                 // so need to set correct scale before setting precision, default scale to 0 if missing
