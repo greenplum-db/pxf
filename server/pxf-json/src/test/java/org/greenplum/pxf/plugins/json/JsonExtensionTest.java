@@ -481,6 +481,7 @@ public class JsonExtensionTest {
         JsonUtilities jsonUtilities = new JsonUtilities();
         jsonUtilities.setPgUtilities(new PgUtilities());
         JsonAccessor jsonAccessor = new JsonAccessor(jsonUtilities);
+        data.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         jsonAccessor.setRequestContext(data);
         jsonAccessor.afterPropertiesSet();
         return jsonAccessor;

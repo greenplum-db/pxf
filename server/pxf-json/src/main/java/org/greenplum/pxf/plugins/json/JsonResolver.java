@@ -252,7 +252,22 @@ public class JsonResolver extends BasePlugin implements Resolver {
             case UUID:
                 oneField.val = val.isTextual() ? val.asText() : MAPPER.writeValueAsString(val);
                 break;
+            case INT2ARRAY:
+            case INT4ARRAY:
+            case INT8ARRAY:
+            case BOOLARRAY:
             case TEXTARRAY:
+            case FLOAT4ARRAY:
+            case FLOAT8ARRAY:
+            case BYTEAARRAY:
+            case BPCHARARRAY:
+            case VARCHARARRAY:
+            case DATEARRAY:
+            case UUIDARRAY:
+            case NUMERICARRAY:
+            case TIMEARRAY:
+            case TIMESTAMPARRAY:
+            case TIMESTAMP_WITH_TIMEZONE_ARRAY:
                 if (!val.isArray()) {
                     throw new BadRecordException(String.format("error while reading column '%s': invalid array value '%s'", columnMetadata.getColumnName(), val));
                 }

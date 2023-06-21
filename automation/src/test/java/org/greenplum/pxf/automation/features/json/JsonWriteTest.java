@@ -38,6 +38,25 @@ public class JsonWriteTest extends BaseWritableFeature {
             "bin         bytea"                        // DataType.BYTEA
     };
 
+    public static final String[] ARRAY_TYPES_FIELDS = {
+            "id          integer",                       // DataType.INTEGER
+            "name        text[]",                        // DataType.TEXTARRAY
+            "sml         smallint[]",                    // DataType.INT2ARRAY
+            "integ       integer[]",                     // DataType.INT4ARRAY
+            "bg          bigint[]",                      // DataType.INT8ARRAY
+            "r           real[]",                        // DataType.FLOAT4ARRAY
+            "dp          double precision[]",            // DataType.FLOAT8ARRAY
+            "dec         numeric[]",                     // DataType.NUMERICARRAY
+            "bool        boolean[]",                     // DataType.BOOLARRAY
+            "cdate       date[]",                        // DataType.DATEARRAY
+            "ctime       time[]",                        // DataType.TIMEARRAY
+            "tm          timestamp without time zone[]", // DataType.TIMESTAMPARRAY
+            "tmz         timestamp with time zone[]",    // DataType.TIMESTAMP_WITH_TIMEZONE_ARRAY
+            "c1          character(3)[]",                // DataType.BPCHARARRAY
+            "vc1         character varying(5)[]",        // DataType.VARCHARARRAY
+            "bin         bytea[]"                        // DataType.BYTEAARRAY
+    };
+
     public static final String[] ESCAPING_PRIMITIVE_TYPES_FIELDS = {
             "id             integer",                     // DataType.INTEGER
             "\"col space\"  text",                        // DataType.TEXT
@@ -47,6 +66,8 @@ public class JsonWriteTest extends BaseWritableFeature {
     };
 
     private static final String PRIMITIVE_TYPES = "primitive_types";
+    private static final String ARRAY_TYPES = "array_types";
+
 
     private static final Consumer<String> JSON_EXTENSION_ASSERTER = (filename) -> {
         assertTrue(filename.endsWith(".json"), "file " + filename + " does not end with .json");
@@ -58,8 +79,9 @@ public class JsonWriteTest extends BaseWritableFeature {
 
     private String resourcePath;
 
-    // table that stores seed data for insertion into writable external tables
+    // tables that store seed data for insertion into writable external tables
     private Table gpdbPrimitiveTypesTable;
+    private Table gpdbArrayTypesTable;
 
     @Override
     public void beforeClass() throws Exception {
@@ -67,11 +89,17 @@ public class JsonWriteTest extends BaseWritableFeature {
         hdfsWritePath = hdfs.getWorkingDirectory() + "/json/";
         resourcePath = localDataResourcesFolder + "/json/";
 
-        // seed the source data in GPDB internal table
+        // seed the source data in GPDB internal table -- primitive types
         gpdbPrimitiveTypesTable = new Table("gpdb_" + PRIMITIVE_TYPES, PRIMITIVE_TYPES_FIELDS);
         gpdbPrimitiveTypesTable.setDistributionFields(new String[]{"id"});
         gpdb.createTableAndVerify(gpdbPrimitiveTypesTable);
         gpdb.copyFromFile(gpdbPrimitiveTypesTable, new File(resourcePath + PRIMITIVE_TYPES + ".csv"), ",", true);
+
+        // seed the source data in GPDB internal table -- array types
+        gpdbArrayTypesTable = new Table("gpdb_" + ARRAY_TYPES, ARRAY_TYPES_FIELDS);
+        gpdbArrayTypesTable.setDistributionFields(new String[]{"id"});
+        gpdb.createTableAndVerify(gpdbArrayTypesTable);
+        gpdb.copyFromFile(gpdbArrayTypesTable, new File(resourcePath + ARRAY_TYPES + ".csv"), ",", true);
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
@@ -107,6 +135,12 @@ public class JsonWriteTest extends BaseWritableFeature {
                 .add("(4, 'col space 4', 't\"\"\"b\\\\\\{},:[]', 't\"\"\"b\\\\\\{},:[]', 't\"\"\"b\\\\\\{},:[]')") // triple sequence
                 .toString();
         runScenario(PRIMITIVE_TYPES + "_escaping", ESCAPING_PRIMITIVE_TYPES_FIELDS, escapingData,
+                null, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
+    }
+
+    @Test(groups = {"gpdb", "security", "hcfs"})
+    public void writeArrayTypesObject() throws Exception {
+        runScenario(ARRAY_TYPES + "_object", ARRAY_TYPES_FIELDS, gpdbArrayTypesTable,
                 null, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
     }
 
