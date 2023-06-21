@@ -1,6 +1,11 @@
 -- start_ignore
 -- end_ignore
 -- @description query01 for writing ORC decimals with scale overflow
-INSERT INTO orc_decimals_with_large_scale_writable VALUES (0,false,'\x0001'::bytea,123456789000000000,10,100,'row-00',0.0,3.141592653589793,'0','var00','var-no-length-00','2010-01-01','10:11:00','2013-07-13 21:00:05.000456','1234567890123456789012345678901234567890.12345','476f35e4-da1a-43cf-8f7c-950a00000000');
-ERROR:  PXF server error : The value 1234567890123456789012345678901234567890.12345 for the NUMERIC column c_numeric exceeds the maximum supported precision 38.
+INSERT INTO orc_decimals_with_large_scale_writable VALUES (0,false,'\x0001'::bytea,123456789000000000,10,100,'row-00',0.0,3.141592653589793,'0','var00','var-no-length-00','2010-01-01','10:11:00','2013-07-13 21:00:05.000456','12345678901234567890.1234567899123456789012345','476f35e4-da1a-43cf-8f7c-950a00000000');
+INSERT 0 1
+SELECT * FROM orc_decimals_with_large_scale_readable;
+ id | c_bool | c_bytea  |      c_bigint      | c_small | c_int | c_text | c_real |     c_float      | c_char | c_varchar | c_varchar_nolimit |   c_date   |  c_time  |        c_timestamp         |           c_numeric             |                c_uuid
+----+--------+----------+--------------------+---------+-------+--------+--------+------------------+--------+-----------+-------------------+------------+----------+----------------------------+---------------------------------+--------------------------------------
+  0 | f      | \000\001 | 123456789000000000 |      10 |   100 | row-00 |      0 | 3.14159265358979 | 0      | var00     | var-no-length-00  | 2010-01-01 | 10:11:00 | 2013-07-13 21:00:05.000456 | 12345678901234567890.1234567899 | 476f35e4-da1a-43cf-8f7c-950a00000000
+(1 row)
 
