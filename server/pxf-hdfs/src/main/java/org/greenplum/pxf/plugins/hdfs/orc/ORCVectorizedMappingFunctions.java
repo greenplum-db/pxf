@@ -82,9 +82,7 @@ class ORCVectorizedMappingFunctions {
     private static final PentaConsumer<ColumnVector, Integer, Object, Configuration, String> timestampInLocalWriteListFunction;
     private static final ZoneId TIMEZONE_UTC = ZoneId.of("UTC");
     private static final ZoneId TIMEZONE_LOCAL = TimeZone.getDefault().toZoneId();
-
     private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.orc.write.decimal.overflow";
-
     private static final List<TypeDescription.Category> SUPPORTED_PRIMITIVE_CATEGORIES = Arrays.asList(
             TypeDescription.Category.BOOLEAN,
             // TypeDescription.Category.BYTE,
@@ -559,7 +557,7 @@ class ORCVectorizedMappingFunctions {
             DecimalColumnVector decimalColumnVector = (DecimalColumnVector) columnVector;
             HiveDecimal convertedValue = decimalUtilities.parseDecimalStringWithHiveDecimal((String) val, decimalColumnVector.precision, decimalColumnVector.scale, columnName);
             if (convertedValue == null) {
-                // val can be null if the original value exceeds precision and cannot be rounded
+                // converted value can be null if the original value exceeds precision and cannot be rounded
                 // Hive just stores NULL as the value, let's do the same
                 columnVector.isNull[row] = true;
                 columnVector.noNulls = false;
@@ -635,7 +633,6 @@ class ORCVectorizedMappingFunctions {
 
     /**
      * A special function that writes lists to ORC file
-     *
      * @param underlyingChildCategory the underlying primitive child category. As PXF currently only has the capability to infer
      *                                an ORC schema from the GPDB schema, so all arrays will be one-dimensional, and this value
      *                                will be the underlying primitive type

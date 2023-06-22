@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 
 /**
  * Represents an operation that accepts five input arguments and returns no
- * result.  This is the five-arity specialization of {@link Consumer}.
+ * result. This is the five-arity specialization of {@link Consumer}.
  * Unlike most other functional interfaces, {@code PentaConsumer} is expected
  * to operate via side-effects.
  *
@@ -37,7 +37,7 @@ public interface PentaConsumer<T, U, V, S, P> {
      * Returns a composed {@code RConsumer} that performs, in sequence, this
      * operation followed by the {@code after} operation. If performing either
      * operation throws an exception, it is relayed to the caller of the
-     * composed operation.  If performing this operation throws an exception,
+     * composed operation. If performing this operation throws an exception,
      * the {@code after} operation will not be performed.
      *
      * @param after the operation to perform after this operation

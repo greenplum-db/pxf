@@ -102,7 +102,6 @@ import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.MAP_BY_PO
 public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedResolver, WriteVectorizedResolver, Resolver {
 
     private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
-
     /**
      * The schema used to read or write the ORC file.
      */

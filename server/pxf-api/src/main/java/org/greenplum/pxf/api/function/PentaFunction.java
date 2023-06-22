@@ -12,7 +12,7 @@ import java.util.function.Function;
  * @param <U> The second argument type
  * @param <V> The third argument type
  * @param <S> The fourth argument type
- * @param <P> the type of the fifth argument to the operation
+ * @param <P> The fifth argument type
  * @param <R> The result type
  * @see Function
  */

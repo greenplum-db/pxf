@@ -47,13 +47,14 @@ public class DecimalUtilities {
          the incoming value is greater than the precision defined in the column e.g., NUMERIC(precision).
          Therefore, the following logic is to deal with the integer digit count overflow when no precision is defined in
          the column e.g., NUMERIC.
-         By default, NUMERIC will be stored as DECIMAL(38,18) in Parquet's schema, or DECIMAL(38,10) in ORC's schema.
+         By default, NUMERIC will be stored as DECIMAL(38,18) in PXF Parquet's schema, or DECIMAL(38,10) in PXF ORC's schema.
 
          HiveDecimal.create has different behaviors given the integer digit count and the total digits of the incoming value.
 
          (1) integer digit count > precision defined in schema
          HiveDecimal.create will return a NULL value. To make the behavior consistent with Hive's behavior
-         when storing on a Parquet/ORC-backed table, we store the value as null when the decimal overflow option is set to 'ignore'.
+         when storing on a Parquet/ORC-backed table, we store the value as null when the decimal overflow option is set to 'ignore',
+         and we throw out an error when the decimal overflow option is set to 'error' or 'round'.
          For example, the integer digit count of 1234567890123456789012345678901234567890.123 is 40,
          which is greater than 38. HiveDecimal.create returns null.
 
@@ -69,7 +70,6 @@ public class DecimalUtilities {
          */
 
         // HiveDecimal.create will return a decimal value which can fit in DECIMAL(38)
-        // also there is Decimal and Decimal64 column vectors for ORC, see TypeUtils.createColumn
         HiveDecimal hiveDecimal = HiveDecimal.create(value);
         if (hiveDecimal == null) {
             if (!decimalOverflowOption.isOptionIgnore()) {
@@ -95,10 +95,14 @@ public class DecimalUtilities {
         HiveDecimal.enforcePrecisionScale has different behaviors given the integer digit count and the max integer digit count (precision - scale).
 
         (1) integer digit count > precision - scale
-        HiveDecimal.enforcePrecisionScale returns NULL. To make the behavior consistent with Hive's behavior
-        when storing on a Parquet/ORC-backed table, we store the value as null when the decimal overflow option is set to 'ignore'.
+        HiveDecimal.enforcePrecisionScale returns NULL. In previous version of PXF, writing data with ORC profile
+        did not enforce precision and scale whereas Parquet did. For backward compatibility,
+        when storing on a Parquet-backed table, we store the value as null when the decimal overflow option is set to 'ignore';
+        when storing on a ORC-backed table, we store a rounded-off value without enforcing precision and scale when the decimal overflow option is set to 'ignore';
+        when the decimal overflow option is set to 'error' or 'round', PXF will throw out an error.
         For example, the column will be stored as DECIMAL(38,18). The integer digit count of 1234567890123456789012345.12345678901234567890
         is 25 which is less than 38, but it's greater than the max integer digit count 20. A null value is returned.
+        For Parquet-backed table, we store NULL; for ORC-backed table, we store 1234567890123456789012345.1234567890123.
 
         (2) (integer digit count <= precision - scale) && (total digits of the value > precision defined in schema)
         HiveDecimal.enforcePrecisionScale will return a rounded-off value to fit in the precision and scale.
@@ -115,7 +119,8 @@ public class DecimalUtilities {
         inconsistency in the error messages in the third check.
          */
 
-        // At this point data can fit in precision 38, but still need enforcePrecisionScale to check whether it can fit in scale 18
+        // HiveDecimal.enforcePrecisionScale will return a decimal value which can fit in DECIMAL(38,18) for Parquet profile,
+        // or DECIMAL(38,10) for ORC profile
         HiveDecimal hiveDecimalEnforcedPrecisionAndScale = HiveDecimal.enforcePrecisionScale(
                 hiveDecimal,
                 precision,
@@ -135,16 +140,19 @@ public class DecimalUtilities {
                         "and have been stored as NULL. Enable TRACE log level for row-level details.", columnName, precision, scale);
                 isIntegerDigitCountOverflowWarningLogged = true;
             }
-            // if we are here, that means we are using 'ignore' option
-            // if old behavior was enforcing precision and scale, we stored the value as NULL,
-            // otherwise store the unenforced value
+            /*
+             if we are here, that means we are using 'ignore' option
+             if previous behavior was enforcing precision and scale, we stored the value as NULL,
+             otherwise store the unenforced value
+             */
             return decimalOverflowOption.wasEnforcedPrecisionAndScale() ? null : hiveDecimal;
         }
 
-        // At this point, the integer digit count must less than or equal to (precision - scale) for Parquet,
-        // or less than or equal to the precision for ORC, but the total digits may still greater than precision.
-        // Here, check whether the value has been rounded off. If the decimal overflow option is set to 'error',
-        // an exception will be thrown.
+        /*
+        At this point, the integer digit count must less than or equal to (precision - scale),
+        but the total digits may still be greater than precision.
+        Here, check whether the value has been rounded off. If the decimal overflow option is set to 'error', an exception will be thrown.
+         */
         BigDecimal accurateDecimal = new BigDecimal(value);
         if (!decimalOverflowOption.isOptionIgnore() && accurateDecimal.compareTo(hiveDecimalEnforcedPrecisionAndScale.bigDecimalValue()) != 0) {
             if (decimalOverflowOption.isOptionError()) {
@@ -161,10 +169,16 @@ public class DecimalUtilities {
                 isScaleOverflowWarningLogged = true;
             }
         }
-        // if we are here, that means we are using 'round' or 'ignore' option
-        // if the old behavior of the current profile enforced precision and scale, when scale overflow happens, the decimal part will be rounded
-        // if the old behavior of the current profile did not enforce precision and scale,
-        // when scale overflow happens, if the decimal part fails to borrow digit slots from the integer part, the decimal part will be rounded when first calling HiveDecimal.create
+        /*
+        If we are here, that means we are using 'round' or 'ignore' option.
+        If the previous behavior of the current profile enforced precision and scale, when scale overflow happens, the decimal part will be rounded
+        If the previous behavior of the current profile did not enforce precision and scale,
+        when scale overflow happens, if the decimal part can borrow digit slots from the integer part, the decimal part will not be rounded.
+        For example, the column will be stored as DECIMAL(38,18). The integer digit count of 123456789012345.1234567890123456789
+        is 15 which is less than 20, the decimal digit count is 19 which is greater than 18.
+        If precision and scale are enforced, the value should be rounded as 123456789012345.123456789012345679,
+        otherwise the decimal part can borrow 1 digit slot from the integer part, and the value will not be rounded.
+         */
         return decimalOverflowOption.wasEnforcedPrecisionAndScale() ? hiveDecimalEnforcedPrecisionAndScale : hiveDecimal;
     }
 }

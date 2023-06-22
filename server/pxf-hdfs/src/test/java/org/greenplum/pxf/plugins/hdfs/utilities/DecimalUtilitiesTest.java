@@ -103,7 +103,7 @@ public class DecimalUtilitiesTest {
     }
 
     @Test
-    public void testParseDecimalIntegerDigitCountOverflowsScaleOptionError() {
+    public void testParseDecimalOverflowsScaleOptionError() {
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR);
 
         Exception e = assertThrows(UnsupportedTypeException.class,
@@ -113,7 +113,7 @@ public class DecimalUtilitiesTest {
     }
 
     @Test
-    public void testParseDecimalIntegerDigitCountOverflowsScaleOptionRound() {
+    public void testParseDecimalOverflowsScaleOptionRound() {
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_ROUND);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
@@ -122,7 +122,7 @@ public class DecimalUtilitiesTest {
     }
 
     @Test
-    public void testParseDecimalIntegerDigitCountOverflowsScaleOptionIgnore() {
+    public void testParseDecimalOverflowsScaleOptionIgnore() {
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
@@ -131,7 +131,7 @@ public class DecimalUtilitiesTest {
     }
 
     @Test
-    public void testParseDecimalIntegerDigitCountOverflowsScaleOptionIgnoreWithoutEnforcing() {
+    public void testParseDecimalOverflowsScaleOptionIgnoreWithoutEnforcing() {
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
@@ -140,7 +140,7 @@ public class DecimalUtilitiesTest {
     }
 
     @Test
-    public void testParseDecimalIntegerDigitCountOverflowsScaleOptionIgnoreWithoutEnforcing_decimalPartFailedToBorrowDigits() {
+    public void testParseDecimalOverflowsScaleOptionIgnoreWithoutEnforcing_decimalPartFailedToBorrowDigits() {
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING);
         String decimalString = "12345678901234567890.12345678901234567890";
 

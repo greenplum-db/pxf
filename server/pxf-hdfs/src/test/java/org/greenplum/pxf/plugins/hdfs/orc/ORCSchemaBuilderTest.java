@@ -163,7 +163,6 @@ public class ORCSchemaBuilderTest {
         assertEquals("struct<col0:decimal(8,2)>", ORCSchemaBuilder.buildSchema(columnDescriptors).toString());
 
         // precision is larger than ORC max of 38
-        // we've replaced the orc's error messages with our more detailed one when failed on (precision > 38 || scale > precision)
         columnDescriptors.clear();
         columnDescriptors.add(new ColumnDescriptor("col0", DataType.NUMERIC.getOID(), 0, "", new Integer[]{55}));
         e = assertThrows(UnsupportedTypeException.class, () -> ORCSchemaBuilder.buildSchema(columnDescriptors));
