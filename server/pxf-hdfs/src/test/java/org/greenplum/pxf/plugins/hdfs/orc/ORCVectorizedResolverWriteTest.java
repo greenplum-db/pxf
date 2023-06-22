@@ -179,8 +179,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         OneRow batchWrapper = resolver.setFieldsForBatch(records);
         VectorizedRowBatch batch = (VectorizedRowBatch) batchWrapper.getData();
 
-        // this value we expect to be not set and null flag turned on
-        IS_NULL[0] = false;
+        // this value we expect to be rounded but its precision and scale will not be enforced
         assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, new HiveDecimalWritable(decimalString_exceedScale));
     }
 
@@ -202,8 +201,7 @@ public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
         OneRow batchWrapper = resolver.setFieldsForBatch(records);
         VectorizedRowBatch batch = (VectorizedRowBatch) batchWrapper.getData();
 
-        // this value we expect to be set and no null flag turned on
-        IS_NULL[0] = false;
+        // this value we expect to be rounded and its precision and scale will also be enforced
         assertDecimalColumnVectorCell(batch, 0, 14, IS_NULL, HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(decimalString_exceedScale), 38, 10));
     }
 
