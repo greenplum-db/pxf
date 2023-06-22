@@ -333,7 +333,8 @@ public class JsonResolver extends BasePlugin implements Resolver {
      */
     private String addAllFromJsonArray(JsonNode jsonNode, DataType type) throws IOException {
         StringJoiner stringJoiner = new StringJoiner(",", "{", "}");
-        for (Iterator<JsonNode> i = jsonNode.elements(); i.hasNext();) {
+        Iterator<JsonNode> i = jsonNode.elements();
+        while (i.hasNext()) {
             JsonNode element = i.next();
             switch (element.getNodeType()) {
                 case NULL:

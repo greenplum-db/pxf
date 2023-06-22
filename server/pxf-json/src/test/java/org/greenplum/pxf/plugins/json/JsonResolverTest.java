@@ -16,6 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -404,14 +405,15 @@ public class JsonResolverTest {
 
     @Test
     public void testSetFields() throws UnsupportedOperationException {
-        // TODO: provide testing logic
-        /*
         context.setMetadata(null);
+        context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
-        Exception e = assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(null));
-        assertEquals("JSON resolver does not support write operation.", e.getMessage());
-        */
+        // ensure that resolver just passes the arguments through embedded into a OneRow object
+        List<OneField> records = new ArrayList<>();
+        OneRow row = resolver.setFields(records);
+        assertNull(row.getKey());
+        assertSame(records, row.getData());
     }
 
     // helper functions for testing
