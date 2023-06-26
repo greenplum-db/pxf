@@ -4,6 +4,7 @@ import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
+import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -128,10 +129,16 @@ public class HcfsGlobbingTest extends BaseFeature {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
 
         // Create GPDB external table directed to the HDFS file
+
+        String updatedPath = protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory()) + "/" + path + "/" + glob;
+        if (FDWUtils.useFDW) {
+            updatedPath = "E'"+ updatedPath +"'";
+        }
+
         exTable = TableFactory.getPxfReadableTextTable(
                 "hcfs_glob_" + testName,
                 FIELDS,
-                protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory()) + "/" + path + "/" + glob,
+                updatedPath,
                 ",");
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
