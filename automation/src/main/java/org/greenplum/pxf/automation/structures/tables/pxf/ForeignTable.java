@@ -47,7 +47,6 @@ public class ForeignTable extends WritableExternalTable {
         // foreign tables do not have locations, parameters go into options
         // path (resource option for FDW) should always be present
         StringJoiner joiner = new StringJoiner(",", " OPTIONS (", ")");
-        // Adding Escape E here in the resource just like external table in the URI.
         appendOption(joiner,"resource ", getPath(), !getPath().startsWith("E"));
 
         String formatOption = getFormatOption();
