@@ -22,6 +22,7 @@ package org.greenplum.pxf.plugins.json;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -49,11 +50,20 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  * It supports a single JSON record per line, or a multi-line JSON records if the <b>IDENTIFIER</b> parameter is set.
  * When provided the <b>IDENTIFIER</b> indicates the member name to determine the encapsulating json object to return.
  * <p>
- * For the writing use case it will serialize tuple data received from {@link JsonResolver} into a JSON format and
- * write it to a file according to the specified "LAYOUT" external table option.
- * A layout can be either 'object' (default) or 'rows'.
+ * For the writing use case it will serialize tuple data received from {@link JsonResolver} into a JSON or JSONL format.
+ * By default, the data will be written in JSONL format, where each database tuple is written on a separate line
+ * and is represented by a Json object:
+ * <pre>
+ * {..tuple1..}
+ * {..tuple2..}
+ * </pre>
+ * The file will have the .jsonl extension to denote that it is not a valid parsable Json by itself.
+ * However, each row will be a valid Json object representing a database tuple.
  * <p>
- * For the 'object' layout, data in each file will look like:
+ * Alternatively, if the <b>ROOT</b> option is provided with a non-empty value the data will be written as a valid JSON
+ * object with the root level attribute having the name given by the option value. The value of the attribute will be
+ * an array of JSON objects, each one representing a database tuple. For example, if the option ROOT=records is provided,
+ * the data in each file will look like:
  * <pre>
  * {"records":[
  * {..tuple1..}
@@ -61,15 +71,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  * ...
  * ]}
  * </pre>
- * The file itself will be a valid parsable Json. The value of the top-level property can be customized from the default
- * value of "records" by setting an external table option "KEY".
- * <p>
- * For the 'rows' layout, data in each file will look like:
- * <pre>
- * {..tuple1..}
- * {..tuple2..}
- * </pre>
- * The file itself will not be a valid parsable Json, but each row will be a valid Json object representing a database tuple.
+ * The file will have the .json extension to denote that it is a valid parsable Json by itself.
  * <p>
  * Files will be written compressed if the "COMPRESSION_CODEC" external table option is specified.
  */
@@ -82,12 +84,8 @@ public class JsonAccessor extends LineBreakAccessor {
 
     // parameters for write use case
     private static final String JSON_FILE_EXTENSION = ".json";
-    private static final String LAYOUT_PARAM = "LAYOUT";
-    private static final String LAYOUT_OBJECT_VALUE = "object";
-    private static final String LAYOUT_ROWS_VALUE = "rows";
-
-    private static final String KEY_PARAM = "KEY";
-    private static final String KEY_DEFAULT_VALUE = "records";
+    private static final String JSONL_FILE_EXTENSION = ".jsonl";
+    private static final String ROOT_PARAM = "ROOT";
 
     private static final JsonFactory jsonFactory = new JsonFactory();
     private static final String NEWLINE = "\n"; //TODO: this can be made configurable
@@ -105,14 +103,9 @@ public class JsonAccessor extends LineBreakAccessor {
     private int maxRecordLength = Integer.MAX_VALUE;
 
     /**
-     * whether the file to be written needs to be a fully-compliant parsable Json object rather than a set of Json rows
+     * for an object layout the name of the root element that will have a tuple array as the value
      */
-    private boolean isObjectLayout;
-
-    /**
-     * for an object layout the name of the property that will have a tuple array as the value
-     */
-    private String keyName;
+    private String rootName;
     private JsonGenerator jsonGenerator;
     private ColumnDescriptor[] columnDescriptors;
     private boolean isFirstRecord;
@@ -142,10 +135,10 @@ public class JsonAccessor extends LineBreakAccessor {
                 maxRecordLength = Integer.valueOf(context.getOption(RECORD_MAX_LENGTH_PARAM));
             }
         }
-        // store file layout and root element property name (for object layout)
-        isObjectLayout = isFileLayoutEqualToObject();
-        if (isObjectLayout) {
-            keyName = context.getOption(KEY_PARAM, KEY_DEFAULT_VALUE);
+        // store the root element name, if any (for object layout)
+        rootName = context.getOption(ROOT_PARAM);
+        if (rootName != null && StringUtils.isBlank(rootName)) {
+            throw new PxfRuntimeException("Option ROOT can not have an empty value");
         }
         validateUTF8Encoding();
         columnDescriptors = context.getTupleDescription().toArray(new ColumnDescriptor[0]);
@@ -154,7 +147,8 @@ public class JsonAccessor extends LineBreakAccessor {
 
     @Override
     protected String getFileExtension() {
-        return JSON_FILE_EXTENSION;
+        // use json if a root element is requested, jsonl otherwise
+        return (rootName != null) ? JSON_FILE_EXTENSION : JSONL_FILE_EXTENSION;
     }
 
     @Override
@@ -188,9 +182,9 @@ public class JsonAccessor extends LineBreakAccessor {
         jsonGenerator.setRootValueSeparator(null); // do not separate top level objects, we will add NEWLINE ourselves
 
         // write the file header, if object layout is requested
-        if (isObjectLayout) {
+        if (rootName != null) {
             jsonGenerator.writeStartObject();
-            jsonGenerator.writeFieldName(keyName);
+            jsonGenerator.writeFieldName(rootName);
             jsonGenerator.writeStartArray();
         }
         return true;
@@ -218,7 +212,7 @@ public class JsonAccessor extends LineBreakAccessor {
                             record.size(), columnDescriptors.length));
         }
         // start each object on a new line - in object layout for all lines and in non-object for all but the first
-        if (isObjectLayout || !isFirstRecord) {
+        if (rootName != null || !isFirstRecord) {
             jsonGenerator.writeRaw(NEWLINE);
         }
         // no matter what the layout is we need to write an object out
@@ -244,7 +238,7 @@ public class JsonAccessor extends LineBreakAccessor {
         boolean caughtException = false;
         try {
             // write the file footer, if object layout is requested
-            if (isObjectLayout) {
+            if (rootName != null) {
                 jsonGenerator.writeRaw(NEWLINE);
                 jsonGenerator.writeEndArray();
                 jsonGenerator.writeEndObject();
@@ -271,20 +265,6 @@ public class JsonAccessor extends LineBreakAccessor {
                 }
             }
         }
-    }
-
-    /**
-     * Determines if the file layout is object layout by parsing request context LAYOUT option and validating its value.
-     * Throws an exception if the option value is not either 'object' or 'rows'.
-     * @return true if the object layout is object one, false otherwise
-     */
-    private boolean isFileLayoutEqualToObject() {
-        String layout = context.getOption(LAYOUT_PARAM, LAYOUT_OBJECT_VALUE);
-        if (!layout.equalsIgnoreCase(LAYOUT_OBJECT_VALUE) && !layout.equalsIgnoreCase(LAYOUT_ROWS_VALUE)) {
-            throw new PxfRuntimeException(String.format(
-                    "Invalid value '%s' for option 'LAYOUT', allowed values are 'object' and 'rows'", layout));
-        }
-        return layout.equalsIgnoreCase(LAYOUT_OBJECT_VALUE);
     }
 
     /**

@@ -73,8 +73,16 @@ public class JsonWriteTest extends BaseWritableFeature {
         assertTrue(filename.endsWith(".json"), "file " + filename + " does not end with .json");
     };
 
+    private static final Consumer<String> JSONL_EXTENSION_ASSERTER = (filename) -> {
+        assertTrue(filename.endsWith(".jsonl"), "file " + filename + " does not end with .jsonl");
+    };
+
     private static final Consumer<String> JSON_GZ_EXTENSION_ASSERTER = (filename) -> {
         assertTrue(filename.endsWith(".json.gz"), "file " + filename + " does not end with .json.gz");
+    };
+
+    private static final Consumer<String> JSONL_GZ_EXTENSION_ASSERTER = (filename) -> {
+        assertTrue(filename.endsWith(".jsonl.gz"), "file " + filename + " does not end with .jsonl.gz");
     };
 
     private String resourcePath;
@@ -103,27 +111,27 @@ public class JsonWriteTest extends BaseWritableFeature {
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
-    public void writePrimitiveTypesObject() throws Exception {
-        runScenario(PRIMITIVE_TYPES + "_object", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
-                null, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
-    }
-
-    @Test(groups = {"gpdb", "security", "hcfs"})
-    public void writePrimitiveTypesObjectWithCustomKey() throws Exception {
-        runScenario(PRIMITIVE_TYPES + "_object_key", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
-                new String[]{"KEY=tuples"}, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
-    }
-
-    @Test(groups = {"gpdb", "security", "hcfs"})
     public void writePrimitiveTypesRows() throws Exception {
         runScenario(PRIMITIVE_TYPES + "_rows", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
-                new String[]{"LAYOUT=rows"}, null, JSON_EXTENSION_ASSERTER);
+                null, null, JSONL_EXTENSION_ASSERTER);
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
-    public void writePrimitiveTypesCompressed() throws Exception {
-        runScenario(PRIMITIVE_TYPES + "_compressed", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
-                new String[]{"COMPRESSION_CODEC=gzip"}, new String[]{"IDENTIFIER=id"}, JSON_GZ_EXTENSION_ASSERTER);
+    public void writePrimitiveTypesObject() throws Exception {
+        runScenario(PRIMITIVE_TYPES + "_object", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
+                new String[]{"ROOT=records"}, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
+    }
+
+    @Test(groups = {"gpdb", "security", "hcfs"})
+    public void writePrimitiveTypesRowsCompressed() throws Exception {
+        runScenario(PRIMITIVE_TYPES + "_rows_compressed", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
+                new String[]{"COMPRESSION_CODEC=gzip"}, new String[]{"IDENTIFIER=id"}, JSONL_GZ_EXTENSION_ASSERTER);
+    }
+
+    @Test(groups = {"gpdb", "security", "hcfs"})
+    public void writePrimitiveTypesObjectCompressed() throws Exception {
+        runScenario(PRIMITIVE_TYPES + "_object_compressed", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
+                new String[]{"ROOT=records","COMPRESSION_CODEC=gzip"}, new String[]{"IDENTIFIER=id"}, JSONL_GZ_EXTENSION_ASSERTER);
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
@@ -135,13 +143,19 @@ public class JsonWriteTest extends BaseWritableFeature {
                 .add("(4, 'col space 4', 't\"\"\"b\\\\\\{},:[]', 't\"\"\"b\\\\\\{},:[]', 't\"\"\"b\\\\\\{},:[]')") // triple sequence
                 .toString();
         runScenario(PRIMITIVE_TYPES + "_escaping", ESCAPING_PRIMITIVE_TYPES_FIELDS, escapingData,
-                null, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
+                null, null, JSONL_EXTENSION_ASSERTER);
+    }
+
+    @Test(groups = {"gpdb", "security", "hcfs"})
+    public void writeArrayTypesRows() throws Exception {
+        runScenario(ARRAY_TYPES + "_rows", ARRAY_TYPES_FIELDS, gpdbArrayTypesTable,
+                null, null, JSONL_EXTENSION_ASSERTER);
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
     public void writeArrayTypesObject() throws Exception {
         runScenario(ARRAY_TYPES + "_object", ARRAY_TYPES_FIELDS, gpdbArrayTypesTable,
-                null, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
+                new String[]{"ROOT=records"}, new String[]{"IDENTIFIER=id"}, JSON_EXTENSION_ASSERTER);
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
@@ -159,15 +173,15 @@ public class JsonWriteTest extends BaseWritableFeature {
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
-    public void errorInvalidLayout() throws Exception {
+    public void errorEmptyRoot() throws Exception {
         // 1. prepare writable external table ready to receive data for writing from internal table
         writableExTable = TableFactory.getPxfHcfsWritableTable(
-                "pxf_invalid_layout_json_write", PRIMITIVE_TYPES_FIELDS, hdfsWritePath + "invalid_layout", hdfs.getBasePath(), "json");
-        writableExTable.setUserParameters(new String[]{"LAYOUT=foo"});
+                "pxf_empty_root_json_write", PRIMITIVE_TYPES_FIELDS, hdfsWritePath + "empty_root", hdfs.getBasePath(), "json");
+        writableExTable.setUserParameters(new String[]{"ROOT= "});
         createTable(writableExTable);
 
         // 2. run the Tinc test that inserts data as CTAS, which should fail and verifies the error message
-        runTincTest("pxf.features.hdfs.writable.json.invalid_layout.runTest");
+        runTincTest("pxf.features.hdfs.writable.json.empty_root.runTest");
     }
 
     /**
