@@ -128,21 +128,13 @@ public class JsonAccessor extends LineBreakAccessor {
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
-        if (!isEmpty(context.getOption(IDENTIFIER_PARAM))) {
-            identifier = context.getOption(IDENTIFIER_PARAM);
-            // If the member identifier is set then check if a record max length is defined as well.
-            if (!isEmpty(context.getOption(RECORD_MAX_LENGTH_PARAM))) {
-                maxRecordLength = Integer.valueOf(context.getOption(RECORD_MAX_LENGTH_PARAM));
-            }
-        }
-        // store the root element name, if any (for object layout)
-        rootName = context.getOption(ROOT_PARAM);
-        if (rootName != null && StringUtils.isBlank(rootName)) {
-            throw new PxfRuntimeException("Option ROOT can not have an empty value");
-        }
-        validateUTF8Encoding();
         columnDescriptors = context.getTupleDescription().toArray(new ColumnDescriptor[0]);
-        isFirstRecord = true;
+        // set the internal properties appropriate for either read or write use case
+        if (context.getRequestType() == RequestContext.RequestType.READ_BRIDGE) {
+            initReadProperties();
+        } else {
+            initWriteProperties();
+        }
     }
 
     @Override
@@ -268,6 +260,32 @@ public class JsonAccessor extends LineBreakAccessor {
     }
 
     /**
+     * Initialize the internal properties for the read use case.
+     */
+    private void initReadProperties() {
+        if (!isEmpty(context.getOption(IDENTIFIER_PARAM))) {
+            identifier = context.getOption(IDENTIFIER_PARAM);
+            // If the member identifier is set then check if a record max length is defined as well.
+            if (!isEmpty(context.getOption(RECORD_MAX_LENGTH_PARAM))) {
+                maxRecordLength = Integer.valueOf(context.getOption(RECORD_MAX_LENGTH_PARAM));
+            }
+        }
+    }
+
+    /**
+     * Initialize the internal properties for the write use case.
+     */
+    private void initWriteProperties() {
+        // store the root element name, if any (for object layout)
+        rootName = context.getOption(ROOT_PARAM);
+        if (rootName != null && StringUtils.isBlank(rootName)) {
+            throw new PxfRuntimeException("Option ROOT can not have an empty value");
+        }
+        validateUTF8Encoding();
+        isFirstRecord = true;
+    }
+
+    /**
      * Validates that the data being written will be in UTF8 encoding. Checks for data encoding first and if it is
      * not specified, checks for the database encoding to make sure the effective encoding will be UTF8. Throws
      * a PxfRuntimeException if the effective encoding is not UTF8.
@@ -279,7 +297,7 @@ public class JsonAccessor extends LineBreakAccessor {
         if (context.getRequestType().equals(RequestContext.RequestType.WRITE_BRIDGE)) {
             Charset encoding = context.getDataEncoding();
             encoding = (encoding != null) ? encoding : context.getDatabaseEncoding();
-            if (!encoding.equals(StandardCharsets.UTF_8)) {
+            if (encoding == null || !encoding.equals(StandardCharsets.UTF_8)) {
                 throw new PxfRuntimeException(
                         String.format("Effective data encoding %s is not UTF8 and is not supported.", encoding),
                         "Make sure either the database is in UTF8 or the table is defined with ENCODING 'UTF8' option.");

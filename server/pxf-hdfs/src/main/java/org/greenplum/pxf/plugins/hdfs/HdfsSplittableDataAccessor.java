@@ -31,6 +31,7 @@ import org.apache.hadoop.util.StringUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -67,8 +68,10 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(context);
 
-        // Parse fileSplit from context
-        fileSplit = HdfsUtilities.parseFileSplit(context.getDataSource(), context.getFragmentMetadata());
+        // Parse fileSplit from context for reading only
+        if (context.getRequestType() == RequestContext.RequestType.READ_BRIDGE) {
+            fileSplit = HdfsUtilities.parseFileSplit(context.getDataSource(), context.getFragmentMetadata());
+        }
     }
 
     /**

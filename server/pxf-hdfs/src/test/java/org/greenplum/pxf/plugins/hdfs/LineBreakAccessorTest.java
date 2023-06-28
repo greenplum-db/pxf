@@ -29,6 +29,7 @@ public class LineBreakAccessorTest {
         context.setConfig("default");
         context.setProfileScheme("localfile");
         context.setUser("test-user");
+        context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.setConfiguration(new Configuration());
     }
 

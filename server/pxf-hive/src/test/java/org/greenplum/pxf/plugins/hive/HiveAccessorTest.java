@@ -74,6 +74,7 @@ class HiveAccessorTest {
         context.setConfig("default");
         context.setUser("test-user");
         context.setDataSource(path);
+        context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.setConfiguration(configuration);
 
         columnDescriptors = new ArrayList<>();

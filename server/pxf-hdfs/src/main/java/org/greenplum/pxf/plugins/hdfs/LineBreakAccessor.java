@@ -32,6 +32,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.DataOutputStream;
@@ -73,6 +74,10 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
+        if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
+            return; // early return for write use case
+        }
+        // setup properties for read use case
         if (inputFormat != null) {
             ((TextInputFormat) inputFormat).configure(jobConf);
         }
