@@ -2,12 +2,12 @@
 title: Service Listen Address, Host, and Port
 ---
 
-By default, the PXF Service starts on a Greenplum host and listens on `0.0.0.0:5888`. With this configuration, the PXF Service listens on all network interfaces of the Greenplum host and accepts network requests from anywhere. You can configure PXF to listen on a different local address. You can also configure PXF to listen on a different port number, or to run on a different host. To change the default configuration, you set one or more of the properties identified below:
+In the default deployment topology, the PXF Service starts on a Greenplum host and listens on `0.0.0.0:5888`. With this configuration, the PXF Service listens on all network interfaces of the Greenplum host and accepts network requests from anywhere. You can configure PXF to listen on a different local address. You can also configure PXF to listen on a different port number, or to run on a different host. To change the default configuration, you set one or more of the properties identified below:
 
 |   Property |  Type | Description      | Default |
 |-------------------------|-------------------|-----|
 |   server.address  | `pxf-application.properties` property | The PXF server listen address. | `0.0.0.0`  |
-|   PXF_HOST  | Environment variable | The host name or IP address on which the PXF server is running. | `localhost`  |
+|   PXF_HOST  | Environment variable | The name or IP address of the (non-Greenpum) host on which the PXF Service is running. | `localhost`  |
 |   PXF_PORT  | Environment variable | The port number on which the PXF server listens for requests on the host. | `5888`  |
 
 
@@ -91,9 +91,11 @@ Perform the following procedure to configure the port number of the PXF server o
 
 ## <a id="host"></a>Configuring the Host
 
-<div class="note"><b>Note:</b> You must restart Greenplum Database when you configure the host in this manner. Consider performing this configuration during a scheduled down time.</div>
+If you have chosen the [alternate deployment topology](deployment_topos.html#alt_topo) for PXF, you must set the `PXF_HOST` environment variable on each Greenplum segment host to inform Greenplum of the location of the PXF service.
 
-Perform the following procedure to configure the PXF server host on one or more Greenplum Database hosts:
+Perform the following procedure to configure the PXF host on each Greenplum Database segmet host:
+
+<div class="note"><b>Note:</b> You must restart Greenplum Database when you configure the host in this manner. Consider performing this configuration during a scheduled down time.</div>
 
 1. Log in to your Greenplum Database master host:
 
@@ -101,10 +103,10 @@ Perform the following procedure to configure the PXF server host on one or more 
     $ ssh gpadmin@<gpmaster>
     ```
 
-2. For each Greenplum Database host:
+2. For each Greenplum Database segment host:
 
     1. Identify the host name or IP address of a PXF Server.
-    3. Log in to the Greenplum Database host:
+    3. Log in to the Greenplum Database segment host:
 
         ``` shell
         $ ssh gpadmin@<seghost>
