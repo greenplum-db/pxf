@@ -131,7 +131,7 @@ public class JsonWriteTest extends BaseWritableFeature {
     @Test(groups = {"gpdb", "security", "hcfs"})
     public void writePrimitiveTypesObjectCompressed() throws Exception {
         runScenario(PRIMITIVE_TYPES + "_object_compressed", PRIMITIVE_TYPES_FIELDS, gpdbPrimitiveTypesTable,
-                new String[]{"ROOT=records","COMPRESSION_CODEC=gzip"}, new String[]{"IDENTIFIER=id"}, JSONL_GZ_EXTENSION_ASSERTER);
+                new String[]{"ROOT=records","COMPRESSION_CODEC=gzip"}, new String[]{"IDENTIFIER=id"}, JSON_GZ_EXTENSION_ASSERTER);
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
@@ -221,8 +221,8 @@ public class JsonWriteTest extends BaseWritableFeature {
         if (ProtocolUtils.getProtocol() != ProtocolEnum.HDFS) {
             // for HCFS on Cloud, wait a bit for async write in previous steps to finish
             sleep(10000);
-            hdfs.list(hdfsWritePath + scenario).forEach(filenameAsserter);
         }
+        hdfs.list(hdfsWritePath + scenario).forEach(filenameAsserter);
 
         // 4. prepare readable external table ready to read data written by the writable external table
         readableExTable = TableFactory.getPxfHcfsReadableTable(

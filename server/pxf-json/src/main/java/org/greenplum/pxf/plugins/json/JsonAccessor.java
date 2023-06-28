@@ -60,10 +60,10 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  * The file will have the .jsonl extension to denote that it is not a valid parsable Json by itself.
  * However, each row will be a valid Json object representing a database tuple.
  * <p>
- * Alternatively, if the <b>ROOT</b> option is provided with a non-empty value the data will be written as a valid JSON
- * object with the root level attribute having the name given by the option value. The value of the attribute will be
- * an array of JSON objects, each one representing a database tuple. For example, if the option ROOT=records is provided,
- * the data in each file will look like:
+ * Alternatively, if the <b>ROOT</b> option is provided with a non-empty value in the LOCATION URI the data will be
+ * written as a valid JSON object with the root level attribute having the name given by the option value.
+ * The value of the attribute will be an array of JSON objects, each one representing a database tuple.
+ * For example, if the option ROOT=records is provided, the data in each file will look like:
  * <pre>
  * {"records":[
  * {..tuple1..}
