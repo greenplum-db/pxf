@@ -1,6 +1,10 @@
 package org.greenplum.pxf.plugins.json;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
@@ -15,14 +19,26 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class JsonAccessorWriteTest {
@@ -32,7 +48,6 @@ public class JsonAccessorWriteTest {
     private JsonAccessor accessor;
     private RequestContext context;
     private Configuration configuration;
-
     private List<ColumnDescriptor> columnDescriptors;
 
     @BeforeEach
@@ -51,7 +66,7 @@ public class JsonAccessorWriteTest {
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.setTupleDescription(columnDescriptors);
 
-        accessor = new JsonAccessor(new JsonUtilities());
+        accessor = new JsonAccessor(new JsonUtilities(), new JsonFactory());
         accessor.setRequestContext(context);
     }
 
@@ -82,34 +97,56 @@ public class JsonAccessorWriteTest {
 
     @Test
     public void testWriteRowsOneRecord() throws IOException {
-        runScenario("test-write-rows-one", new String[]{"blue"}, null);
+        runScenario("test-write-rows-one", new String[]{"blue"}, null, false);
     }
 
     @Test
     public void testWriteObjectOneRecord() throws IOException {
-        runScenario("test-write-object-one", new String[]{"blue"}, "records");
+        runScenario("test-write-object-one", new String[]{"blue"}, "records", false);
     }
 
     @Test
     public void testWriteRowsThreeRecords() throws IOException {
-        runScenario("test-write-rows-three", new String[]{"red","yellow","green"}, null);
+        runScenario("test-write-rows-three", new String[]{"red","yellow","green"}, null, false);
     }
 
     @Test
     public void testWriteObjectThreeRecords() throws IOException {
-        runScenario("test-write-object-three", new String[]{"red","yellow","green"}, "records");
+        runScenario("test-write-object-three", new String[]{"red","yellow","green"}, "records", false);
+    }
+
+    @Test
+    public void testWriteRowsThreeRecordsCompressed() throws IOException {
+        runScenario("test-write-rows-three", new String[]{"red","yellow","green"}, null, true);
+    }
+
+    @Test
+    public void testWriteObjectThreeRecordsCompressed() throws IOException {
+        runScenario("test-write-object-three", new String[]{"red","yellow","green"}, "records", true);
+    }
+
+    @Test
+    public void testExceptionOnCloseNoErrorFromFinally() throws IOException {
+        runErrorOnCloseScenario(false);
+    }
+    @Test
+    public void testExceptionOnCloseSuppressErrorFromFinally() throws IOException {
+        runErrorOnCloseScenario(true);
     }
 
     /**
-     * Runs test scenario, simulating a write bridge initiating the accessor, opening iterations, writing records
+     * Runs a test scenario, simulating a write bridge initiating the accessor, opening iterations, writing records
      * and closing the iterations. Compares contents of the written files with the expected values.
-     * @param fileName name of the file / scenario
-     * @param values values for the string field, one value per row
-     * @param root value for the root element, null if no object layout is needed
+     *
+     * @param fileName       name of the file / scenario
+     * @param values         values for the string field, one value per row
+     * @param root           value for the root element, null if no object layout is needed
+     * @param useCompression whether to use compression when writing the data
      * @throws IOException
      */
-    private void runScenario(String fileName, String[] values, String root) throws IOException {
+    private void runScenario(String fileName, String[] values, String root, boolean useCompression) throws IOException {
         String path = temp.getAbsolutePath() + "/json/" + fileName;
+        path += useCompression ? "-comp" : "";
 
         // -- prepare table schema and sample data, will use a simple schema as we are testing layout, not data types
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, null, null));
@@ -129,6 +166,9 @@ public class JsonAccessorWriteTest {
         if (root != null) {
             context.addOption("ROOT", root);
         }
+        if (useCompression) {
+            context.addOption("COMPRESSION_CODEC", "gzip");
+        }
         accessor.setRequestContext(context);
         accessor.afterPropertiesSet();
 
@@ -141,10 +181,50 @@ public class JsonAccessorWriteTest {
 
         // -- validate a file has been written and is the same as expected one
         String extension = (root == null) ? ".jsonl" : ".json";
-        File writtenFile = new File(path + "/XID-XYZ-123456_4" + extension);
+        String writtenExtension = extension + (useCompression ? ".gz" : "");
+        File writtenFile = new File(path + "/XID-XYZ-123456_4" + writtenExtension);
         assertTrue(writtenFile.exists());
         File expectedFile = new File(getClass().getClassLoader().getResource(fileName + extension).getPath());
-        assertTrue(FileUtils.contentEqualsIgnoreEOL(expectedFile, writtenFile, "UTF-8"));
+        if (useCompression) {
+            // file contents are not equal as written, but should be equal once the written file is uncompressed
+            assertFalse(FileUtils.contentEqualsIgnoreEOL(expectedFile, writtenFile, "UTF-8"));
+            try (Reader expectedInput = new InputStreamReader(new FileInputStream(expectedFile), StandardCharsets.UTF_8);
+                 Reader writtenInput  = new InputStreamReader(new GZIPInputStream(new FileInputStream(writtenFile)), StandardCharsets.UTF_8)) {
+                assertTrue(IOUtils.contentEqualsIgnoreEOL(expectedInput, writtenInput));
+            }
+        } else {
+            assertTrue(FileUtils.contentEqualsIgnoreEOL(expectedFile, writtenFile, "UTF-8"));
+        }
     }
 
+    /**
+     * Runs a test scenario where closeForWrite() fails when generator is closed and optionally the logic in finally branch
+     * also fails. Tests whether the original exception is propagated to the caller and an optional exception from the finally
+     * branch is suppressed.
+     *
+     * @param failOnGeneratorClose whether to mock failure when generator is closed in the finally branch
+     * @throws IOException
+     */
+    private void runErrorOnCloseScenario(boolean failOnGeneratorClose) throws IOException {
+        JsonFactory mockJsonFactory = mock(JsonFactory.class);
+        JsonGenerator mockJsonGenerator = mock(JsonGenerator.class);
+        when(mockJsonFactory.createGenerator(any(OutputStream.class), eq(JsonEncoding.UTF8))).thenReturn(mockJsonGenerator);
+
+        IOException expectedException = new IOException("flush failed");
+        doThrow(expectedException).when(mockJsonGenerator).flush();
+        IOException suppressedException = new IOException("close failed");
+        if (failOnGeneratorClose) {
+            doThrow(suppressedException).when(mockJsonGenerator).close();
+        }
+
+        context.setDatabaseEncoding(StandardCharsets.UTF_8);
+        context.setDataSource(temp.getAbsolutePath() + "/json/testExceptionOnCloseErrorFromFinally" + failOnGeneratorClose);
+        accessor = new JsonAccessor(new JsonUtilities(), mockJsonFactory);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForWrite(); // to init the generator
+
+        IOException e = assertThrows(IOException.class, () -> accessor.closeForWrite());
+        assertSame(expectedException, e);
+    }
 }

@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
+import com.fasterxml.jackson.core.JsonFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -480,7 +481,7 @@ public class JsonExtensionTest {
     private Accessor getReadAccessor(RequestContext data)  {
         JsonUtilities jsonUtilities = new JsonUtilities();
         jsonUtilities.setPgUtilities(new PgUtilities());
-        JsonAccessor jsonAccessor = new JsonAccessor(jsonUtilities);
+        JsonAccessor jsonAccessor = new JsonAccessor(jsonUtilities, new JsonFactory());
         data.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         jsonAccessor.setRequestContext(data);
         jsonAccessor.afterPropertiesSet();

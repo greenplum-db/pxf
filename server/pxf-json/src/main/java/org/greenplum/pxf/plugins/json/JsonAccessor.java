@@ -77,17 +77,16 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  */
 public class JsonAccessor extends LineBreakAccessor {
 
-    // parameters for read use case
+    // --- parameters for read use case
     public static final String IDENTIFIER_PARAM = "IDENTIFIER";
     public static final String RECORD_MAX_LENGTH_PARAM = "MAXLENGTH";
-    private static final String UNSUPPORTED_ERR_MESSAGE = "JSON accessor does not support write operation.";
 
-    // parameters for write use case
+    // --- parameters for write use case
     private static final String JSON_FILE_EXTENSION = ".json";
     private static final String JSONL_FILE_EXTENSION = ".jsonl";
     private static final String ROOT_PARAM = "ROOT";
 
-    private static final JsonFactory jsonFactory = new JsonFactory();
+    private static final JsonFactory COMMON_JSON_FACTORY = new JsonFactory();
     private static final String NEWLINE = "\n"; //TODO: this can be made configurable
 
     /**
@@ -106,6 +105,7 @@ public class JsonAccessor extends LineBreakAccessor {
      * for an object layout the name of the root element that will have a tuple array as the value
      */
     private String rootName;
+    private JsonFactory jsonFactory;
     private JsonGenerator jsonGenerator;
     private ColumnDescriptor[] columnDescriptors;
     private boolean isFirstRecord;
@@ -116,13 +116,14 @@ public class JsonAccessor extends LineBreakAccessor {
      * Constructs a new instance of the JsonAccessor
      */
     public JsonAccessor() {
-        this(SpringContext.getBean(JsonUtilities.class));
+        this(SpringContext.getBean(JsonUtilities.class), COMMON_JSON_FACTORY);
     }
 
-    JsonAccessor(JsonUtilities jsonUtilities) {
+    JsonAccessor(JsonUtilities jsonUtilities, JsonFactory jsonFactory) {
         // we do not use InputFormat for reading, set it to null.
         super(null);
         this.jsonUtilities = jsonUtilities;
+        this.jsonFactory = jsonFactory;
     }
 
     @Override
@@ -237,7 +238,7 @@ public class JsonAccessor extends LineBreakAccessor {
             }
             jsonGenerator.flush();
             super.closeForWrite(); // to flush / close the output stream
-        } catch (IOException e) {
+        } catch (Exception e) {
             // remember that the exception was caught and rethrow it to propagate upwards
             caughtException = true;
             throw e;
@@ -245,7 +246,7 @@ public class JsonAccessor extends LineBreakAccessor {
             if (jsonGenerator != null) {
                 try {
                     jsonGenerator.close();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     // generator close failed, but if there was a more important exception caught before, suppress this one
                     if (caughtException) {
                         // suppress the new exception, just log its message and let the original one propagate
