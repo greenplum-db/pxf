@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 /**
  * DecimalUtilities is used for parsing decimal values for PXF Parquet profile and PXF ORC profile.
  * Parsing behaviors are depending on the decimal overflow option values.
- * Warning logs for different types of overflows will be logged only once if overflows happen.
+ * Warning logs for different types of overflow will be logged only once if overflow happens.
  */
 public class DecimalUtilities {
     private static final Logger LOG = LoggerFactory.getLogger(DecimalUtilities.class);
@@ -21,9 +21,7 @@ public class DecimalUtilities {
     private boolean isScaleOverflowWarningLogged;
 
     /**
-     * Construct a DecimalUtilities object with a DecimalOverflowOption object
-     *
-     * @param decimalOverflowOption is parsed by DecimalOverflowOption.parseDecimalOverflowOption
+     * Construct a {@link DecimalUtilities} object with a {@link DecimalOverflowOption} object
      */
     public DecimalUtilities(DecimalOverflowOption decimalOverflowOption) {
         this.decimalOverflowOption = decimalOverflowOption;
@@ -90,13 +88,13 @@ public class DecimalUtilities {
         }
 
         /*
-        At this point, the integer digit count must less than or equal to the precision, but the total digits may still
+        At this point, the integer digit count must be less than or equal to the precision, but the total digits may still
         be greater than the precision value.
         HiveDecimal.enforcePrecisionScale has different behaviors given the integer digit count and the max integer digit count (precision - scale).
 
         (1) integer digit count > precision - scale
         HiveDecimal.enforcePrecisionScale returns NULL. In previous version of PXF, writing data with ORC profile
-        did not enforce precision and scale whereas Parquet did. For backward compatibility,
+        did not enforce precision and scale whereas the PXF Parquet profile did. For backward compatibility,
         when storing on a Parquet-backed table, we store the value as null when the decimal overflow option is set to 'ignore';
         when storing on a ORC-backed table, we store a rounded-off value without enforcing precision and scale when the decimal overflow option is set to 'ignore';
         when the decimal overflow option is set to 'error' or 'round', PXF will throw out an error.
@@ -149,7 +147,7 @@ public class DecimalUtilities {
         }
 
         /*
-        At this point, the integer digit count must less than or equal to (precision - scale),
+        At this point, the integer digit count must be less than or equal to (precision - scale),
         but the total digits may still be greater than precision.
         Here, check whether the value has been rounded off. If the decimal overflow option is set to 'error', an exception will be thrown.
          */

@@ -4,10 +4,23 @@ import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 
 /**
- * Supported decimal overflow options for ORC and Parquet profiles.
- * Since the old decimal parsing logic for PXF ORC profile didn't enforce precision and scale, whereas PXF Parquet profile did,
- * 'wasEnforcedPrecisionAndScale' is used to differentiate ORC profile and Parquet profile's old behaviors,
- * and return the value getting from the old logic when decimal option is set as 'ignore'
+ * There are 3 different types of overflow that PXF needs to handle when the column is defined as NUMERIC
+ * without precision and scale provided. Decimal overflows on NUMERIC(precision,scale) have already been handled by GPDB.
+ *    Case 1:
+ *        Integer digit count > precision
+ *    Case 2:
+ *        precision >= Integer digit count > precision - scale
+ *    Case 3:
+ *        (Integer digit count <= precision - scale) && (decimal part > scale)
+ *
+ * Previous decimal parsing logic enforced precision and scale only for the PXF Parquet profile and not for the PXF ORC profile.
+ * PXF now enforces precision and scale for both profiles.
+ *
+ * To maintain backwards compatibility, if the decimal overflow option is set to 'ignore',
+ * PXF uses `wasEnforcedPrecisionAndScale` to determine the decimal overflow behavior.
+ * Previous decimal parsing logic for Parquet profile and ORC profile are:
+ *    For the Parquet profile, PXF returns NULL for cases 1 and 2. PXF returns the rounded value for case 3.
+ *    For the ORC profile, PXF returns NULL for case 1 and the rounded value for case 2 and 3.
  */
 public enum DecimalOverflowOption {
     DECIMAL_OVERFLOW_ERROR("error", true),
@@ -22,14 +35,15 @@ public enum DecimalOverflowOption {
     private static final String PXF_WRITE_DECIMAL_OVERFLOW_OPTION_ROUND = "round";
     private static final String PXF_WRITE_DECIMAL_OVERFLOW_OPTION_IGNORE = "ignore";
     private final String decimalOverflowOption;
+    // this boolean is used when the overflow option is set to ignore and is meant to help with backwards compatibility
     private final boolean wasEnforcedPrecisionAndScale;
 
     /**
      * Construct an enum object containing a decimal overflow configuration value
-     * and a boolean value about whether the current profile was parsing a decimal value with precision and scale enforced in its old behavior
-     *
-     * @param decimalOverflowValue        is one of the supported the decimal overflow configuration value. Supported values are 'error', 'round' and 'ignore'.
-     * @param wasEnforcedPrecisionAndScale tells whether the old decimal parsing behavior of the current profile enforced precision and scale
+     * and a profile-dependent boolean value. This boolean captures if the current profile was previously enforcing
+     * precision and scale when parsing decimal values. It is used to help maintain backwards compatibility.
+     * @param decimalOverflowValue        the decimal overflow configuration value for the profile. Supported values are 'error', 'round' and 'ignore'.
+     * @param wasEnforcedPrecisionAndScale true if the previous decimal parsing behavior of the current profile enforced precision and scale
      */
     DecimalOverflowOption(String decimalOverflowValue, boolean wasEnforcedPrecisionAndScale) {
         this.decimalOverflowOption = decimalOverflowValue;
@@ -40,8 +54,8 @@ public enum DecimalOverflowOption {
      * Parse the configuration value of the configurationPropertyName defined in 'pxf-site.xml' into a DecimalOverflowOption enum object
      *
      * @param configuration               contains all the configuration properties of the current server
-     * @param configurationPropertyName   is the decimal overflow configuration property going to be parsed
-     * @param wasEnforcedPrecisionAndScale tells whether the old decimal parsing behavior of the current profile enforced precision and scale
+     * @param configurationPropertyName   name of decimal overflow configuration property to be parsed
+     * @param wasEnforcedPrecisionAndScale true if the previous decimal parsing behavior of the current profile enforced precision and scale
      * @return a DecimalOverflowOption enum object
      */
     public static DecimalOverflowOption parseDecimalOverflowOption(Configuration configuration, String configurationPropertyName, boolean wasEnforcedPrecisionAndScale) {
@@ -70,28 +84,28 @@ public enum DecimalOverflowOption {
     }
 
     /**
-     * @return whether the current profile enforced precision and scale in its old behavior
+     * @return true if the current profile enforced precision and scale in previous decimal parsing behavior
      */
     public boolean wasEnforcedPrecisionAndScale() {
         return wasEnforcedPrecisionAndScale;
     }
 
     /**
-     * @return whether the current option is the 'error' option
+     * @return true if the current option is the 'error' option
      */
     public boolean isOptionError() {
         return decimalOverflowOption.equals(DECIMAL_OVERFLOW_ERROR.getDecimalOverflowOption());
     }
 
     /**
-     * @return whether the current option is the 'round' option
+     * @return true if the current option is the 'round' option
      */
     public boolean isOptionRound() {
         return decimalOverflowOption.equals(DECIMAL_OVERFLOW_ROUND.getDecimalOverflowOption());
     }
 
     /**
-     * @return whether the current option is the 'ignore' option
+     * @return true if the current option is the 'ignore' option
      */
     public boolean isOptionIgnore() {
         return decimalOverflowOption.equals(DECIMAL_OVERFLOW_IGNORE.getDecimalOverflowOption())

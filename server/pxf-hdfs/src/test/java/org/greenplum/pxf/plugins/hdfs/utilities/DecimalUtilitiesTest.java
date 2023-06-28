@@ -142,9 +142,12 @@ public class DecimalUtilitiesTest {
     @Test
     public void testParseDecimalOverflowsScaleOptionIgnoreWithoutEnforcing_decimalPartFailedToBorrowDigits() {
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING);
+        // integer digit count == precision - scale && decimal count > scale
         String decimalString = "12345678901234567890.12345678901234567890";
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalString, precision, scale, columnName);
+        // Although we don't enforce precision and scale when parsing the decimal, decimal part failed to borrow digits from
+        // integer part when decimal part overflows. Then the behavior would be the same as parsing the value with precision and scale enforced.
         HiveDecimal expectedHiveDecimal = HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(decimalString), precision, scale).getHiveDecimal();
         assertEquals(expectedHiveDecimal, hiveDecimal);
     }
