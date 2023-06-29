@@ -553,7 +553,9 @@ class ORCVectorizedMappingFunctions {
         writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val, configuration, columnName) -> {
             DecimalOverflowOption decimalOverflowOption = DecimalOverflowOption.parseDecimalOverflowOption(configuration, PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, false);
             DecimalUtilities decimalUtilities = new DecimalUtilities(decimalOverflowOption);
-            // also there are Decimal and Decimal64 column vectors, see TypeUtils.createColumn
+            // Also there are Decimal and Decimal64 column vectors, see TypeUtils.createColumn.
+            // If the precision of incoming value is not greater than MAX_DECIMAL64_PRECISION 18, in apache orc's TypeUtils.createColumn, it will create a Decimal64ColumnVector
+            // But we definitely have values whose precision is greater than 18, so we should use the more generic DecimalColumnVector
             DecimalColumnVector decimalColumnVector = (DecimalColumnVector) columnVector;
             HiveDecimal convertedValue = decimalUtilities.parseDecimalStringWithHiveDecimal((String) val, decimalColumnVector.precision, decimalColumnVector.scale, columnName);
             if (convertedValue == null) {
