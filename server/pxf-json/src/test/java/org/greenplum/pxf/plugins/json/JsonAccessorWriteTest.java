@@ -127,11 +127,22 @@ public class JsonAccessorWriteTest {
 
     @Test
     public void testExceptionOnCloseNoErrorFromFinally() throws IOException {
-        runErrorOnCloseScenario(false);
-    }
-    @Test
-    public void testExceptionOnCloseSuppressErrorFromFinally() throws IOException {
-        runErrorOnCloseScenario(true);
+        JsonFactory mockJsonFactory = mock(JsonFactory.class);
+        JsonGenerator mockJsonGenerator = mock(JsonGenerator.class);
+        when(mockJsonFactory.createGenerator(any(OutputStream.class), eq(JsonEncoding.UTF8))).thenReturn(mockJsonGenerator);
+
+        IOException expectedException = new IOException("flush failed");
+        doThrow(expectedException).when(mockJsonGenerator).flush();
+
+        context.setDatabaseEncoding(StandardCharsets.UTF_8);
+        context.setDataSource(temp.getAbsolutePath() + "/json/testExceptionOnCloseErrorFromFinally");
+        accessor = new JsonAccessor(new JsonUtilities(), mockJsonFactory);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForWrite(); // to init the generator
+
+        IOException e = assertThrows(IOException.class, () -> accessor.closeForWrite());
+        assertSame(expectedException, e);
     }
 
     /**
@@ -197,34 +208,4 @@ public class JsonAccessorWriteTest {
         }
     }
 
-    /**
-     * Runs a test scenario where closeForWrite() fails when generator is closed and optionally the logic in finally branch
-     * also fails. Tests whether the original exception is propagated to the caller and an optional exception from the finally
-     * branch is suppressed.
-     *
-     * @param failOnGeneratorClose whether to mock failure when generator is closed in the finally branch
-     * @throws IOException
-     */
-    private void runErrorOnCloseScenario(boolean failOnGeneratorClose) throws IOException {
-        JsonFactory mockJsonFactory = mock(JsonFactory.class);
-        JsonGenerator mockJsonGenerator = mock(JsonGenerator.class);
-        when(mockJsonFactory.createGenerator(any(OutputStream.class), eq(JsonEncoding.UTF8))).thenReturn(mockJsonGenerator);
-
-        IOException expectedException = new IOException("flush failed");
-        doThrow(expectedException).when(mockJsonGenerator).flush();
-        IOException suppressedException = new IOException("close failed");
-        if (failOnGeneratorClose) {
-            doThrow(suppressedException).when(mockJsonGenerator).close();
-        }
-
-        context.setDatabaseEncoding(StandardCharsets.UTF_8);
-        context.setDataSource(temp.getAbsolutePath() + "/json/testExceptionOnCloseErrorFromFinally" + failOnGeneratorClose);
-        accessor = new JsonAccessor(new JsonUtilities(), mockJsonFactory);
-        accessor.setRequestContext(context);
-        accessor.afterPropertiesSet();
-        accessor.openForWrite(); // to init the generator
-
-        IOException e = assertThrows(IOException.class, () -> accessor.closeForWrite());
-        assertSame(expectedException, e);
-    }
 }

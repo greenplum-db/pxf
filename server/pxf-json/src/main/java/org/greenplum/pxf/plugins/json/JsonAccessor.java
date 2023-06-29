@@ -173,6 +173,7 @@ public class JsonAccessor extends LineBreakAccessor {
         // setup Json machinery, allow for use of UTF8 encoding only
         jsonGenerator = jsonFactory.createGenerator((OutputStream) dos, JsonEncoding.UTF8);
         jsonGenerator.setRootValueSeparator(null); // do not separate top level objects, we will add NEWLINE ourselves
+        jsonGenerator.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
 
         // write the file header, if object layout is requested
         if (rootName != null) {
@@ -237,24 +238,22 @@ public class JsonAccessor extends LineBreakAccessor {
                 jsonGenerator.writeEndObject();
             }
             jsonGenerator.flush();
-            super.closeForWrite(); // to flush / close the output stream
+            jsonGenerator.close(); // this should not close the output streams as we disabled that option
         } catch (Exception e) {
             // remember that the exception was caught and rethrow it to propagate upwards
             caughtException = true;
             throw e;
         } finally {
-            if (jsonGenerator != null) {
-                try {
-                    jsonGenerator.close();
-                } catch (Exception e) {
-                    // generator close failed, but if there was a more important exception caught before, suppress this one
-                    if (caughtException) {
-                        // suppress the new exception, just log its message and let the original one propagate
-                        LOG.warn("Suppressing exception when closing Json generator: ", e.getMessage());
-                    } else {
-                        // since this is the first and only exception we see, throw it
-                        throw e;
-                    }
+            try {
+                super.closeForWrite(); // close the output streams
+            } catch (Exception e) {
+                // closing of streams failed, but if there was a more important exception caught before, suppress this one
+                if (caughtException) {
+                    // suppress the new exception, just log its message and let the original one propagate
+                    LOG.warn("Suppressing exception when closing Json generator: ", e.getMessage());
+                } else {
+                    // since this is the first and only exception we see, throw it
+                    throw e;
                 }
             }
         }
