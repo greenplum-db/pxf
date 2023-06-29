@@ -489,7 +489,7 @@ public class JdbcBasePluginTest {
     public void testDateWideRangeFromConfiguration() throws SQLException {
         configuration.set("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
         configuration.set("jdbc.url", "test-url");
-        configuration.set("jdbc.date.wide-range", "true");
+        configuration.set("jdbc.date.wideRange", "true");
         JdbcBasePlugin plugin = getPlugin(mockConnectionManager, mockSecureLogin, context);
         assertTrue(plugin.isDateWideRange);
     }

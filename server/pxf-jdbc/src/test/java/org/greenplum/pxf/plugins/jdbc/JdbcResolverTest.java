@@ -26,8 +26,9 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 
@@ -232,6 +233,23 @@ class JdbcResolverTest {
     }
 
     @Test
+    void setFieldDateWithoutWideRangeWithLeadingZeroTest() throws ParseException {
+        isDateWideRange = false;
+        String date = "0003-5-4";
+        Date expectedDate = Date.valueOf(date);
+        OneField oneField = setFields(date, DataType.DATE.getOID(), "date");
+        assertTrue(oneField.val instanceof Date);
+        assertEquals(expectedDate, oneField.val);
+    }
+
+    @Test
+    void setFieldDateWithoutWideRangeWithoutLeadingZeroTest() {
+        isDateWideRange = false;
+        String date = "3-5-4";
+        assertThrows(IllegalArgumentException.class, () -> setFields(date, DataType.DATE.getOID(), "date"));
+    }
+
+    @Test
     void setFieldDateWithMoreThan4digitsInYearTest() throws ParseException {
         isDateWideRange = true;
         LocalDate expectedLocalDate = LocalDate.of(+12345678, 12, 11);
@@ -239,6 +257,13 @@ class JdbcResolverTest {
         OneField oneField = setFields(date, DataType.DATE.getOID(), "date");
         assertTrue(oneField.val instanceof LocalDate);
         assertEquals(expectedLocalDate, oneField.val);
+    }
+
+    @Test
+    void setFieldDateWithMoreThan4digitsInYearWithoutWideRangeTest() throws ParseException {
+        isDateWideRange = false;
+        String date = "12345678-12-11";
+        assertThrows(IllegalArgumentException.class, () -> setFields(date, DataType.DATE.getOID(), "date"));
     }
 
     @Test
@@ -259,6 +284,13 @@ class JdbcResolverTest {
         OneField oneField = setFields(date, DataType.DATE.getOID(), "date");
         assertTrue(oneField.val instanceof LocalDate);
         assertEquals(expectedLocalDate, oneField.val);
+    }
+
+    @Test
+    void setFieldDateWithEraWithoutWideRangeTest() {
+        isDateWideRange = false;
+        String date = "1235-11-01 BC";
+        assertThrows(IllegalArgumentException.class, () -> setFields(date, DataType.DATE.getOID(), "date"));
     }
 
     @Test
@@ -292,6 +324,16 @@ class JdbcResolverTest {
     }
 
     @Test
+    void setFieldDateTimeWithoutWideRangeWithLeadingZeroTest() throws ParseException {
+        isDateWideRange = false;
+        String timestamp = "0003-05-04 01:02:01.23";
+        Timestamp expectedTimestamp = Timestamp.valueOf(timestamp);
+        OneField oneField = setFields(timestamp, DataType.TIMESTAMP.getOID(), "timestamp");
+        assertTrue(oneField.val instanceof Timestamp);
+        assertEquals(expectedTimestamp, oneField.val);
+    }
+
+    @Test
     void setFieldDateTimeWithMoreThan4digitsInYearTest() throws ParseException {
         isDateWideRange = true;
         LocalDateTime expectedLocalDateTime = LocalDateTime.of(+12345678, 12, 11, 15, 35);
@@ -299,6 +341,13 @@ class JdbcResolverTest {
         OneField oneField = setFields(timestamp, DataType.TIMESTAMP.getOID(), "timestamp");
         assertTrue(oneField.val instanceof LocalDateTime);
         assertEquals(expectedLocalDateTime, oneField.val);
+    }
+
+    @Test
+    void setFieldDateTimeWithMoreThan4digitsInYearWithoutWideRangeTest() {
+        isDateWideRange = false;
+        String timestamp = "12345678-12-11 15:35 AD";
+        assertThrows(IllegalArgumentException.class, () -> setFields(timestamp, DataType.TIMESTAMP.getOID(), "timestamp"));
     }
 
     @Test
@@ -319,6 +368,13 @@ class JdbcResolverTest {
         OneField oneField = setFields(timestamp, DataType.TIMESTAMP.getOID(), "timestamp");
         assertTrue(oneField.val instanceof LocalDateTime);
         assertEquals(expectedLocalDateTime, oneField.val);
+    }
+
+    @Test
+    void setFieldDateTimeWithEraWithoutWideRangeTest() throws ParseException {
+        isDateWideRange = false;
+        String timestamp = "1235-11-01 16:20 BC";
+        assertThrows(IllegalArgumentException.class, () -> setFields(timestamp, DataType.TIMESTAMP.getOID(), "timestamp"));
     }
 
     private OneField getOneField(Object date, int dataTypeOid, String typeName) throws SQLException {

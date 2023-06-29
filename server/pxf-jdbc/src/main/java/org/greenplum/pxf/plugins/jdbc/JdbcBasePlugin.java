@@ -96,7 +96,7 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String HIVE_URL_PREFIX = "jdbc:hive2://";
     private static final String HIVE_DEFAULT_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
     private static final String MYSQL_DRIVER_PREFIX = "com.mysql.";
-    private static final String JDBC_DATE_WIDE_RANGE = "jdbc.date.wide-range";
+    private static final String JDBC_DATE_WIDE_RANGE = "jdbc.date.wideRange";
 
     private enum TransactionIsolation {
         READ_UNCOMMITTED(1),
@@ -365,13 +365,8 @@ public class JdbcBasePlugin extends BasePlugin {
         }
 
         // Optional parameter to determine if the year might contain more than 4 digits in `date` or 'timestamp'.
-        // Populate from the context if it exists, otherwise pull from the configuration. The default value is false.
-        String dateWideRange = context.getOption(JDBC_DATE_WIDE_RANGE);
-        if (dateWideRange != null) {
-            isDateWideRange = Boolean.parseBoolean(dateWideRange);
-        } else {
-            isDateWideRange = configuration.getBoolean(JDBC_DATE_WIDE_RANGE, false);
-        }
+        // The default value is false.
+        isDateWideRange = configuration.getBoolean(JDBC_DATE_WIDE_RANGE, false);
     }
 
     /**

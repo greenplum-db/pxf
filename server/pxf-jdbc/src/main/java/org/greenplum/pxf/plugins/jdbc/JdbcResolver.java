@@ -57,6 +57,8 @@ import static java.time.format.DateTimeFormatter.ISO_OFFSET_TIME;
  * JDBC tables resolver
  */
 public class JdbcResolver extends JdbcBasePlugin implements Resolver {
+    // Signifies the ERA format
+    final private static String DATE_TIME_FORMATTER_SPECIFIER = " G";
     /**
      * LOCAL_DATE_GET_FORMATTER is used to format LocalDate to String.
      * Examples: 2023-01-10 -> "2023-01-10 AD"; +12345-02-01 -> "12345-02-01 AD"; -0009-12-11 -> "0010-12-11 BC"
@@ -65,7 +67,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .appendValue(ChronoField.YEAR_OF_ERA, 4, 9, SignStyle.NORMAL).appendLiteral("-")
             .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
             .appendValue(ChronoField.DAY_OF_MONTH, 2)
-            .appendPattern(" G")
+            .appendPattern(DATE_TIME_FORMATTER_SPECIFIER)
             .toFormatter();
 
     /**
@@ -78,7 +80,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
             .appendValue(ChronoField.DAY_OF_MONTH, 2).appendLiteral(" ")
             .append(ISO_LOCAL_TIME)
-            .appendPattern(" G")
+            .appendPattern(DATE_TIME_FORMATTER_SPECIFIER)
             .toFormatter();
 
 
@@ -92,7 +94,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
             .appendValue(ChronoField.DAY_OF_MONTH, 2).appendLiteral(" ")
             .append(ISO_OFFSET_TIME)
-            .appendPattern(" G")
+            .appendPattern(DATE_TIME_FORMATTER_SPECIFIER)
             .toFormatter();
 
     /**
@@ -103,7 +105,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .appendValue(ChronoField.YEAR_OF_ERA, 1, 9, SignStyle.NORMAL).appendLiteral('-')
             .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
             .appendValue(ChronoField.DAY_OF_MONTH, 2)
-            .optionalStart().appendPattern(" G").optionalEnd()
+            .optionalStart().appendPattern(DATE_TIME_FORMATTER_SPECIFIER).optionalEnd()
             .toFormatter();
 
     /**
@@ -116,7 +118,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, SignStyle.NORMAL).appendLiteral('-')
             .appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NORMAL).appendLiteral(" ")
             .append(ISO_LOCAL_TIME)
-            .optionalStart().appendPattern(" G").optionalEnd()
+            .optionalStart().appendPattern(DATE_TIME_FORMATTER_SPECIFIER).optionalEnd()
             .toFormatter();
 
     private static final Set<DataType> DATATYPES_SUPPORTED = EnumSet.of(
