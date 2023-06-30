@@ -42,9 +42,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ORCVectorizedResolverWriteTest extends ORCVectorizedBaseTest {
-    private static final String decimalString_exceedPrecisionMinusScale = "123456789012345678901234567890.123456789012345";
     private static final String decimalString_exceedPrecision = "123456789012345678901234567890123456789";
-    private static final String decimalString_exceedScale = "1234567890.12345678901234567890123456789";
+    private static final String decimalString_exceedPrecisionMinusScale = "123456789012345678901234567890.12345";
+    private static final String decimalString_exceedScale = "1234567890.123456789012345";
     private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.orc.write.decimal.overflow";
     private ORCVectorizedResolver resolver;
     private RequestContext context;

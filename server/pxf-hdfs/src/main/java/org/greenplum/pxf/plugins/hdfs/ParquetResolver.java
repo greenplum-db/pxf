@@ -77,8 +77,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
-        DecimalOverflowOption decimalOverflowOption = DecimalOverflowOption.parseDecimalOverflowOption(configuration, PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, true);
-        decimalUtilities = new DecimalUtilities(decimalOverflowOption);
+        DecimalOverflowOption decimalOverflowOption = DecimalOverflowOption.valueOf(configuration.get(PXF_PARQUET_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, DecimalOverflowOption.ROUND.name()).toUpperCase());
+        decimalUtilities = new DecimalUtilities(decimalOverflowOption, true);
     }
 
     /**

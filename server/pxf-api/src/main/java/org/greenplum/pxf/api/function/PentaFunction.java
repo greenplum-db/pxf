@@ -13,21 +13,21 @@ import java.util.function.Function;
  * @param <V> The third argument type
  * @param <S> The fourth argument type
  * @param <P> The fifth argument type
- * @param <R> The result type
+ * @param <W> The result type
  * @see Function
  */
-public interface PentaFunction<T, U, V, S, P, R> {
+public interface PentaFunction<P, S, T, U, V, W> {
     /**
      * Applies this function to the given arguments.
      *
-     * @param t the first function argument
-     * @param u the second function argument
-     * @param v the third function argument
-     * @param s the fourth function argument
-     * @param p the fifth input argument
+     * @param p the first input argument
+     * @param s the second function argument
+     * @param t the third function argument
+     * @param u the fourth function argument
+     * @param v the fifth function argument
      * @return The result
      */
-    R apply(T t, U u, V v, S s, P p);
+    W apply(P p, S s, T t, U u, V v);
 
     /**
      * Returns a composed function that first applies this function to
@@ -35,16 +35,16 @@ public interface PentaFunction<T, U, V, S, P, R> {
      * If evaluation of either function throws an exception, it is relayed to
      * the caller of the composed function.
      *
-     * @param <W>   the type of output of the {@code after} function, and of the
+     * @param <X>   the type of output of the {@code after} function, and of the
      *              composed function
      * @param after the function to apply after this function is applied
      * @return a composed function that first applies this function and then
      * applies the {@code after} function
      * @throws NullPointerException if after is null
      */
-    default <W> PentaFunction<T, U, V, S, P, W> andThen(
-            Function<? super R, ? extends W> after) {
+    default <X> PentaFunction<P, S, T, U, V, W> andThen(
+            Function<? super W, ? extends W> after) {
         Objects.requireNonNull(after);
-        return (T t, U u, V v, S s, P p) -> after.apply(apply(t, u, v, s, p));
+        return (P p, S s, T t, U u, V v) -> after.apply(apply(p, s, t, u, v));
     }
 }

@@ -1945,7 +1945,7 @@ public class ParquetWriteTest {
 
         String[] values = new String[]{
                 "1.2",
-                "1234567890123456789012345.12345678901234567812",
+                "1234567890123456789012345.12345",
                 "1234567890123456789012345678901234567890.12345678901234567812",
                 "333.34567",
                 "4444.456789",
@@ -2103,7 +2103,7 @@ public class ParquetWriteTest {
                 "1234567890123456.12",
                 "1234567890123456.123",
                 "1234567890123456.1234",
-                "1234567890123456.12345",
+                "1234567890123456.1235",
                 "123456789012345.1",
                 "123456789012345.12",
                 "123456789012345.123",
@@ -2386,7 +2386,7 @@ public class ParquetWriteTest {
         for (String value : values) {
             List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
             BigDecimal bigDecimal = NumberUtils.createBigDecimal(value);
-            if (bigDecimal.precision() - bigDecimal.scale() > precision) {
+            if (bigDecimal.precision() > precision) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
                 assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
                         value, columnName, precision), e.getMessage());

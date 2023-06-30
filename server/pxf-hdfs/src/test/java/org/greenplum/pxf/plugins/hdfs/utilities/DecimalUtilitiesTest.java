@@ -14,13 +14,14 @@ public class DecimalUtilitiesTest {
     private static final int scale = 18;
     private static final String columnName = "dec";
     private static final String decimalStringOverflowsPrecision = "1234567890123456789012345678901234567890.12345";
-    private static final String decimalStringOverflowsPrecisionMinusScale = "123456789012345678901234567890.12345678901234567890";
     private static final String decimalStringOverflowsScale = "123456789012345.12345678901234567890";
+    private static final String decimalStringOverflowsPrecisionMinusScale = "123456789012345678901234567890.12345678";
+
     private DecimalUtilities decimalUtilities;
 
     @Test
     public void testParseDecimalNoOverflow() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_ROUND);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
         String decimalString = "123.12345";
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalString, precision, scale, columnName);
@@ -31,7 +32,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionOptionError() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ERROR, true);
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName));
@@ -41,7 +42,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionOptionRound() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_ROUND);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName));
@@ -51,7 +52,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionOptionIgnore() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.IGNORE, true);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName);
         assertNull(hiveDecimal);
@@ -59,7 +60,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionOptionIgnoreWithoutEnforcing() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.IGNORE, false);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName);
         assertNull(hiveDecimal);
@@ -67,7 +68,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionMinusScaleOptionError() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ERROR, true);
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName));
@@ -77,7 +78,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionMinusScaleOptionRound() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_ROUND);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName));
@@ -87,7 +88,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionMinusScaleOptionIgnore() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.IGNORE, true);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName);
         assertNull(hiveDecimal);
@@ -95,7 +96,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionMinusScaleOptionIgnoreWithoutEnforcing() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.IGNORE, false);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName);
         HiveDecimal expectedHiveDecimal = (new HiveDecimalWritable(decimalStringOverflowsPrecisionMinusScale)).getHiveDecimal();
@@ -104,7 +105,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalOverflowsScaleOptionError() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_ERROR);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ERROR, true);
 
         Exception e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName));
@@ -114,7 +115,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalOverflowsScaleOptionRound() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_ROUND);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
         HiveDecimal expectedHiveDecimal = HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(decimalStringOverflowsScale), precision, scale).getHiveDecimal();
@@ -123,7 +124,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalOverflowsScaleOptionIgnore() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.IGNORE, true);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
         HiveDecimal expectedHiveDecimal = HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(decimalStringOverflowsScale), precision, scale).getHiveDecimal();
@@ -132,7 +133,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalOverflowsScaleOptionIgnoreWithoutEnforcing() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.IGNORE, false);
 
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
         HiveDecimal expectedHiveDecimal = (new HiveDecimalWritable(decimalStringOverflowsScale)).getHiveDecimal();
@@ -141,7 +142,7 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalOverflowsScaleOptionIgnoreWithoutEnforcing_decimalPartFailedToBorrowDigits() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.DECIMAL_OVERFLOW_IGNORE_WITHOUT_ENFORCING);
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.IGNORE, false);
         // integer digit count == precision - scale && decimal count > scale
         String decimalString = "12345678901234567890.12345678901234567890";
 

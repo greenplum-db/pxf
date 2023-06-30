@@ -21,20 +21,20 @@ import java.util.function.Consumer;
  * @see Consumer
  */
 @FunctionalInterface
-public interface PentaConsumer<T, U, V, S, P> {
+public interface PentaConsumer<P, S, T, U, V> {
     /**
      * Performs this operation on the given arguments.
      *
-     * @param t the first input argument
-     * @param u the second input argument
-     * @param v the third input argument
-     * @param s the fourth input argument
-     * @param p the fifth input argument
+     * @param p the first input argument
+     * @param s the second input argument
+     * @param t the third input argument
+     * @param u the forth input argument
+     * @param v the fifth input argument
      */
-    void accept(T t, U u, V v, S s, P p);
+    void accept(P p, S s, T t, U u, V v);
 
     /**
-     * Returns a composed {@code RConsumer} that performs, in sequence, this
+     * Returns a composed {@code Consumer} that performs, in sequence, this
      * operation followed by the {@code after} operation. If performing either
      * operation throws an exception, it is relayed to the caller of the
      * composed operation. If performing this operation throws an exception,
@@ -45,11 +45,11 @@ public interface PentaConsumer<T, U, V, S, P> {
      * operation followed by the {@code after} operation
      * @throws NullPointerException if {@code after} is null
      */
-    default PentaConsumer<T, U, V, S, P> andThen(PentaConsumer<? super T, ? super U, ? super V, ? super S, ? super P> after) {
+    default PentaConsumer<P, S, T, U, V> andThen(PentaConsumer<? super P, ? super S, ? super T, ? super U, ? super V> after) {
         Objects.requireNonNull(after);
-        return (t, u, v, s, p) -> {
-            accept(t, u, v, s, p);
-            after.accept(t, u, v, s, p);
+        return (p, s, t, u, v) -> {
+            accept(p, s, t, u, v);
+            after.accept(p, s, t, u, v);
         };
     }
 }

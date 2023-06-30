@@ -1,7 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs.orc;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -76,13 +75,12 @@ class ORCVectorizedMappingFunctions {
     private static final PgUtilities pgUtilities = new PgUtilities();
     private static final OrcUtilities orcUtilities = new OrcUtilities(pgUtilities);
 
-    private static final Map<TypeDescription.Category, PentaConsumer<ColumnVector, Integer, Object, Configuration, String>> writeFunctionsMap;
-    private static final Map<TypeDescription.Category, PentaConsumer<ColumnVector, Integer, Object, Configuration, String>> writeListFunctionsMap;
-    private static final PentaConsumer<ColumnVector, Integer, Object, Configuration, String> timestampInLocalWriteFunction;
-    private static final PentaConsumer<ColumnVector, Integer, Object, Configuration, String> timestampInLocalWriteListFunction;
+    private static final Map<TypeDescription.Category, PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption>> writeFunctionsMap;
+    private static final Map<TypeDescription.Category, PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption>> writeListFunctionsMap;
+    private static final PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption> timestampInLocalWriteFunction;
+    private static final PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption> timestampInLocalWriteListFunction;
     private static final ZoneId TIMEZONE_UTC = ZoneId.of("UTC");
     private static final ZoneId TIMEZONE_LOCAL = TimeZone.getDefault().toZoneId();
-    private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.orc.write.decimal.overflow";
     private static final List<TypeDescription.Category> SUPPORTED_PRIMITIVE_CATEGORIES = Arrays.asList(
             TypeDescription.Category.BOOLEAN,
             // TypeDescription.Category.BYTE,
@@ -481,9 +479,9 @@ class ORCVectorizedMappingFunctions {
         return result;
     }
 
-    public static PentaConsumer<ColumnVector, Integer, Object, Configuration, String> getColumnWriter(TypeDescription typeDescription, boolean timestampsInUTC) {
+    public static PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption> getColumnWriter(TypeDescription typeDescription, boolean timestampsInUTC) {
         TypeDescription.Category columnTypeCategory = typeDescription.getCategory();
-        PentaConsumer<ColumnVector, Integer, Object, Configuration, String> writeFunction;
+        PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption> writeFunction;
         // if timestamps need to be written in local timezone (and not in UTC), get a special function not in the map
         if (columnTypeCategory.equals(TypeDescription.Category.TIMESTAMP) && !timestampsInUTC) {
             writeFunction = timestampInLocalWriteFunction;
@@ -515,34 +513,34 @@ class ORCVectorizedMappingFunctions {
 
         // see TypeUtils.createColumn for backing storage of different Category types
         // go in the order TypeDescription.Category enum is defined
-        writeFunctionsMap.put(TypeDescription.Category.BOOLEAN, (columnVector, row, val, configuration, columnName) -> {
+        writeFunctionsMap.put(TypeDescription.Category.BOOLEAN, (columnName, columnVector, row, val, decimalOverflowOption) -> {
             ((LongColumnVector) columnVector).vector[row] = (Boolean) val ? 1 : 0;
         });
         // BYTE("tinyint", true) - for now ORCSchemaBuilder does not support this type, so we do not expect it
-        writeFunctionsMap.put(TypeDescription.Category.SHORT, (columnVector, row, val, configuration, columnName) -> {
+        writeFunctionsMap.put(TypeDescription.Category.SHORT, (columnName, columnVector, row, val, decimalOverflowOption) -> {
             ((LongColumnVector) columnVector).vector[row] = ((Number) val).longValue();
         });
         writeFunctionsMap.put(TypeDescription.Category.INT, writeFunctionsMap.get(TypeDescription.Category.SHORT));
         writeFunctionsMap.put(TypeDescription.Category.LONG, writeFunctionsMap.get(TypeDescription.Category.SHORT));
-        writeFunctionsMap.put(TypeDescription.Category.FLOAT, (columnVector, row, val, configuration, columnName) -> {
+        writeFunctionsMap.put(TypeDescription.Category.FLOAT, (columnName, columnVector, row, val, decimalOverflowOption) -> {
             ((DoubleColumnVector) columnVector).vector[row] = ((Number) val).doubleValue();
         });
         writeFunctionsMap.put(TypeDescription.Category.DOUBLE, writeFunctionsMap.get(TypeDescription.Category.FLOAT));
-        writeFunctionsMap.put(TypeDescription.Category.STRING, (columnVector, row, val, configuration, columnName) -> {
+        writeFunctionsMap.put(TypeDescription.Category.STRING, (columnName, columnVector, row, val, decimalOverflowOption) -> {
             byte[] buffer = val.toString().getBytes(StandardCharsets.UTF_8);
             ((BytesColumnVector) columnVector).setRef(row, buffer, 0, buffer.length);
         });
-        writeFunctionsMap.put(TypeDescription.Category.DATE, (columnVector, row, val, configuration, columnName) -> {
+        writeFunctionsMap.put(TypeDescription.Category.DATE, (columnName, columnVector, row, val, decimalOverflowOption) -> {
             // parse Greenplum date given as a string to a local date (no timezone info)
             LocalDate date = LocalDate.parse((String) val, GreenplumDateTime.DATE_FORMATTER);
             // convert local date to days since epoch and store in DateColumnVector
             ((DateColumnVector) columnVector).vector[row] = date.toEpochDay();
         });
-        writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP, (columnVector, row, val, configuration, columnName) -> {
+        writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP, (columnName, columnVector, row, val, decimalOverflowOption) -> {
             // parse GP string timestamp to instant in UTC timezone, then to a Timestamp and store in TimestampColumnVector
             ((TimestampColumnVector) columnVector).set(row, Timestamp.from(getTimeStampAsInstant(val, TIMEZONE_UTC)));
         });
-        writeFunctionsMap.put(TypeDescription.Category.BINARY, (columnVector, row, val, configuration, columnName) -> {
+        writeFunctionsMap.put(TypeDescription.Category.BINARY, (columnName, columnVector, row, val, decimalOverflowOption) -> {
             // do not copy the contents of the byte array, just set as a reference
             if (val instanceof byte[]) {
                 ((BytesColumnVector) columnVector).setRef(row, (byte[]) val, 0, ((byte[]) val).length);
@@ -550,12 +548,11 @@ class ORCVectorizedMappingFunctions {
                 ((BytesColumnVector) columnVector).setRef(row, ((ByteBuffer) val).array(), 0, ((ByteBuffer) val).limit());
             }
         });
-        writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnVector, row, val, configuration, columnName) -> {
-            DecimalOverflowOption decimalOverflowOption = DecimalOverflowOption.parseDecimalOverflowOption(configuration, PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, false);
-            DecimalUtilities decimalUtilities = new DecimalUtilities(decimalOverflowOption);
-            // Also there are Decimal and Decimal64 column vectors, see TypeUtils.createColumn.
-            // If the precision of incoming value is not greater than MAX_DECIMAL64_PRECISION 18, in apache orc's TypeUtils.createColumn, it will create a Decimal64ColumnVector
-            // But we definitely have values whose precision is greater than 18, so we should use the more generic DecimalColumnVector
+        writeFunctionsMap.put(TypeDescription.Category.DECIMAL, (columnName, columnVector, row, val, decimalOverflowOption) -> {
+            DecimalUtilities decimalUtilities = new DecimalUtilities(decimalOverflowOption, false);
+            // Both Decimal and Decimal64 column vectors are possible here (see TypeUtils.createColumn).
+            // If the precision of incoming value is not greater than MAX_DECIMAL64_PRECISION 18, Apache ORC's TypeUtils.createColumn will create a Decimal64ColumnVector.
+            // But we definitely have values whose precisions are greater than 18, so we should use the generic DecimalColumnVector
             DecimalColumnVector decimalColumnVector = (DecimalColumnVector) columnVector;
             HiveDecimal convertedValue = decimalUtilities.parseDecimalStringWithHiveDecimal((String) val, decimalColumnVector.precision, decimalColumnVector.scale, columnName);
             if (convertedValue == null) {
@@ -575,7 +572,7 @@ class ORCVectorizedMappingFunctions {
 
         // MAP, STRUCT, UNION - not supported by our ORCSchemaBuilder, so we do not expect to see them
 
-        writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP_INSTANT, (columnVector, row, val, configuration, columnName) -> {
+        writeFunctionsMap.put(TypeDescription.Category.TIMESTAMP_INSTANT, (columnName, columnVector, row, val, decimalOverflowOption) -> {
             // parse Greenplum timestamp given as a string with timezone to an offset dateTime
             OffsetDateTime offsetDateTime = OffsetDateTime.parse((String) val, GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
             // convert offset dateTime to an instant and then to a Timestamp and store in TimestampColumnVector
@@ -614,8 +611,8 @@ class ORCVectorizedMappingFunctions {
      * that read the file can deconstruct the timestamp value properly.
      * @return a function setting the column vector timestamp value based on local timezone
      */
-    private static PentaConsumer<ColumnVector, Integer, Object, Configuration, String> getTimestampInLocalWriteFunction() {
-        return (columnVector, row, val, configuration, columnName) -> {
+    private static PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption> getTimestampInLocalWriteFunction() {
+        return (columnName, columnVector, row, val, decimalOverflowOption) -> {
             // parse GP string timestamp to instant in local timezone, then to a Timestamp and store in TimestampColumnVector
             ((TimestampColumnVector) columnVector).set(row, Timestamp.from(getTimeStampAsInstant(val, TIMEZONE_LOCAL)));
         };
@@ -629,7 +626,7 @@ class ORCVectorizedMappingFunctions {
      *                                function that will be used to write the primitive value in the child column vector
      * @return a function setting the list column vector
      */
-    private static PentaConsumer<ColumnVector, Integer, Object, Configuration, String> getListWriteFunction(TypeDescription.Category underlyingChildCategory) {
+    private static PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption> getListWriteFunction(TypeDescription.Category underlyingChildCategory) {
         return getListWriteFunction(underlyingChildCategory, writeFunctionsMap.get(underlyingChildCategory));
     }
 
@@ -641,8 +638,8 @@ class ORCVectorizedMappingFunctions {
      * @param childWriteFunction      the write function that will be used to write the primitive value in the child column vector
      * @return a function setting the list column vector
      */
-    private static PentaConsumer<ColumnVector, Integer, Object, Configuration, String> getListWriteFunction(TypeDescription.Category underlyingChildCategory, final PentaConsumer<ColumnVector, Integer, Object, Configuration, String> childWriteFunction) {
-        return (columnVector, row, val, configuration, columnName) -> {
+    private static PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption> getListWriteFunction(TypeDescription.Category underlyingChildCategory, final PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption> childWriteFunction) {
+        return (columnName, columnVector, row, val, decimalOverflowOption) -> {
             // TODO: as all schemas right now are auto-generated, the columnVector will always be a ListColumnVector
             // when we allow user-generated schemas, do we need to consider checking the type of the columnvector before casting?
             ListColumnVector listColumnVector = (ListColumnVector) columnVector;
@@ -682,7 +679,7 @@ class ORCVectorizedMappingFunctions {
                     childColumnVector.isNull[childIndex] = true;
                 } else {
                     try {
-                        childWriteFunction.accept(childColumnVector, childIndex, rowElement, configuration, columnName);
+                        childWriteFunction.accept(columnName, childColumnVector, childIndex, rowElement, decimalOverflowOption);
                     } catch (NumberFormatException | DateTimeParseException | PxfRuntimeException e) {
                         String hint = orcUtilities.createErrorHintFromValue(StringUtils.startsWith(rowElement.toString(), "{"), val.toString());
                         throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", rowElement, underlyingChildCategory), hint, e);
