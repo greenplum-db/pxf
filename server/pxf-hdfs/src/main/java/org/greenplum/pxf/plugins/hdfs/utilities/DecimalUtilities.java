@@ -27,7 +27,7 @@ public class DecimalUtilities {
      *
      * @param decimalOverflowOption            one of the decimal overflow options. Supported values are 'error', 'round' and 'ignore'
      * @param enforcePrecisionAndScaleOnIgnore true if current profile should enforce precision and scale when parsing the decimal
-     *                                         with decimal overflow option is set to 'ignore'
+     *                                         with decimal overflow option set to 'ignore'
      */
     public DecimalUtilities(DecimalOverflowOption decimalOverflowOption, boolean enforcePrecisionAndScaleOnIgnore) {
         this.decimalOverflowOption = decimalOverflowOption;
@@ -37,16 +37,15 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile according to the decimal overflow options
-     * There are 3 different types of overflow that PXF needs to handle when the column is defined as NUMERIC
-     * without precision and scale provided.
+     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile according to the decimal overflow options.
+     * There are 3 different types of overflow that PXF needs to handle when the column is defined as NUMERIC without precision and scale provided.
      * Decimal overflows on NUMERIC(precision,scale) have already been handled by GPDB and FileAccessor.
      * Case 1:
-     * Integer digit count > precision
+     *      Integer digit count > precision
      * Case 2:
-     * precision >= Integer digit count > precision - scale
+     *      precision >= Integer digit count > precision - scale
      * Case 3:
-     * (Integer digit count <= precision - scale) && (decimal part > scale)
+     *      (Integer digit count <= precision - scale) && (decimal part > scale)
      *
      * @param value      is the decimal string to be parsed
      * @param precision  is the decimal precision defined in the schema
@@ -68,14 +67,14 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile when the decimal overflow option is 'error'
-     * PXF should error out on all the 3 overflow cases, or return a HiveDecimal which can fit within dictated precision and scale without rounding.
+     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile when the decimal overflow option is 'error'.
+     * PXF should error out on all the 3 overflow cases, or return a not rounded HiveDecimal which can fit within dictated precision and scale.
      *
      * @param value      is the decimal string to be parsed
      * @param precision  is the decimal precision defined in the schema
      * @param scale      is the decimal scale defined in the schema
      * @param columnName is the name of the current column
-     * @return a HiveDecimal which can fit within dictated precision and scale without rounding
+     * @return a non rounded HiveDecimal which can fit within dictated precision and scale
      */
     private HiveDecimal parseDecimalStringWithHiveDecimalOnError(String value, int precision, int scale, String columnName) {
         BigDecimal bigDecimal = new BigDecimal(value);
@@ -105,8 +104,8 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile when the decimal overflow option is 'round'
-     * PXF should error out on the overflow case 1 and 2, or return a HiveDecimal which can fit within dictated precision and scale with rounding.
+     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile when the decimal overflow option is 'round'.
+     * PXF should error out on the overflow case 1 and 2, or return a rounded HiveDecimal which can fit within dictated precision and scale.
      * Previous decimal parsing logic enforced precision and scale only for the PXF Parquet profile and not for the PXF ORC profile.
      * PXF now enforces precision and scale for both profiles.
      *
@@ -114,7 +113,7 @@ public class DecimalUtilities {
      * @param precision  is the decimal precision defined in the schema
      * @param scale      is the decimal scale defined in the schema
      * @param columnName is the name of the current column
-     * @return a HiveDecimal which can fit within dictated precision and scale with rounding
+     * @return a rounded HiveDecimal which can fit within dictated precision and scale
      */
     private HiveDecimal parseDecimalStringWithHiveDecimalOnRound(String value, int precision, int scale, String columnName) {
         // HiveDecimal.create returns a rounded value if the integer digit count of the decimal string
@@ -140,9 +139,9 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile when the decimal overflow option is 'ignore'
+     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile when the decimal overflow option is 'ignore'.
      * PXF should error out on the overflow case 1, or return a NULL/rounded HiveDecimal for backwards compatibilities.
-     * Precision and scale will be enforced on the returned HiveDecimal if the previous decimal parsing logic of the current profile did so.
+     * Precision and scale will be enforced on the HiveDecimal if the previous decimal parsing logic of the current profile did so.
      * Previous decimal parsing logic enforced precision and scale only for the PXF Parquet profile and not for the PXF ORC profile.
      *
      * @param value      is the decimal string to be parsed

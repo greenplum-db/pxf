@@ -103,6 +103,7 @@ import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.MAP_BY_PO
 public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedResolver, WriteVectorizedResolver, Resolver {
 
     private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
+    private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.orc.write.decimal.overflow";
     /**
      * The schema used to read or write the ORC file.
      */
@@ -145,7 +146,6 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     private VectorizedRowBatch vectorizedRowBatch;
     private DecimalOverflowOption decimalOverflowOption;
     private DecimalUtilities decimalUtilities;
-    private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.orc.write.decimal.overflow";
 
     /**
      * {@inheritDoc}
@@ -156,7 +156,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         columnDescriptors = context.getTupleDescription();
         positionalAccess = context.getOption(MAP_BY_POSITION_OPTION, false);
         decimalOverflowOption = DecimalOverflowOption.valueOf(configuration.get(PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, DecimalOverflowOption.ROUND.name()).toUpperCase());
-        decimalUtilities = new DecimalUtilities(decimalOverflowOption,false);
+        decimalUtilities = new DecimalUtilities(decimalOverflowOption, false);
     }
 
     /**
