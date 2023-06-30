@@ -17,6 +17,7 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.model.WriteVectorizedResolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.utilities.DecimalOverflowOption;
+import org.greenplum.pxf.plugins.hdfs.utilities.DecimalUtilities;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -117,7 +118,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      * An array of functions that resolve Lists of OneFields into ColumnVectors for WRITE use case.
      * The array has the same size as the writeSchema, and the functions depend on the type of the elements in the schema.
      */
-    private PentaConsumer<String, ColumnVector, Integer, Object, DecimalOverflowOption>[] writeFunctions;
+    private PentaConsumer<String, ColumnVector, Integer, Object, DecimalUtilities>[] writeFunctions;
 
     /**
      * An array of types that map from the readSchema types to Greenplum OIDs.
@@ -143,6 +144,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     private List<List<OneField>> cachedBatch;
     private VectorizedRowBatch vectorizedRowBatch;
     private DecimalOverflowOption decimalOverflowOption;
+    private DecimalUtilities decimalUtilities;
     private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.orc.write.decimal.overflow";
 
     /**
@@ -154,6 +156,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         columnDescriptors = context.getTupleDescription();
         positionalAccess = context.getOption(MAP_BY_POSITION_OPTION, false);
         decimalOverflowOption = DecimalOverflowOption.valueOf(configuration.get(PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, DecimalOverflowOption.ROUND.name()).toUpperCase());
+        decimalUtilities = new DecimalUtilities(decimalOverflowOption,false);
     }
 
     /**
@@ -254,7 +257,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     }
                     columnVector.isNull[rowIndex] = true;
                 } else {
-                    writeFunctions[columnIndex].accept(orcSchema.getFieldNames().get(columnIndex), columnVector, rowIndex, field.val, decimalOverflowOption);
+                    writeFunctions[columnIndex].accept(orcSchema.getFieldNames().get(columnIndex), columnVector, rowIndex, field.val, decimalUtilities);
                 }
                 columnIndex++;
             }
