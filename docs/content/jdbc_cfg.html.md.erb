@@ -144,6 +144,14 @@ Example: To set the `search_path` parameter before running a query in a PostgreS
 
 Ensure that the JDBC driver for the external SQL database supports any property that you specify.
 
+### <a id="other"></a>Other Properties
+
+Other properties supported by the PXF JDBC Connector:
+
+| Property       | Description                                | Default Value |
+|----------------|--------------------------------------------|---------------|
+| jdbc.date.wideRange | Boolean that enables special parsing of dates when the year contains more than four alphanumeric characters. When set to `true`, PXF uses extended classes to parse dates, and recognizes years that specify `BC` or `AD`. | false |
+
 ### <a id="jdbcconpool"></a>About JDBC Connection Pooling
 
 The PXF JDBC Connector uses JDBC connection pooling implemented by [HikariCP](https://github.com/brettwooldridge/HikariCP). When a user queries or writes to an external table, the Connector establishes a connection pool for the associated server configuration the first time that it encounters a unique combination of `jdbc.url`, `jdbc.user`, `jdbc.password`, connection property, and pool property settings. The Connector reuses connections in the pool subject to certain connection and timeout settings.
