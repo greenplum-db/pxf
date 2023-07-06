@@ -53,6 +53,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     private FileSystem fs;
     private Path file;
     private int iterationCount;
+    private long totalBytesCount;
 
     /**
      * Constructs a LineBreakAccessor.
@@ -141,10 +142,11 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
                 count += n;
                 if (LOG.isDebugEnabled() && iterationCount == 100) {
                     // Log this message after every 100th Iteration
-                    LOG.debug("wrote {} bytes, total so far {} (buffer size {})", n, count, bufferSize);
+                    LOG.debug("wrote {} bytes, total so far {} (buffer size {})", totalBytesCount, count, bufferSize);
                     iterationCount = 0;
+                    totalBytesCount = 0;
                 }
-
+                totalBytesCount +=n;
                 iterationCount++;
             }
 
