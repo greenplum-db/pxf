@@ -246,7 +246,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
      */
     private void addFilters() throws Exception {
 
-        // TODO whitelist option
+        // TODO allowlist option
         String filterStr = context.getOption("TEST-HBASE-FILTER");
         LOG.debug("user defined filter: {}", filterStr);
         if ((filterStr == null) || filterStr.isEmpty() || "null".equals(filterStr))

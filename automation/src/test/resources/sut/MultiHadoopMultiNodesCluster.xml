@@ -8,7 +8,7 @@
         <hiveBaseHdfsDirectory>/hive/warehouse/</hiveBaseHdfsDirectory>
         <nodes index="0">
             <class>
-                org.greenplum.pxf.automation.components.cluster.installer.nodes.MasterNode
+                org.greenplum.pxf.automation.components.cluster.installer.nodes.CoordinatorNode
             </class>
             <host>cdw</host>
             <userName>gpadmin</userName>
@@ -17,7 +17,7 @@
         </nodes>
         <nodes index="1">
             <class>
-                org.greenplum.pxf.automation.components.cluster.installer.nodes.SlaveNode
+                org.greenplum.pxf.automation.components.cluster.installer.nodes.StandByNode
             </class>
             <host>sdw1</host>
             <userName>gpadmin</userName>
@@ -26,7 +26,7 @@
         </nodes>
         <nodes index="2">
             <class>
-                org.greenplum.pxf.automation.components.cluster.installer.nodes.SlaveNode
+                org.greenplum.pxf.automation.components.cluster.installer.nodes.StandByNode
             </class>
             <host>sdw2</host>
             <userName>gpadmin</userName>

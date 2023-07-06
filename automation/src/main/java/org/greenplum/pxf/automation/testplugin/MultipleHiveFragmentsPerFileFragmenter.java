@@ -65,7 +65,7 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        // TODO whitelist property
+        // TODO allowlist property
         int fragmentsNum = Integer.parseInt(context.getOption("TEST-FRAGMENTS-NUM"));
         Metadata.Item tblDesc = hiveClientWrapper.extractTableFromName(context.getDataSource());
         Table tbl;

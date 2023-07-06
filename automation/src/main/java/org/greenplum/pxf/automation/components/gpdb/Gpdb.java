@@ -308,7 +308,7 @@ public class Gpdb extends DbSystemObject {
 		ShellSystemObject sso = new ShellSystemObject(report.isSilent());
 
 		sso.setHost(getHost());
-		sso.setMasterHost(getMasterHost());
+		sso.setCoordinatorHost(getCoordinatorHost());
 		sso.setUserName(getSshUserName());
 		sso.setPassword(getSshPassword());
 
@@ -429,15 +429,15 @@ public class Gpdb extends DbSystemObject {
 
 	private void copyLocalFileToRemoteGpdb(String from) throws Exception {
 		// copy file to remote host if GPDB is not on localhost
-		if (masterHost.equals("localhost")) {
+		if (coordinatorHost.equals("localhost")) {
 			return;
 		}
 		ShellSystemObject remoteConn = new ShellSystemObject();
 		remoteConn.init();
 		String user = sshUserName == null ? System.getProperty("gpdbUser", System.getenv("USER")) : sshUserName;
 		// first create the directory then ship the files over
-		remoteConn.runRemoteCommand(user, sshPassword, masterHost, "mkdir -p " + from.replaceFirst("(/[^/]*/?)'$", "'"));
-		remoteConn.copyToRemoteMachine(user, sshPassword, masterHost, from, from);
+		remoteConn.runRemoteCommand(user, sshPassword, coordinatorHost, "mkdir -p " + from.replaceFirst("(/[^/]*/?)'$", "'"));
+		remoteConn.copyToRemoteMachine(user, sshPassword, coordinatorHost, from, from);
 	}
 
 	/**

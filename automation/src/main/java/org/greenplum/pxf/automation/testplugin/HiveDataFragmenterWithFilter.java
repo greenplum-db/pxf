@@ -20,7 +20,7 @@ public class HiveDataFragmenterWithFilter extends HiveDataFragmenter {
      */
     private void addFilters() {
 
-        //TODO whitelist the option
+        //TODO allowlist option
         String filterStr = context.getOption("TEST-HIVE-FILTER");
         LOG.debug("user defined filter: " + filterStr);
         if ((filterStr == null) || filterStr.isEmpty() || "null".equals(filterStr))

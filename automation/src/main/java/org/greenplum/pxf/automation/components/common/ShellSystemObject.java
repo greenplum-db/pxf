@@ -23,7 +23,7 @@ import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 public class ShellSystemObject extends BaseSystemObject {
     private PivotalCliConnectionImpl connection;
     private String host = "localHost";
-    private String masterHost = "localHost";
+    private String coordinatorHost = "localHost";
     private String hostName = "";
     private String userName;
     private String password;
@@ -57,7 +57,7 @@ public class ShellSystemObject extends BaseSystemObject {
             "GPHOME",
             "GPHD_ROOT",
             "GPDATA",
-            "MASTER_DATA_DIRECTORY",
+            "COORDINATOR_DATA_DIRECTORY",
             "PGPORT",
             "PGHOST",
             "PGDATABASE",
@@ -535,8 +535,8 @@ public class ShellSystemObject extends BaseSystemObject {
         this.host = host;
     }
 
-    public void setMasterHost(String masterHost) {
-        this.masterHost = masterHost;
+    public void setCoordinatorHost(String coordinatorHost) {
+        this.coordinatorHost = coordinatorHost;
     }
 
     public String getUserName() {

@@ -21,7 +21,7 @@ public class UserDataVerifyAccessor extends BasePlugin implements Accessor {
     @Override
     public boolean openForRead() {
 
-        // TODO whitelist the option
+        // TODO allowlist the option
         FilterVerifyFragmentMetadata metadata = context.getFragmentMetadata();
         filter = metadata.getFilter();
         userDelimiter = String.valueOf(context.getGreenplumCSV().getDelimiter());

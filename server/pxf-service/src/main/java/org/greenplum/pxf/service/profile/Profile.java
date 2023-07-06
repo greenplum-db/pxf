@@ -206,7 +206,7 @@ public class Profile {
     }
 
     /**
-     * A mapping defines a whitelisted option that is allowed
+     * A mapping defines an option that is allowed
      * for the given profile. The option maps to a property that
      * can be interpreted by the Profile Plugins.
      */
@@ -221,9 +221,9 @@ public class Profile {
         private String property;
 
         /**
-         * Returns the whitelisted option
+         * Returns the allowlisted option
          *
-         * @return the whitelisted option
+         * @return the allowlisted option
          */
         String getOption() {
             return option;

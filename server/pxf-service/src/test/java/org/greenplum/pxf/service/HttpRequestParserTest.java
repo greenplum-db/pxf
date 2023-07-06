@@ -466,7 +466,7 @@ public class HttpRequestParserTest {
     }
 
     @Test
-    public void whitelistedOptionsAreAddedAsProperties() {
+    public void allowlistOptionsAreAddedAsProperties() {
         parameters.set("X-GP-OPTIONS-PROFILE", "test-profile");
         parameters.set("X-GP-OPTIONS-CONFIGPROP1", "config-prop-value1");
         parameters.set("X-GP-OPTIONS-CONFIGPROP3", "config-prop-value3");

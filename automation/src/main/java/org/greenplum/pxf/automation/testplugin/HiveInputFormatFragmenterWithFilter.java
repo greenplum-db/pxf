@@ -20,7 +20,7 @@ public class HiveInputFormatFragmenterWithFilter extends HiveInputFormatFragment
      */
     private void addFilters() {
 
-        // TODO: whitelist the option
+        // TODO: allowlist the option
         String filterStr = context.getOption("TEST-HIVE-FILTER");
         LOG.debug("user defined filter: " + filterStr);
         if ((filterStr == null) || filterStr.isEmpty() || "null".equals(filterStr))

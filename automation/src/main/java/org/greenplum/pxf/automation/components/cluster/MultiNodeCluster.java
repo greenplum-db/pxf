@@ -12,9 +12,9 @@ import jsystem.framework.report.Reporter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
-import org.greenplum.pxf.automation.components.cluster.installer.nodes.MasterNode;
+import org.greenplum.pxf.automation.components.cluster.installer.nodes.CoordinatorNode;
 import org.greenplum.pxf.automation.components.cluster.installer.nodes.Node;
-import org.greenplum.pxf.automation.components.cluster.installer.nodes.SlaveNode;
+import org.greenplum.pxf.automation.components.cluster.installer.nodes.StandByNode;
 import org.greenplum.pxf.automation.components.common.cli.ParallelShellActions;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 
@@ -113,11 +113,11 @@ public class MultiNodeCluster extends PhdCluster {
         List<Node> nodesListByService;
         switch (service) {
         case hive:
-            nodesListByService = getNode(MasterNode.class, service);
+            nodesListByService = getNode(CoordinatorNode.class, service);
             break;
         case pxf:
             nodesListByService = getNode(service).stream()
-                    .filter(n -> n instanceof SlaveNode)
+                    .filter(n -> n instanceof StandByNode)
                     .collect(Collectors.toList());
             break;
         default:
@@ -150,7 +150,7 @@ public class MultiNodeCluster extends PhdCluster {
         // currently copy only the pxf-conf to tempClusterConfDirectory
         FileUtils.copyDirectory(new File(getPxfConfLocation()), new File(tempClusterConfDirectory + "/" + getPathToPxfConfInGeneralConf()));
         // if current node is not pxf node, it requires copying pxf/conf directory from the pxf node
-        Node pxfNode = getNode(MasterNode.class, EnumClusterServices.pxf).get(0);
+        Node pxfNode = getNode(CoordinatorNode.class, EnumClusterServices.pxf).get(0);
         // if pxf node is same as local node, then pxf conf is already there, skip pxf conf copying
         String localHostName = Inet4Address.getLocalHost().getHostName();
         if (!localHostName.equals(pxfNode.getHost())) {
@@ -223,7 +223,7 @@ public class MultiNodeCluster extends PhdCluster {
     /**
      * Gets node List from nodes array according to {@link Node} type and serviceType
      *
-     * @param nodeType {@link MasterNode} or {@link SlaveNode}
+     * @param nodeType {@link CoordinatorNode} or {@link StandByNode}
      * @param serviceType required service type to locate in nodes
      * @return list of nodes of given nodeType and serviceType
      */
