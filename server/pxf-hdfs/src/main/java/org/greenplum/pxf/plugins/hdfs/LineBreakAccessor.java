@@ -52,8 +52,6 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     private FSDataOutputStream fsdos;
     private FileSystem fs;
     private Path file;
-    private int iterationCount;
-    private long totalBytesCount;
 
     /**
      * Constructs a LineBreakAccessor.
@@ -137,16 +135,20 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
             // The logic below is copied from IOUtils.copyLarge to add logging
             long count = 0;
             int n;
+            int iterationCount = 0;
+            long iterationByteCount = 0;
+
             while (-1 != (n = inputStream.read(buffer))) {
                 dos.write(buffer, 0, n);
                 count += n;
+                iterationByteCount += n;
                 if (LOG.isDebugEnabled() && iterationCount == 100) {
                     // Log this message after every 100th Iteration
-                    LOG.debug("wrote {} bytes, total so far {} (buffer size {})", totalBytesCount, count, bufferSize);
+                    LOG.debug("wrote {} bytes, total so far {} (buffer size {})", iterationByteCount, count, bufferSize);
                     iterationCount = 0;
-                    totalBytesCount = 0;
+                    iterationByteCount = 0;
                 }
-                totalBytesCount +=n;
+
                 iterationCount++;
             }
 
