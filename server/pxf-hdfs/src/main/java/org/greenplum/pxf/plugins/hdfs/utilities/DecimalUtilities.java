@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 
 /**
- * DecimalUtilities is used for parsing decimal values according to the metadata and the decimal overflow options.
+ * DecimalUtilities is used for parsing decimal values according to the decimal schema and the decimal overflow options.
  * Precision and scale enforcement is dictated by the boolean 'enforcePrecisionAndScaleOnIgnore' when the decimal overflow option is 'ignore'.
  * Warning logs for different types of overflow will be logged only once if overflow happens.
  */
@@ -22,7 +22,7 @@ public class DecimalUtilities {
 
     /**
      * Construct a DecimalUtilities object carrying the decimal overflow option value,
-     * and boolean for the current profile should enforce precision and scale when parsing the decimal
+     * and a boolean for the current profile should enforce precision and scale when parsing the decimal
      * if the overflow option is 'ignore'
      *
      * @param decimalOverflowOption            one of the decimal overflow options. Supported values are 'error', 'round' and 'ignore'
