@@ -42,8 +42,8 @@ public interface PentaFunction<P, S, T, U, V, W> {
      * applies the {@code after} function
      * @throws NullPointerException if after is null
      */
-    default <X> PentaFunction<P, S, T, U, V, W> andThen(
-            Function<? super W, ? extends W> after) {
+    default <X> PentaFunction<P, S, T, U, V, X> andThen(
+            Function<? super W, ? extends X> after) {
         Objects.requireNonNull(after);
         return (P p, S s, T t, U u, V v) -> after.apply(apply(p, s, t, u, v));
     }

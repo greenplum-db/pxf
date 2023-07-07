@@ -21,20 +21,30 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalNoOverflow() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
         String decimalString = "123.12345";
+        HiveDecimal expectedHiveDecimal = HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(decimalString), precision, scale).getHiveDecimal();
 
+        // results should be the same no matter enforcePrecisionAndScaleOnIgnore to be true or false
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalString, precision, scale, columnName);
-        HiveDecimal expectedHiveDecimal = HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(hiveDecimal), precision, scale).getHiveDecimal();
+        assertEquals(expectedHiveDecimal, hiveDecimal);
 
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, false);
+        hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalString, precision, scale, columnName);
         assertEquals(expectedHiveDecimal, hiveDecimal);
     }
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionOptionError() {
+        // results should be the same no matter enforcePrecisionAndScaleOnIgnore to be true or false
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ERROR, true);
-
         Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName));
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
+                decimalStringOverflowsPrecision, columnName, precision), e.getMessage());
+
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ERROR, false);
+        e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName));
         assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
                 decimalStringOverflowsPrecision, columnName, precision), e.getMessage());
@@ -42,9 +52,15 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionOptionRound() {
+        // results should be the same no matter enforcePrecisionAndScaleOnIgnore to be true or false
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
-
         Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName));
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
+                decimalStringOverflowsPrecision, columnName, precision), e.getMessage());
+
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, false);
+        e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecision, precision, scale, columnName));
         assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
                 decimalStringOverflowsPrecision, columnName, precision), e.getMessage());
@@ -68,9 +84,15 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionMinusScaleOptionError() {
+        // results should be the same no matter enforcePrecisionAndScaleOnIgnore to be true or false
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ERROR, true);
-
         Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName));
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
+                decimalStringOverflowsPrecisionMinusScale, columnName, precision, scale), e.getMessage());
+
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ERROR, false);
+        e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName));
         assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
                 decimalStringOverflowsPrecisionMinusScale, columnName, precision, scale), e.getMessage());
@@ -78,9 +100,15 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalIntegerDigitCountOverflowsPrecisionMinusScaleOptionRound() {
+        // results should be the same no matter enforcePrecisionAndScaleOnIgnore to be true or false
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
-
         Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName));
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
+                decimalStringOverflowsPrecisionMinusScale, columnName, precision, scale), e.getMessage());
+
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, false);
+        e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsPrecisionMinusScale, precision, scale, columnName));
         assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
                 decimalStringOverflowsPrecisionMinusScale, columnName, precision, scale), e.getMessage());
@@ -105,9 +133,15 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalOverflowsScaleOptionError() {
+        // results should be the same no matter enforcePrecisionAndScaleOnIgnore to be true or false
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ERROR, true);
-
         Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName));
+        assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported scale %s, and cannot be stored without precision loss.",
+                decimalStringOverflowsScale, columnName, scale), e.getMessage());
+
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ERROR, false);
+        e = assertThrows(UnsupportedTypeException.class,
                 () -> decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName));
         assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported scale %s, and cannot be stored without precision loss.",
                 decimalStringOverflowsScale, columnName, scale), e.getMessage());
@@ -115,10 +149,16 @@ public class DecimalUtilitiesTest {
 
     @Test
     public void testParseDecimalOverflowsScaleOptionRound() {
-        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
-
-        HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
         HiveDecimal expectedHiveDecimal = HiveDecimalWritable.enforcePrecisionScale(new HiveDecimalWritable(decimalStringOverflowsScale), precision, scale).getHiveDecimal();
+
+        // results should be the same no matter enforcePrecisionAndScaleOnIgnore to be true or false
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, true);
+        HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
+        assertEquals(expectedHiveDecimal, hiveDecimal);
+
+        // results should be the same no matter enforcePrecisionAndScaleOnIgnore to be true or false
+        decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, false);
+        hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
         assertEquals(expectedHiveDecimal, hiveDecimal);
     }
 

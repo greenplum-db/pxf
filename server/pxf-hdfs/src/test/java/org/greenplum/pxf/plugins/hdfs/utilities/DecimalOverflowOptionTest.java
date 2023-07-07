@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DecimalOverflowOptionTest {
     @Test
-    public void testDecimalOverflowOptionValidness() {
+    public void testDecimalOverflowOptionValidity() {
         assertEquals(DecimalOverflowOption.ERROR, DecimalOverflowOption.valueOf("ERROR"));
         assertEquals(DecimalOverflowOption.ROUND, DecimalOverflowOption.valueOf("ROUND"));
         assertEquals(DecimalOverflowOption.IGNORE, DecimalOverflowOption.valueOf("IGNORE"));

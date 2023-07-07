@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 
 /**
- * DecimalUtilities is used for parsing decimal values for PXF Parquet and ORC profiles.
- * Parsing behavior is dependent on the decimal overflow option values.
+ * DecimalUtilities is used for parsing decimal values according to the metadata and the decimal overflow options.
+ * Precision and scale enforcement is dictated by the boolean 'enforcePrecisionAndScaleOnIgnore' when the decimal overflow option is 'ignore'.
  * Warning logs for different types of overflow will be logged only once if overflow happens.
  */
 public class DecimalUtilities {
@@ -22,7 +22,7 @@ public class DecimalUtilities {
 
     /**
      * Construct a DecimalUtilities object carrying the decimal overflow option value,
-     * and the information whether the current profile should enforce precision and scale when parsing the decimal
+     * and boolean for the current profile should enforce precision and scale when parsing the decimal
      * if the overflow option is 'ignore'
      *
      * @param decimalOverflowOption            one of the decimal overflow options. Supported values are 'error', 'round' and 'ignore'
@@ -37,7 +37,7 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile according to the decimal overflow options.
+     * Parse the incoming decimal string into a decimal number according to the decimal schema and the decimal overflow options.
      * There are 3 different types of overflow that PXF needs to handle when the column is defined as NUMERIC without precision and scale provided.
      * Decimal overflows on NUMERIC(precision,scale) have already been handled by GPDB and FileAccessor.
      * Case 1:
@@ -67,7 +67,7 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile when the decimal overflow option is 'error'.
+     * Parse the incoming decimal string into a decimal number according to the decimal schema when the decimal overflow option is 'error'.
      * PXF should error out on all the 3 overflow cases, or return a not rounded HiveDecimal which can fit within dictated precision and scale.
      *
      * @param value      is the decimal string to be parsed
@@ -84,7 +84,7 @@ public class DecimalUtilities {
                     value, columnName, precision));
         }
         // integer digit count of the bigDecimal cannot be above designated precision and scale
-        if (bigDecimal.precision() - bigDecimal.scale() > precision - scale) { // integer count of value must also be within allowed integer count
+        if (bigDecimal.precision() - bigDecimal.scale() > precision - scale) {
             throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
                     value, columnName, precision, scale));
         }
@@ -94,7 +94,7 @@ public class DecimalUtilities {
                     value, columnName, scale));
         }
 
-        // if the bigDecimal fits, then create a hive decimal without rounding
+        // if the bigDecimal fits, then create a HiveDecimal without rounding
         HiveDecimal hiveDecimal = HiveDecimal.create(bigDecimal, false);
         if (hiveDecimal == null) {
             throw new UnsupportedTypeException(String.format("The value %s for the NUMERIC column %s is not supported",
@@ -104,9 +104,9 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile when the decimal overflow option is 'round'.
+     * Parse the incoming decimal string into a decimal number according to the decimal schema when the decimal overflow option is 'round'.
      * PXF should error out on the overflow case 1 and 2, or return a rounded HiveDecimal which can fit within dictated precision and scale.
-     * Previous decimal parsing logic enforced precision and scale only for the PXF Parquet profile and not for the PXF ORC profile.
+     * Previous (before release 6.7.0) decimal parsing logic enforced precision and scale only for the PXF Parquet profile and not for the PXF ORC profile.
      * PXF now enforces precision and scale for both profiles.
      *
      * @param value      is the decimal string to be parsed
@@ -139,10 +139,11 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number for PXF Parquet or ORC profile when the decimal overflow option is 'ignore'.
-     * PXF should error out on the overflow case 1, or return a NULL/rounded HiveDecimal for backwards compatibilities.
+     * Parse the incoming decimal string into a decimal number according to the decimal schema when the decimal overflow option is 'ignore'.
+     * PXF should error out on the overflow case 1, or return either NULL or a rounded HiveDecimal for backwards compatibilities.
      * Precision and scale will be enforced on the HiveDecimal if the previous decimal parsing logic of the current profile did so.
-     * Previous decimal parsing logic enforced precision and scale only for the PXF Parquet profile and not for the PXF ORC profile.
+     * Previous (before release 6.7.0) decimal parsing logic enforced precision and scale only for the PXF Parquet profile and not for the PXF ORC profile.
+     * Now the enforcement is dictated by the boolean 'enforcePrecisionAndScaleOnIgnore' and is set to true for the PXF Parquet profile, and false for the PXF ORC profile.
      *
      * @param value      is the decimal string to be parsed
      * @param precision  is the decimal precision defined in the schema
@@ -167,7 +168,6 @@ public class DecimalUtilities {
             }
             return null;
         }
-        // Do we need to also enforce scale?
         if (enforcePrecisionAndScaleOnIgnore) {
             // HiveDecimal.enforcePrecisionScale returns a rounded value if the integer digit count of the decimal string
             // is less than or equal to Hive's maximum supported (precision - scale).
