@@ -20,7 +20,7 @@ public interface PentaFunction<P, S, T, U, V, W> {
     /**
      * Applies this function to the given arguments.
      *
-     * @param p the first input argument
+     * @param p the first function argument
      * @param s the second function argument
      * @param t the third function argument
      * @param u the fourth function argument
