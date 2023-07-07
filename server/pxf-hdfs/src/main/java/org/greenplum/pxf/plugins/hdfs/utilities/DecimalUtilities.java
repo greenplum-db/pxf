@@ -22,7 +22,7 @@ public class DecimalUtilities {
 
     /**
      * Construct a DecimalUtilities object carrying the decimal overflow option value,
-     * and a boolean for the current profile should enforce precision and scale when parsing the decimal
+     * and a boolean for the current profile to determine if precision and scale need to be enforced when parsing the decimal
      * if the overflow option is 'ignore'
      *
      * @param decimalOverflowOption            one of the decimal overflow options. Supported values are 'error', 'round' and 'ignore'
