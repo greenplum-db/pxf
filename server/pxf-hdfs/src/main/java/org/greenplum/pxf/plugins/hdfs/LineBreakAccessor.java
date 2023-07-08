@@ -133,18 +133,18 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
             final byte[] buffer = new byte[bufferSize];
 
             // The logic below is copied from IOUtils.copyLarge to add logging
-            long count = 0;
+            long totalByteCount = 0;
             int n;
             long iterationCount = 0;
             long iterationByteCount = 0;
 
             while (-1 != (n = inputStream.read(buffer))) {
                 dos.write(buffer, 0, n);
-                count += n;
+                totalByteCount += n;
                 iterationByteCount += n;
                 if (LOG.isDebugEnabled() && (iterationCount % 100 == 0)) {
                     // Log this message after every 100th Iteration
-                    LOG.debug("wrote {} bytes, total so far {} (buffer size {})", iterationByteCount, count, bufferSize);
+                    LOG.debug("wrote {} bytes, total so far {} (buffer size {})", iterationByteCount, totalByteCount, bufferSize);
                     iterationByteCount = 0;
                 }
 
