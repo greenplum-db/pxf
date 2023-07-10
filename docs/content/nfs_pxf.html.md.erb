@@ -39,10 +39,10 @@ Use the server template configuration file `<PXF_INSTALL_DIR>/templates/pxf-site
 
 PXF does not support user impersonation when you access a network file system; you must explicitly turn off user impersonation in a network file system server configuration.
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Choose a name for the file system server. You will provide the name to Greenplum users that you choose to allow to read from or write to files on the network file system.
@@ -52,13 +52,13 @@ PXF does not support user impersonation when you access a network file system; y
 3. Create the `$PXF_BASE/servers/<server_name>` directory. For example, use the following command to create a file system server configuration named `nfssrvcfg`:
 
     ``` shell
-    gpadmin@gpmaster$ mkdir $PXF_BASE/servers/nfssrvcfg
+    gpadmin@coordinator$ mkdir $PXF_BASE/servers/nfssrvcfg
     ````
 
 4. Copy the PXF `pxf-site.xml` template file to the `nfssrvcfg` server configuration directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml $PXF_BASE/servers/nfssrvcfg/
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml $PXF_BASE/servers/nfssrvcfg/
     ```
 
 5. Open the template server configuration file in the editor of your choice, and uncomment and provide property values appropriate for your environment. For example, if the file system share point is the directory named `/mnt/extdata/pxffs`, uncomment and set these server properties:
@@ -85,7 +85,7 @@ PXF does not support user impersonation when you access a network file system; y
 7. Synchronize the PXF server configuration to the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ``` 
 
 ## <a id="queryextdata"></a>Creating the External Table
@@ -115,7 +115,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 
 ## <a id="example_nfscsv"></a>Example: Reading From and Writing to a CSV File on a Network File System
 
-This example assumes that you have configured and mounted a network file system with the share point `/mnt/extdata/pxffs` on the Greenplum Database master host, the standby master host, and on each segment host.
+This example assumes that you have configured and mounted a network file system with the share point `/mnt/extdata/pxffs` on the Greenplum Database coordinator host, the standby coordinator host, and on each segment host.
 
 In this example, you:
 
@@ -131,7 +131,7 @@ In this example, you:
 1.  Create a directory (relative to the network file system share point) named `/mnt/extdata/pxffs/ex1`:
 
     ``` shell
-    gpadmin@gpmaster$ mkdir -p /mnt/extdata/pxffs/ex1
+    gpadmin@coordinator$ mkdir -p /mnt/extdata/pxffs/ex1
     ````
 
 2. Create a CSV file named `somedata.csv` in the directory:

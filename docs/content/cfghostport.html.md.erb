@@ -17,10 +17,10 @@ The `server.address` property identifies the IP address or hostname of the netwo
 
 When the PXF Service runs on Greenplum Database hosts, to secure communications and restrict PXF to listen only on the loopback interface, set the `server.address` to `localhost`:
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 1. Locate the `pxf-application.properties` file in your PXF installation. If you did not relocate `$PXF_BASE`, the file resides here:
@@ -40,8 +40,8 @@ When the PXF Service runs on Greenplum Database hosts, to secure communications 
 1. Synchronize the PXF configuration and then restart PXF:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
-    gpadmin@gpmaster$ pxf cluster restart
+    gpadmin@coordinator$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster restart
     ```
 
 ## <a id="port"></a>Configuring the Port Number
@@ -50,10 +50,10 @@ When the PXF Service runs on Greenplum Database hosts, to secure communications 
 
 Perform the following procedure to configure the port number of the PXF server on one or more Greenplum Database hosts:
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. For each Greenplum Database host:
@@ -75,7 +75,7 @@ Perform the following procedure to configure the port number of the PXF server o
 1. Source the `.bashrc` that file you just updated:
 
     ``` shell
-    gpadmin@gpmaster$ source ~/.bashrc
+    gpadmin@coordinator$ source ~/.bashrc
     ```
 
 3. Restart Greenplum Database as described in [Restarting Greenplum Database](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/admin_guide-managing-startstop.html#restarting-greenplum-database) in the Greenplum Documentation.
@@ -83,7 +83,7 @@ Perform the following procedure to configure the port number of the PXF server o
 4. Restart PXF on each Greenplum Database host:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster restart
+    gpadmin@coordinator$ pxf cluster restart
     ```
 
 5. Verify that PXF is running on the reconfigured port by invoking `http://<PXF_HOST>:<PXF_PORT>/actuator/health` to view PXF monitoring information as described in [About PXF Service Runtime Monitoring](monitor_pxf.html#about_rtm).
@@ -97,10 +97,10 @@ Perform the following procedure to configure the PXF host on each Greenplum Data
 
 <div class="note"><b>Note:</b> You must restart Greenplum Database when you configure the host in this manner. Consider performing this configuration during a scheduled down time.</div>
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. For each Greenplum Database segment host:
@@ -122,7 +122,7 @@ Perform the following procedure to configure the PXF host on each Greenplum Data
 1. Source the `.bashrc` that file you just updated:
 
     ``` shell
-    gpadmin@gpmaster$ source ~/.bashrc
+    gpadmin@coordinator$ source ~/.bashrc
     ```
 
 3. Restart Greenplum Database as described in [Restarting Greenplum Database](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/admin_guide-managing-startstop.html#restarting-greenplum-database) in the Greenplum Documentation.

@@ -32,8 +32,8 @@ version
 
 The `pxf` utility manages the PXF configuration and the PXF Service instance on the local Greenplum Database host. You can use the utility to:
 
-- Synchronize the PXF configuration from the master host to the standby master host or to a segment host.
-- Start, stop, or restart the PXF Service instance on the master host, standby master host, or a specific segment host, or display the status of the PXF Service instance running on the master, standby master, or a segment host.
+- Synchronize the PXF configuration from the coordinator host to the standby coordinator host or to a segment host.
+- Start, stop, or restart the PXF Service instance on the coordinator host, standby coordinator host, or a specific segment host, or display the status of the PXF Service instance running on the coordinator, standby coordinator, or a segment host.
 - Copy the PXF extension control file from a PXF installation on the host to the Greenplum installation on the host after a Greenplum upgrade.
 - Prepare a new `$PXF_BASE` runtime configuration directory on the host.
 
@@ -63,32 +63,32 @@ The `pxf` utility manages the PXF configuration and the PXF Service instance on 
 <dd>The command is a no-op.</dd>
 
 <dt>restart</dt>
-<dd>Restart the PXF Service instance running on the local master host, standby master host, or segment host.</dd>
+<dd>Restart the PXF Service instance running on the local coordinator host, standby coordinator host, or segment host.</dd>
 
 <dt>start</dt>
-<dd>Start the PXF Service instance on the local master host, standby master host, or segment host.</dd>
+<dd>Start the PXF Service instance on the local coordinator host, standby coordinator host, or segment host.</dd>
 
 <dt>status</dt>
-<dd>Display the status of the PXF Service instance running on the local master host, standby master host, or segment host.</dd>
+<dd>Display the status of the PXF Service instance running on the local coordinator host, standby coordinator host, or segment host.</dd>
 
 <dt>stop  </dt>
-<dd>Stop the PXF Service instance running on the local master host, standby master host, or segment host.</dd>
+<dd>Stop the PXF Service instance running on the local coordinator host, standby coordinator host, or segment host.</dd>
 
 <dt>sync  </dt>
-<dd>Synchronize the PXF configuration (<code>$PXF_BASE</code>) from the master host to a specific Greenplum Database standby master host or segment host. You must run <code>pxf sync</code> on the master host. By default, this command updates files on and copies files to the remote. You can instruct PXF to also delete files during the synchronization; see Options below.</dd>
+<dd>Synchronize the PXF configuration (<code>$PXF_BASE</code>) from the coordinator host to a specific Greenplum Database standby coordinator host or segment host. You must run <code>pxf sync</code> on the coordinator host. By default, this command updates files on and copies files to the remote. You can instruct PXF to also delete files during the synchronization; see Options below.</dd>
 
 <dt>version  </dt>
 <dd>Display the PXF version and then exit.</dd>
 
 ## <a id="options"></a>Options
 
-The `pxf sync` command, which you must run on the Greenplum Database master host, takes the following option and argument:
+The `pxf sync` command, which you must run on the Greenplum Database coordinator host, takes the following option and argument:
 
 <dt>&#8211;d | &#8211;&#8211;delete </dt>
-<dd>Delete any files in the PXF user configuration on <code>&lt;gphost></code> that are not also present on the master host. If you specify this option, you must provide it on the command line before <code>&lt;gphost></code>.</dd>
+<dd>Delete any files in the PXF user configuration on <code>&lt;gphost></code> that are not also present on the coordinator host. If you specify this option, you must provide it on the command line before <code>&lt;gphost></code>.</dd>
 
 <dt>&lt;gphost> </dt>
-<dd>The Greenplum Database host to which to synchronize the PXF configuration. Required. <code>&lt;gphost></code> must identify the standby master host or a segment host.</dd>
+<dd>The Greenplum Database host to which to synchronize the PXF configuration. Required. <code>&lt;gphost></code> must identify the standby coordinator host or a segment host.</dd>
 
 ## <a id="topic1__section5"></a>Examples
 

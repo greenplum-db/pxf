@@ -86,10 +86,10 @@ By default, PXF accesses Hadoop using the identity of the Greenplum Database use
 
 Perform the following procedure to configure the Hadoop user:
 
-1. Log in to your Greenplum Database master host as the administrative user:
+1. Log in to your Greenplum Database coordinator host as the administrative user:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Identify the name of the Hadoop PXF server configuration that you want to update.
@@ -97,13 +97,13 @@ Perform the following procedure to configure the Hadoop user:
 3. Navigate to the server configuration directory. For example, if the server is named `hdp3`:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_BASE/servers/hdp3
+    gpadmin@coordinator$ cd $PXF_BASE/servers/hdp3
     ```
 
 4. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 5. Open the `pxf-site.xml` file in the editor of your choice, and configure the Hadoop user name. When impersonation is deactivated, this name identifies the Hadoop user identity that PXF will use to access the Hadoop system. When user impersonation is activated for a non-secure Hadoop cluster, this name identifies the PXF proxy Hadoop user. For example, if you want to access Hadoop as the user `hdfsuser1`, uncomment the property and set it as follows:
@@ -122,7 +122,7 @@ Perform the following procedure to configure the Hadoop user:
 8. Use the `pxf cluster sync` command to synchronize the PXF Hadoop server configuration to your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 
@@ -133,13 +133,13 @@ PXF user impersonation is activated by default for Hadoop servers. You can confi
 1. Navigate to the server configuration directory. For example, if the server is named `hdp3`:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_BASE/servers/hdp3
+    gpadmin@coordinator$ cd $PXF_BASE/servers/hdp3
     ```
 
 2. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 3. Open the `pxf-site.xml` file in the editor of your choice, and update the user impersonation property setting. For example, if you do not require user impersonation for this server configuration, set the `pxf.service.user.impersonation` property to `false`:
@@ -167,7 +167,7 @@ PXF user impersonation is activated by default for Hadoop servers. You can confi
 5. Use the `pxf cluster sync` command to synchronize the PXF Hadoop server configuration to your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 
@@ -197,7 +197,7 @@ When PXF user impersonation is activated for a Hadoop server configuration and K
 
 4. You must restart Hadoop for your `core-site.xml` changes to take effect.
 
-5. Copy the updated `core-site.xml` file to the PXF Hadoop server configuration directory `$PXF_BASE/servers/<server_name>` on the Greenplum Database master host and synchronize the configuration to the standby master host and each Greenplum Database segment host.
+5. Copy the updated `core-site.xml` file to the PXF Hadoop server configuration directory `$PXF_BASE/servers/<server_name>` on the Greenplum Database coordinator host and synchronize the configuration to the standby coordinator host and each Greenplum Database segment host.
 
 ## <a id="hive"></a>Hive User Impersonation
 

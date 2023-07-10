@@ -50,10 +50,10 @@ Table heading key:
 
 Perform the following procedure to configure a PXF JDBC server for Hive:
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Choose a name for the JDBC server.
@@ -61,25 +61,25 @@ Perform the following procedure to configure a PXF JDBC server for Hive:
 3. Create the `$PXF_BASE/servers/<server_name>` directory. For example, use the following command to create a JDBC server configuration named `hivejdbc1`:
 
     ``` shell
-    gpadmin@gpmaster$ mkdir $PXF_BASE/servers/hivejdbc1
+    gpadmin@coordinator$ mkdir $PXF_BASE/servers/hivejdbc1
     ````
 
 3. Navigate to the server configuration directory. For example:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_BASE/servers/hivejdbc1
+    gpadmin@coordinator$ cd $PXF_BASE/servers/hivejdbc1
     ```
 
 4. Copy the PXF JDBC server template file to the server configuration directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/jdbc-site.xml .
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/jdbc-site.xml .
     ```
         
 4. When you access Hive secured with Kerberos, you also need to specify configuration properties in the `pxf-site.xml` file. *If this file does not yet exist in your server configuration*, copy the `pxf-site.xml` template file to the server config directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
         
 5. Open the `jdbc-site.xml` file in the editor of your choice and set the `jdbc.driver` and `jdbc.url` properties. Be sure to specify your Hive host, port, and database name:
@@ -186,6 +186,6 @@ Perform the following procedure to configure a PXF JDBC server for Hive:
 11. Use the `pxf cluster sync` command to copy the new server configuration to the Greenplum Database cluster:
     
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 

@@ -84,10 +84,10 @@ You must create a JDBC server configuration for PostgreSQL and synchronize the P
 
 This procedure will typically be performed by the Greenplum Database administrator.
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Create a JDBC server configuration for PostgreSQL as described in [Example Configuration Procedure](jdbc_cfg.html#cfg_proc), naming the server directory `pgsrvcfg`. The `jdbc-site.xml` file contents should look similar to the following (substitute your PostgreSQL host system for `pgserverhost`):
@@ -117,7 +117,7 @@ This procedure will typically be performed by the Greenplum Database administrat
 3. Synchronize the PXF server configuration to the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 ## <a id="ex_readjdbc"></a>Read from the PostgreSQL Table

@@ -217,10 +217,10 @@ Procedure:
     $ hdfs dfs -put /tmp/sampledata.orc /data/pxf_examples/orc_example/
     ```
 
-1. Log in to the Greenplum Database master host and connect to a database. This command connects to the database named `testdb` as the `gpadmin` user:
+1. Log in to the Greenplum Database coordinator host and connect to a database. This command connects to the database named `testdb` as the `gpadmin` user:
 
     ``` shell
-    gpadmin@gpmaster$ psql -d testdb
+    gpadmin@coordinator$ psql -d testdb
     ```
 
 1. Create an external table named `sample_orc` that references the `/data/pxf_examples/orc_example/sampledata.orc` file on HDFS. This command creates the table with the column names specified in the ORC schema, and uses the `default` PXF server:

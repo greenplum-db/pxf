@@ -11,26 +11,26 @@ Ensure that you have access to, or superuser permissions to install, Java 8 or J
 
 ## <a id="proc"></a>Procedure
 
-Perform the following procedure to install Java on the master host, standby master host, and on each segment host in your Greenplum Database cluster. You will use the `gpssh` utility where possible to run a command on multiple hosts.
+Perform the following procedure to install Java on the coordinator host, standby coordinator host, and on each segment host in your Greenplum Database cluster. You will use the `gpssh` utility where possible to run a command on multiple hosts.
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Determine the version(s) of Java installed on the system:
 
     ``` pre
-    gpadmin@gpmaster$ rpm -qa | grep java
+    gpadmin@coordinator$ rpm -qa | grep java
     ```
 
-3. If the system does not include a Java version 8 or 11 installation, install one of these Java versions on the master host, standby master host, and on each Greenplum Database segment host.
+3. If the system does not include a Java version 8 or 11 installation, install one of these Java versions on the coordinator host, standby coordinator host, and on each Greenplum Database segment host.
 
-    1. Create a text file that lists your Greenplum Database standby master host and segment hosts, one host name per line. For example, a file named `gphostfile` may include:
+    1. Create a text file that lists your Greenplum Database standby coordinator host and segment hosts, one host name per line. For example, a file named `gphostfile` may include:
 
         ``` pre
-        gpmaster
+        coordinator
         mstandby
         seghost1
         seghost2
@@ -39,7 +39,7 @@ Perform the following procedure to install Java on the master host, standby mast
     2. Install the Java package on each host. For example, to install Java version 8:
 
         ``` shell
-        gpadmin@gpmaster$ gpssh -e -v -f gphostfile sudo yum -y install java-1.8.0-openjdk-1.8.0*
+        gpadmin@coordinator$ gpssh -e -v -f gphostfile sudo yum -y install java-1.8.0-openjdk-1.8.0*
         ```
 
 4. Identify the Java 8 or 11 `$JAVA_HOME` setting for PXF. For example:

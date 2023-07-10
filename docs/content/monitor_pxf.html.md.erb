@@ -34,16 +34,16 @@ Only the `gpadmin` user can request the status of the PXF Service.
 
 Perform the following procedure to request the PXF status of your Greenplum Database cluster.
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Run the `pxf cluster status` command:
 
     ```shell
-    gpadmin@gpmaster$ pxf cluster status
+    gpadmin@coordinator$ pxf cluster status
     ```
 
 ## <a id="about_rtm"></a> About PXF Service Runtime Monitoring

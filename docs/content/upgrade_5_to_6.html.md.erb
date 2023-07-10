@@ -17,16 +17,16 @@ The PXF upgrade procedure has three steps. You perform one pre-install procedure
 
 Perform this procedure before you upgrade to a new version of PXF:
 
-1. Log in to the Greenplum Database master host. For example:
+1. Log in to the Greenplum Database coordinator host. For example:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 1. Identify and note the version of PXF currently running in your Greenplum cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf version
+    gpadmin@coordinator$ pxf version
     ```
 
 
@@ -44,16 +44,16 @@ Perform this procedure before you upgrade to a new version of PXF:
 
 After you install the new version of PXF, perform the following procedure:
 
-1. Log in to the Greenplum Database master host. For example:
+1. Log in to the Greenplum Database coordinator host. For example:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 1. You must run the `pxf` commands specified in subsequent steps using the binaries from your PXF 6.x installation. Ensure that the PXF 6.x installation `bin/` directory is in your `$PATH`, or provide the full path to the `pxf` command. You can run the following command to check the `pxf` version:
 
     ``` shell
-    gpadmin@gpmaster$ pxf version
+    gpadmin@coordinator$ pxf version
     ```
 
 1. (Optional, Advanced) If you want to relocate `$PXF_BASE` outside of `<PXF_INSTALL_DIR>`, perform the procedure described in [Relocating $PXF_BASE](about_pxf_dir.html#movebase).
@@ -64,13 +64,13 @@ After you install the new version of PXF, perform the following procedure:
     2. Run the `migrate` command (see [pxf cluster migrate](ref/pxf-cluster.html)). You must provide `PXF_CONF`. If you relocated `$PXF_BASE`, provide that setting as well.
 
         ``` shell
-        gpadmin@gpmaster$ PXF_CONF=/path/to/dir pxf cluster migrate
+        gpadmin@coordinator$ PXF_CONF=/path/to/dir pxf cluster migrate
         ```
 
         Or:
 
         ``` shell
-        gpadmin@gpmaster$ PXF_CONF=/path/to/dir PXF_BASE=/new/dir pxf cluster migrate
+        gpadmin@coordinator$ PXF_CONF=/path/to/dir PXF_BASE=/new/dir pxf cluster migrate
         ```
 
         The command copies PXF 5.x `conf/pxf-profiles.xml`, `servers/*`, `lib/*`, and `keytabs/*` to the PXF 6.x `$PXF_BASE` directory. The command also merges configuration changes in the PXF 5.x `conf/pxf-env.sh` into the PXF 6.x file of the same name and into `pxf-application.properties`.
@@ -135,14 +135,14 @@ After you install the new version of PXF, perform the following procedure:
 1. Register the PXF 6.x extension files with Greenplum Database (see [pxf cluster register](ref/pxf-cluster.html)). `$GPHOME` must be set when you run this command.
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster register
+    gpadmin@coordinator$ pxf cluster register
     ```
 
-    The `register` command copies only the `pxf.control` extension file to the Greenplum cluster. In PXF 6.x, the PXF extension `.sql` file and library `pxf.so` reside in `<PXF_INSTALL_DIR>/gpextable`. You may choose to remove these now-unused files from the Greenplum Database installation *on the Greenplum Database master host, the standby master host, and all segment hosts*. For example, to remove the files on the master host:
+    The `register` command copies only the `pxf.control` extension file to the Greenplum cluster. In PXF 6.x, the PXF extension `.sql` file and library `pxf.so` reside in `<PXF_INSTALL_DIR>/gpextable`. You may choose to remove these now-unused files from the Greenplum Database installation *on the Greenplum Database coordinator host, the standby coordinator host, and all segment hosts*. For example, to remove the files on the coordinator host:
 
     ``` shell
-    gpadmin@gpmaster$ rm $GPHOME/share/postgresql/extension/pxf--1.0.sql
-    gpadmin@gpmaster$ rm $GPHOME/lib/postgresql/pxf.so
+    gpadmin@coordinator$ rm $GPHOME/share/postgresql/extension/pxf--1.0.sql
+    gpadmin@coordinator$ rm $GPHOME/lib/postgresql/pxf.so
     ```
 
 1. PXF 6.x includes a new version of the `pxf` extension. You must update the extension in every Greenplum database in which you are using PXF. A database superuser or the database owner must run this SQL command in the `psql` subsystem or in an SQL script:
@@ -167,18 +167,18 @@ After you install the new version of PXF, perform the following procedure:
     1. Add the location of this JAR to `$HBASE_CLASSPATH` on each HBase node.
     1. Restart HBase on each node.
 
-1. In PXF 6.x, the PXF Service runs on all Greenplum Database hosts. If you used PXF 5.x to access Kerberos-secured HDFS, you must now generate principals and keytabs for the Greenplum master and standby master hosts, and distribute these to the hosts as described in [Configuring PXF for Secure HDFS](pxf_kerbhdfs.html#procedure).
+1. In PXF 6.x, the PXF Service runs on all Greenplum Database hosts. If you used PXF 5.x to access Kerberos-secured HDFS, you must now generate principals and keytabs for the Greenplum coordinator and standby coordinator hosts, and distribute these to the hosts as described in [Configuring PXF for Secure HDFS](pxf_kerbhdfs.html#procedure).
 
-4. Synchronize the PXF 6.x configuration from the master host to the standby master host and each Greenplum Database segment host. For example:
+4. Synchronize the PXF 6.x configuration from the coordinator host to the standby coordinator host and each Greenplum Database segment host. For example:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
  
 5. Start PXF on each Greenplum host. For example:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster start
+    gpadmin@coordinator$ pxf cluster start
     ```
 
 1. Verify that PXF can access each external data source by querying external tables that specify each PXF server configuration.

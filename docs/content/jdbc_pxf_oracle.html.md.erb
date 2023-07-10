@@ -82,25 +82,25 @@ You must create a JDBC server configuration for Oracle, download the Oracle driv
 
 This procedure will typically be performed by the Greenplum Database administrator.
 
-1. Download the Oracle JDBC driver and place it under `$PXF_BASE/lib` of your Greenplum Database master host. If you [relocated $PXF_BASE](about_pxf_dir.html#movebase), make sure you use the updated location. You can download a Oracle JDBC driver from your preferred download location. The following example places a driver downloaded from Oracle webiste under `$PXF_BASE/lib` of the Greenplum Database master:
+1. Download the Oracle JDBC driver and place it under `$PXF_BASE/lib` of your Greenplum Database coordinator host. If you [relocated $PXF_BASE](about_pxf_dir.html#movebase), make sure you use the updated location. You can download a Oracle JDBC driver from your preferred download location. The following example places a driver downloaded from Oracle webiste under `$PXF_BASE/lib` of the Greenplum Database coordinator:
 
-    1. If you did not relocate `$PXF_BASE`, run the following from the Greenplum master:
+    1. If you did not relocate `$PXF_BASE`, run the following from the Greenplum coordinator:
 
         ```shell
-        gpadmin@gpmaster$ scp ojdbc10.jar gpadmin@gpmaster:/usr/local/pxf-gp<version>/lib/
+        gpadmin@coordinator$ scp ojdbc10.jar gpadmin@coordinator:/usr/local/pxf-gp<version>/lib/
         ```
 
-    2. If you relocated `$PXF_BASE`, run the following from the Greenplum master:
+    2. If you relocated `$PXF_BASE`, run the following from the Greenplum coordinator:
 
         ```shell
-        gpadmin@gpmaster$ scp ojdbc10.jar gpadmin@gpmaster:$PXF_BASE/lib/
+        gpadmin@coordinator$ scp ojdbc10.jar gpadmin@coordinator:$PXF_BASE/lib/
         ```
 
 1. Synchronize the PXF configuration, and then restart PXF: 
 
     ```shell
-    gpadmin@gpmaster$ pxf cluster sync
-    gpadmin@gpmaster$ pxf cluster restart
+    gpadmin@coordinator$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster restart
     ```
 
 2. Create a JDBC server configuration for Oracle as described in [Example Configuration Procedure](jdbc_cfg.html#cfg_proc), naming the server directory `oracle`. The `jdbc-site.xml` file contents should look similar to the following (substitute your Oracle host system for `oracleserverhost`, and the value of your Oracle service name for `orcl`):
@@ -134,7 +134,7 @@ This procedure will typically be performed by the Greenplum Database administrat
 3. Synchronize the PXF server configuration to the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 ## <a id="ex_readjdbc"></a>Read from the Oracle Table

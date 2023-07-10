@@ -11,16 +11,16 @@ Each PXF Service running on a Greenplum Database host is configured with a defau
 
 Perform the following procedure to increase the heap size for the PXF Service running on each host in your Greenplum Database cluster.
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Edit the `$PXF_BASE/conf/pxf-env.sh` file. For example:
 
     ``` shell
-    gpadmin@gpmaster$ vi $PXF_BASE/conf/pxf-env.sh
+    gpadmin@coordinator$ vi $PXF_BASE/conf/pxf-env.sh
     ```
 
 3. Locate the `PXF_JVM_OPTS` setting in the `pxf-env.sh` file, and update the `-Xmx` and/or `-Xms` options to the desired value. For example:
@@ -34,7 +34,7 @@ Perform the following procedure to increase the heap size for the PXF Service ru
 4. Use the `pxf cluster sync` command to copy the updated `pxf-env.sh` file to the Greenplum Database cluster. For example:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 5. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
@@ -96,16 +96,16 @@ Refer to the configuration [procedure](#pxf-cfgoom_proc) below for the instructi
 
 Auto-termination of the PXF Service on OOM is deactivated by default. Heap dump generation on OOM is deactivated by default. To configure one or both of these properties, perform the following procedure:
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Edit the `$PXF_BASE/conf/pxf-env.sh` file. For example:
 
     ``` shell
-    gpadmin@gpmaster$ vi $PXF_BASE/conf/pxf-env.sh
+    gpadmin@coordinator$ vi $PXF_BASE/conf/pxf-env.sh
     ```
 
 3. If you want to configure (i.e. turn off, or turn back on) auto-termination of the PXF Service on OOM, locate the `PXF_OOM_KILL` property in the `pxf-env.sh` file. If the setting is commented out, uncomment it, and then update the value. For example, to turn off this behavior, set the value to `false`:
@@ -133,7 +133,7 @@ Auto-termination of the PXF Service on OOM is deactivated by default. Heap dump 
 6. Use the `pxf cluster sync` command to copy the updated `pxf-env.sh` file to the Greenplum Database cluster. For example:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 7. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
@@ -151,16 +151,16 @@ If you plan to run large workloads on a large number of files in an external Hiv
 
 Perform the following procedure to set the maximum number of Tomcat threads for the PXF Service running on each host in your Greenplum Database deployment.
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Edit the `$PXF_BASE/conf/pxf-application.properties` file. For example:
 
     ``` shell
-    gpadmin@gpmaster$ vi $PXF_BASE/conf/pxf-application.properties
+    gpadmin@coordinator$ vi $PXF_BASE/conf/pxf-application.properties
     ```
 
 3. Locate the `pxf.max.threads` setting in the `pxf-application.properties` file. If the setting is commented out, uncomment it, and then update to the desired value. For example, to reduce the maximum number of Tomcat threads to 100:
@@ -174,7 +174,7 @@ Perform the following procedure to set the maximum number of Tomcat threads for 
 4. Use the `pxf cluster sync` command to copy the updated `pxf-application.properties` file to the Greenplum Database cluster. For example:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 5. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).

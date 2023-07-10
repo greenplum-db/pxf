@@ -25,7 +25,7 @@ PXF is compatible with Cloudera, Hortonworks Data Platform, MapR, and generic Ap
 
 ## <a id="hdfs_arch"></a>Architecture
 
-HDFS is the primary distributed storage mechanism used by Apache Hadoop. When a user or application performs a query on a PXF external table that references an HDFS file, the Greenplum Database master host dispatches the query to all segment instances. Each segment instance contacts the PXF Service running on its host. When it receives the request from a segment instance, the PXF Service:
+HDFS is the primary distributed storage mechanism used by Apache Hadoop. When a user or application performs a query on a PXF external table that references an HDFS file, the Greenplum Database coordinator host dispatches the query to all segment instances. Each segment instance contacts the PXF Service running on its host. When it receives the request from a segment instance, the PXF Service:
 
 1. Allocates a worker thread to serve the request from the segment instance.
 2. Invokes the HDFS Java API to request metadata information for the HDFS file from the HDFS NameNode. 
@@ -36,7 +36,7 @@ HDFS is the primary distributed storage mechanism used by Apache Hadoop. When a 
 
 A PXF worker thread works on behalf of a segment instance. A worker thread uses its Greenplum Database `gp_segment_id` and the file block information described in the metadata to assign itself a specific portion of the query data. This data may reside on one or more HDFS DataNodes.
 
-The PXF worker thread invokes the HDFS Java API to read the data and delivers it to the segment instance. The segment instance delivers its portion of the data to the Greenplum Database master host. This communication occurs across segment hosts and segment instances in parallel.
+The PXF worker thread invokes the HDFS Java API to read the data and delivers it to the segment instance. The segment instance delivers its portion of the data to the Greenplum Database coordinator host. This communication occurs across segment hosts and segment instances in parallel.
 
 
 ## <a id="hadoop_prereq"></a>Prerequisites
