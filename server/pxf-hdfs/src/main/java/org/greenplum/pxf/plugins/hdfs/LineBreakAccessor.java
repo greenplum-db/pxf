@@ -151,8 +151,8 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
                 iterationCount++;
             }
 
-            LOG.debug("Wrote {} bytes to outputStream using a buffer of size {}", count, bufferSize);
-            return count > 0;
+            LOG.debug("Wrote {} bytes to outputStream using a buffer of size {}", iterationCount, bufferSize);
+            return iterationCount > 0;
         } else {
             dos.write((byte[]) onerow.getData());
         }
