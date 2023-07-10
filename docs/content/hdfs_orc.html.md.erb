@@ -301,3 +301,25 @@ In this example, you create a writable external table to write some data to the 
     postgres=# SELECT * FROM sample_orc ORDER BY num_orders;
     ```
 
+## <a id="overflow"></a>Understanding Overflow Conditions When Writing Numeric Data
+
+PXF uses the `HiveDecimal` class to write numeric ORC data. `HiveDecimal` limits both the precision and the scale of a numeric type to a maximum of 38.
+
+When you define a `NUMERIC` column in an external table without specifying a precision or scale, PXF internally maps the column to a `DECIMAL(38, 10)`.
+
+A precision overflow condition can result when:
+
+- You define a `NUMERIC` column in the external table, and the integer digit count of a value exceeds the maximum supported precision of 38. For example, `1234567890123456789012345678901234567890.12345`, which has an integer digit count of 45.
+- You define a `NUMERIC(<precision>)` column with a `<precision>` greater than 38. For example, `NUMERIC(55)`.
+- You define a `NUMERIC(<precision>, <scale>)` column and the integer digit count of a value is greater than `<precision> - <scale>`. For example, you define a `NUMERIC(20,4)` column and the value is `12345678901234567.12`, which has an integer digit count of 19, which is greater than 20-4=16.
+
+PXF can take one of three actions when it detects an overflow while writing numeric data to an ORC file: round the value (the default), return an error, or ignore the overflow. The `pxf.orc.write.decimal.overflow` property in the `pxf-site.xml` server configuration governs PXF's action in this circumstance; valid values for this property follow:
+
+| Value  | PXF Action |
+|-------|-------------------------------------|
+| `round` | When PXF encounters an overflow, it attempts to round the value to meet both precision and scale requirements before writing and logs a warning. PXF reports an error if rounding fails. This may potentially leave an incomplete data set in the external system.  `round` is the default. |
+| `error` | PXF reports an error when it encounters an overflow, and the transaction fails. |
+| `ignore` | PXF attempts to round the value to meet only the precision requirement; otherwise PXF writes a NULL value. (This was PXF's behavior prior to version 6.7.0.) |
+
+PXF always logs a warning when it detects an overflow, regardless of the `pxf.orc.write.decimal.overflow` property setting.
+
