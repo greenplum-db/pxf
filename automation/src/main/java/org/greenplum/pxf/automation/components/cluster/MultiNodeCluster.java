@@ -14,7 +14,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.greenplum.pxf.automation.components.cluster.installer.nodes.CoordinatorNode;
 import org.greenplum.pxf.automation.components.cluster.installer.nodes.Node;
-import org.greenplum.pxf.automation.components.cluster.installer.nodes.StandByNode;
+import org.greenplum.pxf.automation.components.cluster.installer.nodes.SegmentNode;
 import org.greenplum.pxf.automation.components.common.cli.ParallelShellActions;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 
@@ -117,7 +117,7 @@ public class MultiNodeCluster extends PhdCluster {
             break;
         case pxf:
             nodesListByService = getNode(service).stream()
-                    .filter(n -> n instanceof StandByNode)
+                    .filter(n -> n instanceof SegmentNode)
                     .collect(Collectors.toList());
             break;
         default:
@@ -223,7 +223,7 @@ public class MultiNodeCluster extends PhdCluster {
     /**
      * Gets node List from nodes array according to {@link Node} type and serviceType
      *
-     * @param nodeType {@link CoordinatorNode} or {@link StandByNode}
+     * @param nodeType {@link CoordinatorNode} or {@link SegmentNode}
      * @param serviceType required service type to locate in nodes
      * @return list of nodes of given nodeType and serviceType
      */

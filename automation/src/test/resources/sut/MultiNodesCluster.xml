@@ -12,14 +12,14 @@
 			<services>gpdb,pxf</services>
 		</nodes>
 		<nodes index="1">
-			<class>org.greenplum.pxf.automation.components.cluster.installer.nodes.StandByNode</class>
+			<class>org.greenplum.pxf.automation.components.cluster.installer.nodes.SegmentNode</class>
 			<host>sdw1</host>
 			<userName>gpadmin</userName>
 			<password></password>
 			<services>pxf</services>
 		</nodes>
 		<nodes index="2">
-			<class>org.greenplum.pxf.automation.components.cluster.installer.nodes.StandByNode</class>
+			<class>org.greenplum.pxf.automation.components.cluster.installer.nodes.SegmentNode</class>
 			<host>sdw2</host>
 			<userName>gpadmin</userName>
 			<password></password>

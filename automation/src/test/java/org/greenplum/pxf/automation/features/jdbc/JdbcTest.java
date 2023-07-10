@@ -167,7 +167,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS,
                 gpdbNativeTableTypes.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName());
         pxfJdbcSingleFragment.setHost(pxfHost);
         pxfJdbcSingleFragment.setPort(pxfPort);
@@ -181,7 +181,7 @@ public class JdbcTest extends BaseFeature {
                         TYPES_TABLE_FIELDS,
                         gpdbNativeTableTypes.getName(),
                         POSTGRES_DRIVER_CLASS,
-                        GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                        GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                         13,
                         "USD:UAH",
                         "1",
@@ -200,7 +200,7 @@ public class JdbcTest extends BaseFeature {
                         TYPES_TABLE_FIELDS,
                         gpdbNativeTableTypes.getName(),
                         POSTGRES_DRIVER_CLASS,
-                        GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                        GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                         2,
                         "1:6",
                         "1",
@@ -219,7 +219,7 @@ public class JdbcTest extends BaseFeature {
                         TYPES_TABLE_FIELDS,
                         gpdbNativeTableTypes.getName(),
                         POSTGRES_DRIVER_CLASS,
-                        GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                        GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                         11,
                         "2015-03-06:2015-03-20",
                         "1:DAY",
@@ -276,7 +276,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS,
                 gpdbWritableTargetTable.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName(), null);
         pxfJdbcWritable.setHost(pxfHost);
         pxfJdbcWritable.setPort(pxfPort);
@@ -287,7 +287,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS_SMALL,
                 gpdbWritableTargetTableNoBatch.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName(), "BATCH_SIZE=1");
         pxfJdbcWritable.setHost(pxfHost);
         pxfJdbcWritable.setPort(pxfPort);
@@ -298,7 +298,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS_SMALL,
                 gpdbWritableTargetTablePool.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName(), "POOL_SIZE=2");
         pxfJdbcWritable.setHost(pxfHost);
         pxfJdbcWritable.setPort(pxfPort);
@@ -311,7 +311,7 @@ public class JdbcTest extends BaseFeature {
                 COLUMNS_TABLE_FIELDS,
                 gpdbNativeTableColumns.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName());
         pxfJdbcColumns.setHost(pxfHost);
         pxfJdbcColumns.setPort(pxfPort);
@@ -324,7 +324,7 @@ public class JdbcTest extends BaseFeature {
                 COLUMNS_TABLE_FIELDS_IN_DIFFERENT_ORDER_SUBSET,
                 gpdbNativeTableColumns.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName());
         pxfJdbcColumnProjectionSubset.setHost(pxfHost);
         pxfJdbcColumnProjectionSubset.setPort(pxfPort);
@@ -337,7 +337,7 @@ public class JdbcTest extends BaseFeature {
                 COLUMNS_TABLE_FIELDS_SUPERSET,
                 gpdbNativeTableColumns.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName());
         pxfJdbcColumnProjectionSuperset.setHost(pxfHost);
         pxfJdbcColumnProjectionSuperset.setPort(pxfPort);
@@ -350,7 +350,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS,
                 gpdbNativeTableTypes.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName(), "FETCH_SIZE=0");
         pxfJdbcSingleFragment.setHost(pxfHost);
         pxfJdbcSingleFragment.setPort(pxfPort);

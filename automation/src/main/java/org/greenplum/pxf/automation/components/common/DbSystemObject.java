@@ -28,7 +28,7 @@ import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 public abstract class DbSystemObject extends BaseSystemObject implements IDbFunctionality {
 	protected String db;
 	protected String host;
-	protected String coordinatorHost;
+	protected String masterHost;
 	protected String port;
 	protected String userName;
     protected String kerberosPrincipal;
@@ -425,16 +425,16 @@ public abstract class DbSystemObject extends BaseSystemObject implements IDbFunc
 		return host;
 	}
 
-	public String getCoordinatorHost() {
-		return coordinatorHost;
+	public String getMasterHost() {
+		return masterHost;
 	}
 
 	public void setHost(String host) {
 		this.host = host;
 	}
 
-	public void setCoordinatorHost(String coordinatorHost) {
-		this.coordinatorHost = coordinatorHost;
+	public void setMasterHost(String masterHost) {
+		this.masterHost = masterHost;
 	}
 
 	public String getEncoding() {

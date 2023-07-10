@@ -28,19 +28,19 @@ public class FailOverTest extends BaseFeature {
     @Override
     protected void afterClass() throws Exception {
         super.afterClass();
-        // We need to restore the service after it has been killed
+        // We need to restore the service after it has been stopped
         if (cluster != null) {
             cluster.start(PhdCluster.EnumClusterServices.pxf);
         }
     }
 
     /**
-     * Should kill the JVM by invoking OutOfMemoryFragmenter
+     * Should stop the JVM by invoking OutOfMemoryFragmenter
      *
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "security"})
-    public void killTomcatOnOutOfMemory() throws Exception {
+    public void stopTomcatOnOutOfMemory() throws Exception {
 
         // Create PXF external table for out of memory testing
         ReadableExternalTable pxfExternalTable = new ReadableExternalTable("test_out_of_memory", new String[] {

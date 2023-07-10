@@ -58,7 +58,7 @@ public class MultiUserTest extends BaseFeature {
         Gpdb gpdbEx = new Gpdb();
         gpdbEx.setDb("template1");
         gpdbEx.setHost(gpdb.getHost());
-        gpdbEx.setCoordinatorHost(gpdb.getCoordinatorHost());
+        gpdbEx.setMasterHost(gpdb.getMasterHost());
         gpdbEx.init();
         gpdbEx.createTableAndVerify(gpdbNativeTable);
         gpdbEx.copyFromFile(gpdbNativeTable, new File(localDataResourcesFolder
@@ -80,7 +80,7 @@ public class MultiUserTest extends BaseFeature {
                 "pxf_jdbc_readable_overrideddl",
                 TYPES_TABLE_FIELDS,
                 gpdbNativeTable.getName(),
-                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getCoordinatorHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 "database");
         pxfJdbcReadableOverrideDDL.setHost(pxfHost);
         pxfJdbcReadableOverrideDDL.setPort(pxfPort);

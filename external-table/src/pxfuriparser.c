@@ -179,7 +179,7 @@ GPHDUri_parse_options(GPHDUri *uri, char **cursor)
 	/* skip '?' */
 	start++;
 
-	/* sanity check */
+	/* confidence check */
 	if (strlen(start) < 2)
 		ereport(ERROR,
 				(errcode(ERRCODE_SYNTAX_ERROR),
