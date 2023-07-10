@@ -46,6 +46,7 @@ The `pxf-application.properties` file exposes these PXF Service application conf
 | pxf.task.pool.max-size | The maximum allowed number of core streaming threads. | pxf.max.threads if set, or 200 |
 | [pxf.log.level](cfg_logging.html) | The log level for the PXF Service. | info  |
 | pxf.fragmenter-cache.expiration | The amount of time after which an entry expires and is removed from the fragment cache. | 10s (10 seconds) |
+| [server.address](cfghostport.html) | The PXF server listen address. | localhost |
 
 To change the value of a PXF Service application property, you may first need to add the property to, or uncomment the property in, the `pxf-application.properties` file before you can set the new value.
 

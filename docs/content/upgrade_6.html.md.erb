@@ -127,6 +127,8 @@ After you install the new version of PXF, perform the following procedure:
 
     Refer to [Understanding Overflow Conditions When Writing Numeric Data](hdfs_parquet.html#overflow) for more information about how PXF uses this property to direct its actions when it encounters a numeric overflow while writing to a Parquet file.
 
+1. **If you are upgrading <i>from</i> PXF version 6.6.x or earlier <i>to</i> PXF version 6.7.0 or later**, and you want to retain the previous PXF listen address (`0.0.0.0`), change the value of the `server.address` `pxf-application.properties` property as described in [Configuring the Listen Address](cfghostport.html#listen_address).
+
 1. Synchronize the PXF configuration from the master host to the standby master host and each Greenplum Database segment host. For example:
 
     ``` shell
