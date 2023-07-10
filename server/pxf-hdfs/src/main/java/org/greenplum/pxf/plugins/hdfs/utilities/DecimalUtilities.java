@@ -39,7 +39,7 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number according to the decimal schema and the decimal overflow options.
+     * Parse the incoming decimal string into a decimal number according to the precision and scale and the decimal overflow options.
      * There are 3 different types of overflow that PXF needs to handle when the column is defined as NUMERIC without precision and scale provided.
      * Decimal overflows on NUMERIC(precision,scale) have already been handled by GPDB and FileAccessor.
      * Case 1:
@@ -69,7 +69,7 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number according to the decimal schema when the decimal overflow option is 'error'.
+     * Parse the incoming decimal string into a decimal number according to the precision and scale when the decimal overflow option is 'error'.
      * PXF should error out on all the 3 overflow cases, or return a not rounded HiveDecimal which can fit within dictated precision and scale.
      *
      * @param value      is the decimal string to be parsed
@@ -106,7 +106,7 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number according to the decimal schema when the decimal overflow option is 'round'.
+     * Parse the incoming decimal string into a decimal number according to the precision and scale when the decimal overflow option is 'round'.
      * PXF should error out on the overflow case 1 and 2, or return a rounded HiveDecimal which can fit within dictated precision and scale.
      * Previous (before release 6.7.0) decimal parsing logic enforced precision and scale only for the PXF Parquet profile and not for the PXF ORC profile.
      * PXF now enforces precision and scale for both profiles.
@@ -141,7 +141,7 @@ public class DecimalUtilities {
     }
 
     /**
-     * Parse the incoming decimal string into a decimal number according to the decimal schema when the decimal overflow option is 'ignore'.
+     * Parse the incoming decimal string into a decimal number according to the precision and scale when the decimal overflow option is 'ignore'.
      * PXF should error out on the overflow case 1, or return either NULL or a rounded HiveDecimal for backwards compatibilities.
      * Precision and scale will be enforced on the HiveDecimal if the previous decimal parsing logic of the current profile did so.
      * Previous (before release 6.7.0) decimal parsing logic enforced precision and scale only for the PXF Parquet profile and not for the PXF ORC profile.
