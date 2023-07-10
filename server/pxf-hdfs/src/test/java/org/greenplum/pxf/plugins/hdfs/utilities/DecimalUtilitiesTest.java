@@ -156,7 +156,6 @@ public class DecimalUtilitiesTest {
         HiveDecimal hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
         assertEquals(expectedHiveDecimal, hiveDecimal);
 
-        // results should be the same no matter enforcePrecisionAndScaleOnIgnore is true or false
         decimalUtilities = new DecimalUtilities(DecimalOverflowOption.ROUND, false);
         hiveDecimal = decimalUtilities.parseDecimalStringWithHiveDecimal(decimalStringOverflowsScale, precision, scale, columnName);
         assertEquals(expectedHiveDecimal, hiveDecimal);

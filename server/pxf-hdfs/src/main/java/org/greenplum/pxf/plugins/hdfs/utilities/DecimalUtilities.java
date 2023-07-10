@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 
 /**
- * DecimalUtilities is used for parsing decimal values according to the decimal schema and the decimal overflow options.
- * Precision and scale enforcement is dictated by the boolean 'enforcePrecisionAndScaleOnIgnore' when the decimal overflow option is 'ignore'.
+ * DecimalUtilities is used for parsing decimal values according to the precision and scale
+ * as defined by the GPDB schema as well as the decimal overflow option.
+ * If precision and scale are not defined, DecimalUtilities will use the default precision and scale values
+ * for the file type.
  * Warning logs for different types of overflow will be logged only once if overflow happens.
  */
 public class DecimalUtilities {
