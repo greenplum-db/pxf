@@ -277,12 +277,11 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://doc
 | delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma (`,`). Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 | DISTRIBUTED BY    | If you want to load data from an existing Greenplum Database table into the writable external table, consider specifying the same distribution policy or `<column_name>` on both tables. Doing so will avoid extra motion of data between segments on the load operation. |
 
-Writable external tables that you create using an `<objstore>:text|csv` profile can optionally use record or block compression. You specify the compression type and codec via custom options in the `CREATE EXTERNAL TABLE` `LOCATION` clause. The `<objstore>:text|csv` profiles support the following custom write options:
+Writable external tables that you create using an `<objstore>:text|csv` profile can optionally use record or block compression. You specify the compression codec via a custom option in the `CREATE EXTERNAL TABLE` `LOCATION` clause. The `<objstore>:text|csv` profiles support the following custom write options:
 
 | Option  | Value Description |
 |-------|-------------------------------------|
 | COMPRESSION_CODEC    | The compression codec alias. Supported compression codecs for writing text data include: `default`, `bzip2`, `gzip`, and `uncompressed`. If this option is not provided, Greenplum Database performs no data compression. |
-| COMPRESSION_TYPE    | The compression type to employ; supported values are `RECORD` (the default) or `BLOCK`. |
 
 If you are accessing an S3 object store, you can provide S3 credentials via custom options in the `CREATE EXTERNAL TABLE` command as described in [Overriding the S3 Server Configuration with DDL](access_s3.html#s3_override).
 
