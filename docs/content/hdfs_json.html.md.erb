@@ -484,7 +484,7 @@ Notice that PXF creates a flat JSON structure.
 
 Use the following [CREATE EXTERNAL TABLE](https://docs.vmware.com/en/VMware-Greenplum/6/greenplum-database/ref_guide-sql_commands-CREATE_EXTERNAL_TABLE.html) SQL command to create a writable external table that writes JSON data in single object format and uses the PXF default server.
 
-You must specify the `ROOT` and `IDENTIFIER` keywords and associated values in the `LOCATION` clause. For example:
+You must specify the `ROOT` keyword and associated value in the `LOCATION` clause. For example:
 
 ``` sql
 CREATE WRITABLE EXTERNAL TABLE add_singleobj_json_tbl(
