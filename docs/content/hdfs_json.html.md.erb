@@ -102,9 +102,11 @@ PXF uses the following data type mapping when reading JSON data:
 | number  | { bigint &#124; float8 &#124; integer &#124; numeric &#124; real &#124; smallint } |
 | string | text |
 | string (base64-encoded value) | bytea |
+| string (date, time, timestamp in a text format that Greenplum understands) | text |
 | Array (one dimension) of type boolean[] | boolean[] |
 | Array (one dimension) of type number[] | { bigint[] &#124; float8[] &#124; integer[] &#124; numeric[] &#124; real[] &#124; smallint[] } |
 | Array (one dimension) of type string[] (base64-encoded value) | bytea[] |
+| Array (one dimension) of type string[] (date, time, timestamp in a text format that Greenplum understands) | string[] |
 | Array (one dimension) of type string[] | text[] |
 | Array of other types | text[] |
 | Object                | Use dot `.` notation to specify each level of projection (nesting) to a member of a primitive or Array type.                                                                                         |
