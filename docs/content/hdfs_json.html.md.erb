@@ -205,7 +205,6 @@ The `hdfs:json` profile supports the following custom **write** options:
 
 | Option  | Value Description |
 |-------|-------------------------------------|
-| IDENTIFIER=\<value\> | When the JSON data that you are writing is comprised of a single JSON object, you must specify an `IDENTIFIER` to identify the name of the field whose parent JSON object you want PXF to write as individual tuples. | 
 | ROOT=\<value\>    | When writing to a single JSON object, identifies the name of the root-level object attribute. |
 | COMPRESSION_CODEC    | The compression codec alias. Supported compression codecs for writing json data include: `default`, `bzip2`, `gzip`, and `uncompressed`. If this option is not provided, Greenplum Database performs no data compression. |
 | COMPRESSION_TYPE    | The compression type to employ; supported values are `RECORD` (the default) or `BLOCK`. |
@@ -520,7 +519,7 @@ CREATE EXTERNAL TABLE jso_tbl(
 LOCATION('pxf://data/pxf_examples/jso?PROFILE=hdfs:json&IDENTIFIER=created_at')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 
-The column names that you specify in the create command must match those of the writable external table.
+The column names that you specify in the create command must match those of the writable external table. And recall that to read a JSON file that contains a single object, you must specify the `IDENTIFIER` option.
 
 Query the table to read the data:
 
