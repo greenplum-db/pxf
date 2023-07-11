@@ -417,7 +417,7 @@ If you choose to alter the external table definition in this manner, be sure to 
 
 ## <a id="json_write"></a>Writing JSON Data
 
-To write JSON data, you create a writable external table that references the name of a directory on HDFS. When you insert records into the writable external table, PXF writes the block(s) of data that you insert to one or more files in the directory that you specified. In the default case (single object per row), PXF writes the data to a `.jsonl` file. When you specify an `IDENTIFIER` and a `ROOT` attribute (single object per file), PXF writes to a `.json` file.
+To write JSON data, you create a writable external table that references the name of a directory on HDFS. When you insert records into the writable external table, PXF writes the block(s) of data that you insert to one or more files in the directory that you specified. In the default case (single object per row), PXF writes the data to a `.jsonl` file. When you specify a `ROOT` attribute (single object per file), PXF writes to a `.json` file.
 
 > **Note** When you use PXF to write JSON data, you must flatten the objects into scalar or array table columns. PXF does not support column projection when writing JSON data.
 
