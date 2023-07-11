@@ -13,7 +13,7 @@ In the default deployment topology, since PXF 6.7.0, the PXF Service starts on a
 
 ## <a id="listen_address"></a>Configuring the Listen Address
 
-The `server.address` property identifies the IP address or hostname of the network interface on which the PXF service listens. The default PXF service listen address is `localhost`.
+The `server.address` property identifies the IP address or hostname of the network interface on which the PXF service listens. The default PXF service listen address is `localhost`. You may choose to change the listen address to allow traffic from other hosts to send requests to PXF (for example, when you have chosen the [alternate deployment topology](deployment_topos.html#alt_topo) or to retrieve PXF monitoring data).
 
 Perform the following procedure to change the PXF listen address:
 
@@ -34,6 +34,8 @@ Perform the following procedure to change the PXF listen address:
     ``` pre
     server.address=<new_listen_addr>
     ```
+
+    Changing the listen address to `0.0.0.0` allows PXF to listen for requests from all hosts.
 
 1. Save the file and exit the editor.
 
