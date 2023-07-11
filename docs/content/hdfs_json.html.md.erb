@@ -494,7 +494,7 @@ CREATE WRITABLE EXTERNAL TABLE add_singleobj_json_tbl(
   location TEXT,
   coordinates INTEGER[]
 )
-LOCATION('pxf://data/pxf_examples/jso?PROFILE=hdfs:json&ROOT=root&IDENTIFIER=created_at')
+LOCATION('pxf://data/pxf_examples/jso?PROFILE=hdfs:json&ROOT=root')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
 ```
 
