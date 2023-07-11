@@ -21,7 +21,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Use the PXF HDFS Connector to read and write JSON-format data. This section describes how to use PXF to access JSON data in HDFS, including how to create, query, and insert into an external table that references a JSON file or directory in the HDFS data store.
+Use the PXF HDFS Connector to read and write JSON-format data. This section describes how to use PXF and external tables to access and write JSON data in HDFS.
 
 ## <a id="prereq"></a>Prerequisites
 
@@ -39,7 +39,7 @@ PXF supports two data access modes for JSON files. The default mode expects one 
 
 #### <a id="jsonl"></a>Single Object Per Row
 
-A JSON file can contain a single JSON object per row, where each row represents a database tuple. A JSON file that contains a single object per row may have a `.json`, or `.jsonl` suffix.
+A JSON file can contain a single JSON object per row, where each row represents a database tuple. A JSON file that PXF reads that contains a single object per row may have any or no suffix. When writing, PXF creates the file with a `.jsonl` suffix.
 
 Excerpt of sample single-object-per-row JSON data file:
 
@@ -419,7 +419,7 @@ If you choose to alter the external table definition in this manner, be sure to 
 
 To write JSON data, you create a writable external table that references the name of a directory on HDFS. When you insert records into the writable external table, PXF writes the block(s) of data that you insert to one or more files in the directory that you specified. In the default case (single object per row), PXF writes the data to a `.jsonl` file. When you specify a `ROOT` attribute (single object per file), PXF writes to a `.json` file.
 
-> **Note** When you use PXF to write JSON data, you must flatten the objects into scalar or array table columns. PXF does not support column projection when writing JSON data.
+> **Note** When writing JSON data, PXF supports only scalar or one dimensional arrays of Greenplum data types. PXF does not support column projection when writing JSON data.
 
 Writable external tables can only be used for `INSERT` operations. If you want to query the data that you inserted, you must create a separate readable external table that references the HDFS directory and read from that table.
 
