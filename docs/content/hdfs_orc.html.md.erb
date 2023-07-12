@@ -303,7 +303,7 @@ In this example, you create a writable external table to write some data to the 
 
 ## <a id="overflow"></a>Understanding Overflow Conditions When Writing Numeric Data
 
-PXF uses the `HiveDecimal` class to write numeric ORC data. In versions prior to 6.7.0, PXF limited only the precision of a numeric type to a maximum of 38. In versions 6.7.0 and later, PXF limits both the precision and the scale of a numeric type to a maximum of 38.
+PXF uses the `HiveDecimal` class to write numeric ORC data. In versions prior to 6.7.0, PXF limited only the precision of a numeric type to a maximum of 38. In versions 6.7.0 and later, PXF must meet both precision and scale requirements before writing numeric ORC data.
 
 When you define a `NUMERIC` column in an external table without specifying a precision or scale, PXF internally maps the column to a `DECIMAL(38, 10)`.
 
