@@ -23,7 +23,7 @@ jobs:
           release_name: PXF Version ${{ github.ref }}
           body: |
             ## 6.7.0 (07/13/2023)
-              
+
             ### Enhancements:
             
             - [#956](https://github.com/greenplum-db/pxf/pull/956) Add pxfdelimited_import formatter to support multibyte delimiters for TEXT and CSV profiles
