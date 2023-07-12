@@ -53,7 +53,7 @@ Refer to [JSON Lines](https://jsonlines.org/) for detailed information about thi
 
 #### <a id="arrayobject"></a>Single Object Per File
 
-A JSON file can also contain a single, named, root level JSON object whose value is an array of JSON objects. Each JSON object in the array represents a database tuple. JSON files of this type have the `.json` suffix.
+A JSON file can also contain a single, named, root level JSON object whose value is an array of JSON objects. When reading, the array may contain objects with arbitrary complexity and nesting, and PXF forms database tuples from objects that have a property named the same as that specified for the `IDENTIFIER` (discussed below). When writing, each JSON object in the array represents a database tuple. JSON files of this type have the `.json` suffix.
 
 In the following example JSON data file, the root-level `records` object is an array of three objects (tuples):
 
