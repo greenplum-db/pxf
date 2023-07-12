@@ -321,7 +321,7 @@ PXF can take one of three actions when it detects an overflow while writing nume
 |-------|-------------------------------------|
 | `round` | When PXF encounters an overflow, it attempts to round the value to meet both precision and scale requirements before writing. PXF reports an error if rounding fails. This may potentially leave an incomplete data set in the external system.  `round` is the default. |
 | `error` | PXF reports an error when it encounters an overflow, and the transaction fails. |
-| `ignore` | PXF attempts to round the value to meet only the precision requirement and ignore validation of precision and scale; otherwise PXF writes a NULL value. (This was PXF's behavior prior to version 6.7.0.) |
+| `ignore` | PXF attempts to round the value to meet only the precision requirement and ignores validation of precision and scale; otherwise PXF writes a NULL value. (This was PXF's behavior prior to version 6.7.0.) |
 
 PXF logs a warning when it detects an overflow and the `pxf.orc.write.decimal.overflow` property is set to `ignore`.
 
