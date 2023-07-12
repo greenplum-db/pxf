@@ -123,7 +123,7 @@ After you install the new version of PXF, perform the following procedure:
     </property>
     ```
 
-    where `NEW_VALUE` is `error` or `ignore`.
+    where `NEW_VALUE` is `round`, `error`, or `ignore`. The default value is `round`.
 
     Refer to [Understanding Overflow Conditions When Writing Numeric Data](hdfs_parquet.html#overflow) for more information about how PXF uses this property to direct its actions when it encounters a numeric overflow while writing to a Parquet file.
 
@@ -136,7 +136,7 @@ After you install the new version of PXF, perform the following procedure:
     </property>
     ```
 
-    where `NEW_VALUE` is `error` or `ignore`.
+    where `NEW_VALUE` is `round`, `error`, or `ignore`. The default value is `round`.
 
     Refer to [Understanding Overflow Conditions When Writing Numeric Data](hdfs_orc.html#overflow) for more information about how PXF uses this property to direct its actions when it encounters a numeric overflow while writing to an ORC file.
 
