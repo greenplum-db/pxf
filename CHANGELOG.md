@@ -1,5 +1,26 @@
 # Changelog
 
+## 6.7.0 (07/13/2023)
+
+### Enhancements:
+
+- [#956](https://github.com/greenplum-db/pxf/pull/956) Add pxfdelimited_import formatter to support multibyte delimiters for TEXT and CSV profiles
+- [#960](https://github.com/greenplum-db/pxf/pull/960) Add support year with more than 4 digits in 'date' or 'timestamp'
+- [#973](https://github.com/greenplum-db/pxf/pull/973) Enable write flow for FDW for non-text/csv formats
+- [#976](https://github.com/greenplum-db/pxf/pull/976) Restrict PXF to listen to local requests only
+- [#979](https://github.com/greenplum-db/pxf/pull/979) Add logging to the LineBreakAccessor for the write
+- [#983](https://github.com/greenplum-db/pxf/pull/983) Bump Springboot to 2.7.12
+- [#984](https://github.com/greenplum-db/pxf/pull/984) Enable writing data in JSON format using *:json profiles
+- [#987](https://github.com/greenplum-db/pxf/pull/987) Add Escape E to the Options in FDW
+- [#989](https://github.com/greenplum-db/pxf/pull/989) Bump snappy to 1.1.10.1
+
+### Bug Fixes:
+
+- [#967](https://github.com/greenplum-db/pxf/pull/967) FDW: Fix for skipping the dropped and correctly counting Projection Index
+- [#978](https://github.com/greenplum-db/pxf/pull/978) Added erroring out logic for decimal overflow for ORC
+- [#986](https://github.com/greenplum-db/pxf/pull/986) Update cloudbuild maven version to 3.9.2
+- [#990](https://github.com/greenplum-db/pxf/pull/990) Fixed a problem with JsonAccessor closing streams with S3 filesystem
+
 ## 6.6.0 (04/06/2023)
 
 ### Enhancements:
