@@ -470,6 +470,12 @@ Query the table:
 
 ``` sql
 SELECT * FROM jsopr_tbl;
+
+        created_at         |       id_str       |    id     | location | coordinates 
+---------------------------+--------------------+-----------+----------+-------------
+ MonJun1002:12:06+00002013 | 343136557777777777 | 377777777 | NearHere | {13,93}
+ SunJun0912:59:07+00002013 | 343136551111111111 | 311111111 | FarAway  | {6,50}
+(2 rows)
 ```
 
 View the files added to HDFS:
@@ -528,6 +534,14 @@ Query the table to read the data:
 
 ``` sql
 SELECT * FROM jso_tbl;
+
+        created_at         |       id_str       |    id     |   location   | coo
+rdinates 
+---------------------------+--------------------+-----------+--------------+----
+---------
+ WedJun1212:37:02+00002013 | 333333333333333333 | 333333333 | NetherWorld  | {9,63}
+ SunJun0912:59:07+00002013 | 343136551111111111 | 311111111 | FarAway      | {6,50}
+(2 rows)
 ```
 
 View the files added to HDFS:
