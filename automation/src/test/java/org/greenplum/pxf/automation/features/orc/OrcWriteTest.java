@@ -7,8 +7,6 @@ import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
-import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
@@ -45,6 +43,11 @@ public class OrcWriteTest extends BaseFeature {
             "c_time         time"       , // DataType.TIME
             "c_timestamp    timestamp"  , // DataType.TIMESTAMP
             "c_timestamptz  timestamptz", // DataType.TIMESTAMP_WITH_TIME_ZONE
+    };
+
+    private static final String[] ORC_DECIMAL_WITH_LARGE_PRECISION_TABLE_COLUMNS = {
+            "id             integer"        ,
+            "c_numeric      numeric(90)"     // DataType.NUMERIC
     };
 
     private static final String[] ORC_PRIMITIVE_TABLE_COLUMNS_HIVE = {
@@ -305,6 +308,47 @@ public class OrcWriteTest extends BaseFeature {
 
         // use the heap table to insert data into the external tables
         runTincTest("pxf.features.orc.write.primitive_types_array_multi.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWriteDecimalWithLargePrecisionDefined() throws Exception {
+        gpdbTableNamePrefix = "orc_decimals_with_large_precision";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
+
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_DECIMAL_WITH_LARGE_PRECISION_TABLE_COLUMNS, fullTestPath);
+
+        runTincTest("pxf.features.orc.write.decimal_with_large_precision_defined.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWriteDecimalWithLargePrecisionNotDefined() throws Exception {
+        gpdbTableNamePrefix = "orc_decimals_with_large_precision_not_defined";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
+
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+
+        runTincTest("pxf.features.orc.write.decimal_with_large_precision_not_defined.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWriteDecimalIntegerDigitCountOverflow() throws Exception {
+        gpdbTableNamePrefix = "orc_decimals_with_large_integer_digit_count";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
+
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+
+        runTincTest("pxf.features.orc.write.decimal_with_large_integer_digit.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcWriteDecimalScaleOverflow() throws Exception {
+        gpdbTableNamePrefix = "orc_decimals_with_large_scale";
+        fullTestPath = hdfsPath + gpdbTableNamePrefix;
+
+        prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
+        prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
+
+        runTincTest("pxf.features.orc.write.decimal_with_large_scale.runTest");
     }
 
     private void insertDataWithoutNulls(String exTable, int numRows) throws Exception {

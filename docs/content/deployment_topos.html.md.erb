@@ -13,5 +13,5 @@ Running the PXF Service on non-Greenplum hosts is an alternate deployment topolo
 
 In the alternate deployment topology, you manage the PXF services individually using the [pxf](ref/pxf.html) command on each host; you can not use the `pxf cluster` commands to collectively manage the PXF services in this topology.
 
-If you choose the alternate deployment topology, you must explicitly configure each Greenplum host to identify a host on which the PXF Service is running. This procedure is described in [Configuring the Host](cfghostport.html#host).
+If you choose the alternate deployment topology, you must explicitly configure each Greenplum host to identify the host and listen address on which the PXF Service is running. These procedures are described in [Configuring the Host](cfghostport.html#host) and [Configuring the Listen Address](cfghostport.html#listen_address).
 

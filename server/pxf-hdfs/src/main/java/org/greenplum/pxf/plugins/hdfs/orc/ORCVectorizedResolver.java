@@ -6,7 +6,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.function.TriConsumer;
+import org.greenplum.pxf.api.function.PentaConsumer;
 import org.greenplum.pxf.api.model.ReadVectorizedResolver;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
@@ -16,6 +16,8 @@ import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.model.WriteVectorizedResolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.hdfs.utilities.DecimalOverflowOption;
+import org.greenplum.pxf.plugins.hdfs.utilities.DecimalUtilities;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -101,6 +103,7 @@ import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.MAP_BY_PO
 public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedResolver, WriteVectorizedResolver, Resolver {
 
     private static final String UNSUPPORTED_ERR_MESSAGE = "Current operation is not supported";
+    private static final String PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME = "pxf.orc.write.decimal.overflow";
     /**
      * The schema used to read or write the ORC file.
      */
@@ -116,7 +119,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      * An array of functions that resolve Lists of OneFields into ColumnVectors for WRITE use case.
      * The array has the same size as the writeSchema, and the functions depend on the type of the elements in the schema.
      */
-    private TriConsumer<ColumnVector, Integer, Object>[] writeFunctions;
+    private PentaConsumer<String, ColumnVector, Integer, Object, DecimalUtilities>[] writeFunctions;
 
     /**
      * An array of types that map from the readSchema types to Greenplum OIDs.
@@ -141,6 +144,8 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
 
     private List<List<OneField>> cachedBatch;
     private VectorizedRowBatch vectorizedRowBatch;
+    private DecimalOverflowOption decimalOverflowOption;
+    private DecimalUtilities decimalUtilities;
 
     /**
      * {@inheritDoc}
@@ -150,6 +155,8 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
         positionalAccess = context.getOption(MAP_BY_POSITION_OPTION, false);
+        decimalOverflowOption = DecimalOverflowOption.valueOf(configuration.get(PXF_ORC_WRITE_DECIMAL_OVERFLOW_PROPERTY_NAME, DecimalOverflowOption.ROUND.name()).toUpperCase());
+        decimalUtilities = new DecimalUtilities(decimalOverflowOption, false);
     }
 
     /**
@@ -250,7 +257,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     }
                     columnVector.isNull[rowIndex] = true;
                 } else {
-                    writeFunctions[columnIndex].accept(columnVector, rowIndex, field.val);
+                    writeFunctions[columnIndex].accept(orcSchema.getFieldNames().get(columnIndex), columnVector, rowIndex, field.val, decimalUtilities);
                 }
                 columnIndex++;
             }
@@ -391,7 +398,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         orcSchema = writerOptions.getSchema();
         List<TypeDescription> columnTypeDescriptions = orcSchema.getChildren();
         int schemaSize = columnTypeDescriptions.size();
-        writeFunctions = new TriConsumer[schemaSize];
+        writeFunctions = new PentaConsumer[schemaSize];
 
         int columnIndex = 0;
         for (TypeDescription columnTypeDescription : columnTypeDescriptions) {

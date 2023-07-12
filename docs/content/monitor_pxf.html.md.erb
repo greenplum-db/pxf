@@ -57,10 +57,16 @@ PXF exposes the following HTTP endpoints that you can use to monitor a running P
 
 Any user can access the HTTP endpoints and view the monitoring information that PXF returns.
 
-You can view the data associated with a specific endpoint by viewing in a browser, or `curl`-ing, a URL of the following format:
+You can view the data associated with a specific endpoint by viewing in a browser, or `curl`-ing, a URL of the following format (default PXF deployment topology):
 
 ``` pre
 http://localhost:5888/<endpoint>[/<name>]
+```
+
+If you chose the [alternate deployment topology](deployment_topos.html#alt_topo) for PXF, the URL is:
+
+``` pre
+http://<pxf_listen_address>:<port>/<endpoint>[/<name>]
 ```
 
 For example, to view the build information for the PXF service running on `localhost`, query the `actuator/info` endpoint:
