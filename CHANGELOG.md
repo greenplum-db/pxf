@@ -19,7 +19,6 @@
 - [#967](https://github.com/greenplum-db/pxf/pull/967) FDW: Fix for skipping the dropped and correctly counting Projection Index
 - [#978](https://github.com/greenplum-db/pxf/pull/978) Added erroring out logic for decimal overflow for ORC
 - [#986](https://github.com/greenplum-db/pxf/pull/986) Update cloudbuild maven version to 3.9.2
-- [#990](https://github.com/greenplum-db/pxf/pull/990) Fixed a problem with JsonAccessor closing streams with S3 filesystem
 
 ## 6.6.0 (04/06/2023)
 
