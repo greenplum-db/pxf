@@ -32,10 +32,10 @@ To change the PXF log directory, you must update the `$PXF_LOGDIR` property in t
 
 **Note:** The new log directory must exist on all Greenplum Database hosts, and must be accessible by the `gpadmin` user.
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 1. Use a text editor to uncomment the `export PXF_LOGDIR` line in `$PXF_BASE/conf/pxf-env.sh`, and replace the value with the new PXF log directory. For example:
@@ -48,7 +48,7 @@ To change the PXF log directory, you must update the `$PXF_LOGDIR` property in t
 2. Use the `pxf cluster sync` command to copy the updated `pxf-env.sh` file to all hosts in the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 3. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
@@ -119,10 +119,10 @@ You can change the log level for the PXF Service running on a specific Greenplum
 
 To change the log level for the PXF service running on every host in the Greenplum Database cluster:
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 1. Use a text editor to uncomment the following line in the `$PXF_BASE/conf/pxf-application.properties` file and set the desired log level.  For example, to change the log level from `info` (the default) to `debug`:
@@ -134,13 +134,13 @@ To change the log level for the PXF service running on every host in the Greenpl
 1. Use the `pxf cluster sync` command to copy the updated `pxf-application.properties` file to all hosts in the Greenplum Database cluster. For example:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 1.  Restart PXF on each Greenplum Database host:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster restart
+    gpadmin@coordinator$ pxf cluster restart
     ```
 
 1. Perform operations that exercise the PXF Service, and then collect and examine the information in `$PXF_LOGDIR/pxf-service.log`.

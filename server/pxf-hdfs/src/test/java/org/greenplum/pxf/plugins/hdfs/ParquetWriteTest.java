@@ -1945,7 +1945,7 @@ public class ParquetWriteTest {
 
         String[] values = new String[]{
                 "1.2",
-                "1234567890123456789012345.12345678901234567812",
+                "1234567890123456789012345.12345",
                 "1234567890123456789012345678901234567890.12345678901234567812",
                 "333.34567",
                 "4444.456789",
@@ -1970,7 +1970,7 @@ public class ParquetWriteTest {
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123492");
         Exception e = assertThrows(UnsupportedTypeException.class, () -> accessor.openForWrite());
-        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
+        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds the maximum supported precision %d.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
     }
 
     // Numeric precision defined, test error flag when provided precision overflow. An error should be thrown
@@ -1984,7 +1984,7 @@ public class ParquetWriteTest {
         String columnName = "dec1";
         setUpConfigurationValueAndNumericType(configurationOption, new Integer[]{precision, scale}, path, "XID-XYZ-123493");
         Exception e = assertThrows(UnsupportedTypeException.class, () -> accessor.openForWrite());
-        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds maximum supported precision %d.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
+        assertEquals(String.format("Column %s is defined as NUMERIC with precision %d which exceeds the maximum supported precision %d.", "dec1", precision, HiveDecimal.MAX_PRECISION), e.getMessage());
     }
 
     // Numeric precision not defined, test ignore flag when data integer digits overflow. Data should be skipped
@@ -2103,7 +2103,7 @@ public class ParquetWriteTest {
                 "1234567890123456.12",
                 "1234567890123456.123",
                 "1234567890123456.1234",
-                "1234567890123456.12345",
+                "1234567890123456.1235",
                 "123456789012345.1",
                 "123456789012345.12",
                 "123456789012345.123",
@@ -2150,49 +2150,6 @@ public class ParquetWriteTest {
                 "12345.12345"
         };
         validateWriteNumeric(expectedValues, new HashSet<>(), precision, scale);
-    }
-
-    @Test
-    public void testValidnessOfDecimalOverflowOption() throws Exception {
-        String path = temp + "/out/numeric_with_defined_precision_integer_overflow_with_error_flag/";
-        String[] values = new String[]{
-                "1234567890123456789012345678901234567890.1",
-                "1234567890123456789012345678901234567890.12",
-                "1234567890123456789012345678901234567890.123",
-                "1234567890123456789012345678901234567890.1234",
-                "1234567890123456789012345678901234567890.12345",
-                "12345678901234567890123.123451",
-                "12345678901234567890123.1234512",
-                "12345678901234567890123.12345123",
-                "12345678901234567890123.123451234",
-                "12345678901234567890123.1234512345",
-        };
-        String columnName = "dec1";
-
-        setup();
-        String configurationOption = "ERROR";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123500");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-
-        setup();
-        configurationOption = "ignore";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123501");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-
-        setup();
-        configurationOption = "IGNORE";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123502");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-
-        setup();
-        configurationOption = "round";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123503");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
-
-        setup();
-        configurationOption = "false";
-        setUpConfigurationValueAndNumericType(configurationOption, null, path, "XID-XYZ-123504");
-        writeNumericValues(values, configurationOption, columnName, 38, 18);
     }
 
     // Test data scale overflow.  Data should be rounded off
@@ -2429,17 +2386,17 @@ public class ParquetWriteTest {
         for (String value : values) {
             List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
             BigDecimal bigDecimal = NumberUtils.createBigDecimal(value);
-            if (bigDecimal.precision() - bigDecimal.scale() > precision) {
+            if (bigDecimal.precision() > precision) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
                         value, columnName, precision), e.getMessage());
             } else if (bigDecimal.precision() - bigDecimal.scale() > precision - scale) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
                         value, columnName, precision, scale), e.getMessage());
             } else if (bigDecimal.scale() > scale) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum scale %d.",
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported scale %d, and cannot be stored without precision loss.",
                         value, columnName, scale), e.getMessage());
             } else {
                 OneRow rowToWrite = resolver.setFields(record);
@@ -2456,11 +2413,11 @@ public class ParquetWriteTest {
             BigDecimal bigDecimal = new BigDecimal(value);
             if (bigDecimal.precision() - bigDecimal.scale() > precision) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision %d.",
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision %d.",
                         value, columnName, precision), e.getMessage());
             } else if (bigDecimal.precision() - bigDecimal.scale() > precision - scale) {
                 Exception e = assertThrows(UnsupportedTypeException.class, () -> resolver.setFields(record));
-                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds maximum precision and scale (%d,%d).",
+                assertEquals(String.format("The value %s for the NUMERIC column %s exceeds the maximum supported precision and scale (%d,%d).",
                                 value, columnName, precision, scale),
                         e.getMessage());
             } else {

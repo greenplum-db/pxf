@@ -15,28 +15,28 @@ The PXF upgrade procedure has three steps. You perform one pre-install procedure
 
 Perform this procedure before you upgrade to a new version of PXF 6.x:
 
-1. Log in to the Greenplum Database master host. For example:
+1. Log in to the Greenplum Database coordinator host. For example:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 1. Identify and note the version of PXF currently running in your Greenplum cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf version
+    gpadmin@coordinator$ pxf version
     ```
 
 1. Stop PXF on each Greenplum host as described in [Stopping PXF](cfginitstart_pxf.html#stop_pxf):
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster stop
+    gpadmin@coordinator$ pxf cluster stop
     ```
 
 1. (Optional, Recommended) Back up the PXF user configuration files; for example, if `PXF_BASE=/usr/local/pxf-gp6`:
 
     ``` shell
-    gpadmin@gpmaster$ cp -avi /usr/local/pxf-gp6 pxf_base.bak
+    gpadmin@coordinator$ cp -avi /usr/local/pxf-gp6 pxf_base.bak
     ```
 
 
@@ -49,16 +49,16 @@ Install PXF 6.x and identify and note the new PXF version number.
 
 After you install the new version of PXF, perform the following procedure:
 
-1. Log in to the Greenplum Database master host. For example:
+1. Log in to the Greenplum Database coordinator host. For example:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 1. PXF 6.x includes a new version of the `pxf` extension. Register the extension files with Greenplum Database (see [pxf cluster register](ref/pxf-cluster.html)). `$GPHOME` must be set when you run this command:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster register
+    gpadmin@coordinator$ pxf cluster register
     ```
 
 1. You must update the `pxf` extension in every Greenplum database in which you are using PXF. A database superuser or the database owner must run this SQL command in the `psql` subsystem or in an SQL script:
@@ -140,15 +140,17 @@ After you install the new version of PXF, perform the following procedure:
 
     Refer to [Understanding Overflow Conditions When Writing Numeric Data](hdfs_orc.html#overflow) for more information about how PXF uses this property to direct its actions when it encounters a numeric overflow while writing to an ORC file.
 
-1. Synchronize the PXF configuration from the master host to the standby master host and each Greenplum Database segment host. For example:
+1. **If you are upgrading <i>from</i> PXF version 6.6.x or earlier <i>to</i> PXF version 6.7.0 or later**, and you want to retain the previous PXF listen address (`0.0.0.0`), change the value of the `server.address` `pxf-application.properties` property as described in [Configuring the Listen Address](cfghostport.html#listen_address).
+
+1. Synchronize the PXF configuration from the coordinator host to the standby coordinator host and each Greenplum Database segment host. For example:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
  
 1. Start PXF on each Greenplum host as described in [Starting PXF](cfginitstart_pxf.html#start_pxf):
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster start
+    gpadmin@coordinator$ pxf cluster start
     ```
  

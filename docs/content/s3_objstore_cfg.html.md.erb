@@ -145,12 +145,12 @@ To enable SSE-C for a specific S3 bucket, use the property name variants that in
 
 ## <a id="cfg_proc"></a>Example Server Configuration Procedure
 
-In this procedure, you name and add a PXF server configuration in the `$PXF_BASE/servers` directory on the Greenplum Database master host for the S3 Cloud Storage connector. You then use the `pxf cluster sync` command to sync the server configuration(s) to the Greenplum Database cluster.
+In this procedure, you name and add a PXF server configuration in the `$PXF_BASE/servers` directory on the Greenplum Database coordinator host for the S3 Cloud Storage connector. You then use the `pxf cluster sync` command to sync the server configuration(s) to the Greenplum Database cluster.
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Choose a name for the server. You will provide the name to end users that need to reference files in the object store.
@@ -158,13 +158,13 @@ In this procedure, you name and add a PXF server configuration in the `$PXF_BASE
 3. Create the `$PXF_BASE/servers/<server_name>` directory. For example, use the following command to create a server configuration for an S3 server named `s3srvcfg`:
 
     ``` shell
-    gpadmin@gpmaster$ mkdir $PXF_BASE/servers/s3srvcfg
+    gpadmin@coordinator$ mkdir $PXF_BASE/servers/s3srvcfg
     ````
 
 3. Copy the PXF template file for S3 to the server configuration directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/s3-site.xml $PXF_BASE/servers/s3srvcfg/
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/s3-site.xml $PXF_BASE/servers/s3srvcfg/
     ```
         
 4. Open the template server configuration file in the editor of your choice, and provide appropriate property values for your environment. For example:
@@ -191,7 +191,7 @@ In this procedure, you name and add a PXF server configuration in the `$PXF_BASE
 4. Use the `pxf cluster sync` command to copy the new server configuration to the Greenplum Database cluster:
     
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 ## <a id="ecs_cfg"></a>Dell ECS Server Configuration

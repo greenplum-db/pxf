@@ -34,16 +34,16 @@ Only the `gpadmin` user can request the status of the PXF Service.
 
 Perform the following procedure to request the PXF status of your Greenplum Database cluster.
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Run the `pxf cluster status` command:
 
     ```shell
-    gpadmin@gpmaster$ pxf cluster status
+    gpadmin@coordinator$ pxf cluster status
     ```
 
 ## <a id="about_rtm"></a> About PXF Service Runtime Monitoring
@@ -57,10 +57,16 @@ PXF exposes the following HTTP endpoints that you can use to monitor a running P
 
 Any user can access the HTTP endpoints and view the monitoring information that PXF returns.
 
-You can view the data associated with a specific endpoint by viewing in a browser, or `curl`-ing, a URL of the following format:
+You can view the data associated with a specific endpoint by viewing in a browser, or `curl`-ing, a URL of the following format (default PXF deployment topology):
 
 ``` pre
 http://localhost:5888/<endpoint>[/<name>]
+```
+
+If you chose the [alternate deployment topology](deployment_topos.html#alt_topo) for PXF, the URL is:
+
+``` pre
+http://<pxf_listen_address>:<port>/<endpoint>[/<name>]
 ```
 
 For example, to view the build information for the PXF service running on `localhost`, query the `actuator/info` endpoint:

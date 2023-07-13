@@ -16,8 +16,8 @@ Perform the following steps after running `gpupgrade`:
     1. Run the following commands to roll back your PXF installation to its previous state (before you ran `pxf-pre-gpupgrade`):
 
         ``` shell
-        gpadmin@gpmaster$ export GPHOME=<greenplum5-install-dir>
-        gpadmin@gpmaster$ /usr/local/pxf-gp5/bin/pxf-post-gpupgrade
+        gpadmin@coordinator$ export GPHOME=<greenplum5-install-dir>
+        gpadmin@coordinator$ /usr/local/pxf-gp5/bin/pxf-post-gpupgrade
         ```
 
         **Note:** The `pxf-post-upgrade` script must connect to your running Greenplum Database 5.x cluster. By default, it attempts to connect to the `gpadmin` database on `localhost` on port `5432` as the `gpadmin` user, no password. If you need to customize these settings, refer to [Customizing the Greenplum Connection Parameters](#env) for instructions on setting environment variables for this purpose.
@@ -25,7 +25,7 @@ Perform the following steps after running `gpupgrade`:
     1. Restart the PXF that was running in your Greenplum Database 5.x installation.
 
         ``` shell
-        gpadmin@gpmaster$ /usr/local/pxf-gp5/bin/pxf cluster start
+        gpadmin@coordinator$ /usr/local/pxf-gp5/bin/pxf cluster start
         ```
 
     1. You may choose to uninstall the PXF for Greenplum 6 package.
@@ -37,8 +37,8 @@ Perform the following steps after running `gpupgrade`:
 1. Configure PXF as though it was a fresh install in Greenplum Database 6.x:
 
     ``` shell
-    gpadmin@gpmaster$ export GPHOME=<greenplum6-install-dir>
-    gpadmin@gpmaster$ /usr/local/pxf-gp6/bin/pxf-post-gpupgrade
+    gpadmin@coordinator$ export GPHOME=<greenplum6-install-dir>
+    gpadmin@coordinator$ /usr/local/pxf-gp6/bin/pxf-post-gpupgrade
     ```
 
     **Note:** The `pxf-post-upgrade` script must connect to your running Greenplum Database 6.x cluster. By default, it attempts to connect to the `gpadmin` database on `localhost` on port `5432` as the `gpadmin` user, no password. If you need to customize these settings, refer to [Customizing the Greenplum Connection Parameters](#env) for instructions on setting environment variables for this purpose.
@@ -46,21 +46,21 @@ Perform the following steps after running `gpupgrade`:
 1. If you nave not relocated your `$PXF_BASE`, you must copy the PXF configuration from the PXF Greenplum Database 5.x install location to the PXF Greenplum Database 6.x install location. For example:
 
     ``` bash
-    gpadmin@gpmaster$ for dir in conf lib servers keytabs; do
+    gpadmin@coordinator$ for dir in conf lib servers keytabs; do
         cp -aiv /usr/local/pxf-gp5/$dir/. /usr/local/pxf-gp6/$dir/
     done
     ```
 
-1. Synchronize the PXF configuration from the Greenplum Database master host to the standby and segment hosts:
+1. Synchronize the PXF configuration from the Greenplum Database coordinator host to the standby and segment hosts:
 
     ``` shell
-    gpadmin@gpmaster$ /usr/local/pxf-gp6/bin/pxf cluster sync
+    gpadmin@coordinator$ /usr/local/pxf-gp6/bin/pxf cluster sync
     ```
 
 1. Start the PXF installed for Greenplum Database 6.x.
 
     ``` shell
-    gpadmin@gpmaster$ /usr/local/pxf-gp6/bin/pxf cluster start
+    gpadmin@coordinator$ /usr/local/pxf-gp6/bin/pxf cluster start
     ```
 
 1. Update the `$PATH` in `.bashrc` or `.bash_profile` shell initialization scripts, replacing any occurrences of `/usr/local/pxf-gp5` with `/usr/local/pxf-gp6`.
@@ -79,8 +79,8 @@ The PXF scripts that you run before and after `gpupgrade` must connect to your r
 
 | Environment Variable | Default Value | Description                                           |
 |----------------------|---------------|-------------------------------------------------------|
-| `$PGHOST`            | localhost     | The host name or IP address of the Greenplum Database master host. |
-| `$PGPORT`            | 5432          | The port number to connect to on the master host.     |
+| `$PGHOST`            | localhost     | The host name or IP address of the Greenplum Database coordinator host. |
+| `$PGPORT`            | 5432          | The port number to connect to on the coordinator host.     |
 | `$PGDATABASE`        | gpadmin       | The name of the database. |
 | `$PGUSER`            | gpadmin       | The Greenplum Database user name.     |
 | `$PGPASSWORD`        | _none_        | The password for the user. |

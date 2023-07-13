@@ -96,7 +96,7 @@ PXF uses the `hive-site.xml` `hive.metastore.failure.retries` property setting t
 
 Perform the following procedure to configure the number of Hive MetaStore connection retries that PXF will attempt; you may be required to add the `hive.metastore.failure.retries` property to the `hive-site.xml` file:
 
-1. Log in to the Greenplum Database master host.
+1. Log in to the Greenplum Database coordinator host.
 
 1. Identify the name of your Hive PXF server.
 
@@ -114,7 +114,7 @@ Perform the following procedure to configure the number of Hive MetaStore connec
 1. Synchronize the PXF configuration to all hosts in your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 1. Re-run the failing SQL external table command.
@@ -125,19 +125,19 @@ By default, PXF does not bundle the LZO compression library. If the Hadoop clust
 
 1. Locate the LZO library in the Hadoop installation directory on the Hadoop NameNode. For example, the file system location of the library may be `/usr/lib/hadoop-lzo/lib/hadoop-lzo.jar`.
 
-1. Log in to the Greenplum Database master host.
+1. Log in to the Greenplum Database coordinator host.
 
-1. Copy `hadoop-lzo.jar` from the Hadoop NameNode to the PXF configuration directory on the Greenplum Database master host. For example, if `$PXF_BASE` is `/usr/local/pxf-gp6`:
+1. Copy `hadoop-lzo.jar` from the Hadoop NameNode to the PXF configuration directory on the Greenplum Database coordinator host. For example, if `$PXF_BASE` is `/usr/local/pxf-gp6`:
 
     ``` shell
-    gpadmin@gpmaster$ scp <hadoop-user>@<namenode-host>:/usr/lib/hadoop-lzo/lib/hadoop-lzo.jar /usr/local/pxf-gp6/lib/
+    gpadmin@coordinator$ scp <hadoop-user>@<namenode-host>:/usr/lib/hadoop-lzo/lib/hadoop-lzo.jar /usr/local/pxf-gp6/lib/
     ```
 
 1. Synchronize the PXF configuration and restart PXF:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
-    gpadmin@gpmaster$ pxf cluster restart
+    gpadmin@coordinator$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster restart
     ```
 
 1. Re-run the query.
@@ -163,12 +163,12 @@ To remedy this situation, specify an executable directory for the Snappy `tempdi
 
     If the `mount` command output for `/tmp` includes `noexec`, continue.
 
-1. Log in to the Greenplum Database master host.
+1. Log in to the Greenplum Database coordinator host.
 
 1. Stop PXF on the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster stop
+    gpadmin@coordinator$ pxf cluster stop
     ```
 
 1.  Locate the `pxf-env.sh` file in your PXF installation. If you did not relocate `$PXF_BASE`, the file is located here:
@@ -189,8 +189,8 @@ To remedy this situation, specify an executable directory for the Snappy `tempdi
 1.  Synchronize the PXF configuration and then restart PXF:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
-    gpadmin@gpmaster$ pxf cluster start
+    gpadmin@coordinator$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster start
     ```
 
 ## <a id="hiveorcnulls"></a>Reading from a Hive table STORED AS ORC Returns NULLs
@@ -218,7 +218,7 @@ The workaround described in this section applies when all of the following hold 
 
 *To remedy this situation, perform the following procedure*:
 
-1. Log in to the Greenplum Database master host.
+1. Log in to the Greenplum Database coordinator host.
 
 1. Identify the name of your Hadoop PXF server configuration.
 
@@ -241,7 +241,7 @@ The workaround described in this section applies when all of the following hold 
 1. Synchronize the PXF server configuration to your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ````
 
 1. Try the query again.

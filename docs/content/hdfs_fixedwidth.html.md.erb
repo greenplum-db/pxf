@@ -144,12 +144,11 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://doc
 | line_delim    | The line delimiter character in the data. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `line_delim=E'\n'`, `line_delim 'aaa'`. The default value is `'\n'`. |
 | DISTRIBUTED BY    | If you want to load data from an existing Greenplum Database table into the writable external table, consider specifying the same distribution policy or `<column_name>` on both tables. Doing so will avoid extra motion of data between segments on the load operation. |
 
-Writable external tables that you create using the `hdfs:fixedwidth` profile can optionally use record or block compression. You specify the compression type and codec via options in the `CREATE WRITABLE EXTERNAL TABLE` `LOCATION` clause:
+Writable external tables that you create using the `hdfs:fixedwidth` profile can optionally use record or block compression. You specify the compression codec via an option in the `CREATE WRITABLE EXTERNAL TABLE` `LOCATION` clause:
 
 | Write Option  | Value Description |
 |-------|-------------------------------------|
 | COMPRESSION_CODEC    | The compression codec alias. Supported compression codecs for writing fixed-width text data include: `default`, `bzip2`, `gzip`, and `uncompressed`. If this option is not provided, Greenplum Database performs no data compression. |
-| COMPRESSION_TYPE    | The compression type to employ; supported values are `RECORD` (the default) or `BLOCK`. |
 
 ## <a id="fixedwidth_write_example"></a>Example: Writing Fixed-Width Text Data to HDFS
 

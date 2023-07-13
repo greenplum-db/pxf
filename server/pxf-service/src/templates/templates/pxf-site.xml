@@ -76,6 +76,17 @@
     </property>
 
     <property>
+        <name>pxf.orc.write.decimal.overflow</name>
+        <value>round</value>
+        <description>
+            Specifies behavior of the PXF ORC profiles when writing NUMERIC data that exceeds the maximum precision of 38. Valid values are error, round and ignore. The default value is round.
+            If set to error, PXF will report an error, potentially leaving an incomplete dataset in the external system.
+            If set to round, PXF will try to round the value to meet both precision and scale requirements, or report an error if the value cannot be rounded, potentially leaving an incomplete dataset in the external system.
+            If set to ignore, PXF will try to round the value to meet only the precision requirement; otherwise PXF will write NULL instead of the value (as in previous PXF versions).
+        </description>
+    </property>
+
+    <property>
         <name>pxf.orc.write.timezone.utc</name>
         <value>true</value>
         <description>
@@ -89,9 +100,9 @@
         <value>round</value>
         <description>
             Specifies behavior of the PXF Parquet profiles when writing NUMERIC data that exceeds the maximum precision of 38. Valid values are error, round, and ignore. The default value is round.
-            If set to error, an error will be reported and the transaction will fail, potentially leaving an incomplete dataset in the external system.
-            If set to round, PXF will try to round and write the value, or report an error if the value cannot be rounded, potentially leaving an incomplete dataset in the external system.
-            If set to ignore, PXF will write NULL instead of the value (as in previous PXF versions).
+            If set to error, PXF will report an error, potentially leaving an incomplete dataset in the external system.
+            If set to round, PXF will try to round the value to meet both precision and scale requirements, or report an error if the value cannot be rounded, potentially leaving an incomplete dataset in the external system.
+            If set to ignore, PXF will try to round the value to meet both precision and scale requirements; otherwise PXF will write NULL if the value cannot be rounded (as in previous PXF versions).
         </description>
     </property>
 

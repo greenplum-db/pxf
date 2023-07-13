@@ -32,10 +32,10 @@ You must create a JDBC server configuration for Trino, download the Trino driver
 
 This procedure will typically be performed by the Greenplum Database administrator.
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ```shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 1. Download the Trino JDBC driver and place it under `$PXF_BASE/lib`.
@@ -43,25 +43,25 @@ This procedure will typically be performed by the Greenplum Database administrat
    See [Trino Documentation - JDBC Driver](https://trino.io/docs/current/client/jdbc.html#installing) for instructions on downloading the Trino JDBC driver.
    The following example downloads the driver and places it under `$PXF_BASE/lib`:
 
-    1. If you did not relocate `$PXF_BASE`, run the following from the Greenplum master:
+    1. If you did not relocate `$PXF_BASE`, run the following from the Greenplum coordinator:
 
         ```shell
-        gpadmin@gpmaster$ cd /usr/local/pxf-gp<version>/lib
-        gpadmin@gpmaster$ wget <url-to-trino-jdbc-driver>
+        gpadmin@coordinator$ cd /usr/local/pxf-gp<version>/lib
+        gpadmin@coordinator$ wget <url-to-trino-jdbc-driver>
         ```
 
-    2. If you relocated `$PXF_BASE`, run the following from the Greenplum master:
+    2. If you relocated `$PXF_BASE`, run the following from the Greenplum coordinator:
 
         ```shell
-        gpadmin@gpmaster$ cd $PXF_BASE/lib
-        gpadmin@gpmaster$ wget <url-to-trino-jdbc-driver>
+        gpadmin@coordinator$ cd $PXF_BASE/lib
+        gpadmin@coordinator$ wget <url-to-trino-jdbc-driver>
         ```
 
 1. Synchronize the PXF configuration, and then restart PXF:
 
     ```shell
-    gpadmin@gpmaster$ pxf cluster sync
-    gpadmin@gpmaster$ pxf cluster restart
+    gpadmin@coordinator$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster restart
     ```
 
 1. Create a JDBC server configuration for Trino as described in [Example Configuration Procedure](jdbc_cfg.html#cfg_proc), naming the server directory `trino`.
@@ -134,7 +134,7 @@ This procedure will typically be performed by the Greenplum Database administrat
 1. Synchronize the PXF server configuration to the Greenplum Database cluster:
 
     ```shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 ## <a id="ex_readjdbc"></a>Read from a Trino Table

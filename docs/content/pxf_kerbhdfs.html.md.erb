@@ -149,7 +149,7 @@ There are different procedures for configuring PXF for secure HDFS with a [Micro
 
 ### <a id="proc_ad"></a>Configuring PXF with a Microsoft Active Directory Kerberos KDC Server
 
-When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will perform tasks on both the KDC server host and the Greenplum Database master host.
+When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will perform tasks on both the KDC server host and the Greenplum Database coordinator host.
 
 **Perform the following steps to configure the Active Directory domain controller**:
 
@@ -167,26 +167,26 @@ When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will
 
     With Active Directory, the principal and the keytab file are shared by all Greenplum Database hosts. 
 	
-8. Copy the `pxf.service.keytab` file to the Greenplum master host.
+8. Copy the `pxf.service.keytab` file to the Greenplum coordinator host.
 
-**Perform the following procedure on the Greenplum Database master host**:
+**Perform the following procedure on the Greenplum Database coordinator host**:
 
-1. Log in to the Greenplum Database master host. For example:
+1. Log in to the Greenplum Database coordinator host. For example:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
     
 2. Identify the name of the PXF Hadoop server configuration, and navigate to the server configuration directory. For example, if the server is named `hdp3`:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_BASE/servers/hdp3
+    gpadmin@coordinator$ cd $PXF_BASE/servers/hdp3
     ```
 
 3. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 4. Open the `pxf-site.xml` file in the editor of your choice, and update the keytab and principal property settings, if required. Specify the location of the keytab file and the Kerberos principal, substituting your realm. For example:
@@ -207,15 +207,15 @@ When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will
 5. Synchronize the keytabs in `$PXF_BASE`. You must distribute the keytab file to `$PXF_BASE/keytabs/`. Locate the keytab file, copy the file to the `$PXF_BASE` runtime configuration directory, and set required permissions. For example:
 	
     ``` shell
-    gpadmin@gpmaster$ gpscp -f hostfile_all pxf.service.keytab =:$PXF_BASE/keytabs/
-    gpadmin@gpmaster$ gpssh -f hostfile_all chmod 400 $PXF_BASE/keytabs/pxf.service.keytab
+    gpadmin@coordinator$ gpscp -f hostfile_all pxf.service.keytab =:$PXF_BASE/keytabs/
+    gpadmin@coordinator$ gpssh -f hostfile_all chmod 400 $PXF_BASE/keytabs/pxf.service.keytab
     ```
 
 6. [Complete the PXF Configuration](#proc_complete) based on your chosen Hadoop access scenario.
 
 ### <a id="proc_mit"></a>Configuring PXF with an MIT Kerberos KDC Server
 
-When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you will perform tasks on both the KDC server host and the Greenplum Database master host.
+When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you will perform tasks on both the KDC server host and the Greenplum Database coordinator host.
 
 **Perform the following steps on the MIT Kerberos KDC server host**:
 
@@ -279,12 +279,12 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     root@kdc-server$ ssh host3.example.com chmod 400 /usr/local/pxf-gp6/keytabs/pxf.service.keytab
     ```
 
-**Perform the following steps on the Greenplum Database master host**:
+**Perform the following steps on the Greenplum Database coordinator host**:
 
-1. Log in to the master host. For example:
+1. Log in to the coordinator host. For example:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Identify the name of the PXF Hadoop server configuration that requires Kerberos access.
@@ -292,13 +292,13 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 3. Navigate to the server configuration directory. For example, if the server is named `hdp3`:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_BASE/servers/hdp3
+    gpadmin@coordinator$ cd $PXF_BASE/servers/hdp3
     ```
 
 4. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 5. Open the `pxf-site.xml` file in the editor of your choice, and update the keytab and principal property settings, if required. Specify the location of the keytab file and the Kerberos principal, substituting your realm. *The default values for these settings are identified below*:
@@ -320,7 +320,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 
 ### <a id="proc_complete"></a>Completing the PXF Configuration
 
-On the Greenplum Database master host, complete the configuration of the PXF server based on your chosen Hadoop access scenario. Choose one, as *these are mutually exclusive*:
+On the Greenplum Database coordinator host, complete the configuration of the PXF server based on your chosen Hadoop access scenario. Choose one, as *these are mutually exclusive*:
 
 1. If you want to access Hadoop as the Greenplum Database user:
 
@@ -340,17 +340,17 @@ On the Greenplum Database master host, complete the configuration of the PXF ser
 1. Synchronize the PXF configuration to your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 ### <a id="enable_kcd"></a>Activating Kerberos Constrained Delegation
 
 By default, Kerberos constrained delegation is deactivated for PXF. Perform the following procedure to configure Kerberos constrained delegation for a PXF server:
 
-1. Log in to your Greenplum Database master host as the administrative user:
+1. Log in to your Greenplum Database coordinator host as the administrative user:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 1. Identify the name of the Hadoop PXF server configuration that you want to update.
@@ -358,13 +358,13 @@ By default, Kerberos constrained delegation is deactivated for PXF. Perform the 
 1. Navigate to the server configuration directory. For example, if the server is named `hdp3`:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_BASE/servers/hdp3
+    gpadmin@coordinator$ cd $PXF_BASE/servers/hdp3
     ```
 
 1. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/pxf-site.xml .
     ```
 
 1. Open the `pxf-site.xml` file in the editor of your choice, locate the `pxf.service.kerberos-constrained.delegation` property, and set it as follows:
@@ -381,6 +381,6 @@ By default, Kerberos constrained delegation is deactivated for PXF. Perform the 
 1. Use the `pxf cluster sync` command to synchronize the PXF Hadoop server configuration to your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 

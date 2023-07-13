@@ -21,13 +21,13 @@ Procedure:
 1. Synchronize the PXF configuration to all hosts in the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 1. (Re)start PXF on all Greenplum hosts:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster restart
+    gpadmin@coordinator$ pxf cluster restart
     ```
 
 
@@ -46,6 +46,7 @@ The `pxf-application.properties` file exposes these PXF Service application conf
 | pxf.task.pool.max-size | The maximum allowed number of core streaming threads. | pxf.max.threads if set, or 200 |
 | [pxf.log.level](cfg_logging.html) | The log level for the PXF Service. | info  |
 | pxf.fragmenter-cache.expiration | The amount of time after which an entry expires and is removed from the fragment cache. | 10s (10 seconds) |
+| [server.address](cfghostport.html) | The PXF server listen address. | localhost |
 
 To change the value of a PXF Service application property, you may first need to add the property to, or uncomment the property in, the `pxf-application.properties` file before you can set the new value.
 
@@ -76,5 +77,5 @@ The [Logging](cfg_logging.html) advanced configuration topic describes how to en
 
 ## <a id="pxfprofiledef"></a>pxf-profiles.xml
 
-PXF defines its default profiles in the [`pxf-profiles-default.xml`](https://github.com/greenplum-db/pxf/blob/master/server/pxf-service/src/main/resources/pxf-profiles-default.xml) file. If you choose to add a custom profile, you configure the profile in `pxf-profiles.xml`.
+PXF defines its default profiles in the [`pxf-profiles-default.xml`](https://github.com/greenplum-db/pxf/blob/main/server/pxf-service/src/main/resources/pxf-profiles-default.xml) file. If you choose to add a custom profile, you configure the profile in `pxf-profiles.xml`.
 

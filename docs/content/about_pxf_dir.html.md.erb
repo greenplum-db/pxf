@@ -22,7 +22,7 @@ The following PXF files and directories are installed to `<PXF_INSTALL_DIR>` whe
 | application/                | The PXF Server application JAR file.   |
 | bin/                | The PXF command line executable directory.   |
 | commit.sha          | The commit identifier for this PXF release.   |
-| gpextable/           | The PXF extension files. PXF copies the `pxf.control` file from this directory to the Greenplum installation (`$GPHOME`) on a single host when you run the `pxf register` command, or on all hosts in the cluster when you run the `pxf [cluster] register` command from the Greenplum master host.   |
+| gpextable/           | The PXF extension files. PXF copies the `pxf.control` file from this directory to the Greenplum installation (`$GPHOME`) on a single host when you run the `pxf register` command, or on all hosts in the cluster when you run the `pxf [cluster] register` command from the Greenplum coordinator host.   |
 | share/                | The directory for shared PXF files that you may require depending on the external data stores that you access. `share/` initially includes only the PXF HBase JAR file. |
 | templates/  | The PXF directory for server configuration file templates. |
 | version              | The PXF version.             |
@@ -49,13 +49,13 @@ PXF provides the [pxf [cluster] prepare](ref/pxf-cluster.html) command to prepar
 For example, to relocate `$PXF_BASE` to the `/path/to/dir` directory on all Greenplum hosts, run the command as follows:
 
 ``` shell
-gpadmin@gpmaster$ PXF_BASE=/path/to/dir pxf cluster prepare
+gpadmin@coordinator$ PXF_BASE=/path/to/dir pxf cluster prepare
 ```
 
 When your `$PXF_BASE` is different than `<PXF_INSTALL_DIR>`, inform PXF by setting the `PXF_BASE` environment variable when you run a `pxf` command:
 
 ``` pre
-gpadmin@gpmaster$ PXF_BASE=/path/to/dir pxf cluster start
+gpadmin@coordinator$ PXF_BASE=/path/to/dir pxf cluster start
 ```
 
 Set the environment variable in the `.bashrc` shell initialization script for the PXF installation owner (typically the `gpadmin` user) as follows:

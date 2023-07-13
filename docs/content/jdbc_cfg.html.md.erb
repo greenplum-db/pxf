@@ -214,10 +214,10 @@ The `pxf.service.user.impersonation` property in the `jdbc-site.xml` configurati
 
 By default, PXF JDBC user impersonation is deactivated.  Perform the following procedure to turn PXF user impersonation on or off for a JDBC server configuration.
 
-1. Log in to your Greenplum Database master host as the administrative user:
+1. Log in to your Greenplum Database coordinator host as the administrative user:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Identify the name of the PXF JDBC server configuration that you want to update.
@@ -225,7 +225,7 @@ By default, PXF JDBC user impersonation is deactivated.  Perform the following p
 3. Navigate to the server configuration directory. For example, if the server is named `mysqldb`:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_BASE/servers/mysqldb
+    gpadmin@coordinator$ cd $PXF_BASE/servers/mysqldb
     ```
 
 5. Open the `jdbc-site.xml` file in the editor of your choice, and add or uncomment the user impersonation property and setting. For example, if you require user impersonation for this server configuration, set the `pxf.service.user.impersonation` property to `true`:
@@ -242,7 +242,7 @@ By default, PXF JDBC user impersonation is deactivated.  Perform the following p
 8. Use the `pxf cluster sync` command to synchronize the PXF JDBC server configuration to your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 ## <a id="sessauth"></a>About Session Authorization
@@ -354,10 +354,10 @@ You can use the JDBC Connector to access Hive. Refer to [Configuring the JDBC Co
 
 In this procedure, you name and add a PXF JDBC server configuration for a PostgreSQL database and synchronize the server configuration(s) to the Greenplum Database cluster.
 
-1. Log in to your Greenplum Database master host:
+1. Log in to your Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Choose a name for the JDBC server. You will provide the name to Greenplum users that you choose to allow to reference tables in the external SQL database as the configured user.
@@ -367,13 +367,13 @@ In this procedure, you name and add a PXF JDBC server configuration for a Postgr
 3. Create the `$PXF_BASE/servers/<server_name>` directory. For example, use the following command to create a JDBC server configuration named `pg_user1_testdb`:
 
     ``` shell
-    gpadmin@gpmaster$ mkdir $PXF_BASE/servers/pg_user1_testdb
+    gpadmin@coordinator$ mkdir $PXF_BASE/servers/pg_user1_testdb
     ````
 
 4. Copy the PXF JDBC server template file to the server configuration directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp <PXF_INSTALL_DIR>/templates/jdbc-site.xml $PXF_BASE/servers/pg_user1_testdb/
+    gpadmin@coordinator$ cp <PXF_INSTALL_DIR>/templates/jdbc-site.xml $PXF_BASE/servers/pg_user1_testdb/
     ```
         
 5. Open the template server configuration file in the editor of your choice, and provide appropriate property values for your environment. For example, if you are configuring access to a PostgreSQL database named `testdb` on a PostgreSQL instance running on the host named `pgserverhost` for the user named `user1`:
@@ -404,6 +404,6 @@ In this procedure, you name and add a PXF JDBC server configuration for a Postgr
 7. Use the `pxf cluster sync` command to copy the new server configuration to the Greenplum Database cluster:
     
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 

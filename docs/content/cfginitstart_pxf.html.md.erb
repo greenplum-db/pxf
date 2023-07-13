@@ -48,16 +48,16 @@ Before you start PXF in your Greenplum Database cluster, ensure that:
 
 Perform the following procedure to start PXF on each host in your Greenplum Database cluster.
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 3. Run the `pxf cluster start` command to start PXF on each host:
 
     ```shell
-    gpadmin@gpmaster$ pxf cluster start
+    gpadmin@coordinator$ pxf cluster start
     ```
 
 ## <a id="stop_pxf"></a>Stopping PXF
@@ -72,16 +72,16 @@ Before you stop PXF in your Greenplum Database cluster, ensure that your Greenpl
 
 Perform the following procedure to stop PXF on each host in your Greenplum Database cluster.
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 3. Run the `pxf cluster stop` command to stop PXF on each host:
 
     ```shell
-    gpadmin@gpmaster$ pxf cluster stop
+    gpadmin@coordinator$ pxf cluster stop
     ```
 
 ## <a id="restart_pxf"></a>Restarting PXF
@@ -98,15 +98,15 @@ Before you restart PXF in your Greenplum Database cluster, ensure that your Gree
 
 Perform the following procedure to restart PXF in your Greenplum Database cluster.
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Restart PXF:
 
     ```shell
-    gpadmin@gpmaster$ pxf cluster restart
+    gpadmin@coordinator$ pxf cluster restart
     ```
 

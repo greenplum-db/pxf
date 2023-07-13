@@ -86,16 +86,16 @@ In this procedure you create a named query text file, add it to the `pgsrvcfg` J
 
 This procedure will typically be performed by the Greenplum Database administrator.
 
-1. Log in to the Greenplum Database master host:
+1. Log in to the Greenplum Database coordinator host:
 
     ``` shell
-    $ ssh gpadmin@<gpmaster>
+    $ ssh gpadmin@<coordinator>
     ```
 
 2. Navigate to the JDBC server configuration directory `pgsrvcfg`. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cd $PXF_BASE/servers/pgsrvcfg
+    gpadmin@coordinator$ cd $PXF_BASE/servers/pgsrvcfg
     ```
 
 3. Open a query text file named `pg_order_report.sql` in a text editor and copy/paste the following query into the file:
@@ -112,7 +112,7 @@ This procedure will typically be performed by the Greenplum Database administrat
 5. Synchronize these changes to the PXF configuration to the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ pxf cluster sync
+    gpadmin@coordinator$ pxf cluster sync
     ```
 
 ## <a id="nq_readjdbc"></a>Read the Query Results
