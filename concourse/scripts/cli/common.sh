@@ -142,25 +142,41 @@ has_standby_coordinator() {
   grep -q scdw hostfile_all
 }
 
+get_host_from_version() {
+  local mainHostName="master"
+  gpdb_build_from_sql=$(psql -c 'select version()' | grep Greenplum | cut -d ' ' -f 6,8)
+  GPDB_VERSION=${gpdb_build_from_sql:0:1}
+
+   if [[ GPDB_VERSION -lt 7 ]]
+      then
+        mainHostName="master"
+      else
+        mainHostName="coordinator"
+  fi
+
+  echo "${mainHostName}"
+}
+
 get_cluster_description() {
-  local cluster_description="master host"
+  local cluster_description="$(get_host_from_version) host"
   if has_standby_coordinator; then
-    cluster_description+=", standby master host,"
+    cluster_description+=", standby $(get_host_from_version) host,"
   fi
   local num_segment_hosts
-  num_segment_hosts="$(grep -c -P 'sdw\d+' hostfile_all)"
+  num_segment_hosts="$(grep -c 'sdw\d+' hostfile_all)"
   cluster_description+=" and ${num_segment_hosts} segment hosts..."
+
 
   echo "${cluster_description}"
 }
 
 get_cluster_sync_description() {
-  local cluster_sync_description="master host to "
+  local cluster_sync_description="$(get_host_from_version) host to "
   if has_standby_coordinator; then
-    cluster_sync_description+="standby master host and "
+    cluster_sync_description+="standby $(get_host_from_version) host and "
   fi
   local num_segment_hosts
-  num_segment_hosts="$(grep -c -P 'sdw\d+' hostfile_all)"
+  num_segment_hosts="$(grep -c 'sdw\d+' hostfile_all)"
   cluster_sync_description+="${num_segment_hosts} segment hosts..."
 
   echo "${cluster_sync_description}"

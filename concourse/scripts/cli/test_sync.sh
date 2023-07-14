@@ -7,6 +7,7 @@ source "${dir}/common.sh"
 cluster_description="$(get_cluster_description)"
 cluster_sync_description="$(get_cluster_sync_description)"
 num_hosts="${#all_cluster_hosts[@]}"
+get_host_from_version="$(get_host_from_version)"
 
 list_cluster_configs() {
 	for host in "${all_cluster_hosts[@]}"; do
@@ -264,7 +265,7 @@ run_test test_sync_succeeds_delete_server "pxf cluster sync (delete server) shou
 
 # === Test "pxf cluster sync (no standby)" ================================================================
 expected_sync_message=\
-"Syncing PXF configuration files from master host to 2 segment hosts...
+"Syncing PXF configuration files from ${get_host_from_version} host to 2 segment hosts...
 PXF configs synced successfully on 2 out of 2 hosts"
 expected_cluster_configs=\
 "cdw:
