@@ -12,7 +12,7 @@ err_cnt=0
 for script in "${SCRIPT_DIR}/cli/"test_*.sh; do
 	scp "${script}" cdw:
 	script_short_name=${script##*/} # chop off path to script
-	ssh cdw "~gpadmin/${script_short_name}"
+	ssh cdw "source ${GPHOME}/greenplum_path.sh && ~gpadmin/${script_short_name}"
 	((err_cnt+=$?))
 done
 
