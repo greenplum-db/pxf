@@ -269,7 +269,6 @@ resources:
   source:
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
-    disable_forks: true
     ignore_paths:
       - docs/**
       - singlecluster/**
