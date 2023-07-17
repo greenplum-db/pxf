@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+export GPHOME=${GPHOME:-/usr/local/greenplum-db-devel}
 
 cluster_env_files=$( cd "${SCRIPT_DIR}/../../../cluster_env_files" && pwd )
 

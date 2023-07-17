@@ -163,7 +163,7 @@ get_cluster_description() {
     cluster_description+=", standby $(get_host_from_version) host,"
   fi
   local num_segment_hosts
-  num_segment_hosts="$(grep -c 'sdw\d+' hostfile_all)"
+  num_segment_hosts="$(grep -c -P 'sdw\d+' hostfile_all)"
   cluster_description+=" and ${num_segment_hosts} segment hosts..."
 
 
@@ -176,7 +176,7 @@ get_cluster_sync_description() {
     cluster_sync_description+="standby $(get_host_from_version) host and "
   fi
   local num_segment_hosts
-  num_segment_hosts="$(grep -c 'sdw\d+' hostfile_all)"
+  num_segment_hosts="$(grep -c -P 'sdw\d+' hostfile_all)"
   cluster_sync_description+="${num_segment_hosts} segment hosts..."
 
   echo "${cluster_sync_description}"
