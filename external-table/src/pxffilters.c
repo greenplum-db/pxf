@@ -182,6 +182,14 @@ dbop_pxfop_map pxf_supported_opr_op_expr[] =
 	{1059 /* bpcharle */ , PXFOP_LE},
 	{1061 /* bpcharge */ , PXFOP_GE},
 	{1057 /* bpcharne */ , PXFOP_NE},
+
+	/* numeric */
+	{NumericEqualOperator /* numericeq */ , PXFOP_EQ},
+	{1754 /* numericlt */ , PXFOP_LT},
+	{1756 /* numericgt */ , PXFOP_GT},
+	{1755 /* numericle */ , PXFOP_LE},
+	{1757 /* numericge */ , PXFOP_GE},
+	{1753 /* numericne */ , PXFOP_NE},
 };
 
 
