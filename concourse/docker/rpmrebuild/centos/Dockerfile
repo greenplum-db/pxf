@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=centos:7
+ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-centos7-build
 
 FROM ${BASE_IMAGE}
 

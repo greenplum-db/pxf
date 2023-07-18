@@ -56,10 +56,12 @@ resources:
       private_key: ((ud/pxf/secrets/gp-image-baking-repo-key))
       paths:
         - images/docker/gpdb5/gpdb5-centos7-build-test
+        - images/docker/gpdb6/gpdb6-centos7-build
         - images/docker/gpdb6/gpdb6-centos7-test
         - images/docker/gpdb6/gpdb6-ubuntu18.04-test
         - images/docker/gpdb6/gpdb6-oel7-test
         - images/docker/gpdb6/gpdb6-rhel8-test
+        - images/docker/gpdb6/gpdb6-rocky8-build
         - images/docker/gpdb7/gpdb7-centos7-test
         - images/docker/gpdb7/gpdb7-rhel8-test
         - images/docker/gpdb7/gpdb7-rocky8-test

@@ -8,7 +8,7 @@ steps:
   id: rpmrebuild-centos7-image
   args:
     - 'build'
-    - '--build-arg=BASE_IMAGE=centos:7'
+    - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-centos7-build:latest'
     - '--tag=gcr.io/$PROJECT_ID/rpmrebuild-centos7:latest'
     - '-f'
     - 'concourse/docker/rpmrebuild/centos/Dockerfile'
@@ -20,7 +20,7 @@ steps:
   id: rpmrebuild-rocky8-image
   args:
     - 'build'
-    - '--build-arg=BASE_IMAGE=rockylinux:8'
+    - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-rocky8-build:latest'
     - '--tag=gcr.io/$PROJECT_ID/rpmrebuild-rocky8:latest'
     - '-f'
     - 'concourse/docker/rpmrebuild/rocky/Dockerfile'

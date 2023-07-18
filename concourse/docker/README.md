@@ -46,21 +46,14 @@ flowchart TD
   classDef latestStyle fill:#6c71c4,color:white,stroke:none
   classDef plainStyle fill:none,stroke:black
 
-  subgraph dockerhub [Official DockerHub]
-    centos7[centos:7]
-    rocky8[rockylinux:8]
-    class centos7 dockerhubStyle
-    class rocky8 dockerhubStyle
-
-  end
-  class dockerhub subgraphStyle
-
   subgraph gcr_images ["GP RelEng Images (gcr.io/data-gpdb-public-images)"]
     gp5_centos7_latest[centos-gpdb-dev:7-gcc6.2-llvm3.7]
     gp6_centos7_latest[gpdb6-centos7-test:latest]
+    gp6_centos7_build[gpdb6-centos7-build:latest]
     gp6_ubuntu18_latest[gpdb6-ubuntu18.04-test:latest]
     gp6_oel7_latest[gpdb6-oel7-test:latest]
     gp6_rocky8_latest[gpdb6-rocky8-test:latest]
+    gp6_rocky8_build[gpdb6-rocky8-build:latest]
     gp7_rocky8_latest[gpdb7-rocky8-test:latest]
 
     class gp5_centos7_latest gcrPublicStyle
@@ -210,9 +203,9 @@ flowchart TD
   gp7_rocky8_dockerfile -- CloudBuild --> gp7_rocky8_pxf_sha
   gp7_rocky8_pxf_sha -- "tag (concourse pipeline)" --> gp7_rocky8_pxf_latest
 
-  centos7 --> rpm_docker_centos7
+  gp6_centos7_build --> rpm_docker_centos7
   rpm_docker_centos7 --> rpm_centos7_latest
-  rocky8 --> rpm_docker_rocky8
+  gp6_rocky8_build --> rpm_docker_rocky8
   rpm_docker_rocky8 --> rpm_rocky8_latest
 
   gp5_centos7_pxf_latest --> mapr_dockerfile
