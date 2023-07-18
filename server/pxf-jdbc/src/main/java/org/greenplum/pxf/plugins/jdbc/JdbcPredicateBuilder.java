@@ -69,9 +69,12 @@ public class JdbcPredicateBuilder extends ColumnPredicateBuilder {
             case BIGINT:
             case FLOAT8:
             case REAL:
+            case NUMERIC:
             case BOOLEAN:
                 return value;
             case TEXT:
+            case VARCHAR:
+            case BPCHAR:
                 return String.format("'%s'",
                         StringUtils.replace(value, "'", "''"));
             case DATE:
