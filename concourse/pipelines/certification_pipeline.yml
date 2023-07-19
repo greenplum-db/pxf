@@ -147,7 +147,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.tar.gz
+    regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.debug.tar.gz
 
 ## ---------- PXF Released RPM Artifacts ----------
 - name: pxf_gp5_rpm_rhel7
