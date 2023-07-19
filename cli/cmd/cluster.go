@@ -17,7 +17,7 @@ type ClusterData struct {
 	Cluster    *cluster.Cluster
 	Output     *cluster.RemoteOutput
 	NumHosts   int
-	Connection *dbconn.DBConn
+	connection *dbconn.DBConn
 }
 
 func createCobraCommand(use string, short string, cmd *command) *cobra.Command {
@@ -85,7 +85,7 @@ func handlePlurality(num int) string {
 
 func (clusterData *ClusterData) getHost() string {
 
-    if clusterData.Connection.Version.Before("7") {
+    if clusterData.connection.Version.Before("7") {
         return "master"
     }
     return "coordinator"
@@ -155,13 +155,13 @@ func doSetup() (*ClusterData, error) {
 		gplog.Error(fmt.Sprintf("ERROR: Could not retrieve segment information from GPDB.\n%s\n" + err.Error()))
 		return nil, err
 	}
-	clusterData := &ClusterData{Cluster: cluster.NewCluster(segConfigs), Connection: connection}
+	clusterData := &ClusterData{Cluster: cluster.NewCluster(segConfigs), connection: connection}
 
 	return clusterData, nil
 }
 
 func clusterRun(cmd *command, clusterData *ClusterData) error {
-	defer clusterData.Connection.Close()
+	defer clusterData.connection.Close()
 
 	err := cmd.Warn(os.Stdin)
 	if err != nil {
