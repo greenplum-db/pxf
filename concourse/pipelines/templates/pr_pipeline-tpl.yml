@@ -39,6 +39,7 @@ resources:
 - name: pxf_src
   type: pull-request
   source:
+    disable_forks: true
     repository: greenplum-db/pxf
     base_branch: "branch-5.16"
     access_token: ((ud/pxf/secrets/bot-access-token))
