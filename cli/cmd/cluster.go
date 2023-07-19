@@ -101,7 +101,7 @@ func (clusterData *ClusterData) getHost() string {
         connection = clusterData.connection
     }
 
-    if connection != nil && connection.Version.Before("7") {
+    if connection == nil || (*connection).Version.Before("7") {
         return "master"
     }
 
