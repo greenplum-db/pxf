@@ -24,12 +24,16 @@ func createCobraCommand(use string, short string, cmd *command) *cobra.Command {
 	if cmd == nil {
 		return &cobra.Command{Use: use, Short: short}
 	}
-	clusterData, err := doSetup()
-	hostName := clusterData.getHost()
+
+	// creating a clusterData object to call getHost
+	var emptyClusterData *ClusterData
+	hostName := emptyClusterData.getHost()
+
 	return &cobra.Command{
 		Use:   use,
 		Short: fmt.Sprintf( short, hostName, hostName),
 		Run: func(cobraCmd *cobra.Command, args []string) {
+			clusterData, err := doSetup()
 			if err == nil {
 				err = clusterRun(cmd, clusterData)
 			}
@@ -84,10 +88,23 @@ func handlePlurality(num int) string {
 }
 
 func (clusterData *ClusterData) getHost() string {
+    var connection *dbconn.DBConn
 
-    if clusterData.connection.Version.Before("7") {
+    if clusterData == nil {
+        connection = dbconn.NewDBConnFromEnvironment("postgres")
+        err := connection.Connect(1)
+        if err != nil {
+            // unable to connect to the database, so defaulting to master
+            return "master"
+        }
+    } else {
+        connection = clusterData.connection
+    }
+
+    if connection != nil && connection.Version.Before("7") {
         return "master"
     }
+
     return "coordinator"
 }
 
