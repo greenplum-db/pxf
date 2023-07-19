@@ -1,6 +1,6 @@
------------------------------------------------------
------- Check that Filter Push Down is working -------
------------------------------------------------------
+----------------------------------------------------------------------------------
+------ Check that Filter Push Down is working and disabled in normal cases -------
+----------------------------------------------------------------------------------
 -- Check that the filter is being pushed down. We create an external table
 -- that returns the filter being sent from the C-side
 CREATE FOREIGN DATA WRAPPER pxf_filter_push_down_fdw
@@ -12,29 +12,29 @@ CREATE SERVER pxf_filter_push_down_server
 CREATE USER MAPPING FOR CURRENT_USER SERVER pxf_filter_push_down_server;
 DROP FOREIGN TABLE IF EXISTS test_filter CASCADE;
 NOTICE:  foreign table "test_filter" does not exist, skipping
-CREATE FOREIGN TABLE test_filter (t0 text, a1 integer, b2 boolean, filterValue text)
+CREATE FOREIGN TABLE test_filter (t0 text, a1 integer, b2 boolean, c3 numeric, d4 text, filterValue text)
     SERVER pxf_filter_push_down_server
     OPTIONS ( resource 'dummy_path', delimiter ',');
 SET optimizer = off;
 SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
- t0 | a1 | b2 |       filtervalue        
-----+----+----+--------------------------
- A  |  0 | t  | a0c25s1dAo5a1c23s1d0o5l0
+ t0 | a1 | b2 |  c3  | d4 |       filtervalue        
+----+----+----+------+----+--------------------------
+ A  |  0 | t  | 0.01 | AA | a0c25s1dAo5a1c23s1d0o5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  B  |  1 | f  | a1c23s1d1o3a0c25s1dBo5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |              filtervalue               
 ----+----+----+----------------------------------------
  B  |  1 | f  | a1c23s1d1o5a1c23s2d10o5l1a0c25s1dBo5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
  t0 | a1 | b2 |              filtervalue              
 ----+----+----+---------------------------------------
  A  |  0 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
@@ -42,7 +42,7 @@ SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, 
  C  |  2 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
 (3 rows)
 
-SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
  t0 | a1 | b2 |   filtervalue    
 ----+----+----+------------------
  B  |  1 | f  | a2c16s4dtrueo0l2
@@ -59,13 +59,13 @@ SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY
  D  |  3 | a1c23s1d5o1a2c16s4dtrueo0l2l0
 (2 rows)
 
-SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |                 filtervalue                 
 ----+----+----+---------------------------------------------
  B  |  1 | f  | a2c16s4dtrueo0l2a1c23s1d1o5a1c23s2d10o5l1l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
  t0 | a1 | b2 |                filtervalue                 
 ----+----+----+--------------------------------------------
  A  |  0 | t  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
@@ -78,25 +78,25 @@ SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0
 (7 rows)
 
 SET optimizer = on;
-SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  A  |  0 | t  | a0c25s1dAo5a1c23s1d0o5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  B  |  1 | f  | a1c23s1d1o3a0c25s1dBo5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |              filtervalue               
 ----+----+----+----------------------------------------
  B  |  1 | f  | a1c23s1d1o5a1c23s2d10o5l1a0c25s1dBo5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
  t0 | a1 | b2 |              filtervalue              
 ----+----+----+---------------------------------------
  A  |  0 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
@@ -104,7 +104,7 @@ SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, 
  C  |  2 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
 (3 rows)
 
-SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
  t0 | a1 | b2 |   filtervalue    
 ----+----+----+------------------
  B  |  1 | f  | a2c16s4dtrueo0l2
@@ -121,13 +121,13 @@ SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY
  D  |  3 | a1c23s1d5o1a2c16s4dtrueo0l2l0
 (2 rows)
 
-SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |                 filtervalue                 
 ----+----+----+---------------------------------------------
  B  |  1 | f  | a2c16s4dtrueo0l2a1c23s1d1o5a1c23s2d10o5l1l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
  t0 | a1 | b2 |                filtervalue                 
 ----+----+----+--------------------------------------------
  A  |  0 | t  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
@@ -139,14 +139,11 @@ SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0
  J  |  9 | f  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
 (7 rows)
 
------------------------------------------------------
------- Check that Filter Push Down is disabled ------
------------------------------------------------------
 -- Now let's make sure nothing gets pushed down when we disable predicate
 -- push-down by setting the disable_ppd option to true
 ALTER SERVER pxf_filter_push_down_server
     OPTIONS ( ADD disable_ppd 'true' );
-SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
  t0 | a1 | b2 | filtervalue 
 ----+----+----+-------------
  A  |  0 | t  | No filter
@@ -155,32 +152,37 @@ SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
 -- Drop the disable_ppd option to re-enable predicate push-down for the server
 ALTER SERVER pxf_filter_push_down_server
     OPTIONS ( DROP disable_ppd );
+-------------------------------------------------------------------------------------
+------ Check that Filter Push Down is working for varchar, bpchar and numeric -------
+-------------------------------------------------------------------------------------
+
 -- Recreate the same table as above, but now we use varchar for the t0 column
--- type. We want to make sure varchar predicates are being pushed down.
+-- type and 2 more columns c3 and c4 use numeric and bpchar. We want to make
+-- sure varchar, bpchar and numeric predicates are being pushed down.
 DROP FOREIGN TABLE IF EXISTS test_filter CASCADE;
-CREATE FOREIGN TABLE test_filter (t0 varchar(1), a1 integer, b2 boolean, filterValue text)
+CREATE FOREIGN TABLE test_filter (t0 varchar(1), a1 integer, b2 boolean, c3 numeric, d4 char(10), filterValue text)
     SERVER pxf_filter_push_down_server
     OPTIONS ( resource 'dummy_path', delimiter ',');
 SET optimizer = off;
-SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  A  |  0 | t  | a0c25s1dAo5a1c23s1d0o5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  B  |  1 | f  | a1c23s1d1o3a0c25s1dBo5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |              filtervalue               
 ----+----+----+----------------------------------------
  B  |  1 | f  | a1c23s1d1o5a1c23s2d10o5l1a0c25s1dBo5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
  t0 | a1 | b2 |              filtervalue              
 ----+----+----+---------------------------------------
  A  |  0 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
@@ -188,7 +190,7 @@ SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, 
  C  |  2 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
 (3 rows)
 
-SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
  t0 | a1 | b2 |   filtervalue    
 ----+----+----+------------------
  B  |  1 | f  | a2c16s4dtrueo0l2
@@ -205,13 +207,13 @@ SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY
  D  |  3 | a1c23s1d5o1a2c16s4dtrueo0l2l0
 (2 rows)
 
-SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |                 filtervalue                 
 ----+----+----+---------------------------------------------
  B  |  1 | f  | a2c16s4dtrueo0l2a1c23s1d1o5a1c23s2d10o5l1l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
  t0 | a1 | b2 |                filtervalue                 
 ----+----+----+--------------------------------------------
  A  |  0 | t  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
@@ -222,27 +224,66 @@ SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0
  H  |  7 | f  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
  J  |  9 | f  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
 (7 rows)
+
+SELECT * FROM test_filter WHERE  c3 = 1.11 ORDER BY t0, a1;
+ t0 | a1 | b2 |  c3  |     d4     |   filtervalue    
+----+----+----+------+------------+------------------
+ B  |  1 | f  | 1.11 | BB         | a3c1700s4d1.11o5
+(1 row)
+
+SELECT * FROM test_filter WHERE  c3 > 1.11 ORDER BY t0, a1;
+ t0 | a1 | b2 |  c3  |     d4     |   filtervalue    
+----+----+----+------+------------+------------------
+ C  |  2 | t  | 2.21 | CC         | a3c1700s4d1.11o2
+ D  |  3 | f  | 3.31 | DD         | a3c1700s4d1.11o2
+ E  |  4 | t  | 4.41 | EE         | a3c1700s4d1.11o2
+ F  |  5 | f  | 5.51 | FF         | a3c1700s4d1.11o2
+ G  |  6 | t  | 6.61 | GG         | a3c1700s4d1.11o2
+ H  |  7 | f  | 7.71 | HH         | a3c1700s4d1.11o2
+ I  |  8 | t  | 8.81 | II         | a3c1700s4d1.11o2
+ J  |  9 | f  | 9.91 | JJ         | a3c1700s4d1.11o2
+(8 rows)
+
+SELECT * FROM test_filter WHERE  c3 <> 1.11 ORDER BY t0, a1;
+ t0 | a1 | b2 |  c3  |     d4     |   filtervalue    
+----+----+----+------+------------+------------------
+ A  |  0 | t  | 0.01 | AA         | a3c1700s4d1.11o6
+ C  |  2 | t  | 2.21 | CC         | a3c1700s4d1.11o6
+ D  |  3 | f  | 3.31 | DD         | a3c1700s4d1.11o6
+ E  |  4 | t  | 4.41 | EE         | a3c1700s4d1.11o6
+ F  |  5 | f  | 5.51 | FF         | a3c1700s4d1.11o6
+ G  |  6 | t  | 6.61 | GG         | a3c1700s4d1.11o6
+ H  |  7 | f  | 7.71 | HH         | a3c1700s4d1.11o6
+ I  |  8 | t  | 8.81 | II         | a3c1700s4d1.11o6
+ J  |  9 | f  | 9.91 | JJ         | a3c1700s4d1.11o6
+(9 rows)
+
+SELECT * FROM test_filter WHERE  d4 = 'AA' ORDER BY t0, a1;
+ t0 | a1 | b2 |  c3  |     d4     |  filtervalue   
+----+----+----+------+------------+----------------
+ A  |  0 | t  | 0.01 | AA         | a4c1042s2dAAo5
+(1 row)
 
 SET optimizer = on;
-SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  A  |  0 | t  | a0c25s1dAo5a1c23s1d0o5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  B  |  1 | f  | a1c23s1d1o3a0c25s1dBo5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |              filtervalue               
 ----+----+----+----------------------------------------
  B  |  1 | f  | a1c23s1d1o5a1c23s2d10o5l1a0c25s1dBo5l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
  t0 | a1 | b2 |              filtervalue              
 ----+----+----+---------------------------------------
  A  |  0 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
@@ -250,7 +291,7 @@ SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, 
  C  |  2 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
 (3 rows)
 
-SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
  t0 | a1 | b2 |   filtervalue    
 ----+----+----+------------------
  B  |  1 | f  | a2c16s4dtrueo0l2
@@ -267,13 +308,13 @@ SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY
  D  |  3 | a1c23s1d5o1a2c16s4dtrueo0l2l0
 (2 rows)
 
-SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
  t0 | a1 | b2 |                 filtervalue                 
 ----+----+----+---------------------------------------------
  B  |  1 | f  | a2c16s4dtrueo0l2a1c23s1d1o5a1c23s2d10o5l1l0
 (1 row)
 
-SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
  t0 | a1 | b2 |                filtervalue                 
 ----+----+----+--------------------------------------------
  A  |  0 | t  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
@@ -284,12 +325,51 @@ SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0
  H  |  7 | f  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
  J  |  9 | f  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
 (7 rows)
+
+SELECT * FROM test_filter WHERE  c3 = 1.11 ORDER BY t0, a1;
+ t0 | a1 | b2 |  c3  |     d4     |   filtervalue    
+----+----+----+------+------------+------------------
+ B  |  1 | f  | 1.11 | BB         | a3c1700s4d1.11o5
+(1 row)
+
+SELECT * FROM test_filter WHERE  c3 > 1.11 ORDER BY t0, a1;
+ t0 | a1 | b2 |  c3  |     d4     |   filtervalue    
+----+----+----+------+------------+------------------
+ C  |  2 | t  | 2.21 | CC         | a3c1700s4d1.11o2
+ D  |  3 | f  | 3.31 | DD         | a3c1700s4d1.11o2
+ E  |  4 | t  | 4.41 | EE         | a3c1700s4d1.11o2
+ F  |  5 | f  | 5.51 | FF         | a3c1700s4d1.11o2
+ G  |  6 | t  | 6.61 | GG         | a3c1700s4d1.11o2
+ H  |  7 | f  | 7.71 | HH         | a3c1700s4d1.11o2
+ I  |  8 | t  | 8.81 | II         | a3c1700s4d1.11o2
+ J  |  9 | f  | 9.91 | JJ         | a3c1700s4d1.11o2
+(8 rows)
+
+SELECT * FROM test_filter WHERE  c3 <> 1.11 ORDER BY t0, a1;
+ t0 | a1 | b2 |  c3  |     d4     |   filtervalue    
+----+----+----+------+------------+------------------
+ A  |  0 | t  | 0.01 | AA         | a3c1700s4d1.11o6
+ C  |  2 | t  | 2.21 | CC         | a3c1700s4d1.11o6
+ D  |  3 | f  | 3.31 | DD         | a3c1700s4d1.11o6
+ E  |  4 | t  | 4.41 | EE         | a3c1700s4d1.11o6
+ F  |  5 | f  | 5.51 | FF         | a3c1700s4d1.11o6
+ G  |  6 | t  | 6.61 | GG         | a3c1700s4d1.11o6
+ H  |  7 | f  | 7.71 | HH         | a3c1700s4d1.11o6
+ I  |  8 | t  | 8.81 | II         | a3c1700s4d1.11o6
+ J  |  9 | f  | 9.91 | JJ         | a3c1700s4d1.11o6
+(9 rows)
+
+SELECT * FROM test_filter WHERE  d4 = 'AA' ORDER BY t0, a1;
+ t0 | a1 | b2 |  c3  |     d4     |  filtervalue   
+----+----+----+------+------------+----------------
+ A  |  0 | t  | 0.01 | AA         | a4c1042s2dAAo5
+(1 row)
 
 -- Now let's make sure nothing gets pushed down by setting the disable_ppd
 -- option to false at the foreign table level instead of the server level
 ALTER FOREIGN TABLE test_filter
     OPTIONS ( ADD disable_ppd 'true' );
-SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
  t0 | a1 | b2 | filtervalue 
 ----+----+----+-------------
  A  |  0 | t  | No filter
@@ -299,18 +379,18 @@ SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
 ------ Check that Filter Push Down is working with HEX delimiter ------
 -----------------------------------------------------------------------
 DROP FOREIGN TABLE IF EXISTS test_filter CASCADE;
-CREATE FOREIGN TABLE test_filter (t0 text, a1 integer, b2 boolean, filterValue text)
+CREATE FOREIGN TABLE test_filter (t0 text, a1 integer, b2 boolean, c3 numeric, d4 char(10), filterValue text)
     SERVER pxf_filter_push_down_server
     OPTIONS ( resource 'dummy_path', delimiter E'\x01');
 SET optimizer = off;
-SELECT * FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  J  |  9 | f  | a0c25s1dJo5a1c23s1d9o5l0
 (1 row)
 
 SET optimizer = on;
-SELECT * FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  J  |  9 | f  | a0c25s1dJo5a1c23s1d9o5l0
@@ -319,18 +399,18 @@ SELECT * FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
 -- Recreate the same table as above and make sure that varchar is also being
 -- pushed down.
 DROP FOREIGN TABLE IF EXISTS test_filter CASCADE;
-CREATE FOREIGN TABLE test_filter (t0 varchar(1), a1 integer, b2 boolean, filterValue text)
+CREATE FOREIGN TABLE test_filter (t0 varchar(1), a1 integer, b2 boolean, c3 numeric, d4 char(10), filterValue text)
     SERVER pxf_filter_push_down_server
     OPTIONS ( resource 'dummy_path', delimiter E'\x01');
 SET optimizer = off;
-SELECT * FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  J  |  9 | f  | a0c25s1dJo5a1c23s1d9o5l0
 (1 row)
 
 SET optimizer = on;
-SELECT * FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
+SELECT t0, a1, b2, filterValue FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
  t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  J  |  9 | f  | a0c25s1dJo5a1c23s1d9o5l0
