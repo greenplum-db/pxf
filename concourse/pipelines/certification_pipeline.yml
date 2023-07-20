@@ -138,8 +138,8 @@ resources:
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    # use debug builds here as we no longer publish non-debug builds of ubuntu18 release candidates
-    # TODO: swap out for non-debug builds of ubuntu20 when we start creating release candidates
+    # use debug builds here as upstream gpdb no longer publishes non-debug builds of ubuntu18 release candidates
+    # TODO: swap out for non-debug builds of ubuntu20 when upstream gpdb start creating release candidates
     regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.debug.tar.gz
 
 ## ---------- PXF Released RPM Artifacts ----------
