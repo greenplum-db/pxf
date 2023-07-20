@@ -44,7 +44,9 @@ install: build
 	cp $(GOPATH)/bin/pxf-cli $(PXF_HOME)/bin
 
 test: build
-	ginkgo cmd end_to_end
+	# as the docker images no longer have ginkgo,
+	# fetch and run ginkgo but don't actually install it
+	go run github.com/onsi/ginkgo/ginkgo cmd end_to_end
 
 clean:
 	rm -rf ${PXF_CLI_DIR}/build
