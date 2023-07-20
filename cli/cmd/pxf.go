@@ -143,8 +143,8 @@ var (
 				"* Use the \"pxf cluster register\" command instead.\n" +
 				"*\n" +
 				"*****************************************************************************\n\n" +
-				"Initializing PXF on %s host%s and %d segment host%s...\n",
-			standby: ", standby %s host,",
+				"Initializing PXF on coordinator host%s and %d segment host%s...\n",
+			standby: ", standby coordinator host,",
 			err:     "PXF failed to initialize on %d out of %d host%s\n",
 		},
 		warn:       false,
@@ -155,8 +155,8 @@ var (
 		name: start,
 		messages: map[messageType]string{
 			success: "PXF started successfully on %d out of %d host%s\n",
-			status:  "Starting PXF on %s host%s and %d segment host%s...\n",
-			standby: ", standby %s host,",
+			status:  "Starting PXF on coordinator host%s and %d segment host%s...\n",
+			standby: ", standby coordinator host,",
 			err:     "PXF failed to start on %d out of %d host%s\n",
 		},
 		warn:       false,
@@ -167,8 +167,8 @@ var (
 		name: stop,
 		messages: map[messageType]string{
 			success: "PXF stopped successfully on %d out of %d host%s\n",
-			status:  "Stopping PXF on %s host%s and %d segment host%s...\n",
-			standby: ", standby %s host,",
+			status:  "Stopping PXF on coordinator host%s and %d segment host%s...\n",
+			standby: ", standby coordinator host,",
 			err:     "PXF failed to stop on %d out of %d host%s\n",
 		},
 		warn:       false,
@@ -179,23 +179,23 @@ var (
 		name: sync,
 		messages: map[messageType]string{
 			success: "PXF configs synced successfully on %d out of %d host%s\n",
-			status:  "Syncing PXF configuration files from %s host to%s %d segment host%s...\n",
-			standby: " standby %s host and",
+			status:  "Syncing PXF configuration files from coordinator host to%s %d segment host%s...\n",
+			standby: " standby coordinator host and",
 			err:     "PXF configs failed to sync on %d out of %d host%s\n",
 		},
 		warn:    false,
 		envVars: []envVar{pxfBase},
-		// cluster.ON_LOCAL | cluster.ON_HOSTS: the command will target host%s, but be run from master
-		// this is ideal for copying files from master to segment host(s) using rsync.
-		// since the files are already on master, we exclude master but include standby master
+		// cluster.ON_LOCAL | cluster.ON_HOSTS: the command will target host%s, but be run from coordinator
+		// this is ideal for copying files from coordinator to segment host(s) using rsync.
+		// since the files are already on coordinator, we exclude coordinator but include standby coordinator
 		whereToRun: cluster.ON_LOCAL | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
 	}
 	StatusCommand = command{
 		name: statuses,
 		messages: map[messageType]string{
 			success: "PXF is running on %d out of %d host%s\n",
-			status:  "Checking status of PXF servers on %s host%s and %d segment host%s...\n",
-			standby: ", standby %s host,",
+			status:  "Checking status of PXF servers on coordinator host%s and %d segment host%s...\n",
+			standby: ", standby coordinator host,",
 			err:     "PXF is not running on %d out of %d host%s\n",
 		},
 		warn:       false,
@@ -206,8 +206,8 @@ var (
 		name: register,
 		messages: map[messageType]string{
 			success: "PXF extension has been installed on %d out of %d host%s\n",
-			status:  "Installing PXF extension on %s host%s and %d segment host%s...\n",
-			standby: ", standby %s host,",
+			status:  "Installing PXF extension on coordinator host%s and %d segment host%s...\n",
+			standby: ", standby coordinator host,",
 			err:     "Failed to install PXF extension on %d out of %d host%s\n",
 		},
 		warn:       false,
@@ -223,8 +223,8 @@ var (
 				"* The \"pxf cluster reset\" command is deprecated and will be removed\n" +
 				"* in a future release of PXF.\n" +
 				"*****************************************************************************\n\n" +
-				"Resetting PXF on %s host%s and %d segment host%s...\n",
-			standby: ", standby %s host,",
+				"Resetting PXF on coordinator host%s and %d segment host%s...\n",
+			standby: ", standby coordinator host,",
 			err:     "Failed to reset PXF on %d out of %d host%s\n",
 		},
 		warn:       false,
@@ -235,8 +235,8 @@ var (
 		name: restart,
 		messages: map[messageType]string{
 			success: "PXF restarted successfully on %d out of %d host%s\n",
-			status:  "Restarting PXF on %s host%s and %d segment host%s...\n",
-			standby: ", standby %s host,",
+			status:  "Restarting PXF on coordinator host%s and %d segment host%s...\n",
+			standby: ", standby coordinator host,",
 			err:     "PXF failed to restart on %d out of %d host%s\n",
 		},
 		warn:       false,
@@ -247,8 +247,8 @@ var (
 		name: prepare,
 		messages: map[messageType]string{
 			success: "PXF prepared successfully on %d out of %d host%s\n",
-			status:  "Preparing PXF on %s host%s and %d segment host%s...\n",
-			standby: ", standby %s host,",
+			status:  "Preparing PXF on coordinator host%s and %d segment host%s...\n",
+			standby: ", standby coordinator host,",
 			err:     "PXF failed to prepare on %d out of %d host%s\n",
 		},
 		warn:       false,
@@ -259,8 +259,8 @@ var (
 		name: migrate,
 		messages: map[messageType]string{
 			success: "PXF configuration migrated successfully on %d out of %d host%s\n",
-			status:  "Migrating PXF configuration on %s host%s and %d segment host%s...\n",
-			standby: ", standby %s host,",
+			status:  "Migrating PXF configuration on coordinator host%s and %d segment host%s...\n",
+			standby: ", standby coordinator host,",
 			err:     "PXF failed to migrate configuration on %d out of %d host%s\n",
 		},
 		warn:       false,

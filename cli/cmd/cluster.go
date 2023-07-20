@@ -24,14 +24,9 @@ func createCobraCommand(use string, short string, cmd *command) *cobra.Command {
 	if cmd == nil {
 		return &cobra.Command{Use: use, Short: short}
 	}
-
-	// creating a clusterData object to call getHost
-	var emptyClusterData *ClusterData
-	hostName := emptyClusterData.getHost()
-
 	return &cobra.Command{
 		Use:   use,
-		Short: fmt.Sprintf( short, hostName, hostName),
+		Short: short,
 		Run: func(cobraCmd *cobra.Command, args []string) {
 			clusterData, err := doSetup()
 			if err == nil {
@@ -44,16 +39,16 @@ func createCobraCommand(use string, short string, cmd *command) *cobra.Command {
 
 var (
 	clusterCmd  = createCobraCommand("cluster", "Perform <command> on each segment host in the cluster", nil)
-	initCmd     = createCobraCommand("init", "(deprecated) Install PXF extension under $GPHOME on %s, standby %s, and all segment hosts", &InitCommand)
-	startCmd    = createCobraCommand("start", "Start the PXF server instances on %s, standby %s, and all segment hosts", &StartCommand)
-	stopCmd     = createCobraCommand("stop", "Stop the PXF server instances on %s, standby %s, and all segment hosts", &StopCommand)
-	statusCmd   = createCobraCommand("status", "Get status of PXF servers on %s, standby %s, and all segment hosts", &StatusCommand)
-	syncCmd     = createCobraCommand("sync", "Sync PXF configs from %s to standby %s and all segment hosts. Use --delete to delete extraneous remote files", &SyncCommand)
-	resetCmd    = createCobraCommand("reset", "(deprecated) No operation %.s %.s", &ResetCommand)
-	registerCmd = createCobraCommand("register", "Install PXF extension under $GPHOME on %s, standby %s, and all segment hosts", &RegisterCommand)
-	restartCmd  = createCobraCommand("restart", "Restart the PXF server on %s, standby %s, and all segment hosts", &RestartCommand)
-	prepareCmd  = createCobraCommand("prepare", "Prepares a new base directory specified by the $PXF_BASE environment variable %.s %.s", &PrepareCommand)
-	migrateCmd  = createCobraCommand("migrate", "Migrates configurations from older installations of PXF %.s %.s", &MigrateCommand)
+	initCmd     = createCobraCommand("init", "(deprecated) Install PXF extension under $GPHOME on coordinator, standby coordinator, and all segment hosts", &InitCommand)
+	startCmd    = createCobraCommand("start", "Start the PXF server instances on coordinator, standby coordinator, and all segment hosts", &StartCommand)
+	stopCmd     = createCobraCommand("stop", "Stop the PXF server instances on coordinator, standby coordinator, and all segment hosts", &StopCommand)
+	statusCmd   = createCobraCommand("status", "Get status of PXF servers on coordinator, standby coordinator, and all segment hosts", &StatusCommand)
+	syncCmd     = createCobraCommand("sync", "Sync PXF configs from coordinator to standby coordinator and all segment hosts. Use --delete to delete extraneous remote files", &SyncCommand)
+	resetCmd    = createCobraCommand("reset", "(deprecated) No operation", &ResetCommand)
+	registerCmd = createCobraCommand("register", "Install PXF extension under $GPHOME on coordinator, standby coordinator, and all segment hosts", &RegisterCommand)
+	restartCmd  = createCobraCommand("restart", "Restart the PXF server on coordinator, standby coordinator, and all segment hosts", &RestartCommand)
+	prepareCmd  = createCobraCommand("prepare", "Prepares a new base directory specified by the $PXF_BASE environment variable", &PrepareCommand)
+	migrateCmd  = createCobraCommand("migrate", "Migrates configurations from older installations of PXF", &MigrateCommand)
 	// DeleteOnSync is a boolean for determining whether to use rsync with --delete, exported for tests
 	DeleteOnSync bool
 )
@@ -87,27 +82,6 @@ func handlePlurality(num int) string {
 	return "s"
 }
 
-func (clusterData *ClusterData) getHost() string {
-    var connection *dbconn.DBConn
-
-    if clusterData == nil {
-        connection = dbconn.NewDBConnFromEnvironment("postgres")
-        err := connection.Connect(1)
-        if err != nil {
-            // unable to connect to the database, so defaulting to master
-            return "master"
-        }
-    } else {
-        connection = clusterData.connection
-    }
-
-    if connection == nil || (*connection).Version.Before("7") {
-        return "master"
-    }
-
-    return "coordinator"
-}
-
 // GenerateStatusReport exported for testing
 func GenerateStatusReport(cmd *command, clusterData *ClusterData) {
 	if _, ok := cmd.messages[standby]; !ok {
@@ -121,10 +95,10 @@ func GenerateStatusReport(cmd *command, clusterData *ClusterData) {
 		numHosts--
 	}
 	if isStandbyAloneOnHost(clusterData) {
-		standbyMsg = fmt.Sprintf(cmd.messages[standby], clusterData.getHost())
+		standbyMsg = cmd.messages[standby]
 		numHosts--
 	}
-	gplog.Info(fmt.Sprintf(cmd.messages[status], clusterData.getHost(), standbyMsg, numHosts, handlePlurality(numHosts)))
+	gplog.Info(fmt.Sprintf(cmd.messages[status], standbyMsg, numHosts, handlePlurality(numHosts)))
 }
 
 // GenerateOutput is exported for testing
@@ -164,7 +138,7 @@ func doSetup() (*ClusterData, error) {
 	err := connection.Connect(1)
 	if err != nil {
 		gplog.Error(fmt.Sprintf("ERROR: Could not connect to GPDB.\n%s\n"+
-			"Please make sure that your Greenplum database is running and you are on the master node.", err.Error()))
+			"Please make sure that your Greenplum database is running and you are on the coordinator node.", err.Error()))
 		return nil, err
 	}
 	segConfigs, err := cluster.GetSegmentConfiguration(connection, true)
@@ -202,7 +176,7 @@ func clusterRun(cmd *command, clusterData *ClusterData) error {
 func isStandbyAloneOnHost(clusterData *ClusterData) bool {
 	standbyHost := clusterData.Cluster.GetHostForContent(-1, "m")
 	if standbyHost == "" {
-		return false // there is no standby master
+		return false // there is no standby coordinator
 	}
 	return len(clusterData.Cluster.GetContentsForHost(standbyHost)) == 1
 }
