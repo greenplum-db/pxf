@@ -229,7 +229,7 @@ public abstract class TableFactory {
     }
 
     /**
-     * Prepares PXF Readable External or Foreign Table for TEXT data, using TEXT format and "<protocol>:text" profile.
+     * Prepares PXF Readable External or Foreign Table for Json data, using custom format or CSV format and "<protocol>:json" profile.
      *
      * @param name name of the table
      * @param fields fields of the table

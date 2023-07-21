@@ -158,10 +158,10 @@ public class OrcReadTest extends BaseFeature {
     }
 
     /*
-     * FDW fails for the data that have NUL. This behaviour is different from external-table but same as GPDB Heap
+     * FDW fails for the data that contain a NUL-byte (i.e. '\/u000'"). This behaviour is different from external-table but same as GPDB Heap
      * FDW Failure: invalid byte sequence for encoding "UTF8": 0x00
      *
-     * GPDB also throws the same error when copying the data with NUL
+     * GPDB also throws the same error when copying the data containing a NUL-byte
      *
      * postgres=# copy test from '/Users/pandeyhi/Documents/bad_data.txt' ;
      * ERROR:  invalid byte sequence for encoding "UTF8": 0x00
