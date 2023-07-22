@@ -16,12 +16,12 @@ You can run the entire cloudbuild using Google Cloud Build by doing the followin
 cd ~/workspace/pxf
 
 gcloud builds submit . --config=concourse/docker/pxf-dev-base/cloudbuild.yaml \
-  --substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,_PRIVATE_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-private-images,COMMIT_SHA=dev-build-<name>
+  --substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,COMMIT_SHA=dev-build-<name>
 
 -- or if you would like to modify the go and ginkgo versions, you can do so by doing the following --
 
 gcloud builds submit . --config=concourse/docker/pxf-dev-base/cloudbuild.yaml \
---substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,_PRIVATE_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-private-images,_GO_VERSION=<test-version>,COMMIT_SHA=dev-build-<test-name>
+--substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,_GO_VERSION=<test-version>,_MAVEN_VERSION=<mvn-version>,COMMIT_SHA=dev-build-<test-name>
 ```
 
 This guide assumes the PXF repository lives under the `~/workspace/pxf`

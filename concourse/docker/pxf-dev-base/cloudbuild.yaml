@@ -10,6 +10,11 @@ options:
 
 steps:
 
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: apache-maven-binaries
+  args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/apache-maven/apache-maven-${_MAVEN_VERSION}-bin.tar.gz', 'build/apache-maven.tar.gz']
+  waitFor: ['-']
+
 ##############################################################################
 # GPDB 5 Images
 ##############################################################################
@@ -38,6 +43,7 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb5/centos7/Dockerfile'
   - '/workspace/build/'
   waitFor:
+    - apache-maven-binaries
     - gpdb5-centos7-test-pxf-image-cache
 
 ##############################################################################
@@ -60,7 +66,6 @@ steps:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-centos7-test:latest'
   - '--build-arg=GO_VERSION=${_GO_VERSION}'
-  - '--build-arg=MAVEN_VERSION=${_MAVEN_VERSION}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest'
@@ -69,6 +74,7 @@ steps:
   - '/workspace/build/'
   waitFor:
     - gpdb6-centos7-test-pxf-image-cache
+    - apache-maven-binaries
 
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb6-rocky8-test-pxf-image-cache
@@ -86,7 +92,6 @@ steps:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-rocky8-test:latest'
   - '--build-arg=GO_VERSION=${_GO_VERSION}'
-  - '--build-arg=MAVEN_VERSION=${_MAVEN_VERSION}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-rocky8-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-rocky8-test-pxf:latest'
@@ -94,6 +99,7 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb6/rocky8/Dockerfile'
   - '/workspace/build/'
   waitFor:
+    - apache-maven-binaries
     - gpdb6-rocky8-test-pxf-image-cache
 
 - name: 'gcr.io/cloud-builders/docker'
@@ -112,7 +118,6 @@ steps:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-ubuntu18.04-test:latest'
   - '--build-arg=GO_VERSION=${_GO_VERSION}'
-  - '--build-arg=MAVEN_VERSION=${_MAVEN_VERSION}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:latest'
@@ -120,6 +125,7 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb6/ubuntu18.04/Dockerfile'
   - '/workspace/build/'
   waitFor:
+    - apache-maven-binaries
     - gpdb6-ubuntu18.04-test-pxf-image-cache
 
 # An image for gpdb6 running on OEL7
@@ -139,7 +145,6 @@ steps:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-oel7-test:latest'
   - '--build-arg=GO_VERSION=${_GO_VERSION}'
-  - '--build-arg=MAVEN_VERSION=${_MAVEN_VERSION}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-oel7-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-oel7-test-pxf:latest'
@@ -147,6 +152,7 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb6/oel7/Dockerfile'
   - '/workspace/build/'
   waitFor:
+    - apache-maven-binaries
     - gpdb6-oel7-test-pxf-image-cache
 
 ##############################################################################
@@ -170,7 +176,6 @@ steps:
     - 'build'
     - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-rocky8-test:latest'
     - '--build-arg=GO_VERSION=${_GO_VERSION}'
-    - '--build-arg=MAVEN_VERSION=${_MAVEN_VERSION}'
     - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:$COMMIT_SHA'
     - '--cache-from'
     - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:latest'
@@ -178,6 +183,7 @@ steps:
     - 'concourse/docker/pxf-dev-base/gpdb7/rocky8/Dockerfile'
     - '/workspace/build/'
   waitFor:
+    - apache-maven-binaries
     - gpdb7-rocky8-test-pxf-image-cache
 
 substitutions:

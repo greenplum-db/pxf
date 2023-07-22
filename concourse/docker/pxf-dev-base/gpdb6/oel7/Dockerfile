@@ -1,25 +1,25 @@
 ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-oel7-test:latest
 
+FROM ${BASE_IMAGE} as scratch
+
+ADD apache-maven.tar.gz /tmp/apache-maven
+
 FROM ${BASE_IMAGE}
 
 ARG GO_VERSION
+
+COPY --from=scratch /tmp/apache-maven/ /usr/share/maven
 
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
     && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tgz && rm go.tgz
 
-ARG MAVEN_VERSION
 ARG USER_HOME_DIR="/root"
-ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
 
 # install dependencies that are missing on the base images
 # glibc-common is for adding locales
-RUN curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
-    && mkdir -p /usr/share/maven \
-    && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
-    && rm -f /tmp/apache-maven.tar.gz \
-    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
+RUN ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
     # explicitly reinstall glibc-common to add back deleted charmaps
     && yum reinstall -y glibc-common \
     && yum install -y rpm-build python-devel jq sudo && yum clean all \
