@@ -7,8 +7,9 @@ ADD apache-maven.tar.gz /tmp/apache-maven
 FROM ${BASE_IMAGE}
 
 ARG GO_VERSION
+ARG MAVEN_VERSION
 
-COPY --from=scratch /tmp/apache-maven/ /usr/share/maven
+COPY --from=scratch /tmp/apache-maven/apache-maven-${MAVEN_VERSION} /usr/share/maven
 
 
 # install Go utilities
