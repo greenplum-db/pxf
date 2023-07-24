@@ -12,7 +12,7 @@ steps:
 
 - name: 'gcr.io/cloud-builders/gsutil'
   id: apache-maven-binaries
-  args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/apache-maven/apache-maven-${_MAVEN_VERSION}-bin.tar.gz', 'build/apache-maven.tar.gz']
+  args: ['cp', 'gs://${_PXF_BUILD_BUCKET}/apache-maven/apache-maven-${_MAVEN_VERSION}-bin.tar.gz', 'build/apache-maven.tar.gz']
   waitFor: ['-']
 
 ##############################################################################
