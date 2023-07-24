@@ -10,7 +10,6 @@ ARG GO_VERSION
 
 COPY --from=scratch /tmp/apache-maven/apache-maven-* /usr/share/maven
 
-
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \

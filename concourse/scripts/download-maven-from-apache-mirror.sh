@@ -27,14 +27,5 @@ else
     download_url="${preferred%/}/$path_info"
 fi
 
-preferred="$(jq -r ".preferred" <<<"$response_json")"
-path_info="$(jq -r ".path_info" <<<"$response_json")"
-
-if [ -z "$preferred" ] || [ -z "$path_info" ]; then
-    echo >&2 "unable to get download URL from response"
-    echo >&2 "$response_json"
-    exit 1
-fi
-
 echo "Downloading $download_url to ${PXF_HOME}/${maven_dist}..."
 curl -Lo ${PXF_HOME}/${maven_dist} "$download_url"
