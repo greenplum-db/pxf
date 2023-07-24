@@ -7,6 +7,28 @@ PXF_HOME=${HOME}/workspace/pxf/downloads/
 
 MAVEN_VERSION="${1:?a Maven version must be provided}"
 
+function check_prerequisites() {
+    if ! type ggrep &>/dev/null; then
+        >&2 echo 'ggrep not found, did you install it (e.g. "brew install coreutils") ?'
+        exit 1
+    fi
+}
+
+if [ $MAVEN_VERSION == "latest" ]; then
+    check_prerequisites
+    echo "Looking for latest maven-3 version..."
+    MAVEN_VERSION=$(curl -fsSL https://archive.apache.org/dist/maven/maven-3/ | ggrep -P -o '(?<=href=")[0-9.]+(?=/")' | sort --version-sort | tail -1)
+    echo "Latest maven version determined to be: ${MAVEN_VERSION}"
+    while true; do
+        read -r -p "Would you like to proceed (y/n)? " yn
+        case $yn in
+        [Yy]*) break ;;
+        [Nn]*) exit ;;
+        *) echo "Please answer yes or no." ;;
+        esac
+    done
+fi
+
 maven_dist="apache-maven-${MAVEN_VERSION}-bin.tar.gz"
 maven_full_path="maven/maven-3/${MAVEN_VERSION}/binaries/${maven_dist}"
 
