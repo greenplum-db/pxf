@@ -188,7 +188,7 @@ steps:
 
 substitutions:
   _GO_VERSION: '1.19.6' # default values
-  _MAVEN_VERSION: '3.9.2' # default values
+  _MAVEN_VERSION: '3.9.3' # default values
 
 # Push images to Cloud Build to Container Registry
 images:
