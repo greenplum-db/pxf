@@ -1,14 +1,10 @@
 ARG BASE_IMAGE=gcr.io/data-gpdb-private-images/gpdb7-rhel8-test:latest
 
-FROM ${BASE_IMAGE} as scratch
-
-ADD apache-maven.tar.gz /tmp/apache-maven
-
 FROM ${BASE_IMAGE}
 
 ARG GO_VERSION
 
-COPY --from=scratch /tmp/apache-maven/apache-maven-* /usr/share/maven
+ADD apache-maven.tar.gz /usr/share
 
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
@@ -27,7 +23,7 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio \
 ARG USER_HOME_DIR="/root"
 
 # install dependencies that are missing on the base images
-RUN ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
+RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn \
     && dnf install -y -d1 python2 python2-pip \
     && /usr/bin/pip2 install paramiko --no-cache-dir
 

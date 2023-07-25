@@ -1,14 +1,10 @@
 ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-ubuntu18.04-test:latest
 
-FROM ${BASE_IMAGE} as scratch
-
-ADD apache-maven.tar.gz /tmp/apache-maven
-
 FROM ${BASE_IMAGE}
 
 ARG GO_VERSION
 
-COPY --from=scratch /tmp/apache-maven/apache-maven-* /usr/share/maven
+ADD apache-maven.tar.gz /usr/share
 
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
@@ -23,8 +19,8 @@ RUN apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev curl sudo jq openjdk-8-jdk openjdk-11-jdk \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    && mkdir -p /usr/share/maven/ref \
-    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+    && mkdir -p /usr/share/apache-maven-*/ref \
+    && ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn
 
 # create user gpadmin since GPDB cannot run under root
 RUN locale-gen en_US.UTF-8 \
