@@ -7,27 +7,10 @@ downloads_dir=${HOME}/workspace/pxf/downloads/
 
 MAVEN_VERSION="${1:?a Maven version must be provided}"
 
-version=$(uname -s)
-GREP_CMD=grep
-SORT_CMD=sort
-
-function check_prerequisites() {
-    if [[ "${version}" == "Darwin" ]]; then
-      if ! type ggrep &>/dev/null; then
-        >&2 echo 'ggrep not found, did you install it (e.g. "brew install coreutils") ?'
-        exit 1
-      else
-        GREP_CMD=ggrep
-        SORT_CMD=gsort
-      fi
-    fi
-}
-
 if [[ "${MAVEN_VERSION}" == "latest" ]]; then
-    check_prerequisites
     echo "Looking for latest maven-3 version..."
     curl_output=$(curl -fsSL https://archive.apache.org/dist/maven/maven-3/)
-    MAVEN_VERSION=$(echo ${curl_output} | ${GREP_CMD} -P -o '(?<=href=")[0-9.]+(?=/")' | ${SORT_CMD} --version-sort | tail -1)
+    MAVEN_VERSION=$(echo ${curl_output} | perl -lne 'print for /href="([0-9.]+)\/"/' | sort --version-sort | tail -1)
 
     echo "Latest maven version determined to be: ${MAVEN_VERSION}"
     while true; do
