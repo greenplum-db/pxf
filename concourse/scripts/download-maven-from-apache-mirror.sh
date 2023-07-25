@@ -9,8 +9,7 @@ MAVEN_VERSION="${1:?a Maven version must be provided}"
 
 if [[ "${MAVEN_VERSION}" == "latest" ]]; then
     echo "Looking for latest maven-3 version..."
-    curl_output=$(curl -fsSL https://archive.apache.org/dist/maven/maven-3/)
-    MAVEN_VERSION=$(echo ${curl_output} | perl -lne 'print for /href="([0-9.]+)\/"/' | sort --version-sort | tail -1)
+    MAVEN_VERSION=$(curl -fsSL https://archive.apache.org/dist/maven/maven-3/ | perl -lne 'print for /href="([0-9.]+)\/"/' | sort --version-sort | tail -1)
 
     echo "Latest maven version determined to be: ${MAVEN_VERSION}"
     while true; do
