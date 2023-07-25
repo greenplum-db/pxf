@@ -11,7 +11,7 @@ if [[ "${MAVEN_VERSION}" == "latest" ]]; then
     echo "Looking for latest maven-3 version..."
     MAVEN_VERSION=$(curl -fsSL https://archive.apache.org/dist/maven/maven-3/ | perl -lne 'print for /href="([0-9.]+)\/"/' | sort --version-sort | tail -1)
 
-    echo "Latest maven version determined to be: ${MAVEN_VERSION}"
+    echo "Latest maven-3 version determined to be: ${MAVEN_VERSION}"
     while true; do
         read -r -p "Would you like to proceed (y/n)? " yn
         case $yn in
