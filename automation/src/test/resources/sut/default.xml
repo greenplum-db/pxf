@@ -82,6 +82,14 @@
         <tincFolder>tinc/main</tincFolder>
         <tincTestsFolder>tincrepo/main</tincTestsFolder>
     </tinc>
+    <pgRegress>
+        <class>org.greenplum.pxf.automation.components.regress.PgRegress</class>
+        <pgRegress>$GPHOME/lib/postgresql/pgxs/src/test/regress/pg_regress</pgRegress>
+        <psqlDir>$GPHOME/bin</psqlDir>
+        <dbName>pxfautomation</dbName>
+        <regressTestFolder>tincrepo/main</regressTestFolder>
+        <initFile>global_init_file</initFile>
+    </pgRegress>
 
     <pxf>
         <class>org.greenplum.pxf.automation.components.pxf.Pxf</class>

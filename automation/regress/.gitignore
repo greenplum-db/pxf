@@ -1,0 +1,4 @@
+!*.out
+regression.out
+regression.diffs
+results/

@@ -16,9 +16,11 @@ import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.components.cluster.installer.nodes.Node;
 import org.greenplum.pxf.automation.components.gpdb.Gpdb;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
+import org.greenplum.pxf.automation.components.regress.PgRegress;
 import org.greenplum.pxf.automation.components.tinc.Tinc;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
+import org.greenplum.pxf.automation.utils.system.RegressUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -39,6 +41,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY
 public abstract class BaseTestParent {
     // Objects used in the tests
     protected PhdCluster cluster;
+    protected PgRegress pgRegress;
     protected Tinc tinc;
     protected Gpdb gpdb;
     protected Gpdb nonUtf8Gpdb;
@@ -89,8 +92,14 @@ public abstract class BaseTestParent {
             // Create local Data folder
             File localDataTempFolder = new File(dataTempFolder);
             localDataTempFolder.mkdirs();
-            // Initialize Tinc System Object
-            tinc = (Tinc) systemManager.getSystemObject("tinc");
+            if (RegressUtils.usePgRegress) {
+                // Initialize PgRegress System Object
+                pgRegress = (PgRegress) systemManager.getSystemObject("pgRegress");
+            } else {
+                // Initialize Tinc System Object
+                tinc = (Tinc) systemManager.getSystemObject("tinc");
+            }
+
             // Initialize GPDB System Object
             gpdb = (Gpdb) systemManager.getSystemObject("gpdb");
             // Initialize GPDB2 System Object -- database with non-utf8 encoding
@@ -217,16 +226,24 @@ public abstract class BaseTestParent {
     }
 
     /**
-     * Run given tinc Tests
+     * Runs the given regression test using either tinc (default) or pg_regress
      *
+     * Instead of renaming this to something more generic (e.g.,
+     * runRegressionTest), the old name is retained for a transition period to
+     * minimize the set of changes to ther files. Once tinc is fully removed,
+     * this method can be renamed.
      * @param tincTest
-     * @throws Exception in case of test fails
+     * @throws Exception
      */
     protected void runTincTest(String tincTest) throws Exception {
         try {
-            tinc.runTest(tincTest);
+            if (RegressUtils.usePgRegress) {
+                pgRegress.runPgRegress(tincTest);
+            } else {
+                tinc.runTest(tincTest);
+            }
         } catch (Exception e) {
-            throw new Exception("Tinc Failure (" + e.getMessage() + ")");
+            throw new Exception("PgRegress Failure (" + e.getMessage() + ")", e);
         }
     }
 
