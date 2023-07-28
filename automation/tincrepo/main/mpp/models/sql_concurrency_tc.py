@@ -58,7 +58,7 @@ class SQLConcurrencyTestCase(SQLTestCase, ConcurrencyTestCase):
             timestamp = '%s%s%s%s%s%s%s'%(now.year,now.month,now.day,now.hour,now.minute,now.second,now.microsecond)
             out_file = sql_file.replace('.sql', '_' + timestamp + '.out')
             out_file = os.path.join(self.get_out_dir(), os.path.basename(out_file))
-            ans_file = sql_file.replace('.sql', '.ans')
+            ans_file = sql_file.replace('.sql', '.out')
             ans_file = os.path.join(self.get_ans_dir(), os.path.basename(ans_file))
             compare_files_list.append((out_file, ans_file))
             thread_name = "Thread_" + os.path.splitext(os.path.basename(sql_file))[0]

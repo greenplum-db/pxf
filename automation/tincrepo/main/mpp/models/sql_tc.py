@@ -316,8 +316,8 @@ class SQLTestCase(MPPTestCase):
         dir_set = sql_dir_set.union(ans_dir_set)
         
         # Type of files that will be copied or parsed
-        file_types = ["*.sql", "*.ans", "*.ans.orca", "*.ans.planner"]
         
+        file_types = ["*.sql", "*.out", "*.out.orca", "*.out.planner"]
         # Go through each directory to either copy it or parse it
         for each_dir in dir_set:
             if not os.path.exists(each_dir):
@@ -438,7 +438,7 @@ class SQLTestCase(MPPTestCase):
         assert methodName.startswith(tinctest.TINCTestLoader.testMethodPrefix)
         partial_test_name = methodName[len(tinctest.TINCTestLoader.testMethodPrefix):]
 
-        # implicit sql tests are generated from *.sql/*.ans files
+        # implicit sql tests are generated from *.sql/*.out files
         # found in the current working directory
 
         # To enable tinc_client to construct a test case for a specific sql file
@@ -448,12 +448,12 @@ class SQLTestCase(MPPTestCase):
             partial_file_name = os.path.basename(sql_file)[:-4]
             # Order in which ans files are located
             # 1. Same as sql file location. 2. sql_file/../expected/
-            self.ans_file = os.path.join(os.path.dirname(sql_file), "%s.ans" %partial_file_name)
+            self.ans_file = os.path.join(os.path.dirname(sql_file), "%s.out" %partial_file_name)
             if not os.path.exists(self.ans_file):
                 ans_dir = os.path.join(self.get_source_dir(), self.__class__.ans_dir)
-                self.ans_file = os.path.join(ans_dir, "%s.ans" %partial_file_name)
+                self.ans_file = os.path.join(ans_dir, "%s.out" %partial_file_name)
             if not os.path.exists(self.ans_file):
-                self.ans_file = os.path.join(os.path.dirname(sql_file), "../expected/", "%s.ans" %partial_file_name)
+                self.ans_file = os.path.join(os.path.dirname(sql_file), "../expected/", "%s.out" %partial_file_name)
         else:
             # Normal execution (sql_file is None)
             if not self.__class__._template_exist and partial_test_name.startswith("template_"):
@@ -463,15 +463,15 @@ class SQLTestCase(MPPTestCase):
             if self.__class__._template_exist and partial_test_name.startswith("template_"):
                 base_file = partial_test_name[len("template_"):]
                 self._original_sql_file = os.path.join(os.path.dirname(sys.modules[self.__class__.__module__].__file__), self.__class__.sql_dir, self.__class__.template_dir, "%s.sql" % base_file)
-                self._original_ans_file = os.path.join(os.path.dirname(sys.modules[self.__class__.__module__].__file__), self.__class__.ans_dir, self.__class__.template_dir, "%s.ans" % base_file)
+                self._original_ans_file = os.path.join(os.path.dirname(sys.modules[self.__class__.__module__].__file__), self.__class__.ans_dir, self.__class__.template_dir, "%s.out" % base_file)
             else:
                 self._original_sql_file = os.path.join(os.path.dirname(sys.modules[self.__class__.__module__].__file__), self.__class__.sql_dir, "%s.sql" % partial_test_name)
-                self._original_ans_file = os.path.join(os.path.dirname(sys.modules[self.__class__.__module__].__file__), self.__class__.ans_dir, "%s.ans" % partial_test_name)
             
+                self._original_ans_file = os.path.join(os.path.dirname(sys.modules[self.__class__.__module__].__file__), self.__class__.ans_dir, "%s.out" % partial_test_name)
             # At this point, regular non-template sql files would assume that the sql file is the one in sql_dir
             # For template sql file, get_sql_dir will automatically point to the one in out_dir
             self.sql_file = os.path.join(self.get_sql_dir(), "%s.sql" % partial_test_name)
-            self.ans_file = os.path.join(self.get_ans_dir(), "%s.ans" % partial_test_name)
+            self.ans_file = os.path.join(self.get_ans_dir(), "%s.out" % partial_test_name)
 
         tinctest.logger.debug("sql_file: %s", self.sql_file)
         tinctest.logger.debug("ans_file: %s", self.ans_file)
@@ -672,23 +672,23 @@ class SQLTestCase(MPPTestCase):
         '''
         selects the right answer file depending on whether optimizer_mode is on or not
 
-        if optimizer is True, answer file = .ans.orca and if not present, .ans
-        if optimizer is False, answer file = .ans.planner and if not present, .ans
-        if optimizer is None, answer file = .ans
+        if optimizer is True, answer file = .out.orca and if not present, .out
+        if optimizer is False, answer file = .out.planner and if not present, .out
+        if optimizer is None, answer file = .out
         '''
         base_sql_file = os.path.basename(sql_file)
         ans_file = None
 
         if optimizer == True or self.__class__._global_optimizer_mode == 'on':
-            ans_file = os.path.join(self.get_ans_dir(), base_sql_file.replace('.sql', '.ans.orca'))
+            ans_file = os.path.join(self.get_ans_dir(), base_sql_file.replace('.sql', '.out.orca'))
         elif optimizer == False:
-            ans_file = os.path.join(self.get_ans_dir(), base_sql_file.replace('.sql', '.ans.planner'))
+            ans_file = os.path.join(self.get_ans_dir(), base_sql_file.replace('.sql', '.out.planner'))
 
         if not ans_file:
-            ans_file = os.path.join(self.get_ans_dir(), base_sql_file.replace('.sql', '.ans'))
+            ans_file = os.path.join(self.get_ans_dir(), base_sql_file.replace('.sql', '.out'))
         else:
             if not os.path.exists(ans_file):
-                ans_file = os.path.join(self.get_ans_dir(), base_sql_file.replace('.sql', '.ans'))
+                ans_file = os.path.join(self.get_ans_dir(), base_sql_file.replace('.sql', '.out'))
 
         return ans_file
             
