@@ -93,11 +93,13 @@ If pip is already installed then run:
 python2 -m pip install --user paramiko
 ```
 
-If the above fails because of OpenSSL errors on the M1 Apple Mac, please set the following before rerunning the pip command.
+If the above fails because of OpenSSL errors on the macOS, please set the following before rerunning the `pip`` command:
 
 ```bash
-export LDFLAGS='-L/opt/homebrew/lib -L/opt/homebrew/opt/openssl@1.1/lib'
-export CPPFLAGS='-I/opt/homebrew/include -I/opt/homebrew/opt/openssl@1.1/include'
+brew_prefix="$(brew --prefix)"
+export CFLAGS="-std=c89"
+export LDFLAGS="-L${brew_prefix}/lib -L${brew_prefix}/opt/openssl@1.1/lib"
+export CPPFLAGS="-I${brew_prefix}/include -I${brew_prefix}/opt/openssl@1.1/include"
 ```
 
 ### General Automation Setup
