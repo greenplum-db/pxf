@@ -20,7 +20,7 @@ def local_path(filename):
 class Gpdiff(Command):
     """This is a wrapper for gpdiff.pl."""
     def __init__(self, out_file, ans_file, gp_ignore = True, ignore_header = True, ignore_plans = False, match_sub = []):
-        cmd_str = 'gpdiff.pl -w -B -I HINT: -I CONTEXT: -I GP_IGNORE:'
+        cmd_str = 'gpdiff.pl -I HINT: -I CONTEXT: -I GP_IGNORE:'
         if ignore_header:
             cmd_str += ' -I GP_IGNORE -gpd_ignore_headers'
         elif gp_ignore:
