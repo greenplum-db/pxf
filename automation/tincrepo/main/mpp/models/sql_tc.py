@@ -775,26 +775,29 @@ class SQLTestCase(MPPTestCase):
         if not gucs_sql_file:
             gucs_sql_file = os.path.join(self.get_out_dir(), os.path.basename(sql_file))
             
-        with open(gucs_sql_file, 'w') as o:
-            o.write('\n-- start_ignore\n')
-            for guc_string in self.gucs:
-                o.write("SET %s;\n" %guc_string)
-            for orca_guc_string in self.orcagucs:
-                o.write("%s;\n"%orca_guc_string)
-            # Write optimizer mode
-            optimizer_mode_str = ''
-            if optimizer is not None:
-                optimizer_mode_str = 'on' if optimizer else 'off'
-            if optimizer_mode_str:
-                o.write("SET optimizer=%s;\n" %optimizer_mode_str)
+        # BEGIN BB
+        shutil.copyfile(sql_file, gucs_sql_file)
+        # the following block is problematic because it always adds '-- start_ignore' and '-- end_ignore' to the result file, even if gucs is empty and orcagucs is empty and optimizer is none
+        # with open(gucs_sql_file, 'w') as o:
+        #     o.write('\n-- start_ignore\n')
+        #     for guc_string in self.gucs:
+        #         o.write("SET %s;\n" %guc_string)
+        #     for orca_guc_string in self.orcagucs:
+        #         o.write("%s;\n"%orca_guc_string)
+        #     # Write optimizer mode
+        #     optimizer_mode_str = ''
+        #     if optimizer is not None:
+        #         optimizer_mode_str = 'on' if optimizer else 'off'
+        #     if optimizer_mode_str:
+        #         o.write("SET optimizer=%s;\n" %optimizer_mode_str)
 
-            if optimizer is not None and optimizer:
-                for guc_string in self._optimizer_gucs:
-                    o.write("SET %s;\n" %guc_string)
-            o.write('\n-- end_ignore\n')
-            with open(sql_file, 'r') as f:
-                for line in f:
-                    o.write(line)
+        #     if optimizer is not None and optimizer:
+        #         for guc_string in self._optimizer_gucs:
+        #             o.write("SET %s;\n" %guc_string)
+        #     o.write('\n-- end_ignore\n')
+        #     with open(sql_file, 'r') as f:
+        #         for line in f:
+        #             o.write(line)
         self.test_artifacts.append(gucs_sql_file)
         return gucs_sql_file
         

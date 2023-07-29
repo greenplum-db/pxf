@@ -20,7 +20,12 @@ class PSQL(Command):
                  PGOPTIONS = None, flags = '-a', isODBC = None,
                  timeout = 900, background = False):
 
-        PSQL.propagate_env_map = {}
+        # pg_regress uses a fixed time zone and datestyle
+        PSQL.propagate_env_map = {
+            "PGTZ": "PST8PDT",
+            "PGDATESTYLE": "'Postgres, MDY'"
+        }
+        # END BB
 
         if not dbname:
             dbname_option = ""
@@ -54,7 +59,12 @@ class PSQL(Command):
             if not os.path.exists(sql_file):
                 raise PSQLException('SQL file %s does not exist. ' %sql_file)
 
-            cmd_str = '%s psql %s %s %s %s %s --no-psqlrc -f %s' \
+            # BEGIN BB: run psql like pg_regress (see pg_regress_main)
+            #   -X => do not read startup file (~/.psqlrc)
+            #   -a => echo all input from script
+            #   -q => run quietly (no messages, only query output)
+            # END BB
+            cmd_str = '%s psql -X -a -q %s %s %s %s %s < %s' \
                 % (PGOPTIONS, dbname_option, username_option, hostname_option, port_option,
                    flags, sql_file)
 
