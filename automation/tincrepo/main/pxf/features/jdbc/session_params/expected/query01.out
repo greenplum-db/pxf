@@ -1,17 +1,15 @@
--- start_ignore
--- end_ignore
 -- @description query01 for JDBC query from view
-
 SELECT * FROM pxf_jdbc_read_view_no_params WHERE name='client_min_messages' OR name='default_statistics_target' ORDER BY name;
-           name            | setting
+           name            | setting 
 ---------------------------+---------
  client_min_messages       | notice
  default_statistics_target | 100
 (2 rows)
 
 SELECT * FROM pxf_jdbc_read_view_session_params WHERE name='client_min_messages' OR name='default_statistics_target' ORDER BY name;
-           name            | setting
+           name            | setting 
 ---------------------------+---------
  client_min_messages       | debug1
  default_statistics_target | 123
 (2 rows)
+

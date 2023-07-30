@@ -2,7 +2,7 @@
 -- end_ignore
 -- @description query01 for JDBC query with special column names
 SELECT * FROM pxf_jdbc_columns ORDER BY t;
-  t   | num 1 | n@m2
+  t   | num 1 | n@m2 
 ------+-------+------
  row1 |     1 |  100
  row2 |     2 |  200

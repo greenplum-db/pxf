@@ -2,19 +2,15 @@
 -- end_ignore
 -- @description query for JDBC writable query
 ALTER TABLE gpdb_types_pool_target ADD CONSTRAINT gpdb_types_pool_target_t1_key UNIQUE (t1);
-NOTICE:  ALTER TABLE / ADD UNIQUE will create implicit index "gpdb_types_pool_target_t1_key" for table "gpdb_types_pool_target"
-ALTER TABLE
-
 INSERT INTO pxf_jdbc_writable_pool SELECT t1, t2, num1 FROM gpdb_types;
-INSERT 0 25
 SELECT * FROM gpdb_types_pool_target ORDER BY t1;
-          t1          |  t2  | num1
+          t1          |  t2  | num1 
 ----------------------+------+------
  row1                 | s_6  |    1
  row10                | s_15 |   10
  row11                | s_16 |   11
  row12_text_null      |      |   11
- row13_int_null       | s_16 |
+ row13_int_null       | s_16 |     
  row14_double_null    | s_16 |   11
  row15_decimal_null   | s_17 |   12
  row16_timestamp_null | s_16 |   11
@@ -58,7 +54,5 @@ SELECT * FROM gpdb_types_pool_target ORDER BY t1;
 --
 -- end_matchsubs
 INSERT INTO pxf_jdbc_writable_pool SELECT t1, t2, num1 FROM gpdb_types;
-ERROR: duplicate key value violates unique constraint "gpdb_types_pool_target_t1_key"
--- start_ignore
+ERROR:  PXF server error : ERROR: duplicate key value violates unique constraint "gpdb_types_pool_target_t1_key"
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
--- end_ignore

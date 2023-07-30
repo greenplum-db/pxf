@@ -13,7 +13,7 @@ GROUP BY gpdb_dept.name;
 (3 rows)
 
 SELECT * FROM pxf_jdbc_read_named_query ORDER BY name;
-  name   | count | max
+  name   | count | max 
 ---------+-------+-----
  finance |     4 | 103
  it      |     2 |  96
@@ -21,20 +21,20 @@ SELECT * FROM pxf_jdbc_read_named_query ORDER BY name;
 (3 rows)
 
 SELECT name, count FROM pxf_jdbc_read_named_query WHERE max > 100 ORDER BY name;
-  name   | count
+  name   | count 
 ---------+-------
  finance |     4
  sales   |     3
 (2 rows)
 
 SELECT max(max) FROM pxf_jdbc_read_named_query;
- max
+ max 
 -----
  120
 (1 row)
 
 SELECT * FROM pxf_jdbc_read_named_query_partitioned ORDER BY name;
-  name   | count | max
+  name   | count | max 
 ---------+-------+-----
  finance |     4 | 103
  it      |     2 |  96
@@ -42,8 +42,9 @@ SELECT * FROM pxf_jdbc_read_named_query_partitioned ORDER BY name;
 (3 rows)
 
 SELECT name, count FROM pxf_jdbc_read_named_query_partitioned WHERE count > 2 ORDER BY name;
-  name   | count
+  name   | count 
 ---------+-------
  finance |     4
  sales   |     3
 (2 rows)
+

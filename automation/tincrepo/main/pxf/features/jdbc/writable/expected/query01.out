@@ -1,12 +1,8 @@
--- start_ignore
--- end_ignore
 -- @description query01 for JDBC writable query
 ALTER TABLE gpdb_types_target ADD CONSTRAINT gpdb_types_target_t1_key UNIQUE (t1);
-NOTICE:  ALTER TABLE / ADD UNIQUE will create implicit index "gpdb_types_target_t1_key" for table "gpdb_types_target"
-ALTER TABLE
-
+-- FIXME: this insert fails if datestyle is 'Postgres, MDY'
+SET datestyle TO 'ISO, MDY';
 INSERT INTO pxf_jdbc_writable SELECT * FROM gpdb_types;
-INSERT 0 25
 SELECT * FROM gpdb_types_target ORDER BY t1;
           t1          |  t2  | num1 | dub1 |      dec1      |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
@@ -58,7 +54,5 @@ SELECT * FROM gpdb_types_target ORDER BY t1;
 --
 -- end_matchsubs
 INSERT INTO pxf_jdbc_writable SELECT * FROM gpdb_types;
-ERROR: duplicate key value violates unique constraint "gpdb_types_target_t1_key"
--- start_ignore
-HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
--- end_ignore
+ERROR:  PXF server error : ERROR: duplicate key value violates unique constraint "gpdb_types_target_t1_key"  (seg1 127.0.0.1:6001 pid=42147)  (seg2 127.0.0.1:6002 pid=43053)
+HINT:  Check the PXF logs located in the '/Users/bboyle/pxf-base/logs' directory on host 'localhost' or 'set client_min_messages=LOG' for additional details.
