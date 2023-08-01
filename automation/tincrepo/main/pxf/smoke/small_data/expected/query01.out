@@ -1,7 +1,6 @@
 -- @description query01 for PXF test on small data
-
 SELECT *  FROM pxf_smoke_small_data ORDER BY name;
- name   | num | dub |    longnum     | bool 
+  name   | num | dub |    longnum     | bool 
 ---------+-----+-----+----------------+------
  row_1   |   1 |   1 |   100000000000 | f
  row_10  |  10 |  10 |  1000000000000 | t
