@@ -9,6 +9,8 @@ inputs:
 - name: pxf_package
 - name: singlecluster
 - name: pxf-automation-dependencies
+- name: gp6-python-libs
+  optional: true
 
 outputs:
 - name: certification
