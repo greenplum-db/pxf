@@ -11,7 +11,7 @@ MAVEN_TEST_OPTS += -B -e
 PXF_TMP_LIB     := $(HOME)/automation_tmp_lib
 BASE_PATH       ?= /mnt/nfs/var/nfsshare
 USE_FDW         ?= false
-USE_PGREGRESS   ?= false
+USE_PGREGRESS   ?= true
 
 ifneq "$(TEST)" ""
 	MAVEN_TEST_OPTS+= -Dtest=$(TEST)
