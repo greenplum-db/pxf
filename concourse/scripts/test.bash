@@ -257,7 +257,7 @@ function _main() {
 	# we will set PYTHONPATH to point to the set of python libs compiled with Python2 for GP6
 	if [[ ${GP_VER} == 7 ]]; then
 	  local gp6_python_libs=~gpadmin/python
-	  echo "export PYTHONPATH=${gp6_python_libs}" >> /usr/local/greenplum-db/greenplum_path.sh
+	  echo "export PYTHONPATH=${gp6_python_libs}" >> ${GPHOME}/greenplum_path.sh
 	fi
 
 	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src
