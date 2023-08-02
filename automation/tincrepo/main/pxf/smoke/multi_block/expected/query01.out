@@ -4,3 +4,4 @@ SELECT count(*)  FROM pxf_smoke_multi_blocked_data;
 ----------
  32000000
 (1 row)
+
