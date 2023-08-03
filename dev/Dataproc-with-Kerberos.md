@@ -12,7 +12,7 @@ This developer note will guide you through the process of creating a Google Clou
 
     **NOTE:** After running the script, but before creating the PXF server config, replace `bradford-local-cluster-m` with `bradford-local-cluster-m.c.data-gpdb-ud.internal` for `hive.metastore.uris` in `dataproc_env_files/conf/hive-site.xml`
 
-1. SSH into cluster code (e.g., `gcloud compute ssh bradford-local-cluster-m --zone=us-west1`) and created a PXF service principal named `${USER}`
+1. SSH into cluster code (e.g., `gcloud compute ssh bradford-local-cluster-m --zone=us-west1-c`) and created a PXF service principal named `${USER}`
 
     ```sh
     sudo kadmin.local -q "add_principal -nokey ${USER}"
@@ -87,7 +87,7 @@ This developer note will guide you through the process of creating a Google Clou
 1. Create a table
 
     ```sql
-    CREATE TABLE foo (col1 INTEGER, col2 STRING);
+    CREATE TABLE foo (col1 INTEGER, col2 STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
     INSERT INTO foo VALUES
         (1, 'hive row 1'),
         (2, 'hive row 2'),
@@ -111,6 +111,7 @@ This developer note will guide you through the process of creating a Google Clou
 
     ```sql
     CREATE EXTERNAL TABLE foo_ext (col1 INTEGER, col2 STRING)
+    ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
     LOCATION 'hdfs:///tmp/foo';
 
     SELECT * FROM foo_ext;
