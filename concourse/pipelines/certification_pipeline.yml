@@ -44,6 +44,14 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
+- name: gp6-python-libs
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    versioned_file: automation-dependencies/gp6-python-libs.tar.gz
+
 - name: singlecluster-hdp2
   type: gcs
   icon: google-drive
@@ -57,7 +65,6 @@ resources:
   type: git
   icon: git
   source:
-    tag_filter: release-*
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
@@ -147,9 +154,7 @@ resources:
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: s/server/published/main/server-rc-7.(.*)-el8_x86_64.tar.gz
-
-
+    regexp: server/published/main/server-rc-7.(.*)-el8_x86_64.tar.gz
 
 - name: gpdb6_ubuntu18_tarball
   type: gcs
@@ -340,7 +345,7 @@ jobs:
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
 
-- name: Certify GPDB-7 with PXF-GP6 on RHEL8
+- name: Certify GPDB-7 with PXF-GP7 on RHEL8
   plan:
     - in_parallel:
         - get: pxf_src
@@ -353,6 +358,7 @@ jobs:
         - get: gpdb7-pxf-dev-rocky8-image
         - get: ccp-7-image
         - get: pxf-automation-dependencies
+        - get: gp6-python-libs
         - get: singlecluster
           resource: singlecluster-hdp2
     - task: Test GPDB-7 with PXF-GP7-HDP2 on RHEL8
@@ -360,7 +366,7 @@ jobs:
       image: gpdb7-pxf-dev-rocky8-image
       params:
         ACCESS_KEY_ID: ((tf-machine-access-key-id))
-        GP_VER: 6
+        GP_VER: 7
         GROUP: gpdb,proxy,profile
         SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
     - task: Upload certification for GPDB-7 with PXF-GP7-HDP2 on RHEL8
@@ -423,3 +429,26 @@ jobs:
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+
+- name: Reporting Gate for PXF-GP7
+  plan:
+    - in_parallel:
+        - get: pxf_src
+        # gpdb release candidate tarballs and PXF RPMs used in testing jobs
+        - get: gpdb7_tarball_rhel8
+          passed:
+            - Certify GPDB-7 with PXF-GP7 on RHEL8
+          trigger: true
+        - get: pxf_gp7_rpm_rhel8
+          passed:
+            - Certify GPDB-7 with PXF-GP7 on RHEL8
+          trigger: true
+        - get: ccp-7-image
+    - task: Print Report for GPDB-7 with PXF-GP7 Artifacts
+      <<: *slack_alert
+      file: pxf_src/concourse/tasks/certification_list.yml
+      image: ccp-7-image
+      params:
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
+        GP_VER: 6
+        PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
