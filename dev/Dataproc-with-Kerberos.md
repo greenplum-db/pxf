@@ -12,7 +12,7 @@ This developer note will guide you through the process of creating a Google Clou
 
     **NOTE:** After running the script, but before creating the PXF server config, replace `bradford-local-cluster-m` with `bradford-local-cluster-m.c.data-gpdb-ud.internal` for `hive.metastore.uris` in `dataproc_env_files/conf/hive-site.xml`
 
-1. SSH into cluster code (e.g., `gcloud compute ssh bradford-local-cluster-m --zone=us-west1-c`) and created a PXF service principal named `${USER}`
+1. SSH into cluster code (e.g., `gcloud compute ssh "${DATAPROC_CLUSTER_NAME}-m" --zone=us-west1-c`) and created a PXF service principal named `${USER}`
 
     ```sh
     sudo kadmin.local -q "add_principal -nokey ${USER}"
@@ -29,13 +29,14 @@ This developer note will guide you through the process of creating a Google Clou
 1. Copy Kerberos files from the cluster to the local working directory
 
     ```sh
-    gcloud compute scp bradford-local-cluster-m:~/pxf.service.keytab bradford-local-cluster-m:/etc/krb5.conf dataproc_env_files/
+    gcloud compute scp ${DATAPROC_CLUSTER_NAME}-m:~/pxf.service.keytab "${DATAPROC_CLUSTER_NAME}-m:/etc/krb5.conf" dataproc_env_files/
     cp -i dataproc_env_files/pxf.service.keytab "${PXF_BASE}/keytabs"
     ```
 
 1. If `kinit` and/or `klist` are not found on your path, install
     * `krb5-user` on Debian-based distros
     * `krb5-workstation` and `krb5-libs` on RHEL7-based distros
+    * `brew install krb5` for MacOS
 
 1. Verify that Kerberos is working on your local machine
 
@@ -48,7 +49,7 @@ This developer note will guide you through the process of creating a Google Clou
     #export HADOOP_HOME=<path/to/hadoop>
     #export HIVE_HOME=<path/to/hive>
     "${HADOOP_HOME}/bin/hdfs" dfs -ls /
-    "${HIVE_HOME}/bin/beeline" -u 'jdbc:hive2://bradford-local-cluster-m.c.data-gpdb-ud.internal:10000/default;principal=hive/bradford-local-cluster-m.c.data-gpdb-ud.internal@C.DATA-GPDB-UD.INTERNAL'
+    "${HIVE_HOME}/bin/beeline" -u "jdbc:hive2://${DATAPROC_CLUSTER_NAME}-m.c.data-gpdb-ud.internal:10000/default;principal=hive/${DATAPROC_CLUSTER_NAME}-m.c.data-gpdb-ud.internal@C.DATA-GPDB-UD.INTERNAL"
     ```
 
     **NOTE:** Java 8 does not like/support the [directives `include` or `includedir`][0]; rather than attempt to automate editing the system's `/etc/krb5.conf` or provide manual steps for editing it (which would require also removing the config when destroying the cluster), this guide takes a more conservative approach of using an alternate location for the Kerberos config (e.g., `KRB5_CONFIG` and `-Djava.security.krb5.conf` above).
@@ -78,7 +79,7 @@ This developer note will guide you through the process of creating a Google Clou
 1. SSH into cluster node (e.g., `bradford-local-cluster-m`), run any kinit and then connect to Hive
 
     ```sh
-    gcloud compute ssh bradford-local-cluster-m --zone=us-west1
+    gcloud compute ssh ${DATAPROC_CLUSTER_NAME}-m --zone=us-west1
     kinit -kt pxf.service.keytab ${USER}
     klist
     hive

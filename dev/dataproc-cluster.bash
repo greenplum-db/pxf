@@ -170,7 +170,7 @@ function delete_dataproc_env_files() {
 
 function prompt_for_confirmation() {
     while true; do
-        read -r -p "Destroy Dataproc cluster and firewall rule (y/n)? " yn
+        read -r -p "Destroy Dataproc cluster ${CLUSTER_NAME} and its related firewall rule (y/n)? " yn
         case $yn in
         [Yy]*) break ;;
         [Nn]*) exit ;;
@@ -183,7 +183,7 @@ function print_user_instructions_for_create() {
     cat <<EOF
 Now do the following:
 
-    1. Add the hostname to IP address mappings for the cluster to /etc/hosts:
+    1. Add the hostname to IP address mappings for the cluster to /etc/hosts
 
         sudo tee -a /etc/hosts <dataproc_env_files/etc_hostfile
 
@@ -195,12 +195,17 @@ Now do the following:
 
         export HADOOP_CONF_DIR="${PWD}/dataproc_env_files/conf"
         export HIVE_CONF_DIR="${PWD}/dataproc_env_files/conf"
+
+    4. (Optional) Export the cluster name for ease of use
+
+        export DATAPROC_CLUSTER_NAME=${CLUSTER_NAME}
 EOF
 }
 
 function print_user_instructions_for_delete() {
     cat <<EOF
 Now do the following:
+
     1. Remove the hostname to IP address mappings for the cluster in /etc/hosts
 
     2. Delete the PXF server using the clusters config files, for example
