@@ -10,8 +10,6 @@ This developer note will guide you through the process of creating a Google Clou
     IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.bash --create 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT,hdfs:dfs.client.use.datanode.hostname=true'
     ```
 
-    **NOTE:** After running the script, but before creating the PXF server config, replace `bradford-local-cluster-m` with `bradford-local-cluster-m.c.data-gpdb-ud.internal` for `hive.metastore.uris` in `dataproc_env_files/conf/hive-site.xml`
-
 1. SSH into cluster code (e.g., `gcloud compute ssh "${DATAPROC_CLUSTER_NAME}-m" --zone=us-west1-c`) and created a PXF service principal named `${USER}`
 
     ```sh
@@ -54,29 +52,9 @@ This developer note will guide you through the process of creating a Google Clou
 
     **NOTE:** Java 8 does not like/support the [directives `include` or `includedir`][0]; rather than attempt to automate editing the system's `/etc/krb5.conf` or provide manual steps for editing it (which would require also removing the config when destroying the cluster), this guide takes a more conservative approach of using an alternate location for the Kerberos config (e.g., `KRB5_CONFIG` and `-Djava.security.krb5.conf` above).
 
-## PXF Setup
-
-1. Edit `$PXF_BASE/servers/dataproc/pxf-site.xml`
-    * Set `pxf.service.kerberos.principal` to `<username>@C.DATA-GPDB-UD.INTERNAL`
-
-1. Edit `$PXF_BASE/conf/pxf-env.sh` and add `-Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf` to `PXF_JVM_OPTS`
-
-1. Copy `dataproc_env_files/krb5.conf` to `$PXF_BASE/conf/krb5.conf`
-
-    ```sh
-    cp dataproc_env_files/krb5.conf $PXF_BASE/conf/krb5.conf
-    ```
-
-1. (Re-)Start PXF
-
-    ```sh
-    pxf stop
-    pxf start
-    ```
-
 ## Hive Setup
 
-1. SSH into cluster node (e.g., `bradford-local-cluster-m`), run any kinit and then connect to Hive
+1. SSH into cluster node (e.g., `${DATAPROC_CLUSTER_NAME}-m`), run any kinit and then connect to Hive
 
     ```sh
     gcloud compute ssh ${DATAPROC_CLUSTER_NAME}-m --zone=us-west1
@@ -154,11 +132,6 @@ This developer note will guide you through the process of creating a Google Clou
     --    10 | hive row 10
     -- (10 rows)
     ```
-
-## Clean-Up
-
-1. Stop PXF, remove `-Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf` from `PXF_JVM_OPTS` in `$PXF_BASE/conf/pxf-env.sh`, and delete `${PXF_BASE}/conf/krb5.conf` as well as `${PXF_BASE}/keytabs/pxf.service.keytab`
-2. Run `./dataproc-cluster.bash --destroy`
 
 <!-- link ids -->
 [0]: https://linux.die.net/man/5/krb5.conf

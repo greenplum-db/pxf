@@ -15,6 +15,7 @@ NETWORK="${NETWORK:-default}"
 # valid choices for this can be found
 # https://cloud.google.com/dataproc/docs/concepts/versioning/dataproc-version-clusters
 IMAGE_VERSION="${IMAGE_VERSION:-2.0-debian10}"
+KERBERIZED="${KERBERIZED:-false}"
 
 function check_pre_requisites() {
     if ! type gcloud &>/dev/null; then
@@ -52,8 +53,12 @@ function create_dataproc_cluster() {
         --tags="${CLUSTER_USER}-only"
         --num-workers="${NUM_WORKERS}"
         --image-version="${IMAGE_VERSION}"
-        --network="${NETWORK}"
-        --enable-kerberos)
+        --network="${NETWORK}")
+
+    if [[ "${KERBERIZED}" == true ]]; then
+      echo "Enabling kerberos..."
+      create_cmd+=("--enable-kerberos")
+    fi
 
     if [[ -n $1 ]]; then
         create_cmd+=("--properties=${extra_hadoop_config}")
@@ -91,14 +96,19 @@ function create_firewall_rule() {
     # HDFS NameNode         9870 http://${CLUSTER_NAME}-m:9870
     #
     # https://cloud.google.com/dataproc/docs/concepts/accessing/cluster-web-interfaces
-    #
+    local allow_list="tcp:8020,tcp:8088,tcp:9083,tcp:9866,tcp:9870,tcp:10000"
+    if [[ "${KERBERIZED}" == true ]]; then
     # Kerberos Service  Port
     # KDC               88
     # Admin server      750
+      echo "Include KDC and admin server ports to allow list..."
+      allow_list+=",udp:88,udp:750"
+    fi
+
     gcloud compute firewall-rules create "${firewall_rule_name}" \
         --description="Allow incoming HDFS traffic from ${USER}'s home office" \
         --network="${NETWORK}" \
-        --allow=tcp:8020,tcp:8088,tcp:9083,tcp:9866,tcp:9870,tcp:10000,udp:88,udp:750 \
+        --allow="${allow_list}" \
         --direction=INGRESS \
         --target-tags="${CLUSTER_USER}-only" \
         --source-ranges="${local_external_ip}/32"
@@ -161,6 +171,12 @@ function create_dataproc_env_files() {
     # set impersonation property to false for the PXF server
     xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.user.impersonation']/value" -v false dataproc_env_files/conf/pxf-site.xml
 
+    if [[ "${KERBERIZED}" == true ]]; then
+      echo "Making changes to hive-site to update hive.metastore.uris from ${CLUSTER_NAME}-m to ${CLUSTER_NAME}-m.c.data-gpdb-ud.internal..."
+      # set Hive metastore uris to full name
+      xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'hive.metastore.uris']/value" -x "concat(substring-before(., '${CLUSTER_NAME}-m'), '${CLUSTER_NAME}-m.c.data-gpdb-ud.internal', substring-after(., '${CLUSTER_NAME}-m'))" dataproc_env_files/conf/hive-site.xml
+    fi
+
     echo "Cluster config for ${CLUSTER_NAME} has been written in dataproc_env_files"
 }
 
@@ -214,6 +230,48 @@ Now do the following:
 EOF
 }
 
+function print_user_instructions_for_kerberos_create() {
+    cat <<EOF
+This cluster has Kerberos Authentication enabled, please check the Dataproc-with-Kerberos README to finish
+setting up the cluster and your local environment:
+
+    1. Finish the steps listed in the Dataproc-with-Kerberos.md file
+
+    2. Copy the krb5.conf file into \$PXF_BASE, for example
+
+        cp -a dataproc_env_files/krb5.conf \${PXF_BASE}/conf/krb5.conf
+
+    3. Update the \$PXF_BASE/conf/pxf-env.sh file and add the following to \`PXF_JVM_OPTS\`
+
+        -Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf
+
+    4. Edit \$PXF_BASE/servers/dataproc/pxf-site.xml and set \`pxf.service.kerberos.principal\` to \`<username>@C.DATA-GPDB-UD.INTERNAL\  `
+
+        xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.kerberos.principal']/value" -v "${USER}@C.DATA-GPDB-UD.INTERNAL" \$PXF_BASE/servers/dataproc/pxf-site.xml
+
+    5. (Re-)Start PXF
+
+        pxf start
+EOF
+}
+
+function print_user_instructions_for_kerberos_delete() {
+    cat <<EOF
+PXF also needs to remove Kerberos references that were used for this cluster, please do the following:
+
+    1. Stop PXF
+
+        pxf stop
+
+    2. Remove the \'-Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf\' option from \`PXF_JVM_OPTS\` in the \$PXF_BASE/conf/pxf-env.sh file
+
+    3. Delete the krb5.conf and keytab files in \$PXF_BASE, for example
+
+        rm \${PXF_BASE}/conf/krb5.conf \${PXF_BASE}/keytabs/pxf.service.keytab
+
+EOF
+}
+
 function print_usage() {
     cat <<EOF
 NAME
@@ -251,6 +309,9 @@ case "${script_command}" in
     create_firewall_rule "${CLUSTER_NAME}-external-access"
     create_dataproc_env_files
     print_user_instructions_for_create
+    if [[ "${KERBERIZED}" == true ]]; then
+      print_user_instructions_for_kerberos_create
+    fi
     ;;
 '--destroy')
     [[ -n ${NON_INTERACTIVE} ]] || prompt_for_confirmation
@@ -258,6 +319,9 @@ case "${script_command}" in
     delete_firewall_rule "${CLUSTER_NAME}-external-access"
     delete_dataproc_cluster
     print_user_instructions_for_delete
+    if [[ "${KERBERIZED}" == true ]]; then
+      print_user_instructions_for_kerberos_delete
+    fi
     ;;
 '--update_env_files')
     create_dataproc_env_files
