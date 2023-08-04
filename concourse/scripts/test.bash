@@ -253,10 +253,13 @@ function _main() {
 
 	inflate_dependencies
 
+	#TODO Revisit this code once the Tinc is removed and pg_regress is implemented. We then no longer need this extra PYTHONPATH setting.
 	# To run Tinc against GP7 we need to modify PYTHONPATH in $GPHOME/greenplum_path.sh since Tinc calls that script
 	# we will set PYTHONPATH to point to the set of python libs compiled with Python2 for GP6
 	if [[ ${GP_VER} == 7 ]]; then
 	  local gp6_python_libs=~gpadmin/python
+	  echo "# Added by test.bash - Overriding PYTHONPATH to run the Tinc Tests in GP7" >> ${GPHOME}/greenplum_path.sh
+	  echo "# Comment the following line out if you need to run GP utilities" >> ${GPHOME}/greenplum_path.sh
 	  echo "export PYTHONPATH=${gp6_python_libs}" >> ${GPHOME}/greenplum_path.sh
 	fi
 

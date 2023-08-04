@@ -8,12 +8,7 @@ anchors:
     put: slack-alert
     params:
       text: |
-        <((ud/pxf/secrets/ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went red :blob_slightly_frowning_face:
-  on_success:
-    put: slack-alert
-    params:
-      text: |
-        <((ud/pxf/secrets/ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went green! :smile:
+        :fail: <((ud/pxf/secrets/ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> has failed (<((ud/pxf/common/slack-em-id.id1))>, <((ud/pxf/common/slack-em-id.id1))>)
 
 ## ======================================================================
 ## RESOURCE TYPES
@@ -65,6 +60,7 @@ resources:
   type: git
   icon: git
   source:
+    tag_filter: release-*
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
@@ -234,6 +230,7 @@ jobs:
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test GPDB-5 with PXF-GP5-HDP2 on RHEL7
+    <<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb5-pxf-dev-centos7-image
     params:
@@ -265,6 +262,7 @@ jobs:
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test GPDB-6 with PXF-GP6-HDP2 on RHEL7
+    <<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-centos7-image
     params:
@@ -297,6 +295,7 @@ jobs:
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test GPDB-6 with PXF-GP6-HDP2 on RHEL8
+    <<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-rocky8-image
     params:
@@ -311,39 +310,6 @@ jobs:
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
-
-## ---------- Ubuntu 18 Swimlane ----------
-- name: Certify GPDB-6 with PXF-GP6 on Ubuntu 18.04
-  plan:
-  - in_parallel:
-    - get: pxf_src
-    - get: bin_gpdb
-      resource: gpdb6_ubuntu18_tarball
-      trigger: true
-    - get: pxf_package
-      resource: pxf_gp6_deb_ubuntu18
-      trigger: true
-    - get: gpdb6-pxf-dev-ubuntu18-image
-    - get: ccp-7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: Test GPDB-6 with PXF-GP6-HDP2 on Ubuntu 18.04
-    file: pxf_src/concourse/tasks/test_certification.yml
-    image: gpdb6-pxf-dev-ubuntu18-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: 6
-      GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-  - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on Ubuntu 18.04
-    file: pxf_src/concourse/tasks/certification_upload.yml
-    image: ccp-7-image
-    params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
-      GP_VER: 6
-      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
-
 
 - name: Certify GPDB-7 with PXF-GP7 on RHEL8
   plan:
@@ -362,6 +328,7 @@ jobs:
         - get: singlecluster
           resource: singlecluster-hdp2
     - task: Test GPDB-7 with PXF-GP7-HDP2 on RHEL8
+      <<: *slack_alert
       file: pxf_src/concourse/tasks/test_certification.yml
       image: gpdb7-pxf-dev-rocky8-image
       params:
@@ -376,6 +343,39 @@ jobs:
         GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
         GP_VER: 6
         PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+
+## ---------- Ubuntu 18 Swimlane ----------
+- name: Certify GPDB-6 with PXF-GP6 on Ubuntu 18.04
+  plan:
+  - in_parallel:
+    - get: pxf_src
+    - get: bin_gpdb
+      resource: gpdb6_ubuntu18_tarball
+      trigger: true
+    - get: pxf_package
+      resource: pxf_gp6_deb_ubuntu18
+      trigger: true
+    - get: gpdb6-pxf-dev-ubuntu18-image
+    - get: ccp-7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: Test GPDB-6 with PXF-GP6-HDP2 on Ubuntu 18.04
+    <<: *slack_alert
+    file: pxf_src/concourse/tasks/test_certification.yml
+    image: gpdb6-pxf-dev-ubuntu18-image
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GP_VER: 6
+      GROUP: gpdb,proxy,profile
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+  - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on Ubuntu 18.04
+    file: pxf_src/concourse/tasks/certification_upload.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
+      GP_VER: 6
+      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
 ## ---------- Reporting Gates ----------
 - name: Reporting Gate for PXF-GP5
@@ -393,7 +393,6 @@ jobs:
       trigger: true
     - get: ccp-7-image
   - task: Print Report for GPDB-5 with PXF-GP5 Artifacts
-    <<: *slack_alert
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
@@ -422,7 +421,6 @@ jobs:
       - Certify GPDB-6 with PXF-GP6 on Ubuntu 18.04
     - get: ccp-7-image
   - task: Print Report for GPDB-6 with PXF-GP6 Artifacts
-    <<: *slack_alert
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
@@ -445,7 +443,6 @@ jobs:
           trigger: true
         - get: ccp-7-image
     - task: Print Report for GPDB-7 with PXF-GP7 Artifacts
-      <<: *slack_alert
       file: pxf_src/concourse/tasks/certification_list.yml
       image: ccp-7-image
       params:
