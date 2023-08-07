@@ -8,7 +8,7 @@ anchors:
     put: slack-alert
     params:
       text: |
-        :ci-fail: <((ud/pxf/secrets/ud-concourse-url))/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> has failed (<((ud/pxf/common/slack-em-id.id1))>, <((ud/pxf/common/slack-em-id.id2))>)
+        :ci-fail: <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> has failed (((ud/common/slack-em-ids)))
 
 ## ======================================================================
 ## RESOURCE TYPES
