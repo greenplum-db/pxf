@@ -1,5 +1,6 @@
 -- @description query01 for writing primitive ORC data types using the Hive profile
 SET bytea_output=hex;
+SET datestyle TO 'ISO, MDY';
 
 SET timezone='America/Los_Angeles';
 -- for the numeric column in GPDB, decimal(38,18) in Hive, there are differences in output between different hive versions.

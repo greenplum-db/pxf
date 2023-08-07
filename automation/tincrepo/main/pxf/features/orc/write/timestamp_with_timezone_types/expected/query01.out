@@ -1,12 +1,8 @@
--- start_ignore
--- end_ignore
 -- @description query01 for writing timestamp with timezone ORC data types
 \pset null 'NIL'
-Null display is "NIL".
 SET bytea_output=hex;
-SET
+SET datestyle TO 'ISO, MDY';
 SET timezone='America/Los_Angeles';
-SET
 SELECT * FROM pxf_orc_timestamp_with_timezone_readable ORDER BY id;
  id |   c_date   |  c_time  |        c_timestamp         |         c_timestamptz         
 ----+------------+----------+----------------------------+-------------------------------
@@ -23,7 +19,6 @@ SELECT * FROM pxf_orc_timestamp_with_timezone_readable ORDER BY id;
 (10 rows)
 
 SET timezone='America/New_York';
-SET
 SELECT * FROM pxf_orc_timestamp_with_timezone_readable ORDER BY id;
  id |   c_date   |  c_time  |        c_timestamp         |         c_timestamptz         
 ----+------------+----------+----------------------------+-------------------------------

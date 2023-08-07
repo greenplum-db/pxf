@@ -1,14 +1,10 @@
--- start_ignore
--- end_ignore
 -- @description query01 for writing arrays of primitive ORC data types
 \pset null 'NIL'
-Null display is "NIL".
 SET bytea_output=hex;
-SET
+SET datestyle TO 'ISO, MDY';
 SET timezone='America/Los_Angeles';
-SET
 SELECT * FROM orc_primitive_arrays_readable ORDER BY id;
- id | bool_arr |  bytea_arr  |      bigint_arr      | smallint_arr | int_arr | text_arr | real_arr  |  float_arr  | char_arr | varchar_arr |   varchar_arr_nolimit   |   date_arr   |  time_arr  |         timestamp_arr          |          timestamptz_arr          |       numeric_arr        |                uuid_arr
+ id | bool_arr |  bytea_arr  |      bigint_arr      | smallint_arr | int_arr | text_arr | real_arr  |  float_arr  | char_arr | varchar_arr |   varchar_arr_nolimit   |   date_arr   |  time_arr  |         timestamp_arr          |          timestamptz_arr          |       numeric_arr        |                uuid_arr                
 ----+----------+-------------+----------------------+--------------+---------+----------+-----------+-------------+----------+-------------+-------------------------+--------------+------------+--------------------------------+-----------------------------------+--------------------------+----------------------------------------
   0 | NIL      | {"\\x0001"} | {123456789000000000} | {10}         | {100}   | {row-00} | {0}       | {3.141593}  | {"0   "} | {var00}     | {"longer string var00"} | {2010-01-01} | {10:11:00} | {"2013-07-13 21:00:05.000456"} | {"2013-07-13 21:00:05.987-07"}    | {12345678900000}         | {476f35e4-da1a-43cf-8f7c-950a00000000}
   1 | {t}      | NIL         | {123456789000000001} | {11}         | {101}   | {row-01} | {1.00001} | {4.141593}  | {"1   "} | {var01}     | {"longer string var01"} | {2010-01-02} | {10:11:01} | {"2013-07-13 21:00:05.001456"} | {"2013-07-13 21:00:05.987001-07"} | {12345678900000.000001}  | {476f35e4-da1a-43cf-8f7c-950a00000001}
@@ -46,9 +42,8 @@ SELECT * FROM orc_primitive_arrays_readable ORDER BY id;
 (33 rows)
 
 SET timezone='America/New_York';
-SET
 SELECT * FROM orc_primitive_arrays_readable ORDER BY id;
- id | bool_arr |  bytea_arr  |      bigint_arr      | smallint_arr | int_arr | text_arr | real_arr  |  float_arr  | char_arr | varchar_arr |   varchar_arr_nolimit   |   date_arr   |  time_arr  |         timestamp_arr          |          timestamptz_arr          |       numeric_arr        |                uuid_arr
+ id | bool_arr |  bytea_arr  |      bigint_arr      | smallint_arr | int_arr | text_arr | real_arr  |  float_arr  | char_arr | varchar_arr |   varchar_arr_nolimit   |   date_arr   |  time_arr  |         timestamp_arr          |          timestamptz_arr          |       numeric_arr        |                uuid_arr                
 ----+----------+-------------+----------------------+--------------+---------+----------+-----------+-------------+----------+-------------+-------------------------+--------------+------------+--------------------------------+-----------------------------------+--------------------------+----------------------------------------
   0 | NIL      | {"\\x0001"} | {123456789000000000} | {10}         | {100}   | {row-00} | {0}       | {3.141593}  | {"0   "} | {var00}     | {"longer string var00"} | {2010-01-01} | {10:11:00} | {"2013-07-13 21:00:05.000456"} | {"2013-07-14 00:00:05.987-04"}    | {12345678900000}         | {476f35e4-da1a-43cf-8f7c-950a00000000}
   1 | {t}      | NIL         | {123456789000000001} | {11}         | {101}   | {row-01} | {1.00001} | {4.141593}  | {"1   "} | {var01}     | {"longer string var01"} | {2010-01-02} | {10:11:01} | {"2013-07-13 21:00:05.001456"} | {"2013-07-14 00:00:05.987001-04"} | {12345678900000.000001}  | {476f35e4-da1a-43cf-8f7c-950a00000001}
@@ -84,3 +79,4 @@ SELECT * FROM orc_primitive_arrays_readable ORDER BY id;
  31 | {t}      | {"\\x3132"} | {123456789000000031} | {41}         | {131}   | {row-31} | {31.0003} | {34.141593} | {"31  "} | {var31}     | {"longer string var31"} | {2010-01-02} | {10:11:31} | {"2013-07-13 21:00:05.031456"} | NIL                               | {12345678900000.0000031} | {476f35e4-da1a-43cf-8f7c-950a00000031}
  32 | {f}      | {"\\x3233"} | {123456789000000032} | {42}         | {132}   | {row-32} | {32.0003} | {35.141593} | {"32  "} | {var32}     | {"longer string var32"} | {2010-01-03} | {10:11:32} | {"2013-07-13 21:00:05.032456"} | {"2013-07-14 00:00:05.987032-04"} | NIL                      | {476f35e4-da1a-43cf-8f7c-950a00000032}
 (33 rows)
+

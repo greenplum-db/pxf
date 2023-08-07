@@ -1,10 +1,7 @@
--- start_ignore
--- end_ignore
 -- @description query01 for writing primitive ORC data types
 SET bytea_output=hex;
-SET
+SET datestyle TO 'ISO, MDY';
 SET timezone='America/Los_Angeles';
-SET
 SELECT * FROM pxf_orc_primitive_types_readable ORDER BY id;
  id | c_bool | c_bytea |      c_bigint      | c_small | c_int | c_text | c_real  |     c_float      | c_char | c_varchar | c_varchar_nolimit |   c_date   |  c_time  |        c_timestamp         |       c_numeric        |                c_uuid                
 ----+--------+---------+--------------------+---------+-------+--------+---------+------------------+--------+-----------+-------------------+------------+----------+----------------------------+------------------------+--------------------------------------
@@ -44,7 +41,6 @@ SELECT * FROM pxf_orc_primitive_types_readable ORDER BY id;
 (33 rows)
 
 SET timezone='America/New_York';
-SET
 SELECT * FROM pxf_orc_primitive_types_readable ORDER BY id;
  id | c_bool | c_bytea |      c_bigint      | c_small | c_int | c_text | c_real  |     c_float      | c_char | c_varchar | c_varchar_nolimit |   c_date   |  c_time  |        c_timestamp         |       c_numeric        |                c_uuid                
 ----+--------+---------+--------------------+---------+-------+--------+---------+------------------+--------+-----------+-------------------+------------+----------+----------------------------+------------------------+--------------------------------------

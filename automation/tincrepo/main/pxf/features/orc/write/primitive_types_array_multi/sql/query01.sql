@@ -19,12 +19,13 @@
 
 \pset null 'NIL'
 SET bytea_output=hex;
+SET datestyle TO 'ISO, MDY';
 
-INSERT INTO orc_primitive_arrays_multi_bool_writable SELECT id, bool_arr FROM orc_primitive_arrays_multi_heap;
-INSERT INTO orc_primitive_arrays_multi_bytea_writable SELECT id, bytea_arr FROM orc_primitive_arrays_multi_heap;
-INSERT INTO orc_primitive_arrays_multi_int_writable SELECT id, int_arr FROM orc_primitive_arrays_multi_heap;
-INSERT INTO orc_primitive_arrays_multi_float_writable SELECT id, float_arr FROM orc_primitive_arrays_multi_heap;
-INSERT INTO orc_primitive_arrays_multi_date_writable SELECT id, date_arr FROM orc_primitive_arrays_multi_heap;
+INSERT INTO orc_primitive_arrays_multi_bool_writable SELECT id, bool_arr FROM orc_primitive_arrays_multi_heap WHERE id = 9;
+INSERT INTO orc_primitive_arrays_multi_bytea_writable SELECT id, bytea_arr FROM orc_primitive_arrays_multi_heap WHERE id = 16;
+INSERT INTO orc_primitive_arrays_multi_int_writable SELECT id, int_arr FROM orc_primitive_arrays_multi_heap WHERE id = 23;
+INSERT INTO orc_primitive_arrays_multi_float_writable SELECT id, float_arr FROM orc_primitive_arrays_multi_heap WHERE id = 12;
+INSERT INTO orc_primitive_arrays_multi_date_writable SELECT id, date_arr FROM orc_primitive_arrays_multi_heap WHERE id = 18;
 INSERT INTO orc_primitive_arrays_multi_text_writable SELECT id, text_arr FROM orc_primitive_arrays_multi_heap;
 
 SELECT * FROM orc_primitive_arrays_multi_text_readable ORDER BY id;
