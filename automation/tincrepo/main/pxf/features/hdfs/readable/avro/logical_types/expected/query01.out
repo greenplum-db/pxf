@@ -1,16 +1,14 @@
 -- @description query01 for PXF HDFS Readable Avro test case for Avro logical types.
-
+set datestyle to 'ISO, MDY';
 SELECT count(*) from avro_logical_types;
- count
+ count 
 -------
      8
 (1 row)
 
 set timezone='utc';
-SET
-
-select * from avro_logical_types ;
-                 uid                  | decnum  |    dob     |  timemillis  |   timemicros    |      timestampmillis       |        timestampmicros        |    localtimestampmicros    |  localtimestampmillis
+select * from avro_logical_types;
+                 uid                  | decnum  |    dob     |  timemillis  |   timemicros    |      timestampmillis       |        timestampmicros        |    localtimestampmicros    |  localtimestampmillis   
 --------------------------------------+---------+------------+--------------+-----------------+----------------------------+-------------------------------+----------------------------+-------------------------
  67799edc-11b8-11ec-82a8-0242ac130003 |  130.50 | 2003-10-20 | 04:02:20.334 | 04:02:20.334343 | 2021-10-21 19:48:24.629+00 | 2021-10-21 19:48:24.629556+00 | 2021-10-21 19:48:24.629556 | 2021-10-21 19:48:24.629
  d7130d85-cb94-49b1-a722-d3c842f77d01 |    0.11 | 2024-11-18 | 04:32:28.504 | 04:32:28.508141 | 2020-01-31 13:23:34.345+00 | 2020-01-31 13:23:34.345556+00 | 2020-01-31 13:23:34.345556 | 2020-01-31 13:23:34.345
@@ -22,13 +20,9 @@ select * from avro_logical_types ;
  1f501214-77df-41d4-958e-467dd8fcb09c | 1111.11 | 2033-02-04 | 09:35:21.245 | 09:35:21.245123 | 2010-10-10 17:10:10.898+00 | 2010-10-10 17:10:10.898556+00 | 2010-10-10 17:10:10.898556 | 2010-10-10 17:10:10.898
 (8 rows)
 
--- set timezone='America/Los_Angeles'
-
 set timezone='America/Los_Angeles';
-SET
-
 select * from avro_logical_types;
-                 uid                  | decnum  |    dob     |  timemillis  |   timemicros    |      timestampmillis       |        timestampmicros        |    localtimestampmicros    |  localtimestampmillis
+                 uid                  | decnum  |    dob     |  timemillis  |   timemicros    |      timestampmillis       |        timestampmicros        |    localtimestampmicros    |  localtimestampmillis   
 --------------------------------------+---------+------------+--------------+-----------------+----------------------------+-------------------------------+----------------------------+-------------------------
  67799edc-11b8-11ec-82a8-0242ac130003 |  130.50 | 2003-10-20 | 04:02:20.334 | 04:02:20.334343 | 2021-10-21 12:48:24.629-07 | 2021-10-21 12:48:24.629556-07 | 2021-10-21 19:48:24.629556 | 2021-10-21 19:48:24.629
  d7130d85-cb94-49b1-a722-d3c842f77d01 |    0.11 | 2024-11-18 | 04:32:28.504 | 04:32:28.508141 | 2020-01-31 05:23:34.345-08 | 2020-01-31 05:23:34.345556-08 | 2020-01-31 13:23:34.345556 | 2020-01-31 13:23:34.345

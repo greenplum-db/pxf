@@ -1,4 +1,4 @@
--- @description query01 for PXF HDFS Readable Avro supported array type for FORMAT "CSV" test cases
+-- @description query01 for PXF HDFS Readable Avro supported complex type for FORMAT "CSV" test cases
 
 SELECT type_long, type_string, type_array, type_union, type_enum, type_fixed from avrotest_complex_csv ORDER BY type_long;
 

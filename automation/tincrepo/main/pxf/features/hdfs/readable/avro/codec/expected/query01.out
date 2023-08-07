@@ -1,7 +1,6 @@
 -- @description query01 for PXF HDFS Readable Avro with compression test cases
-
 SELECT * FROM avro_codec ORDER BY st1;
-    num     | int1 | int2 |                                                                              strings                                                                              |        st1        |      dubs      | dub |       fts       |  ft  |    lngs     | lng |     bls      | bl |   bts
+    num     | int1 | int2 |                                                                              strings                                                                              |        st1        |      dubs      | dub |       fts       |  ft  |    longs    | lng |     bls      | bl |   bts    
 ------------+------+------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+----------------+-----+-----------------+------+-------------+-----+--------------+----+----------
  [10,20]    |   10 |   20 | [strings_array_member_number___1,strings_array_member_number___2,strings_array_member_number___3,strings_array_member_number___4,strings_array_member_number___5] | short_string___1  | [10.0,20.0]    |  60 | [23.0,46.0]     |   23 | [30,40]     |  15 | [true,false] | t  | AvroDude
  [100,200]  |  100 |  200 | [strings_array_member_number___1,strings_array_member_number___2,strings_array_member_number___3,strings_array_member_number___4,strings_array_member_number___5] | short_string___10 | [100.0,200.0]  | 150 | [230.0,460.0]   |  230 | [300,400]   | 105 | [true,false] | t  | AvroDude
@@ -54,3 +53,4 @@ SELECT * FROM avro_codec ORDER BY st1;
  [80,160]   |   80 |  160 | [strings_array_member_number___1,strings_array_member_number___2,strings_array_member_number___3,strings_array_member_number___4,strings_array_member_number___5] | short_string___8  | [80.0,160.0]   | 130 | [184.0,368.0]   |  184 | [240,320]   |  85 | [true,false] | t  | AvroDude
  [90,180]   |   90 |  180 | [strings_array_member_number___1,strings_array_member_number___2,strings_array_member_number___3,strings_array_member_number___4,strings_array_member_number___5] | short_string___9  | [90.0,180.0]   | 140 | [207.0,414.0]   |  207 | [270,360]   |  95 | [true,false] | t  | AvroDude
 (50 rows)
+

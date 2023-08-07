@@ -1,8 +1,8 @@
 -- @description query01 for PXF HDFS Readable Avro simple test cases
-
 SELECT * from avrotest_simple ORDER BY age;
  name  | age 
 -------+-----
  bob   | 120
  alice | 121
 (2 rows)
+

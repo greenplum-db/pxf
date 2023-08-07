@@ -5,7 +5,6 @@
 -- s/, line \d+ of .*//
 --
 -- end_matchsubs
-
 SELECT * from avro_extra_field ORDER BY age;
 ERROR:  Avro record has 2 fields but GPDB table has 3 columns.
 CONTEXT:  External table avro_extra_field

@@ -1,5 +1,4 @@
 -- @description query01 for PXF HDFS Readable Avro with logical types with Incorrect Schema test
-
 -- start_matchsubs
 --
 -- # create a match/subs
@@ -12,7 +11,6 @@
 -- s/invalid input syntax for date: .*/For field dob schema requires type DATE but input record has type INTEGER/
 --
 -- end_matchsubs
-
 select * from logical_incorrect_schema_test;
 ERROR:  For field dob schema requires type DATE but input record has type INTEGER
 CONTEXT:  External table logical_incorrect_schema_test

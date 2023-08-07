@@ -1,8 +1,8 @@
--- @description query01 for PXF HDFS Readable Avro simple test cases
-
+-- @description query01 for PXF HDFS Readable Avro supported primitive types test cases
 SELECT * from avrotest_supported_primitive_types ORDER BY type_int;
   type_int  | type_double |                  type_string                  | type_float |   type_long   | type_bytes | type_boolean 
 ------------+-------------+-----------------------------------------------+------------+---------------+------------+--------------
  -200000002 |        -2.2 | testing all supported types in AvroResolver 2 |       -2.2 | -200000000002 | 1          | f
   100000001 |         1.1 | testing all supported types in AvroResolver 1 |        1.1 |  100000000001 | 1          | t
 (2 rows)
+

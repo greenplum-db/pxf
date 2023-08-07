@@ -1,4 +1,4 @@
--- @description query01 for PXF HDFS Readable Avro supported array types test cases
+-- @description query01 for PXF HDFS Readable Avro supported complex types test cases
 
 SELECT type_long, type_string, type_array, type_union, type_enum, type_fixed from avrotest_complex ORDER BY type_long;
 

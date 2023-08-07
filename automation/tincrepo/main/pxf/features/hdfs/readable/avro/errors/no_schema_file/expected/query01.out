@@ -1,7 +1,6 @@
 -- @description query01 for PXF HDFS Readable Avro with missing schema file test cases
-
 -- start_matchsubs
---
+--                                                                                               
 -- # create a match/subs
 --
 -- m/ +(d|D)escription  .*/
@@ -19,7 +18,5 @@
 -- end_matchsubs
 SELECT * from avro_in_seq_no_schema;
 ERROR:  PXF server error : Failed to obtain Avro schema from 'i_do_not_exist'
--- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
--- end_ignore
 CONTEXT:  External table avro_in_seq_no_schema

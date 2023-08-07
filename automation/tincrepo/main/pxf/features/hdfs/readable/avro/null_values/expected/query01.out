@@ -1,15 +1,15 @@
 -- @description query01 for PXF HDFS Readable Avro supported complex types test cases
-
 SELECT type_long, type_string, type_array, type_union, type_record, type_enum, type_fixed from avrotest_null where type_union IS NULL ORDER BY type_long;
- type_long | type_string |          type_array           | type_union |                    type_record                    | type_enum |  type_fixed
+ type_long | type_string |          type_array           | type_union |                    type_record                    | type_enum |  type_fixed   
 -----------+-------------+-------------------------------+------------+---------------------------------------------------+-----------+---------------
          1 | shivram     | [karthik,santosh,girish,arun] |            | {number:12,street:krishna street,city:chennai}    | FRIEND    | ?zst
          3 | jimmy       | [kate,santosh]                |            | {number:1,street:renaissance drive,city:san jose} | FRIEND    | \001\002\003{
 (2 rows)
 
 SELECT type_long, type_string, type_array, type_union, type_record, type_enum, type_fixed from avrotest_null where type_union IS NOT NULL ORDER BY type_long;
- type_long | type_string |   type_array   |                            type_union                             |                  type_record                  | type_enum |  type_fixed
+ type_long | type_string |   type_array   |                            type_union                             |                  type_record                  | type_enum |  type_fixed   
 -----------+-------------+----------------+-------------------------------------------------------------------+-----------------------------------------------+-----------+---------------
          2 | noa         | [jimmy,godon]  | this is optional type_unionellaneious information about this user | {number:754,street:melon ct,city:sunnyvale}   | COLLEAGUE | \020!\003\004
          4 | godon       | [caleb,parham] | new user                                                          | {number:999,street:deer creek,city:palo alto} | COLLEAGUE | 4\002<\004
 (2 rows)
+

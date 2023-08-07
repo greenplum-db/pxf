@@ -1,7 +1,6 @@
 -- @description query01 for PXF HDFS Readable Avro in Sequence files test cases
-
 SELECT * from avro_in_seq_arrays ORDER BY int1;
-    num    | int1 | int2 |                                                                              strings                                                                              |        st1        |     dubs      | dub |      fts      | ft  |   lngs    | lng |     bls      | bl |   bts
+    num    | int1 | int2 |                                                                              strings                                                                              |        st1        |     dubs      | dub |      fts      | ft  |   longs   | lng |     bls      | bl |   bts    
 -----------+------+------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+---------------+-----+---------------+-----+-----------+-----+--------------+----+----------
  [10,20]   |   10 |   20 | [strings_array_member_number___1,strings_array_member_number___2,strings_array_member_number___3,strings_array_member_number___4,strings_array_member_number___5] | short_string___1  | [10.0,20.0]   |  60 | [23.0,46.0]   |  23 | [30,40]   |  15 | [true,false] | t  | AvroDude
  [20,40]   |   20 |   40 | [strings_array_member_number___1,strings_array_member_number___2,strings_array_member_number___3,strings_array_member_number___4,strings_array_member_number___5] | short_string___2  | [20.0,40.0]   |  70 | [46.0,92.0]   |  46 | [60,80]   |  25 | [true,false] | t  | AvroDude
@@ -24,3 +23,4 @@ SELECT * from avro_in_seq_arrays ORDER BY int1;
  [190,380] |  190 |  380 | [strings_array_member_number___1,strings_array_member_number___2,strings_array_member_number___3,strings_array_member_number___4,strings_array_member_number___5] | short_string___19 | [190.0,380.0] | 240 | [437.0,874.0] | 437 | [570,760] | 195 | [true,false] | t  | AvroDude
  [200,400] |  200 |  400 | [strings_array_member_number___1,strings_array_member_number___2,strings_array_member_number___3,strings_array_member_number___4,strings_array_member_number___5] | short_string___20 | [200.0,400.0] | 250 | [460.0,920.0] | 460 | [600,800] | 205 | [true,false] | t  | AvroDude
 (20 rows)
+
