@@ -1,2 +1,4 @@
 !**/expected/*.out
 regression.diffs
+**/results/*.out
+**/results/*.diff
