@@ -1,12 +1,8 @@
--- start_ignore
--- end_ignore
 -- @description query01 for list ORC data types
 \pset null 'NIL'
-Null display is "NIL".
 SET bytea_output=hex;
-SET
 SELECT * FROM pxf_orc_multidim_list_types ORDER BY id;
- id |      bool_arr       |       int2_arr        |          int_arr           |                   int8_arr                    |       float_arr        |          float8_arr          |                                    text_arr                                     |                      bytea_arr                       |                             char_arr                             |                        varchar_arr
+ id |      bool_arr       |       int2_arr        |          int_arr           |                   int8_arr                    |       float_arr        |          float8_arr          |                                    text_arr                                     |                      bytea_arr                       |                             char_arr                             |                        varchar_arr                        
 ----+---------------------+-----------------------+----------------------------+-----------------------------------------------+------------------------+------------------------------+---------------------------------------------------------------------------------+------------------------------------------------------+------------------------------------------------------------------+-----------------------------------------------------------
   1 | {}                  | {{50}}                | {{1}}                      | {{1}}                                         | NIL                    | {{1.7e+308}}                 | {{"this is a test string"}}                                                     | NIL                                                  | {{"hello          "}}                                            | {{hello}}
   2 | {{f,t},{t,f}}       | {}                    | {{2,3},{NULL,NULL},{4,5}}  | NIL                                           | {}                     | {{1}}                        | {{"this is a string with \"special\" characters"},{"this is a string without"}} | {}                                                   | {{"this is exactly"},{" fifteen chars."}}                        | {{"this is exactly"},{" fifteen chars."}}
@@ -17,7 +13,7 @@ SELECT * FROM pxf_orc_multidim_list_types ORDER BY id;
 (6 rows)
 
 SELECT id, bool_arr[1:1], int2_arr[2:2], int_arr[1:1], int8_arr[2:2], float_arr[1:1], float8_arr[1:1], text_arr[1:1], bytea_arr[1:1], char_arr[1:1], varchar_arr[1:1]  FROM pxf_orc_multidim_list_types ORDER BY id;
- id | bool_arr |   int2_arr    |          int_arr           |              int8_arr               |       float_arr        |   float8_arr   |                      text_arr                      |           bytea_arr           |           char_arr           |        varchar_arr
+ id | bool_arr |   int2_arr    |          int_arr           |              int8_arr               |       float_arr        |   float8_arr   |                      text_arr                      |           bytea_arr           |           char_arr           |        varchar_arr        
 ----+----------+---------------+----------------------------+-------------------------------------+------------------------+----------------+----------------------------------------------------+-------------------------------+------------------------------+---------------------------
   1 | {}       | {}            | {{1}}                      | {}                                  | NIL                    | {{1.7e+308}}   | {{"this is a test string"}}                        | NIL                           | {{"hello          "}}        | {{hello}}
   2 | {{f,t}}  | {}            | {{2,3}}                    | NIL                                 | {}                     | {{1}}          | {{"this is a string with \"special\" characters"}} | {}                            | {{"this is exactly"}}        | {{"this is exactly"}}
@@ -28,7 +24,7 @@ SELECT id, bool_arr[1:1], int2_arr[2:2], int_arr[1:1], int8_arr[2:2], float_arr[
 (6 rows)
 
 SELECT id, bool_arr[1][1], int2_arr[2][2], int_arr[1][1], int8_arr[2][2], float_arr[1][1], float8_arr[1][1], text_arr[1][1], bytea_arr[1][1], char_arr[1][1], varchar_arr[1][1] FROM pxf_orc_multidim_list_types ORDER BY id;
- id | bool_arr | int2_arr |  int_arr   |  int8_arr   | float_arr | float8_arr |                  text_arr                  | bytea_arr  |    char_arr     |   varchar_arr
+ id | bool_arr | int2_arr |  int_arr   |  int8_arr   | float_arr | float8_arr |                  text_arr                  | bytea_arr  |    char_arr     |   varchar_arr   
 ----+----------+----------+------------+-------------+-----------+------------+--------------------------------------------+------------+-----------------+-----------------
   1 | NIL      |      NIL |          1 |         NIL |       NIL |   1.7e+308 | this is a test string                      | NIL        | hello           | hello
   2 | f        |      NIL |          2 |         NIL |       NIL |          1 | this is a string with "special" characters | NIL        | this is exactly | this is exactly
@@ -39,9 +35,8 @@ SELECT id, bool_arr[1][1], int2_arr[2][2], int_arr[1][1], int8_arr[2][2], float_
 (6 rows)
 
 SET bytea_output=escape;
-SET
 SELECT bytea_arr FROM pxf_orc_multidim_list_types ORDER BY id;
-              bytea_arr
+              bytea_arr               
 --------------------------------------
  NIL
  {}
@@ -50,3 +45,4 @@ SELECT bytea_arr FROM pxf_orc_multidim_list_types ORDER BY id;
  {{"\\\\\\\\\\\\",[HI]},{NULL,hello}}
  {{123},{456}}
 (6 rows)
+

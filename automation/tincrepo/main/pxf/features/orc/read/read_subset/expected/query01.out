@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 for ORC with Greenplum table as a subset of the ORC file
 SELECT * FROM pxf_orc_primitive_types_subset ORDER BY name;
          name         | num1 | amt  |  r   | b |  vc1  | bin 

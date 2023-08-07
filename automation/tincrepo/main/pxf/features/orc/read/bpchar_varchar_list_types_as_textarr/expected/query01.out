@@ -1,12 +1,8 @@
--- start_ignore
--- end_ignore
 -- @description query01 for list ORC data types
 \pset null 'NIL'
-Null display is "NIL".
 SET bytea_output=hex;
-SET
 SELECT * FROM pxf_orc_bpchar_varchar_list_types_as_textarr ORDER BY id;
- id |  bool_arr  |   int2_arr   |         int_arr          |          int8_arr          |      float_arr       |     float8_arr     |                                  text_arr                                   |         bytea_arr         |               char_arr                |              varchar_arr
+ id |  bool_arr  |   int2_arr   |         int_arr          |          int8_arr          |      float_arr       |     float8_arr     |                                  text_arr                                   |         bytea_arr         |               char_arr                |              varchar_arr              
 ----+------------+--------------+--------------------------+----------------------------+----------------------+--------------------+-----------------------------------------------------------------------------+---------------------------+---------------------------------------+---------------------------------------
   1 | {}         | {50}         | {1}                      | {1}                        | NIL                  | {1.7e+308}         | {"this is a test string"}                                                   | NIL                       | {hello}                               | {hello}
   2 | {f,t,t,f}  | {}           | {2,3}                    | NIL                        | {}                   | {1}                | {"this is a string with \"special\" characters","this is a string without"} | {}                        | {"this is exactly"," fifteen chars."} | {"this is exactly"," fifteen chars."}
@@ -17,20 +13,19 @@ SELECT * FROM pxf_orc_bpchar_varchar_list_types_as_textarr ORDER BY id;
 (6 rows)
 
 SELECT id, bool_arr[1], int2_arr[2], int_arr[1], int8_arr[2], float_arr[1], float8_arr[1], text_arr[1], bytea_arr[1], char_arr[1], varchar_arr[1] FROM pxf_orc_bpchar_varchar_list_types_as_textarr ORDER BY id;
- id | bool_arr | int2_arr |  int_arr   |      int8_arr       | float_arr | float8_arr |                  text_arr                  | bytea_arr  |    char_arr     |   varchar_arr
+ id | bool_arr | int2_arr |  int_arr   |      int8_arr       | float_arr | float8_arr |                  text_arr                  | bytea_arr  |    char_arr     |   varchar_arr   
 ----+----------+----------+------------+---------------------+-----------+------------+--------------------------------------------+------------+-----------------+-----------------
   1 | NIL      |      NIL |          1 |                 NIL |       NIL |   1.7e+308 | this is a test string                      | NIL        | hello           | hello
   2 | f        |      NIL |          2 |                 NIL |       NIL |          1 | this is a string with "special" characters | NIL        | this is exactly | this is exactly
-  3 | t        |      NIL |        NIL |                 NIL |   -123457 |      5.678 | hello                                      | \xdeadbeef |                 |
+  3 | t        |      NIL |        NIL |                 NIL |   -123457 |      5.678 | hello                                      | \xdeadbeef |                 | 
   4 | NIL      |       20 |          7 |                   0 |       2.3 |        NIL | NIL                                        | NIL        | NIL             | NIL
   5 | t        |      NIL |        NIL | 9223372036854775807 |       6.7 |        NIL | NIL                                        | \x5c5c5c   | specials \ "    | specials \ "
   6 | t        |      127 | 2147483647 |                 NIL |     1e-14 |        NIL | this is a test string with \ and "         | \x313233   | test string     | test string
 (6 rows)
 
 SET bytea_output=escape;
-SET
 SELECT bytea_arr FROM pxf_orc_bpchar_varchar_list_types_as_textarr ORDER BY id;
-        bytea_arr
+        bytea_arr         
 --------------------------
  NIL
  {}
@@ -39,3 +34,4 @@ SELECT bytea_arr FROM pxf_orc_bpchar_varchar_list_types_as_textarr ORDER BY id;
  {"\\\\\\\\\\\\",NULL}
  {123,456}
 (6 rows)
+

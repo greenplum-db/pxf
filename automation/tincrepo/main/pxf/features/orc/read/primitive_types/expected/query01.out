@@ -1,6 +1,5 @@
--- start_ignore
--- end_ignore
 -- @description query01 for primitive ORC data types
+SET datestyle TO 'ISO, MDY';
 SELECT * FROM pxf_orc_primitive_types ORDER BY id;
  id |         name         |   cdate    | amt  |   grade   | b |         tm          |     bg      | bin |  sml   |  r   |  vc1  | c1  |      dec1      |  dec2   |      dec3       | num1 
 ----+----------------------+------------+------+-----------+---+---------------------+-------------+-----+--------+------+-------+-----+----------------+---------+-----------------+------

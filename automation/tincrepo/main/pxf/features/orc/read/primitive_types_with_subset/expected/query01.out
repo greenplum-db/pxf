@@ -1,8 +1,7 @@
--- start_ignore
--- end_ignore
 -- @description query01 for primitive ORC data types. This test has two files:
 -- the primitive ORC data file and a file that has a subset of columns in
 -- different order
+SET datestyle TO 'ISO, MDY';
 SELECT * FROM pxf_orc_primitive_types_with_subset ORDER BY id;
  id |            name            |   cdate    | amt  |   grade   | b |         tm          |     bg      | bin |  sml   |  r   |  vc1  | c1  |         dec1         |  dec2   |      dec3       | num1 
 ----+----------------------------+------------+------+-----------+---+---------------------+-------------+-----+--------+------+-------+-----+----------------------+---------+-----------------+------

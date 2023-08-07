@@ -1,5 +1,5 @@
 -- @description query01 for ORC pushdown
-
+set datestyle to 'ISO, MDY';
 -- no filter
 select * from pxf_orc_primitive_types;
 
