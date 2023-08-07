@@ -13,3 +13,4 @@ SELECT * from pxf_hive_small_data WHERE num1 <= 10 ORDER BY num1;
  abcde |    9 | s_14
  abcde |   10 | s_15
 (10 rows)
+

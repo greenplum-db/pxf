@@ -1,10 +1,10 @@
 -- @description query01 for PXF Hive Collection Types
-
 SELECT * FROM pxf_hive_collections ORDER BY t1;
-   t1    | f1 |              t2              |               t3               |                                t4                                |    t5
+   t1    | f1 |              t2              |               t3               |                                t4                                |    t5     
 ---------+----+------------------------------+--------------------------------+------------------------------------------------------------------+-----------
  giraffe |  2 | ["Nige","Kenya","Congo"]     | {"height":4.0,"wheight":100.0} | {"street":"agripas","city":"aviv","state":"israel","zip":56303}  | [["abc"]]
  lion    |  2 | ["Zanzibar","Kenya","Congo"] | {"height":2.0,"wheight":90.0}  | {"street":"horcanus","city":"aviv","state":"israel","zip":56303} | [[111]]
  panther |  2 | ["Somalia","Kenya","Congo"]  | {"height":1.0,"wheight":40.0}  | {"street":"herzog","city":"aviv","state":"israel","zip":56303}   | [42]
  zebra   |  2 | ["Tanzania","Kenya","Congo"] | {"height":2.0,"wheight":50.0}  | {"street":"zohar","city":"aviv","state":"israel","zip":56303}    | ["abc"]
 (4 rows)
+

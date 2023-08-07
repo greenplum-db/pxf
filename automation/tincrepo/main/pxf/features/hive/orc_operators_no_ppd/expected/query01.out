@@ -1,9 +1,7 @@
--- start_ignore
--- end_ignore
--- @description query01 for HCatalog ORC all types cases
+-- @description query01 for Operators that are not pushed down to PXF
 --ANY
 SELECT t1 FROM pxf_hive_orc_types WHERE num1 = ANY(array[9,10,11]);
-          t1
+          t1          
 ----------------------
  row9
  row10
@@ -21,8 +19,9 @@ SELECT t1 FROM pxf_hive_orc_types WHERE num1 = ANY(array[9,10,11]);
  row24_char_null
  row25_binary_null
 (15 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE c1 = ANY(array['ab']);
-          t1
+          t1          
 ----------------------
  row11
  row12_text_null
@@ -39,21 +38,24 @@ SELECT t1 FROM pxf_hive_orc_types WHERE c1 = ANY(array['ab']);
  row23_varchar_null
  row25_binary_null
 (14 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE tm = ANY(array['2013-07-13 21:00:05'::timestamp, '2013-07-21 21:00:05'::timestamp]);
-  t1
+  t1  
 ------
  row1
  row2
  row9
 (3 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE r = ANY(array[11.7]::real[]);
-  t1
+  t1  
 ------
  row5
 (1 row)
+
 --ALL
 SELECT t1 FROM pxf_hive_orc_types WHERE num1 <= ALL(array[9,10,11]);
-  t1
+  t1  
 ------
  row1
  row2
@@ -65,8 +67,9 @@ SELECT t1 FROM pxf_hive_orc_types WHERE num1 <= ALL(array[9,10,11]);
  row8
  row9
 (9 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE c1 < ALL(array['abc', 'def']);
-          t1
+          t1          
 ----------------------
  row11
  row12_text_null
@@ -83,8 +86,9 @@ SELECT t1 FROM pxf_hive_orc_types WHERE c1 < ALL(array['abc', 'def']);
  row23_varchar_null
  row25_binary_null
 (14 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE tm < ALL(array['2013-07-23 21:00:05'::timestamp, '2013-07-21 21:00:05'::timestamp]);
-  t1
+  t1  
 ------
  row1
  row2
@@ -95,8 +99,9 @@ SELECT t1 FROM pxf_hive_orc_types WHERE tm < ALL(array['2013-07-23 21:00:05'::ti
  row7
  row8
 (8 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE r < ALL(array[10.7, 11.7]::real[]);
-          t1
+          t1          
 ----------------------
  row1
  row2
@@ -120,9 +125,10 @@ SELECT t1 FROM pxf_hive_orc_types WHERE r < ALL(array[10.7, 11.7]::real[]);
  row24_char_null
  row25_binary_null
 (21 rows)
+
 --SOME
 SELECT t1 FROM pxf_hive_orc_types WHERE num1 > SOME(array[9,10,11]);
-          t1
+          t1          
 ----------------------
  row10
  row11
@@ -140,8 +146,9 @@ SELECT t1 FROM pxf_hive_orc_types WHERE num1 > SOME(array[9,10,11]);
  row24_char_null
  row25_binary_null
 (15 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE c1 < SOME(array['ab', 'abc']);
-          t1
+          t1          
 ----------------------
  row11
  row12_text_null
@@ -158,8 +165,9 @@ SELECT t1 FROM pxf_hive_orc_types WHERE c1 < SOME(array['ab', 'abc']);
  row23_varchar_null
  row25_binary_null
 (14 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE tm < SOME(array['2013-07-13 21:00:05'::timestamp, '2013-07-21 21:00:05'::timestamp]);
-  t1
+  t1  
 ------
  row1
  row2
@@ -170,15 +178,17 @@ SELECT t1 FROM pxf_hive_orc_types WHERE tm < SOME(array['2013-07-13 21:00:05'::t
  row7
  row8
 (8 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE r > SOME(array[10.7, 11.7]::real[]);
-  t1
+  t1  
 ------
  row5
  row6
 (2 rows)
+
 --EXISTS
 SELECT t1 FROM pxf_hive_orc_types WHERE EXISTS(SELECT t1 FROM pxf_hive_orc_types WHERE num1 = 10);
-          t1
+          t1          
 ----------------------
  row1
  row2
@@ -206,3 +216,4 @@ SELECT t1 FROM pxf_hive_orc_types WHERE EXISTS(SELECT t1 FROM pxf_hive_orc_types
  row24_char_null
  row25_binary_null
 (25 rows)
+

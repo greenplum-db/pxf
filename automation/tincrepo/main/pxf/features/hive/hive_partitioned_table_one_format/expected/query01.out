@@ -1,7 +1,6 @@
 -- @description query01 for PXF Hive partitioned table cases
-
 SELECT * FROM pxf_hive_partitioned_table ORDER BY fmt, t1;
-          t1          |  t2  | num1 | dub1 |  fmt
+          t1          |  t2  | num1 | dub1 |  fmt  
 ----------------------+------+------+------+-------
  row1                 | s_6  |    1 |      | abcd
  row10                | s_15 |   10 |      | abcde
@@ -29,13 +28,16 @@ SELECT * FROM pxf_hive_partitioned_table ORDER BY fmt, t1;
  row9                 | s_14 |    9 |      | abcde
  row23_varchar_null   | s_16 |   11 |      | 
 (25 rows)
+
 SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'abcd' ORDER BY fmt, t1;
-  t1  | t2  | num1 | dub1 |  fmt
+  t1  | t2  | num1 | dub1 | fmt  
 ------+-----+------+------+------
  row1 | s_6 |    1 |      | abcd
 (1 row)
+
 SELECT * FROM pxf_hive_partitioned_table WHERE fmt IS NULL ORDER BY fmt, t1;
-         t1         |  t2  | num1 | dub1 | fmt
---------------------+------+------+------+----
+         t1         |  t2  | num1 | dub1 | fmt 
+--------------------+------+------+------+-----
  row23_varchar_null | s_16 |   11 |      | 
 (1 row)
+

@@ -1,6 +1,5 @@
--- start_ignore
--- end_ignore
 -- @description query01 for HCatalog ORC all types cases
+SET datestyle TO 'ISO, MDY';
 SELECT * FROM pxf_hive_orc_types ORDER BY t1;
           t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----

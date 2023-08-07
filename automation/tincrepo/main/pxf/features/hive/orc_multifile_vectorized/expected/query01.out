@@ -1,9 +1,7 @@
--- start_ignore
--- end_ignore
 -- @description query01 for Hive ORC small data multifile vectorized
 -- query 10 times to make sure there are no race conditions across fragment processing
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6
@@ -38,7 +36,7 @@ SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
 (30 rows)
 
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6
@@ -73,7 +71,7 @@ SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
 (30 rows)
 
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6
@@ -108,7 +106,7 @@ SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
 (30 rows)
 
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6
@@ -143,7 +141,7 @@ SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
 (30 rows)
 
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6
@@ -178,7 +176,7 @@ SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
 (30 rows)
 
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6
@@ -213,7 +211,7 @@ SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
 (30 rows)
 
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6
@@ -248,7 +246,7 @@ SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
 (30 rows)
 
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6
@@ -283,7 +281,7 @@ SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
 (30 rows)
 
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6
@@ -318,7 +316,7 @@ SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
 (30 rows)
 
 SELECT * FROM pxf_hive_orc_multifile_vectorized ORDER BY t1;
-  t1   |  t2  | num1 | dub1
+  t1   |  t2  | num1 | dub1 
 -------+------+------+------
  row1  | s_6  |    1 |    6
  row1  | s_6  |    1 |    6

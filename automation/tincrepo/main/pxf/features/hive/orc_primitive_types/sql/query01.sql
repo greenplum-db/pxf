@@ -1,4 +1,5 @@
 -- @description query01 for HCatalog ORC all types cases
+SET datestyle TO 'ISO, MDY';
 SELECT * FROM pxf_hive_orc_types ORDER BY t1;
 
 --LIKE

@@ -12,3 +12,4 @@ SELECT t1, t2, num1 FROM pxf_hive_small_data WHERE to_timestamp(1505056530 + num
 ------+------+------
  row5 | s_10 |    5
 (1 row)
+

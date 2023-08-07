@@ -1,5 +1,4 @@
 -- @description query01 for PXF Hive Small Column subset test
-
 SELECT * from pxf_hive_small_data ORDER BY dub1;
  dub1 |  t2  
 ------+------
@@ -14,3 +13,4 @@ SELECT * from pxf_hive_small_data ORDER BY dub1;
    14 | s_14
    15 | s_15
 (10 rows)
+
