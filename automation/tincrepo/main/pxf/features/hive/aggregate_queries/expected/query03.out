@@ -1,18 +1,19 @@
--- start_ignore
--- end_ignore
 -- @description query03 for Hive aggregate query
 SELECT COUNT(*) FROM pxf_hive_small_data WHERE dub1 >= 0;
  count 
 -------
     24
 (1 row)
+
 SELECT COUNT(*) FROM pxf_hive_small_data WHERE num1 > 10;
  count 
 -------
     14
 (1 row)
+
 SELECT COUNT(*) FROM pxf_hive_small_data WHERE dub1 <= 15 AND num1 >= 9;
  count 
 -------
      2
 (1 row)
+

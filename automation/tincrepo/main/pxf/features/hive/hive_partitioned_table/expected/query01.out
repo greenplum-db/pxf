@@ -1,7 +1,6 @@
 -- @description query01 for PXF Hive partitioned table cases
-
 SELECT * FROM pxf_hive_partitioned_table ORDER BY fmt, t1;
-  t1   |  t2  | num1 | dub1 | fmt
+  t1   |  t2  | num1 | dub1 | fmt  
 -------+------+------+------+------
  row1  | s_6  |    1 |    6 | avro
  row10 | s_15 |   10 |   15 | avro
@@ -54,3 +53,4 @@ SELECT * FROM pxf_hive_partitioned_table ORDER BY fmt, t1;
  row8  | s_13 |    8 |   13 | txt
  row9  | s_14 |    9 |   14 | txt
 (50 rows)
+

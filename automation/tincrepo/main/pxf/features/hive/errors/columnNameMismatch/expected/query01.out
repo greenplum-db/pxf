@@ -1,5 +1,4 @@
---- @description query01 for PXF hive column count mismatch
-
+-- @description query01 for PXF hive column count mismatch
 -- start_matchsubs
 --                                                                                               
 -- # create a match/subs

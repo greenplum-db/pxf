@@ -1,8 +1,7 @@
--- start_ignore
--- end_ignore
 -- @description query04 for Hive aggregate query, when columns have NULL values
 SELECT COUNT(num1) from pxf_hive_small_data;
  count 
 -------
     24
 (1 row)
+

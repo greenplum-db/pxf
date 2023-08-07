@@ -1,5 +1,5 @@
 -- @description query01 for PXF Hive parquet timestamp
-
+SET datestyle TO 'ISO, MDY';
 SELECT * FROM pxf_hive_parquet_timestamp ORDER BY tm;
            tm            
 -------------------------
@@ -8,3 +8,4 @@ SELECT * FROM pxf_hive_parquet_timestamp ORDER BY tm;
  2020-04-03 06:55:26.078
  2020-04-03 06:55:38.948
 (4 rows)
+

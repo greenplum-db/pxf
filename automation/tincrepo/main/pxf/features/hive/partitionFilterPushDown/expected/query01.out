@@ -1,5 +1,4 @@
 -- @description query01 for PXF Hive filter pushdown case
-
 SELECT * FROM hive_partition_filter_pushdown_rc ORDER BY fmt, t1;
   t1   |  t2  | num1 | dub1 | fmt 
 -------+------+------+------+-----
@@ -79,3 +78,4 @@ SELECT * FROM hive_partition_filter_pushdown_complex ORDER BY fmt, t1;
  row8  | s_13 |    8 |   13 | seq
  row9  | s_14 |    9 |   14 | seq
 (10 rows)
+

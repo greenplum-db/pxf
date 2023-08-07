@@ -1,6 +1,6 @@
 -- @description query01 for PXF Hive parquet mismatch
 SELECT * FROM pxf_hive_parquet_mismatch ORDER BY num;
- num |  s2  |      dcm       | part |   s1
+ num |  s2  |      dcm       | part |   s1   
 -----+------+----------------+------+--------
   10 |      | 1.000000000000 | a    | a_row0
   11 |      | 1.100000000000 | a    | a_row1
@@ -36,7 +36,7 @@ SELECT * FROM pxf_hive_parquet_mismatch ORDER BY num;
 
 -- column projection on non-part column
 SELECT dcm FROM pxf_hive_parquet_mismatch ORDER BY dcm;
-      dcm
+      dcm       
 ----------------
  1.000000000000
  1.100000000000
@@ -72,7 +72,7 @@ SELECT dcm FROM pxf_hive_parquet_mismatch ORDER BY dcm;
 
 -- column projection on non-part and part columns
 SELECT part, s1 FROM pxf_hive_parquet_mismatch ORDER BY s1;
- part |   s1
+ part |   s1   
 ------+--------
  a    | a_row0
  a    | a_row1
@@ -108,7 +108,7 @@ SELECT part, s1 FROM pxf_hive_parquet_mismatch ORDER BY s1;
 
 -- column projection on part column
 SELECT part FROM pxf_hive_parquet_mismatch ORDER BY part;
- part
+ part 
 ------
  a
  a
@@ -144,7 +144,7 @@ SELECT part FROM pxf_hive_parquet_mismatch ORDER BY part;
 
 -- column projection and predicate pushdown on partially NULL column
 SELECT s1 FROM pxf_hive_parquet_mismatch WHERE s2 IS NOT NULL ORDER BY s1;
-   s1
+   s1   
 --------
  b_row0
  b_row1
@@ -170,7 +170,7 @@ SELECT s1 FROM pxf_hive_parquet_mismatch WHERE s2 IS NOT NULL ORDER BY s1;
 
 -- column projection and predicate pushdown
 SELECT num, s1 FROM pxf_hive_parquet_mismatch WHERE num > 15 ORDER BY num;
- num |   s1
+ num |   s1   
 -----+--------
   16 | a_row6
   17 | a_row7
@@ -200,7 +200,7 @@ SELECT num, s1 FROM pxf_hive_parquet_mismatch WHERE num > 15 ORDER BY num;
 
 -- column projection and partition pruning
 SELECT num, s1 FROM pxf_hive_parquet_mismatch WHERE part='c' ORDER BY num;
- num |   s1
+ num |   s1   
 -----+--------
   30 | c_row0
   31 | c_row1
@@ -216,7 +216,7 @@ SELECT num, s1 FROM pxf_hive_parquet_mismatch WHERE part='c' ORDER BY num;
 
 -- column projection and partition pruning and pushdown
 SELECT num, s1 FROM pxf_hive_parquet_mismatch WHERE num < 27 AND part='b' ORDER BY num;
- num |   s1
+ num |   s1   
 -----+--------
   20 | b_row0
   21 | b_row1
@@ -226,3 +226,4 @@ SELECT num, s1 FROM pxf_hive_parquet_mismatch WHERE num < 27 AND part='b' ORDER 
   25 | b_row5
   26 | b_row6
 (7 rows)
+

@@ -1,6 +1,6 @@
 -- @description query01 for PXF Hive Small Column subset test
 SELECT * from pxf_hive_small_data WHERE num1 <= 10 ORDER BY fmt, num1;
- fmt  | num1 |  t2
+ fmt  | num1 |  t2  
 ------+------+------
  avro |    1 | s_6
  avro |    2 | s_7
@@ -53,3 +53,4 @@ SELECT * from pxf_hive_small_data WHERE num1 <= 10 ORDER BY fmt, num1;
  txt  |    9 | s_14
  txt  |   10 | s_15
 (50 rows)
+

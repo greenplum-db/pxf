@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF Hive partitioned table with custom filters
 SELECT * FROM pxf_hive_partitioned_ppd_table_customfilter_1 ORDER BY num1, t2;
   t1  | dub1 |  t2  | num1 

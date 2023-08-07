@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF Hive partitioned table with predicate pushdown tests cases for logical operators
 --
 -- Terminology
@@ -83,17 +81,17 @@ SELECT * FROM pxf_hive_partitioned_ppd_table WHERE (dub1 >=9) AND NOT(num1=4 AND
 
 -- Test for !=
 SELECT * FROM pxf_hive_partitioned_ppd_table WHERE (num1!=4 AND t2!='s_9') ORDER BY num1, t2;
-  s1   | d1 |  s2  | n1
--------+----+------+----
- row1  |  6 | s_6  |  1
- row2  |  7 | s_7  |  2
- row3  |  8 | s_8  |  3
- row5  | 10 | s_10 |  5
- row6  | 11 | s_11 |  6
- row7  | 12 | s_12 |  7
- row8  | 13 | s_13 |  8
- row9  | 14 | s_14 |  9
- row10 | 15 | s_15 | 10
+  t1   | dub1 |  t2  | num1 
+-------+------+------+------
+ row1  |    6 | s_6  |    1
+ row2  |    7 | s_7  |    2
+ row3  |    8 | s_8  |    3
+ row5  |   10 | s_10 |    5
+ row6  |   11 | s_11 |    6
+ row7  |   12 | s_12 |    7
+ row8  |   13 | s_13 |    8
+ row9  |   14 | s_14 |    9
+ row10 |   15 | s_15 |   10
 (9 rows)
 
 -- Test for max filters hitting all but one partition

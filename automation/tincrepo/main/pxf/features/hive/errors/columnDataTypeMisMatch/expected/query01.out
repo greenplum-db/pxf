@@ -1,5 +1,4 @@
 -- @description query01 for PXF hive column datatype mis match
-
 -- start_matchsubs
 --                                                                                               
 -- # create a match/subs

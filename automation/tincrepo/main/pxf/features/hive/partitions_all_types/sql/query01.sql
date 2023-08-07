@@ -1,4 +1,5 @@
 -- @description query01 for PXF Hive table with multiple partitions
+SET datestyle TO 'ISO, MDY';
 
 SELECT * FROM hive_partitions_all_types ORDER BY t1;
 

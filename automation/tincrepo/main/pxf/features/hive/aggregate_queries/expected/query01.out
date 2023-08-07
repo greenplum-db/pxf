@@ -1,8 +1,7 @@
--- start_ignore
--- end_ignore
--- @description query01 for HCatalog aggregate query
+-- @description query01 for Hive aggregate query
 SELECT COUNT(*) FROM pxf_hive_small_data;
  count 
 -------
     25
 (1 row)
+

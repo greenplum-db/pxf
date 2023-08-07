@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query02 for HCatalog aggregate query which has WHERE, GROUP BY, HAVING clauses
 SELECT t1, SUM(num1) FROM pxf_hive_small_data
 WHERE dub1 >= 10
@@ -14,3 +12,4 @@ ORDER BY 2;
  row9  |   9
  row10 |  10
 (5 rows)
+

@@ -10,5 +10,6 @@ SELECT t1, t2 FROM pxf_hive_small_data WHERE to_timestamp(1505056530 + num1::int
 SELECT t1, t2, num1 FROM pxf_hive_small_data WHERE to_timestamp(1505056530 + num1::int*86400)::DATE = '2017-09-15'::DATE AND t2 = 's_10';
   t1  |  t2  | num1 
 ------+------+------
- row5 | s_10 |    5
+ row5 | s_10 | 5
 (1 row)
+

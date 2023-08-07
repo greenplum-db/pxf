@@ -1,5 +1,5 @@
 -- @description query01 for PXF Hive primitive types case
-
+SET datestyle TO 'ISO, MDY';
 SELECT * FROM gpdb_hive_types ORDER BY t1;
           t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
@@ -29,3 +29,4 @@ SELECT * FROM gpdb_hive_types ORDER BY t1;
  row8                 | s_13 |    8 |   13 |    45678.00002340089 | 2013-07-20 21:00:05 |  7.7 | 23456789 | t |  8 |  800 | 2015-03-06 | abcde | abc | 8
  row9                 | s_14 |    9 |   14 |              23457.1 | 2013-07-21 21:00:05 |  7.7 | 23456789 | f |  9 |  900 | 2015-03-06 | abcde | abc | 9
 (25 rows)
+

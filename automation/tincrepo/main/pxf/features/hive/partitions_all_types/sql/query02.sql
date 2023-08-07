@@ -1,4 +1,5 @@
 -- @description query02 for PXF Hive table with multiple partitions - queries for null values
+SET datestyle TO 'ISO, MDY';
 
 SELECT * FROM hive_partitions_all_types WHERE t2 is null ORDER BY t1;
 

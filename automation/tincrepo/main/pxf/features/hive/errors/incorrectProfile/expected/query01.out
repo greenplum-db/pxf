@@ -1,5 +1,4 @@
 -- @description query01 for PXF hive using profile from hdfs
-
 -- start_matchsubs
 --                                                                                               
 -- # create a match/subs

@@ -1,5 +1,4 @@
 -- @description query01 for PXF hive invalid filter pushdown string
-
 -- start_matchsubs
 --                                                                                               
 -- # create a match/subs
@@ -16,6 +15,5 @@
 -- end_matchsubs
 SELECT *  FROM hive_invalid_filter ORDER BY fmt, t1;
 ERROR:  PXF server error : missing logical operator before op NOT_EQUALS at 28 (filter string: 'a4c25s3dtxto5a4c25s3dseqo5o6')
--- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
--- end_ignore
+CONTEXT:  External table hive_invalid_filter

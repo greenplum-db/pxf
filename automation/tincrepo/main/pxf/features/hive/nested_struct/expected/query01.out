@@ -1,7 +1,8 @@
 -- @description query01 for PXF Hive nested struct
 SELECT * FROM pxf_hive_nested_struct ORDER BY t1;
-                                              t1
+                                              t1                                              
 ----------------------------------------------------------------------------------------------
  {"field1":{"subfield1":"a really \"fancy\" string","subfield2":"test string"},"field2":1002}
  {"field1":{"subfield1":null,"subfield2":"test string"},"field2":1002}
 (2 rows)
+
