@@ -8,15 +8,13 @@ import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.StringJoiner;
 
 public class PgRegress extends ShellSystemObject {
     private String regressTestFolder;
     private String pgRegress;
-    // TODO: GP6 has "--psqldir"
-    // TODO: GP7 has "--bindir"
-    private String psqlDir;
     private String dbName;
     private String initFile;
     @Override
@@ -24,6 +22,9 @@ public class PgRegress extends ShellSystemObject {
         ReportUtils.startLevel(report, getClass(), "init");
         super.init();
         runCommand("source $GPHOME/greenplum_path.sh");
+        runCommand("$GPHOME/bin/pg_config --pgxs");
+        String pgxs = getLastCmdResult();
+        pgRegress = Paths.get(pgxs).getParent().getParent().resolve("test/regress/pg_regress").toString();
         runCommand("cd " + new File(regressTestFolder).getAbsolutePath());
         ReportUtils.stopLevel(report);
     }
@@ -49,7 +50,6 @@ public class PgRegress extends ShellSystemObject {
 
         commandToRun.add(pgRegress);
         commandToRun.add("--use-existing");
-        commandToRun.add("--psqldir=${GPHOME}/bin");
         commandToRun.add("--inputdir=" + testPath);
         commandToRun.add("--outputdir=" + testPath);
         commandToRun.add("--schedule=" + testPath + "/schedule");
@@ -87,14 +87,6 @@ public class PgRegress extends ShellSystemObject {
 
     public void setPgRegress(String pgRegress) {
         this.pgRegress = pgRegress;
-    }
-
-    public String getPsqlDir() {
-        return psqlDir;
-    }
-
-    public void setPsqlDir(String psqlDir) {
-        this.psqlDir = psqlDir;
     }
 
     public String getDbName() {
