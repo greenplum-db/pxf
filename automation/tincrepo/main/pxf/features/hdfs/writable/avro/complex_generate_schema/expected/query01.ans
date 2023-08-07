@@ -1,13 +1,12 @@
 -- @description query01 for PXF HDFS Writable Avro without user-provided schema, complex types
-
 -- start_matchsubs
 --
 -- # create a match/subs
 --
 -- end_matchsubs
 SELECT * from writable_avro_complex_generate_schema_readable ORDER BY type_int;
- type_int | type_record | type_enum_mood | type_long_array  |    type_numeric_array     |          type_string_array           | type_date  | type_time |   type_timestamp    
-----------+-------------+----------------+------------------+---------------------------+--------------------------------------+------------+-----------+---------------------
+ type_int | type_record | type_enum_mood | type_long_array  |    type_numeric_array     |          type_string_array           | type_date  | type_time |   type_timestamp    |    type_timestampz     
+----------+-------------+----------------+------------------+---------------------------+--------------------------------------+------------+-----------+---------------------+------------------------
         1 | (t,2)       | happy          | {1,10,100}       | {1.0,100.0,10000.0}       | {"item 0","item 10","item 20"}       | 2001-09-29 | 00:00:01  | 2001-09-29 02:00:00 | 2001-09-29 02:00:00-07
         2 | (f,4)       | sad            | {2,20,200}       | {2.0,200.0,20000.0}       | {"item 10","item 20","item 30"}      | 2001-09-30 | 00:00:02  | 2001-09-30 03:00:00 | 2001-09-30 03:00:00-07
         3 | (t,6)       | happy          | {3,30,300}       | {3.0,300.0,30000.0}       | {"item 20","item 30","item 40"}      | 2001-10-01 | 00:00:03  | 2001-10-01 04:00:00 | 2001-10-01 04:00:00-07
@@ -109,3 +108,4 @@ SELECT * from writable_avro_complex_generate_schema_readable ORDER BY type_int;
        99 | (t,198)     | happy          | {99,990,9900}    | {99.0,9900.0,990000.0}    | {"item 980","item 990","item 1000"}  | 2002-01-05 | 00:01:39  | 2002-01-09 04:00:00 | 2002-01-09 04:00:00-07
       100 | (f,200)     | sad            | {100,1000,10000} | {100.0,10000.0,1000000.0} | {"item 990","item 1000","item 1010"} | 2002-01-06 | 00:01:40  | 2002-01-10 05:00:00 | 2002-01-10 05:00:00-07
 (100 rows)
+

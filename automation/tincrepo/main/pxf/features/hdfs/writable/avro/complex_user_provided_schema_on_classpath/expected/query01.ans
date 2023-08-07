@@ -1,5 +1,4 @@
 -- @description query01 for PXF HDFS Writable Avro with user-provided schema on Classpath, complex types
-
 -- start_matchsubs
 --
 -- # create a match/subs
@@ -109,3 +108,4 @@ SELECT * from writable_avro_complex_user_schema_on_classpath_readable ORDER BY t
        99 | (t,198)     | happy          | {99,990,9900}    | {99.0,9900.0,990000.0}    | {"item 980","item 990","item 1000"}  | 2002-01-05 | 00:01:39  | 2002-01-09 04:00:00 | 2002-01-09 04:00:00-07
       100 | (f,200)     | sad            | {100,1000,10000} | {100.0,10000.0,1000000.0} | {"item 990","item 1000","item 1010"} | 2002-01-06 | 00:01:40  | 2002-01-10 05:00:00 | 2002-01-10 05:00:00-07
 (100 rows)
+

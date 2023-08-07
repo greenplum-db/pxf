@@ -1,18 +1,18 @@
 -- @description query01 for PXF HDFS Writable Avro with user-provided schema on Classpath, complex types with arrays containing nulls
-
 -- start_matchsubs
 --
 -- # create a match/subs
 --
 -- end_matchsubs
 SELECT * from writable_avro_array_user_schema_w_nulls_readable ORDER BY type_int;
- type_int | type_long_array | type_numeric_array |       type_string_array
+ type_int | type_long_array | type_numeric_array |       type_string_array        
 ----------+-----------------+--------------------+--------------------------------
         1 |                 | {1.0,10.0,100.0}   | {"item 0","item 10","item 20"}
         2 | {2,20,200}      |                    | {"item 0","item 10","item 20"}
-        3 | {3,30,300}      | {3.0,30.0,300.0}   |
+        3 | {3,30,300}      | {3.0,30.0,300.0}   | 
         4 | {NULL,40,400}   | {4.0,40.0,400.0}   | {"item 0","item 10","item 20"}
         5 | {5,50,500}      | {5.0,NULL,500.0}   | {"item 0","item 10","item 20"}
         6 | {6,60,600}      | {6.0,60.0,600.0}   | {"item 0","item 10",NULL}
         7 | {7,70,700}      | {7.0,70.0,700.0}   | {"item 0","item 10","item 20"}
 (7 rows)
+

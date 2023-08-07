@@ -1,5 +1,4 @@
 -- @description query01 for PXF HDFS Writable Avro without user-provided schema, primitive types
-
 -- start_matchsubs
 --
 -- # create a match/subs
@@ -109,3 +108,4 @@ SELECT * from writable_avro_primitive_no_compression_readable ORDER BY type_int;
        99 |            99 |  9900000000000 |        100 | 9900000.0099 | row_99      | bytes for 99  | f            | character row 99     | character varying row 99
       100 |           100 | 10000000000000 |        101 |  10000000.01 | row_100     | bytes for 100 | t            | character row 100    | character varying row 100
 (100 rows)
+

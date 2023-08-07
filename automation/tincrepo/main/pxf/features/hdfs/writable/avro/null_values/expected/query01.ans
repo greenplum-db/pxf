@@ -1,5 +1,4 @@
 -- @description query01 for PXF HDFS Writable Avro without user-provided schema, complex types with null values
-
 -- start_matchsubs
 --
 -- # create a match/subs
@@ -109,3 +108,4 @@ SELECT * from writable_avro_null_values_readable ORDER BY type_int;
        99 | (t,198)     | sad            | {99,990,9900}    | {99.0,9900.0,990000.0}    | {"item 980","item 990","item 1000"}  | 2002-01-05 | 00:01:39  | 2002-01-09 04:00:00 | 2002-01-09 04:00:00-07
       100 | (f,200)     | happy          | {100,1000,10000} | {100.0,10000.0,1000000.0} | {"item 990","item 1000","item 1010"} | 2002-01-06 | 00:01:40  | 2002-01-10 05:00:00 | 2002-01-10 05:00:00-07
 (100 rows)
+
