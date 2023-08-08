@@ -1,4 +1,5 @@
 -- @description query01 test altering table, dropping columns during write
+SET datestyle TO 'ISO, MDY';
 
 -- Insert all columns
 INSERT INTO pxf_alter_write_parquet_table

@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 test altering table, dropping columns and then adding them back
 -- start_matchsubs
 --
@@ -14,13 +12,11 @@
 -- end_matchsubs
 -- sets the bytea output to the expected by the tests
 SET bytea_output='escape';
-SET
 SELECT * from pxf_alter_avro_table ORDER BY type_int;
 ERROR:  Avro record has 7 fields but GPDB table has 8 columns.
 CONTEXT:  External table pxf_alter_avro_table
 -- Drop one of the columns
 ALTER EXTERNAL TABLE pxf_alter_avro_table DROP COLUMN col_does_not_exist;
-ALTER EXTERNAL TABLE
 SELECT * from pxf_alter_avro_table ORDER BY type_int;
   type_int  | type_double |                  type_string                  | type_float |   type_long   | type_bytes | type_boolean 
 ------------+-------------+-----------------------------------------------+------------+---------------+------------+--------------
@@ -30,9 +26,7 @@ SELECT * from pxf_alter_avro_table ORDER BY type_int;
 
 -- Drop the last column and then add it back
 ALTER EXTERNAL TABLE pxf_alter_avro_table DROP COLUMN type_boolean;
-ALTER EXTERNAL TABLE
 ALTER EXTERNAL TABLE pxf_alter_avro_table ADD COLUMN type_boolean BOOL;
-ALTER EXTERNAL TABLE
 -- Run the query again
 SELECT * from pxf_alter_avro_table ORDER BY type_int;
   type_int  | type_double |                  type_string                  | type_float |   type_long   | type_bytes | type_boolean 

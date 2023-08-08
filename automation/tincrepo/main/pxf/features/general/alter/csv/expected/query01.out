@@ -1,7 +1,4 @@
--- start_ignore
--- end_ignore
 -- @description query01 test altering table, dropping columns and then adding them back
-
 -- start_matchsubs
 --
 -- # create a match/subs
@@ -22,14 +19,12 @@
 -- s/tmp\/pxf_automation_data\/(.*)/pxf:\/\/pxf_automation_data?PROFILE=*:text/g
 --
 -- end_matchsubs
-
 -- This query should error out with invalid input syntax for integer
 SELECT * FROM pxf_alter_csv_table ORDER BY name;
 ERROR:  invalid input syntax for integer: "1.0"
 CONTEXT:  External table pxf_alter_csv_table, pxf://pxf_automation_data?PROFILE=*:text
 -- Remove the column that does not exist
 ALTER EXTERNAL TABLE pxf_alter_csv_table DROP COLUMN col_does_not_exist;
-ALTER EXTERNAL TABLE
 -- Run the query again and we get results back
 SELECT * FROM pxf_alter_csv_table ORDER BY name;
   name   | num | dub |    longnum     | bool 

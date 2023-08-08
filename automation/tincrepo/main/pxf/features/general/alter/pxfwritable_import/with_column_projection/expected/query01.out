@@ -1,11 +1,7 @@
--- start_ignore
--- end_ignore
 -- @description query01 test altering table, dropping columns and then adding them back
 -- sets the date style and bytea output to the expected by the tests
 SET datestyle='ISO, MDY';
-SET
 SET bytea_output='escape';
-SET
 SELECT s1, s2, n1, d1, dc1, CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm, f, bg, b, tn, sml, vc1, c1, bin FROM pxf_alter_parquet_table ORDER BY s1;
           s1          |  s2  | n1 | d1 |             dc1              |         tm          |  f   |    bg    | b | tn | sml  |  vc1  | c1  | bin 
 ----------------------+------+----+----+------------------------------+---------------------+------+----------+---+----+------+-------+-----+-----
@@ -38,7 +34,6 @@ SELECT s1, s2, n1, d1, dc1, CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'P
 
 -- Drop one of the columns
 ALTER EXTERNAL TABLE pxf_alter_parquet_table DROP COLUMN tm;
-ALTER EXTERNAL TABLE
 -- Select query after alter
 SELECT s1, s2, n1, d1, dc1, f, bg, b, tn, sml, vc1, c1, bin FROM pxf_alter_parquet_table ORDER BY s1;
           s1          |  s2  | n1 | d1 |             dc1              |  f   |    bg    | b | tn | sml  |  vc1  | c1  | bin 
@@ -115,7 +110,6 @@ ALTER EXTERNAL TABLE pxf_alter_parquet_table
     DROP COLUMN bg,
     DROP COLUMN vc1,
     DROP COLUMN bin;
-ALTER EXTERNAL TABLE
 -- Select query after alter
 SELECT * FROM pxf_alter_parquet_table ORDER BY s1;
           s1          |  s2  | d1 |  f   | b | tn | sml  | c1  
@@ -187,7 +181,6 @@ SELECT f, tn FROM pxf_alter_parquet_table ORDER BY s1;
 
 -- Add one of the columns back to the table
 ALTER EXTERNAL TABLE pxf_alter_parquet_table ADD COLUMN n1 INT;
-ALTER EXTERNAL TABLE
 -- Select query after adding the column back
 SELECT * FROM pxf_alter_parquet_table ORDER BY s1;
           s1          |  s2  | d1 |  f   | b | tn | sml  | c1  | n1 
@@ -264,7 +257,6 @@ SELECT s1, n1 FROM pxf_alter_parquet_table ORDER BY s1;
 -- Edge cases
 -- Drop the first column
 ALTER EXTERNAL TABLE pxf_alter_parquet_table DROP COLUMN s1;
-ALTER EXTERNAL TABLE
 -- Select query after dropping the first column
 SELECT * FROM pxf_alter_parquet_table WHERE s2 <> 's_16' ORDER BY s2;
   s2  | d1 |  f   | b | tn | sml  | c1  | n1 
