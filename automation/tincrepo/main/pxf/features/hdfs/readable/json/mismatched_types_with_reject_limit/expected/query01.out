@@ -3,7 +3,7 @@ SELECT *
 FROM jsontest_mismatched_types_with_reject_limit
 ORDER BY type_int;
 NOTICE:  Found 6 data formatting errors (6 or more input rows). Rejected related input data.
-  type_int  | type_bigint | type_smallint | type_float | type_double |                 type_string1                  |                 type_string2                  |                 type_string3                  | type_char | type_boolean
+  type_int  | type_bigint | type_smallint | type_float | type_double |                 type_string1                  |                 type_string2                  |                 type_string3                  | type_char | type_boolean 
 ------------+-------------+---------------+------------+-------------+-----------------------------------------------+-----------------------------------------------+-----------------------------------------------+-----------+--------------
  -200000002 | 20202020202 |            26 |       -2.2 |        -2.2 | testing all supported types in JsonResolver A | testing all supported types in JsonResolver B | testing all supported types in JsonResolver C | 1         | f
   100000001 | 10101010101 |            13 |        1.1 |         1.1 | testing all supported types in JsonResolver 1 | testing all supported types in JsonResolver 2 | testing all supported types in JsonResolver 3 | z         | t
@@ -11,8 +11,8 @@ NOTICE:  Found 6 data formatting errors (6 or more input rows). Rejected related
 
 SELECT relname, errmsg
 FROM gp_read_error_log('jsontest_mismatched_types_with_reject_limit');
-                   relname                   |                errmsg
----------------------------------------------+--------------------------------------
+                   relname                   |                   errmsg                   
+---------------------------------------------+--------------------------------------------
  jsontest_mismatched_types_with_reject_limit | invalid INTEGER input value '"["'
  jsontest_mismatched_types_with_reject_limit | invalid BIGINT input value '"?"'
  jsontest_mismatched_types_with_reject_limit | invalid SMALLINT input value '"("'

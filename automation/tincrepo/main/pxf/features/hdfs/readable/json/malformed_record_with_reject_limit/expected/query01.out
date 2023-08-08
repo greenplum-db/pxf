@@ -9,15 +9,15 @@ SELECT *
 FROM jsontest_malformed_record_with_reject_limit
 ORDER BY id;
 NOTICE:  Found 1 data formatting errors (1 or more input rows). Rejected related input data.
-           created_at           |         id         | text  | user.screen_name | entities.hashtags[0] | coordinates.coordinates[0] | coordinates.coordinates[1]
+           created_at           |         id         | text  | user.screen_name | entities.hashtags[0] | coordinates.coordinates[0] | coordinates.coordinates[1] 
 --------------------------------+--------------------+-------+------------------+----------------------+----------------------------+----------------------------
- Fri Jun 07 22:45:02 +0000 2013 | 343136547115253761 | text1 | SpreadButter     | tweetCongress        |                            |
- Fri Jun 07 22:45:02 +0000 2013 | 343136547136233472 | text3 | NoSecrets_Vagas  |                      |                            |
+ Fri Jun 07 22:45:02 +0000 2013 | 343136547115253761 | text1 | SpreadButter     | tweetCongress        |                            |                           
+ Fri Jun 07 22:45:02 +0000 2013 | 343136547136233472 | text3 | NoSecrets_Vagas  |                      |                            |                           
 (2 rows)
 
 SELECT relname, errmsg
 FROM gp_read_error_log('jsontest_malformed_record_with_reject_limit');
-                   relname                   |                                                                errmsg
+                   relname                   |                                                                errmsg                                                                 
 ---------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------
  jsontest_malformed_record_with_reject_limit | error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate Object entries
                                              :  at [Source: (String)"{
@@ -61,15 +61,15 @@ SELECT *
 FROM jsontest_malformed_record_with_reject_limit_filefrag
 ORDER BY id;
 NOTICE:  found 1 data formatting errors (1 or more input rows), rejected related input data
-           created_at           |         id         | text  | user.screen_name | entities.hashtags[0] | coordinates.coordinates[0] | coordinates.coordinates[1]
+           created_at           |         id         | text  | user.screen_name | entities.hashtags[0] | coordinates.coordinates[0] | coordinates.coordinates[1] 
 --------------------------------+--------------------+-------+------------------+----------------------+----------------------------+----------------------------
- Fri Jun 07 22:45:02 +0000 2013 | 343136547115253761 | text1 | SpreadButter     | tweetCongress        |                            |
- Fri Jun 07 22:45:02 +0000 2013 | 343136547136233472 | text3 | NoSecrets_Vagas  |                      |                            |
+ Fri Jun 07 22:45:02 +0000 2013 | 343136547115253761 | text1 | SpreadButter     | tweetCongress        |                            |                           
+ Fri Jun 07 22:45:02 +0000 2013 | 343136547136233472 | text3 | NoSecrets_Vagas  |                      |                            |                           
 (2 rows)
 
 SELECT relname, errmsg
 FROM gp_read_error_log('jsontest_malformed_record_with_reject_limit_filefrag');
-                       relname                        |                                                                errmsg
+                       relname                        |                                                                errmsg                                                                 
 ------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------
  jsontest_malformed_record_with_reject_limit_filefrag | error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate Object entries                +
                                                       |  at [Source: (String)"{                                                                                                              +
@@ -108,3 +108,4 @@ FROM gp_read_error_log('jsontest_malformed_record_with_reject_limit_filefrag');
                                                       |         }                                                                                                                            +
                                                       |       }
 (1 row)
+

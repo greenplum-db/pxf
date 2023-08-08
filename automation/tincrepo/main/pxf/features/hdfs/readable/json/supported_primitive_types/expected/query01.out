@@ -1,8 +1,8 @@
 -- @description query01 for PXF HDFS Readable Json supported primitive types test cases
-
 SELECT * from jsontest_supported_primitive_types ORDER BY type_int;
   type_int  | type_bigint | type_smallint | type_float | type_double |                 type_string1                  |                 type_string2                  |                 type_string3                  | type_char | type_boolean 
 ------------+-------------+---------------+------------+-------------+-----------------------------------------------+-----------------------------------------------+-----------------------------------------------+-----------+--------------
  -200000002 | 20202020202 |            26 |       -2.2 |        -2.2 | testing all supported types in JsonResolver A | testing all supported types in JsonResolver B | testing all supported types in JsonResolver C | 1         | f
   100000001 | 10101010101 |            13 |        1.1 |         1.1 | testing all supported types in JsonResolver 1 | testing all supported types in JsonResolver 2 | testing all supported types in JsonResolver 3 | z         | t
 (2 rows)
+

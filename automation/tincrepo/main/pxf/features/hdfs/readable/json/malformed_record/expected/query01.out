@@ -11,7 +11,6 @@ SELECT *
 FROM jsontest_malformed_record
 ORDER BY id;
 ERROR:  error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate Object entries
-
  at [Source: (String)"{
       "record":
         "created_at":"Fri Jun 07 22:45:02 +0000 2013",
@@ -53,7 +52,6 @@ FROM jsontest_malformed_record
 WHERE id IS NULL
 ORDER BY id;
 ERROR:  error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate Object entries
-
  at [Source: (String)"{
       "record":
         "created_at":"Fri Jun 07 22:45:02 +0000 2013",
@@ -88,14 +86,12 @@ ERROR:  error while parsing json record 'Unexpected character (':' (code 58)): w
 
           ]
         }
-      }
-External table jsontest_malformed_record
-
+      }  (seg1 slice1 127.0.0.1:6001 pid=96971)
+CONTEXT:  External table jsontest_malformed_record
 SELECT *
 FROM jsontest_malformed_record_filefrag
 ORDER BY id;
 ERROR:  error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate Object entries
-
  at [Source: (String)"{
       "record":
         "created_at":"Fri Jun 07 22:45:02 +0000 2013",
@@ -137,7 +133,6 @@ FROM jsontest_malformed_record_filefrag
 WHERE id IS NULL
 ORDER BY id;
 ERROR:  error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate Object entries
-
  at [Source: (String)"{
       "record":
         "created_at":"Fri Jun 07 22:45:02 +0000 2013",
