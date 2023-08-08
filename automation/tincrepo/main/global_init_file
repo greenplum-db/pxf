@@ -39,11 +39,12 @@ s/pg_temp_\d+/pg_temp/
 m/^psql:.* WARNING|INFO|ERROR/
 s/^psql:.* (WARNING|INFO|ERROR)/$1/
 
+# FIXME: this can break gpdiff.pl handling of '-- start_ignore'
 # Ignore diffs in sql comments 
 # Does not consider all forms of comments. For eg: block comments, comments at the end of a line
 # This will suffice to ignore tinc metadata added to sql in the form of comments. 
-m/^--.*/
-s/^--.*//
+#m/^--.*/
+#s/^--.*//
 
 # replace the default hint with a generic log-dir and host
 m/Check the PXF logs located in the.*/
