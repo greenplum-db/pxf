@@ -112,6 +112,8 @@ export GPHOME=<your gphome>
 export PXF_HOME=/usr/local/pxf
 ```
 
+Add `pxf.profile.dynamic.regex=test:.* ` to `${PXF_BASE}/conf/pxf-application.properties`
+
 Run all tests for GPDB
 ```
 make GROUP=gpdb
