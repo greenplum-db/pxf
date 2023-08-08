@@ -9,6 +9,7 @@ inputs:
 - name: pxf_package
 - name: singlecluster
 - name: pxf-automation-dependencies
+# TODO Remove gp6-python-libs input once Tinc is replaced with pg_regress.
 - name: gp6-python-libs
   optional: true
 

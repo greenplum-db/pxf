@@ -39,6 +39,7 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
+## TODO Remove this resource block once Tinc is replaced with pg_regress.
 - name: gp6-python-libs
   type: gcs
   icon: google-drive
@@ -341,7 +342,7 @@ jobs:
       image: ccp-7-image
       params:
         GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
-        GP_VER: 6
+        GP_VER: 7
         PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
 ## ---------- Ubuntu 18 Swimlane ----------
