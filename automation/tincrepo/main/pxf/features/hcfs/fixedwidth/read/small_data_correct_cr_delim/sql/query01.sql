@@ -9,4 +9,5 @@
 -- s/CONTEXT.*//
 --
 -- end_matchsubs
+set datestyle to 'ISO, MDY';
 select * from fixedwidth_in_small_correct_cr_delim order by s1;
