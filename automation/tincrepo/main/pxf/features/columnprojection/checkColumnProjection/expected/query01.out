@@ -1,16 +1,10 @@
 -- start_ignore
--- end_ignore
--- start_ignore
 DROP TABLE IF EXISTS t0_values;
-DROP TABLE
 CREATE TABLE t0_values(key char(1), value int) DISTRIBUTED BY (key);
-CREATE TABLE
 INSERT INTO t0_values VALUES('A', 50);
-INSERT 0 1
 -- end_ignore
 -- @description query01 for PXF Column Projection Support
 SET optimizer = off;
-SET
 SELECT * FROM test_column_projection ORDER BY t0;
  t0 | a1 | b2 |     colprojvalue
 ----+----+----+----------------------
@@ -354,5 +348,4 @@ SELECT t0, colprojvalue, sqrt(b2::int) FROM test_column_projection ORDER BY t0;
 -- cleanup
 -- start_ignore
 DROP TABLE IF EXISTS t0_values;
-DROP TABLE
 -- end_ignore
