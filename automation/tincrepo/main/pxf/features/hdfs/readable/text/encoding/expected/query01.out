@@ -1,5 +1,4 @@
 -- @description query01 for PXF HDFS Readable Text differentEncoding case
-
 SELECT * from pxf_hdfs_small_data ORDER BY num1;
  num1 |                 word                 
 ------+--------------------------------------
@@ -7,3 +6,4 @@ SELECT * from pxf_hdfs_small_data ORDER BY num1;
     4 | tá sé seo le tástáil dea-
     5 | minden amire szüksége van a szeretet
 (3 rows)
+

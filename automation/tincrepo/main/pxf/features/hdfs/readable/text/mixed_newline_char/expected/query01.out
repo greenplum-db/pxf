@@ -1,11 +1,7 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF HDFS Readable newline character
 -- Display on for output consistency between GPDB 5 and 6
 \x on
-Expanded display is on.
 \pset format unaligned
-Output format is unaligned.
 SELECT * from pxf_newline_char;
 name|newline_row_1
 a

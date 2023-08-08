@@ -1,1498 +1,1449 @@
 -- @description query01 for count lines multilined CSV file with header
-
 SELECT COUNT(*) from pxf_multi_csv_with_header;
-  count   
-----------
- 320
+ count 
+-------
+   320
 (1 row)
 
--- Display on for output consistency between GPDB 5 and 6
--- Without setting these options:
--- \x on
--- \pset format unaligned
-
--- The query in GPDB 6 returns output in this format ( notice the + appended in the second column) :
-
--- select * from pxf_multi_csv_with_header;
---  num1 |  word  | num2
--- ------+--------+------
---     1 | aaa_1 +|    2
---       | _c     |
---     2 | aaa_2  |    3
---     3 | aaa_3 +|    4
---       | _c     |
---     4 | aaa_4  |    5
---     5 | aaa_5 +|    6
---       | _c     |
---
--- And the same query returns the output like this in GPDB 5:
-
--- select * from pxf_multi_csv_with_header;
---  num1 |  word  | num2
--- ------+--------+------
---     1 | aaa_1  |    2
---       : _c
---     2 | aaa_2  |    3
---     3 | aaa_3  |    4
---       : _c
---     4 | aaa_4  |    5
---     5 | aaa_5  |    6
---       : _c
-
--- Once we set extended display on with format unaligned, the output comes in the same format in both GPDB 5 and GPDB 6:
--- select * from pxf_multi_csv_with_header;
--- num1|1
--- word|aaa_1
--- _c
--- num2|2
---
--- num1|2
--- word|aaa_2
--- num2|3
-
-
 \x on
-Expanded display is on.
 \pset format unaligned
-Output format is unaligned.
-
 SELECT * from pxf_multi_csv_with_header;
- num1|1
- word|aaa_1
- _c
- num2|2
-
- num1|2
- word|aaa_2
- num2|3
-
- num1|3
- word|aaa_3
- _c
- num2|4
-
- num1|4
- word|aaa_4
- num2|5
-
- num1|5
- word|aaa_5
- _c
- num2|6
-
- num1|6
- word|aaa_6
- num2|7
-
- num1|7
- word|aaa_7
- _c
- num2|8
-
- num1|8
- word|aaa_8
- num2|9
-
- num1|9
- word|aaa_9
- _c
- num2|10
-
- num1|10
- word|aaa_10
- num2|11
-
- num1|11
- word|aaa_1
- _c
- num2|2
-
- num1|12
- word|aaa_2
- num2|3
-
- num1|13
- word|aaa_3
- _c
- num2|4
-
- num1|14
- word|aaa_4
- num2|5
-
- num1|15
- word|aaa_5
- _c
- num2|6
-
- num1|16
- word|aaa_6
- num2|7
-
- num1|17
- word|aaa_7
- _c
- num2|8
-
- num1|18
- word|aaa_8
- num2|9
-
- num1|19
- word|aaa_9
- _c
- num2|10
-
- num1|20
- word|aaa_10
- num2|11
-
- num1|21
- word|aaa_1
- _c
- num2|2
-
- num1|22
- word|aaa_2
- num2|3
-
- num1|23
- word|aaa_3
- _c
- num2|4
-
- num1|24
- word|aaa_4
- num2|5
-
- num1|25
- word|aaa_5
- _c
- num2|6
-
- num1|26
- word|aaa_6
- num2|7
-
- num1|27
- word|aaa_7
- _c
- num2|8
-
- num1|28
- word|aaa_8
- num2|9
-
- num1|29
- word|aaa_9
- _c
- num2|10
-
- num1|30
- word|aaa_10
- num2|11
-
- num1|31
- word|aaa_1
- _c
- num2|2
-
- num1|32
- word|aaa_2
- num2|3
-
- num1|33
- word|aaa_3
- _c
- num2|4
-
- num1|34
- word|aaa_4
- num2|5
-
- num1|35
- word|aaa_5
- _c
- num2|6
-
- num1|36
- word|aaa_6
- num2|7
-
- num1|37
- word|aaa_7
- _c
- num2|8
-
- num1|38
- word|aaa_8
- num2|9
-
- num1|39
- word|aaa_9
- _c
- num2|10
-
- num1|40
- word|aaa_10
- num2|11
-
- num1|41
- word|aaa_1
- _c
- num2|2
-
- num1|42
- word|aaa_2
- num2|3
-
- num1|43
- word|aaa_3
- _c
- num2|4
-
- num1|44
- word|aaa_4
- num2|5
-
- num1|45
- word|aaa_5
- _c
- num2|6
-
- num1|46
- word|aaa_6
- num2|7
-
- num1|47
- word|aaa_7
- _c
- num2|8
-
- num1|48
- word|aaa_8
- num2|9
-
- num1|49
- word|aaa_9
- _c
- num2|10
-
- num1|50
- word|aaa_10
- num2|11
-
- num1|51
- word|aaa_1
- _c
- num2|2
-
- num1|52
- word|aaa_2
- num2|3
-
- num1|53
- word|aaa_3
- _c
- num2|4
-
- num1|54
- word|aaa_4
- num2|5
-
- num1|55
- word|aaa_5
- _c
- num2|6
-
- num1|56
- word|aaa_6
- num2|7
-
- num1|57
- word|aaa_7
- _c
- num2|8
-
- num1|58
- word|aaa_8
- num2|9
-
- num1|59
- word|aaa_9
- _c
- num2|10
-
- num1|60
- word|aaa_10
- num2|11
-
- num1|61
- word|aaa_1
- _c
- num2|2
-
- num1|62
- word|aaa_2
- num2|3
-
- num1|63
- word|aaa_3
- _c
- num2|4
-
- num1|64
- word|aaa_4
- num2|5
-
- num1|65
- word|aaa_5
- _c
- num2|6
-
- num1|66
- word|aaa_6
- num2|7
-
- num1|67
- word|aaa_7
- _c
- num2|8
-
- num1|68
- word|aaa_8
- num2|9
-
- num1|69
- word|aaa_9
- _c
- num2|10
-
- num1|70
- word|aaa_10
- num2|11
-
- num1|71
- word|aaa_1
- _c
- num2|2
-
- num1|72
- word|aaa_2
- num2|3
-
- num1|73
- word|aaa_3
- _c
- num2|4
-
- num1|74
- word|aaa_4
- num2|5
-
- num1|75
- word|aaa_5
- _c
- num2|6
-
- num1|76
- word|aaa_6
- num2|7
-
- num1|77
- word|aaa_7
- _c
- num2|8
-
- num1|78
- word|aaa_8
- num2|9
-
- num1|79
- word|aaa_9
- _c
- num2|10
-
- num1|80
- word|aaa_10
- num2|11
-
- num1|81
- word|aaa_1
- _c
- num2|2
-
- num1|82
- word|aaa_2
- num2|3
-
- num1|83
- word|aaa_3
- _c
- num2|4
-
- num1|84
- word|aaa_4
- num2|5
-
- num1|85
- word|aaa_5
- _c
- num2|6
-
- num1|86
- word|aaa_6
- num2|7
-
- num1|87
- word|aaa_7
- _c
- num2|8
-
- num1|88
- word|aaa_8
- num2|9
-
- num1|89
- word|aaa_9
- _c
- num2|10
-
- num1|90
- word|aaa_10
- num2|11
-
- num1|91
- word|aaa_1
- _c
- num2|2
-
- num1|92
- word|aaa_2
- num2|3
-
- num1|93
- word|aaa_3
- _c
- num2|4
-
- num1|94
- word|aaa_4
- num2|5
-
- num1|95
- word|aaa_5
- _c
- num2|6
-
- num1|96
- word|aaa_6
- num2|7
-
- num1|97
- word|aaa_7
- _c
- num2|8
-
- num1|98
- word|aaa_8
- num2|9
-
- num1|99
- word|aaa_9
- _c
- num2|10
-
- num1|100
- word|aaa_10
- num2|11
-
- num1|101
- word|aaa_1
- _c
- num2|2
-
- num1|102
- word|aaa_2
- num2|3
-
- num1|103
- word|aaa_3
- _c
- num2|4
-
- num1|104
- word|aaa_4
- num2|5
-
- num1|105
- word|aaa_5
- _c
- num2|6
-
- num1|106
- word|aaa_6
- num2|7
-
- num1|107
- word|aaa_7
- _c
- num2|8
-
- num1|108
- word|aaa_8
- num2|9
-
- num1|109
- word|aaa_9
- _c
- num2|10
-
- num1|110
- word|aaa_10
- num2|11
-
- num1|111
- word|aaa_1
- _c
- num2|2
-
- num1|112
- word|aaa_2
- num2|3
-
- num1|113
- word|aaa_3
- _c
- num2|4
-
- num1|114
- word|aaa_4
- num2|5
-
- num1|115
- word|aaa_5
- _c
- num2|6
-
- num1|116
- word|aaa_6
- num2|7
-
- num1|117
- word|aaa_7
- _c
- num2|8
-
- num1|118
- word|aaa_8
- num2|9
-
- num1|119
- word|aaa_9
- _c
- num2|10
-
- num1|120
- word|aaa_10
- num2|11
-
- num1|121
- word|aaa_1
- _c
- num2|2
-
- num1|122
- word|aaa_2
- num2|3
-
- num1|123
- word|aaa_3
- _c
- num2|4
-
- num1|124
- word|aaa_4
- num2|5
-
- num1|125
- word|aaa_5
- _c
- num2|6
-
- num1|126
- word|aaa_6
- num2|7
-
- num1|127
- word|aaa_7
- _c
- num2|8
-
- num1|128
- word|aaa_8
- num2|9
-
- num1|129
- word|aaa_9
- _c
- num2|10
-
- num1|130
- word|aaa_10
- num2|11
-
- num1|131
- word|aaa_1
- _c
- num2|2
-
- num1|132
- word|aaa_2
- num2|3
-
- num1|133
- word|aaa_3
- _c
- num2|4
-
- num1|134
- word|aaa_4
- num2|5
-
- num1|135
- word|aaa_5
- _c
- num2|6
-
- num1|136
- word|aaa_6
- num2|7
-
- num1|137
- word|aaa_7
- _c
- num2|8
-
- num1|138
- word|aaa_8
- num2|9
-
- num1|139
- word|aaa_9
- _c
- num2|10
-
- num1|140
- word|aaa_10
- num2|11
-
- num1|141
- word|aaa_1
- _c
- num2|2
-
- num1|142
- word|aaa_2
- num2|3
-
- num1|143
- word|aaa_3
- _c
- num2|4
-
- num1|144
- word|aaa_4
- num2|5
-
- num1|145
- word|aaa_5
- _c
- num2|6
-
- num1|146
- word|aaa_6
- num2|7
-
- num1|147
- word|aaa_7
- _c
- num2|8
-
- num1|148
- word|aaa_8
- num2|9
-
- num1|149
- word|aaa_9
- _c
- num2|10
-
- num1|150
- word|aaa_10
- num2|11
-
- num1|151
- word|aaa_1
- _c
- num2|2
-
- num1|152
- word|aaa_2
- num2|3
-
- num1|153
- word|aaa_3
- _c
- num2|4
-
- num1|154
- word|aaa_4
- num2|5
-
- num1|155
- word|aaa_5
- _c
- num2|6
-
- num1|156
- word|aaa_6
- num2|7
-
- num1|157
- word|aaa_7
- _c
- num2|8
-
- num1|158
- word|aaa_8
- num2|9
-
- num1|159
- word|aaa_9
- _c
- num2|10
-
- num1|160
- word|aaa_10
- num2|11
-
- num1|161
- word|aaa_1
- _c
- num2|2
-
- num1|162
- word|aaa_2
- num2|3
-
- num1|163
- word|aaa_3
- _c
- num2|4
-
- num1|164
- word|aaa_4
- num2|5
-
- num1|165
- word|aaa_5
- _c
- num2|6
-
- num1|166
- word|aaa_6
- num2|7
-
- num1|167
- word|aaa_7
- _c
- num2|8
-
- num1|168
- word|aaa_8
- num2|9
-
- num1|169
- word|aaa_9
- _c
- num2|10
-
- num1|170
- word|aaa_10
- num2|11
-
- num1|171
- word|aaa_1
- _c
- num2|2
-
- num1|172
- word|aaa_2
- num2|3
-
- num1|173
- word|aaa_3
- _c
- num2|4
-
- num1|174
- word|aaa_4
- num2|5
-
- num1|175
- word|aaa_5
- _c
- num2|6
-
- num1|176
- word|aaa_6
- num2|7
-
- num1|177
- word|aaa_7
- _c
- num2|8
-
- num1|178
- word|aaa_8
- num2|9
-
- num1|179
- word|aaa_9
- _c
- num2|10
-
- num1|180
- word|aaa_10
- num2|11
-
- num1|181
- word|aaa_1
- _c
- num2|2
-
- num1|182
- word|aaa_2
- num2|3
-
- num1|183
- word|aaa_3
- _c
- num2|4
-
- num1|184
- word|aaa_4
- num2|5
-
- num1|185
- word|aaa_5
- _c
- num2|6
-
- num1|186
- word|aaa_6
- num2|7
-
- num1|187
- word|aaa_7
- _c
- num2|8
-
- num1|188
- word|aaa_8
- num2|9
-
- num1|189
- word|aaa_9
- _c
- num2|10
-
- num1|190
- word|aaa_10
- num2|11
-
- num1|191
- word|aaa_1
- _c
- num2|2
-
- num1|192
- word|aaa_2
- num2|3
-
- num1|193
- word|aaa_3
- _c
- num2|4
-
- num1|194
- word|aaa_4
- num2|5
-
- num1|195
- word|aaa_5
- _c
- num2|6
-
- num1|196
- word|aaa_6
- num2|7
-
- num1|197
- word|aaa_7
- _c
- num2|8
-
- num1|198
- word|aaa_8
- num2|9
-
- num1|199
- word|aaa_9
- _c
- num2|10
-
- num1|200
- word|aaa_10
- num2|11
-
- num1|201
- word|aaa_1
- _c
- num2|2
-
- num1|202
- word|aaa_2
- num2|3
-
- num1|203
- word|aaa_3
- _c
- num2|4
-
- num1|204
- word|aaa_4
- num2|5
-
- num1|205
- word|aaa_5
- _c
- num2|6
-
- num1|206
- word|aaa_6
- num2|7
-
- num1|207
- word|aaa_7
- _c
- num2|8
-
- num1|208
- word|aaa_8
- num2|9
-
- num1|209
- word|aaa_9
- _c
- num2|10
-
- num1|210
- word|aaa_10
- num2|11
-
- num1|211
- word|aaa_1
- _c
- num2|2
-
- num1|212
- word|aaa_2
- num2|3
-
- num1|213
- word|aaa_3
- _c
- num2|4
-
- num1|214
- word|aaa_4
- num2|5
-
- num1|215
- word|aaa_5
- _c
- num2|6
-
- num1|216
- word|aaa_6
- num2|7
-
- num1|217
- word|aaa_7
- _c
- num2|8
-
- num1|218
- word|aaa_8
- num2|9
-
- num1|219
- word|aaa_9
- _c
- num2|10
-
- num1|220
- word|aaa_10
- num2|11
-
- num1|221
- word|aaa_1
- _c
- num2|2
-
- num1|222
- word|aaa_2
- num2|3
-
- num1|223
- word|aaa_3
- _c
- num2|4
-
- num1|224
- word|aaa_4
- num2|5
-
- num1|225
- word|aaa_5
- _c
- num2|6
-
- num1|226
- word|aaa_6
- num2|7
-
- num1|227
- word|aaa_7
- _c
- num2|8
-
- num1|228
- word|aaa_8
- num2|9
-
- num1|229
- word|aaa_9
- _c
- num2|10
-
- num1|230
- word|aaa_10
- num2|11
-
- num1|231
- word|aaa_1
- _c
- num2|2
-
- num1|232
- word|aaa_2
- num2|3
-
- num1|233
- word|aaa_3
- _c
- num2|4
-
- num1|234
- word|aaa_4
- num2|5
-
- num1|235
- word|aaa_5
- _c
- num2|6
-
- num1|236
- word|aaa_6
- num2|7
-
- num1|237
- word|aaa_7
- _c
- num2|8
-
- num1|238
- word|aaa_8
- num2|9
-
- num1|239
- word|aaa_9
- _c
- num2|10
-
- num1|240
- word|aaa_10
- num2|11
-
- num1|241
- word|aaa_1
- _c
- num2|2
-
- num1|242
- word|aaa_2
- num2|3
-
- num1|243
- word|aaa_3
- _c
- num2|4
-
- num1|244
- word|aaa_4
- num2|5
-
- num1|245
- word|aaa_5
- _c
- num2|6
-
- num1|246
- word|aaa_6
- num2|7
-
- num1|247
- word|aaa_7
- _c
- num2|8
-
- num1|248
- word|aaa_8
- num2|9
-
- num1|249
- word|aaa_9
- _c
- num2|10
-
- num1|250
- word|aaa_10
- num2|11
-
- num1|251
- word|aaa_1
- _c
- num2|2
-
- num1|252
- word|aaa_2
- num2|3
-
- num1|253
- word|aaa_3
- _c
- num2|4
-
- num1|254
- word|aaa_4
- num2|5
-
- num1|255
- word|aaa_5
- _c
- num2|6
-
- num1|256
- word|aaa_6
- num2|7
-
- num1|257
- word|aaa_7
- _c
- num2|8
-
- num1|258
- word|aaa_8
- num2|9
-
- num1|259
- word|aaa_9
- _c
- num2|10
-
- num1|260
- word|aaa_10
- num2|11
-
- num1|261
- word|aaa_1
- _c
- num2|2
-
- num1|262
- word|aaa_2
- num2|3
-
- num1|263
- word|aaa_3
- _c
- num2|4
-
- num1|264
- word|aaa_4
- num2|5
-
- num1|265
- word|aaa_5
- _c
- num2|6
-
- num1|266
- word|aaa_6
- num2|7
-
- num1|267
- word|aaa_7
- _c
- num2|8
-
- num1|268
- word|aaa_8
- num2|9
-
- num1|269
- word|aaa_9
- _c
- num2|10
-
- num1|270
- word|aaa_10
- num2|11
-
- num1|271
- word|aaa_1
- _c
- num2|2
-
- num1|272
- word|aaa_2
- num2|3
-
- num1|273
- word|aaa_3
- _c
- num2|4
-
- num1|274
- word|aaa_4
- num2|5
-
- num1|275
- word|aaa_5
- _c
- num2|6
-
- num1|276
- word|aaa_6
- num2|7
-
- num1|277
- word|aaa_7
- _c
- num2|8
-
- num1|278
- word|aaa_8
- num2|9
-
- num1|279
- word|aaa_9
- _c
- num2|10
-
- num1|280
- word|aaa_10
- num2|11
-
- num1|281
- word|aaa_1
- _c
- num2|2
-
- num1|282
- word|aaa_2
- num2|3
-
- num1|283
- word|aaa_3
- _c
- num2|4
-
- num1|284
- word|aaa_4
- num2|5
-
- num1|285
- word|aaa_5
- _c
- num2|6
-
- num1|286
- word|aaa_6
- num2|7
-
- num1|287
- word|aaa_7
- _c
- num2|8
-
- num1|288
- word|aaa_8
- num2|9
-
- num1|289
- word|aaa_9
- _c
- num2|10
-
- num1|290
- word|aaa_10
- num2|11
-
- num1|291
- word|aaa_1
- _c
- num2|2
-
- num1|292
- word|aaa_2
- num2|3
-
- num1|293
- word|aaa_3
- _c
- num2|4
-
- num1|294
- word|aaa_4
- num2|5
-
- num1|295
- word|aaa_5
- _c
- num2|6
-
- num1|296
- word|aaa_6
- num2|7
-
- num1|297
- word|aaa_7
- _c
- num2|8
-
- num1|298
- word|aaa_8
- num2|9
-
- num1|299
- word|aaa_9
- _c
- num2|10
-
- num1|300
- word|aaa_10
- num2|11
-
- num1|301
- word|aaa_1
- _c
- num2|2
-
- num1|302
- word|aaa_2
- num2|3
-
- num1|303
- word|aaa_3
- _c
- num2|4
-
- num1|304
- word|aaa_4
- num2|5
-
- num1|305
- word|aaa_5
- _c
- num2|6
-
- num1|306
- word|aaa_6
- num2|7
-
- num1|307
- word|aaa_7
- _c
- num2|8
-
- num1|308
- word|aaa_8
- num2|9
-
- num1|309
- word|aaa_9
- _c
- num2|10
-
- num1|310
- word|aaa_10
- num2|11
-
- num1|321
- word|aaa_1
- _c
- num2|2
-
- num1|322
- word|aaa_2
- num2|3
-
- num1|323
- word|aaa_3
- _c
- num2|4
-
- num1|324
- word|aaa_4
- num2|5
-
- num1|325
- word|aaa_5
- _c
- num2|6
-
- num1|326
- word|aaa_6
- num2|7
-
- num1|327
- word|aaa_7
- _c
- num2|8
-
- num1|328
- word|aaa_8
- num2|9
-
- num1|329
- word|aaa_9
- _c
- num2|10
-
- num1|320
- word|aaa_10
- num2|11
+num1|1
+word|aaa_1
+_c
+num2|2
+
+num1|2
+word|aaa_2
+num2|3
+
+num1|3
+word|aaa_3
+_c
+num2|4
+
+num1|4
+word|aaa_4
+num2|5
+
+num1|5
+word|aaa_5
+_c
+num2|6
+
+num1|6
+word|aaa_6
+num2|7
+
+num1|7
+word|aaa_7
+_c
+num2|8
+
+num1|8
+word|aaa_8
+num2|9
+
+num1|9
+word|aaa_9
+_c
+num2|10
+
+num1|10
+word|aaa_10
+num2|11
+
+num1|11
+word|aaa_1
+_c
+num2|2
+
+num1|12
+word|aaa_2
+num2|3
+
+num1|13
+word|aaa_3
+_c
+num2|4
+
+num1|14
+word|aaa_4
+num2|5
+
+num1|15
+word|aaa_5
+_c
+num2|6
+
+num1|16
+word|aaa_6
+num2|7
+
+num1|17
+word|aaa_7
+_c
+num2|8
+
+num1|18
+word|aaa_8
+num2|9
+
+num1|19
+word|aaa_9
+_c
+num2|10
+
+num1|20
+word|aaa_10
+num2|11
+
+num1|21
+word|aaa_1
+_c
+num2|2
+
+num1|22
+word|aaa_2
+num2|3
+
+num1|23
+word|aaa_3
+_c
+num2|4
+
+num1|24
+word|aaa_4
+num2|5
+
+num1|25
+word|aaa_5
+_c
+num2|6
+
+num1|26
+word|aaa_6
+num2|7
+
+num1|27
+word|aaa_7
+_c
+num2|8
+
+num1|28
+word|aaa_8
+num2|9
+
+num1|29
+word|aaa_9
+_c
+num2|10
+
+num1|30
+word|aaa_10
+num2|11
+
+num1|31
+word|aaa_1
+_c
+num2|2
+
+num1|32
+word|aaa_2
+num2|3
+
+num1|33
+word|aaa_3
+_c
+num2|4
+
+num1|34
+word|aaa_4
+num2|5
+
+num1|35
+word|aaa_5
+_c
+num2|6
+
+num1|36
+word|aaa_6
+num2|7
+
+num1|37
+word|aaa_7
+_c
+num2|8
+
+num1|38
+word|aaa_8
+num2|9
+
+num1|39
+word|aaa_9
+_c
+num2|10
+
+num1|40
+word|aaa_10
+num2|11
+
+num1|41
+word|aaa_1
+_c
+num2|2
+
+num1|42
+word|aaa_2
+num2|3
+
+num1|43
+word|aaa_3
+_c
+num2|4
+
+num1|44
+word|aaa_4
+num2|5
+
+num1|45
+word|aaa_5
+_c
+num2|6
+
+num1|46
+word|aaa_6
+num2|7
+
+num1|47
+word|aaa_7
+_c
+num2|8
+
+num1|48
+word|aaa_8
+num2|9
+
+num1|49
+word|aaa_9
+_c
+num2|10
+
+num1|50
+word|aaa_10
+num2|11
+
+num1|51
+word|aaa_1
+_c
+num2|2
+
+num1|52
+word|aaa_2
+num2|3
+
+num1|53
+word|aaa_3
+_c
+num2|4
+
+num1|54
+word|aaa_4
+num2|5
+
+num1|55
+word|aaa_5
+_c
+num2|6
+
+num1|56
+word|aaa_6
+num2|7
+
+num1|57
+word|aaa_7
+_c
+num2|8
+
+num1|58
+word|aaa_8
+num2|9
+
+num1|59
+word|aaa_9
+_c
+num2|10
+
+num1|60
+word|aaa_10
+num2|11
+
+num1|61
+word|aaa_1
+_c
+num2|2
+
+num1|62
+word|aaa_2
+num2|3
+
+num1|63
+word|aaa_3
+_c
+num2|4
+
+num1|64
+word|aaa_4
+num2|5
+
+num1|65
+word|aaa_5
+_c
+num2|6
+
+num1|66
+word|aaa_6
+num2|7
+
+num1|67
+word|aaa_7
+_c
+num2|8
+
+num1|68
+word|aaa_8
+num2|9
+
+num1|69
+word|aaa_9
+_c
+num2|10
+
+num1|70
+word|aaa_10
+num2|11
+
+num1|71
+word|aaa_1
+_c
+num2|2
+
+num1|72
+word|aaa_2
+num2|3
+
+num1|73
+word|aaa_3
+_c
+num2|4
+
+num1|74
+word|aaa_4
+num2|5
+
+num1|75
+word|aaa_5
+_c
+num2|6
+
+num1|76
+word|aaa_6
+num2|7
+
+num1|77
+word|aaa_7
+_c
+num2|8
+
+num1|78
+word|aaa_8
+num2|9
+
+num1|79
+word|aaa_9
+_c
+num2|10
+
+num1|80
+word|aaa_10
+num2|11
+
+num1|81
+word|aaa_1
+_c
+num2|2
+
+num1|82
+word|aaa_2
+num2|3
+
+num1|83
+word|aaa_3
+_c
+num2|4
+
+num1|84
+word|aaa_4
+num2|5
+
+num1|85
+word|aaa_5
+_c
+num2|6
+
+num1|86
+word|aaa_6
+num2|7
+
+num1|87
+word|aaa_7
+_c
+num2|8
+
+num1|88
+word|aaa_8
+num2|9
+
+num1|89
+word|aaa_9
+_c
+num2|10
+
+num1|90
+word|aaa_10
+num2|11
+
+num1|91
+word|aaa_1
+_c
+num2|2
+
+num1|92
+word|aaa_2
+num2|3
+
+num1|93
+word|aaa_3
+_c
+num2|4
+
+num1|94
+word|aaa_4
+num2|5
+
+num1|95
+word|aaa_5
+_c
+num2|6
+
+num1|96
+word|aaa_6
+num2|7
+
+num1|97
+word|aaa_7
+_c
+num2|8
+
+num1|98
+word|aaa_8
+num2|9
+
+num1|99
+word|aaa_9
+_c
+num2|10
+
+num1|100
+word|aaa_10
+num2|11
+
+num1|101
+word|aaa_1
+_c
+num2|2
+
+num1|102
+word|aaa_2
+num2|3
+
+num1|103
+word|aaa_3
+_c
+num2|4
+
+num1|104
+word|aaa_4
+num2|5
+
+num1|105
+word|aaa_5
+_c
+num2|6
+
+num1|106
+word|aaa_6
+num2|7
+
+num1|107
+word|aaa_7
+_c
+num2|8
+
+num1|108
+word|aaa_8
+num2|9
+
+num1|109
+word|aaa_9
+_c
+num2|10
+
+num1|110
+word|aaa_10
+num2|11
+
+num1|111
+word|aaa_1
+_c
+num2|2
+
+num1|112
+word|aaa_2
+num2|3
+
+num1|113
+word|aaa_3
+_c
+num2|4
+
+num1|114
+word|aaa_4
+num2|5
+
+num1|115
+word|aaa_5
+_c
+num2|6
+
+num1|116
+word|aaa_6
+num2|7
+
+num1|117
+word|aaa_7
+_c
+num2|8
+
+num1|118
+word|aaa_8
+num2|9
+
+num1|119
+word|aaa_9
+_c
+num2|10
+
+num1|120
+word|aaa_10
+num2|11
+
+num1|121
+word|aaa_1
+_c
+num2|2
+
+num1|122
+word|aaa_2
+num2|3
+
+num1|123
+word|aaa_3
+_c
+num2|4
+
+num1|124
+word|aaa_4
+num2|5
+
+num1|125
+word|aaa_5
+_c
+num2|6
+
+num1|126
+word|aaa_6
+num2|7
+
+num1|127
+word|aaa_7
+_c
+num2|8
+
+num1|128
+word|aaa_8
+num2|9
+
+num1|129
+word|aaa_9
+_c
+num2|10
+
+num1|130
+word|aaa_10
+num2|11
+
+num1|131
+word|aaa_1
+_c
+num2|2
+
+num1|132
+word|aaa_2
+num2|3
+
+num1|133
+word|aaa_3
+_c
+num2|4
+
+num1|134
+word|aaa_4
+num2|5
+
+num1|135
+word|aaa_5
+_c
+num2|6
+
+num1|136
+word|aaa_6
+num2|7
+
+num1|137
+word|aaa_7
+_c
+num2|8
+
+num1|138
+word|aaa_8
+num2|9
+
+num1|139
+word|aaa_9
+_c
+num2|10
+
+num1|140
+word|aaa_10
+num2|11
+
+num1|141
+word|aaa_1
+_c
+num2|2
+
+num1|142
+word|aaa_2
+num2|3
+
+num1|143
+word|aaa_3
+_c
+num2|4
+
+num1|144
+word|aaa_4
+num2|5
+
+num1|145
+word|aaa_5
+_c
+num2|6
+
+num1|146
+word|aaa_6
+num2|7
+
+num1|147
+word|aaa_7
+_c
+num2|8
+
+num1|148
+word|aaa_8
+num2|9
+
+num1|149
+word|aaa_9
+_c
+num2|10
+
+num1|150
+word|aaa_10
+num2|11
+
+num1|151
+word|aaa_1
+_c
+num2|2
+
+num1|152
+word|aaa_2
+num2|3
+
+num1|153
+word|aaa_3
+_c
+num2|4
+
+num1|154
+word|aaa_4
+num2|5
+
+num1|155
+word|aaa_5
+_c
+num2|6
+
+num1|156
+word|aaa_6
+num2|7
+
+num1|157
+word|aaa_7
+_c
+num2|8
+
+num1|158
+word|aaa_8
+num2|9
+
+num1|159
+word|aaa_9
+_c
+num2|10
+
+num1|160
+word|aaa_10
+num2|11
+
+num1|161
+word|aaa_1
+_c
+num2|2
+
+num1|162
+word|aaa_2
+num2|3
+
+num1|163
+word|aaa_3
+_c
+num2|4
+
+num1|164
+word|aaa_4
+num2|5
+
+num1|165
+word|aaa_5
+_c
+num2|6
+
+num1|166
+word|aaa_6
+num2|7
+
+num1|167
+word|aaa_7
+_c
+num2|8
+
+num1|168
+word|aaa_8
+num2|9
+
+num1|169
+word|aaa_9
+_c
+num2|10
+
+num1|170
+word|aaa_10
+num2|11
+
+num1|171
+word|aaa_1
+_c
+num2|2
+
+num1|172
+word|aaa_2
+num2|3
+
+num1|173
+word|aaa_3
+_c
+num2|4
+
+num1|174
+word|aaa_4
+num2|5
+
+num1|175
+word|aaa_5
+_c
+num2|6
+
+num1|176
+word|aaa_6
+num2|7
+
+num1|177
+word|aaa_7
+_c
+num2|8
+
+num1|178
+word|aaa_8
+num2|9
+
+num1|179
+word|aaa_9
+_c
+num2|10
+
+num1|180
+word|aaa_10
+num2|11
+
+num1|181
+word|aaa_1
+_c
+num2|2
+
+num1|182
+word|aaa_2
+num2|3
+
+num1|183
+word|aaa_3
+_c
+num2|4
+
+num1|184
+word|aaa_4
+num2|5
+
+num1|185
+word|aaa_5
+_c
+num2|6
+
+num1|186
+word|aaa_6
+num2|7
+
+num1|187
+word|aaa_7
+_c
+num2|8
+
+num1|188
+word|aaa_8
+num2|9
+
+num1|189
+word|aaa_9
+_c
+num2|10
+
+num1|190
+word|aaa_10
+num2|11
+
+num1|191
+word|aaa_1
+_c
+num2|2
+
+num1|192
+word|aaa_2
+num2|3
+
+num1|193
+word|aaa_3
+_c
+num2|4
+
+num1|194
+word|aaa_4
+num2|5
+
+num1|195
+word|aaa_5
+_c
+num2|6
+
+num1|196
+word|aaa_6
+num2|7
+
+num1|197
+word|aaa_7
+_c
+num2|8
+
+num1|198
+word|aaa_8
+num2|9
+
+num1|199
+word|aaa_9
+_c
+num2|10
+
+num1|200
+word|aaa_10
+num2|11
+
+num1|201
+word|aaa_1
+_c
+num2|2
+
+num1|202
+word|aaa_2
+num2|3
+
+num1|203
+word|aaa_3
+_c
+num2|4
+
+num1|204
+word|aaa_4
+num2|5
+
+num1|205
+word|aaa_5
+_c
+num2|6
+
+num1|206
+word|aaa_6
+num2|7
+
+num1|207
+word|aaa_7
+_c
+num2|8
+
+num1|208
+word|aaa_8
+num2|9
+
+num1|209
+word|aaa_9
+_c
+num2|10
+
+num1|210
+word|aaa_10
+num2|11
+
+num1|211
+word|aaa_1
+_c
+num2|2
+
+num1|212
+word|aaa_2
+num2|3
+
+num1|213
+word|aaa_3
+_c
+num2|4
+
+num1|214
+word|aaa_4
+num2|5
+
+num1|215
+word|aaa_5
+_c
+num2|6
+
+num1|216
+word|aaa_6
+num2|7
+
+num1|217
+word|aaa_7
+_c
+num2|8
+
+num1|218
+word|aaa_8
+num2|9
+
+num1|219
+word|aaa_9
+_c
+num2|10
+
+num1|220
+word|aaa_10
+num2|11
+
+num1|221
+word|aaa_1
+_c
+num2|2
+
+num1|222
+word|aaa_2
+num2|3
+
+num1|223
+word|aaa_3
+_c
+num2|4
+
+num1|224
+word|aaa_4
+num2|5
+
+num1|225
+word|aaa_5
+_c
+num2|6
+
+num1|226
+word|aaa_6
+num2|7
+
+num1|227
+word|aaa_7
+_c
+num2|8
+
+num1|228
+word|aaa_8
+num2|9
+
+num1|229
+word|aaa_9
+_c
+num2|10
+
+num1|230
+word|aaa_10
+num2|11
+
+num1|231
+word|aaa_1
+_c
+num2|2
+
+num1|232
+word|aaa_2
+num2|3
+
+num1|233
+word|aaa_3
+_c
+num2|4
+
+num1|234
+word|aaa_4
+num2|5
+
+num1|235
+word|aaa_5
+_c
+num2|6
+
+num1|236
+word|aaa_6
+num2|7
+
+num1|237
+word|aaa_7
+_c
+num2|8
+
+num1|238
+word|aaa_8
+num2|9
+
+num1|239
+word|aaa_9
+_c
+num2|10
+
+num1|240
+word|aaa_10
+num2|11
+
+num1|241
+word|aaa_1
+_c
+num2|2
+
+num1|242
+word|aaa_2
+num2|3
+
+num1|243
+word|aaa_3
+_c
+num2|4
+
+num1|244
+word|aaa_4
+num2|5
+
+num1|245
+word|aaa_5
+_c
+num2|6
+
+num1|246
+word|aaa_6
+num2|7
+
+num1|247
+word|aaa_7
+_c
+num2|8
+
+num1|248
+word|aaa_8
+num2|9
+
+num1|249
+word|aaa_9
+_c
+num2|10
+
+num1|250
+word|aaa_10
+num2|11
+
+num1|251
+word|aaa_1
+_c
+num2|2
+
+num1|252
+word|aaa_2
+num2|3
+
+num1|253
+word|aaa_3
+_c
+num2|4
+
+num1|254
+word|aaa_4
+num2|5
+
+num1|255
+word|aaa_5
+_c
+num2|6
+
+num1|256
+word|aaa_6
+num2|7
+
+num1|257
+word|aaa_7
+_c
+num2|8
+
+num1|258
+word|aaa_8
+num2|9
+
+num1|259
+word|aaa_9
+_c
+num2|10
+
+num1|260
+word|aaa_10
+num2|11
+
+num1|261
+word|aaa_1
+_c
+num2|2
+
+num1|262
+word|aaa_2
+num2|3
+
+num1|263
+word|aaa_3
+_c
+num2|4
+
+num1|264
+word|aaa_4
+num2|5
+
+num1|265
+word|aaa_5
+_c
+num2|6
+
+num1|266
+word|aaa_6
+num2|7
+
+num1|267
+word|aaa_7
+_c
+num2|8
+
+num1|268
+word|aaa_8
+num2|9
+
+num1|269
+word|aaa_9
+_c
+num2|10
+
+num1|270
+word|aaa_10
+num2|11
+
+num1|271
+word|aaa_1
+_c
+num2|2
+
+num1|272
+word|aaa_2
+num2|3
+
+num1|273
+word|aaa_3
+_c
+num2|4
+
+num1|274
+word|aaa_4
+num2|5
+
+num1|275
+word|aaa_5
+_c
+num2|6
+
+num1|276
+word|aaa_6
+num2|7
+
+num1|277
+word|aaa_7
+_c
+num2|8
+
+num1|278
+word|aaa_8
+num2|9
+
+num1|279
+word|aaa_9
+_c
+num2|10
+
+num1|280
+word|aaa_10
+num2|11
+
+num1|281
+word|aaa_1
+_c
+num2|2
+
+num1|282
+word|aaa_2
+num2|3
+
+num1|283
+word|aaa_3
+_c
+num2|4
+
+num1|284
+word|aaa_4
+num2|5
+
+num1|285
+word|aaa_5
+_c
+num2|6
+
+num1|286
+word|aaa_6
+num2|7
+
+num1|287
+word|aaa_7
+_c
+num2|8
+
+num1|288
+word|aaa_8
+num2|9
+
+num1|289
+word|aaa_9
+_c
+num2|10
+
+num1|290
+word|aaa_10
+num2|11
+
+num1|291
+word|aaa_1
+_c
+num2|2
+
+num1|292
+word|aaa_2
+num2|3
+
+num1|293
+word|aaa_3
+_c
+num2|4
+
+num1|294
+word|aaa_4
+num2|5
+
+num1|295
+word|aaa_5
+_c
+num2|6
+
+num1|296
+word|aaa_6
+num2|7
+
+num1|297
+word|aaa_7
+_c
+num2|8
+
+num1|298
+word|aaa_8
+num2|9
+
+num1|299
+word|aaa_9
+_c
+num2|10
+
+num1|300
+word|aaa_10
+num2|11
+
+num1|301
+word|aaa_1
+_c
+num2|2
+
+num1|302
+word|aaa_2
+num2|3
+
+num1|303
+word|aaa_3
+_c
+num2|4
+
+num1|304
+word|aaa_4
+num2|5
+
+num1|305
+word|aaa_5
+_c
+num2|6
+
+num1|306
+word|aaa_6
+num2|7
+
+num1|307
+word|aaa_7
+_c
+num2|8
+
+num1|308
+word|aaa_8
+num2|9
+
+num1|309
+word|aaa_9
+_c
+num2|10
+
+num1|310
+word|aaa_10
+num2|11
+
+num1|321
+word|aaa_1
+_c
+num2|2
+
+num1|322
+word|aaa_2
+num2|3
+
+num1|323
+word|aaa_3
+_c
+num2|4
+
+num1|324
+word|aaa_4
+num2|5
+
+num1|325
+word|aaa_5
+_c
+num2|6
+
+num1|326
+word|aaa_6
+num2|7
+
+num1|327
+word|aaa_7
+_c
+num2|8
+
+num1|328
+word|aaa_8
+num2|9
+
+num1|329
+word|aaa_9
+_c
+num2|10
+
+num1|320
+word|aaa_10
+num2|11

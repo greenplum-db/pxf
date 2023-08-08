@@ -1,5 +1,4 @@
 -- @description query01 for PXF HDFS Readable wrong type
-
 -- start_matchsubs
 --
 -- m/DETAIL/
@@ -14,5 +13,5 @@
 -- end_matchsubs
 
 SELECT * FROM bad_text ORDER BY num ASC;
-ERROR: invalid input syntax for integer: "joker"
+ERROR:  invalid input syntax for type integer: "joker"
 DETAIL:  External table bad_text, line 51 of pxf://pxf_automation_data/data?PROFILE=HdfsTextSimple, column num

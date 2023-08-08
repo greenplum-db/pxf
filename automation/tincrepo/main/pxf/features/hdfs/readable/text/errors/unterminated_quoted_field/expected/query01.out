@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF HDFS Readable error when an unterminated quoted
 -- field at the end of the file is being read from a PXF external table with
 -- SEGMENT REJECT LIMIT for the table definition. A segmentation fault was
@@ -11,7 +9,7 @@
 -- s/\+$//
 -- end_matchsubs
 SELECT * FROM unterminated_quoted_field ORDER BY name ASC;
-NOTICE:  Found 1 data formatting errors (1 or more input rows). Rejected related input data.
+NOTICE:  found 1 data formatting errors (1 or more input rows), rejected related input data
    name    | num | dub |   longnum    | bool 
 -----------+-----+-----+--------------+------
  foo_row_1 |   1 |   1 | 100000000000 | f

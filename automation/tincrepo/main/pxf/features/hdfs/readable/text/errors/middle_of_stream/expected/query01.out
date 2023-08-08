@@ -1,5 +1,4 @@
 -- @description query01 for PXF HDFS Readable error in the middle of stream
-
 -- start_matchsubs
 --
 -- m/(ERROR|WARNING):.*'\d+\.\d+\.\d+\.\d+:\d+'.*/
@@ -11,8 +10,10 @@
 -- m/External table error_on_10000/
 -- s/.*External table error_on_10000.*/CONTEXT:  External table error_on_10000/
 --
+-- m/libchurl\.c/
+-- s/libchurl\.c:\d+/libchurl\.c:xxx/
+--
 -- end_matchsubs
-
 SELECT * FROM error_on_10000 ORDER BY num ASC;
 ERROR:  transfer error (18): Transferred a partial file from 'SOME_IP:SOME_PORT' (libchurl.c:xxx)
 DETAIL:  curl error buffer: transfer closed with outstanding read data remaining

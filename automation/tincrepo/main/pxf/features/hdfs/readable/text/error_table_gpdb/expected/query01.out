@@ -1,21 +1,16 @@
 -- @description query01 for PXF HDFS Readable error table
-
 -- start_matchsubs
 --
 -- # create a match/subs
 --
 -- # replace PXF URL with "pxf-location" string
--- m/pxf:\/\/(.*)\|/
--- s/pxf:\/\/.*data\?PROFILE=.+?\|/pxf-location\|/
---
--- m/\|.*\/data/
--- s/\|.*\/data/\|pxf-location/
+-- m/pxf:\/\/[^ ]+/
+-- s/pxf:\/\/[^ ]+/pxf-location/
 --
 -- end_matchsubs
-
 SELECT * FROM err_table_test ORDER BY num ASC;
-NOTICE:  Found 4 data formatting errors (4 or more input rows). Rejected related input data.
- num |       words
+NOTICE:  found 4 data formatting errors (4 or more input rows), rejected related input data
+ num |       words       
 -----+-------------------
    1 | one
    2 | two
@@ -37,3 +32,4 @@ SELECT relname, filename, linenum, errmsg, rawdata FROM  gp_read_error_log('err_
  err_table_test | pxf-location |       7 | invalid input syntax for integer: "have", column num             | have,a
  err_table_test | pxf-location |       8 | invalid input syntax for integer: "little", column num           | little,more
 (4 rows)
+

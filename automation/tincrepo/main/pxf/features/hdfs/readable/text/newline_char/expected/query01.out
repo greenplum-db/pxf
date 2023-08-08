@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF HDFS Readable newline character
 SELECT * from pxf_newline_char;
       name      | num | dub |    longnum    | bool 
@@ -15,3 +13,4 @@ SELECT * from pxf_newline_char;
  newline_row_9  |   9 |   9 |  900000000000 | f
  newline_row_10 |  10 |  10 | 1000000000000 | t
 (10 rows)
+

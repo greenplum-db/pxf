@@ -1,54 +1,12 @@
 -- @description query01 for count lines multilined CSV file with header
-
 SELECT COUNT(*) from pxf_file_as_row_with_header;
-  count   
-----------
- 1
+ count 
+-------
+     1
 (1 row)
 
--- Display on for output consistency between GPDB 5 and 6
--- Without setting these options:
--- \x on
--- \pset format unaligned
-
--- The query in GPDB 6 returns output in this format ( notice the + appended in the second column) :
-
--- select * from pxf_file_as_row_with_header;
---       data
--- -----------------
---  1,"aaa_1       +
---  _c",2          +
---  2,"aaa_2",3    +
---  3,"aaa_3       +
---  _c",4          +
-
-
--- And the same query returns the output like this in GPDB 5:
-
--- select * from pxf_file_as_row_with_header;
---      data
--- -----------------
---  1,"aaa_1
---  _c",2
---  2,"aaa_2",3
---  3,"aaa_3
---  _c",4
-
--- Once we set extended display on with format unaligned, the output comes in the same format in both GPDB 5 and GPDB 6:
-
--- select * from pxf_file_as_row_with_header;
--- data|1,"aaa_1
--- _c",2
--- 2,"aaa_2",3
--- 3,"aaa_3
--- _c",4
-
-
 \x on
-Expanded display is on.
 \pset format unaligned
-Output format is unaligned.
-
 SELECT * from pxf_file_as_row_with_header;
 data|1,"aaa_1
 _c",2

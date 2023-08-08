@@ -11,6 +11,9 @@
 -- m/External table error_on_10000/
 -- s/.*External table error_on_10000.*/CONTEXT:  External table error_on_10000/
 --
+-- m/libchurl\.c/
+-- s/libchurl\.c:\d+/libchurl\.c:xxx/
+  
 -- end_matchsubs
 
 SELECT * FROM error_on_10000 ORDER BY num ASC;
