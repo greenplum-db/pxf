@@ -1,14 +1,10 @@
 -- start_ignore
 -- end_ignore
--- start_ignore
--- end_ignore
 -- @description query01 tests that a multiline json file returns as a single multiline record in GPDB
 --
 -- Display on for output consistency between GPDB 5 and 6
 \x on
-Expanded display is on.
 \pset format unaligned
-Output format is unaligned.
 select * from file_as_row_json;
 json_blob|{
   "root":[
@@ -79,7 +75,6 @@ json_blob|{
 }
 -- Query JSON using JSON functions
 \pset format aligned
-Output format is aligned.
 select
        json_array_elements(json_blob->'root')->'record'->'created_at' as created_at,
        json_array_elements(json_blob->'root')->'record'->'text' as text,

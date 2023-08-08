@@ -1,14 +1,10 @@
 -- start_ignore
 -- end_ignore
--- start_ignore
--- end_ignore
 -- @description query01 tests that a multiline text file returns as a single multiline record in GPDB
 --
 -- Display on for output consistency between GPDB 5 and 6
 \x on
-Expanded display is on.
 \pset format unaligned
-Output format is unaligned.
 select * from file_as_row_text;
 text_blob|""Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 sed do eiusmod tempor incididunt ut labore et dolore magna
