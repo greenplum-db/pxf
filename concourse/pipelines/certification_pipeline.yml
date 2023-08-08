@@ -7,8 +7,8 @@ anchors:
   on_failure:
     put: slack-alert
     params:
-      text: |
-        :ci-fail: <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> has failed (((ud/common/slack-em-ids)))
+      # yamllint disable-line rule:line-length
+      text: ":ci-fail: <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> has failed (((ud/common/slack-em-ids)))"
 
 ## ======================================================================
 ## RESOURCE TYPES
