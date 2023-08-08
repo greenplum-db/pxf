@@ -12,6 +12,14 @@ if [[ ${PXF_COMPONENT} == "true" ]]; then
 else
 	PXF_HOME=${GPHOME}/pxf
 fi
+
+# gpscp command is replaced with gpsync in GP7
+if [ "${GP_VER}" -lt 7 ]; then
+  GP_SCP_CMD=gpscp
+else
+  GP_SCP_CMD=gpsync
+fi
+
 PXF_VERSION=${PXF_VERSION:=6}
 # read default user from terraform metadata file
 DEFAULT_OS_USER=$(jq --raw-output ".ami_default_user" terraform/metadata)
@@ -126,16 +134,16 @@ function create_pxf_installer_scripts() {
 		    if [[ ${PXF_VERSION} == 5 ]]; then
 		      echo 'export PXF_KEYTAB="\${PXF_CONF}/keytabs/pxf.service.keytab"' >> "\${PXF_CONF}/conf/pxf-env.sh"
 		      echo 'export PXF_PRINCIPAL="gpadmin@${REALM}"' >> "\${PXF_CONF}/conf/pxf-env.sh"
-		      gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_env_files/pxf.service.keytab =:/home/gpadmin/pxf/keytabs/
+		      ${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_env_files/pxf.service.keytab =:/home/gpadmin/pxf/keytabs/
 		    else
 		      if [[ ! -f \${PXF_BASE}/servers/default/pxf-site.xml ]]; then
 		        cp \${PXF_HOME}/templates/pxf-site.xml \${PXF_BASE}/servers/default/pxf-site.xml
 		      fi
 
 		      sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g" ${BASE_DIR}/servers/default/pxf-site.xml
-		      gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_env_files/pxf.service.keytab =:${BASE_DIR}/keytabs/
+		      ${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_env_files/pxf.service.keytab =:${BASE_DIR}/keytabs/
 		    fi
-		    gpscp -f ~gpadmin/hostfile_all -v -r -u ${DEFAULT_OS_USER} /tmp/krb5.conf =:/tmp/krb5.conf
+		    ${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -r -u ${DEFAULT_OS_USER} /tmp/krb5.conf =:/tmp/krb5.conf
 		    gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e 'sudo mv /tmp/krb5.conf /etc/krb5.conf'
 		  fi
 		}
@@ -239,7 +247,7 @@ function run_pxf_installer_scripts() {
 			gpstop -u
 		fi &&
 		sed -i '/edw/d' hostfile_all &&
-		gpscp -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -r ~/pxf_installer ~gpadmin/install_pxf_dependencies.sh ${DEFAULT_OS_USER}@=: &&
+		${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -r ~/pxf_installer ~gpadmin/install_pxf_dependencies.sh ${DEFAULT_OS_USER}@=: &&
 		gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e 'sudo ~${DEFAULT_OS_USER}/install_pxf_dependencies.sh' &&
 		gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e 'sudo GPHOME=${GPHOME} ~${DEFAULT_OS_USER}/pxf_installer/install_component'
 		gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_OS_USER} -s -e 'sudo chown -R gpadmin:gpadmin ${PXF_HOME}'
@@ -249,7 +257,7 @@ function run_pxf_installer_scripts() {
 			${PXF_HOME}/bin/pxf cluster register
 		fi &&
 		if [[ -d ~/dataproc_env_files ]]; then
-			gpscp -f ~gpadmin/hostfile_init -v -r -u gpadmin ~/dataproc_env_files =:
+			${GP_SCP_CMD} -f ~gpadmin/hostfile_init -v -r -u gpadmin ~/dataproc_env_files =:
 		fi &&
 		~gpadmin/configure_pxf.sh &&
 		source ~gpadmin/.bashrc &&

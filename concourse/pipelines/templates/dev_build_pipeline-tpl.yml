@@ -73,7 +73,7 @@ anchors:
 ## ======================================================================
 resource_types:
 
-{% if multinode or multinode_no_impersonation or file %}
+{% if multinode or multinode_no_impersonation or file or gp7_cli %}
 - name: terraform
   type: registry-image
   source:
@@ -83,7 +83,7 @@ resource_types:
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endif %}
 
-{% if multinode %}
+{% if multinode or gp7_cli %}
 - name: terraform-0.14.10
   type: registry-image
   source:
@@ -169,7 +169,7 @@ resources:
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
-{% if multinode or multinode_no_impersonation or file %}
+{% if multinode or multinode_no_impersonation or file or gp7_cli %}
 - name: ccp_src
   type: git
   source:
@@ -202,7 +202,6 @@ resources:
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endfor %}
-{% set gp_ver = None %}
 
 {% if oel7 %}
 - name: gpdb6-pxf-dev-oel7-image
@@ -237,7 +236,7 @@ resources:
 {% endif %}
 {% set gp_ver = None %}
 
-{% if multinode or multinode_no_impersonation or ambari or file %}
+{% if multinode or multinode_no_impersonation or ambari or file or gp7_cli %}
 - name: ccp-7-image
   type: registry-image
   icon: docker
@@ -351,7 +350,7 @@ resources:
 {% endfor %}
 
 ## ---------- Auxiliary Resources ----------
-{% if multinode or multinode_no_impersonation or file %}
+{% if multinode or multinode_no_impersonation or file or gp7_cli %}
 - name: terraform
   type: terraform
   source:
@@ -617,6 +616,82 @@ jobs:
       USE_FDW: true
 {% endfor %}
 {% set gp_ver = None %}
+
+## ----------GP7 CLI tests ----------\
+
+{% if gp7_cli %}
+{% set gp_ver = 7 %}
+- name: Test PXF-GP[[gp_ver]]-CLI on RHEL8
+  max_in_flight: 2
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_gp[[gp_ver]]_tarball_rhel8
+      passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+      passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    - get: ccp_src
+    - get: ccp-7-image
+  - in_parallel:
+    - do:
+      - put: terraform_gpdb
+        resource: terraform
+        params:
+          action: create
+          delete_on_failure: true
+          generate_random_name: true
+          terraform_source: ccp_src/google/
+          vars:
+            PLATFORM: rocky8-gpdb7
+            number_of_nodes: ((number_of_gpdb_nodes))
+            extra_nodes: 1
+            segments_per_host: 4
+            instance_type: n1-standard-4
+            ccp_reap_minutes: 120
+            standby_master: true
+      - task: Generate Greenplum Cluster
+        input_mapping:
+          gpdb_rpm: gpdb_package
+          terraform: terraform_gpdb
+        file: ccp_src/ci/tasks/gen_cluster.yml
+        image: ccp-7-image
+        params:
+          AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
+          AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+          AWS_DEFAULT_REGION: ((ud/common/aws-region))
+          BUCKET_PATH: ((tf-bucket-path))
+          BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
+          PLATFORM: rocky8-gpdb7
+          CLOUD_PROVIDER: google
+          GPDB_RPM: true
+  - task: Initialize Greenplum
+    file: ccp_src/ci/tasks/gpinitsystem.yml
+  - task: Setup PXF
+    input_mapping:
+      terraform: terraform_gpdb
+    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
+    image: ccp-7-image
+    params:
+      IMPERSONATION: false
+      INSTALL_GPHDFS: false
+      GP_VER: [[gp_ver]]
+      PXF_JVM_OPTS: ((pxf-jvm-opts))
+  - task: Test PXF CLI
+    on_success:
+      in_parallel:
+        steps:
+        - *destroy_gpdb_cluster
+    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    file: pxf_src/concourse/tasks/test_pxf_cli.yml
+{% if slack_notification %}
+    <<: *slack_alert
+{% endif %}
+{% endif %}
 
 ## ---------- Extended Tests ----------
 {% set gp_ver = 6 %}

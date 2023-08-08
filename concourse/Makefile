@@ -37,6 +37,7 @@ GS                          ?= false
 MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
+GP7_CLI                     ?= false
 
 SET_PIPELINE := set-pipeline
 ifeq ($(CHECK_CREDS), true)
@@ -116,6 +117,7 @@ set-dev-build-pipeline:
 		gs=$(GS) \
 		minio=$(MINIO) \
 		oel7=$(OEL7) \
+		gp7_cli=$(GP7_CLI) \
 		dev_pipeline=true \
 		user=$(USER) \
 		branch=$(BRANCH) \

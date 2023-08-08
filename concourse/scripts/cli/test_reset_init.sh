@@ -93,10 +93,10 @@ Initializing PXF on ${cluster_description}
 PXF initialized successfully on ${num_hosts} out of ${num_hosts} hosts"
 
 control_file_content=\
-"directory = '/usr/local/pxf-gp6/gpextable/'
+"directory = '${PXF_HOME}/gpextable/'
 default_version = '2.1'
 comment = 'Extension which allows to access unmanaged data'
-module_pathname = '/usr/local/pxf-gp6/gpextable/pxf'
+module_pathname = '${PXF_HOME}/gpextable/pxf'
 superuser = true
 relocatable = false
 schema = public"
