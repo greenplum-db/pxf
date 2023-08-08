@@ -448,5 +448,5 @@ jobs:
       image: ccp-7-image
       params:
         GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
-        GP_VER: 6
+        GP_VER: 7
         PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
