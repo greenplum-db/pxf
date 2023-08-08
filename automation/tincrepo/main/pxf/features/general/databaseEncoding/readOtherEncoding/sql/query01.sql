@@ -5,6 +5,7 @@
 -- set client encoding to UTF8
 \encoding UTF8
 -- end_ignore
+set datestyle to 'ISO, MDY';
 
 select * from db_encoding_read_other order by id;
 

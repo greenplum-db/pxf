@@ -1,9 +1,8 @@
--- start_ignore
--- end_ignore
 -- @description query01 reads from the parquet file from a non-UTF-8 database
 -- start_ignore
 \c pxfautomation_encoding
 -- end_ignore
+set datestyle to 'ISO, MDY';
 select * from db_encoding_read_other order by id;
  id |  name  |   cdate    | amt  |  grade  | b |         tm          |     bg     |  sml   |  r  | vc1 | c1  |         dec1         |  dec2  |   dec3   | num1 
 ----+--------+------------+------+---------+---+---------------------+------------+--------+-----+-----+-----+----------------------+--------+----------+------
