@@ -10,6 +10,7 @@
 SET bytea_output = 'hex';
 SET TIME ZONE 'America/Los_Angeles';
 SHOW TIME ZONE;
+SET datestyle TO 'ISO, MDY';
 
 SELECT id, name, sml, integ, bg, r, dp, dec, bool, cdate, ctime, tm, tmz, c1, vc1, bin from gpdb_array_types ORDER BY id;
 

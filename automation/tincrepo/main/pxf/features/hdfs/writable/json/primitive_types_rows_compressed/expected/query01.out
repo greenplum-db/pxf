@@ -5,11 +5,10 @@
 --
 -- end_matchsubs
 \pset null 'NIL'
-Null display is "NIL".
 SET bytea_output = 'hex';
-SET
+SET datestyle TO 'ISO, MDY';
 SELECT id, name, sml, integ, bg, r, dp, dec, bool, cdate, ctime, tm, CAST(tmz AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tmz, c1, vc1, bin from gpdb_primitive_types ORDER BY id;
- id |  name  | sml |  integ  |     bg     |    r    |        dp        |          dec           | bool |   cdate    |  ctime   |             tm             |              tmz           | c1  |  vc1  |    bin
+ id |  name  | sml |  integ  |     bg     |    r    |        dp        |          dec           | bool |   cdate    |  ctime   |             tm             |            tmz             | c1  |  vc1  |    bin     
 ----+--------+-----+---------+------------+---------+------------------+------------------------+------+------------+----------+----------------------------+----------------------------+-----+-------+------------
   0 | row-00 |   0 | 1000000 | 5555500000 |  0.0001 | 3.14159265358979 |  12345678900000.000000 | f    | 2010-01-01 | 10:11:00 | 2013-07-13 21:00:05.000456 | 2013-07-13 21:00:05.000123 | abc |  def  | \x622d30
   1 | NIL    |   1 | 1000001 | 5555500001 |  1.0001 | 3.14159265358979 |  12345678900000.000001 | t    | 2010-01-02 | 10:11:01 | 2013-07-13 21:00:05.001456 | 2013-07-13 21:00:05.001123 | abc |  def  | \x622d31
@@ -30,7 +29,7 @@ SELECT id, name, sml, integ, bg, r, dp, dec, bool, cdate, ctime, tm, CAST(tmz AS
 (16 rows)
 
 SELECT id, name, sml, integ, bg, r, dp, dec, bool, cdate, ctime, tm, CAST(tmz AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tmz, c1, vc1, bin from pxf_primitive_types_rows_compressed_json_read ORDER BY id;
- id |  name  | sml |  integ  |     bg     |    r    |        dp        |          dec           | bool |   cdate    |  ctime   |             tm             |              tmz           | c1  |  vc1  |    bin
+ id |  name  | sml |  integ  |     bg     |    r    |        dp        |          dec           | bool |   cdate    |  ctime   |             tm             |            tmz             | c1  |  vc1  |    bin     
 ----+--------+-----+---------+------------+---------+------------------+------------------------+------+------------+----------+----------------------------+----------------------------+-----+-------+------------
   0 | row-00 |   0 | 1000000 | 5555500000 |  0.0001 | 3.14159265358979 |         12345678900000 | f    | 2010-01-01 | 10:11:00 | 2013-07-13 21:00:05.000456 | 2013-07-13 21:00:05.000123 | abc |  def  | \x622d30
   1 | NIL    |   1 | 1000001 | 5555500001 |  1.0001 | 3.14159265358979 |  12345678900000.000001 | t    | 2010-01-02 | 10:11:01 | 2013-07-13 21:00:05.001456 | 2013-07-13 21:00:05.001123 | abc |  def  | \x622d31
@@ -49,3 +48,4 @@ SELECT id, name, sml, integ, bg, r, dp, dec, bool, cdate, ctime, tm, CAST(tmz AS
  14 | row-14 |  14 | 1000014 | 5555500014 | 14.0001 | 3.14159265358979 | 12345678900000.0000014 | f    | 2010-01-15 | 10:11:14 | 2013-07-13 21:00:05.014456 | 2013-07-13 21:00:05.014123 | abc | NIL   | \x622d3134
  15 | row-15 |  15 | 1000015 | 5555500015 | 15.0001 | 3.14159265358979 | 12345678900000.0000015 | t    | 2010-01-16 | 10:11:15 | 2013-07-13 21:00:05.015456 | 2013-07-13 21:00:05.015123 | abc |  def  | NIL
 (16 rows)
+

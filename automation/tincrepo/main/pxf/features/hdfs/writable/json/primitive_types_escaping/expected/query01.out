@@ -1,16 +1,15 @@
 -- @description query01 for PXF HDFS Writable Json primitive types escaping
-
 -- start_matchsubs
 --
 -- # create a match/subs
 --
 -- end_matchsubs
-
 SELECT * from pxf_primitive_types_escaping_json_read ORDER BY id;
- id |  col space  |  text_escape   |  char_escape   | varchar_escape
+ id |  col space  |  text_escape   |  char_escape   | varchar_escape 
 ----+-------------+----------------+----------------+----------------
   1 | col space 1 | text           | char           | varchar
   2 | col space 2 | s"b\{},:[]     | s"b\{},:[]     | s"b\{},:[]
   3 | col space 3 | d""b\\{},:[]   | d""b\\{},:[]   | d""b\\{},:[]
   4 | col space 4 | t"""b\\\{},:[] | t"""b\\\{},:[] | t"""b\\\{},:[]
 (4 rows)
+
