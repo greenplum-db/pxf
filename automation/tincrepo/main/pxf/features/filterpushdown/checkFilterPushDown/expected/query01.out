@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF Hive filter pushdown case
 --
 -- start_matchsubs
@@ -19,31 +17,28 @@
 -- s/a1c23s1d1o5a1c23s2d10o5l1a0c25s1dBo5l0/a0c25s1dBo5a1c23s1d1o5a1c23s2d10o5l1l0/
 --
 -- end_matchsubs
-
 SET gp_external_enable_filter_pushdown = true;
-SET
 SET optimizer = off;
-SET
 SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
- t0 | a1 | b2 |       filtervalue
+ t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  A  |  0 | t  | a0c25s1dAo5a1c23s1d0o5l0
 (1 row)
 
 SELECT * FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
- t0 | a1 | b2 |       filtervalue
+ t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  B  |  1 | f  | a1c23s1d1o3a0c25s1dBo5l0
 (1 row)
 
 SELECT * FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
- t0 | a1 | b2 |              filtervalue
+ t0 | a1 | b2 |              filtervalue               
 ----+----+----+----------------------------------------
  B  |  1 | f  | a0c25s1dBo5a1c23s1d1o5a1c23s2d10o5l1l0
 (1 row)
 
 SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
- t0 | a1 | b2 |              filtervalue
+ t0 | a1 | b2 |              filtervalue              
 ----+----+----+---------------------------------------
  A  |  0 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
  B  |  1 | f  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
@@ -51,7 +46,7 @@ SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, 
 (3 rows)
 
 SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
- t0 | a1 | b2 |   filtervalue
+ t0 | a1 | b2 |   filtervalue    
 ----+----+----+------------------
  B  |  1 | f  | a2c16s4dtrueo0l2
  D  |  3 | f  | a2c16s4dtrueo0l2
@@ -61,21 +56,21 @@ SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
 (5 rows)
 
 SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
- t0 | a1 |          filtervalue
+ t0 | a1 |          filtervalue          
 ----+----+-------------------------------
  B  |  1 | a2c16s4dtrueo0l2a1c23s1d5o1l0
  D  |  3 | a2c16s4dtrueo0l2a1c23s1d5o1l0
 (2 rows)
 
 SELECT round(sqrt(a1)::numeric,5), filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
-  round  |          filtervalue
+  round  |          filtervalue          
 ---------+-------------------------------
  1.00000 | a1c23s1d5o1a2c16s4dtrueo0l2l0
  1.73205 | a1c23s1d5o1a2c16s4dtrueo0l2l0
 (2 rows)
 
 SELECT round(sqrt(a1)::numeric,5), filtervalue FROM test_filter WHERE b2 = false ORDER BY t0;
-  round  |   filtervalue
+  round  |   filtervalue    
 ---------+------------------
  1.00000 | a2c16s4dtrueo0l2
  1.73205 | a2c16s4dtrueo0l2
@@ -85,13 +80,13 @@ SELECT round(sqrt(a1)::numeric,5), filtervalue FROM test_filter WHERE b2 = false
 (5 rows)
 
 SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
- t0 | a1 | b2 |                 filtervalue
+ t0 | a1 | b2 |                 filtervalue                 
 ----+----+----+---------------------------------------------
  B  |  1 | f  | a2c16s4dtrueo0l2a1c23s1d1o5a1c23s2d10o5l1l0
 (1 row)
 
 SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
- t0 | a1 | b2 |                filtervalue
+ t0 | a1 | b2 |                filtervalue                 
 ----+----+----+--------------------------------------------
  A  |  0 | t  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
  B  |  1 | f  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
@@ -103,27 +98,26 @@ SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0
 (7 rows)
 
 SET optimizer = on;
-SET
 SELECT * FROM test_filter WHERE  t0 = 'A' and a1 = 0 ORDER BY t0, a1;
- t0 | a1 | b2 |       filtervalue
+ t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  A  |  0 | t  | a0c25s1dAo5a1c23s1d0o5l0
 (1 row)
 
 SELECT * FROM test_filter WHERE  t0 = 'B' AND a1 <= 1 ORDER BY t0, a1;
- t0 | a1 | b2 |       filtervalue
+ t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  B  |  1 | f  | a0c25s1dBo5a1c23s1d1o3l0
 (1 row)
 
 SELECT * FROM test_filter WHERE  t0 = 'B' AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
- t0 | a1 | b2 |              filtervalue
+ t0 | a1 | b2 |              filtervalue               
 ----+----+----+----------------------------------------
  B  |  1 | f  | a0c25s1dBo5a1c23s1d1o5a1c23s2d10o5l1l0
 (1 row)
 
 SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
- t0 | a1 | b2 |              filtervalue
+ t0 | a1 | b2 |              filtervalue              
 ----+----+----+---------------------------------------
  A  |  0 | t  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
  B  |  1 | f  | a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1
@@ -131,7 +125,7 @@ SELECT * FROM test_filter WHERE  t0 = 'B' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, 
 (3 rows)
 
 SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
- t0 | a1 | b2 |   filtervalue
+ t0 | a1 | b2 |   filtervalue    
 ----+----+----+------------------
  B  |  1 | f  | a2c16s4dtrueo0l2
  D  |  3 | f  | a2c16s4dtrueo0l2
@@ -141,21 +135,21 @@ SELECT * FROM test_filter WHERE  b2 = false ORDER BY t0, a1;
 (5 rows)
 
 SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
- t0 | a1 |          filtervalue
+ t0 | a1 |          filtervalue          
 ----+----+-------------------------------
  B  |  1 | a1c23s1d5o1a2c16s4dtrueo0l2l0
  D  |  3 | a1c23s1d5o1a2c16s4dtrueo0l2l0
 (2 rows)
 
 SELECT round(sqrt(a1)::numeric,5), filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
-  round  |          filtervalue
+  round  |          filtervalue          
 ---------+-------------------------------
  1.00000 | a1c23s1d5o1a2c16s4dtrueo0l2l0
  1.73205 | a1c23s1d5o1a2c16s4dtrueo0l2l0
 (2 rows)
 
 SELECT round(sqrt(a1)::numeric,5), filtervalue FROM test_filter WHERE b2 = false ORDER BY t0;
-  round  |   filtervalue
+  round  |   filtervalue    
 ---------+------------------
  1.00000 | a2c16s4dtrueo0l2
  1.73205 | a2c16s4dtrueo0l2
@@ -165,13 +159,13 @@ SELECT round(sqrt(a1)::numeric,5), filtervalue FROM test_filter WHERE b2 = false
 (5 rows)
 
 SELECT * FROM test_filter WHERE  b2 = false AND (a1 = 1 OR a1 = 10) ORDER BY t0, a1;
- t0 | a1 | b2 |                 filtervalue
+ t0 | a1 | b2 |                 filtervalue                 
 ----+----+----+---------------------------------------------
  B  |  1 | f  | a2c16s4dtrueo0l2a1c23s1d1o5a1c23s2d10o5l1l0
 (1 row)
 
 SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
- t0 | a1 | b2 |                filtervalue
+ t0 | a1 | b2 |                filtervalue                 
 ----+----+----+--------------------------------------------
  A  |  0 | t  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
  B  |  1 | f  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
@@ -181,3 +175,4 @@ SELECT * FROM test_filter WHERE  b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0
  H  |  7 | f  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
  J  |  9 | f  | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
 (7 rows)
+

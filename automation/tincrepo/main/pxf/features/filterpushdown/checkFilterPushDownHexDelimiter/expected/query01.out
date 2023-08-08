@@ -1,20 +1,16 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF Hive filter pushdown with hex delimiter
 SET gp_external_enable_filter_pushdown = true;
-SET
 SET optimizer = off;
-SET
 SELECT * FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
- t0 | a1 | b2 |       filtervalue
+ t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  J  |  9 | f  | a0c25s1dJo5a1c23s1d9o5l0
 (1 row)
 
 SET optimizer = on;
-SET
 SELECT * FROM test_filter WHERE t0 = 'J' and a1 = 9 ORDER BY t0, a1;
- t0 | a1 | b2 |       filtervalue
+ t0 | a1 | b2 |       filtervalue        
 ----+----+----+--------------------------
  J  |  9 | f  | a0c25s1dJo5a1c23s1d9o5l0
 (1 row)
+
