@@ -1,4 +1,5 @@
 -- @description query01 for Parquet pushdown
+set datestyle to 'ISO, MDY';
 
 -- no filter
 select id, name, cdate, amt, grade, b, CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm, bg, bin, sml, r, vc1, c1, dec1, dec2, dec3, num1 from parquet_types_hcfs_r;
