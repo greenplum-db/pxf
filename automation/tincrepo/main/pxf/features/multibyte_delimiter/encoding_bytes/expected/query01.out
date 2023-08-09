@@ -1,5 +1,4 @@
 -- @description query01 for PXF Multibyte delimiter encoding case with byte representation
-
 SELECT * from pxf_multibyte_encoding_bytes ORDER BY num1;
  num1 |                 word                 
 ------+--------------------------------------
@@ -7,3 +6,4 @@ SELECT * from pxf_multibyte_encoding_bytes ORDER BY num1;
     4 | tá sé seo le tástáil dea-
     5 | minden amire szüksége van a szeretet
 (3 rows)
+

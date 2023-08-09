@@ -1,5 +1,4 @@
--- @description query01 for PXF Multibyte delimiter, 2-byte delim with wrong quote cases
-
+-- @description query01 for PXF Multibyte delimiter, 2-byte delim with wrong quote case
 SELECT * from pxf_multibyte_twobyte_wrong_quote_data ORDER BY n1;
 ERROR:  Did not find expected `newline` character when `quote` value was provided
 HINT:  Check the format options in the table definition. Additionally, make sure there are no extraneous characters between the `quote` and `newline` values in the data.

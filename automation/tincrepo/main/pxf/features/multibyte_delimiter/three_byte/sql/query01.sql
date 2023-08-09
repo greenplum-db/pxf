@@ -1,4 +1,5 @@
 -- @description query01 for PXF Multibyte delimiter, 3-byte delim cases
+SET datestyle TO 'ISO, MDY';
 
 SELECT * from pxf_multibyte_threebyte_data ORDER BY n1;
 

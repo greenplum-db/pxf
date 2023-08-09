@@ -1,7 +1,4 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF Multibyte delimiter, no profile case
-
 SELECT * from pxf_multibyte_no_profile ORDER BY age;
 ERROR:  The "pxfdelimited_import" formatter only works with *:text or *:csv profiles.
 HINT:  Please double check the profile option in the external table definition.
