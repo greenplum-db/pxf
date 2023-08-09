@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF install test on small data
 -- start_matchsubs
 --
@@ -13,18 +11,18 @@
 -- start_ignore
 \c pxfautomation_extension
 -- end_ignore
-
 SELECT extversion FROM pg_extension WHERE extname = 'pxf';
- extversion
+ extversion 
 ------------
  2.1
 (1 row)
 
 SHOW dynamic_library_path;
- dynamic_library_path
+ dynamic_library_path 
 ----------------------
  $libdir
 (1 row)
+
 SELECT p.proname, p.prosrc, p.probin
 FROM pg_catalog.pg_extension AS e
     INNER JOIN pg_catalog.pg_depend AS d ON (d.refobjid = e.oid)
@@ -42,7 +40,7 @@ ORDER BY 1;
 (6 rows)
 
 SELECT * FROM pxf_upgrade_test ORDER BY num;
-  name  | num | dub |    longnum    | bool
+  name  | num | dub |    longnum    | bool 
 --------+-----+-----+---------------+------
  row_1  |   1 |   1 |  100000000000 | f
  row_2  |   2 |   2 |  200000000000 | t
@@ -57,7 +55,7 @@ SELECT * FROM pxf_upgrade_test ORDER BY num;
 (10 rows)
 
 SELECT * FROM pxf_upgrade_test_multibyte ORDER BY num;
-  name  | num | dub |    longnum    | bool
+  name  | num | dub |    longnum    | bool 
 --------+-----+-----+---------------+------
  row_1  |   1 |   1 |  100000000000 | f
  row_2  |   2 |   2 |  200000000000 | t
@@ -70,3 +68,4 @@ SELECT * FROM pxf_upgrade_test_multibyte ORDER BY num;
  row_9  |   9 |   9 |  900000000000 | f
  row_10 |  10 |  10 | 1000000000000 | t
 (10 rows)
+
