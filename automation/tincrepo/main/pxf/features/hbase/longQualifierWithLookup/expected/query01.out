@@ -1,5 +1,4 @@
 -- @description query01 for PXF HBase - long qualifier name with look up table
-
 SELECT * from long_qualifiers_hbase_table;
                                                                                     used_to_be_long                                                                                    |  short  
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------
@@ -14,3 +13,4 @@ SELECT * from long_qualifiers_hbase_table;
  long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_8 | short_8
  long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_long_9 | short_9
 (10 rows)
+

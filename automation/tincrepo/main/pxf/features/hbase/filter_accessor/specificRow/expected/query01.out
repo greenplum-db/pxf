@@ -1,7 +1,8 @@
 -- @description query01 for PXF HBase  - filter accessor - specific row
-
+SET datestyle TO 'ISO, MDY';
 SELECT * from hbase_pxf_with_filter;
  recordkey |    cf1:q1     |          cf1:q2          | cf1:q3 |     cf1:q4     | cf1:q5 | cf1:q6 | cf1:q7 | cf1:q8 |    cf1:q9     | cf1:q10 | cf1:q11 |         q12         
 -----------+---------------+--------------------------+--------+----------------+--------+--------+--------+--------+---------------+---------+---------+---------------------
  00000003  | ASCII00000003 | UTF8_計算機用語_00000003 |      4 | lookup00000006 |    3.3 | 3333.3 | #      |      3 | -270000000003 | f       |    1000 | 1970-01-01 00:00:18
 (1 row)
+

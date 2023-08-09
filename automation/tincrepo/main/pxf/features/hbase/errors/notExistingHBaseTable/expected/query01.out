@@ -1,5 +1,4 @@
--- @description query01 for PXF HBase not exists HBase table
-
+-- @description query01 for PXF HBase not existing HBase table
 -- start_matchsubs
 --
 -- # create a match/subs
@@ -13,4 +12,5 @@ ERROR:  PXF server error : dummy
 -- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
+
 DETAIL:  External table pxf_not_existing_hbase_table

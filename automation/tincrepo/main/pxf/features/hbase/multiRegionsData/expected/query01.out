@@ -1,7 +1,7 @@
 -- @description query01 for PXF HBase - multiple region data
-
 SELECT count(*) FROM pxf_hbase_table_multi_regions;
- count  
---------
+ count 
+-------
  30300
 (1 row)
+

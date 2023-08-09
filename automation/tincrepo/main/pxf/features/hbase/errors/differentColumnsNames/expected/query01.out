@@ -1,5 +1,4 @@
 -- @description query01 for PXF HBase different columns name case
-
 -- start_matchsubs
 --
 -- # create a match/subs
@@ -17,3 +16,4 @@ ERROR:  PXF server error : Illegal HBase column name q2, missing :
 HINT:  Check the PXF logs located in the 'log-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
 DETAIL:  External table pxf_hbase_different_columns_names
+

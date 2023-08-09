@@ -1,6 +1,6 @@
 -- @description query01 for PXF HBase empty table
-
 SELECT * from empty_hbase_table;
  recordkey | cf1:q1 | cf1:q2 | cf1:q3 
 -----------+--------+--------+--------
 (0 rows)
+

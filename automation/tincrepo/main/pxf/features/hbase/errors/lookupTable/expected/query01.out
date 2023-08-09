@@ -1,5 +1,4 @@
 -- @description query01 for PXF HBase negative test - lookup table
-
 -- start_matchsubs
 --
 -- # create a match/subs
@@ -17,8 +16,10 @@ ERROR:  PXF server error : Illegal HBase column name q12, missing :
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
 DETAIL:  External table pxf_hbase_table
+
 SELECT COUNT(*) FROM pxf_hbase_full_names;
- count
+ count 
 -------
    100
 (1 row)
+
