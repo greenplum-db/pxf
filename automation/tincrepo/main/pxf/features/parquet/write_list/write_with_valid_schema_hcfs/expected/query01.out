@@ -1,12 +1,9 @@
--- start_ignore
--- end_ignore
 -- @description query01 for writing Parquet List data with a valid schema file provided
 SET bytea_output=hex;
-SET
+SET datestyle TO 'ISO, MDY';
 \pset null 'NIL'
-Null display is "NIL".
 SELECT * FROM parquet_list_user_provided_schema_on_hcfs_read ORDER BY id;
- id |  bool_arr  | smallint_arr |         int_arr          |         bigint_arr         |       real_arr       |     double_arr     |                                  text_arr                                   |         bytea_arr         |               char_arr                |              varchar_arr              |      numeric_arr       |           date_arr
+ id |  bool_arr  | smallint_arr |         int_arr          |         bigint_arr         |       real_arr       |     double_arr     |                                  text_arr                                   |         bytea_arr         |               char_arr                |              varchar_arr              |      numeric_arr       |           date_arr           
 ----+------------+--------------+--------------------------+----------------------------+----------------------+--------------------+-----------------------------------------------------------------------------+---------------------------+---------------------------------------+---------------------------------------+------------------------+------------------------------
   1 | NIL        | {50}         | {1}                      | {1}                        | NIL                  | {1.7e+308}         | {"this is a test string"}                                                   | NIL                       | {"hello          "}                   | {hello}                               | {1.234500000000000000} | {2022-10-07}
   2 | {f,t,t,f}  | {}           | {2,3}                    | NIL                        | NIL                  | {1.1}              | {"this is a string with \"special\" characters","this is a string without"} | {}                        | {"this is exactly"," fifteen chars."} | {"this is exactly"," fifteen chars."} | {1.234500000000000000} | {2022-10-07}
@@ -15,3 +12,4 @@ SELECT * FROM parquet_list_user_provided_schema_on_hcfs_read ORDER BY id;
   5 | {t,f}      | NIL          | {}                       | {NULL,9223372036854775807} | {6.7,-8,NULL}        | NIL                | NIL                                                                         | {"\\x5c5c5c",NULL}        | {"specials \\ \"   "}                 | {"specials \\ \""}                    | {1.234500000000000000} | NIL
   6 | {t,f,NULL} | {0,127,-128} | {2147483647,-2147483648} | {1,NULL,300}               | {1e-14}              | {NULL,8.431,-1.56} | {"this is a test string with \\ and \"",NULL}                               | {"\\x313233","\\x343536"} | {"test string    ",NULL}              | {"test string",NULL}                  | {1.234500000000000000} | {2022-10-07,2012-01-01}
 (6 rows)
+

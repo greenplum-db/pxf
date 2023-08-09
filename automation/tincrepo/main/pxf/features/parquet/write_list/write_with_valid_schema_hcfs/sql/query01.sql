@@ -1,5 +1,6 @@
 -- @description query01 for writing Parquet List data with a valid schema file provided
 SET bytea_output=hex;
+SET datestyle TO 'ISO, MDY';
 
 \pset null 'NIL'
 
