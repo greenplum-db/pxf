@@ -1,5 +1,4 @@
 -- @description query01 for PXF hive RC mismatched types
-
 -- start_matchsubs
 --                                                                                               
 -- # create a match/subs
@@ -22,4 +21,5 @@ ERROR:  PXF server error : org.greenplum.pxf.api.error.UnsupportedTypeException:
 -- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
+
 DETAIL:  External table gpdb_hive_types, file pxf://hive_types_rc?FRAGMENTER=org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hive.HiveRCFileAccessor&RESOLVER=org.greenplum.pxf.plugins.hive.HiveColumnarSerdeResolver
