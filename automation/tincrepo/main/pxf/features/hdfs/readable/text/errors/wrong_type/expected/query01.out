@@ -11,7 +11,6 @@
 -- s/, line 51 of.*//
 --
 -- end_matchsubs
-
 SELECT * FROM bad_text ORDER BY num ASC;
 ERROR:  invalid input syntax for type integer: "joker"
 DETAIL:  External table bad_text, line 51 of pxf://pxf_automation_data/data?PROFILE=HdfsTextSimple, column num

@@ -1,5 +1,3 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF test for cloud access where server is specified, no credentials are specified, and configuration file contains invalid credentials running alongside an HDFS setup
 --
 -- start_matchsubs
@@ -27,4 +25,5 @@ ERROR:  PXF server error : com.amazonaws.services.s3.model.AmazonS3Exception: Fo
 -- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
+
 DETAIL:  External table cloudaccess_server_no_credentials_invalid_config_with_hdfs, file pxf_automation_data

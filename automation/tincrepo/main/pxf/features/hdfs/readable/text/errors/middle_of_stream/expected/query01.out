@@ -12,7 +12,7 @@
 --
 -- m/libchurl\.c/
 -- s/libchurl\.c:\d+/libchurl\.c:xxx/
---
+  
 -- end_matchsubs
 SELECT * FROM error_on_10000 ORDER BY num ASC;
 ERROR:  transfer error (18): Transferred a partial file from 'SOME_IP:SOME_PORT' (libchurl.c:xxx)

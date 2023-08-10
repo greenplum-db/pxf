@@ -1,5 +1,4 @@
 -- @description query01 for PXF HDFS Readable Json with missing identifier test cases
-
 SELECT * from jsontest_missing_identifier ORDER BY id;
            created_at           |         id         | text  | user.screen_name | entities.hashtags[0] | coordinates.coordinates[0] | coordinates.coordinates[1] 
 --------------------------------+--------------------+-------+------------------+----------------------+----------------------------+----------------------------

@@ -1,5 +1,4 @@
 -- @description query01 for PXF HDFS Readable error table breached
-
 -- start_matchsubs
 --
 -- m/DETAIL/
@@ -21,7 +20,6 @@
 -- s/column num:.*/column num/
 --
 -- end_matchsubs
-
 SELECT * FROM err_table_test ORDER BY num ASC;
 ERROR: segment reject limit reached
 CONTEXT:  External table err_table_test, line 7 of pxf://pxf_automation_data/data?PROFILE=HdfsTextSimple, column num

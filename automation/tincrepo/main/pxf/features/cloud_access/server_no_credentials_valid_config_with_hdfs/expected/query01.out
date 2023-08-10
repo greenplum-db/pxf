@@ -1,9 +1,7 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF test for cloud access where server is specified, no credentials are specified, and configuration file exists running alongside an HDFS setup
 --
 SELECT * FROM cloudaccess_server_no_credentials_valid_config_with_hdfs ORDER BY name;
-name   | num | dub |    longnum     | bool
+  name   | num | dub |    longnum     | bool 
 ---------+-----+-----+----------------+------
  row_1   |   1 |   1 |   100000000000 | f
  row_10  |  10 |  10 |  1000000000000 | t
@@ -106,3 +104,4 @@ name   | num | dub |    longnum     | bool
  row_98  |  98 |  98 |  9800000000000 | t
  row_99  |  99 |  99 |  9900000000000 | f
 (100 rows)
+

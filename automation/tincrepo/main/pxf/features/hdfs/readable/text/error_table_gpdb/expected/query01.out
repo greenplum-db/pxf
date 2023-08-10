@@ -25,8 +25,8 @@ NOTICE:  found 4 data formatting errors (4 or more input rows), rejected related
 (10 rows)
 
 SELECT relname, filename, linenum, errmsg, rawdata FROM  gp_read_error_log('err_table_test') ORDER BY linenum ASC;
-    relname     |                               filename                                | linenum |                              errmsg                              |           rawdata
-----------------+-----------------------------------------------------------------------+---------+------------------------------------------------------------------+------------------------------
+    relname     |                                         filename                                          | linenum |                                errmsg                                 |           rawdata            
+----------------+-------------------------------------------------------------------------------------------+---------+-----------------------------------------------------------------------+------------------------------
  err_table_test | pxf-location |       1 | invalid input syntax for integer: "All Together Now", column num | All Together Now,The Beatles
  err_table_test | pxf-location |       6 | invalid input syntax for integer: "can", column num              | can,I
  err_table_test | pxf-location |       7 | invalid input syntax for integer: "have", column num             | have,a
