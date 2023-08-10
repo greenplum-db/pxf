@@ -2,8 +2,9 @@
 -- end_ignore
 -- @description query01 test CSV with headers, using header names to access data, and no compression
 --
+SET datestyle TO 'ISO, MDY';
 SELECT l_orderkey, l_partkey, l_commitdate FROM s3select_csv_use_headers WHERE l_orderkey = 194 OR l_orderkey = 82756;
- l_orderkey | l_partkey | l_commitdate
+ l_orderkey | l_partkey | l_commitdate 
 ------------+-----------+--------------
         194 |        39 | 1992-05-22
         194 |      2753 | 1992-05-18
@@ -18,3 +19,4 @@ SELECT l_orderkey, l_partkey, l_commitdate FROM s3select_csv_use_headers WHERE l
       82756 |      1709 | 1998-04-26
       82756 |       218 | 1998-05-23
 (12 rows)
+

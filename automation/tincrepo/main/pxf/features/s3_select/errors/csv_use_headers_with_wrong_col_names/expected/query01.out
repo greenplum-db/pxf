@@ -30,4 +30,5 @@ ERROR:  PXF server error : Some headers in the query are missing from the file. 
 -- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
+
 DETAIL:  External table s3select_csv_use_headers_with_wrong_col_names, file pxf://pxf_automation_data/s3select/sample.csv?PROFILE=s3:csv&FILE_HEADER=USE&S3_SELECT=ON&server=s3
