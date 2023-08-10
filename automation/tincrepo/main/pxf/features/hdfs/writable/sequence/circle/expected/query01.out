@@ -1,8 +1,8 @@
 -- @description query01 for PXF HDFS Readable Sequence circle type
-
 SELECT * from pxf_sequence_circle_type_r ORDER BY a1;
  a1 |     c1     
 ----+------------
   1 | <(3,3),9>
   2 | <(4,4),16>
 (2 rows)
+

@@ -1,5 +1,5 @@
 -- @description query01 for PXF HDFS Readable Sequence with text recordkey 
-
+SET datestyle TO 'ISO, MDY';
 SELECT * from pxf_recordkey_text_type_r ORDER BY num1;
  recordkey  |           tmp1           | num1 | num2 | num3 | num4 |               t1                |               t2                |               t3                |               t4                |               t5                |        t6         | dub1 | dub2 | dub3 | ft1  | ft2  | ft3  | ln1  | ln2  | ln3 | bool1 | bool2 | bool3 | short1 | short2 | short3 | short4 | short5 |    bt    
 ------------+--------------------------+------+------+------+------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------+------+------+------+------+------+------+------+------+-----+-------+-------+-------+--------+--------+--------+--------+--------+----------
@@ -53,3 +53,4 @@ SELECT * from pxf_recordkey_text_type_r ORDER BY num1;
  000048     | 1919-06-28 23:59:59.2233 |  480 |  960 |  480 |  960 | strings_array_member_number___1 | strings_array_member_number___2 | strings_array_member_number___3 | strings_array_member_number___4 | strings_array_member_number___5 | short_string___48 |  480 |  960 |  530 | 1104 | 2208 | 1104 | 1440 | 1920 | 485 | f     | t     | f     |     60 |     60 |     60 |     60 |    100 | Writable
  000049     | 1919-06-28 23:59:59.2233 |  490 |  980 |  490 |  980 | strings_array_member_number___1 | strings_array_member_number___2 | strings_array_member_number___3 | strings_array_member_number___4 | strings_array_member_number___5 | short_string___49 |  490 |  980 |  540 | 1127 | 2254 | 1127 | 1470 | 1960 | 495 | f     | t     | f     |     80 |     80 |     80 |     80 |    100 | Writable
 (49 rows)
+
