@@ -1,10 +1,8 @@
--- start_ignore
--- end_ignore
 -- @description query01 for PXF Hive ORC vectorized with repeating data cases
+SET datestyle TO 'ISO, MDY';
 \pset null 'NIL'
-Null display is "NIL".
 SELECT * FROM pxf_hive_orc_vectorize_repeating_no_nulls ORDER BY t1;
-  t1  |  t2  | num1 | dub1 |  dec1   |  r  |    bg    | b | tn | sml |     dt     | vc1  | c1  | bin
+  t1  |  t2  | num1 | dub1 |  dec1   |  r  |    bg    | b | tn | sml |     dt     | vc1  | c1  | bin 
 ------+------+------+------+---------+-----+----------+---+----+-----+------------+------+-----+-----
  col1 | col2 |    1 |    6 | 1.23456 | 7.7 | 23456789 | f |  1 |  10 | 2015-03-06 | abcd | abc | 1
  col1 | col2 |    1 |    6 | 1.23456 | 7.7 | 23456789 | f |  1 |  10 | 2015-03-06 | abcd | abc | 1
@@ -19,7 +17,7 @@ SELECT * FROM pxf_hive_orc_vectorize_repeating_no_nulls ORDER BY t1;
 (10 rows)
 
 SELECT * FROM pxf_hive_orc_vectorize_repeating_nulls ORDER BY t1;
- t1  | t2  | num1 | dub1 | dec1 |  r  | bg  |  b  | tn  | sml | dt  | vc1 | c1  | bin
+ t1  | t2  | num1 | dub1 | dec1 |  r  | bg  |  b  | tn  | sml | dt  | vc1 | c1  | bin 
 -----+-----+------+------+------+-----+-----+-----+-----+-----+-----+-----+-----+-----
  NIL | NIL |  NIL |  NIL |  NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL
  NIL | NIL |  NIL |  NIL |  NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL
@@ -32,3 +30,4 @@ SELECT * FROM pxf_hive_orc_vectorize_repeating_nulls ORDER BY t1;
  NIL | NIL |  NIL |  NIL |  NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL
  NIL | NIL |  NIL |  NIL |  NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL | NIL
 (10 rows)
+

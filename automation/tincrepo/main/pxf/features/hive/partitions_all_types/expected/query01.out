@@ -1,4 +1,5 @@
 -- @description query01 for PXF Hive table with multiple partitions
+SET datestyle TO 'ISO, MDY';
 SELECT * FROM hive_partitions_all_types ORDER BY t1;
           t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
@@ -287,3 +288,4 @@ SELECT * FROM hive_partitions_all_types WHERE bin = '31'::bytea ORDER BY t1;
  row23_varchar_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 31
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 31
 (15 rows)
+

@@ -10,7 +10,6 @@
 -- s/DETAIL/CONTEXT/
 --
 -- end_matchsubs
-
 SELECT * FROM pxf_hive_partitioned_table_acid ORDER BY fmt, t1;
 ERROR:  PXF server error : java.lang.UnsupportedOperationException: PXF does not support Hive transactional tables
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.

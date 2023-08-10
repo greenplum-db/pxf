@@ -1,17 +1,17 @@
 -- @description query01 for PXF Hive table with 30k partitions
-
 -- fast test - reads only one fragment
 SELECT * FROM hive_30k_parts WHERE date_i = '2015-01-01' ORDER BY i;
- i  |    date    
-----+------------
-  5 | 2015-01-01
-  6 | 2015-01-01
+ i |   date_i   
+---+------------
+ 5 | 2015-01-01
+ 6 | 2015-01-01
 (2 rows)
 
 -- slow test - reads 30,001 fragments
 SELECT * FROM hive_30k_parts ORDER BY i;
- i  |    date    
-----+------------
-  5 | 2015-01-01
-  6 | 2015-01-01
+ i |   date_i   
+---+------------
+ 5 | 2015-01-01
+ 6 | 2015-01-01
 (2 rows)
+

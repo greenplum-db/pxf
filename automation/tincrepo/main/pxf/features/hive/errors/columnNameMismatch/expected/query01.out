@@ -15,4 +15,5 @@ ERROR:  PXF server error : column 's2' does not exist in the Hive schema
 -- start_ignore
 HINT:  Ensure the column exists and check the column name spelling and case. Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
+
 CONTEXT:  External table pxf_hive_small_data
