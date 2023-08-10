@@ -21,12 +21,13 @@ ERROR:  PXF server error : java.lang.OutOfMemoryError: Java heap space
 -- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
+
 CONTEXT:  External table test_out_of_memory, file pxf://dummy_path?FRAGMENTER=org.greenplum.pxf.automation.testplugin.OutOfMemoryFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hdfs.LineBreakAccessor&RESOLVER=org.greenplum.pxf.plugins.hdfs.StringPassResolver
 -- wait until the JVM has been killed
 SELECT pg_sleep(3);
- pg_sleep
+ pg_sleep 
 ----------
-
+ 
 (1 row)
 
 -- We expect to see a Failed to connect error
@@ -35,4 +36,5 @@ ERROR:  PXF server error : Failed to connect to server, must be down
 -- start_ignore
 HINT:  Use the 'pxf [cluster] start' command to start the PXF service.
 -- end_ignore
+
 CONTEXT:  External table test_out_of_memory, file pxf://dummy_path?FRAGMENTER=org.greenplum.pxf.automation.testplugin.OutOfMemoryFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hdfs.LineBreakAccessor&RESOLVER=org.greenplum.pxf.plugins.hdfs.StringPassResolver
