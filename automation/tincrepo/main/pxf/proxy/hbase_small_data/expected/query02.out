@@ -6,14 +6,10 @@
 -- s/.*//g
 --
 -- end_matchsubs
-
 GRANT ALL ON TABLE pxf_proxy_hbase_small_data_allowed TO PUBLIC;
-GRANT
 \set OLD_GP_USER :USER
 DROP ROLE IF EXISTS testuser;
-DROP ROLE
 CREATE ROLE testuser LOGIN;
-CREATE ROLE
 \connect - testuser
 SELECT name, num FROM pxf_proxy_hbase_small_data_allowed WHERE num > 50 ORDER BY name;
   name   | num 
@@ -72,4 +68,3 @@ SELECT name, num FROM pxf_proxy_hbase_small_data_allowed WHERE num > 50 ORDER BY
 
 \connect - :OLD_GP_USER
 DROP ROLE IF EXISTS testuser;
-DROP ROLE

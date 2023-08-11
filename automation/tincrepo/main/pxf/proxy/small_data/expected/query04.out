@@ -27,6 +27,7 @@ ERROR:  PXF server error : Permission denied: user=foobar, access=READ, inode=SO
 -- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
+
 DETAIL:  External table pxf_proxy_small_data_allowed_no_impersonation, file pxf://pxf_automation_data/proxy/NON_IMPERSONATED_USER/data.txt?PROFILE=hdfs:text&SERVER=default-no-impersonation
 \set OLD_GP_USER :USER
 DROP ROLE IF EXISTS testuser;
