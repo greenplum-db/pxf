@@ -3,6 +3,8 @@
 -- s/( +):/\1|/
 -- m/\+$/
 -- s/\+$//
+-- m/^NOTICE:  found \d+ data formatting errors.*/
+-- s/.*/NOTICE:  Found 1 data formatting errors (1 or more input rows). Rejected related input data./
 -- end_matchsubs
 -- @description query01 for PXF HDFS Readable Json with malformed record test cases
 SELECT *
@@ -19,42 +21,42 @@ SELECT relname, errmsg
 FROM gp_read_error_log('jsontest_malformed_record_with_reject_limit');
                    relname                   |                                                                errmsg                                                                 
 ---------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------
- jsontest_malformed_record_with_reject_limit | error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate Object entries
-                                             :  at [Source: (String)"{
-                                             :       "record":
-                                             :         "created_at":"Fri Jun 07 22:45:02 +0000 2013",
-                                             :         "id":343136547123646465,
-                                             :         "id_str":"343136547123646465",
-                                             :         "text":"text2",
-                                             :         "source":"\u003ca href=\"http:\/\/twitter.com\/download\/android\" rel=\"nofollow\"\u003eTwitter for Android\u003c\/a\u003e",
-                                             :         "user":{
-                                             :           "id":102904200,
-                                             :           "id_str":"102904200",
-                                             :           "name":"Ardianto",
-                                             :           "screen_name":"patronusdeadly",
-                                             :           "location":"Bekasi-Surabaya"
-                                             :         },
-                                             :  "[truncated 73 chars]; line: 3, column: 22]'. invalid JSON record
-                                             : {
-                                             :       "record":
-                                             :         "created_at":"Fri Jun 07 22:45:02 +0000 2013",
-                                             :         "id":343136547123646465,
-                                             :         "id_str":"343136547123646465",
-                                             :         "text":"text2",
-                                             :         "source":"\u003ca href=\"http:\/\/twitter.com\/download\/android\" rel=\"nofollow\"\u003eTwitter for Android\u003c\/a\u003e",
-                                             :         "user":{
-                                             :           "id":102904200,
-                                             :           "id_str":"102904200",
-                                             :           "name":"Ardianto",
-                                             :           "screen_name":"patronusdeadly",
-                                             :           "location":"Bekasi-Surabaya"
-                                             :         },
-                                             :         "entities":{
-                                             :           "hashtags":[
-                                             :
-                                             :           ]
-                                             :         }
-                                             :       }
+ jsontest_malformed_record_with_reject_limit | error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate Object entries                +
+                                             |  at [Source: (String)"{                                                                                                              +
+                                             |       "record":                                                                                                                      +
+                                             |         "created_at":"Fri Jun 07 22:45:02 +0000 2013",                                                                               +
+                                             |         "id":343136547123646465,                                                                                                     +
+                                             |         "id_str":"343136547123646465",                                                                                               +
+                                             |         "text":"text2",                                                                                                              +
+                                             |         "source":"\u003ca href=\"http:\/\/twitter.com\/download\/android\" rel=\"nofollow\"\u003eTwitter for Android\u003c\/a\u003e",+
+                                             |         "user":{                                                                                                                     +
+                                             |           "id":102904200,                                                                                                            +
+                                             |           "id_str":"102904200",                                                                                                      +
+                                             |           "name":"Ardianto",                                                                                                         +
+                                             |           "screen_name":"patronusdeadly",                                                                                            +
+                                             |           "location":"Bekasi-Surabaya"                                                                                               +
+                                             |         },                                                                                                                           +
+                                             |  "[truncated 73 chars]; line: 3, column: 22]'. invalid JSON record                                                                   +
+                                             | {                                                                                                                                    +
+                                             |       "record":                                                                                                                      +
+                                             |         "created_at":"Fri Jun 07 22:45:02 +0000 2013",                                                                               +
+                                             |         "id":343136547123646465,                                                                                                     +
+                                             |         "id_str":"343136547123646465",                                                                                               +
+                                             |         "text":"text2",                                                                                                              +
+                                             |         "source":"\u003ca href=\"http:\/\/twitter.com\/download\/android\" rel=\"nofollow\"\u003eTwitter for Android\u003c\/a\u003e",+
+                                             |         "user":{                                                                                                                     +
+                                             |           "id":102904200,                                                                                                            +
+                                             |           "id_str":"102904200",                                                                                                      +
+                                             |           "name":"Ardianto",                                                                                                         +
+                                             |           "screen_name":"patronusdeadly",                                                                                            +
+                                             |           "location":"Bekasi-Surabaya"                                                                                               +
+                                             |         },                                                                                                                           +
+                                             |         "entities":{                                                                                                                 +
+                                             |           "hashtags":[                                                                                                               +
+                                             |                                                                                                                                      +
+                                             |           ]                                                                                                                          +
+                                             |         }                                                                                                                            +
+                                             |       }
 (1 row)
 
 SELECT *

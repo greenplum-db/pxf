@@ -29,7 +29,7 @@ FROM pg_catalog.pg_extension AS e
     INNER JOIN pg_catalog.pg_proc AS p ON (p.oid = d.objid)
 WHERE d.deptype = 'e' AND e.extname = 'pxf'
 ORDER BY 1;
-       proname       |            prosrc            |             probin               
+       proname       |            prosrc            |              probin              
 ---------------------+------------------------------+----------------------------------
  pxf_read            | pxfprotocol_import           | $PXF_HOME/gpextable/pxf
  pxf_validate        | pxfprotocol_validate_urls    | $PXF_HOME/gpextable/pxf
@@ -68,3 +68,4 @@ SELECT * FROM pxf_upgrade_test_multibyte ORDER BY num;
  row_9  |   9 |   9 |  900000000000 | f
  row_10 |  10 |  10 | 1000000000000 | t
 (10 rows)
+
