@@ -8,13 +8,13 @@
 --
 -- end_matchsubs
 SELECT extname, extversion FROM pg_catalog.pg_extension WHERE extname = 'pxf';
- extname | extversion
+ extname | extversion 
 ---------+------------
  pxf     | 2.1
 (1 row)
 
 SELECT * FROM pxf_gpupgrade_test;
-  name  | num | dub |    longnum    | bool
+  name  | num | dub |    longnum    | bool 
 --------+-----+-----+---------------+------
  row_1  |   1 |   1 |  100000000000 | f
  row_2  |   2 |   2 |  200000000000 | t
@@ -29,7 +29,7 @@ SELECT * FROM pxf_gpupgrade_test;
 (10 rows)
 
 SHOW dynamic_library_path;
- dynamic_library_path
+ dynamic_library_path 
 ----------------------
  $libdir
 (1 row)
@@ -40,7 +40,7 @@ FROM pg_catalog.pg_extension AS e
     INNER JOIN pg_catalog.pg_proc AS p ON (p.oid = d.objid)
 WHERE d.deptype = 'e' AND e.extname = 'pxf'
 ORDER BY 1;
-       proname       |            prosrc            |             probin
+       proname       |            prosrc            |              probin              
 ---------------------+------------------------------+----------------------------------
  pxf_read            | pxfprotocol_import           | $PXF_HOME/gpextable/pxf
  pxf_validate        | pxfprotocol_validate_urls    | $PXF_HOME/gpextable/pxf
