@@ -3,7 +3,7 @@
 -- start_matchsubs
 --
 -- m/.*WARNING.*/
--- s/^.*//
+-- s/^.*\n//
 --
 -- m/^CONTEXT.*/
 -- s/CONTEXT.*//

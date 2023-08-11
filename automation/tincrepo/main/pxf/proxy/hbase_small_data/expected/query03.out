@@ -28,4 +28,3 @@ HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or '
 DETAIL:  External table pxf_proxy_hbase_small_data_prohibited
 \connect - :OLD_GP_USER
 DROP ROLE IF EXISTS testuser;
-

@@ -1,1 +1,3 @@
-test: query01 query02
+# these queries cannot run concurrently because each creates/drops the same role
+test: query01
+test: query02
