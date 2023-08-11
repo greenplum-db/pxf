@@ -1,4 +1,5 @@
 -- @description query01 for PXF multi user config driven test
+SET datestyle TO 'ISO, MDY';
 
 -- start_matchsubs
 --
@@ -15,9 +16,11 @@ CREATE ROLE testuser LOGIN;
 SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin, 'escape') FROM pxf_jdbc_readable ORDER BY t1;
 
 \connect - testuser
+SET datestyle TO 'ISO, MDY';
 SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin, 'escape') FROM pxf_jdbc_readable ORDER BY t1;
 
 \connect - :OLD_GP_USER
+SET datestyle TO 'ISO, MDY';
 SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin, 'escape') FROM pxf_jdbc_readable ORDER BY t1;
 
 DROP ROLE IF EXISTS testuser;
