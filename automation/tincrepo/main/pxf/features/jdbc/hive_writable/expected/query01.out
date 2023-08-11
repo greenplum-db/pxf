@@ -1,13 +1,12 @@
--- @description query01 for JDBC Hive writable query
+-- @description query01 for JDBC Hive writing
 SELECT * FROM pxf_jdbc_hive_readable ORDER BY t1;
- t1 | t2 | num1 | dub1 | r | bg | b | tn | sml | vc1 | c1
+ t1 | t2 | num1 | dub1 | r | bg | b | tn | sml | vc1 | c1 
 ----+----+------+------+---+----+---+----+-----+-----+----
 (0 rows)
 
 INSERT INTO pxf_jdbc_hive_writable SELECT * FROM jdbc_write_hive_supported_types;
-INSERT 0 21
 SELECT * FROM jdbc_write_hive_supported_types ORDER BY t1;
-         t1          |  t2  |    num1     |         dub1         |    r    |          bg          | b |  tn  |  sml   |  vc1  | c1
+         t1          |  t2  |    num1     |         dub1         |    r    |          bg          | b |  tn  |  sml   |  vc1  | c1  
 ---------------------+------+-------------+----------------------+---------+----------------------+---+------+--------+-------+-----
  row1                | s_6  |           1 |     123456.987654321 |     7.7 |  9223372036854775807 | f |  127 |     10 | abcd  | USD
  row10               | s_15 |          10 |                   15 |     7.7 |             23456789 | t |   10 |   1000 | abcde | USD
@@ -22,7 +21,7 @@ SELECT * FROM jdbc_write_hive_supported_types ORDER BY t1;
  row19_smallint_null | s_16 |          11 |                   37 |     7.7 |             23456789 | f |   11 |        | abcde | USD
  row2                | s_7  |           2 | 9.00719925474099e+15 |    8.07 | -9223372036854775808 | t | -128 |     20 | abcde | USD
  row20_varchar_null  | s_16 |          11 |                   37 |     7.7 |             23456789 | f |   11 |   1100 |       | EUR
- row21_char_null     | s_16 |          11 |                   37 |     7.7 |             23456789 | f |   11 |   1100 | abcde |
+ row21_char_null     | s_16 |          11 |                   37 |     7.7 |             23456789 | f |   11 |   1100 | abcde | 
  row3                | s_8  |           3 |                1e-14 |   9.007 |             23456789 | f |    3 | -32768 | abcde | USD
  row4                | s_9  |           4 |    -123456.987654321 | 10.0007 |             23456789 | t |    4 |  32767 | abcde | USD
  row5                | s_10 |           5 | 9.00719925474099e+15 | 11.0001 |             23456789 | f |    5 |    500 | abcde | USD
@@ -31,8 +30,9 @@ SELECT * FROM jdbc_write_hive_supported_types ORDER BY t1;
  row8                | s_13 |           8 |                   13 |     7.7 |             23456789 | t |    8 |    800 | abcde | EUR
  row9                | s_14 |           9 |                   14 |     7.7 |             23456789 | f |    9 |    900 | abcde | UAH
 (21 rows)
+
 SELECT * FROM pxf_jdbc_hive_readable ORDER BY t1;
-         t1          |  t2  |    num1     |         dub1         |    r    |          bg          | b |  tn  |  sml   |  vc1  | c1
+         t1          |  t2  |    num1     |         dub1         |    r    |          bg          | b |  tn  |  sml   |  vc1  | c1  
 ---------------------+------+-------------+----------------------+---------+----------------------+---+------+--------+-------+-----
  row1                | s_6  |           1 |     123456.987654321 |     7.7 |  9223372036854775807 | f |  127 |     10 | abcd  | USD
  row10               | s_15 |          10 |                   15 |     7.7 |             23456789 | t |   10 |   1000 | abcde | USD
@@ -47,7 +47,7 @@ SELECT * FROM pxf_jdbc_hive_readable ORDER BY t1;
  row19_smallint_null | s_16 |          11 |                   37 |     7.7 |             23456789 | f |   11 |        | abcde | USD
  row2                | s_7  |           2 | 9.00719925474099e+15 |    8.07 | -9223372036854775808 | t | -128 |     20 | abcde | USD
  row20_varchar_null  | s_16 |          11 |                   37 |     7.7 |             23456789 | f |   11 |   1100 |       | EUR
- row21_char_null     | s_16 |          11 |                   37 |     7.7 |             23456789 | f |   11 |   1100 | abcde |
+ row21_char_null     | s_16 |          11 |                   37 |     7.7 |             23456789 | f |   11 |   1100 | abcde | 
  row3                | s_8  |           3 |                1e-14 |   9.007 |             23456789 | f |    3 | -32768 | abcde | USD
  row4                | s_9  |           4 |    -123456.987654321 | 10.0007 |             23456789 | t |    4 |  32767 | abcde | USD
  row5                | s_10 |           5 | 9.00719925474099e+15 | 11.0001 |             23456789 | f |    5 |    500 | abcde | USD
@@ -56,3 +56,4 @@ SELECT * FROM pxf_jdbc_hive_readable ORDER BY t1;
  row8                | s_13 |           8 |                   13 |     7.7 |             23456789 | t |    8 |    800 | abcde | EUR
  row9                | s_14 |           9 |                   14 |     7.7 |             23456789 | f |    9 |    900 | abcde | UAH
 (21 rows)
+

@@ -1,6 +1,7 @@
--- @description query03 for JDBC Hive query with date filter
+-- @description query04 for JDBC Hive query with date filter
+SET datestyle TO 'ISO, MDY';
 SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER BY n1, s1;
-          s1          | n1 |     dt
+          s1          | n1 |     dt     
 ----------------------+----+------------
  row1                 |  1 | 2015-03-06
  row2                 |  2 | 2015-03-06
@@ -26,3 +27,4 @@ SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER B
  row15_decimal_null   | 12 | 2015-03-06
  row13_int_null       |    | 2015-03-06
 (23 rows)
+
