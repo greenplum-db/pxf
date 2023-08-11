@@ -1,5 +1,9 @@
 # Global matchsubs
 -- start_matchsubs
+# Ignore Notice messages
+m/^NOTICE:.*/
+s/NOTICE/GP_IGNORE: NOTICE/
+
 # Ignore Warning messages
 m/^WARNING:.*/
 s/WARNING/GP_IGNORE: WARNING/
