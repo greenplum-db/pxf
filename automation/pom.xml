@@ -287,7 +287,7 @@
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-storage</artifactId>
-            <version>5.4.0</version>
+            <version>5.5.0</version>
         </dependency>
 
         <!-- HADOOP Dependencies -->

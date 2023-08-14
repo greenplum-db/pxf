@@ -75,7 +75,7 @@ configure(javaProjects) {
             dependency("com.google.guava:guava:20.0")
             dependency("com.google.protobuf:protobuf-java:2.5.0")
             dependency("com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.17")
-            dependency("com.microsoft.azure:azure-storage:5.4.0")
+            dependency("com.microsoft.azure:azure-storage:5.5.0")
             dependency("com.microsoft.azure:azure-data-lake-store-sdk:2.3.9")
             dependency("com.univocity:univocity-parsers:2.9.1")
             dependency("com.yammer.metrics:metrics-core:2.2.0")
