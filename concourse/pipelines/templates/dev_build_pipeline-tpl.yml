@@ -73,7 +73,7 @@ anchors:
 ## ======================================================================
 resource_types:
 
-{% if multinode or multinode_no_impersonation or file or gp7_cli %}
+{% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
 - name: terraform
   type: registry-image
   source:
@@ -83,7 +83,7 @@ resource_types:
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endif %}
 
-{% if multinode %}
+{% if multinode or gp7_multinode %}
 - name: terraform-0.14.10
   type: registry-image
   source:
@@ -169,7 +169,7 @@ resources:
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
-{% if multinode or multinode_no_impersonation or file or gp7_cli %}
+{% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
 - name: ccp_src
   type: git
   source:
@@ -236,7 +236,7 @@ resources:
 {% endif %}
 {% set gp_ver = None %}
 
-{% if multinode or multinode_no_impersonation or ambari or file or gp7_cli %}
+{% if multinode or multinode_no_impersonation or ambari or file or gp7_cli or gp7_multinode %}
 - name: ccp-7-image
   type: registry-image
   icon: docker
@@ -350,7 +350,7 @@ resources:
 {% endfor %}
 
 ## ---------- Auxiliary Resources ----------
-{% if multinode or multinode_no_impersonation or file or gp7_cli %}
+{% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
 - name: terraform
   type: terraform
   source:
@@ -368,7 +368,7 @@ resources:
       bucket_path: ((tf-bucket-path))
 {% endif %}
 
-{% if multinode %}
+{% if multinode or gp7_multinode %}
 - name: terraform_ipa_hadoop
   type: terraform-0.14.10
   source:
@@ -1431,3 +1431,150 @@ jobs:
     <<: *slack_alert
 {% endif %}
 {% endif %}
+
+## ---------- Multi-node test for GP7 ----------
+{% if gp7_multinode %}
+{% set gp_ver = 7 %}
+- name: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
+  max_in_flight: 2
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_gp[[gp_ver]]_tarball_rhel8
+      passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+      passed: [Build PXF-GP[[gp_ver]] on RHEL8]
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    - get: ccp_src
+    - get: ccp-7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+    - get: gp6-python-libs
+  - in_parallel:
+    - do:
+      - put: terraform_gpdb
+        resource: terraform
+        params:
+          action: create
+          delete_on_failure: true
+          generate_random_name: true
+          terraform_source: ccp_src/google/
+          vars:
+            PLATFORM: rocky8-gpdb[[gp_ver]]
+            number_of_nodes: ((number_of_gpdb_nodes))
+            extra_nodes: 1
+            segments_per_host: 4
+            instance_type: n1-standard-4
+            ccp_reap_minutes: 120
+            standby_master: true
+      - task: Generate Greenplum Cluster
+        input_mapping:
+          gpdb_rpm: gpdb_package
+          terraform: terraform_gpdb
+        file: ccp_src/ci/tasks/gen_cluster.yml
+        image: ccp-7-image
+        params:
+          AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
+          AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+          AWS_DEFAULT_REGION: ((ud/common/aws-region))
+          BUCKET_PATH: ((tf-bucket-path))
+          BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
+          PLATFORM: rocky8-gpdb[[gp_ver]]
+          CLOUD_PROVIDER: google
+          GPDB_RPM: true
+      - in_parallel:
+        - task: Initialize Greenplum
+          file: ccp_src/ci/tasks/gpinitsystem.yml
+        - task: Install Hadoop
+          file: pxf_src/concourse/tasks/install_hadoop.yml
+          image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+          params:
+            ACCESS_KEY_ID: ((tf-machine-access-key-id))
+            SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+            IMPERSONATION: ((enable-impersonation-multinode))
+    - task: Generate Hadoop Cluster 1
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      params:
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
+        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
+        IMAGE_VERSION: ((dataproc-image-version))
+        KERBEROS: ((kerberos-enabled))
+        ccp_reap_minutes: 120
+    - task: Generate Hadoop Cluster 2
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      output_mapping:
+        dataproc_env_files: dataproc_2_env_files
+      params:
+        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/kerberos-ccp-ci-service-account-key))
+        GOOGLE_PROJECT_ID: ((ud/pxf/common/kerberos-google-project-id))
+        GOOGLE_ZONE: ((ud/pxf/common/kerberos-google-zone))
+        HADOOP_USER: gpuser
+        IMAGE_VERSION: ((dataproc-image-version))
+        INITIALIZATION_SCRIPT: gs://data-gpdb-ud-kerberos-scripts/scripts/initialization-for-kerberos.sh
+        INSTANCE_TAGS: bosh-network,data-gpdb-ud-access
+        KERBEROS: ((kerberos-enabled))
+        KEY: dataproc-kerberos-key
+        KEYRING: dataproc-kerberos
+        ccp_reap_minutes: 120
+        NO_ADDRESS: false
+        PROXY_USER: gpuser
+        SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
+  - do: # Generate IPA Hadoop cluster
+    - put: terraform_ipa_hadoop
+      params:
+        action: create
+        generate_random_name: true
+        terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
+        vars:
+          gcp_project: ((ud/pxf/common/ipa-google-project-id))
+    - task: Generate Multinode Hadoop Cluster
+      file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
+      image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+      params:
+        ANSIBLE_VAR_gcp_storage_bucket: ((ud/pxf/common/build-resources-bucket-name))
+        ANSIBLE_VAR_ipa_password: ((ud/pxf/secrets/ipa-password))
+        ANSIBLE_VAR_ssl_store_password: ((ud/pxf/secrets/ssl-store-password))
+  - task: Setup PXF
+    input_mapping:
+      terraform: terraform_gpdb
+    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
+    image: ccp-7-image
+    params:
+      IMPERSONATION: true
+      INSTALL_GPHDFS: false
+      GP_VER: [[gp_ver]]
+      KERBEROS: ((kerberos-enabled))
+      PXF_JVM_OPTS: ((pxf-jvm-opts))
+      PXF_BASE_DIR: /home/gpadmin/pxf-boot
+  - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
+    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
+    attempts: 2
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      HIVE_VERSION: 2
+      IMPERSONATION: true
+      KERBEROS: ((kerberos-enabled))
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+      GP_VER: [[gp_ver]]
+      GROUP: security,proxySecurity,proxySecurityIpa,multiClusterSecurity
+      PXF_JVM_OPTS: ((pxf-jvm-opts))
+      PXF_BASE_DIR: /home/gpadmin/pxf-boot
+    on_success:
+      in_parallel:
+        steps:
+        - *destroy_dataproc_1
+        - *destroy_dataproc_2
+        - *destroy_gpdb_cluster
+        - *destroy_hadoop_cluster
+{% if slack_notification %}
+    <<: *slack_alert
+{% endif %}
+{% endif %} # if gp7_multinode ends here

@@ -38,6 +38,7 @@ MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
 GP7_CLI                     ?= false
+GP7_MULTINODE               ?= false
 
 SET_PIPELINE := set-pipeline
 ifeq ($(CHECK_CREDS), true)
@@ -104,6 +105,7 @@ set-dev-build-pipeline:
 	$(TEMPLATE_CMD) --template dev_build_pipeline-tpl.yml --vars \
 		slack_notification=$(SLACK) \
 		multinode=$(MULTINODE) \
+		gp7_multinode=$(GP7_MULTINODE) \
 		multinode_no_impersonation=$(MULTINODE_NO_IMPERSONATION) \
 		jdk11=$(JDK11) \
 		cdh=$(CDH) \

@@ -9,6 +9,7 @@ PROXY_USER=${PROXY_USER:-pxfuser}
 PROTOCOL=${PROTOCOL:-}
 GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 PXF_SRC=$(find /tmp/build -name pxf_src -type d)
+DEFAULT_CCP_USER=""
 
 # on purpose do not call this PXF_CONF|PXF_BASE so that it is not set during pxf operations
 if [[ ${PXF_VERSION} == 5 ]]; then
@@ -22,7 +23,8 @@ else
 fi
 
 if [[ -f ~/.pxfrc ]]; then
-	source <(grep JAVA_HOME ~/.pxfrc)
+	# shellcheck disable=SC1090
+	source <(grep "export JAVA_HOME" ~/.pxfrc)
 	echo "JAVA_HOME found in ${HOME}/.pxfrc, set to ${JAVA_HOME}..."
 else
 	JAVA_HOME=$(find /usr/lib/jvm -name 'java-1.8.0-openjdk*' | head -1)
@@ -267,7 +269,7 @@ function remote_access_to_gpdb() {
 	cp cluster_env_files/.ssh/* /home/gpadmin/.ssh
 	cp cluster_env_files/.ssh/*.pem /home/gpadmin/.ssh/id_rsa
 	cp cluster_env_files/public_key.openssh /home/gpadmin/.ssh/authorized_keys
-	{ ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
+	awk '{print "localhost", $1, $2; print "0.0.0.0", $1, $2}' /etc/ssh/ssh_host_rsa_key.pub >> /home/gpadmin/.ssh/known_hosts
 	ssh "${SSH_OPTS[@]}" gpadmin@cdw "
 		source ${GPHOME}/greenplum_path.sh &&
 		export MASTER_DATA_DIRECTORY=${CDD_VALUE} &&
@@ -312,7 +314,7 @@ function setup_gpadmin_user() {
 		ssh-keygen -t rsa -N "" -f ~gpadmin/.ssh/id_rsa
 		cat /home/gpadmin/.ssh/id_rsa.pub >> ~gpadmin/.ssh/authorized_keys
 		chmod 0600 /home/gpadmin/.ssh/authorized_keys
-		{ ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> ~gpadmin/.ssh/known_hosts
+		awk '{print "localhost", $1, $2; print "0.0.0.0", $1, $2}' /etc/ssh/ssh_host_rsa_key.pub >> ~gpadmin/.ssh/known_hosts
 		chown -R gpadmin:gpadmin ${GPHOME} ~gpadmin/.ssh # don't chown cached dirs ~/.m2, etc.
 		echo -e "password\npassword" | passwd gpadmin 2> /dev/null
 	fi
@@ -863,4 +865,23 @@ function setup_minio() {
 
 	# export minio credentials as access environment variables
 	export ACCESS_KEY_ID=${MINIO_ACCESS_KEY} SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
+}
+
+function set_default_ccp_user() {
+    metadata_file="cluster_env_files/terraform/metadata"
+
+    # Check if jq is installed
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "jq is not installed. Installing jq..."
+        sudo yum install -y jq
+    fi
+
+    # Check if the metadata file exists
+    if [ -e "$metadata_file" ]; then
+        # shellcheck disable=SC2034
+        DEFAULT_CCP_USER=$(jq -r '.ami_default_user' "$metadata_file")
+    else
+        echo "The $metadata_file file does not exist."
+        exit 2
+    fi
 }
