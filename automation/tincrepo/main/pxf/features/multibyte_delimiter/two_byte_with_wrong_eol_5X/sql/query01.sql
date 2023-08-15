@@ -4,7 +4,7 @@
 --
 -- # create a match/subs
 
--- m/WARNING/
+-- m/^WARNING/
 -- s/WARNING/GP_IGNORE: WARNING/
 --
 -- end_matchsubs

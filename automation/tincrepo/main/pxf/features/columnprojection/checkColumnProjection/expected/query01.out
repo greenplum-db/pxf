@@ -175,7 +175,6 @@ SELECT t0, colprojvalue, sqrt(b2::int) FROM test_column_projection ORDER BY t0;
 (10 rows)
 
 SET optimizer = on;
-SET
 SELECT * FROM test_column_projection ORDER BY t0;
  t0 | a1 | b2 |     colprojvalue     
 ----+----+----+----------------------

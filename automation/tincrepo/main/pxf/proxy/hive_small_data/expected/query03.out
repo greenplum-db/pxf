@@ -21,10 +21,7 @@ CREATE ROLE testuser LOGIN;
 \connect - testuser
 SELECT * FROM pxf_proxy_hive_small_data_prohibited ORDER BY name;
 ERROR:  PXF server error : Permission denied: user=testuser, access=READ, inode=SOME_PATH:-rwx------
--- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
--- end_ignore
-
 DETAIL:  External table pxf_proxy_hive_small_data_prohibited
 \connect - :OLD_GP_USER
 DROP ROLE IF EXISTS testuser;

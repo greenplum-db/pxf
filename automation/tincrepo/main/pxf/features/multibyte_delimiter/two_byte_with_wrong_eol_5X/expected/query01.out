@@ -1,12 +1,10 @@
 -- start_ignore
 -- end_ignore
 -- @description query01 for PXF Multibyte delimiter, 2-byte delim with wrong eol case
-
 -- start_matchsubs
 --
 -- # create a match/subs
-
--- m/WARNING/
+-- m/^WARNING/
 -- s/WARNING/GP_IGNORE: WARNING/
 --
 -- end_matchsubs
@@ -16,3 +14,4 @@ CONTEXT:  External table pxf_multibyte_twobyte_wrong_eol_data
  s1 | s2 | s3 | d1 | n1 | n2 | n3 | n4 | n5 | n6 | n7 | s11 | s12 | s13 | d11 | n11 | n12 | n13 | n14 | n15 | n16 | n17
 ----+----+----+----+----+----+----+----+----+----+----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----
 (0 rows)
+

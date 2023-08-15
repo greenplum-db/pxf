@@ -12,8 +12,5 @@
 -- end_matchsubs
 SELECT * from pxf_hbase_different_columns_names ORDER BY recordkey;
 ERROR:  PXF server error : Illegal HBase column name q2, missing :
--- start_ignore
 HINT:  Check the PXF logs located in the 'log-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
--- end_ignore
 DETAIL:  External table pxf_hbase_different_columns_names
-

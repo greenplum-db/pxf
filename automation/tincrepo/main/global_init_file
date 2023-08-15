@@ -54,9 +54,10 @@ s/^psql:.* (WARNING|INFO|ERROR)/$1/
 m/Check the PXF logs located in the.*/
 s/Check the PXF logs located in the.*/Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details./
 
+# TODO: remove since gpdiff.pl is called with -I HINT:
 # suppress the HINT: line (Greenplum 5 does not render the HINT)
-m/HINT:  .*/
-s/.*//g
+#m/HINT:  .*/
+#s/.*//g
 
 # rename DETAIL (from GP5) to CONTEXT (in GP6+)
 m/DETAIL/

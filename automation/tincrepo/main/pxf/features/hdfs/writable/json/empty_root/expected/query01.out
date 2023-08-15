@@ -6,4 +6,3 @@
 -- end_matchsubs
 INSERT INTO pxf_empty_root_json_write SELECT * from gpdb_primitive_types;
 ERROR:  PXF server error : Option ROOT can not have an empty value
-

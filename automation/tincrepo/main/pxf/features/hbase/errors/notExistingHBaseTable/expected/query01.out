@@ -9,8 +9,5 @@
 -- end_matchsubs
 SELECT * from pxf_not_existing_hbase_table ORDER BY recordkey;
 ERROR:  PXF server error : dummy
--- start_ignore
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
--- end_ignore
-
 DETAIL:  External table pxf_not_existing_hbase_table
