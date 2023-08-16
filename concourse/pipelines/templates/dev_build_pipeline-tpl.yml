@@ -617,7 +617,7 @@ jobs:
 {% endfor %}
 {% set gp_ver = None %}
 
-## ----------GP7 PXF CLI tests START-----------
+## ---------- GP7 PXF tests ----------
 
 {% if gp7_cli %}
 {% set gp_ver = 7 %}
@@ -689,8 +689,8 @@ jobs:
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
-{% endif %}
-## ----------GP7 PXF CLI tests END ----------
+{% endif %} # if gp7_cli ends here
+{% set gp_ver = None %}
 
 ## ---------- Extended Tests ----------
 {% set gp_ver = 6 %}
