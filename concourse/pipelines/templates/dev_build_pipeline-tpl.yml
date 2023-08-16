@@ -83,7 +83,7 @@ resource_types:
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endif %}
 
-{% if multinode or gp7_cli %}
+{% if multinode %}
 - name: terraform-0.14.10
   type: registry-image
   source:
@@ -617,7 +617,7 @@ jobs:
 {% endfor %}
 {% set gp_ver = None %}
 
-## ----------GP7 CLI tests ----------\
+## ----------GP7 PXF CLI tests START-----------
 
 {% if gp7_cli %}
 {% set gp_ver = 7 %}
@@ -647,7 +647,7 @@ jobs:
           generate_random_name: true
           terraform_source: ccp_src/google/
           vars:
-            PLATFORM: rocky8-gpdb7
+            PLATFORM: rocky8-gpdb[[gp_ver]]
             number_of_nodes: ((number_of_gpdb_nodes))
             extra_nodes: 1
             segments_per_host: 4
@@ -666,7 +666,7 @@ jobs:
           AWS_DEFAULT_REGION: ((ud/common/aws-region))
           BUCKET_PATH: ((tf-bucket-path))
           BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-          PLATFORM: rocky8-gpdb7
+          PLATFORM: rocky8-gpdb[[gp_ver]]
           CLOUD_PROVIDER: google
           GPDB_RPM: true
   - task: Initialize Greenplum
@@ -683,15 +683,14 @@ jobs:
       PXF_JVM_OPTS: ((pxf-jvm-opts))
   - task: Test PXF CLI
     on_success:
-      in_parallel:
-        steps:
-        - *destroy_gpdb_cluster
+      <<: *destroy_gpdb_cluster
     image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
 {% endif %}
+## ----------GP7 PXF CLI tests END ----------
 
 ## ---------- Extended Tests ----------
 {% set gp_ver = 6 %}
