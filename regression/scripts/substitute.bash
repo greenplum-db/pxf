@@ -2,6 +2,14 @@
 
 set -eo pipefail
 
+if [ "${BASH_VERSION::1}" -lt 4 ]; then
+  echo "This script uses the mapfile command which was added in bash version 4.0.0"
+  echo "The bash picked by /usr/bin/env is version $BASH_VERSION"
+  echo "Please upgrade the bash version to a version >= 4.0.0"
+  echo "And add the path to the directory where it is installed to your PATH variable before /bin entry"
+  exit 1
+fi
+
 WORKING_DIR=$( cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd )
 
 _die() {
@@ -34,12 +42,17 @@ _host_is_local() {
 
 _gen_random_string() {
 	local length=${1:-4}
-	base64 < /dev/urandom | tr -cd '[:alnum:]' | head -c "${length}"
+	if [ "$(uname)" == "Darwin" ]; then
+		# base64 on MacOS fails the command below, so instead we use the openssl library to get a random number
+		openssl rand -hex "${length}"
+	else
+		base64 < /dev/urandom | tr -cd '[:alnum:]' | head -c "${length}"
+	fi
 }
 
 _gen_uuid() {
 	: "$(_gen_random_string 8)_$(_gen_random_string)_$(_gen_random_string)_$(_gen_random_string)_$(_gen_random_string 12)"
-	echo "${_,,}" # downcase
+	echo "${_,,}" # downcase (works in bash 4 and later)
 }
 
 case ${HCFS_PROTOCOL} in

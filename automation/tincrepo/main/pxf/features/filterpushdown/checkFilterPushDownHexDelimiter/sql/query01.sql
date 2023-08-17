@@ -1,4 +1,4 @@
--- @description query01 for PXF Hive filter pushdown with hex delimiter
+-- @description query01 for PXF filter pushdown with hex delimiter
 SET gp_external_enable_filter_pushdown = true;
 
 SET optimizer = off;
