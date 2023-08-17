@@ -617,7 +617,7 @@ jobs:
 {% endfor %}
 {% set gp_ver = None %}
 
-## ---------- GP7 PXF tests ----------
+## ---------- GP7 PXF CLI tests ----------
 
 {% if gp7_cli %}
 {% set gp_ver = 7 %}
