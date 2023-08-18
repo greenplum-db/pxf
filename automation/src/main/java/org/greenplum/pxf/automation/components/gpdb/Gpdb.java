@@ -78,6 +78,7 @@ public class Gpdb extends DbSystemObject {
 
 		if (FDWUtils.useFDW) {
 			createTestFDW(true);
+			createSystemFDW(true);
 			createForeignServers(true);
 		}
 
@@ -248,6 +249,13 @@ public class Gpdb extends DbSystemObject {
 				ignoreFail, false);
 	}
 
+	private void createSystemFDW(boolean ignoreFail) throws Exception {
+		runQuery("DROP FOREIGN DATA WRAPPER IF EXISTS system_pxf_fdw CASCADE", ignoreFail, false);
+		runQuery("CREATE FOREIGN DATA WRAPPER system_pxf_fdw HANDLER pxf_fdw_handler " +
+				"VALIDATOR pxf_fdw_validator OPTIONS (protocol 'system', mpp_execute 'all segments')",
+				ignoreFail, false);
+	}
+
 	private void createForeignServers(boolean ignoreFail) throws Exception {
 		List<String> servers = Lists.newArrayList(
 		"default_hdfs",
@@ -268,7 +276,8 @@ public class Gpdb extends DbSystemObject {
 		"hdfs-non-secure_hdfs",
 		"hdfs-secure_hdfs",
 		"hdfs-ipa_hdfs",
-		"default_test");
+		"default_test",
+		"default_system");
 
 		// version below GP7 do not have IF EXISTS / IF NOT EXISTS command options for foreign SERVER creation
 		String option = (version < 7) ? "" : IF_NOT_EXISTS_OPTION;
