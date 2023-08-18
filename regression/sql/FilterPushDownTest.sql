@@ -10,7 +10,7 @@ DROP EXTERNAL TABLE IF EXISTS test_filter CASCADE;
 
 CREATE EXTERNAL TABLE test_filter (t0 text, a1 integer, b2 boolean, c3 numeric, d4 char(2), e5 varchar(2), filterValue text)
     LOCATION (E'pxf://dummy_path?PROFILE=system:filter')
-    FORMAT 'TEXT' ( DELIMITER ',');
+    FORMAT 'TEXT' (DELIMITER ',');
 
 ----------------------------------------------------
 ------ Check that Filter Push Down is enabled ------
@@ -201,7 +201,7 @@ SELECT * FROM test_filter WHERE t0 = 'J' AND a1 = 9 AND b2 = false AND c3 = 9.91
 DROP EXTERNAL TABLE IF EXISTS test_filter CASCADE;
 CREATE EXTERNAL TABLE test_filter (t0 text, a1 integer, b2 boolean, c3 numeric, d4 char(2), e5 varchar(2), filterValue text)
     LOCATION (E'pxf://dummy_path?PROFILE=system:filter')
-    FORMAT 'TEXT' ( DELIMITER E'\x01');
+    FORMAT 'TEXT' (DELIMITER E'\x01');
 
 SET gp_external_enable_filter_pushdown = true;
 
