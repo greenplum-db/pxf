@@ -235,7 +235,8 @@ function print_user_instructions_for_kerberos_create() {
 This cluster has Kerberos Authentication enabled, please check the Dataproc-with-Kerberos README to finish
 setting up the cluster and your local environment:
 
-    1. Finish the steps listed in the Dataproc-with-Kerberos.md file
+    1. Create a PXF service principal in the newly generated cluster and copy it to the local working directory.
+      Steps to create and verify the principal and keytab can be found in the Dataproc-with-Kerberos.md file.
 
     2. Copy the krb5.conf file into \$PXF_BASE, for example
 
@@ -245,7 +246,7 @@ setting up the cluster and your local environment:
 
         -Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf
 
-    4. Edit \$PXF_BASE/servers/dataproc/pxf-site.xml and set \`pxf.service.kerberos.principal\` to \`<username>@C.DATA-GPDB-UD.INTERNAL\  `
+    4. Edit \$PXF_BASE/servers/dataproc/pxf-site.xml and set \`pxf.service.kerberos.principal\` to \`<username>@C.DATA-GPDB-UD.INTERNAL\`
 
         xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.kerberos.principal']/value" -v "${USER}@C.DATA-GPDB-UD.INTERNAL" \$PXF_BASE/servers/dataproc/pxf-site.xml
 
@@ -294,6 +295,12 @@ DESCRIPTION
     detailed description of the format, See '--properties' in the man page
     for 'gcloud dataproc clusters create'.
 
+    To create a kerberized dataproc cluster, users can set an environment variable `KERBERIZED`
+    as well as some extra hadoop configurations. For example:
+
+            KERBERIZED=true dataproc-cluster.bash --create 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT,hdfs:dfs.client.use.datanode.hostname=true'
+
+    would create a kerberized cluster with authentication rules and use hostnames on the datanodes.
 EOF
 
 }

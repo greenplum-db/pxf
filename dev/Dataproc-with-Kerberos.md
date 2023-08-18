@@ -7,10 +7,10 @@ This developer note will guide you through the process of creating a Google Clou
 1. Run the modified `dataproc-cluster.bash` script with following options to create a local Dataproc cluster with Kerberos authentication
 
     ```sh
-    IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.bash --create 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT,hdfs:dfs.client.use.datanode.hostname=true'
+    KERBERIZED=true IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.bash --create 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT,hdfs:dfs.client.use.datanode.hostname=true'
     ```
 
-1. SSH into cluster code (e.g., `gcloud compute ssh "${DATAPROC_CLUSTER_NAME}-m" --zone=us-west1-c`) and created a PXF service principal named `${USER}`
+1. SSH into cluster code (e.g., `gcloud compute ssh "${DATAPROC_CLUSTER_NAME}-m --zone=${ZONE}"`) and created a PXF service principal named `${USER}`
 
     ```sh
     sudo kadmin.local -q "add_principal -nokey ${USER}"
@@ -57,7 +57,7 @@ This developer note will guide you through the process of creating a Google Clou
 1. SSH into cluster node (e.g., `${DATAPROC_CLUSTER_NAME}-m`), run any kinit and then connect to Hive
 
     ```sh
-    gcloud compute ssh ${DATAPROC_CLUSTER_NAME}-m --zone=us-west1
+    gcloud compute ssh ${DATAPROC_CLUSTER_NAME}-m --zone=${ZONE}
     kinit -kt pxf.service.keytab ${USER}
     klist
     hive
