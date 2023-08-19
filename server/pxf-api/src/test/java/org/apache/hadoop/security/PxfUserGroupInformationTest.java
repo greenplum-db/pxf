@@ -154,7 +154,7 @@ public class PxfUserGroupInformationTest {
         // do NOT set authentication method of UGI to KERBEROS, will cause NOOP for relogin
         session = new LoginSession("config", "principal", "keytab", ugi, subjectWithKerberosKeyTab, 1);
 
-        pxfUserGroupInformation.reloginFromKeytab(serverName, session);
+        pxfUserGroupInformation.reloginFromKeytab(serverName, session, configuration);
 
         verifyNoInteractions(mockLoginContext); // proves noop
     }
@@ -166,7 +166,7 @@ public class PxfUserGroupInformationTest {
         ugi.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);
         session = new LoginSession("config", "principal", "keytab", ugi, subject, 1);
 
-        pxfUserGroupInformation.reloginFromKeytab(serverName, session);
+        pxfUserGroupInformation.reloginFromKeytab(serverName, session, configuration);
 
         verifyNoInteractions(mockLoginContext); // proves noop
     }
@@ -180,7 +180,7 @@ public class PxfUserGroupInformationTest {
         // set 33 secs between re-login attempts
         session = new LoginSession("config", "principal", "keytab", ugi, subjectWithKerberosKeyTab, 55000L);
 
-        pxfUserGroupInformation.reloginFromKeytab(serverName, session);
+        pxfUserGroupInformation.reloginFromKeytab(serverName, session, configuration);
 
         verifyNoInteractions(mockLoginContext); // proves noop
     }
@@ -199,7 +199,7 @@ public class PxfUserGroupInformationTest {
         // leave user.lastLogin at 0 to simulate old login
         session = new LoginSession("config", "principal", "keytab", ugi, subjectWithKerberosKeyTab, 1);
 
-        pxfUserGroupInformation.reloginFromKeytab(serverName, session);
+        pxfUserGroupInformation.reloginFromKeytab(serverName, session, configuration);
 
         verifyNoInteractions(mockLoginContext);
     }
@@ -213,7 +213,7 @@ public class PxfUserGroupInformationTest {
         session = new LoginSession("config", "principal", "keytab", ugi, subjectWithKerberosKeyTab, 1);
 
         Exception e = assertThrows(KerberosAuthException.class,
-                () -> pxfUserGroupInformation.reloginFromKeytab(serverName, session));
+                () -> pxfUserGroupInformation.reloginFromKeytab(serverName, session, configuration));
         assertEquals(" loginUserFromKeyTab must be done first", e.getMessage());
     }
 
@@ -226,7 +226,7 @@ public class PxfUserGroupInformationTest {
         session = new LoginSession("config", "principal", null, ugi, subjectWithKerberosKeyTab, 1);
 
         Exception e = assertThrows(KerberosAuthException.class,
-                () -> pxfUserGroupInformation.reloginFromKeytab(serverName, session));
+                () -> pxfUserGroupInformation.reloginFromKeytab(serverName, session, configuration));
         assertEquals(" loginUserFromKeyTab must be done first", e.getMessage());
     }
 
@@ -249,7 +249,7 @@ public class PxfUserGroupInformationTest {
         mockAnotherLoginContext = mock(LoginContext.class);
         when(mockLoginContextProvider.newLoginContext(anyString(), any(), any())).thenReturn(mockAnotherLoginContext);
 
-        pxfUserGroupInformation.reloginFromKeytab(serverName, session);
+        pxfUserGroupInformation.reloginFromKeytab(serverName, session, configuration);
 
         assertNotSame(mockLoginContext, user.getLogin());
         assertSame(mockAnotherLoginContext, user.getLogin());
@@ -283,7 +283,7 @@ public class PxfUserGroupInformationTest {
         mockAnotherLoginContext = mock(LoginContext.class);
         when(mockLoginContextProvider.newLoginContext(anyString(), any(), any())).thenReturn(mockAnotherLoginContext);
 
-        pxfUserGroupInformation.reloginFromKeytab(serverName, session);
+        pxfUserGroupInformation.reloginFromKeytab(serverName, session, configuration);
 
         assertNotSame(mockLoginContext, user.getLogin());
         assertSame(mockAnotherLoginContext, user.getLogin());
@@ -310,7 +310,7 @@ public class PxfUserGroupInformationTest {
         doThrow(new LoginException("foo")).when(mockAnotherLoginContext).login(); // simulate login failure
 
         Exception e = assertThrows(KerberosAuthException.class,
-                () -> pxfUserGroupInformation.reloginFromKeytab(serverName, session));
+                () -> pxfUserGroupInformation.reloginFromKeytab(serverName, session, configuration));
         assertEquals("Login failure for principal: principal from keytab keytab javax.security.auth.login.LoginException: foo", e.getMessage());
     }
 

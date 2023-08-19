@@ -26,6 +26,16 @@
             Set to true to enable, false to disable.
         </description>
     </property>
+    <!--
+    <property>
+        <name>pxf.service.kerberos.ticket-renew-threshold</name>
+        <value>0.8</value>
+        <description>
+            By default, PXF refreshes the Kerberos ticket when 80% (0.8) of its lifespan has elapsed.
+            Specifies the threshold, as a float, at which PXF will actively refresh the ticket.
+        </description>
+    </property>
+    -->
 
     <!--
     <property>

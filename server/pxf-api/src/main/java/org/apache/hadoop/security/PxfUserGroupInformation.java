@@ -40,10 +40,7 @@ public class PxfUserGroupInformation {
     private static final String MUST_FIRST_LOGIN_FROM_KEYTAB = "loginUserFromKeyTab must be done first";
     private static final String OS_LOGIN_MODULE_NAME = getOSLoginModuleName();
 
-    /**
-     * Percentage of the ticket window to use before we renew ticket.
-     */
-    private static final float TICKET_RENEW_WINDOW = 0.80f;
+    private static final String PROPERTY_TICKET_RENEW_THRESHOLD = "pxf.service.kerberos.ticket-renew-threshold";
 
     private static final boolean windows = System.getProperty("os.name").startsWith("Windows");
     private static final boolean is64Bit = System.getProperty("os.arch").contains("64") ||
@@ -82,6 +79,9 @@ public class PxfUserGroupInformation {
 
             // set the configuration on the HadoopKerberosName
             HadoopKerberosName.setConfiguration(configuration);
+
+            // the percentage of the ticket window to use before we renew ticket
+            float ticket_renew_threshold = configuration.getFloat(PROPERTY_TICKET_RENEW_THRESHOLD, 0.80f);
 
             long now = Time.now();
             // create login context with the given subject, using Kerberos principal and keytab filename; then login
@@ -129,7 +129,7 @@ public class PxfUserGroupInformation {
      * @throws IOException           when an IO error occurs
      * @throws KerberosAuthException on a failure
      */
-    public void reloginFromKeytab(String serverName, LoginSession loginSession) throws KerberosAuthException {
+    public void reloginFromKeytab(String serverName, LoginSession loginSession, Configuration configuration) throws KerberosAuthException {
 
         UserGroupInformation ugi = loginSession.getLoginUser();
 
@@ -145,10 +145,12 @@ public class PxfUserGroupInformation {
                 return;
             }
 
+            float ticket_renew_threshold = configuration.getFloat(PROPERTY_TICKET_RENEW_THRESHOLD, 0.80f);
+
             Subject subject = loginSession.getSubject();
             KerberosTicket tgt = getTGT(subject);
             //Return if TGT is valid and is not going to expire soon.
-            if (tgt != null && now < getRefreshTime(tgt)) {
+            if (tgt != null && now < getRefreshTime(tgt, ticket_renew_threshold)) {
                 return;
             }
 
@@ -237,10 +239,10 @@ public class PxfUserGroupInformation {
         LOG.warn("Warning, no kerberos tickets found while attempting to renew ticket");
     }
 
-    private long getRefreshTime(KerberosTicket tgt) {
+    private long getRefreshTime(KerberosTicket tgt, float ticket_renew_threshold) {
         long start = tgt.getStartTime().getTime();
         long end = tgt.getEndTime().getTime();
-        return start + (long) ((end - start) * TICKET_RENEW_WINDOW);
+        return start + (long) ((end - start) * ticket_renew_threshold);
     }
 
     private static String getOSLoginModuleName() {
