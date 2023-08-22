@@ -204,10 +204,23 @@ When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will
 
 4. Save the file and exit the editor.
 
-5. Synchronize the keytabs in `$PXF_BASE`. You must distribute the keytab file to `$PXF_BASE/keytabs/`. Locate the keytab file, copy the file to the `$PXF_BASE` runtime configuration directory, and set required permissions. For example:
+5. Synchronize the keytabs in `$PXF_BASE`. You must distribute the keytab file to `$PXF_BASE/keytabs/`. Locate the keytab file and copy the file to the `$PXF_BASE` runtime configuration directory. The copy command that you specify differs based on the Greenplum Database version. For example:
+
+    If your source Greenplum cluster is running version 5.x or 6.x:
 	
     ``` shell
     gpadmin@coordinator$ gpscp -f hostfile_all pxf.service.keytab =:$PXF_BASE/keytabs/
+    ```
+
+    If your source Greenplum cluster is running version 7.x:
+
+    ``` shell
+    gpadmin@coordinator$ gpsync -f hostfile_all pxf.service.keytab =:$PXF_BASE/keytabs/
+    ```
+
+5. Set the required permissions on the keytab file. For example:
+
+    ``` shell
     gpadmin@coordinator$ gpssh -f hostfile_all chmod 400 $PXF_BASE/keytabs/pxf.service.keytab
     ```
 
