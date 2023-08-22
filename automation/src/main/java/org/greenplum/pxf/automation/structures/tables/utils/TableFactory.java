@@ -210,6 +210,26 @@ public abstract class TableFactory {
     }
 
     /**
+     * Prepares PXF Readable External or Foreign Table for test data, using CSV format and "test:csv" profile.
+     * Since "test:*" profiles are ephemeral, it should be used when testing with custom Fragmenter, Accessor or Resolver.
+     *
+     * @param name name of the table
+     * @param fields fields of the table
+     * @param path for external table path
+     * @param delimiter delimiter used in the external data
+     * @return PXF Readable External or Foreign table
+     */
+    public static ReadableExternalTable getPxfReadableTestCSVTable(String name,
+                                                                   String[] fields,
+                                                                   String path,
+                                                                   String delimiter) {
+        ReadableExternalTable exTable = getReadableExternalOrForeignTable(name, fields, path, "CSV");
+        exTable.setProfile("test:csv");
+        exTable.setDelimiter(delimiter);
+        return exTable;
+    }
+
+    /**
      * Prepares PXF Readable External or Foreign Table for TEXT data, using TEXT format and "<protocol>:text" profile.
      *
      * @param name name of the table

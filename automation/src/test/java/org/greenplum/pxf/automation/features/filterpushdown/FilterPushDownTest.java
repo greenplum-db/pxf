@@ -66,7 +66,7 @@ public class FilterPushDownTest extends BaseFeature {
      */
     private void preparePxfTable(String delimiter) throws Exception {
         // Create PXF external table for filter testing
-        exTable = TableFactory.getPxfReadableTestTextTable("test_filter", FIELDS, "dummy_path", delimiter);
+        exTable = TableFactory.getPxfReadableTestCSVTable("test_filter", FIELDS, "dummy_path", delimiter);
         exTable.setProfile("system:filter"); // use system:filter profile shipped with PXF server
         gpdb.createTableAndVerify(exTable);
     }

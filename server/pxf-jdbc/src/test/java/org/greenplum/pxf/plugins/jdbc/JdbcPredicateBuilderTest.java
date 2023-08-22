@@ -46,6 +46,9 @@ public class JdbcPredicateBuilderTest {
         runScenario("a0c25s1dBo6", "WHERE t0 <> 'B'");
         runScenario("a0c25s2dB%o7", "WHERE t0 LIKE 'B%'");
         runScenario("a0m1009s1dBs1dCo10", "WHERE t0 IN ('B','C')");
+        runScenario("a0o8", "WHERE t0 IS NULL");
+        runScenario("a0o9", "WHERE t0 IS NOT NULL");
+        runScenario("a0o8l2", "WHERE NOT (t0 IS NULL)"); // ORCA
     }
 
     @Test
@@ -57,6 +60,9 @@ public class JdbcPredicateBuilderTest {
         runScenario("a1c23s1d1o4", "WHERE a1 >= 1");
         runScenario("a1c23s1d1o6", "WHERE a1 <> 1");
         runScenario("a1m1007s1d1s1d2o10", "WHERE a1 IN (1,2)");
+        runScenario("a1o8", "WHERE a1 IS NULL");
+        runScenario("a1o9", "WHERE a1 IS NOT NULL");
+        runScenario("a1o8l2", "WHERE NOT (a1 IS NULL)"); // ORCA
     }
 
     @Test
@@ -68,6 +74,9 @@ public class JdbcPredicateBuilderTest {
         runScenario("a3c1700s4d1.11o4", "WHERE c3 >= 1.11");
         runScenario("a3c1700s4d1.11o6", "WHERE c3 <> 1.11");
         // IN operator is not yet supported for NUMERIC types
+        runScenario("a3o8", "WHERE c3 IS NULL");
+        runScenario("a3o9", "WHERE c3 IS NOT NULL");
+        runScenario("a3o8l2", "WHERE NOT (c3 IS NULL)"); // ORCA
     }
 
     @Test
@@ -80,6 +89,9 @@ public class JdbcPredicateBuilderTest {
         runScenario("a4c1042s2dBBo6", "WHERE d4 <> 'BB'");
         // LIKE operator is not yet supported for CHAR types
         // IN   operator is not yet supported for CHAR types
+        runScenario("a4o8", "WHERE d4 IS NULL");
+        runScenario("a4o9", "WHERE d4 IS NOT NULL");
+        runScenario("a4o8l2", "WHERE NOT (d4 IS NULL)"); // ORCA
     }
 
     @Test
@@ -93,14 +105,18 @@ public class JdbcPredicateBuilderTest {
         runScenario("a5c25s2dBBo6", "WHERE e5 <> 'BB'");
         // LIKE operator is not yet supported for VARCHAR types
         // IN   operator is not yet supported for VARCHAR types
+        runScenario("a5o8", "WHERE e5 IS NULL");
+        runScenario("a5o9", "WHERE e5 IS NOT NULL");
+        runScenario("a5o8l2", "WHERE NOT (e5 IS NULL)"); // ORCA
     }
 
     @Test
     public void testLogicalFilters() throws Exception {
-        runScenario("a0c25s1dAo5a1c23s1d0o5l0", "WHERE (t0 = 'A' AND a1 = 0)");
-        runScenario("a1c23s1d1o3a0c25s1dBo5l0", "WHERE (a1 <= 1 AND t0 = 'B')");
-        runScenario("a0c25s1dBo5a1c23s1d1o5a1c23s2d10o5l1l0", "WHERE (t0 = 'B' AND (a1 = 1 OR a1 = 10))");
-        runScenario("a0c25s1dBo5a1c23s1d0o4a1c23s1d2o3l0l1", "WHERE (t0 = 'B' OR (a1 >= 0 AND a1 <= 2))");
+        runScenario("a0c25s1dBo5a1o8l0", "WHERE (t0 = 'B' AND a1 IS NULL)");
+        runScenario("a0c25s1dCo5a1c23s1d2o5l0", "WHERE (t0 = 'C' AND a1 = 2)");
+        runScenario("a1c23s1d2o3a0c25s1dCo5l0", "WHERE (a1 <= 2 AND t0 = 'C')");
+        runScenario("a0c25s1dCo5a1c23s1d2o5a1c23s2d10o5l1l0", "WHERE (t0 = 'C' AND (a1 = 2 OR a1 = 10))");
+        runScenario("a0c25s1dCo5a1c23s1d0o4a1c23s1d2o3l0l1", "WHERE (t0 = 'C' OR (a1 >= 0 AND a1 <= 2))");
         runScenario("a2c16s4dtrueo0l2", "WHERE NOT (b2)");
         runScenario("a2c16s4dtrueo0l2a1c23s1d5o1l0", "WHERE (NOT (b2) AND a1 < 5)");
         runScenario("a2c16s4dtrueo0l2a1c23s1d1o5a1c23s2d10o5l1l0", "WHERE (NOT (b2) AND (a1 = 1 OR a1 = 10))");
