@@ -4,7 +4,7 @@ We warmly welcome and appreciate contributions from the community!
 By participating you agree to the [code of conduct](https://github.com/greenplum-db/pxf/blob/main/CODE-OF-CONDUCT.md).
 To contribute:
 
-- Sign our [Contributor License Agreement](https://cla.pivotal.io/sign/greenplum).
+- Sign our [Contributor License Agreement](https://cla.vmware.com/cla/1/preview).
 
 - Fork the PXF repository on GitHub.
 
