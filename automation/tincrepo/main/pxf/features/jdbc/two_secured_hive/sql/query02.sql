@@ -5,4 +5,4 @@ SELECT s1, n1 FROM pxf_jdbc_hive_2_types_table WHERE tn < 11 ORDER BY n1;
 
 SELECT s1, n1 FROM pxf_jdbc_hive_types_table WHERE tn < 11 UNION ALL
 SELECT s1, n1 FROM pxf_jdbc_hive_2_types_table WHERE tn < 11
-ORDER BY n1;
+ORDER BY n1, s1;

@@ -33,28 +33,28 @@ SELECT s1, n1 FROM pxf_jdbc_hive_2_types_table WHERE tn < 11 ORDER BY n1;
 
 SELECT s1, n1 FROM pxf_jdbc_hive_types_table WHERE tn < 11 UNION ALL
 SELECT s1, n1 FROM pxf_jdbc_hive_2_types_table WHERE tn < 11
-ORDER BY n1;
+ORDER BY n1, s1;
         s1         | n1 
 -------------------+----
- second_hive_row1  |  1
  row1              |  1
- second_hive_row2  |  2
+ second_hive_row1  |  1
  row2              |  2
- second_hive_row3  |  3
+ second_hive_row2  |  2
  row3              |  3
+ second_hive_row3  |  3
  row4              |  4
  second_hive_row4  |  4
- second_hive_row5  |  5
  row5              |  5
+ second_hive_row5  |  5
  row6              |  6
  second_hive_row6  |  6
- second_hive_row7  |  7
  row7              |  7
- second_hive_row8  |  8
+ second_hive_row7  |  7
  row8              |  8
+ second_hive_row8  |  8
  row9              |  9
  second_hive_row9  |  9
- second_hive_row10 | 10
  row10             | 10
+ second_hive_row10 | 10
 (20 rows)
 

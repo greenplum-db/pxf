@@ -1,7 +1,7 @@
 -- start_ignore
 -- end_ignore
 -- @description query04 for Multiple JDBC Hive Server queries with date filter
-SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER BY n1;
+SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER BY n1, s1;
           s1          | n1 |     dt     
 ----------------------+----+------------
  row1                 |  1 | 2015-03-06
@@ -15,8 +15,7 @@ SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER B
  row9                 |  9 | 2015-03-06
  row10                | 10 | 2015-03-06
  row11                | 11 | 2015-03-06
- row24_char_null      | 11 | 2015-03-06
- row23_varchar_null   | 11 | 2015-03-06
+ row12_text_null      | 11 | 2015-03-06
  row14_double_null    | 11 | 2015-03-06
  row16_timestamp_null | 11 | 2015-03-06
  row17_real_null      | 11 | 2015-03-06
@@ -24,13 +23,14 @@ SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' ORDER B
  row19_bool_null      | 11 | 2015-03-06
  row20_tinyint_null   | 11 | 2015-03-06
  row21_smallint_null  | 11 | 2015-03-06
- row12_text_null      | 11 | 2015-03-06
+ row23_varchar_null   | 11 | 2015-03-06
+ row24_char_null      | 11 | 2015-03-06
  row15_decimal_null   | 12 | 2015-03-06
  row13_int_null       |    | 2015-03-06
 (23 rows)
 
-SELECT s1, n1, dt FROM pxf_jdbc_hive_2_types_table WHERE dt = '2015-03-06' ORDER BY n1;
-                s1                | n1 |     dt     
+SELECT s1, n1, dt FROM pxf_jdbc_hive_2_types_table WHERE dt = '2015-03-06' ORDER BY n1, s1;
+                s1                | n1 |     dt
 ----------------------------------+----+------------
  second_hive_row1                 |  1 | 2015-03-06
  second_hive_row2                 |  2 | 2015-03-06
@@ -43,8 +43,7 @@ SELECT s1, n1, dt FROM pxf_jdbc_hive_2_types_table WHERE dt = '2015-03-06' ORDER
  second_hive_row9                 |  9 | 2015-03-06
  second_hive_row10                | 10 | 2015-03-06
  second_hive_row11                | 11 | 2015-03-06
- second_hive_row24_char_null      | 11 | 2015-03-06
- second_hive_row23_varchar_null   | 11 | 2015-03-06
+ second_hive_row12_text_null      | 11 | 2015-03-06
  second_hive_row14_double_null    | 11 | 2015-03-06
  second_hive_row16_timestamp_null | 11 | 2015-03-06
  second_hive_row17_real_null      | 11 | 2015-03-06
@@ -52,50 +51,48 @@ SELECT s1, n1, dt FROM pxf_jdbc_hive_2_types_table WHERE dt = '2015-03-06' ORDER
  second_hive_row19_bool_null      | 11 | 2015-03-06
  second_hive_row20_tinyint_null   | 11 | 2015-03-06
  second_hive_row21_smallint_null  | 11 | 2015-03-06
- second_hive_row12_text_null      | 11 | 2015-03-06
+ second_hive_row23_varchar_null   | 11 | 2015-03-06
+ second_hive_row24_char_null      | 11 | 2015-03-06
  second_hive_row15_decimal_null   | 12 | 2015-03-06
  second_hive_row13_int_null       |    | 2015-03-06
 (23 rows)
 
 SELECT s1, n1, dt FROM pxf_jdbc_hive_types_table WHERE dt = '2015-03-06' UNION ALL
 SELECT s1, n1, dt FROM pxf_jdbc_hive_2_types_table WHERE dt = '2015-03-06'
-ORDER BY n1;
-                s1                | n1 |     dt     
+ORDER BY n1, s1;
+                s1                | n1 |     dt
 ----------------------------------+----+------------
  row1                             |  1 | 2015-03-06
  second_hive_row1                 |  1 | 2015-03-06
  row2                             |  2 | 2015-03-06
  second_hive_row2                 |  2 | 2015-03-06
- second_hive_row3                 |  3 | 2015-03-06
  row3                             |  3 | 2015-03-06
- second_hive_row4                 |  4 | 2015-03-06
+ second_hive_row3                 |  3 | 2015-03-06
  row4                             |  4 | 2015-03-06
- second_hive_row5                 |  5 | 2015-03-06
+ second_hive_row4                 |  4 | 2015-03-06
  row5                             |  5 | 2015-03-06
- second_hive_row6                 |  6 | 2015-03-06
+ second_hive_row5                 |  5 | 2015-03-06
  row6                             |  6 | 2015-03-06
- second_hive_row7                 |  7 | 2015-03-06
+ second_hive_row6                 |  6 | 2015-03-06
  row7                             |  7 | 2015-03-06
+ second_hive_row7                 |  7 | 2015-03-06
  row8                             |  8 | 2015-03-06
  second_hive_row8                 |  8 | 2015-03-06
  row9                             |  9 | 2015-03-06
  second_hive_row9                 |  9 | 2015-03-06
- second_hive_row10                | 10 | 2015-03-06
  row10                            | 10 | 2015-03-06
+ second_hive_row10                | 10 | 2015-03-06
  row11                            | 11 | 2015-03-06
- second_hive_row24_char_null      | 11 | 2015-03-06
- row23_varchar_null               | 11 | 2015-03-06
- row21_smallint_null              | 11 | 2015-03-06
- row20_tinyint_null               | 11 | 2015-03-06
- row19_bool_null                  | 11 | 2015-03-06
- row18_bigint_null                | 11 | 2015-03-06
- row17_real_null                  | 11 | 2015-03-06
- row16_timestamp_null             | 11 | 2015-03-06
- row14_double_null                | 11 | 2015-03-06
  row12_text_null                  | 11 | 2015-03-06
- second_hive_row23_varchar_null   | 11 | 2015-03-06
- second_hive_row21_smallint_null  | 11 | 2015-03-06
- second_hive_row20_tinyint_null   | 11 | 2015-03-06
+ row14_double_null                | 11 | 2015-03-06
+ row16_timestamp_null             | 11 | 2015-03-06
+ row17_real_null                  | 11 | 2015-03-06
+ row18_bigint_null                | 11 | 2015-03-06
+ row19_bool_null                  | 11 | 2015-03-06
+ row20_tinyint_null               | 11 | 2015-03-06
+ row21_smallint_null              | 11 | 2015-03-06
+ row23_varchar_null               | 11 | 2015-03-06
+ row24_char_null                  | 11 | 2015-03-06
  second_hive_row11                | 11 | 2015-03-06
  second_hive_row12_text_null      | 11 | 2015-03-06
  second_hive_row14_double_null    | 11 | 2015-03-06
@@ -103,10 +100,13 @@ ORDER BY n1;
  second_hive_row17_real_null      | 11 | 2015-03-06
  second_hive_row18_bigint_null    | 11 | 2015-03-06
  second_hive_row19_bool_null      | 11 | 2015-03-06
- row24_char_null                  | 11 | 2015-03-06
- second_hive_row15_decimal_null   | 12 | 2015-03-06
+ second_hive_row20_tinyint_null   | 11 | 2015-03-06
+ second_hive_row21_smallint_null  | 11 | 2015-03-06
+ second_hive_row23_varchar_null   | 11 | 2015-03-06
+ second_hive_row24_char_null      | 11 | 2015-03-06
  row15_decimal_null               | 12 | 2015-03-06
- second_hive_row13_int_null       |    | 2015-03-06
+ second_hive_row15_decimal_null   | 12 | 2015-03-06
  row13_int_null                   |    | 2015-03-06
+ second_hive_row13_int_null       |    | 2015-03-06
 (46 rows)
 
