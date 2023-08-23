@@ -1,5 +1,5 @@
--- @description query01 for PXF HDFS Readable Avro supported complex type for FORMAT "TEXT" test cases
-SELECT type_long, type_string, type_array, type_union, type_enum, type_fixed from avrotest_complex_text ORDER BY type_long;
+-- @description query01 for PXF HDFS Readable Avro supported complex types test cases
+SELECT type_long, type_string, type_array, type_union, type_enum, type_fixed from avrotest_complex ORDER BY type_long;
  type_long | type_string |          type_array           |                            type_union                             | type_enum |  type_fixed   
 -----------+-------------+-------------------------------+-------------------------------------------------------------------+-----------+---------------
          1 | shivram     | [karthik,santosh,girish,arun] |                                                                   | FRIEND    | ?zst
@@ -10,7 +10,8 @@ SELECT type_long, type_string, type_array, type_union, type_enum, type_fixed fro
 
 CREATE view avro_view
 as select type_string, string_to_array(substring(type_map from 2 for (char_length(type_map) - 2)),',')::text[]
-as type_map, string_to_array(substring(type_record from 2 for (char_length(type_record) - 2)),',')::text[] as type_record from avrotest_complex_text;
+as type_map, string_to_array(substring(type_record from 2 for (char_length(type_record) - 2)),',')::text[] as type_record from avrotest_complex;
+CREATE VIEW
 select exists(select type_map from avro_view where type_map <@ '{caleb:3,parham:3}' and type_map @> '{caleb:3,parham:3}');
  exists 
 --------
@@ -60,3 +61,4 @@ select exists(select type_record from avro_view where type_record <@ '{street:de
 (1 row)
 
 DROP VIEW avro_view CASCADE;
+DROP VIEW

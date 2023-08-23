@@ -1,7 +1,6 @@
 -- @description query01 tests reading a small data set from fixed width text files with and without compression
-set datestyle to 'ISO, MDY';
 select * from fixedwidth_in_small_correct_mixed order by s1;
-     s1     |  s2  |   s3   |         dt          | n1 | n2  |   n3   |  n4   |   n5    |   n6    |     n7     
+     s1     |  s2  |   s3   |         dt          | n1 | n2  |   n3   |  n4   |   n5    |   n6    |     n7
 ------------+------+--------+---------------------+----+-----+--------+-------+---------+---------+------------
  aaa        | twoa | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789
  aaa        | twoa | shpits | 2011-06-01 12:30:30 | 23 | 732 | 834567 | 45.67 | 789.123 | 7.12345 | 123.456789

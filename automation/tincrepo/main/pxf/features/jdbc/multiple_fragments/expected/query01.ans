@@ -1,9 +1,5 @@
--- @description query01 for JDBC writable query
-ALTER TABLE gpdb_types_target ADD CONSTRAINT gpdb_types_target_t1_key UNIQUE (t1);
--- FIXME: this insert fails if datestyle is 'Postgres, MDY'
-SET datestyle TO 'ISO, MDY';
-INSERT INTO pxf_jdbc_writable SELECT * FROM gpdb_types;
-SELECT * FROM gpdb_types_target ORDER BY t1;
+-- @description query01 for JDBC query with int by partitioning
+SELECT * FROM pxf_jdbc_multiple_fragments_by_int ORDER BY t1;
           t1          |  t2  | num1 | dub1 |      dec1      |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1                 | s_6  |    1 |    6 |        1.23456 | 2013-07-13 21:00:00 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | USD | 1
@@ -33,26 +29,3 @@ SELECT * FROM gpdb_types_target ORDER BY t1;
  row9                 | s_14 |    9 |   14 |        23457.1 | 2013-07-21 21:00:00 |  7.7 | 23456789 | f |  9 |  900 | 2015-03-13 | abcde | UAH | 9
 (25 rows)
 
--- start_matchsubs
---
--- # create a match/subs
---
--- m/\/gpdb\/v\d+\//
--- s/v\d+/SOME_VERSION/
---
--- m/file:.*;/
--- s/file:.*; lineNumber: \d+; columnNumber: \d+;/SOME_ERROR_LOCATION/g
---
--- m/DETAIL/
--- s/DETAIL/CONTEXT/
---
--- m/pxf:\/\/(.*)\/pxf_automation_data/
--- s/pxf:\/\/.*\/pxf_automation_data/pxf:\/\/pxf_automation_data/
---
--- m/CONTEXT:.*line.*/
--- s/line \d* of //g
---
--- end_matchsubs
-INSERT INTO pxf_jdbc_writable SELECT * FROM gpdb_types;
-ERROR:  PXF server error : ERROR: duplicate key value violates unique constraint "gpdb_types_target_t1_key"  (seg1 127.0.0.1:6001 pid=42147)  (seg2 127.0.0.1:6002 pid=43053)
-HINT:  Check the PXF logs located in the '/Users/bboyle/pxf-base/logs' directory on host 'localhost' or 'set client_min_messages=LOG' for additional details.

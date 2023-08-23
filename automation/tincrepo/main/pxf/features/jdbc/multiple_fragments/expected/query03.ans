@@ -1,6 +1,5 @@
--- @description query01 for JDBC query with server config
-SET datestyle TO 'ISO, MDY';
-SELECT * FROM pxf_jdbc_read_server_config_all ORDER BY t1;
+-- @description query01 for JDBC query with enum by partitioning
+SELECT * FROM pxf_jdbc_multiple_fragments_by_enum ORDER BY t1;
           t1          |  t2  | num1 | dub1 |      dec1      |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1                 | s_6  |    1 |    6 |        1.23456 | 2013-07-13 21:00:00 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | USD | 1

@@ -1,5 +1,5 @@
 -- @description query01 for PXF HDFS Readable Avro test case for Array of logical types.
-set datestyle to 'ISO, MDY';
+
 set timezone='utc';
 
 \x

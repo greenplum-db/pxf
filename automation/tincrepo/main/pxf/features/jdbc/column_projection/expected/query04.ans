@@ -37,6 +37,6 @@ SELECT "n@m2", "t", "num 1" FROM pxf_jdbc_superset_of_fields ORDER BY "t";
 --
 -- end_matchsubs
 SELECT * FROM pxf_jdbc_superset_of_fields ORDER BY "t";
-ERROR:  PXF server error : ERROR: column "does_not_exist_on_source" does not exist
+ERROR: column "does_not_exist_on_source" does not exist
 HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 DETAIL:  External table pxf_jdbc_superset_of_fields
