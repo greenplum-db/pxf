@@ -65,6 +65,7 @@ public class S3SelectPredicateBuilder extends JdbcPredicateBuilder {
                     format = "CAST (%s AS float)";
                     break;
                 case REAL:
+                case NUMERIC:
                     format = "CAST (%s AS decimal)";
                     break;
                 case TEXT:
@@ -86,15 +87,4 @@ public class S3SelectPredicateBuilder extends JdbcPredicateBuilder {
         return super.getNodeValue(operandNode);
     }
 
-    @Override
-    protected String serializeValue(DataType type, String value) {
-        switch (type) {
-            case VARCHAR:
-            case BPCHAR:
-                // We can also push VARCHAR and BPCHAR
-                type = DataType.TEXT;
-                break;
-        }
-        return super.serializeValue(type, value);
-    }
 }

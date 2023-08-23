@@ -14,8 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class S3SelectQueryBuilderTest {
 
-    private static final String SQL_POSITION = "SELECT s._1, s._2, s._3, s._4, s._5, s._6 FROM S3Object s";
-    private static final String SQL_NO_POSITION = "SELECT s.\"id\", s.\"cdate\", s.\"amt\", s.\"grade\", s.\"pass\", s.\"weight\" FROM S3Object s";
+    private static final String SQL_POSITION = "SELECT s._1, s._2, s._3, s._4, s._5, s._6, s._7, s._8, s._9 FROM S3Object s";
+    private static final String SQL_NO_POSITION = "SELECT s.\"id\", s.\"cdate\", s.\"amt\", s.\"grade\", s.\"pass\", s.\"weight\"" +
+            ", s.\"col_varchar\", s.\"col_char\", s.\"col_numeric\" FROM S3Object s";
 
     private RequestContext context;
     private S3SelectQueryBuilder builderPosition, builderNoPosition;
@@ -31,6 +32,9 @@ public class S3SelectQueryBuilderTest {
         columns.add(new ColumnDescriptor("grade", DataType.TEXT.getOID(), 3, "text", null));
         columns.add(new ColumnDescriptor("pass", DataType.BOOLEAN.getOID(), 4, "boolean", null));
         columns.add(new ColumnDescriptor("weight", DataType.REAL.getOID(), 5, "float4", null));
+        columns.add(new ColumnDescriptor("col_varchar", DataType.VARCHAR.getOID(), 6, "varchar", null));
+        columns.add(new ColumnDescriptor("col_char", DataType.BPCHAR.getOID(), 7, "bpchar", null));
+        columns.add(new ColumnDescriptor("col_numeric", DataType.NUMERIC.getOID(), 8, "numeric", null));
         context.setTupleDescription(columns);
 
         builderPosition = new S3SelectQueryBuilder(context, true);
@@ -137,4 +141,29 @@ public class S3SelectQueryBuilderTest {
         assertEquals(SQL_POSITION + " WHERE ((s._4 = 'foobar' AND CAST (s._3 AS float) <> 999) AND (TO_TIMESTAMP(s._2) = TO_TIMESTAMP('2008-02-01') OR CAST (s._6 AS decimal) <> 999))", builderPosition.buildSelectQuery());
         assertEquals(SQL_NO_POSITION + " WHERE ((s.\"grade\" = 'foobar' AND CAST (s.\"amt\" AS float) <> 999) AND (TO_TIMESTAMP(s.\"cdate\") = TO_TIMESTAMP('2008-02-01') OR CAST (s.\"weight\" AS decimal) <> 999))", builderNoPosition.buildSelectQuery());
     }
+
+    @Test
+    public void testVarchar() {
+        // a6 = abc
+        context.setFilterString("a6c1043s3dabco5");
+        assertEquals(SQL_POSITION + " WHERE s._7 = 'abc'", builderPosition.buildSelectQuery());
+        assertEquals(SQL_NO_POSITION + " WHERE s.\"col_varchar\" = 'abc'", builderNoPosition.buildSelectQuery());
+    }
+
+    @Test
+    public void testChar() {
+        // a7 = abc
+        context.setFilterString("a7c1042s3dabco5");
+        assertEquals(SQL_POSITION + " WHERE s._8 = 'abc'", builderPosition.buildSelectQuery());
+        assertEquals(SQL_NO_POSITION + " WHERE s.\"col_char\" = 'abc'", builderNoPosition.buildSelectQuery());
+    }
+
+    @Test
+    public void testNumeric() {
+        // a8 = 1.23
+        context.setFilterString("a8c1700s4d1.23o5");
+        assertEquals(SQL_POSITION + " WHERE CAST (s._9 AS decimal) = 1.23", builderPosition.buildSelectQuery());
+        assertEquals(SQL_NO_POSITION + " WHERE CAST (s.\"col_numeric\" AS decimal) = 1.23", builderNoPosition.buildSelectQuery());
+    }
+
 }

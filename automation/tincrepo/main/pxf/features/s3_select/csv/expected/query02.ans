@@ -1,0 +1,22 @@
+-- start_ignore
+-- end_ignore
+-- start_ignore
+-- end_ignore
+-- @description query02 test S3 Select access to CSV with headers and no compression
+--
+-- test filters with varchar, char and numeric types
+-- while we can not prove here they have actually been pushed down to S3
+-- we can prove the query does not fail if they are used
+SELECT l_orderkey, l_quantity, l_shipmode, l_comment FROM s3select_csv
+WHERE  l_orderkey < 2000 AND (l_quantity = 15 AND l_shipmode = 'RAIL' OR l_comment = 'ideas doubt')
+ORDER BY l_orderkey;
+ l_orderkey | l_quantity | l_shipmode |                  l_comment
+------------+------------+------------+---------------------------------------------
+        709 |      15.00 | RAIL       | ily regular deposits. sauternes was accor
+       1316 |      15.00 | RAIL       | fully express dugouts. furiously silent ide
+       1601 |      50.00 | FOB        | ideas doubt
+       1604 |      15.00 | RAIL       | ending realms along the special, p
+       1698 |      15.00 | RAIL       | final ideas. even, ironic
+       1857 |      15.00 | RAIL       | egular, regular inst
+       1927 |      15.00 | RAIL       |  carefully regular requests sleep car
+(7 rows)
