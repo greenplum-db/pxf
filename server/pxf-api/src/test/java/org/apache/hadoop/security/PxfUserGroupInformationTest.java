@@ -297,6 +297,42 @@ public class PxfUserGroupInformationTest {
     }
 
     @Test
+    public void testReloginFromKeytabDifferentRenewWindow() throws Exception {
+        user.setLogin(mockLoginContext);
+        when(mockTGT.getServer()).thenReturn(tgtPrincipal);
+
+        // TGT validity started 1 hr ago, valid for another 1 hr, we are at 6/12 or 50% which is less
+        // than the default renew window of 80%
+        when(mockTGT.getStartTime()).thenReturn(new Date(nowMs - 3600 * 1000L));
+        when(mockTGT.getEndTime()).thenReturn(new Date(nowMs + 3600 * 1000L));
+
+        ugi = new UserGroupInformation(subjectWithKerberosKeyTab);
+        ugi.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);
+        // leave user.lastLogin at 0 to simulate old login
+        session = new LoginSession("config", "principal", "keytab", ugi, subjectWithKerberosKeyTab, 1);
+
+        // with the default threshold, there should be no change to the login
+        pxfUserGroupInformation.reloginFromKeytab(serverName, session, DEFAULT_TICKET_RENEW_THRESHOLD);
+
+        assertSame(mockLoginContext, user.getLogin());
+        assertTrue(user.getLastLogin() == 0); // login timestamp is updated
+
+        // train to return another LoginContext when it is constructed during re-login
+        mockAnotherLoginContext = mock(LoginContext.class);
+        when(mockLoginContextProvider.newLoginContext(anyString(), any(), any())).thenReturn(mockAnotherLoginContext);
+
+        // change the renew threshold to 50%
+        pxfUserGroupInformation.reloginFromKeytab(serverName, session, 0.5f);
+
+        assertNotSame(mockLoginContext, user.getLogin());
+        assertSame(mockAnotherLoginContext, user.getLogin());
+        assertTrue(user.getLastLogin() > 0); // login timestamp is updated
+
+        verify(mockLoginContext).logout();
+        verify(mockAnotherLoginContext).login();
+    }
+
+    @Test
     public void testReloginFromKeytabThrowsExceptionOnLoginFailure() throws Exception {
 
         user.setLogin(mockLoginContext);
