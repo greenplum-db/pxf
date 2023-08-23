@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.InetAddress;
 
+import static org.greenplum.pxf.api.security.SecureLogin.DEFAULT_TICKET_RENEW_THRESHOLD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -190,7 +191,7 @@ public class SecureLoginTest {
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
 
         verify(pxfUserGroupInformationMock).loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
-        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedLoginSession, configuration);
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedLoginSession, DEFAULT_TICKET_RENEW_THRESHOLD);
 
         verifyNoMoreInteractions(pxfUserGroupInformationMock);
     }
@@ -227,7 +228,7 @@ public class SecureLoginTest {
         verify(pxfUserGroupInformationMock).loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
         verify(pxfUserGroupInformationMock).getKerberosMinMillisBeforeRelogin("server", configuration);
         // 1 extra relogin call
-        verify(pxfUserGroupInformationMock, times(2)).reloginFromKeytab("server", expectedLoginSession, configuration);
+        verify(pxfUserGroupInformationMock, times(2)).reloginFromKeytab("server", expectedLoginSession, DEFAULT_TICKET_RENEW_THRESHOLD);
 
         verifyNoMoreInteractions(pxfUserGroupInformationMock);
     }
@@ -271,10 +272,10 @@ public class SecureLoginTest {
         assertNotSame(loginSession, diffLoginSession); // should be different object
 
         verify(pxfUserGroupInformationMock).loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
-        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedLoginSession, configuration);
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedLoginSession, DEFAULT_TICKET_RENEW_THRESHOLD);
 
         verify(pxfUserGroupInformationMock).loginUserFromKeytab(diffConfiguration, "diff-server", "diff-config", "principal", "/path/to/keytab");
-        verify(pxfUserGroupInformationMock).reloginFromKeytab("diff-server", expectedDiffLoginSession, diffConfiguration);
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("diff-server", expectedDiffLoginSession, DEFAULT_TICKET_RENEW_THRESHOLD);
 
         verifyNoMoreInteractions(pxfUserGroupInformationMock);
     }
@@ -321,11 +322,11 @@ public class SecureLoginTest {
         assertNotSame(loginSession, diffLoginSession); // should be different object
 
         verify(pxfUserGroupInformationMock).loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
-        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedLoginSession, configuration);
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedLoginSession, DEFAULT_TICKET_RENEW_THRESHOLD);
 
         verify(pxfUserGroupInformationMock).loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab");
         verify(pxfUserGroupInformationMock, times(2)).getKerberosMinMillisBeforeRelogin("server", diffConfiguration);
-        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedDiffLoginSession, diffConfiguration);
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedDiffLoginSession, DEFAULT_TICKET_RENEW_THRESHOLD);
 
         verifyNoMoreInteractions(pxfUserGroupInformationMock);
     }
@@ -353,7 +354,7 @@ public class SecureLoginTest {
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
 
         // login should be never called, only re-login
-        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", loginSession, configuration);
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", loginSession, DEFAULT_TICKET_RENEW_THRESHOLD);
         verify(pxfUserGroupInformationMock, never()).loginUserFromKeytab(any(), any(), any(), any(), any());
     }
 

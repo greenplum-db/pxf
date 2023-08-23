@@ -38,6 +38,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.hadoop.security.PxfUserGroupInformation.PROPERTY_TICKET_RENEW_THRESHOLD;
+
 /**
  * This class relies heavily on Hadoop API to
  * <ul>
@@ -64,6 +66,8 @@ public class SecureLogin {
     public static final String CONFIG_KEY_SERVICE_CONSTRAINED_DELEGATION = "pxf.service.kerberos.constrained-delegation";
     public static final String CONFIG_KEY_SERVICE_USER_IMPERSONATION = "pxf.service.user.impersonation";
     public static final String CONFIG_KEY_SERVICE_USER_NAME = "pxf.service.user.name";
+
+    public static final float DEFAULT_TICKET_RENEW_THRESHOLD = 0.8f;
 
     private static final Map<String, LoginSession> loginMap = new HashMap<>();
 
@@ -130,7 +134,11 @@ public class SecureLogin {
 
         // try to relogin to keep the TGT token from expiring, if it still has a long validity, it will be a no-op
         if (Utilities.isSecurityEnabled(configuration)) {
-            pxfUserGroupInformation.reloginFromKeytab(serverName, loginSession, configuration);
+
+            // the percentage of the ticket window to use before we renew ticket
+            float ticket_renew_threshold = configuration.getFloat(PROPERTY_TICKET_RENEW_THRESHOLD, DEFAULT_TICKET_RENEW_THRESHOLD);
+
+            pxfUserGroupInformation.reloginFromKeytab(serverName, loginSession, ticket_renew_threshold);
         }
 
         return loginSession.getLoginUser();
