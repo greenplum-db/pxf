@@ -8,6 +8,7 @@ import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.filter.CollectionOperandNode;
 import org.greenplum.pxf.api.filter.ColumnIndexOperandNode;
@@ -237,6 +238,7 @@ public class SearchArgumentBuilder implements TreeVisitor {
         } else if (literal instanceof Timestamp) {
             return PredicateLeaf.Type.TIMESTAMP;
         } else if (literal instanceof HiveDecimal ||
+                literal instanceof HiveDecimalWritable ||
                 literal instanceof BigDecimal) {
             return PredicateLeaf.Type.DECIMAL;
         } else if (literal instanceof Boolean) {
@@ -257,6 +259,7 @@ public class SearchArgumentBuilder implements TreeVisitor {
                 literal instanceof Date ||
                 literal instanceof Timestamp ||
                 literal instanceof HiveDecimal ||
+                literal instanceof HiveDecimalWritable ||
                 literal instanceof BigDecimal ||
                 literal instanceof Boolean) {
             return literal;
@@ -305,6 +308,11 @@ public class SearchArgumentBuilder implements TreeVisitor {
                 case REAL:
                     return Float.parseFloat(value);
                 case NUMERIC:
+                    HiveDecimalWritable decimalValue = new HiveDecimalWritable(value);
+                    if (!decimalValue.isSet() || new BigDecimal(value).precision() > HiveDecimal.MAX_PRECISION) {
+                        throw new NumberFormatException("Failed to set HiveDecimal value");
+                    }
+                    return decimalValue;
                 case FLOAT8:
                     return Double.parseDouble(value);
                 case TEXT:
@@ -325,7 +333,7 @@ public class SearchArgumentBuilder implements TreeVisitor {
                     throw new UnsupportedTypeException(String.format("DataType %s unsupported", dataType));
             }
         } catch (NumberFormatException nfe) {
-            throw new IllegalStateException(String.format("failed to parse number data %s for type %s", value, dataType));
+            throw new IllegalStateException(String.format("failed to parse number data %s for type %s", value, dataType), nfe);
         }
     }
 

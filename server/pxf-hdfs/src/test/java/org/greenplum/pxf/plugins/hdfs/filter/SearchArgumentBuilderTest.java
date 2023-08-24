@@ -35,6 +35,9 @@ public class SearchArgumentBuilderTest {
         columnDescriptors.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 2, "float8", null));
         columnDescriptors.add(new ColumnDescriptor("grade", DataType.TEXT.getOID(), 3, "text", null));
         columnDescriptors.add(new ColumnDescriptor("b", DataType.BOOLEAN.getOID(), 4, "bool", null));
+        columnDescriptors.add(new ColumnDescriptor("col-char", DataType.BPCHAR.getOID(), 5, "char", null));
+        columnDescriptors.add(new ColumnDescriptor("col-varchar", DataType.VARCHAR.getOID(), 6, "varchar", null));
+        columnDescriptors.add(new ColumnDescriptor("col-numeric", DataType.NUMERIC.getOID(), 7, "numeric", null));
     }
 
     @Test
@@ -148,12 +151,90 @@ public class SearchArgumentBuilderTest {
         assertEquals("leaf-0 = (EQUALS id 5), expr = (not leaf-0)", filterBuilder.build().toString());
     }
 
+    @Test
+    public void testCharFilter() throws Exception {
+        // col-char = ABC
+        String filterString = "a5c1042s3dABCo5";
+
+        SearchArgument.Builder filterBuilder = helper(filterString, columnDescriptors);
+        assertNotNull(filterBuilder);
+        assertEquals("leaf-0 = (EQUALS col-char ABC), expr = leaf-0", filterBuilder.build().toString());
+    }
+    @Test
+    public void testCharFilterWithPadding() throws Exception {
+        // col-char = ABC
+        String filterString = "a5c1042s4dABC o5";
+
+        SearchArgument.Builder filterBuilder = helper(filterString, columnDescriptors);
+        assertNotNull(filterBuilder);
+        assertEquals("leaf-0 = (EQUALS col-char ABC ), expr = leaf-0", filterBuilder.build().toString());
+    }
+
+    @Test
+    public void testCharFilterWithPaddingWithTransformer() throws Exception {
+        // col-char = ABC
+        String filterString = "a5c1042s4dABC o5";
+
+        SearchArgument.Builder filterBuilder = helperWithTransformer(filterString, columnDescriptors);
+        assertNotNull(filterBuilder);
+        assertEquals("leaf-0 = (EQUALS col-char ABC ), leaf-1 = (EQUALS col-char ABC), expr = (or leaf-0 leaf-1)", filterBuilder.build().toString());
+    }
+
+    @Test
+    public void testVarcharFilter() throws Exception {
+        // col-varchar = ABC
+        String filterString = "a6c1043s3dABCo5";
+
+        SearchArgument.Builder filterBuilder = helper(filterString, columnDescriptors);
+        assertNotNull(filterBuilder);
+        assertEquals("leaf-0 = (EQUALS col-varchar ABC), expr = leaf-0", filterBuilder.build().toString());
+    }
+
+    @Test
+    public void testNumericFilter() throws Exception {
+        // col-numeric = 123456789.01234567890123456789012345678 <== go beyond double precision to max of 38
+        String filterString = "a7c1700s39d123456789.01234567890123456789012345678o5";
+
+        SearchArgument.Builder filterBuilder = helper(filterString, columnDescriptors);
+        assertNotNull(filterBuilder);
+        // make sure we are not losing precision as before
+        assertEquals("leaf-0 = (EQUALS col-numeric 123456789.01234567890123456789012345678), expr = leaf-0", filterBuilder.build().toString());
+    }
+
+    @Test
+    public void testNumericFilterScaleOverflow() throws Exception {
+        String filterString = "a7c1700s60d12345678901234567890123456789.012345678901234567890123456789o5";
+
+        Exception e = assertThrows(IllegalStateException.class,
+                () -> helper(filterString, columnDescriptors));
+        assertEquals("failed to parse number data 12345678901234567890123456789.012345678901234567890123456789 for type NUMERIC", e.getMessage());
+    }
+
+    @Test
+    public void testNumericFilterIntegerPartOverflow() {
+        String filterString = "a7c1700s80d1234567890123456789012345678901234567890123456789.012345678901234567890123456789o5";
+
+        Exception e = assertThrows(IllegalStateException.class,
+                () -> helper(filterString, columnDescriptors));
+        assertEquals("failed to parse number data 1234567890123456789012345678901234567890123456789.012345678901234567890123456789 for type NUMERIC", e.getMessage());
+    }
+
+
     private SearchArgument.Builder helper(String filterString, List<ColumnDescriptor> columnDescriptors) throws Exception {
         SearchArgumentBuilder treeVisitor =
                 new SearchArgumentBuilder(columnDescriptors, new Configuration());
         // Parse the filter string into a expression tree Node
         Node root = new FilterParser().parse(filterString);
         TRAVERSER.traverse(root, PRUNER, treeVisitor);
+        return treeVisitor.getFilterBuilder();
+    }
+
+    private SearchArgument.Builder helperWithTransformer(String filterString, List<ColumnDescriptor> columnDescriptors) throws Exception {
+        SearchArgumentBuilder treeVisitor =
+                new SearchArgumentBuilder(columnDescriptors, new Configuration());
+        // Parse the filter string into a expression tree Node
+        Node root = new FilterParser().parse(filterString);
+        TRAVERSER.traverse(root, PRUNER, new BPCharOperatorTransformer(columnDescriptors), treeVisitor);
         return treeVisitor.getFilterBuilder();
     }
 
