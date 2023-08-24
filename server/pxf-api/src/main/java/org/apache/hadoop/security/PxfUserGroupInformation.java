@@ -40,7 +40,8 @@ public class PxfUserGroupInformation {
     private static final String MUST_FIRST_LOGIN_FROM_KEYTAB = "loginUserFromKeyTab must be done first";
     private static final String OS_LOGIN_MODULE_NAME = getOSLoginModuleName();
 
-    public static final String PROPERTY_TICKET_RENEW_THRESHOLD = "pxf.service.kerberos.ticket-renew-threshold";
+    public static final String CONFIG_KEY_TICKET_RENEW_WINDOW = "pxf.service.kerberos.ticket-renew-window";
+    public static final float TICKET_RENEW_WINDOW_DEFAULT = 0.8f;
 
     private static final boolean windows = System.getProperty("os.name").startsWith("Windows");
     private static final boolean is64Bit = System.getProperty("os.arch").contains("64") ||
@@ -103,7 +104,8 @@ public class PxfUserGroupInformation {
 
             // store all the relevant information in the login session and return it
             return new LoginSession(configDirectory, principal, keytabFilename, loginUser, subject,
-                    getKerberosMinMillisBeforeRelogin(serverName, configuration));
+                    getKerberosMinMillisBeforeRelogin(serverName, configuration),
+                    getKerberosTicketRenewWindow(serverName, configuration));
 
         } catch (LoginException le) {
             KerberosAuthException kae = new KerberosAuthException(LOGIN_FAILURE, le);
@@ -126,7 +128,7 @@ public class PxfUserGroupInformation {
      * @throws IOException           when an IO error occurs
      * @throws KerberosAuthException on a failure
      */
-    public void reloginFromKeytab(String serverName, LoginSession loginSession, float ticket_renew_threshold) throws KerberosAuthException {
+    public void reloginFromKeytab(String serverName, LoginSession loginSession) throws KerberosAuthException {
 
         UserGroupInformation ugi = loginSession.getLoginUser();
 
@@ -145,7 +147,7 @@ public class PxfUserGroupInformation {
             Subject subject = loginSession.getSubject();
             KerberosTicket tgt = getTGT(subject);
             //Return if TGT is valid and is not going to expire soon.
-            if (tgt != null && now < getRefreshTime(tgt, ticket_renew_threshold)) {
+            if (tgt != null && now < getRefreshTime(tgt, loginSession.getKerberosTicketRenewWindow())) {
                 return;
             }
 
@@ -203,6 +205,17 @@ public class PxfUserGroupInformation {
         }
     }
 
+    public float getKerberosTicketRenewWindow(String serverName, Configuration configuration) {
+        float ticketRenewWindow = configuration.getFloat(CONFIG_KEY_TICKET_RENEW_WINDOW, TICKET_RENEW_WINDOW_DEFAULT);
+        if (ticketRenewWindow < 0 || ticketRenewWindow > 1.0) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid value for %s of %f for server %s. Please choose a value between 0 and 1.",
+                            ticketRenewWindow,
+                            CONFIG_KEY_TICKET_RENEW_WINDOW,
+                            serverName));
+        }
+        return ticketRenewWindow;
+    }
     // if the first kerberos ticket is not TGT, then remove and destroy it since
     // the kerberos library of jdk always use the first kerberos ticket as TGT.
     // See HADOOP-13433 for more details.

@@ -54,30 +54,33 @@ public class LoginSessionTest {
     public void testLoginSessionConfigurationConstructor() {
         session = new LoginSession("config");
         assertEquals(0, session.getKerberosMinMillisBeforeRelogin());
+        assertEquals(0, session.getKerberosTicketRenewWindow());
         assertNull(session.getKeytabPath());
         assertNull(session.getPrincipalName());
         assertNull(session.getLoginUser());
         assertNull(session.getSubject());
         assertNull(session.getUser());
-        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0]", session.toString());
+        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0,kerberosTicketRenewWindow=0.8]", session.toString());
     }
 
     @Test
     public void testLoginSessionConfigurationAndLoginUserConstructor() {
         session = new LoginSession("config", ugiFoo);
         assertEquals(0, session.getKerberosMinMillisBeforeRelogin());
+        assertEquals(0, session.getKerberosTicketRenewWindow());
         assertSame(ugiFoo, session.getLoginUser());
         assertNull(session.getKeytabPath());
         assertNull(session.getPrincipalName());
         assertNull(session.getSubject());
         assertNull(session.getUser());
-        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0]", session.toString());
+        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0,kerberosTicketRenewWindow=0.8]", session.toString());
     }
 
     @Test
     public void testLoginSessionShortConstructor() {
         session = new LoginSession("config", "principal", "keytab", 0);
         assertEquals(0, session.getKerberosMinMillisBeforeRelogin());
+        assertEquals(0, session.getKerberosTicketRenewWindow());
         assertEquals("keytab", session.getKeytabPath());
         assertEquals("principal", session.getPrincipalName());
         assertNull(session.getLoginUser());
@@ -87,8 +90,9 @@ public class LoginSessionTest {
 
     @Test
     public void testLoginSessionFullConstructor() {
-        session = new LoginSession("config", "principal", "keytab", ugiFoo, subjectFoo, 1);
+        session = new LoginSession("config", "principal", "keytab", ugiFoo, subjectFoo, 1, 0.8f);
         assertEquals(1, session.getKerberosMinMillisBeforeRelogin());
+        assertEquals(0.8f, session.getKerberosTicketRenewWindow());
         assertEquals("keytab", session.getKeytabPath());
         assertEquals("principal", session.getPrincipalName());
         assertSame(ugiFoo, session.getLoginUser());
@@ -98,35 +102,39 @@ public class LoginSessionTest {
 
     @Test
     public void testEquality() {
-        sessionFoo = new LoginSession("config", "principal", "keytab", ugiFoo, subjectFoo, 1);
+        sessionFoo = new LoginSession("config", "principal", "keytab", ugiFoo, subjectFoo, 1, 0.8f);
 
-        sessionBar = new LoginSession("config", "principal", "keytab", ugiBar, subjectBar, 1);
+        sessionBar = new LoginSession("config", "principal", "keytab", ugiBar, subjectBar, 1, 0.8f);
         assertEquals(sessionFoo, sessionBar);
         assertEquals(sessionFoo.hashCode(), sessionBar.hashCode());
 
 
-        sessionBar = new LoginSession("DIFFERENT", "principal", "keytab", ugiBar, subjectBar, 1);
+        sessionBar = new LoginSession("DIFFERENT", "principal", "keytab", ugiBar, subjectBar, 1, 0.8f);
         assertNotEquals(sessionFoo, sessionBar);
         assertNotEquals(sessionFoo.hashCode(), sessionBar.hashCode());
 
-        sessionBar = new LoginSession("config", "DIFFERENT", "keytab", ugiBar, subjectBar, 1);
+        sessionBar = new LoginSession("config", "DIFFERENT", "keytab", ugiBar, subjectBar, 1, 0.8f);
         assertNotEquals(sessionFoo, sessionBar);
         assertNotEquals(sessionFoo.hashCode(), sessionBar.hashCode());
 
 
-        sessionBar = new LoginSession("config", "principal", "DIFFERENT", ugiBar, subjectBar, 1);
+        sessionBar = new LoginSession("config", "principal", "DIFFERENT", ugiBar, subjectBar, 1, 0.8f);
         assertNotEquals(sessionFoo, sessionBar);
         assertNotEquals(sessionFoo.hashCode(), sessionBar.hashCode());
 
-        sessionBar = new LoginSession("config", "principal", "keytab", ugiBar, subjectBar, 999);
+        sessionBar = new LoginSession("config", "principal", "keytab", ugiBar, subjectBar, 999, 0.8f);
+        assertNotEquals(sessionFoo, sessionBar);
+        assertNotEquals(sessionFoo.hashCode(), sessionBar.hashCode());
+
+        sessionBar = new LoginSession("config", "principal", "keytab", ugiBar, subjectBar, 1, 0.4f);
         assertNotEquals(sessionFoo, sessionBar);
         assertNotEquals(sessionFoo.hashCode(), sessionBar.hashCode());
     }
 
     @Test
     public void testToString() {
-        session = new LoginSession("config", "principal", "keytab", ugiFoo, subjectFoo, 1);
-        assertEquals("LoginSession[config=config,principal=principal,keytab=keytab,kerberosMinMillisBeforeRelogin=1]", session.toString());
+        session = new LoginSession("config", "principal", "keytab", ugiFoo, subjectFoo, 1, 0.8f);
+        assertEquals("LoginSession[config=config,principal=principal,keytab=keytab,kerberosMinMillisBeforeRelogin=1,kerberosTicketRenewWindow=0.8]", session.toString());
     }
 
     private static void resetProperty(String key, String val) {
