@@ -20,8 +20,8 @@ SELECT s1, n1, tm FROM pxf_jdbc_hive_types_table WHERE tm > '2013-07-23 21:00:01
 (13 rows)
 
 SELECT s1, n1, tm FROM pxf_jdbc_hive_non_secure_types_table WHERE tm > '2013-07-23 21:00:01' ORDER BY n1, s1;
-               s1                | n1 |         tm          
----------------------------------+----+---------------------
+               s1               | n1 |         tm
+--------------------------------+----+---------------------
  third_hive_row11               | 11 | 2013-07-23 21:00:05
  third_hive_row12_text_null     | 11 | 2013-07-23 21:00:05
  third_hive_row14_double_null   | 11 | 2013-07-23 21:00:05
@@ -40,8 +40,8 @@ SELECT s1, n1, tm FROM pxf_jdbc_hive_non_secure_types_table WHERE tm > '2013-07-
 SELECT s1, n1, tm FROM pxf_jdbc_hive_types_table WHERE tm > '2013-07-23 21:00:01' UNION ALL
 SELECT s1, n1, tm FROM pxf_jdbc_hive_non_secure_types_table WHERE tm > '2013-07-23 21:00:01'
 ORDER BY n1, s1;
-               s1                | n1 |         tm          
----------------------------------+----+---------------------
+               s1               | n1 |         tm
+--------------------------------+----+---------------------
  row11                          | 11 | 2013-07-23 21:00:05
  row12_text_null                | 11 | 2013-07-23 21:00:05
  row14_double_null              | 11 | 2013-07-23 21:00:05
