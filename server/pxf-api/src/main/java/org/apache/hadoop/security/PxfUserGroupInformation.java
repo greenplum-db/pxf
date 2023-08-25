@@ -207,11 +207,11 @@ public class PxfUserGroupInformation {
 
     public float getKerberosTicketRenewWindow(String serverName, Configuration configuration) {
         float ticketRenewWindow = configuration.getFloat(CONFIG_KEY_TICKET_RENEW_WINDOW, TICKET_RENEW_WINDOW_DEFAULT);
-        if (ticketRenewWindow < 0 || ticketRenewWindow > 1.0) {
+        if (ticketRenewWindow < 0f || ticketRenewWindow > 1f) {
             throw new IllegalArgumentException(
                     String.format("Invalid value for %s of %f for server %s. Please choose a value between 0 and 1.",
-                            ticketRenewWindow,
                             CONFIG_KEY_TICKET_RENEW_WINDOW,
+                            ticketRenewWindow,
                             serverName));
         }
         return ticketRenewWindow;
@@ -247,10 +247,10 @@ public class PxfUserGroupInformation {
         LOG.warn("Warning, no kerberos tickets found while attempting to renew ticket");
     }
 
-    private long getRefreshTime(KerberosTicket tgt, float ticket_renew_threshold) {
+    private long getRefreshTime(KerberosTicket tgt, float ticketRenewWindow) {
         long start = tgt.getStartTime().getTime();
         long end = tgt.getEndTime().getTime();
-        return start + (long) ((end - start) * ticket_renew_threshold);
+        return start + (long) ((end - start) * ticketRenewWindow);
     }
 
     private static String getOSLoginModuleName() {

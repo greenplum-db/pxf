@@ -145,6 +145,62 @@ public class PxfUserGroupInformationTest {
         verify(mockLoginContext).login();
     }
 
+    @Test
+    public void testLoginFromKeytabRenewWindowFromConfig() throws Exception {
+        configuration.setFloat("pxf.service.kerberos.ticket-renew-window", 0.2f);
+        ugi = new UserGroupInformation(subject);
+
+        session = pxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config-dir", "principal/some.host.com@EXAMPLE.COM", "/path/to/keytab");
+
+        // assert that the login session was created with properly wired up ugi/subject/user/loginContext
+        assertEquals(0.2f, session.getKerberosTicketRenewWindow()); // will pick from configuration
+        assertEquals("/path/to/keytab", session.getKeytabPath());
+        assertEquals("principal/some.host.com@EXAMPLE.COM", session.getPrincipalName());
+        assertEquals(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
+        assertNotSame(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
+        assertSame(subject, session.getSubject());
+        assertSame(user, session.getUser());
+        assertSame(mockLoginContext, session.getUser().getLogin());
+        assertEquals(UserGroupInformation.AuthenticationMethod.KERBEROS, session.getLoginUser().getAuthenticationMethod());
+
+        // verify that login() was called
+        verify(mockLoginContext).login();
+    }
+
+    @Test
+    public void testLoginFromKeytabRenewWindowDefault() throws Exception {
+        ugi = new UserGroupInformation(subject);
+
+        session = pxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config-dir", "principal/some.host.com@EXAMPLE.COM", "/path/to/keytab");
+
+        // assert that the login session was created with properly wired up ugi/subject/user/loginContext
+        assertEquals(0.8f, session.getKerberosTicketRenewWindow()); // will pick from default
+        assertEquals("/path/to/keytab", session.getKeytabPath());
+        assertEquals("principal/some.host.com@EXAMPLE.COM", session.getPrincipalName());
+        assertEquals(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
+        assertNotSame(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
+        assertSame(subject, session.getSubject());
+        assertSame(user, session.getUser());
+        assertSame(mockLoginContext, session.getUser().getLogin());
+        assertEquals(UserGroupInformation.AuthenticationMethod.KERBEROS, session.getLoginUser().getAuthenticationMethod());
+
+        // verify that login() was called
+        verify(mockLoginContext).login();
+    }
+
+    @Test
+    public void testLoginFromKeytabRenewWindowInvalidValue() throws Exception {
+        configuration.set("pxf.service.kerberos.ticket-renew-window", "1.2");
+        ugi = new UserGroupInformation(subject);
+
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> pxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config-dir", "principal/some.host.com@EXAMPLE.COM", "/path/to/keytab"));
+        assertEquals("Invalid value for pxf.service.kerberos.ticket-renew-window of 1.200000 for server server. Please choose a value between 0 and 1.", e.getMessage());
+
+        // verify that login() was called
+        verify(mockLoginContext).login();
+    }
+
     /* ---------- Test below follow either cause no re-login (noop) or error out ---------- */
 
     @Test
