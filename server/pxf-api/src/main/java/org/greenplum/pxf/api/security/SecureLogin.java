@@ -224,7 +224,8 @@ public class SecureLogin {
                     configDirectory,
                     getServicePrincipal(serverName, configuration),
                     getServiceKeytab(serverName, configuration),
-                    kerberosMinMillisBeforeRelogin);
+                    kerberosMinMillisBeforeRelogin,
+                    kerberosTicketRenewWindow);
         } else {
             expectedLoginSession = new LoginSession(configDirectory);
         }

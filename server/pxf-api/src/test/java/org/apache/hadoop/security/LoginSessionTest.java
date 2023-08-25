@@ -78,9 +78,9 @@ public class LoginSessionTest {
 
     @Test
     public void testLoginSessionShortConstructor() {
-        session = new LoginSession("config", "principal", "keytab", 0);
+        session = new LoginSession("config", "principal", "keytab", 0, 0.8f);
         assertEquals(0, session.getKerberosMinMillisBeforeRelogin());
-        assertEquals(0, session.getKerberosTicketRenewWindow());
+        assertEquals(0.8f, session.getKerberosTicketRenewWindow());
         assertEquals("keytab", session.getKeytabPath());
         assertEquals("principal", session.getPrincipalName());
         assertNull(session.getLoginUser());

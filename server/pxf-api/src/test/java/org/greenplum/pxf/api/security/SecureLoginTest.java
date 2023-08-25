@@ -205,6 +205,7 @@ public class SecureLoginTest {
         configuration.set("hadoop.kerberos.min.seconds.before.relogin", "90");
         when(pxfUserGroupInformationMock.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
         when(pxfUserGroupInformationMock.getKerberosMinMillisBeforeRelogin("server", configuration)).thenReturn(90000L);
+        when(pxfUserGroupInformationMock.getKerberosTicketRenewWindow("server", configuration)).thenReturn(0.8f);
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
@@ -226,6 +227,7 @@ public class SecureLoginTest {
 
         verify(pxfUserGroupInformationMock).loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
         verify(pxfUserGroupInformationMock).getKerberosMinMillisBeforeRelogin("server", configuration);
+        verify(pxfUserGroupInformationMock).getKerberosTicketRenewWindow("server", configuration);
         // 1 extra relogin call
         verify(pxfUserGroupInformationMock, times(2)).reloginFromKeytab("server", expectedLoginSession);
 
@@ -290,6 +292,7 @@ public class SecureLoginTest {
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
         configuration.set("hadoop.kerberos.min.seconds.before.relogin", "90");
         when(pxfUserGroupInformationMock.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
+        when(pxfUserGroupInformationMock.getKerberosTicketRenewWindow("server", configuration)).thenReturn(0.8f);
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
@@ -310,6 +313,7 @@ public class SecureLoginTest {
         when(pxfUserGroupInformationMock.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
         when(pxfUserGroupInformationMock.loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab")).thenReturn(expectedDiffLoginSession);
         when(pxfUserGroupInformationMock.getKerberosMinMillisBeforeRelogin("server", diffConfiguration)).thenReturn(180000L);
+        when(pxfUserGroupInformationMock.getKerberosTicketRenewWindow("server", diffConfiguration)).thenReturn(0.8f);
 
         UserGroupInformation diffLoginUGI = secureLogin.getLoginUser("server", "config", diffConfiguration);
 
@@ -325,6 +329,7 @@ public class SecureLoginTest {
 
         verify(pxfUserGroupInformationMock).loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab");
         verify(pxfUserGroupInformationMock, times(2)).getKerberosMinMillisBeforeRelogin("server", diffConfiguration);
+        verify(pxfUserGroupInformationMock, times(2)).getKerberosTicketRenewWindow("server", diffConfiguration);
         verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedDiffLoginSession);
 
         verifyNoMoreInteractions(pxfUserGroupInformationMock);
@@ -333,6 +338,7 @@ public class SecureLoginTest {
     @Test
     public void testLoginKerberosReuseExistingLoginSessionWithResolvedHostnameInPrincipal() throws IOException {
         when(pxfUserGroupInformationMock.getKerberosMinMillisBeforeRelogin("server", configuration)).thenReturn(90L);
+        when(pxfUserGroupInformationMock.getKerberosTicketRenewWindow("server", configuration)).thenReturn(0.8f);
 
         expectedUGI = UserGroupInformation.createUserForTesting("some", new String[]{});
 
