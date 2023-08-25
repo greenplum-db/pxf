@@ -60,7 +60,7 @@ public class LoginSessionTest {
         assertNull(session.getLoginUser());
         assertNull(session.getSubject());
         assertNull(session.getUser());
-        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0,kerberosTicketRenewWindow=0.8]", session.toString());
+        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0,kerberosTicketRenewWindow=0.0]", session.toString());
     }
 
     @Test
@@ -73,7 +73,7 @@ public class LoginSessionTest {
         assertNull(session.getPrincipalName());
         assertNull(session.getSubject());
         assertNull(session.getUser());
-        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0,kerberosTicketRenewWindow=0.8]", session.toString());
+        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0,kerberosTicketRenewWindow=0.0]", session.toString());
     }
 
     @Test
