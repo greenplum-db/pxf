@@ -130,7 +130,6 @@ public class SecureLogin {
 
         // try to relogin to keep the TGT token from expiring, if it still has a long validity, it will be a no-op
         if (Utilities.isSecurityEnabled(configuration)) {
-
             pxfUserGroupInformation.reloginFromKeytab(serverName, loginSession);
         }
 

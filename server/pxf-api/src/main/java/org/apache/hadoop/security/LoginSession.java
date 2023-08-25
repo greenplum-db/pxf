@@ -28,7 +28,6 @@ public class LoginSession {
     private Subject subject;
     private User user;
 
-
     /**
      * Creates a new session object with a config directory
      *
