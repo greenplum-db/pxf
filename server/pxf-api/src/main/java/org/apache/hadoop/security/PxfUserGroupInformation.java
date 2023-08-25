@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN_DEFAULT;
 
 /**
  * PXF-specific analog of <code>UserGroupInformation</code> class to support multiple concurrent Kerberos sessions
@@ -196,7 +197,7 @@ public class PxfUserGroupInformation {
 
     public long getKerberosMinMillisBeforeRelogin(String serverName, Configuration configuration) {
         try {
-            return 1000L * configuration.getLong(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN, 60L);
+            return 1000L * configuration.getLong(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN, HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN_DEFAULT);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(String.format("Invalid attribute value for %s of %s for server %s",
                     HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN,
