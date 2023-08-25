@@ -41,6 +41,9 @@ public class PxfUserGroupInformation {
     private static final String MUST_FIRST_LOGIN_FROM_KEYTAB = "loginUserFromKeyTab must be done first";
     private static final String OS_LOGIN_MODULE_NAME = getOSLoginModuleName();
 
+    /**
+     * Percentage of the ticket window to use before we renew ticket.
+     */
     public static final String CONFIG_KEY_TICKET_RENEW_WINDOW = "pxf.service.kerberos.ticket-renew-window";
     public static final float TICKET_RENEW_WINDOW_DEFAULT = 0.8f;
 
@@ -217,6 +220,7 @@ public class PxfUserGroupInformation {
         }
         return ticketRenewWindow;
     }
+
     // if the first kerberos ticket is not TGT, then remove and destroy it since
     // the kerberos library of jdk always use the first kerberos ticket as TGT.
     // See HADOOP-13433 for more details.
