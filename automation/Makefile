@@ -166,8 +166,11 @@ sync_jdbc_config:
 sync_cloud_configs:
 ifneq "$(PROTOCOL)" ""
 	@mkdir -p $(PROTOCOL_HOME)
-	@if [ ! -f "$(PROTOCOL_HOME)/$(PROTOCOL)-site.xml" ]; then \
-		cp $(TEMPLATES_DIR)/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)/; \
+	@ set -e; \
+	if [ ! -f "$(PROTOCOL_HOME)/$(PROTOCOL)-site.xml" ]; then \
+		if [ $(PROTOCOL) != file ]; then \
+			cp $(TEMPLATES_DIR)/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)/; \
+		fi; \
 		cp $(TEMPLATES_DIR)/mapred-site.xml $(PROTOCOL_HOME)/; \
 		if [ $(PROTOCOL) = file ]; then \
 			if [ ! -d "$(BASE_PATH)" ]; then \
@@ -175,7 +178,7 @@ ifneq "$(PROTOCOL)" ""
 				rm -rf $(PROTOCOL_HOME); \
 				exit 1; \
 			fi; \
-			echo "Make sure your $PXF_BASE/conf/pxf-profiles.xml file configures the file:AvroSequenceFile and file:SequenceFile profiles"; \
+			echo "Make sure your $$PXF_BASE/conf/pxf-profiles.xml file configures the file:AvroSequenceFile and file:SequenceFile profiles"; \
 			cp $(TEMPLATES_DIR)/pxf-site.xml $(PROTOCOL_HOME)/; \
 			sed $(SED_OPTS) 's|</configuration>|<property><name>pxf.fs.basePath</name><value>$(BASE_PATH)</value></property></configuration>|g' $(PROTOCOL_HOME)/pxf-site.xml; \
 		fi; \
