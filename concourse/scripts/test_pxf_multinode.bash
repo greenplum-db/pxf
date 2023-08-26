@@ -86,6 +86,8 @@ function update_pghba_conf() {
 
 function add_testing_encoding() {
 	# install new encoding and restart Greenplum so that the new encoding is picked up by Greenplum
+	# TODO: Remove the glibc-locale-source installation from here once available in CCP
+	#       PR https://github.com/pivotal/gp-cloud-image-baking/pull/150
 	ssh "${SSH_OPTS[@]}" gpadmin@cdw "
 		source ${GPHOME}/greenplum_path.sh &&
 		gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_CCP_USER} -s -e 'if ! rpm -q glibc-locale-source >/dev/null 2>&1; then sudo yum install -y glibc-locale-source; fi; sudo localedef -c -i ru_RU -f CP1251 ru_RU.CP1251' &&

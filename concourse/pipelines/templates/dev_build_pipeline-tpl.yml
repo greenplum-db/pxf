@@ -1578,3 +1578,4 @@ jobs:
     <<: *slack_alert
 {% endif %}
 {% endif %} # if gp7_multinode ends here
+{% set gp_ver = None %}
