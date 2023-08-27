@@ -211,6 +211,19 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
     }
 
     @Test
+    public void testVarcharPushDown() throws Exception {
+        // ORC SearchArgument filters out row groups. Since we have a single
+        // group, all rows will be returned
+        // vc1 = 'abcde'
+        context.setFilterString("a13c1043s5dabcdeo5");
+        assertRowsReturned(ALL_ROWS);
+
+        // vc1 = 'xyz'
+        context.setFilterString("a13c1043s3dxyzo5");
+        assertRowsReturned(NO_ROWS);
+    }
+
+    @Test
     public void testNullPushDown() throws Exception {
         // there are no nulls in column t1
         // t1 is not null
@@ -245,6 +258,23 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
         // num1 in (11, 12, 15)
         context.setFilterString("a2m1007s2d11s2d12s2d15o10");
         assertRowsReturned(ALL_ROWS);
+    }
+
+    @Test
+    public void testNumericPushDown() throws Exception {
+        // ORC SearchArgument filters out row groups. Since we have a single
+        // group, all rows will be returned
+        // dec1 = 5
+        context.setFilterString("a4c1700s1d5o5");
+        assertRowsReturned(ALL_ROWS);
+
+        // dec1 < -1.2345599999999999999999999999999999999
+        context.setFilterString("a4c1700s40d-1.2345599999999999999999999999999999999o1");
+        assertRowsReturned(ALL_ROWS);
+
+        // dec1 < -1.23456
+        context.setFilterString("a4c1700s8d-1.23456o1");
+        assertRowsReturned(NO_ROWS);
     }
 
     private void assertRowsReturned(int[] expectedRows) throws Exception {
