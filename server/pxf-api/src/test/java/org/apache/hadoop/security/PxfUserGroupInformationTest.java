@@ -111,14 +111,7 @@ public class PxfUserGroupInformationTest {
 
         // assert that the login session was created with properly wired up ugi/subject/user/loginContext
         assertEquals(33000, session.getKerberosMinMillisBeforeRelogin()); // will pick from configuration
-        assertEquals("/path/to/keytab", session.getKeytabPath());
-        assertEquals("principal/some.host.com@EXAMPLE.COM", session.getPrincipalName());
-        assertEquals(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
-        assertNotSame(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
-        assertSame(subject, session.getSubject());
-        assertSame(user, session.getUser());
-        assertSame(mockLoginContext, session.getUser().getLogin());
-        assertEquals(UserGroupInformation.AuthenticationMethod.KERBEROS, session.getLoginUser().getAuthenticationMethod());
+        assertSessionInfo(session, mockLoginContext, ugi, subject, user);
 
         // verify that login() was called
         verify(mockLoginContext).login();
@@ -132,14 +125,7 @@ public class PxfUserGroupInformationTest {
 
         // assert that the login session was created with properly wired up ugi/subject/user/loginContext
         assertEquals(60000, session.getKerberosMinMillisBeforeRelogin()); // will pick from default
-        assertEquals("/path/to/keytab", session.getKeytabPath());
-        assertEquals("principal/some.host.com@EXAMPLE.COM", session.getPrincipalName());
-        assertEquals(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
-        assertNotSame(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
-        assertSame(subject, session.getSubject());
-        assertSame(user, session.getUser());
-        assertSame(mockLoginContext, session.getUser().getLogin());
-        assertEquals(UserGroupInformation.AuthenticationMethod.KERBEROS, session.getLoginUser().getAuthenticationMethod());
+        assertSessionInfo(session, mockLoginContext, ugi, subject, user);
 
         // verify that login() was called
         verify(mockLoginContext).login();
@@ -154,14 +140,7 @@ public class PxfUserGroupInformationTest {
 
         // assert that the login session was created with properly wired up ugi/subject/user/loginContext
         assertEquals(0.2f, session.getKerberosTicketRenewWindow()); // will pick from configuration
-        assertEquals("/path/to/keytab", session.getKeytabPath());
-        assertEquals("principal/some.host.com@EXAMPLE.COM", session.getPrincipalName());
-        assertEquals(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
-        assertNotSame(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
-        assertSame(subject, session.getSubject());
-        assertSame(user, session.getUser());
-        assertSame(mockLoginContext, session.getUser().getLogin());
-        assertEquals(UserGroupInformation.AuthenticationMethod.KERBEROS, session.getLoginUser().getAuthenticationMethod());
+        assertSessionInfo(session, mockLoginContext, ugi, subject, user);
 
         // verify that login() was called
         verify(mockLoginContext).login();
@@ -175,14 +154,7 @@ public class PxfUserGroupInformationTest {
 
         // assert that the login session was created with properly wired up ugi/subject/user/loginContext
         assertEquals(0.8f, session.getKerberosTicketRenewWindow()); // will pick from default
-        assertEquals("/path/to/keytab", session.getKeytabPath());
-        assertEquals("principal/some.host.com@EXAMPLE.COM", session.getPrincipalName());
-        assertEquals(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
-        assertNotSame(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
-        assertSame(subject, session.getSubject());
-        assertSame(user, session.getUser());
-        assertSame(mockLoginContext, session.getUser().getLogin());
-        assertEquals(UserGroupInformation.AuthenticationMethod.KERBEROS, session.getLoginUser().getAuthenticationMethod());
+        assertSessionInfo(session, mockLoginContext, ugi, subject, user);
 
         // verify that login() was called
         verify(mockLoginContext).login();
@@ -405,6 +377,17 @@ public class PxfUserGroupInformationTest {
         Exception e = assertThrows(KerberosAuthException.class,
                 () -> pxfUserGroupInformation.reloginFromKeytab(serverName, session));
         assertEquals("Login failure for principal: principal from keytab keytab javax.security.auth.login.LoginException: foo", e.getMessage());
+    }
+
+    private static void assertSessionInfo(LoginSession session, LoginContext loginContext, UserGroupInformation ugi, Subject subject, User user) {
+        assertEquals("/path/to/keytab", session.getKeytabPath());
+        assertEquals("principal/some.host.com@EXAMPLE.COM", session.getPrincipalName());
+        assertEquals(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
+        assertNotSame(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
+        assertSame(subject, session.getSubject());
+        assertSame(user, session.getUser());
+        assertSame(loginContext, session.getUser().getLogin());
+        assertEquals(UserGroupInformation.AuthenticationMethod.KERBEROS, session.getLoginUser().getAuthenticationMethod());
     }
 
     private static void resetProperty(String key, String val) {

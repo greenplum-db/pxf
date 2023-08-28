@@ -53,6 +53,7 @@ public class LoginSession {
      * @param configDirectory server configuration directory
      * @param principalName   Kerberos principal name to use to obtain tokens
      * @param keytabPath      full path to a keytab file for the principal
+     * @param kerberosTicketRenewWindow the percentage of the ticket lifespan
      */
     public LoginSession(String configDirectory, String principalName, String keytabPath, long kerberosMinMillisBeforeRelogin, float kerberosTicketRenewWindow) {
         this(configDirectory, principalName, keytabPath, null, null, kerberosMinMillisBeforeRelogin, kerberosTicketRenewWindow);

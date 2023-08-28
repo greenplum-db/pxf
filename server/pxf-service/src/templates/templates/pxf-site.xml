@@ -26,7 +26,6 @@
             Set to true to enable, false to disable.
         </description>
     </property>
-    <!--
     <property>
         <name>pxf.service.kerberos.ticket-renew-window</name>
         <value>0.8</value>
@@ -35,7 +34,6 @@
             Specifies the window, as a float, at which PXF will actively refresh the ticket.
         </description>
     </property>
-    -->
 
     <!--
     <property>
