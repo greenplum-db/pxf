@@ -9,7 +9,7 @@ PROXY_USER=${PROXY_USER:-pxfuser}
 PROTOCOL=${PROTOCOL:-}
 GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 PXF_SRC=$(find /tmp/build -name pxf_src -type d)
-DEFAULT_CCP_USER=""
+CCP_OS_USER=""
 
 # on purpose do not call this PXF_CONF|PXF_BASE so that it is not set during pxf operations
 if [[ ${PXF_VERSION} == 5 ]]; then
@@ -867,22 +867,22 @@ function setup_minio() {
 	export ACCESS_KEY_ID=${MINIO_ACCESS_KEY} SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
 }
 
-function set_default_ccp_user() {
+function set_ccp_os_user() {
     metadata_file="cluster_env_files/terraform/metadata"
 
     # TODO: Remove the jq installation from here once available in the base image.
     # Check if jq is installed
-    if ! command -v jq >/dev/null 2>&1; then
+    if ! command jq &> /dev/null; then
         echo "jq is not installed. Installing jq..."
         sudo yum install -y jq
     fi
 
     # Check if the metadata file exists
-    if [ -e "$metadata_file" ]; then
-        # shellcheck disable=SC2034
-        DEFAULT_CCP_USER=$(jq -r '.ami_default_user' "$metadata_file")
-    else
+    if [ ! -e "$metadata_file" ]; then
         echo "The $metadata_file file does not exist."
         exit 2
     fi
+
+    # shellcheck disable=SC2034
+    CCP_OS_USER=$(jq -r '.ami_default_user' "$metadata_file")
 }

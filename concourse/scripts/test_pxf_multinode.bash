@@ -23,7 +23,7 @@ fi
 
 # shellcheck source=/dev/null
 source "${CWDIR}/pxf_common.bash"
-set_default_ccp_user
+set_ccp_os_user
 
 SSH_OPTS=(-i cluster_env_files/private_key.pem -o 'StrictHostKeyChecking=no')
 HADOOP_SSH_OPTS=(-o 'StrictHostKeyChecking=no')
@@ -89,7 +89,7 @@ function add_testing_encoding() {
 	# TODO: Remove the glibc-locale-source installation from here once available in CCP
 	ssh "${SSH_OPTS[@]}" gpadmin@cdw "
 		source ${GPHOME}/greenplum_path.sh &&
-		gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_CCP_USER} -s -e 'if ! rpm -q glibc-locale-source >/dev/null 2>&1; then sudo yum install -y glibc-locale-source; fi; sudo localedef -c -i ru_RU -f CP1251 ru_RU.CP1251' &&
+		gpssh -f ~gpadmin/hostfile_all -v -u ${CCP_OS_USER} -s -e 'if ! rpm -q glibc-locale-source >/dev/null 2>&1; then sudo yum install -y glibc-locale-source; fi; sudo localedef -c -i ru_RU -f CP1251 ru_RU.CP1251' &&
 		export MASTER_DATA_DIRECTORY=/data/gpdata/coordinator/gpseg-1 &&
 		gpstop -air
 	"
@@ -218,7 +218,7 @@ function setup_pxf_kerberos_on_cluster() {
 	sudo mkdir -p /etc/security/keytabs
 	sudo cp "${DATAPROC_DIR}/pxf.service.keytab" /etc/security/keytabs/gpadmin.headless.keytab
 	sudo chown gpadmin:gpadmin /etc/security/keytabs/gpadmin.headless.keytab
-	scp "${DEFAULT_CCP_USER}"@cdw:/etc/krb5.conf /tmp/krb5.conf
+	scp "${CCP_OS_USER}"@cdw:/etc/krb5.conf /tmp/krb5.conf
 	sudo cp /tmp/krb5.conf /etc/krb5.conf
 
 	# Add foreign dataproc hostfile to /etc/hosts
@@ -293,8 +293,8 @@ function setup_pxf_kerberos_on_cluster() {
 		# Add foreign dataproc hostfile to /etc/hosts on all nodes and copy keytab
 		ssh gpadmin@cdw "
 			source ${GPHOME}/greenplum_path.sh &&
-			${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -r -u ${DEFAULT_CCP_USER} ~/dataproc_2_env_files/etc_hostfile =:/tmp/etc_hostfile &&
-			gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_CCP_USER} -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
+			${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -r -u ${CCP_OS_USER} ~/dataproc_2_env_files/etc_hostfile =:/tmp/etc_hostfile &&
+			gpssh -f ~gpadmin/hostfile_all -v -u ${CCP_OS_USER} -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
 			${GP_SCP_CMD} -h cdw -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-cdw.keytab =:${BASE_DIR}/keytabs/pxf.service.2.keytab &&
 			${GP_SCP_CMD} -h sdw1 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw1.keytab =:${BASE_DIR}/keytabs/pxf.service.2.keytab &&
 			${GP_SCP_CMD} -h sdw2 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw2.keytab =:${BASE_DIR}/keytabs/pxf.service.2.keytab
@@ -364,8 +364,8 @@ function setup_pxf_kerberos_on_cluster() {
 		# add foreign Hadoop and IPA KDC hostfile to /etc/hosts on all nodes
 		ssh gpadmin@cdw "
 			source ${GPHOME}/greenplum_path.sh &&
-			${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -r -u ${DEFAULT_CCP_USER} ~/ipa_env_files/etc_hostfile =:/tmp/etc_hostfile &&
-			gpssh -f ~gpadmin/hostfile_all -v -u ${DEFAULT_CCP_USER} -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
+			${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -r -u ${CCP_OS_USER} ~/ipa_env_files/etc_hostfile =:/tmp/etc_hostfile &&
+			gpssh -f ~gpadmin/hostfile_all -v -u ${CCP_OS_USER} -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
 			${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/ipa_env_files/pxf.service.keytab =:${BASE_DIR}/keytabs/pxf.service.3.keytab
 			${GP_SCP_CMD} -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/ipa_env_files/hadoop.user.keytab =:${BASE_DIR}/keytabs/hadoop.user.3.keytab
 		"
@@ -540,8 +540,8 @@ function _main() {
 		HDFS_BIN=/usr/bin
 	elif grep "edw0" cluster_env_files/etc_hostfile; then
 		HADOOP_HOSTNAME=hadoop
-		HADOOP_USER="${DEFAULT_CCP_USER}"
-		HDFS_BIN=~"${DEFAULT_CCP_USER}"/singlecluster/bin
+		HADOOP_USER="${CCP_OS_USER}"
+		HDFS_BIN=~"${CCP_OS_USER}"/singlecluster/bin
 		hadoop_ip=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print $1}')
 		# tell hbase where to find zookeeper
 		sed -i "/<name>hbase.zookeeper.quorum<\/name>/ {n; s/127.0.0.1/${hadoop_ip}/}" \

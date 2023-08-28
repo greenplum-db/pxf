@@ -5,11 +5,11 @@ set -exuo pipefail
 CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "${CWDIR}/pxf_common.bash"
 
-set_default_ccp_user
+set_ccp_os_user
 SSH_OPTS=(-i cluster_env_files/private_key.pem)
 LOCAL_GPHD_ROOT=/singlecluster
 inflate_singlecluster
-REMOTE_GPHD_ROOT=~"${DEFAULT_CCP_USER}"/singlecluster
+REMOTE_GPHD_ROOT=~"${CCP_OS_USER}"/singlecluster
 
 function install_hadoop_single_cluster() {
 	local hadoop_ip=${1}
@@ -39,16 +39,16 @@ function install_hadoop_single_cluster() {
 		groupadd supergroup &&
 		usermod -aG supergroup gpadmin &&
 
-		source ~${DEFAULT_CCP_USER}/pxf_common.bash &&
+		source ~${CCP_OS_USER}/pxf_common.bash &&
 		export IMPERSONATION=${IMPERSONATION} &&
 		setup_impersonation ${REMOTE_GPHD_ROOT} &&
 		start_hadoop_services ${REMOTE_GPHD_ROOT}
 	EOF
 
 	local FILES_TO_SCP=(~/setup_hadoop.sh pxf_src/concourse/scripts/pxf_common.bash "${LOCAL_GPHD_ROOT}")
-	scp "${SSH_OPTS[@]}" -rq "${FILES_TO_SCP[@]}" "${DEFAULT_CCP_USER}"@edw0:
+	scp "${SSH_OPTS[@]}" -rq "${FILES_TO_SCP[@]}" "${CCP_OS_USER}"@edw0:
 
-	ssh "${SSH_OPTS[@]}" "${DEFAULT_CCP_USER}"@edw0 '
+	ssh "${SSH_OPTS[@]}" "${CCP_OS_USER}"@edw0 '
 		sudo chmod +x ~/setup_hadoop.sh &&
 		sudo ~/setup_hadoop.sh
 	'
