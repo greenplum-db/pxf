@@ -872,7 +872,7 @@ function set_ccp_os_user() {
 
     # TODO: Remove the jq installation from here once available in the base image.
     # Check if jq is installed
-    if ! command jq &> /dev/null; then
+    if ! rpm -q jq &> /dev/null; then
         echo "jq is not installed. Installing jq..."
         sudo yum install -y jq
     fi
