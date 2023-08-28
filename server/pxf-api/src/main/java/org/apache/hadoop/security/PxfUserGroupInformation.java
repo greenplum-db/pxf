@@ -45,7 +45,7 @@ public class PxfUserGroupInformation {
      * Percentage of the ticket window to use before we renew ticket.
      */
     public static final String CONFIG_KEY_TICKET_RENEW_WINDOW = "pxf.service.kerberos.ticket-renew-window";
-    public static final float TICKET_RENEW_WINDOW_DEFAULT = 0.8f;
+    public static final float DEFAULT_TICKET_RENEW_WINDOW = 0.8f;
 
     private static final boolean windows = System.getProperty("os.name").startsWith("Windows");
     private static final boolean is64Bit = System.getProperty("os.arch").contains("64") ||
@@ -210,7 +210,7 @@ public class PxfUserGroupInformation {
     }
 
     public float getKerberosTicketRenewWindow(String serverName, Configuration configuration) {
-        float ticketRenewWindow = configuration.getFloat(CONFIG_KEY_TICKET_RENEW_WINDOW, TICKET_RENEW_WINDOW_DEFAULT);
+        float ticketRenewWindow = configuration.getFloat(CONFIG_KEY_TICKET_RENEW_WINDOW, DEFAULT_TICKET_RENEW_WINDOW);
         if (ticketRenewWindow < 0f || ticketRenewWindow > 1f) {
             throw new IllegalArgumentException(
                     String.format("Invalid value for %s of %f for server %s. Please choose a value between 0 and 1.",
