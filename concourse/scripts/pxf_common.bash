@@ -871,7 +871,6 @@ function set_default_ccp_user() {
     metadata_file="cluster_env_files/terraform/metadata"
 
     # TODO: Remove the jq installation from here once available in the base image.
-    #       PR https://github.com/pivotal/gp-image-baking/pull/379
     # Check if jq is installed
     if ! command -v jq >/dev/null 2>&1; then
         echo "jq is not installed. Installing jq..."
