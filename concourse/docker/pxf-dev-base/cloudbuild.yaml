@@ -36,6 +36,7 @@ steps:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb5-centos7-build-test:latest'
   - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest'
@@ -66,6 +67,7 @@ steps:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-centos7-test:latest'
   - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest'
@@ -92,6 +94,7 @@ steps:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-rocky8-test:latest'
   - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-rocky8-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-rocky8-test-pxf:latest'
@@ -118,6 +121,7 @@ steps:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-ubuntu18.04-test:latest'
   - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:latest'
@@ -145,6 +149,7 @@ steps:
   - 'build'
   - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-oel7-test:latest'
   - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-oel7-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-oel7-test-pxf:latest'
@@ -176,6 +181,7 @@ steps:
     - 'build'
     - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-rocky8-test:latest'
     - '--build-arg=GO_VERSION=${_GO_VERSION}'
+    - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
     - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:$COMMIT_SHA'
     - '--cache-from'
     - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:latest'
@@ -188,6 +194,7 @@ steps:
 
 substitutions:
   _GO_VERSION: '1.19.6' # default values
+  _GO_SHA256SUM: 'e3410c676ced327aec928303fef11385702a5562fd19d9a1750d5a2979763c3d' # sha256 for 1.19.6
   _MAVEN_VERSION: '3.9.3' # default values
 
 # Push images to Cloud Build to Container Registry

@@ -3,12 +3,14 @@ ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-centos7-test:latest
 FROM ${BASE_IMAGE}
 
 ARG GO_VERSION
+ARG GO_SHA256SUM
 
 ADD apache-maven.tar.gz /usr/share
 
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
+    && echo "${GO_SHA256SUM} /tmp/go.tgz" | sha256sum --check \
     && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tgz && rm go.tgz
 
 # add minio software
