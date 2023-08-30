@@ -2,6 +2,11 @@
 
 set -eox pipefail
 
+echo "Count of files under /usr/local/go"
+find /usr/local/go -type f | wc -l
+
+chmod --recursive a-w /usr/local/go
+
 CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "${CWDIR}/pxf_common.bash"
 
