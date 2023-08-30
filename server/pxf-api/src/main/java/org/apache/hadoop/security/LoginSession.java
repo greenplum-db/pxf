@@ -50,9 +50,9 @@ public class LoginSession {
     /**
      * Creates a new session object.
      *
-     * @param configDirectory server configuration directory
-     * @param principalName   Kerberos principal name to use to obtain tokens
-     * @param keytabPath      full path to a keytab file for the principal
+     * @param configDirectory           server configuration directory
+     * @param principalName             Kerberos principal name to use to obtain tokens
+     * @param keytabPath                full path to a keytab file for the principal
      * @param kerberosTicketRenewWindow the percentage of the ticket lifespan
      */
     public LoginSession(String configDirectory, String principalName, String keytabPath, long kerberosMinMillisBeforeRelogin, float kerberosTicketRenewWindow) {
@@ -68,7 +68,7 @@ public class LoginSession {
      * @param loginUser                      UserGroupInformation for the given principal after login to Kerberos was performed
      * @param subject                        the subject
      * @param kerberosMinMillisBeforeRelogin the number of milliseconds before re-login
-     * @param kerberosTicketRenewWindow the percentage of the ticket lifespan
+     * @param kerberosTicketRenewWindow      the percentage of the ticket lifespan
      */
     public LoginSession(String configDirectory, String principalName, String keytabPath, UserGroupInformation loginUser,
                         Subject subject, long kerberosMinMillisBeforeRelogin, float kerberosTicketRenewWindow) {
