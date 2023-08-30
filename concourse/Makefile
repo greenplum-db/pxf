@@ -39,6 +39,7 @@ OEL7                        ?= false
 FILE                        ?= false
 GP7_CLI                     ?= false
 GP7_MULTINODE               ?= false
+PXF_DEV_IMAGE_TAG           ?= latest
 
 SET_PIPELINE := set-pipeline
 ifeq ($(CHECK_CREDS), true)
@@ -131,6 +132,7 @@ set-dev-build-pipeline:
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--var=pxf-git-branch=${BRANCH} \
+		--var=pxf-dev-image-tag=$(PXF_DEV_IMAGE_TAG) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:

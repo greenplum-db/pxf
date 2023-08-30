@@ -187,7 +187,7 @@ resources:
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
-    tag: latest
+    tag: ((pxf-dev-image-tag))
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endfor %} {# gp5, gp6, and gp7 #}
@@ -198,7 +198,7 @@ resources:
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rocky8-test-pxf
-    tag: latest
+    tag: ((pxf-dev-image-tag))
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endfor %}
@@ -209,7 +209,7 @@ resources:
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-oel7-test-pxf
-    tag: latest
+    tag: ((pxf-dev-image-tag))
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% endif %}
@@ -220,7 +220,7 @@ resources:
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
-    tag: latest
+    tag: ((pxf-dev-image-tag))
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 
