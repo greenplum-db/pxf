@@ -1,6 +1,6 @@
 -- start_ignore
 -- end_ignore
--- @description query01 for PXF filter pushdown case using the planner
+-- @description query01 for PXF filter pushdown case using the optimizer
 --
 -- start_matchsubs
 --
@@ -27,7 +27,7 @@ SET gp_external_enable_filter_pushdown = true;
 SET
 -- control - no predicates
 SELECT * FROM test_filter;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
     |  0 | t  | 0.01 | AA  | AA | No filter
  B  |    | f  | 1.11 | BB  | BB | No filter
@@ -41,42 +41,42 @@ SELECT * FROM test_filter;
  J  |  9 | f  | 9.91 | JJ  | JJ | No filter
 (10 rows)
 
-SET optimizer = off;
+SET optimizer = on;
 SET
 -- test logical predicates
 SELECT * FROM test_filter WHERE t0 = 'B' AND a1 IS NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |    filtervalue    
 ----+----+----+------+-----+----+-------------------
- B  |    | f  | 1.11 | BB  | BB | a1o8a0c25s1dBo5l0
+ B  |    | f  | 1.11 | BB  | BB | a0c25s1dBo5a1o8l0
 (1 row)
 
 SELECT * FROM test_filter WHERE t0 = 'C' AND a1 = 2 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue        
 ----+----+----+------+-----+----+--------------------------
  C  |  2 |    | 2.21 | CC  | CC | a0c25s1dCo5a1c23s1d2o5l0
 (1 row)
 
 SELECT * FROM test_filter WHERE t0 = 'C' AND a1 <= 2 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue        
 ----+----+----+------+-----+----+--------------------------
- C  |  2 |    | 2.21 | CC  | CC | a1c23s1d2o3a0c25s1dCo5l0
+ C  |  2 |    | 2.21 | CC  | CC | a0c25s1dCo5a1c23s1d2o3l0
 (1 row)
 
 SELECT * FROM test_filter WHERE t0 = 'C' AND (a1 = 2 OR a1 = 10) ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |              filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |              filtervalue               
 ----+----+----+------+-----+----+----------------------------------------
- C  |  2 |    | 2.21 | CC  | CC | a1c23s1d2o5a1c23s2d10o5l1a0c25s1dCo5l0
+ C  |  2 |    | 2.21 | CC  | CC | a0c25s1dCo5a1c23s1d2o5a1c23s2d10o5l1l0
 (1 row)
 
 SELECT * FROM test_filter WHERE t0 = 'C' OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |              filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |              filtervalue              
 ----+----+----+------+-----+----+---------------------------------------
  C  |  2 |    | 2.21 | CC  | CC | a0c25s1dCo5a1c23s1d0o4a1c23s1d2o3l0l1
     |  0 | t  | 0.01 | AA  | AA | a0c25s1dCo5a1c23s1d0o4a1c23s1d2o3l0l1
 (2 rows)
 
 SELECT * FROM test_filter WHERE b2 = false ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue    
 ----+----+----+------+-----+----+------------------
  B  |    | f  | 1.11 | BB  | BB | a2c16s4dtrueo0l2
  D  |  3 | f  |      | DD  | DD | a2c16s4dtrueo0l2
@@ -86,19 +86,19 @@ SELECT * FROM test_filter WHERE b2 = false ORDER BY t0, a1;
 (5 rows)
 
 SELECT t0, a1, filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
- t0 | a1 |          filtervalue
+ t0 | a1 |          filtervalue          
 ----+----+-------------------------------
  D  |  3 | a1c23s1d5o1a2c16s4dtrueo0l2l0
 (1 row)
 
 SELECT round(sqrt(a1)::numeric,5), filtervalue FROM test_filter WHERE a1 < 5 AND b2 = false ORDER BY t0, a1;
-  round  |          filtervalue
+  round  |          filtervalue          
 ---------+-------------------------------
  1.73205 | a1c23s1d5o1a2c16s4dtrueo0l2l0
 (1 row)
 
 SELECT round(sqrt(a1)::numeric,5), filtervalue FROM test_filter WHERE b2 = false ORDER BY t0;
-  round  |   filtervalue
+  round  |   filtervalue    
 ---------+------------------
          | a2c16s4dtrueo0l2
  1.73205 | a2c16s4dtrueo0l2
@@ -108,13 +108,13 @@ SELECT round(sqrt(a1)::numeric,5), filtervalue FROM test_filter WHERE b2 = false
 (5 rows)
 
 SELECT * FROM test_filter WHERE b2 = false AND (a1 = 3 OR a1 = 10) ORDER BY t0, a1;
- t0 | a1 | b2 | c3 | d4  | e5 |                 filtervalue
+ t0 | a1 | b2 | c3 | d4  | e5 |                 filtervalue                 
 ----+----+----+----+-----+----+---------------------------------------------
  D  |  3 | f  |    | DD  | DD | a2c16s4dtrueo0l2a1c23s1d3o5a1c23s2d10o5l1l0
 (1 row)
 
 SELECT * FROM test_filter WHERE b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |                filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |                filtervalue                 
 ----+----+----+------+-----+----+--------------------------------------------
  B  |    | f  | 1.11 | BB  | BB | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
  C  |  2 |    | 2.21 | CC  | CC | a2c16s4dtrueo0l2a1c23s1d0o4a1c23s1d2o3l0l1
@@ -127,31 +127,31 @@ SELECT * FROM test_filter WHERE b2 = false OR (a1 >= 0 AND a1 <= 2) ORDER BY t0,
 
 -- test text predicates
 SELECT * FROM test_filter WHERE t0 =  'C' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  C  |  2 |    | 2.21 | CC  | CC | a0c25s1dCo5
 (1 row)
 
 SELECT * FROM test_filter WHERE t0 =  'C ' ORDER BY t0, a1;
- t0 | a1 | b2 | c3 | d4 | e5 | filtervalue
+ t0 | a1 | b2 | c3 | d4 | e5 | filtervalue 
 ----+----+----+----+----+----+-------------
 (0 rows)
 
 SELECT * FROM test_filter WHERE t0 <  'C' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | a0c25s1dCo1
 (1 row)
 
 SELECT * FROM test_filter WHERE t0 <= 'C' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | a0c25s1dCo3
  C  |  2 |    | 2.21 | CC  | CC | a0c25s1dCo3
 (2 rows)
 
 SELECT * FROM test_filter WHERE t0 >  'C' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  D  |  3 | f  |      | DD  | DD | a0c25s1dCo2
  E  |  4 | t  | 4.41 |     | EE | a0c25s1dCo2
@@ -163,7 +163,7 @@ SELECT * FROM test_filter WHERE t0 >  'C' ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE t0 >= 'C' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  C  |  2 |    | 2.21 | CC  | CC | a0c25s1dCo4
  D  |  3 | f  |      | DD  | DD | a0c25s1dCo4
@@ -176,7 +176,7 @@ SELECT * FROM test_filter WHERE t0 >= 'C' ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE t0 <> 'C' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | a0c25s1dCo6
  D  |  3 | f  |      | DD  | DD | a0c25s1dCo6
@@ -189,13 +189,13 @@ SELECT * FROM test_filter WHERE t0 <> 'C' ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE t0 LIKE     'C%' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue  
 ----+----+----+------+-----+----+--------------
  C  |  2 |    | 2.21 | CC  | CC | a0c25s2dC%o7
 (1 row)
 
 SELECT * FROM test_filter WHERE t0 NOT LIKE 'C%' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | No filter
  D  |  3 | f  |      | DD  | DD | No filter
@@ -208,14 +208,14 @@ SELECT * FROM test_filter WHERE t0 NOT LIKE 'C%' ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE t0 IN     ('C','D') ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |    filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |    filtervalue     
 ----+----+----+------+-----+----+--------------------
  C  |  2 |    | 2.21 | CC  | CC | a0m1009s1dCs1dDo10
  D  |  3 | f  |      | DD  | DD | a0m1009s1dCs1dDo10
 (2 rows)
 
 SELECT * FROM test_filter WHERE t0 NOT IN ('C','D') ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | No filter
  E  |  4 | t  | 4.41 |     | EE | No filter
@@ -227,7 +227,7 @@ SELECT * FROM test_filter WHERE t0 NOT IN ('C','D') ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE t0 BETWEEN     'B' AND 'D' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue        
 ----+----+----+------+-----+----+--------------------------
  B  |    | f  | 1.11 | BB  | BB | a0c25s1dBo4a0c25s1dDo3l0
  C  |  2 |    | 2.21 | CC  | CC | a0c25s1dBo4a0c25s1dDo3l0
@@ -235,7 +235,7 @@ SELECT * FROM test_filter WHERE t0 BETWEEN     'B' AND 'D' ORDER BY t0, a1;
 (3 rows)
 
 SELECT * FROM test_filter WHERE t0 NOT BETWEEN 'B' AND 'D' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue        
 ----+----+----+------+-----+----+--------------------------
  E  |  4 | t  | 4.41 |     | EE | a0c25s1dBo1a0c25s1dDo2l1
  F  |  5 | f  | 5.51 | FF  |    | a0c25s1dBo1a0c25s1dDo2l1
@@ -246,47 +246,47 @@ SELECT * FROM test_filter WHERE t0 NOT BETWEEN 'B' AND 'D' ORDER BY t0, a1;
 (6 rows)
 
 SELECT * FROM test_filter WHERE t0 IS NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
     |  0 | t  | 0.01 | AA  | AA | a0o8
 (1 row)
 
 SELECT * FROM test_filter WHERE t0 IS NOT NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
- B  |    | f  | 1.11 | BB  | BB | a0o9
- C  |  2 |    | 2.21 | CC  | CC | a0o9
- D  |  3 | f  |      | DD  | DD | a0o9
- E  |  4 | t  | 4.41 |     | EE | a0o9
- F  |  5 | f  | 5.51 | FF  |    | a0o9
- G  |  6 | t  | 6.61 | GG  | GG | a0o9
- H  |  7 | f  | 7.71 | HH  | HH | a0o9
- I  |  8 | t  | 8.81 | II  | II | a0o9
- J  |  9 | f  | 9.91 | JJ  | JJ | a0o9
+ B  |    | f  | 1.11 | BB  | BB | a0o8l2
+ C  |  2 |    | 2.21 | CC  | CC | a0o8l2
+ D  |  3 | f  |      | DD  | DD | a0o8l2
+ E  |  4 | t  | 4.41 |     | EE | a0o8l2
+ F  |  5 | f  | 5.51 | FF  |    | a0o8l2
+ G  |  6 | t  | 6.61 | GG  | GG | a0o8l2
+ H  |  7 | f  | 7.71 | HH  | HH | a0o8l2
+ I  |  8 | t  | 8.81 | II  | II | a0o8l2
+ J  |  9 | f  | 9.91 | JJ  | JJ | a0o8l2
 (9 rows)
 
 -- test integer predicates
 SELECT * FROM test_filter WHERE a1 =  2 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  C  |  2 |    | 2.21 | CC  | CC | a1c23s1d2o5
 (1 row)
 
 SELECT * FROM test_filter WHERE a1 <  2 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
     |  0 | t  | 0.01 | AA  | AA | a1c23s1d2o1
 (1 row)
 
 SELECT * FROM test_filter WHERE a1 <= 2 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  C  |  2 |    | 2.21 | CC  | CC | a1c23s1d2o3
     |  0 | t  | 0.01 | AA  | AA | a1c23s1d2o3
 (2 rows)
 
 SELECT * FROM test_filter WHERE a1 >  2 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  D  |  3 | f  |      | DD  | DD | a1c23s1d2o2
  E  |  4 | t  | 4.41 |     | EE | a1c23s1d2o2
@@ -298,7 +298,7 @@ SELECT * FROM test_filter WHERE a1 >  2 ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE a1 >= 2 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  C  |  2 |    | 2.21 | CC  | CC | a1c23s1d2o4
  D  |  3 | f  |      | DD  | DD | a1c23s1d2o4
@@ -311,7 +311,7 @@ SELECT * FROM test_filter WHERE a1 >= 2 ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE a1 <> 2 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  D  |  3 | f  |      | DD  | DD | a1c23s1d2o6
  E  |  4 | t  | 4.41 |     | EE | a1c23s1d2o6
@@ -324,14 +324,14 @@ SELECT * FROM test_filter WHERE a1 <> 2 ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE a1 IN     (2,3) ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |    filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |    filtervalue     
 ----+----+----+------+-----+----+--------------------
  C  |  2 |    | 2.21 | CC  | CC | a1m1007s1d2s1d3o10
  D  |  3 | f  |      | DD  | DD | a1m1007s1d2s1d3o10
 (2 rows)
 
 SELECT * FROM test_filter WHERE a1 NOT IN (2,3) ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  E  |  4 | t  | 4.41 |     | EE | No filter
  F  |  5 | f  | 5.51 | FF  |    | No filter
@@ -343,7 +343,7 @@ SELECT * FROM test_filter WHERE a1 NOT IN (2,3) ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE a1 BETWEEN     2 AND 4 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue        
 ----+----+----+------+-----+----+--------------------------
  C  |  2 |    | 2.21 | CC  | CC | a1c23s1d2o4a1c23s1d4o3l0
  D  |  3 | f  |      | DD  | DD | a1c23s1d2o4a1c23s1d4o3l0
@@ -351,7 +351,7 @@ SELECT * FROM test_filter WHERE a1 BETWEEN     2 AND 4 ORDER BY t0, a1;
 (3 rows)
 
 SELECT * FROM test_filter WHERE a1 NOT BETWEEN 2 AND 4 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |       filtervalue        
 ----+----+----+------+-----+----+--------------------------
  F  |  5 | f  | 5.51 | FF  |    | a1c23s1d2o1a1c23s1d4o2l1
  G  |  6 | t  | 6.61 | GG  | GG | a1c23s1d2o1a1c23s1d4o2l1
@@ -362,47 +362,47 @@ SELECT * FROM test_filter WHERE a1 NOT BETWEEN 2 AND 4 ORDER BY t0, a1;
 (6 rows)
 
 SELECT * FROM test_filter WHERE a1 IS NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | a1o8
 (1 row)
 
 SELECT * FROM test_filter WHERE a1 IS NOT NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
- C  |  2 |    | 2.21 | CC  | CC | a1o9
- D  |  3 | f  |      | DD  | DD | a1o9
- E  |  4 | t  | 4.41 |     | EE | a1o9
- F  |  5 | f  | 5.51 | FF  |    | a1o9
- G  |  6 | t  | 6.61 | GG  | GG | a1o9
- H  |  7 | f  | 7.71 | HH  | HH | a1o9
- I  |  8 | t  | 8.81 | II  | II | a1o9
- J  |  9 | f  | 9.91 | JJ  | JJ | a1o9
-    |  0 | t  | 0.01 | AA  | AA | a1o9
+ C  |  2 |    | 2.21 | CC  | CC | a1o8l2
+ D  |  3 | f  |      | DD  | DD | a1o8l2
+ E  |  4 | t  | 4.41 |     | EE | a1o8l2
+ F  |  5 | f  | 5.51 | FF  |    | a1o8l2
+ G  |  6 | t  | 6.61 | GG  | GG | a1o8l2
+ H  |  7 | f  | 7.71 | HH  | HH | a1o8l2
+ I  |  8 | t  | 8.81 | II  | II | a1o8l2
+ J  |  9 | f  | 9.91 | JJ  | JJ | a1o8l2
+    |  0 | t  | 0.01 | AA  | AA | a1o8l2
 (9 rows)
 
 -- test numeric predicates
 SELECT * FROM test_filter WHERE c3 =  1.11 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue    
 ----+----+----+------+-----+----+------------------
  B  |    | f  | 1.11 | BB  | BB | a3c1700s4d1.11o5
 (1 row)
 
 SELECT * FROM test_filter WHERE c3 <  1.11 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue    
 ----+----+----+------+-----+----+------------------
     |  0 | t  | 0.01 | AA  | AA | a3c1700s4d1.11o1
 (1 row)
 
 SELECT * FROM test_filter WHERE c3 <= 1.11 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue    
 ----+----+----+------+-----+----+------------------
  B  |    | f  | 1.11 | BB  | BB | a3c1700s4d1.11o3
     |  0 | t  | 0.01 | AA  | AA | a3c1700s4d1.11o3
 (2 rows)
 
 SELECT * FROM test_filter WHERE c3 >  1.11 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue    
 ----+----+----+------+-----+----+------------------
  C  |  2 |    | 2.21 | CC  | CC | a3c1700s4d1.11o2
  E  |  4 | t  | 4.41 |     | EE | a3c1700s4d1.11o2
@@ -414,7 +414,7 @@ SELECT * FROM test_filter WHERE c3 >  1.11 ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE c3 >= 1.11 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue    
 ----+----+----+------+-----+----+------------------
  B  |    | f  | 1.11 | BB  | BB | a3c1700s4d1.11o4
  C  |  2 |    | 2.21 | CC  | CC | a3c1700s4d1.11o4
@@ -427,7 +427,7 @@ SELECT * FROM test_filter WHERE c3 >= 1.11 ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE c3 <> 1.11 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue    
 ----+----+----+------+-----+----+------------------
  C  |  2 |    | 2.21 | CC  | CC | a3c1700s4d1.11o6
  E  |  4 | t  | 4.41 |     | EE | a3c1700s4d1.11o6
@@ -440,14 +440,14 @@ SELECT * FROM test_filter WHERE c3 <> 1.11 ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE c3 IN     (1.11,2.21) ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | No filter
  C  |  2 |    | 2.21 | CC  | CC | No filter
 (2 rows)
 
 SELECT * FROM test_filter WHERE c3 NOT IN (1.11,2.21) ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  E  |  4 | t  | 4.41 |     | EE | No filter
  F  |  5 | f  | 5.51 | FF  |    | No filter
@@ -459,7 +459,7 @@ SELECT * FROM test_filter WHERE c3 NOT IN (1.11,2.21) ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE c3 BETWEEN     1.11 AND 4.41 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |            filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |            filtervalue             
 ----+----+----+------+-----+----+------------------------------------
  B  |    | f  | 1.11 | BB  | BB | a3c1700s4d1.11o4a3c1700s4d4.41o3l0
  C  |  2 |    | 2.21 | CC  | CC | a3c1700s4d1.11o4a3c1700s4d4.41o3l0
@@ -467,7 +467,7 @@ SELECT * FROM test_filter WHERE c3 BETWEEN     1.11 AND 4.41 ORDER BY t0, a1;
 (3 rows)
 
 SELECT * FROM test_filter WHERE c3 NOT BETWEEN 1.11 AND 4.41 ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |            filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |            filtervalue             
 ----+----+----+------+-----+----+------------------------------------
  F  |  5 | f  | 5.51 | FF  |    | a3c1700s4d1.11o1a3c1700s4d4.41o2l1
  G  |  6 | t  | 6.61 | GG  | GG | a3c1700s4d1.11o1a3c1700s4d4.41o2l1
@@ -478,53 +478,53 @@ SELECT * FROM test_filter WHERE c3 NOT BETWEEN 1.11 AND 4.41 ORDER BY t0, a1;
 (6 rows)
 
 SELECT * FROM test_filter WHERE c3 IS NULL ORDER BY t0, a1;
- t0 | a1 | b2 | c3 | d4  | e5 | filtervalue
+ t0 | a1 | b2 | c3 | d4  | e5 | filtervalue 
 ----+----+----+----+-----+----+-------------
  D  |  3 | f  |    | DD  | DD | a3o8
 (1 row)
 
 SELECT * FROM test_filter WHERE c3 IS NOT NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
- B  |    | f  | 1.11 | BB  | BB | a3o9
- C  |  2 |    | 2.21 | CC  | CC | a3o9
- E  |  4 | t  | 4.41 |     | EE | a3o9
- F  |  5 | f  | 5.51 | FF  |    | a3o9
- G  |  6 | t  | 6.61 | GG  | GG | a3o9
- H  |  7 | f  | 7.71 | HH  | HH | a3o9
- I  |  8 | t  | 8.81 | II  | II | a3o9
- J  |  9 | f  | 9.91 | JJ  | JJ | a3o9
-    |  0 | t  | 0.01 | AA  | AA | a3o9
+ B  |    | f  | 1.11 | BB  | BB | a3o8l2
+ C  |  2 |    | 2.21 | CC  | CC | a3o8l2
+ E  |  4 | t  | 4.41 |     | EE | a3o8l2
+ F  |  5 | f  | 5.51 | FF  |    | a3o8l2
+ G  |  6 | t  | 6.61 | GG  | GG | a3o8l2
+ H  |  7 | f  | 7.71 | HH  | HH | a3o8l2
+ I  |  8 | t  | 8.81 | II  | II | a3o8l2
+ J  |  9 | f  | 9.91 | JJ  | JJ | a3o8l2
+    |  0 | t  | 0.01 | AA  | AA | a3o8l2
 (9 rows)
 
 -- test char predicates
 SELECT * FROM test_filter WHERE d4 =  'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue   
 ----+----+----+------+-----+----+----------------
  B  |    | f  | 1.11 | BB  | BB | a4c1042s2dBBo5
 (1 row)
 
 SELECT * FROM test_filter WHERE d4 =  'BB ' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |   filtervalue   
 ----+----+----+------+-----+----+-----------------
  B  |    | f  | 1.11 | BB  | BB | a4c1042s3dBB o5
 (1 row)
 
 SELECT * FROM test_filter WHERE d4 <  'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue   
 ----+----+----+------+-----+----+----------------
     |  0 | t  | 0.01 | AA  | AA | a4c1042s2dBBo1
 (1 row)
 
 SELECT * FROM test_filter WHERE d4 <= 'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue   
 ----+----+----+------+-----+----+----------------
  B  |    | f  | 1.11 | BB  | BB | a4c1042s2dBBo3
     |  0 | t  | 0.01 | AA  | AA | a4c1042s2dBBo3
 (2 rows)
 
 SELECT * FROM test_filter WHERE d4 >  'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue   
 ----+----+----+------+-----+----+----------------
  C  |  2 |    | 2.21 | CC  | CC | a4c1042s2dBBo2
  D  |  3 | f  |      | DD  | DD | a4c1042s2dBBo2
@@ -536,7 +536,7 @@ SELECT * FROM test_filter WHERE d4 >  'BB' ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE d4 >= 'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue   
 ----+----+----+------+-----+----+----------------
  B  |    | f  | 1.11 | BB  | BB | a4c1042s2dBBo4
  C  |  2 |    | 2.21 | CC  | CC | a4c1042s2dBBo4
@@ -549,7 +549,7 @@ SELECT * FROM test_filter WHERE d4 >= 'BB' ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE d4 <> 'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |  filtervalue   
 ----+----+----+------+-----+----+----------------
  C  |  2 |    | 2.21 | CC  | CC | a4c1042s2dBBo6
  D  |  3 | f  |      | DD  | DD | a4c1042s2dBBo6
@@ -562,13 +562,13 @@ SELECT * FROM test_filter WHERE d4 <> 'BB' ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE d4 LIKE     'B%' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | No filter
 (1 row)
 
 SELECT * FROM test_filter WHERE d4 NOT LIKE 'B%' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  C  |  2 |    | 2.21 | CC  | CC | No filter
  D  |  3 | f  |      | DD  | DD | No filter
@@ -581,14 +581,14 @@ SELECT * FROM test_filter WHERE d4 NOT LIKE 'B%' ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE d4 IN     ('BB','CC') ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | No filter
  C  |  2 |    | 2.21 | CC  | CC | No filter
 (2 rows)
 
 SELECT * FROM test_filter WHERE d4 NOT IN ('BB','CC') ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  D  |  3 | f  |      | DD  | DD | No filter
  F  |  5 | f  | 5.51 | FF  |    | No filter
@@ -600,7 +600,7 @@ SELECT * FROM test_filter WHERE d4 NOT IN ('BB','CC') ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE d4 BETWEEN     'AA' AND 'CC' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |          filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |          filtervalue           
 ----+----+----+------+-----+----+--------------------------------
  B  |    | f  | 1.11 | BB  | BB | a4c1042s2dAAo4a4c1042s2dCCo3l0
  C  |  2 |    | 2.21 | CC  | CC | a4c1042s2dAAo4a4c1042s2dCCo3l0
@@ -608,7 +608,7 @@ SELECT * FROM test_filter WHERE d4 BETWEEN     'AA' AND 'CC' ORDER BY t0, a1;
 (3 rows)
 
 SELECT * FROM test_filter WHERE d4 NOT BETWEEN 'AA' AND 'CC' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |          filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |          filtervalue           
 ----+----+----+------+-----+----+--------------------------------
  D  |  3 | f  |      | DD  | DD | a4c1042s2dAAo1a4c1042s2dCCo2l1
  F  |  5 | f  | 5.51 | FF  |    | a4c1042s2dAAo1a4c1042s2dCCo2l1
@@ -619,52 +619,52 @@ SELECT * FROM test_filter WHERE d4 NOT BETWEEN 'AA' AND 'CC' ORDER BY t0, a1;
 (6 rows)
 
 SELECT * FROM test_filter WHERE d4 IS NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4 | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4 | e5 | filtervalue 
 ----+----+----+------+----+----+-------------
  E  |  4 | t  | 4.41 |    | EE | a4o8
 (1 row)
 
 SELECT * FROM test_filter WHERE d4 IS NOT NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
- B  |    | f  | 1.11 | BB  | BB | a4o9
- C  |  2 |    | 2.21 | CC  | CC | a4o9
- D  |  3 | f  |      | DD  | DD | a4o9
- F  |  5 | f  | 5.51 | FF  |    | a4o9
- G  |  6 | t  | 6.61 | GG  | GG | a4o9
- H  |  7 | f  | 7.71 | HH  | HH | a4o9
- I  |  8 | t  | 8.81 | II  | II | a4o9
- J  |  9 | f  | 9.91 | JJ  | JJ | a4o9
-    |  0 | t  | 0.01 | AA  | AA | a4o9
+ B  |    | f  | 1.11 | BB  | BB | a4o8l2
+ C  |  2 |    | 2.21 | CC  | CC | a4o8l2
+ D  |  3 | f  |      | DD  | DD | a4o8l2
+ F  |  5 | f  | 5.51 | FF  |    | a4o8l2
+ G  |  6 | t  | 6.61 | GG  | GG | a4o8l2
+ H  |  7 | f  | 7.71 | HH  | HH | a4o8l2
+ I  |  8 | t  | 8.81 | II  | II | a4o8l2
+ J  |  9 | f  | 9.91 | JJ  | JJ | a4o8l2
+    |  0 | t  | 0.01 | AA  | AA | a4o8l2
 (9 rows)
 
 -- test varchar predicates
 SELECT * FROM test_filter WHERE e5 =  'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue  
 ----+----+----+------+-----+----+--------------
  B  |    | f  | 1.11 | BB  | BB | a5c25s2dBBo5
 (1 row)
 
 SELECT * FROM test_filter WHERE e5 =  'BB ' ORDER BY t0, a1;
- t0 | a1 | b2 | c3 | d4 | e5 | filtervalue
+ t0 | a1 | b2 | c3 | d4 | e5 | filtervalue 
 ----+----+----+----+----+----+-------------
 (0 rows)
 
 SELECT * FROM test_filter WHERE e5 <  'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue  
 ----+----+----+------+-----+----+--------------
     |  0 | t  | 0.01 | AA  | AA | a5c25s2dBBo1
 (1 row)
 
 SELECT * FROM test_filter WHERE e5 <= 'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue  
 ----+----+----+------+-----+----+--------------
  B  |    | f  | 1.11 | BB  | BB | a5c25s2dBBo3
     |  0 | t  | 0.01 | AA  | AA | a5c25s2dBBo3
 (2 rows)
 
 SELECT * FROM test_filter WHERE e5 >  'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue  
 ----+----+----+------+-----+----+--------------
  C  |  2 |    | 2.21 | CC  | CC | a5c25s2dBBo2
  D  |  3 | f  |      | DD  | DD | a5c25s2dBBo2
@@ -676,7 +676,7 @@ SELECT * FROM test_filter WHERE e5 >  'BB' ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE e5 >= 'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue  
 ----+----+----+------+-----+----+--------------
  B  |    | f  | 1.11 | BB  | BB | a5c25s2dBBo4
  C  |  2 |    | 2.21 | CC  | CC | a5c25s2dBBo4
@@ -689,7 +689,7 @@ SELECT * FROM test_filter WHERE e5 >= 'BB' ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE e5 <> 'BB' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue  
 ----+----+----+------+-----+----+--------------
  C  |  2 |    | 2.21 | CC  | CC | a5c25s2dBBo6
  D  |  3 | f  |      | DD  | DD | a5c25s2dBBo6
@@ -702,13 +702,13 @@ SELECT * FROM test_filter WHERE e5 <> 'BB' ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE e5 LIKE     'B%' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue  
 ----+----+----+------+-----+----+--------------
  B  |    | f  | 1.11 | BB  | BB | a5c25s2dB%o7
 (1 row)
 
 SELECT * FROM test_filter WHERE e5 NOT LIKE 'B%' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  C  |  2 |    | 2.21 | CC  | CC | No filter
  D  |  3 | f  |      | DD  | DD | No filter
@@ -721,14 +721,14 @@ SELECT * FROM test_filter WHERE e5 NOT LIKE 'B%' ORDER BY t0, a1;
 (8 rows)
 
 SELECT * FROM test_filter WHERE e5 IN     ('BB','CC') ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  B  |    | f  | 1.11 | BB  | BB | No filter
  C  |  2 |    | 2.21 | CC  | CC | No filter
 (2 rows)
 
 SELECT * FROM test_filter WHERE e5 NOT IN ('BB','CC') ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  D  |  3 | f  |      | DD  | DD | No filter
  E  |  4 | t  | 4.41 |     | EE | No filter
@@ -740,7 +740,7 @@ SELECT * FROM test_filter WHERE e5 NOT IN ('BB','CC') ORDER BY t0, a1;
 (7 rows)
 
 SELECT * FROM test_filter WHERE e5 BETWEEN     'AA' AND 'CC' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |        filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |        filtervalue         
 ----+----+----+------+-----+----+----------------------------
  B  |    | f  | 1.11 | BB  | BB | a5c25s2dAAo4a5c25s2dCCo3l0
  C  |  2 |    | 2.21 | CC  | CC | a5c25s2dAAo4a5c25s2dCCo3l0
@@ -748,7 +748,7 @@ SELECT * FROM test_filter WHERE e5 BETWEEN     'AA' AND 'CC' ORDER BY t0, a1;
 (3 rows)
 
 SELECT * FROM test_filter WHERE e5 NOT BETWEEN 'AA' AND 'CC' ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 |        filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 |        filtervalue         
 ----+----+----+------+-----+----+----------------------------
  D  |  3 | f  |      | DD  | DD | a5c25s2dAAo1a5c25s2dCCo2l1
  E  |  4 | t  | 4.41 |     | EE | a5c25s2dAAo1a5c25s2dCCo2l1
@@ -759,22 +759,22 @@ SELECT * FROM test_filter WHERE e5 NOT BETWEEN 'AA' AND 'CC' ORDER BY t0, a1;
 (6 rows)
 
 SELECT * FROM test_filter WHERE e5 IS NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
  F  |  5 | f  | 5.51 | FF  |    | a5o8
 (1 row)
 
 SELECT * FROM test_filter WHERE e5 IS NOT NULL ORDER BY t0, a1;
- t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue
+ t0 | a1 | b2 |  c3  | d4  | e5 | filtervalue 
 ----+----+----+------+-----+----+-------------
- B  |    | f  | 1.11 | BB  | BB | a5o9
- C  |  2 |    | 2.21 | CC  | CC | a5o9
- D  |  3 | f  |      | DD  | DD | a5o9
- E  |  4 | t  | 4.41 |     | EE | a5o9
- G  |  6 | t  | 6.61 | GG  | GG | a5o9
- H  |  7 | f  | 7.71 | HH  | HH | a5o9
- I  |  8 | t  | 8.81 | II  | II | a5o9
- J  |  9 | f  | 9.91 | JJ  | JJ | a5o9
-    |  0 | t  | 0.01 | AA  | AA | a5o9
+ B  |    | f  | 1.11 | BB  | BB | a5o8l2
+ C  |  2 |    | 2.21 | CC  | CC | a5o8l2
+ D  |  3 | f  |      | DD  | DD | a5o8l2
+ E  |  4 | t  | 4.41 |     | EE | a5o8l2
+ G  |  6 | t  | 6.61 | GG  | GG | a5o8l2
+ H  |  7 | f  | 7.71 | HH  | HH | a5o8l2
+ I  |  8 | t  | 8.81 | II  | II | a5o8l2
+ J  |  9 | f  | 9.91 | JJ  | JJ | a5o8l2
+    |  0 | t  | 0.01 | AA  | AA | a5o8l2
 (9 rows)
 

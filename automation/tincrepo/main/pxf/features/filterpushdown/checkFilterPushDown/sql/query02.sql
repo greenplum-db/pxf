@@ -1,4 +1,4 @@
--- @description query01 for PXF filter pushdown case using the planner
+-- @description query01 for PXF filter pushdown case using the optimizer
 --
 -- start_matchsubs
 --
@@ -27,7 +27,7 @@ SET gp_external_enable_filter_pushdown = true;
 -- control - no predicates
 SELECT * FROM test_filter;
 
-SET optimizer = off;
+SET optimizer = on;
 
 -- test logical predicates
 SELECT * FROM test_filter WHERE t0 = 'B' AND a1 IS NULL ORDER BY t0, a1;

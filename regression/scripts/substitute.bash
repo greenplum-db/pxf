@@ -40,19 +40,14 @@ _host_is_local() {
 	[[ $hostname =~ $host_regex ]]
 }
 
-_gen_random_string() {
-	local length=${1:-4}
-	if [ "$(uname)" == "Darwin" ]; then
-		# base64 on MacOS fails the command below, so instead we use the openssl library to get a random number
-		openssl rand -hex "${length}"
-	else
-		base64 < /dev/urandom | tr -cd '[:alnum:]' | head -c "${length}"
-	fi
-}
-
 _gen_uuid() {
-	: "$(_gen_random_string 8)_$(_gen_random_string)_$(_gen_random_string)_$(_gen_random_string)_$(_gen_random_string 12)"
-	echo "${_,,}" # downcase (works in bash 4 and later)
+	local uuid
+	if [[ $(uname) = Darwin ]]; then
+		uuid=$(uuidgen)
+	else
+		uuid=$(cat /proc/sys/kernel/random/uuid)
+	fi
+	echo "$uuid" | tr '[:upper:]' '[:lower:]' | tr '-' '_'
 }
 
 case ${HCFS_PROTOCOL} in
