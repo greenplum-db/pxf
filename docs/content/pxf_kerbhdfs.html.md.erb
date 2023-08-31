@@ -13,6 +13,7 @@ The identity with which PXF accesses a Kerberos-secured Hadoop depends on the se
 | pxf.service.kerberos.principal | The PXF Kerberos principal name. | gpadmin/\_HOST@EXAMPLE.COM |
 | pxf.service.user.impersonation | Activates/deactivates Greenplum Database user impersonation on the remote system. | `true` |
 | pxf.service.kerberos.constrained-delegation | Activates/deactivates usage of Kerberos constrained delegation based on S4U Kerberos extensions. This option allows Hadoop administrators to avoid creating a proxy user configuration in Hadoop, instead requiring them to perform delegation configuration in an Active Directory (AD) or Identity Policy Audit (IPA) server. | `false` |
+| pxf.service.kerberos.ticket-renew-window| The minimum elapsed lifespan (as a percentage) after which PXF attempts to renew/refresh a Kerberos ticket. Value range is from 0 (PXF generates a new ticket for all requests) to 1 (PXF renews after full ticket lifespan). | 0.8 (80%) |
 | pxf.service.user.name | (Optional) The user name with which PXF connects to a remote Kerberos-secured cluster if user impersonation is deactivated and using the `pxf.service.kerberos.principal` is not desired. | None |
 
 You configure these setting for a Hadoop PXF server via the `pxf-site.xml` configuration file. Refer to [About the pxf-site.xml Configuration File](cfg_server.html#pxf-site) for more information about the configuration properties in this file.

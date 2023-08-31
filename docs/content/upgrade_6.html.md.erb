@@ -142,6 +142,21 @@ After you install the new version of PXF, perform the following procedure:
 
 1. **If you are upgrading <i>from</i> PXF version 6.6.x or earlier <i>to</i> PXF version 6.7.0 or later**, and you want to retain the previous PXF listen address (`0.0.0.0`), change the value of the `server.address` `pxf-application.properties` property as described in [Configuring the Listen Address](cfghostport.html#listen_address).
 
+1. **If you are upgrading <i>from</i> PXF version 6.7.x or earlier <i>to</i> PXF version 6.8.0 or later** and you want to change the default value of the new `pxf.service.kerberos.ticket-renew-window` property, add the following to the `pxf-site.xml` file for your PXF server:
+
+        ``` pre
+        <property>
+          <name>pxf.service.kerberos.ticket-renew-window</name>
+          <value><new-value></value>
+          <description>
+            By default, PXF refreshes the Kerberos ticket when 80% (0.8) of its lifespan has elapsed.
+            Specifies the window, as a float, at which PXF will actively refresh the ticket. This value
+            must be between 0 and 1. Setting this value to 0 means that every PXF request will get a new
+            ticket.
+          </description>
+        </property>
+        ```
+
 1. Synchronize the PXF configuration from the coordinator host to the standby coordinator host and each Greenplum Database segment host. For example:
 
     ``` shell
