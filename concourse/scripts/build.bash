@@ -2,8 +2,8 @@
 
 set -eox pipefail
 
-echo "Count of files under /usr/local/go"
-find /usr/local/go -type f | wc -l
+#echo "Count of files under /usr/local/go"
+#find /usr/local/go -type f | wc -l
 
 echo "Count of files under /opt/go1.19.6"
 find /opt/go1.19.6 -type f | wc -l
