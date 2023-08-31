@@ -9,7 +9,7 @@ ARG GO_SHA256SUM
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
     && echo "${GO_SHA256SUM} /tmp/go.tgz" | sha256sum --check \
-    && rm -rf /usr/local/go && mkdir /opt/pxf && tar -C /opt/pxf -xzf go.tgz --strip-components=1 && rm go.tgz
+    && rm -rf /usr/local/go && mkdir /opt/pxf && tar -C /opt/pxf -xzf go.tgz && rm go.tgz
 
 # add Java 8, Java 11, jq and rpm-build
 RUN yum install -y rpm-build java-1.8.0-openjdk-devel jq && yum clean all \
