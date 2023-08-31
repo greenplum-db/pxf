@@ -21,5 +21,5 @@ export LANG=en_US.UTF-8
 export JAVA_HOME=/etc/alternatives/java_sdk
 export SLAVES=1
 export GOPATH=/opt/go
-export PATH=\${PXF_HOME}/bin:\${GPHD_ROOT}/hadoop/bin:\${GOPATH}/bin:/opt/go1.19.6/bin:\$PATH
+export PATH=\${PXF_HOME}/bin:\${GPHD_ROOT}/hadoop/bin:\${GOPATH}/bin:/usr/local/go/bin:\$PATH
 EOF
