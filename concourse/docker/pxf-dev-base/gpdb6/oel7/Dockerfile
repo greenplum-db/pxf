@@ -11,7 +11,7 @@ ADD apache-maven.tar.gz /usr/share
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
     && echo "${GO_SHA256SUM} /tmp/go.tgz" | sha256sum --check \
-    && rm -rf /usr/local/go && mkdir /opt/go1.19.6 && tar -C /opt/go1.19.6 -xzf go.tgz --strip-components=1 && rm go.tgz
+    && rm -rf /usr/local/go && mkdir /opt/go${GO_VERSION} && tar -C /opt/go${GO_VERSION} -xzf go.tgz --strip-components=1 && rm go.tgz
 
 ARG USER_HOME_DIR="/root"
 
@@ -61,7 +61,7 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && echo >> ~gpadmin/.pxfrc 'export GPHD_ROOT=/singlecluster' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_HOME=/usr/local/pxf-gp6' \
     && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk' \
-    && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/opt/go1.19.6/bin:$PATH' \
+    && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/opt/go${GO_VERSION}/bin:$PATH' \
     && ln -s ~gpadmin/.pxfrc ~root \
     && echo >> ~gpadmin/.bashrc 'source ~/.pxfrc' \
     && chown -R gpadmin:gpadmin ~gpadmin
