@@ -1,4 +1,4 @@
-# In this directory, run the following command to build this builder.
+# In root pxf directory, run the following command to build this builder.
 # $ gcloud builds submit . --config=concourse/docker/pxf-dev-base/cloudbuild.yaml \
 #  --substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,COMMIT_SHA=<tagname>,_PXF_BUILD_BUCKET=<bucketname>
 

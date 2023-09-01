@@ -39,6 +39,7 @@ OEL7                        ?= false
 FILE                        ?= false
 GP7_CLI                     ?= false
 GP7_MULTINODE               ?= false
+# used to quickly modify the docker image tag being pulled ONLY in the dev_build_pipeline
 PXF_DEV_IMAGE_TAG           ?= latest
 
 SET_PIPELINE := set-pipeline
