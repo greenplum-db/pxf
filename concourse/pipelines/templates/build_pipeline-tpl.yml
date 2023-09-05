@@ -1734,6 +1734,7 @@ jobs:
 
 ## ---------- Artifact Promotion Gate ----------
 - name: Promote PXF for GP5_GP6_GP7 Artifacts
+  old_name: Promote PXF-GP5 and PXF-GP6 Artifacts
   plan:
   - in_parallel:
     - get: pxf_src
@@ -1784,6 +1785,7 @@ jobs:
 {% endif %}
 
 - name: Publish_PXF-GP5_GP6_GP7_Artifacts_to_GP-RelEng
+  old_name: Publish_PXF-GP5_and_PXF-GP6_Artifacts_to_GP-RelEng
   plan:
   - in_parallel:
     - get: pxf_src
