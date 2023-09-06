@@ -1,0 +1,67 @@
+{% set gp_ver = 7 %}
+- name: Test PXF-GP[[gp_ver]]-CLI on RHEL8
+  max_in_flight: 2
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [[job_dependency]]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_gp[[gp_ver]]_tarball_rhel8
+      passed: [[job_dependency]]
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+      passed: [[job_dependency]]
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    - get: ccp_src
+    - get: ccp-7-image
+  - in_parallel:
+    - do:
+      - put: terraform_gpdb
+        resource: terraform
+        params:
+          action: create
+          delete_on_failure: true
+          generate_random_name: true
+          terraform_source: ccp_src/google/
+          vars:
+            PLATFORM: rocky8-gpdb[[gp_ver]]
+            number_of_nodes: ((number_of_gpdb_nodes))
+            extra_nodes: 1
+            segments_per_host: 4
+            instance_type: n1-standard-4
+            ccp_reap_minutes: 120
+            standby_master: true
+      - task: Generate Greenplum Cluster
+        input_mapping:
+          gpdb_rpm: gpdb_package
+          terraform: terraform_gpdb
+        file: ccp_src/ci/tasks/gen_cluster.yml
+        image: ccp-7-image
+        params:
+          AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
+          AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+          AWS_DEFAULT_REGION: ((ud/common/aws-region))
+          BUCKET_PATH: ((tf-bucket-path))
+          BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
+          PLATFORM: rocky8-gpdb[[gp_ver]]
+          CLOUD_PROVIDER: google
+          GPDB_RPM: true
+  - task: Initialize Greenplum
+    file: ccp_src/ci/tasks/gpinitsystem.yml
+  - task: Setup PXF
+    input_mapping:
+      terraform: terraform_gpdb
+    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
+    image: ccp-7-image
+    params:
+      IMPERSONATION: false
+      INSTALL_GPHDFS: false
+      GP_VER: [[gp_ver]]
+      PXF_JVM_OPTS: ((pxf-jvm-opts))
+  - task: Test PXF CLI
+    on_success:
+      <<: *destroy_gpdb_cluster
+    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    file: pxf_src/concourse/tasks/test_pxf_cli.yml
+{% set gp_ver = None %}

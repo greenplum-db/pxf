@@ -48,6 +48,10 @@ groups:
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-Upgrade-Extension on RHEL7
 {% set gp_ver = None %}
+{% set gp_ver = 7 %}
+  - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
+  - Test PXF-GP[[gp_ver]]-CLI on RHEL8
+{% set gp_ver = None %}
   - Compatibility Gate for PXF-GP
   - Promote PXF for GP5_GP6_GP7 Artifacts
   - Publish_PXF-GP5_GP6_GP7_Artifacts_to_GP-RelEng
@@ -94,6 +98,12 @@ groups:
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-Upgrade-Extension on RHEL7
+{% set gp_ver = None %}
+{% set gp_ver = 7 %}
+- name: PXF Tests - GP[[gp_ver]] on RHEL8
+  jobs:
+  - Test PXF-GP[[ gp_ver ]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
+  - Test PXF-GP[[ gp_ver ]]-CLI on RHEL8
 {% set gp_ver = None %}
 - name: Backwards Compatibility
   jobs:
@@ -235,6 +245,7 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
+## TODO Remove gp6-python-libs resource once Tinc is replaced.
 - name: gp6-python-libs
   type: gcs
   icon: google-drive
@@ -1524,6 +1535,14 @@ jobs:
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
 {% set gp_ver = None %}
 
+## ---------- Multi-node test for GP7 ----------
+{% set job_dependency='[Testing Gate for PXF-GP]' %}
+{% include 'jobs/multinode-tpl.yml'%}
+
+## ---------- GP7 PXF CLI tests ----------
+{% include 'jobs/cli-tpl.yml' %}
+{% set job_dependency=None %}
+
 ## ---------- Compatibility Gate ----------
 {% set gp_ver = 6 %}
 - name: Compatibility Gate for PXF-GP
@@ -1545,8 +1564,11 @@ jobs:
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-Upgrade-Extension on RHEL7
-      trigger: true
+{% set gp_ver = 7 %}
+      - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
+      - Test PXF-GP[[gp_ver]]-CLI on RHEL8
 {% set gp_ver = None %}
+      trigger: true
 {% set gp_ver = 5 %}
     - get: pxf_gp[[gp_ver]]_tarball_rhel7
       passed:
@@ -1577,7 +1599,8 @@ jobs:
 {% set gp_ver = 7 %}
     - get: pxf_gp[[gp_ver]]_tarball_rhel8
       passed:
-      - Testing Gate for PXF-GP
+      - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
+      - Test PXF-GP[[gp_ver]]-CLI on RHEL8
 {% set gp_ver = None %}
 
 ## ---------- Compatibility Testing ----------
