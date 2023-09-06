@@ -1074,6 +1074,38 @@ jobs:
 {% endif %}
 {% endif %}
 
+{% if wasbs %}
+- name: Test PXF-GP[[gp_ver]]-WASBS-NO-IMPERS on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Build PXF-GP[[gp_ver]] on RHEL7]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_gp[[gp_ver]]_tarball_rhel7
+      passed: [Build PXF-GP[[gp_ver]] on RHEL7]
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
+      passed: [Build PXF-GP[[gp_ver]] on RHEL7]
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: Test PXF-GP[[gp_ver]]-WASBS-NO-IMPERS on RHEL7
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    params:
+      WASB_ACCOUNT_NAME: ((ud/pxf/common/wasb-account-name))
+      WASB_ACCOUNT_KEY: ((ud/pxf/secrets/wasb-account-key))
+      GP_VER: [[gp_ver]]
+      GROUP: hcfs
+      IMPERSONATION: false
+      PROTOCOL: wasbs
+{% if slack_notification %}
+    <<: *slack_alert
+{% endif %}
+{% endif %}
+
 {% if gs %}
 - name: Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
   plan:

@@ -33,6 +33,7 @@ MAPR                        ?= false
 AMBARI                      ?= false
 S3                          ?= false
 ADL                         ?= false
+WASBS                       ?= false
 GS                          ?= false
 MINIO                       ?= false
 OEL7                        ?= false
@@ -118,6 +119,7 @@ set-dev-build-pipeline:
 		file=$(FILE) \
 		s3=$(S3) \
 		adl=$(ADL) \
+		wasbs=$(WASBS) \
 		gs=$(GS) \
 		minio=$(MINIO) \
 		oel7=$(OEL7) \
