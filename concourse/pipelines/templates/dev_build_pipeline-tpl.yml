@@ -1074,8 +1074,8 @@ jobs:
 {% endif %}
 {% endif %}
 
-{% if wasbs %}
-- name: Test PXF-GP[[gp_ver]]-WASBS-NO-IMPERS on RHEL7
+{% if wasb %}
+- name: Test PXF-GP[[gp_ver]]-WASB-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
@@ -1091,7 +1091,7 @@ jobs:
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: Test PXF-GP[[gp_ver]]-WASBS-NO-IMPERS on RHEL7
+  - task: Test PXF-GP[[gp_ver]]-WASB-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
