@@ -1,4 +1,7 @@
-{% set gp_ver = 7 %}
+## Variables that need to be set for this job:
+## - gp_ver = Greenplum Major Version
+## - job_dependency: Set this to [Testing Gate for PXF-GP] for pxf-build or [Build PXF-GP7 on RHEL8] for dev
+
 - name: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
   max_in_flight: 2
   plan:
@@ -138,4 +141,3 @@
         - *destroy_dataproc_2
         - *destroy_gpdb_cluster
         - *destroy_hadoop_cluster
-{% set gp_ver = None %}

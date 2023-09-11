@@ -1536,12 +1536,14 @@ jobs:
 {% set gp_ver = None %}
 
 ## ---------- Multi-node test for GP7 ----------
+{% set gp_ver = 7 %}
 {% set job_dependency='[Testing Gate for PXF-GP]' %}
 {% include 'jobs/multinode-tpl.yml'%}
 
 ## ---------- GP7 PXF CLI tests ----------
 {% include 'jobs/cli-tpl.yml' %}
 {% set job_dependency=None %}
+{% set gp_ver = None %}
 
 ## ---------- Compatibility Gate ----------
 {% set gp_ver = 6 %}

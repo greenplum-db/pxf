@@ -620,6 +620,7 @@ jobs:
 ## ---------- GP7 PXF CLI tests ----------
 
 {% if gp7_cli %}
+{% set gp_ver = 7 %}
 {% set job_dependency='[Build PXF-GP7 on RHEL8]' %}
 {% include 'jobs/cli-tpl.yml' %}
 {% set job_dependency=None %}
@@ -627,6 +628,7 @@ jobs:
     <<: *slack_alert
 {% endif %}
 {% endif %} # if gp7_cli ends here
+{% set gp_ver = None %}
 
 ## ---------- Extended Tests ----------
 {% set gp_ver = 6 %}
@@ -1370,6 +1372,7 @@ jobs:
 
 ## ---------- Multi-node test for GP7 ----------
 {% if gp7_multinode %}
+{% set gp_ver = 7 %}
 {% set job_dependency='[Build PXF-GP7 on RHEL8]' %}
 {% include 'jobs/multinode-tpl.yml'%}
 {% set job_dependency=None %}
@@ -1377,4 +1380,5 @@ jobs:
     <<: *slack_alert
 {% endif %}
 {% endif %} # if gp7_multinode ends here
+{% set gp_ver = None %}
 
