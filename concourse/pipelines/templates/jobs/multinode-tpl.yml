@@ -1,20 +1,20 @@
 ## Variables that need to be set for this job:
 ## - gp_ver = Greenplum Major Version
-## - job_dependency: Set this to [Testing Gate for PXF-GP] for pxf-build or [Build PXF-GP7 on RHEL8] for dev
+## - passed = upstream job name that the artifacts need to pass before this job
 
 - name: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
   max_in_flight: 2
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [[job_dependency]]
+      passed: [[passed]]
       trigger: true
     - get: pxf_tarball
       resource: pxf_gp[[gp_ver]]_tarball_rhel8
-      passed: [[job_dependency]]
+      passed: [[passed]]
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-      passed: [[job_dependency]]
+      passed: [[passed]]
     - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     - get: ccp_src
     - get: ccp-7-image

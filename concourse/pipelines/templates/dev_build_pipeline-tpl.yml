@@ -621,9 +621,9 @@ jobs:
 
 {% if gp7_cli %}
 {% set gp_ver = 7 %}
-{% set job_dependency='[Build PXF-GP7 on RHEL8]' %}
+{% set passed = '[Build PXF-GP7 on RHEL8]' %}
 {% include 'jobs/cli-tpl.yml' %}
-{% set job_dependency=None %}
+{% set passed = None %}
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -1373,9 +1373,9 @@ jobs:
 ## ---------- Multi-node test for GP7 ----------
 {% if gp7_multinode %}
 {% set gp_ver = 7 %}
-{% set job_dependency='[Build PXF-GP7 on RHEL8]' %}
+{% set passed = '[Build PXF-GP7 on RHEL8]' %}
 {% include 'jobs/multinode-tpl.yml'%}
-{% set job_dependency=None %}
+{% set passed = None %}
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
