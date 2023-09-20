@@ -83,6 +83,21 @@ command to build the image:
       .
     popd
 
+### Docker gpdb6-rocky9-test-pxf-image image
+
+Build this image for Greenplum 6 running on Rhel 9. Run the following
+command to build the image:
+
+    pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
+    docker build \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-rocky9-test:latest \
+      --build-arg=GO_VERSION=${GO_VERSION} \
+      --build-arg=MAVEN_VERSION=${MAVEN_VERSION} \
+      --tag=gpdb6-rocky9-test-pxf \
+      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/rocky9/Dockerfile \
+      .
+    popd
+
 ### Docker gpdb6-ubuntu18.04-test-pxf-image image
 
 Build this image for Greenplum 6 running on Ubuntu 18.04. Run the following

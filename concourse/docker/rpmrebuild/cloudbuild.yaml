@@ -27,7 +27,20 @@ steps:
     - 'concourse/docker/rpmrebuild/rocky'
   waitFor: ['-']
 
+# Builds the rpmrebuild-rocky9 image
+- name: 'gcr.io/cloud-builders/docker'
+  id: rpmrebuild-rocky8-image
+  args:
+    - 'build'
+    - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-rocky9-build:latest'
+    - '--tag=gcr.io/$PROJECT_ID/rpmrebuild-rocky9:latest'
+    - '-f'
+    - 'concourse/docker/rpmrebuild/rocky/Dockerfile'
+    - 'concourse/docker/rpmrebuild/rocky'
+  waitFor: ['-']
+
 # Push images from Cloud Build to Container Registry
 images:
   - 'gcr.io/$PROJECT_ID/rpmrebuild-centos7:latest'
   - 'gcr.io/$PROJECT_ID/rpmrebuild-rocky8:latest'
+  - 'gcr.io/$PROJECT_ID/rpmrebuild-rocky9:latest'
