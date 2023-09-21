@@ -160,9 +160,12 @@ function create_dataproc_env_files() {
     xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.user.impersonation']/value" -v false dataproc_env_files/conf/pxf-site.xml
 
     if [[ "${KERBERIZED}" == true ]]; then
-      echo "Making changes to hive-site to update hive.metastore.uris from ${CLUSTER_NAME}-m to ${CLUSTER_NAME}-m.c.data-gpdb-ud.internal..."
-      # set Hive metastore uris to full name
-      xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'hive.metastore.uris']/value" -x "concat(substring-before(., '${CLUSTER_NAME}-m'), '${CLUSTER_NAME}-m.c.data-gpdb-ud.internal', substring-after(., '${CLUSTER_NAME}-m'))" dataproc_env_files/conf/hive-site.xml
+        echo "Making changes to hive-site.xml to update hive.metastore.uris from ${CLUSTER_NAME}-m to ${CLUSTER_NAME}-m.c.data-gpdb-ud.internal..."
+        # set Hive metastore uris to full name
+        xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'hive.metastore.uris']/value" -x "concat(substring-before(., '${CLUSTER_NAME}-m'), '${CLUSTER_NAME}-m.c.data-gpdb-ud.internal', substring-after(., '${CLUSTER_NAME}-m'))" dataproc_env_files/conf/hive-site.xml
+        echo "Making changes to pxf-site.xml to update the pxf.service.kerberos.principal to ${CLUSTER_USER}@C.DATA-GPDB-UD.INTERNAL..."
+        xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.kerberos.principal']/value" -v "${CLUSTER_USER}@C.DATA-GPDB-UD.INTERNAL" dataproc_env_files/conf/pxf-site.xml
+
     fi
 
     echo "Cluster config for ${CLUSTER_NAME} has been written in dataproc_env_files"
@@ -173,6 +176,7 @@ function delete_dataproc_env_files() {
 }
 
 function create_pxf_service_principal() {
+    echo "Creating PXF service principal for ${CLUSTER_USER}..."
     cat <<\EOF >create_service_principal.sh
 #!/bin/sh
 
@@ -189,7 +193,6 @@ EOF
 
     local zone=$(get_zone)
     gcloud compute scp --zone="${zone}" create_service_principal.sh "${CLUSTER_NAME}-m:~/"
-    echo "Creating PXF service principal for ${CLUSTER_USER}..."
     gcloud compute ssh "${CLUSTER_NAME}-m" --zone="${zone}" \
         --command 'chmod +x create_service_principal.sh && ./create_service_principal.sh'
 }
@@ -239,7 +242,7 @@ function prompt_for_confirmation() {
 
 function print_user_instructions_for_create() {
     cat <<EOF
-Now do the following:
+The cluster has been successfully created. Now do the following:
 
     1. Add the hostname to IP address mappings for the cluster to /etc/hosts
 
@@ -262,7 +265,7 @@ EOF
 
 function print_user_instructions_for_delete() {
     cat <<EOF
-Now do the following:
+The cluster has been successfully deleted. Now do the following:
 
     1. Remove the hostname to IP address mappings for the cluster in /etc/hosts
 
@@ -275,8 +278,8 @@ EOF
 function print_user_instructions_for_kerberos_create() {
     cat <<EOF
 
-This cluster has Kerberos Authentication enabled, please check the Dataproc-with-Kerberos README to finish
-setting up the cluster and your local environment:
+This cluster has Kerberos Authentication enabled and has updated the hive-site.xml and pxf-site.xml accordingly.
+To finish up, please complete the following steps:
 
     1. Copy the krb5.conf file and keytab files into \$PXF_BASE, for example
 
@@ -287,11 +290,7 @@ setting up the cluster and your local environment:
 
         -Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf
 
-    3. Edit \$PXF_BASE/servers/dataproc/pxf-site.xml and set \`pxf.service.kerberos.principal\` to \`<username>@C.DATA-GPDB-UD.INTERNAL\`
-
-        xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.kerberos.principal']/value" -v "${USER}@C.DATA-GPDB-UD.INTERNAL" \$PXF_BASE/servers/dataproc/pxf-site.xml
-
-    4. (Re-)Start PXF
+    3. (Re-)Start PXF
 
         pxf start
 EOF
