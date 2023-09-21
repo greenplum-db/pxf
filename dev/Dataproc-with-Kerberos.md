@@ -1,34 +1,14 @@
 # Local Dataproc Cluster with Kerberos Authentication
 
-This developer note will guide you through the process of creating a Google Cloud Dataproc cluster with Kerberos authentication enabled.
+The is instructions on how to connect your local machine to a Google Cloud Dataproc cluster with Kerberos authentication enabled.
+It runs through a simple flow with HDFS and Hive to check that you can connect locally to the kerberized cluster.
 
 ## Environment SetUp
 
-1. Run the modified `dataproc-cluster.bash` script with following options to create a local Dataproc cluster with Kerberos authentication
+1. Run the `dataproc-cluster.bash` script with following options to create a Dataproc cluster with Kerberos authentication in GCP
 
     ```sh
-    KERBERIZED=true IMAGE_VERSION=1.5-debian10 ./dataproc-cluster.bash --create 'core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT,hdfs:dfs.client.use.datanode.hostname=true'
-    ```
-
-1. SSH into cluster code (e.g., `gcloud compute ssh "${DATAPROC_CLUSTER_NAME}-m --zone=${ZONE}"`) and created a PXF service principal named `${USER}`
-
-    ```sh
-    sudo kadmin.local -q "add_principal -nokey ${USER}"
-    sudo kadmin.local -q "ktadd -k pxf.service.keytab ${USER}"
-    sudo chown "${USER}:" ~/pxf.service.keytab
-    chmod 0600 ~/pxf.service.keytab
-    sudo addgroup "${USER}" hdfs
-    sudo addgroup "${USER}" hadoop
-
-    # verify the keytab
-    klist -ekt pxf.service.keytab
-    ```
-
-1. Copy Kerberos files from the cluster to the local working directory
-
-    ```sh
-    gcloud compute scp ${DATAPROC_CLUSTER_NAME}-m:~/pxf.service.keytab "${DATAPROC_CLUSTER_NAME}-m:/etc/krb5.conf" dataproc_env_files/
-    cp -i dataproc_env_files/pxf.service.keytab "${PXF_BASE}/keytabs"
+    KERBERIZED=true ./dataproc-cluster.bash --create
     ```
 
 1. If `kinit` and/or `klist` are not found on your path, install

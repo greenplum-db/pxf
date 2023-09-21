@@ -58,6 +58,10 @@ function create_dataproc_cluster() {
     if [[ "${KERBERIZED}" == true ]]; then
       echo "Enabling kerberos..."
       create_cmd+=("--enable-kerberos")
+
+      echo "Adding cluster security rules..."
+      extra_hadoop_config+='core:hadoop.security.auth_to_local=RULE:[1:$1] RULE:[2:$1] DEFAULT,hdfs:dfs.client.use.datanode.hostname=true'
+      echo "New config is: " ${extra_hadoop_config}
     fi
 
     if [[ -n $1 ]]; then
@@ -101,7 +105,7 @@ function create_firewall_rule() {
     # Kerberos Service  Port
     # KDC               88
     # Admin server      750
-      echo "Include KDC and admin server ports to allow list..."
+      echo "Adding KDC and admin server ports to allow list..."
       allow_list+=",udp:88,udp:750"
     fi
 
@@ -126,23 +130,7 @@ function delete_firewall_rule() {
 }
 
 function create_dataproc_env_files() {
-    local zoneUri
-    zoneUri="$(gcloud dataproc clusters describe "${CLUSTER_NAME}" --region="${REGION}" --format='get(config.gceClusterConfig.zoneUri)')"
-    # the zoneUri field may contain a
-    #
-    #   * full URL    (https://www.googleapis.com/compute/v1/projects/[projectId]/zones/[zone])
-    #   * partial URI (projects/[projectId]/zones/[zone])
-    #   * short name  ([zone])
-    #
-    # <https://cloud.google.com/dataproc/docs/reference/rest/v1/ClusterConfig#gceclusterconfig>
-    #
-    # we need the just the short name when running
-    #
-    #     gcloud compute instances describe
-    #
-    # use bash parameter expansion to remove the longest matching prefix
-    # (everything up to the last forward-slash)
-    local zone="${zoneUri##*/}"
+    local zone=$(get_zone)
 
     mkdir -p dataproc_env_files/conf
     printf "# BEGIN LOCAL DATAPROC SECTION\n" >dataproc_env_files/etc_hostfile
@@ -182,6 +170,60 @@ function create_dataproc_env_files() {
 
 function delete_dataproc_env_files() {
     rm -rf dataproc_env_files
+}
+
+function create_pxf_service_principal() {
+    cat <<\EOF >create_service_principal.sh
+#!/bin/sh
+
+sudo kadmin.local -q "add_principal -nokey ${USER}"
+sudo kadmin.local -q "ktadd -k pxf.service.keytab ${USER}"
+sudo chown "${USER}:" ~/pxf.service.keytab
+chmod 0600 ~/pxf.service.keytab
+sudo addgroup "${USER}" hdfs
+sudo addgroup "${USER}" hadoop
+
+# verify the keytab
+klist -ekt pxf.service.keytab
+EOF
+
+    local zone=$(get_zone)
+    gcloud compute scp --zone="${zone}" create_service_principal.sh "${CLUSTER_NAME}-m:~/"
+    echo "Creating PXF service principal for ${CLUSTER_USER}..."
+    gcloud compute ssh "${CLUSTER_NAME}-m" --zone="${zone}" \
+        --command 'chmod +x create_service_principal.sh && ./create_service_principal.sh'
+}
+
+function retrieve_keytab_and_krb5_conf() {
+    local zone=$(get_zone)
+
+    echo "Copying down keytab and krb5.conf files into dataproc_env_files..."
+    gcloud compute scp \
+        --zone="${zone}" \
+        "${CLUSTER_NAME}-m:~/pxf.service.keytab" \
+        "${CLUSTER_NAME}-m:/etc/krb5.conf" \
+        dataproc_env_files/
+}
+
+function get_zone() {
+
+    local zoneUri
+    zoneUri="$(gcloud dataproc clusters describe "${CLUSTER_NAME}" --region="${REGION}" --format='get(config.gceClusterConfig.zoneUri)')"
+    # the zoneUri field may contain a
+    #
+    #   * full URL    (https://www.googleapis.com/compute/v1/projects/[projectId]/zones/[zone])
+    #   * partial URI (projects/[projectId]/zones/[zone])
+    #   * short name  ([zone])
+    #
+    # <https://cloud.google.com/dataproc/docs/reference/rest/v1/ClusterConfig#gceclusterconfig>
+    #
+    # we need the just the short name when running
+    #
+    #     gcloud compute instances describe
+    #
+    # use bash parameter expansion to remove the longest matching prefix
+    # (everything up to the last forward-slash)
+    echo "${zoneUri##*/}"
 }
 
 function prompt_for_confirmation() {
@@ -232,25 +274,24 @@ EOF
 
 function print_user_instructions_for_kerberos_create() {
     cat <<EOF
+
 This cluster has Kerberos Authentication enabled, please check the Dataproc-with-Kerberos README to finish
 setting up the cluster and your local environment:
 
-    1. Create a PXF service principal in the newly generated cluster and copy it to the local working directory.
-      Steps to create and verify the principal and keytab can be found in the Dataproc-with-Kerberos.md file.
-
-    2. Copy the krb5.conf file into \$PXF_BASE, for example
+    1. Copy the krb5.conf file and keytab files into \$PXF_BASE, for example
 
         cp -a dataproc_env_files/krb5.conf \${PXF_BASE}/conf/krb5.conf
+        cp -i dataproc_env_files/pxf.service.keytab \${PXF_BASE}/keytabs
 
-    3. Update the \$PXF_BASE/conf/pxf-env.sh file and add the following to \`PXF_JVM_OPTS\`
+    2. Update the \$PXF_BASE/conf/pxf-env.sh file and add the following to \`PXF_JVM_OPTS\`
 
         -Djava.security.krb5.conf=${PXF_BASE}/conf/krb5.conf
 
-    4. Edit \$PXF_BASE/servers/dataproc/pxf-site.xml and set \`pxf.service.kerberos.principal\` to \`<username>@C.DATA-GPDB-UD.INTERNAL\`
+    3. Edit \$PXF_BASE/servers/dataproc/pxf-site.xml and set \`pxf.service.kerberos.principal\` to \`<username>@C.DATA-GPDB-UD.INTERNAL\`
 
         xmlstarlet ed --inplace --pf --update "/configuration/property[name = 'pxf.service.kerberos.principal']/value" -v "${USER}@C.DATA-GPDB-UD.INTERNAL" \$PXF_BASE/servers/dataproc/pxf-site.xml
 
-    5. (Re-)Start PXF
+    4. (Re-)Start PXF
 
         pxf start
 EOF
@@ -269,6 +310,10 @@ PXF also needs to remove Kerberos references that were used for this cluster, pl
     3. Delete the krb5.conf and keytab files in \$PXF_BASE, for example
 
         rm \${PXF_BASE}/conf/krb5.conf \${PXF_BASE}/keytabs/pxf.service.keytab
+
+    4. Delete the create_service_principal.sh file in the local directory
+
+        rm create_service_principal.sh
 
 EOF
 }
@@ -315,6 +360,10 @@ case "${script_command}" in
     create_dataproc_cluster "${extra_hadoop_config}"
     create_firewall_rule "${CLUSTER_NAME}-external-access"
     create_dataproc_env_files
+    if [[ "${KERBERIZED}" == true ]]; then
+      create_pxf_service_principal
+      retrieve_keytab_and_krb5_conf
+    fi
     print_user_instructions_for_create
     if [[ "${KERBERIZED}" == true ]]; then
       print_user_instructions_for_kerberos_create
