@@ -522,14 +522,17 @@ resources:
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
 
-## ---------- Greenplum 7 Beta Builds ----------
-- name: gpdb7_rhel8_rpm_latest-0
+{% set gp_ver = 7 %}
+{% for i in range(num_gpdb7_versions) %}
+- name: gpdb[[gp_ver]]_rhel8_rpm_latest-[[i]]
   type: gcs
   icon: google-drive
   source:
-    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/released/gpdb7/greenplum-db-(7.*)-el8-x86_64.rpm
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-el8-x86_64.rpm
+{% endfor %} {# range(num_gpdb7_versions) #}
+{% set gp_ver = None %}
 
 ## ---------- PXF 5 (for GPDB 6) Artifact ---------------
 - name: pxf5_gp6_rhel7_released

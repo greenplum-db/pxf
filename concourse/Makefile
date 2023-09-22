@@ -16,6 +16,7 @@ PERF_PIPELINE_NAME          ?= pxf_perf-$(SCALE)g-RHEL$(REDHAT_MAJOR_VERSION)
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS          ?= 10
 NUM_GPDB6_VERSIONS          ?=  9
+NUM_GPDB7_VERSIONS          ?=  1
 REDHAT_MAJOR_VERSION        ?= 7
 FLY_CMD                     ?= fly
 CHECK_CREDS                 ?= true
@@ -66,7 +67,8 @@ set-build-pipeline:
 		environment=prod \
 		slack_notification=$(SLACK) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
-		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
+		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
+		num_gpdb7_versions=$(NUM_GPDB7_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \
 		--pipeline=$(BUILD_PIPELINE_NAME) \
@@ -87,7 +89,8 @@ set-dev-release-pipeline:
 		slack_notification=false \
 		git_branch=$(BRANCH) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
-		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
+		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
+		num_gpdb7_versions=$(NUM_GPDB7_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \ \
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
@@ -128,7 +131,8 @@ set-dev-build-pipeline:
 		user=$(USER) \
 		branch=$(BRANCH) \
 		num_gpdb5_versions=1 \
-		num_gpdb6_versions=1 >"$${PIPELINE_FILE}" && \
+		num_gpdb6_versions=1 \
+		num_gpdb7_versions=1 >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
@@ -160,7 +164,8 @@ set-pr-build-pipeline:
 		slack_notification=false \
 		pr_pipeline=true \
 		num_gpdb5_versions=1 \
-		num_gpdb6_versions=1 >"$${PIPELINE_FILE}" && \
+		num_gpdb6_versions=1 \
+		num_gpdb7_versions=1 >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \
 		--pipeline=$(PR_BUILD_PIPELINE_NAME) \
