@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.8.0 (09/25/2023)
+
+### Enhancements:
+
+- [#1013](https://github.com/greenplum-db/pxf/pull/1013) Bumped Azure Storage dependency to 5.5.0
+- [#1018](https://github.com/greenplum-db/pxf/pull/1018) Add pxf.service.kerberos.ticket-renew-window option to pxf-site.xml
+- [#1019](https://github.com/greenplum-db/pxf/pull/1019) Add pushdown of NUMERIC and handling of CHAR and VARCHAR predicates for JDBC profile
+
 ## 6.7.0 (07/13/2023)
 
 ### Enhancements:
