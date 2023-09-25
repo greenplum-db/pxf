@@ -2,20 +2,20 @@
 title: Configuring Hadoop Connectors (Optional)
 ---
 
-PXF is compatible with Cloudera, Hortonworks Data Platform, MapR, and generic Apache Hadoop distributions. This topic describes how to configure the PXF Hadoop, Hive, and HBase connectors.
+PXF is compatible with Cloudera, Hortonworks Data Platform, and generic Apache Hadoop distributions. This topic describes how to configure the PXF Hadoop, Hive, and HBase connectors.
 
 *If you do not want to use the Hadoop-related PXF connectors, then you do not need to perform this procedure.*
 
 ## <a id="prereq"></a>Prerequisites
 
-Configuring PXF Hadoop connectors involves copying configuration files from your Hadoop cluster to the Greenplum Database coordinator host. If you are using the MapR Hadoop distribution, you must also copy certain JAR files to the coordinator host. Before you configure the PXF Hadoop connectors, ensure that you can copy files from hosts in your Hadoop cluster to the Greenplum Database coordinator.
+Configuring PXF Hadoop connectors involves copying configuration files from your Hadoop cluster to the Greenplum Database coordinator host. Before you configure the PXF Hadoop connectors, ensure that you can copy files from hosts in your Hadoop cluster to the Greenplum Database coordinator.
 
 
 ## <a id="client-pxf-config-steps"></a>Procedure
 
 Perform the following procedure to configure the desired PXF Hadoop-related connectors on the Greenplum Database coordinator host. After you configure the connectors, you will use the `pxf cluster sync` command to copy the PXF configuration to the Greenplum Database cluster.
 
-In this procedure, you use the `default`, or create a new PXF server configuration. You copy Hadoop configuration files to the server configuration directory on the Greenplum Database coordinator host. You identify Kerberos and user impersonation settings required for access, if applicable. You may also copy libraries to `$PXF_BASE/lib` for MapR support. You then synchronize the PXF configuration on the coordinator host to the standby coordinator host and segment hosts.
+In this procedure, you use the `default`, or create a new PXF server configuration. You copy Hadoop configuration files to the server configuration directory on the Greenplum Database coordinator host. You identify Kerberos and user impersonation settings required for access, if applicable. You then synchronize the PXF configuration on the coordinator host to the standby coordinator host and segment hosts.
 
 1. Log in to your Greenplum Database coordinator host:
 
@@ -64,15 +64,6 @@ In this procedure, you use the `default`, or create a new PXF server configurati
     gpadmin@coordinator$ scp hbaseuser@hbasehost:/etc/hbase/conf/hbase-site.xml .
     ```
 
-2. If you are using PXF with the MapR Hadoop distribution, you must copy certain JAR files from your MapR cluster to the Greenplum Database coordinator host. (Your file paths may differ based on the version of MapR in use.) For example, these commands use `scp` to copy the files:
-
-    ``` shell
-    gpadmin@coordinator$ cd $PXF_BASE/lib
-    gpadmin@coordinator$ scp mapruser@maprhost:/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/lib/maprfs-5.2.2-mapr.jar .
-    gpadmin@coordinator$ scp mapruser@maprhost:/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/lib/hadoop-auth-2.7.0-mapr-1707.jar .
-    gpadmin@coordinator$ scp mapruser@maprhost:/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/hadoop-common-2.7.0-mapr-1707.jar .
-    ```
-        
 5. Synchronize the PXF configuration to the Greenplum Database cluster:
 
     ``` shell
