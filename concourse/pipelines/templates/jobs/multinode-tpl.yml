@@ -124,12 +124,12 @@
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
     params:
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       HIVE_VERSION: 2
       IMPERSONATION: true
       KERBEROS: ((kerberos-enabled))
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: [[gp_ver]]
       GROUP: security,proxySecurity,proxySecurityIpa,multiClusterSecurity
       PXF_JVM_OPTS: ((pxf-jvm-opts))

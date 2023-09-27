@@ -58,6 +58,7 @@
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       IMPERSONATION: false
       INSTALL_GPHDFS: false
       GP_VER: [[gp_ver]]

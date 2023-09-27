@@ -22,6 +22,7 @@ inputs:
   optional: true
 
 params:
+  GOOGLE_PROJECT_ID:
   GP_VER:
   IMPERSONATION: true
   INSTALL_GPHDFS: true

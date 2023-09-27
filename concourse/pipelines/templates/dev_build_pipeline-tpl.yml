@@ -848,6 +848,7 @@ jobs:
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: [[gp_ver]]
       IMPERSONATION: true
       INSTALL_GPHDFS: false
@@ -868,6 +869,7 @@ jobs:
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       BASE_PATH: /mnt/nfs/var/nfsshare
       GP_VER: [[gp_ver]]
       GROUP: hcfs
@@ -1183,6 +1185,7 @@ jobs:
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: [[gp_ver]]
       IMPERSONATION: true
       INSTALL_GPHDFS: false
@@ -1195,7 +1198,6 @@ jobs:
     file: pxf_src/concourse/tasks/upgrade_pxf_on_ccp.yml
     image: ccp-7-image
     params:
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: [[gp_ver]]
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
@@ -1203,12 +1205,12 @@ jobs:
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
     params:
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       HIVE_VERSION: 2
       IMPERSONATION: true
       KERBEROS: ((kerberos-enabled))
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: [[gp_ver]]
       GROUP: security,proxySecurity,proxySecurityIpa,multiClusterSecurity
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
@@ -1331,6 +1333,7 @@ jobs:
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       IMPERSONATION: false
       INSTALL_GPHDFS: false
       GP_VER: [[gp_ver]]
@@ -1341,12 +1344,12 @@ jobs:
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
     params:
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       HIVE_VERSION: 2
       IMPERSONATION: false
       KERBEROS: ((kerberos-enabled))
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GP_VER: [[gp_ver]]
       GROUP: security,multiClusterSecurity
       PXF_JVM_OPTS: ((pxf-jvm-opts))
