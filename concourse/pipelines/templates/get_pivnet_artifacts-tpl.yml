@@ -73,7 +73,7 @@ resources:
 {% endfor %}
 
 jobs:
-- name: Download Latest PivNet CLI
+- name: download_latest_pivnet_cli
   plan:
   - in_parallel:
     - get: twice-a-day
@@ -81,7 +81,7 @@ jobs:
     - get: pxf_src
     - get: ubuntu18
     - get: pivnet_cli
-  - task: Get Latest PivNet CLI
+  - task: get_latest_pivnet_cli
     attempts: [[attempts]]
     image: ubuntu18
     config:
@@ -99,20 +99,20 @@ jobs:
     params:
       file: pivnet_cli/pivnet
 
-- name: Get Greenplum Product Files GP5
+- name: get_greenplum_product_files_gp5
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Download Latest PivNet CLI]
+      passed: [download_latest_pivnet_cli]
     - get: ubuntu18
     - get: pivnet_cli
-      passed: [Download Latest PivNet CLI]
+      passed: [download_latest_pivnet_cli]
       trigger: true
 {% for i in range(num_gpdb5_versions) %}
     - get: gpdb5_rhel7_rpm_latest-[[i]]
 {% endfor %}
 {% for i in range(num_gpdb5_versions - 1, -1, -1) %}
-  - task: Get Greenplum Product Files GP5 Latest - [[i]]
+  - task: get_greenplum_product_files_gp5_latest-[[i]]
     attempts: [[attempts]]
     # this task will fail on centos6
     image: ubuntu18
@@ -143,14 +143,14 @@ jobs:
       file: gpdb5_rhel7_rpm_latest-[[i]]/greenplum-db-5.*-rhel7-x86_64.rpm
 {% endfor %}
 
-- name: Get Greenplum Product Files GP6
+- name: get_greenplum_product_files_gp6
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Download Latest PivNet CLI]
+      passed: [download_latest_pivnet_cli]
     - get: ubuntu18
     - get: pivnet_cli
-      passed: [Download Latest PivNet CLI]
+      passed: [download_latest_pivnet_cli]
       trigger: true
 {% for i in range(num_gpdb6_versions) %}
     - get: gpdb6_rhel7_rpm_latest-[[i]]
@@ -158,7 +158,7 @@ jobs:
     - get: gpdb6_ubuntu18_deb_latest-[[i]]
 {% endfor %}
 {% for i in range(num_gpdb6_versions - 1, -1, -1) %}
-  - task: Get Greenplum Product Files GP6 Latest - [[i]]
+  - task: get_greenplum_product_files_gp6_latest-[[i]]
     attempts: [[attempts]]
     # this task will fail on centos6
     image: ubuntu18
