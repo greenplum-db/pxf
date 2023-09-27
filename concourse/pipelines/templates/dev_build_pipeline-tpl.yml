@@ -144,7 +144,7 @@ resources:
     versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
 {% endif %}
 
-{% if hdp3 or ambari %}
+{% if hdp3 %}
 - name: singlecluster-hdp3
   type: gcs
   icon: google-drive
@@ -217,7 +217,7 @@ resources:
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
-{% if multinode or multinode_no_impersonation or ambari or file or gp7_cli or gp7_multinode %}
+{% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
 - name: ccp-7-image
   type: registry-image
   icon: docker
@@ -545,44 +545,6 @@ jobs:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
-
-{% if ambari %}
-- name: test_pxf-gp[[gp_ver]]-hdp3-secure_ambari_manual_on_rhel7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: ccp-7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp3
-  - task: load_config_for_ambari
-    file: pxf_src/concourse/tasks/load_ambari_config.yml
-    image: ccp-7-image
-    params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-      GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-  - task: test_pxf-gp[[gp_ver]]-hdp3-secure_ambari_manual_on_rhel7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: security
-      HADOOP_CLIENT: HDP_KERBEROS
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
 {% if slack_notification %}
     <<: *slack_alert

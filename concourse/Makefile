@@ -32,7 +32,6 @@ JDK11                       ?= false
 CDH                         ?= false
 HDP2                        ?= false
 HDP3                        ?= false
-AMBARI                      ?= false
 S3                          ?= false
 ADL                         ?= false
 WASB                        ?= false
@@ -119,7 +118,6 @@ set-dev-build-pipeline:
 		cdh=$(CDH) \
 		hdp2=$(HDP2) \
 		hdp3=$(HDP3) \
-		ambari=$(AMBARI) \
 		file=$(FILE) \
 		s3=$(S3) \
 		adl=$(ADL) \
