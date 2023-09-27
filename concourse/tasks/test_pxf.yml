@@ -7,8 +7,6 @@ inputs:
   - name: bin_gpdb
   - name: pxf_tarball
     optional: true
-  - name: ambari_env_files
-    optional: true
 params:
   ACCESS_KEY_ID:
   GROUP: smoke

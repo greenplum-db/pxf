@@ -746,54 +746,15 @@ function configure_pxf_wasbs_server() {
 }
 
 function configure_pxf_default_server() {
-	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
-	if [[ -n $AMBARI_DIR  ]]; then
-	  AMBARI_KEYTAB_FILE=$(find "$AMBARI_DIR" -name "*.keytab")
-		cp "${AMBARI_DIR}"/conf/*-site.xml "${BASE_DIR}/servers/default"
-
-		if [[ -n $AMBARI_KEYTAB_FILE ]]; then
-			REALM=$(cat "$AMBARI_DIR"/REALM)
-			HADOOP_USER=$(cat "$AMBARI_DIR"/HADOOP_USER)
-			cp ${TEMPLATES_DIR}/templates/mapred-site.xml ${BASE_DIR}/servers/default/mapred1-site.xml
-			cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/default/pxf-site.xml
-			sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|${HADOOP_USER}@${REALM}|g" ${BASE_DIR}/servers/default/pxf-site.xml
-			if [[ ${PXF_VERSION} == 5 ]]; then
-				sed -i -e "s|\${pxf.conf}/keytabs/pxf.service.keytab|$AMBARI_KEYTAB_FILE|g" ${BASE_DIR}/servers/default/pxf-site.xml
-			else
-				sed -i -e "s|\${pxf.base}/keytabs/pxf.service.keytab|$AMBARI_KEYTAB_FILE|g" ${BASE_DIR}/servers/default/pxf-site.xml
-			fi
-			sed -i -e "s|\${user.name}||g" ${BASE_DIR}/servers/default/pxf-site.xml
-			sudo mkdir -p /etc/security/keytabs/
-			sudo cp "$AMBARI_KEYTAB_FILE" /etc/security/keytabs/"${HADOOP_USER}".headless.keytab
-			sudo chown gpadmin:gpadmin /etc/security/keytabs/"${HADOOP_USER}".headless.keytab
-
-			mkdir -p ${BASE_DIR}/servers/db-hive/
-			cp ${BASE_DIR}/servers/default/pxf-site.xml ${BASE_DIR}/servers/db-hive/
-			cp ${TEMPLATES_DIR}/templates/jdbc-site.xml ${BASE_DIR}/servers/db-hive/
-
-			REALM=$(cat "$AMBARI_DIR"/REALM)
-			HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
-			KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.c.${GOOGLE_PROJECT_ID}.internal@${REALM};saslQop=auth" # quoted because of semicolon
-			sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
-				-e "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${HIVE_HOSTNAME}:10000/default;principal=${KERBERIZED_HADOOP_URI}|" \
-				-e 's|YOUR_DATABASE_JDBC_USER||' \
-				-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
-				-e 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
-				${BASE_DIR}/servers/db-hive/jdbc-site.xml
-
-			cp "${PXF_SRC}"/automation/src/test/resources/hive-report.sql ${BASE_DIR}/servers/db-hive/
-		fi
-	else
-		# copy hadoop config files to BASE_DIR/servers/default
-		if [[ -d /etc/hadoop/conf/ ]]; then
-			cp /etc/hadoop/conf/*-site.xml "${BASE_DIR}/servers/default"
-		fi
-		if [[ -d /etc/hive/conf/ ]]; then
-			cp /etc/hive/conf/*-site.xml "${BASE_DIR}/servers/default"
-		fi
-		if [[ -d /etc/hbase/conf/ ]]; then
-			cp /etc/hbase/conf/*-site.xml "${BASE_DIR}/servers/default"
-		fi
+	# copy hadoop config files to BASE_DIR/servers/default
+	if [[ -d /etc/hadoop/conf/ ]]; then
+		cp /etc/hadoop/conf/*-site.xml "${BASE_DIR}/servers/default"
+	fi
+	if [[ -d /etc/hive/conf/ ]]; then
+		cp /etc/hive/conf/*-site.xml "${BASE_DIR}/servers/default"
+	fi
+	if [[ -d /etc/hbase/conf/ ]]; then
+		cp /etc/hbase/conf/*-site.xml "${BASE_DIR}/servers/default"
 	fi
 
 	if [[ ${IMPERSONATION} == true ]]; then
