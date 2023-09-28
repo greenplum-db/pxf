@@ -2,7 +2,7 @@
 ## - gp_ver = Greenplum Major Version
 ## - passed = upstream job name that the artifacts need to pass before this job
 
-- name: test_pxf-gp[[gp_ver]]_hdp2-secure-multi-impers_on_rhel8
+- name: test_pxf-gp[[gp_ver]]-hdp2-secure-multi-impers_on_rhel8
   max_in_flight: 2
   plan:
   - in_parallel:
