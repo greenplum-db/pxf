@@ -17,6 +17,7 @@ resources:
       uri: ((ud/pxf/common/git-remote))
       paths:
         - concourse/docker/pxf-dev-base
+        - concourse/scripts/check_docker_images_and_tag.bash
 
   - name: base-images-trigger
     type: git
@@ -41,7 +42,7 @@ resources:
 ## JOBS
 ## ======================================================================
 jobs:
-  - name: Check upstream base images
+  - name: check_upstream_base_images
     max_in_flight: 1
     plan:
     - in_parallel:
@@ -64,7 +65,7 @@ jobs:
         run:
           path: pxf_src/concourse/scripts/trigger_cloudbuild.bash
 
-  - name: Check pxf-dev-base images
+  - name: check_pxf-dev-base_images
     max_in_flight: 1
     plan:
     - in_parallel:
@@ -73,7 +74,7 @@ jobs:
         resource: pxf-dev-base-cloudbuild-trigger
         trigger: true
       - get: base-images-trigger
-        passed: [Check upstream base images]
+        passed: [check_upstream_base_images]
         trigger: true
     - task: check_docker_images_and_tag
       timeout: 30m
@@ -83,6 +84,7 @@ jobs:
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         IMAGE_LIST: "gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-rocky8-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf gpdb7-rocky8-test-pxf"
+        IMAGE_TAG: ((gcp-image-tag))
       config:
         platform: linux
         inputs:

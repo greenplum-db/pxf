@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+IMAGE_TAG="${IMAGE_TAG:-latest}"
 COMMIT_SHA=$(cat pxf_src/.git/ref)
 echo "Checking images for PXF SHA-1: ${COMMIT_SHA}"
 
@@ -39,13 +40,15 @@ do
 
     for image in "${IMAGE_NAMES[@]}"
     do
-      # we need to untag latest first
-      gcloud container images untag --quiet "gcr.io/${GOOGLE_PROJECT_ID}/gpdb-pxf-dev/${image}:latest" || true
-      # tag image with latest
-      echo "Tagging gcr.io/${GOOGLE_PROJECT_ID}/gpdb-pxf-dev/${image}:${COMMIT_SHA} with latest"
+      # we need to untag ${IMAGE_TAG} first
+      if [[ $IMAGE_TAG == "latest"]]; then
+        gcloud container images untag --quiet "gcr.io/${GOOGLE_PROJECT_ID}/gpdb-pxf-dev/${image}:${IMAGE_TAG}" || true
+      fi
+      # tag image with ${IMAGE_TAG}
+      echo "Tagging gcr.io/${GOOGLE_PROJECT_ID}/gpdb-pxf-dev/${image}:${COMMIT_SHA} with ${IMAGE_TAG}"
       gcloud container images add-tag --quiet \
         "gcr.io/${GOOGLE_PROJECT_ID}/gpdb-pxf-dev/${image}:${COMMIT_SHA}" \
-        "gcr.io/${GOOGLE_PROJECT_ID}/gpdb-pxf-dev/${image}:latest"
+        "gcr.io/${GOOGLE_PROJECT_ID}/gpdb-pxf-dev/${image}:${IMAGE_TAG}"
     done
 
     exit 0

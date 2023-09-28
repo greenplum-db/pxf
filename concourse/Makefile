@@ -13,6 +13,7 @@ DEV_BUILD_PIPELINE_NAME     ?= dev-$(USER)-$(BRANCH)
 PR_BUILD_PIPELINE_NAME      ?= pxf_pr_pipeline
 CERTIFICATION_PIPELINE_NAME ?= pxf-certification
 CLOUDBUILD_PIPELINE_NAME    ?= cloudbuild
+DEV_CLOUDBUILD_PIPELINE_NAME ?= dev-cloudbuild
 PERF_PIPELINE_NAME          ?= pxf_perf-$(SCALE)g-RHEL$(REDHAT_MAJOR_VERSION)
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS          ?= 10
@@ -56,6 +57,7 @@ dev-release: set-dev-release-pipeline
 dev: set-dev-build-pipeline
 pr: set-pr-build-pipeline
 cloudbuild: set-cloudbuild-pipeline
+dev-cloudbuild: set-dev-cloudbuild-pipeline
 longevity: set-longevity-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
@@ -196,8 +198,19 @@ set-cloudbuild-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \
 		--config $(HOME)/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
-		--var pxf-git-branch=$(BRANCH) \
+		--var pxf-git-branch=main \
+		--var gcp-image-tag=latest \
 		--pipeline $(CLOUDBUILD_PIPELINE_NAME) \
+		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/cloudbuild_pipeline.yml has errors"
+
+.PHONY: set-dev-cloudbuild-pipeline
+set-dev-cloudbuild-pipeline:
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		$(SET_PIPELINE) \
+		--config $(HOME)/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
+		--var pxf-git-branch=$(BRANCH) \
+		--var gcp-image-tag=$(PXF_DEV_IMAGE_TAG) \
+		--pipeline $(DEV_CLOUDBUILD_PIPELINE_NAME) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/cloudbuild_pipeline.yml has errors"
 
 .PHONY: pivnet
