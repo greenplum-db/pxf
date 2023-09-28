@@ -234,9 +234,15 @@ set-pivnet-pipeline:
 
 .PHONY: singlecluster
 singlecluster:
-	$(FLY_CMD) -t ud set-pipeline \
-		-c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
-		-v pxf-git-branch=main -p pxf-singlecluster
+	$(FLY_CMD) --target=$(CONCOURSE) \
+	    $(SET_PIPELINE) \
+	    --pipeline=pxf-singlecluster \
+		--config ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
+		--var pxf-git-branch=main \
+		${FLY_OPTIONS_NON-INTERACTIVE} || echo "pipelines/singlecluster-pipeline.yml has errors"
+
+	@echo "using the following command to unpause the pipeline"
+	@echo -e "\t$(FLY_CMD) -t $(CONCOURSE) unpause-pipeline --pipeline pxf-singlecluster"
 
 # ============================= PERFORMANCE PIPELINE TARGETS =============================
 

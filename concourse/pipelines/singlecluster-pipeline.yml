@@ -51,7 +51,7 @@ resources:
       region_name: ((ud/common/aws-region))
       versioned_file: jdbc/postgresql-jdbc-8.4.704.jar
 
-  - name: singlecluster-HDP2-gcs
+  - name: singlecluster-hdp2-gcs
     type: google-cloud-storage
     icon: google-drive
     source:
@@ -59,7 +59,7 @@ resources:
       json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
       versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
-  - name: singlecluster-HDP3-gcs
+  - name: singlecluster-hdp3-gcs
     type: google-cloud-storage
     icon: google-drive
     source:
@@ -67,7 +67,7 @@ resources:
       json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
       versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 
-  - name: singlecluster-CDH-gcs
+  - name: singlecluster-cdh-gcs
     type: google-cloud-storage
     icon: google-drive
     source:
@@ -107,7 +107,7 @@ jobs:
     - task: package_singlecluster
       file: pxf_src/singlecluster/package_singlecluster_cdh.yml
       image: gpdb6-centos7
-    - put: singlecluster-CDH-gcs
+    - put: singlecluster-cdh-gcs
       params:
         file: artifacts/singlecluster-CDH.tar.gz
 
@@ -125,7 +125,7 @@ jobs:
     - task: package_singlecluster
       file: pxf_src/singlecluster/package_singlecluster_hdp2.yml
       image: gpdb6-centos7
-    - put: singlecluster-HDP2-gcs
+    - put: singlecluster-hdp2-gcs
       params:
         file: artifacts/singlecluster-HDP.tar.gz
 
@@ -143,6 +143,6 @@ jobs:
     - task: package_singlecluster
       file: pxf_src/singlecluster/package_singlecluster_hdp3.yml
       image: gpdb6-centos7
-    - put: singlecluster-HDP3-gcs
+    - put: singlecluster-hdp3-gcs
       params:
         file: artifacts/singlecluster-HDP.tar.gz
