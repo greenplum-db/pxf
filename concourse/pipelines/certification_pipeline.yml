@@ -2,13 +2,13 @@
 ## ======================================================================
 ## ANCHORS
 ## ======================================================================
-anchors:
-- &slack_alert
-  on_failure:
-    put: slack-alert
-    params:
-      # yamllint disable-line rule:line-length
-      text: ":ci-fail: <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> has failed (((ud/common/slack-em-ids)))"
+#anchors:
+#- &slack_alert
+#  on_failure:
+#    put: slack-alert
+#    params:
+#      # yamllint disable-line rule:line-length
+#      text: ":ci-fail: <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> has failed (((ud/common/slack-em-ids)))"
 
 ## ======================================================================
 ## RESOURCE TYPES
@@ -20,11 +20,11 @@ resource_types:
   source:
     repository: frodenas/gcs-resource
 
-- name: slack-notification
-  type: registry-image
-  source:
-    repository: cfcommunity/slack-notification-resource
-    tag: latest
+#- name: slack-notification
+#  type: registry-image
+#  source:
+#    repository: cfcommunity/slack-notification-resource
+#    tag: latest
 
 ## ======================================================================
 ## RESOURCES
@@ -61,7 +61,16 @@ resources:
   type: git
   icon: git
   source:
-    tag_filter: release-*
+    # This pipeline should be using a release tag for running
+    # the certification tests, but the build jobs are red on the latest release
+    # of PXF (currently 6.8.0) because of a change in concourse 7.8.x behavior
+    # where gpadmin doesn't own /home/gpadmin. The change only impacts PXF CI code
+    # and not the product's functionality. Until the next release of PXF is tagged
+    # this pipeline should be pointed at the main branch and have the pxf_src
+    # resource pinned to the commit with the fixed CI code. After the next
+    # release, this should be reverted back to using a tag_filter.
+    # TODO: revert this change and unpin resouce in UI.
+    #tag_filter: release-*
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
@@ -163,7 +172,7 @@ resources:
     # TODO: swap out for non-debug builds of ubuntu20 when upstream gpdb start creating release candidates
     regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.debug.tar.gz
 
-## ---------- PXF Released RPM Artifacts ----------
+## ---------- PXF Released RPM_artifacts ----------
 - name: pxf_gp5_rpm_rhel7
   type: gcs
   icon: google-drive
@@ -204,10 +213,10 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: prod/releases/gp7/pxf-gp7-(.*)-1.el8.x86_64.rpm
 
-- name: slack-alert
-  type: slack-notification
-  source:
-    url: ((ud/pxf/secrets/ud-pipeline-bot-ud-dev-webhook))
+#- name: slack-alert
+#  type: slack-notification
+#  source:
+#    url: ((ud/pxf/secrets/ud-pipeline-bot-ud-dev-webhook))
 
 ## ======================================================================
 ## JOBS
@@ -215,7 +224,7 @@ resources:
 jobs:
 
 ## ---------- Centos 7 Swimlane ----------
-- name: Certify GPDB-5 with PXF-GP5 on RHEL7
+- name: certify_gpdb-5_with_pxf-gp5_on_rhel7
   plan:
   - in_parallel:
     - get: pxf_src
@@ -230,8 +239,8 @@ jobs:
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: Test GPDB-5 with PXF-GP5-HDP2 on RHEL7
-    <<: *slack_alert
+  - task: test_gpdb-5_with_pxf-gp5-hdp2_on_rhel7
+    #<<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb5-pxf-dev-centos7-image
     params:
@@ -239,7 +248,7 @@ jobs:
       GP_VER: 5
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-  - task: Upload certification for GPDB-5 with PXF-GP5-HDP2 on RHEL7
+  - task: upload_certification_for_gpdb-5_with_pxf-gp5-hdp2_on_rhel7
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
@@ -247,7 +256,7 @@ jobs:
       GP_VER: 5
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
-- name: Certify GPDB-6 with PXF-GP6 on RHEL7
+- name: certify_gpdb-6_with_pxf-gp6_on_rhel7
   plan:
   - in_parallel:
     - get: pxf_src
@@ -262,8 +271,8 @@ jobs:
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: Test GPDB-6 with PXF-GP6-HDP2 on RHEL7
-    <<: *slack_alert
+  - task: test_gpdb-6_with_pxf-gp6-hdp2_on_rhel7
+    #<<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-centos7-image
     params:
@@ -271,7 +280,7 @@ jobs:
       GP_VER: 6
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-  - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on RHEL7
+  - task: upload_certification_for_gpdb-6_with_pxf-gp6-hdp2_on_rhel7
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
@@ -280,7 +289,7 @@ jobs:
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
 ## ---------- RHEL 8 Swimlane ----------
-- name: Certify GPDB-6 with PXF-GP6 on RHEL8
+- name: certify_gpdb-6_with_pxf-gp6_on_rhel8
   plan:
   - in_parallel:
     - get: pxf_src
@@ -295,8 +304,8 @@ jobs:
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: Test GPDB-6 with PXF-GP6-HDP2 on RHEL8
-    <<: *slack_alert
+  - task: test_gpdb-6_with_pxf-gp6-hdp2_on_rhel8
+    #<<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-rocky8-image
     params:
@@ -304,7 +313,7 @@ jobs:
       GP_VER: 6
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-  - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on RHEL8
+  - task: upload_certification_for_gpdb-6_with_pxf-gp6-hdp2_on_rhel8
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
@@ -312,7 +321,7 @@ jobs:
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
-- name: Certify GPDB-7 with PXF-GP7 on RHEL8
+- name: certify_gpdb-7_with_pxf-gp7_on_rhel8
   plan:
   - in_parallel:
     - get: pxf_src
@@ -328,8 +337,8 @@ jobs:
     - get: gp6-python-libs
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: Test GPDB-7 with PXF-GP7-HDP2 on RHEL8
-    <<: *slack_alert
+  - task: test_gpdb-7_with_pxf-gp7-hdp2_on_rhel8
+    #<<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb7-pxf-dev-rocky8-image
     params:
@@ -337,7 +346,7 @@ jobs:
       GP_VER: 7
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-  - task: Upload certification for GPDB-7 with PXF-GP7-HDP2 on RHEL8
+  - task: upload_certification_for_gpdb-7_with_pxf-gp7-hdp2_on_rhel8
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
@@ -346,7 +355,7 @@ jobs:
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
 ## ---------- Ubuntu 18 Swimlane ----------
-- name: Certify GPDB-6 with PXF-GP6 on Ubuntu 18.04
+- name: certify_gpdb-6_with_pxf-gp6_on_ubuntu_18.04
   plan:
   - in_parallel:
     - get: pxf_src
@@ -361,8 +370,8 @@ jobs:
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: Test GPDB-6 with PXF-GP6-HDP2 on Ubuntu 18.04
-    <<: *slack_alert
+  - task: test_gpdb-6_with_pxf-gp6-hdp2_on_ubuntu_18.04
+    #<<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-ubuntu18-image
     params:
@@ -370,7 +379,7 @@ jobs:
       GP_VER: 6
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-  - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on Ubuntu 18.04
+  - task: upload_certification_for_gpdb-6_with_pxf-gp6-hdp2_on_ubuntu_18.04
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
@@ -379,21 +388,21 @@ jobs:
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
 ## ---------- Reporting Gates ----------
-- name: Reporting Gate for PXF-GP5
+- name: reporting_gate_for_pxf-gp5
   plan:
   - in_parallel:
     - get: pxf_src
     # gpdb release candidate tarballs and PXF RPMs used in testing jobs
     - get: gpdb5_tarball_rhel7
       passed:
-      - Certify GPDB-5 with PXF-GP5 on RHEL7
+      - certify_gpdb-5_with_pxf-gp5_on_rhel7
       trigger: true
     - get: pxf_gp5_rpm_rhel7
       passed:
-      - Certify GPDB-5 with PXF-GP5 on RHEL7
+      - certify_gpdb-5_with_pxf-gp5_on_rhel7
       trigger: true
     - get: ccp-7-image
-  - task: Print Report for GPDB-5 with PXF-GP5 Artifacts
+  - task: print_report_for_gpdb-5_with_pxf-gp5_artifacts
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
@@ -401,27 +410,27 @@ jobs:
       GP_VER: 5
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
-- name: Reporting Gate for PXF-GP6
+- name: reporting_gate_for_pxf-gp6
   plan:
   - in_parallel:
     - get: pxf_src
     # gpdb release candidate tarballs and PXF RPMs used in testing jobs
     - get: gpdb6_tarball_rhel7
       passed:
-      - Certify GPDB-6 with PXF-GP6 on RHEL7
+      - certify_gpdb-6_with_pxf-gp6_on_rhel7
       trigger: true
     - get: pxf_gp6_rpm_rhel7
       passed:
-      - Certify GPDB-6 with PXF-GP6 on RHEL7
+      - certify_gpdb-6_with_pxf-gp6_on_rhel7
       trigger: true
     - get: pxf_gp6_rpm_rhel8
       passed:
-      - Certify GPDB-6 with PXF-GP6 on RHEL8
+      - certify_gpdb-6_with_pxf-gp6_on_rhel8
     - get: pxf_gp6_deb_ubuntu18
       passed:
-      - Certify GPDB-6 with PXF-GP6 on Ubuntu 18.04
+      - certify_gpdb-6_with_pxf-gp6_on_ubuntu_18.04
     - get: ccp-7-image
-  - task: Print Report for GPDB-6 with PXF-GP6 Artifacts
+  - task: print_report_for_gpdb-6_with_pxf-gp6_artifacts
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
@@ -429,21 +438,21 @@ jobs:
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
-- name: Reporting Gate for PXF-GP7
+- name: reporting_gate_for_pxf-gp7
   plan:
   - in_parallel:
     - get: pxf_src
     # gpdb release candidate tarballs and PXF RPMs used in testing jobs
     - get: gpdb7_tarball_rhel8
       passed:
-      - Certify GPDB-7 with PXF-GP7 on RHEL8
+      - certify_gpdb-7_with_pxf-gp7_on_rhel8
       trigger: true
     - get: pxf_gp7_rpm_rhel8
       passed:
-      - Certify GPDB-7 with PXF-GP7 on RHEL8
+      - certify_gpdb-7_with_pxf-gp7_on_rhel8
       trigger: true
     - get: ccp-7-image
-  - task: Print Report for GPDB-7 with PXF-GP7 Artifacts
+  - task: print_report_for_gpdb-7_with_pxf-gp7_artifacts
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
