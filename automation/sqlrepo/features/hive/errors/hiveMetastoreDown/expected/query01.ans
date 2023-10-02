@@ -9,5 +9,5 @@
 --
 -- end_matchsubs
 SELECT *  FROM pxf_hive_metastore_down;
-ERROR:  PXF server error : Failed connecting to Hive MetaStore service: Could not connect to meta store using any of the URIs provided. Most recent failure: org.apache.thrift.transport.TTransportException: java.net.ConnectException: Connection refused (Connection refused)
+ERROR:  PXF server error : java.lang.RuntimeException: Failed connecting to Hive MetaStore service: Could not connect to meta store using any of the URIs provided. Most recent failure: org.apache.thrift.transport.TTransportException: java.net.ConnectException: Connection refused (Connection refused)
 CONTEXT:  External table pxf_hive_metastore_down
