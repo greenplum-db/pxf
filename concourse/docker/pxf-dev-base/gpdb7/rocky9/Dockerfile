@@ -27,6 +27,8 @@ ARG USER_HOME_DIR="/root"
 # install dependencies that are missing on the base images
 RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn
 
+RUN update-crypto-policies --set DEFAULT:SHA1
+
 # create rsa key for the root user
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys \
