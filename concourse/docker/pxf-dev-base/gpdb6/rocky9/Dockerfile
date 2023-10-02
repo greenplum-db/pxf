@@ -31,8 +31,9 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio \
 ARG USER_HOME_DIR="/root"
 
 # install dependencies that are missing on the base images
-RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn \
-    && /usr/bin/pip3 install paramiko --no-cache-dir
+RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn
+
+RUN update-crypto-policies --set DEFAULT:SHA1
 
 # create rsa key for the root user
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
@@ -56,6 +57,8 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && echo -e "password\npassword" | passwd gpadmin 2> /dev/null \
     && awk '{print "localhost", $1, $2; print "127.0.0.1", $1, $2}' /etc/ssh/ssh_host_rsa_key.pub >> /home/gpadmin/.ssh/known_hosts \
     && chown -R gpadmin:gpadmin /home/gpadmin/.ssh \
+    # install dependencies as gpadmin \
+    && su gpadmin -c "pip install paramiko --no-cache-dir" \
     # configure gpadmin limits
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft core unlimited' \
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft nproc 131072' \
