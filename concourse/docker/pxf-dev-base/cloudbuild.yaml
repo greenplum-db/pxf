@@ -220,6 +220,34 @@ steps:
     - apache-maven-binaries
     - gpdb7-rocky8-test-pxf-image-cache
 
+  # Greenplum 7 Rocky 9 Image
+- name: 'gcr.io/cloud-builders/docker'
+  id: gpdb7-rocky9-test-pxf-image-cache
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      mkdir -p /workspace/build
+      docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:latest || exit 0
+  waitFor: ['-']
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: gpdb7-rocky9-test-pxf-image
+  args:
+    - 'build'
+    - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-rocky9-test:latest'
+    - '--build-arg=GO_VERSION=${_GO_VERSION}'
+    - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
+    - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:$COMMIT_SHA'
+    - '--cache-from'
+    - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:latest'
+    - '-f'
+    - 'concourse/docker/pxf-dev-base/gpdb7/rocky9/Dockerfile'
+    - '/workspace/build/'
+  waitFor:
+    - apache-maven-binaries
+    - gpdb7-rocky9-test-pxf-image-cache
+
 substitutions:
   _GO_VERSION: '1.21.3' # default values
   _GO_SHA256SUM: '1241381b2843fae5a9707eec1f8fb2ef94d827990582c7c7c32f5bdfbfd420c8' # sha256 for 1.21.3
@@ -234,3 +262,4 @@ images:
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-oel7-test-pxf:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:$COMMIT_SHA'

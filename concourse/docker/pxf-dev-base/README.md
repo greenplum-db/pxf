@@ -144,3 +144,19 @@ command to build the image:
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/rocky8/Dockerfile \
       .
     popd
+
+
+### Docker gpdb7-rocky9-test-pxf-image image
+
+Build this image for Greenplum 7 running on Rocky 9. Run the following
+command to build the image:
+
+    pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
+    docker build \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-rocky9-test:latest \
+      --build-arg=GO_VERSION=${GO_VERSION} \
+      --build-arg=MAVEN_VERSION=${MAVEN_VERSION} \
+      --tag=gpdb7-rocky9-test-pxf \
+      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/rocky9/Dockerfile \
+      .
+    popd
