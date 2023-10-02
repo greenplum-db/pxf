@@ -29,7 +29,7 @@ steps:
 
 # Builds the rpmrebuild-rocky9 image
 - name: 'gcr.io/cloud-builders/docker'
-  id: rpmrebuild-rocky8-image
+  id: rpmrebuild-rocky9-image
   args:
     - 'build'
     - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb6-rocky9-build:latest'
