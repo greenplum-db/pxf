@@ -172,7 +172,7 @@ resources:
     # TODO: swap out for non-debug builds of ubuntu20 when upstream gpdb start creating release candidates
     regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.debug.tar.gz
 
-## ---------- PXF Released RPM_artifacts ----------
+## ---------- PXF Released RPM Artifacts ----------
 - name: pxf_gp5_rpm_rhel7
   type: gcs
   icon: google-drive

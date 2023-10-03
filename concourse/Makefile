@@ -237,8 +237,8 @@ set-pivnet-pipeline:
 .PHONY: singlecluster
 singlecluster:
 	$(FLY_CMD) --target=$(CONCOURSE) \
-	    $(SET_PIPELINE) \
-	    --pipeline=pxf-singlecluster \
+		$(SET_PIPELINE) \
+		--pipeline=pxf-singlecluster \
 		--config ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
 		--var pxf-git-branch=main \
 		${FLY_OPTIONS_NON-INTERACTIVE} || echo "pipelines/singlecluster-pipeline.yml has errors"
