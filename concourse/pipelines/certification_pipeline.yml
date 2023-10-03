@@ -2,13 +2,13 @@
 ## ======================================================================
 ## ANCHORS
 ## ======================================================================
-#anchors:
-#- &slack_alert
-#  on_failure:
-#    put: slack-alert
-#    params:
-#      # yamllint disable-line rule:line-length
-#      text: ":ci-fail: <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> has failed (((ud/common/slack-em-ids)))"
+anchors:
+- &slack_alert
+  on_failure:
+    put: slack-alert
+    params:
+      # yamllint disable-line rule:line-length
+      text: ":ci-fail: <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> has failed (((ud/common/slack-em-ids)))"
 
 ## ======================================================================
 ## RESOURCE TYPES
@@ -20,11 +20,11 @@ resource_types:
   source:
     repository: frodenas/gcs-resource
 
-#- name: slack-notification
-#  type: registry-image
-#  source:
-#    repository: cfcommunity/slack-notification-resource
-#    tag: latest
+- name: slack-notification
+  type: registry-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
 
 ## ======================================================================
 ## RESOURCES
@@ -213,10 +213,10 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: prod/releases/gp7/pxf-gp7-(.*)-1.el8.x86_64.rpm
 
-#- name: slack-alert
-#  type: slack-notification
-#  source:
-#    url: ((ud/pxf/secrets/ud-pipeline-bot-ud-dev-webhook))
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: ((ud/pxf/secrets/ud-pipeline-bot-ud-dev-webhook))
 
 ## ======================================================================
 ## JOBS
@@ -240,7 +240,7 @@ jobs:
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: test_gpdb-5_with_pxf-gp5-hdp2_on_rhel7
-    #<<: *slack_alert
+    <<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb5-pxf-dev-centos7-image
     params:
@@ -272,7 +272,7 @@ jobs:
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: test_gpdb-6_with_pxf-gp6-hdp2_on_rhel7
-    #<<: *slack_alert
+    <<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-centos7-image
     params:
@@ -305,7 +305,7 @@ jobs:
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: test_gpdb-6_with_pxf-gp6-hdp2_on_rhel8
-    #<<: *slack_alert
+    <<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-rocky8-image
     params:
@@ -338,7 +338,7 @@ jobs:
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: test_gpdb-7_with_pxf-gp7-hdp2_on_rhel8
-    #<<: *slack_alert
+    <<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb7-pxf-dev-rocky8-image
     params:
@@ -371,7 +371,7 @@ jobs:
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: test_gpdb-6_with_pxf-gp6-hdp2_on_ubuntu_18.04
-    #<<: *slack_alert
+    <<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb6-pxf-dev-ubuntu18-image
     params:
