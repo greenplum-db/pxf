@@ -2,7 +2,7 @@
 ## - gp_ver = Greenplum Major Version
 ## - passed = upstream job name that the artifacts need to pass before this job
 
-- name: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
+- name: test_pxf-gp[[gp_ver]]_hdp2-secure-multi-impers_on_rhel8
   max_in_flight: 2
   plan:
   - in_parallel:
@@ -39,7 +39,7 @@
             instance_type: n1-standard-4
             ccp_reap_minutes: 120
             standby_master: true
-      - task: Generate Greenplum Cluster
+      - task: generate_greenplum_cluster
         input_mapping:
           gpdb_rpm: gpdb_package
           terraform: terraform_gpdb
@@ -55,16 +55,16 @@
           CLOUD_PROVIDER: google
           GPDB_RPM: true
       - in_parallel:
-        - task: Initialize Greenplum
+        - task: initialize_greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
-        - task: Install Hadoop
+        - task: install_hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
           image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
           params:
             ACCESS_KEY_ID: ((tf-machine-access-key-id))
             SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
             IMPERSONATION: ((enable-impersonation-multinode))
-    - task: Generate Hadoop Cluster 1
+    - task: generate_hadoop_cluster_1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       params:
         GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
@@ -73,7 +73,7 @@
         IMAGE_VERSION: ((dataproc-image-version))
         KERBEROS: ((kerberos-enabled))
         ccp_reap_minutes: 120
-    - task: Generate Hadoop Cluster 2
+    - task: generate_hadoop_cluster_2
       file: pxf_src/concourse/tasks/install_dataproc.yml
       output_mapping:
         dataproc_env_files: dataproc_2_env_files
@@ -100,14 +100,14 @@
         terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
         vars:
           gcp_project: ((ud/pxf/common/ipa-google-project-id))
-    - task: Generate Multinode Hadoop Cluster
+    - task: generate_multinode_hadoop_cluster
       file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
       image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
       params:
         ANSIBLE_VAR_gcp_storage_bucket: ((ud/pxf/common/build-resources-bucket-name))
         ANSIBLE_VAR_ipa_password: ((ud/pxf/secrets/ipa-password))
         ANSIBLE_VAR_ssl_store_password: ((ud/pxf/secrets/ssl-store-password))
-  - task: Setup PXF
+  - task: setup_pxf
     input_mapping:
       terraform: terraform_gpdb
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
@@ -119,7 +119,7 @@
       KERBEROS: ((kerberos-enabled))
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
-  - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL8
+  - task: test_pxf-gp[[gp_ver]]-hdp2-secure-multi-impers_on_rhel8
     image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2

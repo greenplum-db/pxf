@@ -9,7 +9,7 @@ YOUR_TAG ?= $(shell git describe --tags --abbrev=0)
 
 SHELL                        = /bin/bash
 BUILD_PIPELINE_NAME         ?= pxf-build
-DEV_BUILD_PIPELINE_NAME     ?= dev:$(USER)-$(BRANCH)
+DEV_BUILD_PIPELINE_NAME     ?= dev-$(USER)-$(BRANCH)
 PR_BUILD_PIPELINE_NAME      ?= pxf_pr_pipeline
 CERTIFICATION_PIPELINE_NAME ?= pxf-certification
 CLOUDBUILD_PIPELINE_NAME    ?= cloudbuild

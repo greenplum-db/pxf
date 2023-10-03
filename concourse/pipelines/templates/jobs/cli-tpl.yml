@@ -2,7 +2,7 @@
 ## - gp_ver = Greenplum Major Version
 ## - passed = upstream job name that the artifacts need to pass before this job
 
-- name: Test PXF-GP[[gp_ver]]-CLI on RHEL8
+- name: test_pxf-gp[[gp_ver]]-cli_on_rhel8
   max_in_flight: 2
   plan:
   - in_parallel:
@@ -35,7 +35,7 @@
             instance_type: n1-standard-4
             ccp_reap_minutes: 120
             standby_master: true
-      - task: Generate Greenplum Cluster
+      - task: generate_greenplum_cluster
         input_mapping:
           gpdb_rpm: gpdb_package
           terraform: terraform_gpdb
@@ -50,9 +50,9 @@
           PLATFORM: rocky8-gpdb[[gp_ver]]
           CLOUD_PROVIDER: google
           GPDB_RPM: true
-  - task: Initialize Greenplum
+  - task: initialize_greenplum
     file: ccp_src/ci/tasks/gpinitsystem.yml
-  - task: Setup PXF
+  - task: setup_pxf
     input_mapping:
       terraform: terraform_gpdb
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
@@ -63,7 +63,7 @@
       INSTALL_GPHDFS: false
       GP_VER: [[gp_ver]]
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-  - task: Test PXF CLI
+  - task: test_pxf_cli
     on_success:
       <<: *destroy_gpdb_cluster
     image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
