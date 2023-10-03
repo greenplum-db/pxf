@@ -13,7 +13,7 @@ DEV_BUILD_PIPELINE_NAME     ?= dev-$(USER)-$(BRANCH)
 PR_BUILD_PIPELINE_NAME      ?= pxf_pr_pipeline
 CERTIFICATION_PIPELINE_NAME ?= pxf-certification
 CLOUDBUILD_PIPELINE_NAME    ?= cloudbuild
-DEV_CLOUDBUILD_PIPELINE_NAME ?= dev-cloudbuild
+DEV_CLOUDBUILD_PIPELINE_NAME ?= dev-cloudbuild-$(USER)-$(BRANCH)
 PERF_PIPELINE_NAME          ?= pxf_perf-$(SCALE)g-RHEL$(REDHAT_MAJOR_VERSION)
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS          ?= 10
@@ -50,7 +50,7 @@ ifeq ($(CHECK_CREDS), true)
 SET_PIPELINE += --check-creds
 endif
 
-.PHONY: build certification dev pr cloudbuild longevity
+.PHONY: build certification dev-release dev pr cloudbuild dev-cloudbuild longevity
 build: set-build-pipeline
 certification: set-certification-pipeline
 dev-release: set-dev-release-pipeline
@@ -194,23 +194,25 @@ set-certification-pipeline:
 # ============================= HELPER PIPELINE TARGETS =============================
 
 .PHONY: set-cloudbuild-pipeline
-set-cloudbuild-pipeline:
-	$(FLY_CMD) --target=$(CONCOURSE) \
-		$(SET_PIPELINE) \
-		--config $(HOME)/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
-		--var pxf-git-branch=main \
-		--var gcp-image-tag=latest \
-		--pipeline $(CLOUDBUILD_PIPELINE_NAME) \
-		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/cloudbuild_pipeline.yml has errors"
+set-cloudbuild-pipeline: PXF_GIT_BRANCH=main
+set-cloudbuild-pipeline: GCP_IMAGE_TAG=latest
+set-cloudbuild-pipeline: PIPELINE_NAME=$(CLOUDBUILD_PIPELINE_NAME)
+set-cloudbuild-pipeline: set-cloudbuild-pipeline-base
 
 .PHONY: set-dev-cloudbuild-pipeline
-set-dev-cloudbuild-pipeline:
+set-dev-cloudbuild-pipeline: PXF_GIT_BRANCH=$(BRANCH)
+set-dev-cloudbuild-pipeline: GCP_IMAGE_TAG=$(PXF_DEV_IMAGE_TAG)
+set-dev-cloudbuild-pipeline: PIPELINE_NAME=$(DEV_CLOUDBUILD_PIPELINE_NAME)
+set-dev-cloudbuild-pipeline: set-cloudbuild-pipeline-base
+
+.PHONY: set-cloudbuild-pipeline-base
+set-cloudbuild-pipeline-base:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \
 		--config $(HOME)/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
-		--var pxf-git-branch=$(BRANCH) \
-		--var gcp-image-tag=$(PXF_DEV_IMAGE_TAG) \
-		--pipeline $(DEV_CLOUDBUILD_PIPELINE_NAME) \
+		--var pxf-git-branch=$(PXF_GIT_BRANCH) \
+		--var gcp-image-tag=$(GCP_IMAGE_TAG) \
+		--pipeline $(PIPELINE_NAME) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/cloudbuild_pipeline.yml has errors"
 
 .PHONY: pivnet
