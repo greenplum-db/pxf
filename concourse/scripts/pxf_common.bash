@@ -184,6 +184,9 @@ function build_install_gpdb() {
 }
 
 function install_gpdb_binary() {
+	# Ensure gpadmin owns its home directory
+	chown -R gpadmin:gpadmin /home/gpadmin
+
 	if [[ -d bin_gpdb ]]; then
 		mkdir -p ${GPHOME}
 		tar -xzf bin_gpdb/*.tar.gz -C ${GPHOME}
@@ -208,6 +211,9 @@ function install_gpdb_binary() {
 }
 
 function install_gpdb_package() {
+	# Ensure gpadmin owns its home directory
+	chown -R gpadmin:gpadmin /home/gpadmin
+
 	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH' pkg_file version
 	gpdb_package=${PWD}/${GPDB_PKG_DIR:-gpdb_package}
 
