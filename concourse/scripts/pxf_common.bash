@@ -88,7 +88,7 @@ function set_env() {
 
 function run_pxf_automation() {
 	# Let's make sure that automation/singlecluster directories are writeable
-	chmod a+w pxf_src/automation /singlecluster || true
+	chmod a+w pxf_src/automation pxf_src/automation/pxf_regress /singlecluster || true
 	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
 
 	local extension_name="pxf"

@@ -11,6 +11,7 @@ MAVEN_TEST_OPTS+= -B -e
 PXF_TMP_LIB := $(HOME)/automation_tmp_lib
 BASE_PATH   ?= /mnt/nfs/var/nfsshare
 USE_FDW     ?= false
+USE_TINC    ?= false
 
 ifneq "$(TEST)" ""
 	MAVEN_TEST_OPTS+= -Dtest=$(TEST)
@@ -20,7 +21,7 @@ ifneq "$(GROUP)" ""
 	MAVEN_TEST_OPTS+= -Dgroups=$(GROUP)
 endif
 
-MAVEN_TEST_OPTS+= -Djava.awt.headless=true -DuseFDW=$(USE_FDW)
+MAVEN_TEST_OPTS+= -Djava.awt.headless=true -DuseFDW=$(USE_FDW) -DuseTinc=$(USE_TINC)
 
 ifneq "$(OFFLINE)" "true"
 	MAVEN_TEST_OPTS+= -U
@@ -114,7 +115,7 @@ symlink_pxf_jars: check-env
 		rm -rf $(PXF_TMP_LIB)/tmp; \
 	fi
 
-test: check-env clean-logs symlink_pxf_jars sync_cloud_configs sync_jdbc_config
+test: check-env clean-logs symlink_pxf_jars sync_cloud_configs sync_jdbc_config pxf_regress
 	$(MVN) $(MAVEN_TEST_OPTS) ${MAVEN_DEBUG_OPTS} test
 
 clean: clean-logs
@@ -123,6 +124,8 @@ clean: clean-logs
 
 clean-logs:
 	@rm -rf automation_logs/* tincrepo/main/log/* run-results/*
+	@find tincrepo/main/pxf/. -type d -name results -exec rm -rf {} +
+	@find tincrepo/main/pxf/. -type f -name regression.diffs -delete
 	@find tincrepo/main/pxf/. -type d -name "output" -exec rm -rf {} +
 	@find tincrepo/main/pxf/. -type f -name "*segment_logs" -exec rm -rf {} +
 
@@ -239,3 +242,7 @@ else
 	@echo "***** Feature tests: *****"
 	@ls src/test/java/org/greenplum/pxf/automation/features/*/*Test.java | sed 's/.*\///g' | sed 's/\.java//g' | awk '{print "* ", $$1}'
 endif
+
+.PHONY: pxf_regress
+pxf_regress:
+	$(MAKE) -C pxf_regress

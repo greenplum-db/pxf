@@ -120,6 +120,11 @@
         <tincFolder>tinc/main</tincFolder>
         <tincTestsFolder>tincrepo/main</tincTestsFolder>
     </tinc>
+    <regress>
+        <class>org.greenplum.pxf.automation.components.regress.Regress</class>
+        <regressTestFolder>tincrepo/main</regressTestFolder>
+        <dbName>pxfautomation</dbName>
+    </regress>
     <pxf>
         <class>org.greenplum.pxf.automation.components.pxf.Pxf</class>
         <host>localhost</host>

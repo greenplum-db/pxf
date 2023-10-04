@@ -16,9 +16,11 @@ import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.components.cluster.installer.nodes.Node;
 import org.greenplum.pxf.automation.components.gpdb.Gpdb;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
+import org.greenplum.pxf.automation.components.regress.Regress;
 import org.greenplum.pxf.automation.components.tinc.Tinc;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
+import org.greenplum.pxf.automation.utils.system.TincUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -40,6 +42,7 @@ public abstract class BaseTestParent {
     // Objects used in the tests
     protected PhdCluster cluster;
     protected Tinc tinc;
+    protected Regress regress;
     protected Gpdb gpdb;
     protected Gpdb nonUtf8Gpdb;
     protected Hdfs hdfs;
@@ -89,8 +92,13 @@ public abstract class BaseTestParent {
             // Create local Data folder
             File localDataTempFolder = new File(dataTempFolder);
             localDataTempFolder.mkdirs();
-            // Initialize Tinc System Object
-            tinc = (Tinc) systemManager.getSystemObject("tinc");
+            if (TincUtils.useTinc) {
+                // Initialize Tinc System Object
+                tinc = (Tinc) systemManager.getSystemObject("tinc");
+            } else {
+                // Initialize Regress System Object
+                regress = (Regress) systemManager.getSystemObject("regress");
+            }
             // Initialize GPDB System Object
             gpdb = (Gpdb) systemManager.getSystemObject("gpdb");
             // Initialize GPDB2 System Object -- database with non-utf8 encoding
@@ -224,9 +232,13 @@ public abstract class BaseTestParent {
      */
     protected void runTincTest(String tincTest) throws Exception {
         try {
-            tinc.runTest(tincTest);
+            if (TincUtils.useTinc){
+                tinc.runTest(tincTest);
+            } else {
+                regress.runTest(tincTest);
+            }
         } catch (Exception e) {
-            throw new Exception("Tinc Failure (" + e.getMessage() + ")");
+            throw new Exception(String.format("%s Failure (%s)", TincUtils.useTinc ? "Tinc" : "Regress", e.getMessage()));
         }
     }
 

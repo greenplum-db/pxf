@@ -25,6 +25,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static java.lang.Thread.sleep;
 import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEMA;
 
 /**
@@ -590,6 +591,9 @@ public class HdfsReadableTextTest extends BaseFeature {
         dataTable.addRow(new String[]{"10", "ten - I love you!"});
 
         hdfs.writeTableToFile(hdfsFilePath, dataTable, ",");
+        if (protocol != ProtocolEnum.HDFS) {
+            sleep(10000);
+        }
 
         ErrorTable errorTable = new ErrorTable("err_table");
         gpdb.runQueryWithExpectedWarning(

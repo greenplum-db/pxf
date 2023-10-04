@@ -7,3 +7,4 @@ target/
 tempClusterConfDirectory/
 output/
 automation_logs/
+regression.diffs
