@@ -184,7 +184,10 @@ function build_install_gpdb() {
 }
 
 function install_gpdb_binary() {
-	# Ensure gpadmin owns its home directory
+	# TODO Remove the chown once the ownership of /home/gpadmin is correctly set
+	# In concourse 7.8.x, even though the base pxf dev image correctly gave
+	# gpadmin permissions to /home/gpadmin, the change is not respected
+	# So we have added this chown here to ensure gpadmin owns its home directory
 	chown -R gpadmin:gpadmin /home/gpadmin
 
 	if [[ -d bin_gpdb ]]; then
@@ -211,7 +214,10 @@ function install_gpdb_binary() {
 }
 
 function install_gpdb_package() {
-	# Ensure gpadmin owns its home directory
+	# TODO Remove the chown once the ownership of /home/gpadmin is correctly set
+	# In concourse 7.8.x, even though the base pxf dev image correctly gave
+	# gpadmin permissions to /home/gpadmin, the change is not respected
+	# So we have added this chown here to ensure gpadmin owns its home directory
 	chown -R gpadmin:gpadmin /home/gpadmin
 
 	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH' pkg_file version
