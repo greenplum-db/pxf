@@ -1,6 +1,6 @@
 # PXF MultiNode CI Notes
 
-Based on the CI job [Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7](https://ud.ci.gpdb.pivotal.io/teams/main/pipelines/pxf-build/jobs/Test%20PXF-GP6-HDP2-SECURE-MULTI-IMPERS%20on%20RHEL7)
+Based on the CI job [Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7](https://ci.ud.gpdb.pivotal.io/teams/main/pipelines/pxf-build/jobs/Test%20PXF-GP6-HDP2-SECURE-MULTI-IMPERS%20on%20RHEL7)
 
 ## Infrastructure
 
