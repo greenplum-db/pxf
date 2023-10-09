@@ -87,10 +87,10 @@ jobs:
     config:
       platform: linux
       inputs:
-        - name: pxf_src
-        - name: pivnet_cli
+      - name: pxf_src
+      - name: pivnet_cli
       outputs:
-        - name: pivnet_cli
+      - name: pivnet_cli
       params:
         PIVNET_CLI_DIR: pivnet_cli
       run:
@@ -119,15 +119,15 @@ jobs:
     config:
       platform: linux
       inputs:
-        - name: pxf_src
-        - name: pivnet_cli
-        - name: gpdb5_rhel7_rpm_latest-[[i]]
-        {% if i > 0 %}
-        # save a download from pivnet if not fetching latest
-        - name: gpdb5_rhel7_rpm_latest-[[i - 1]]
-        {% endif %}
+      - name: pxf_src
+      - name: pivnet_cli
+      - name: gpdb5_rhel7_rpm_latest-[[i]]
+      {% if i > 0 %}
+      # save a download from pivnet if not fetching latest
+      - name: gpdb5_rhel7_rpm_latest-[[i - 1]]
+      {% endif %}
       outputs:
-        - name: gpdb5_rhel7_rpm_latest-[[i]]
+      - name: gpdb5_rhel7_rpm_latest-[[i]]
       params:
         GPDB_VERSION: 5
         LIST_OF_DIRS: gpdb5_rhel7_rpm_latest-[[i]]
@@ -165,21 +165,21 @@ jobs:
     config:
       platform: linux
       inputs:
-        - name: pxf_src
-        - name: pivnet_cli
-        - name: gpdb6_rhel7_rpm_latest-[[i]]
-        - name: gpdb6_rhel8_rpm_latest-[[i]]
-        - name: gpdb6_ubuntu18_deb_latest-[[i]]
-        {% if i > 0 %}
-        # save a download from pivnet if not fetching latest
-        - name: gpdb6_rhel7_rpm_latest-[[i - 1]]
-        - name: gpdb6_rhel8_rpm_latest-[[i - 1]]
-        - name: gpdb6_ubuntu18_deb_latest-[[i - 1]]
-        {% endif %}
+      - name: pxf_src
+      - name: pivnet_cli
+      - name: gpdb6_rhel7_rpm_latest-[[i]]
+      - name: gpdb6_rhel8_rpm_latest-[[i]]
+      - name: gpdb6_ubuntu18_deb_latest-[[i]]
+      {% if i > 0 %}
+      # save a download from pivnet if not fetching latest
+      - name: gpdb6_rhel7_rpm_latest-[[i - 1]]
+      - name: gpdb6_rhel8_rpm_latest-[[i - 1]]
+      - name: gpdb6_ubuntu18_deb_latest-[[i - 1]]
+      {% endif %}
       outputs:
-        - name: gpdb6_rhel7_rpm_latest-[[i]]
-        - name: gpdb6_rhel8_rpm_latest-[[i]]
-        - name: gpdb6_ubuntu18_deb_latest-[[i]]
+      - name: gpdb6_rhel7_rpm_latest-[[i]]
+      - name: gpdb6_rhel8_rpm_latest-[[i]]
+      - name: gpdb6_ubuntu18_deb_latest-[[i]]
       params:
         GPDB_VERSION: 6
         LIST_OF_DIRS: gpdb6_rhel7_rpm_latest-[[i]],gpdb6_rhel8_rpm_latest-[[i]],gpdb6_ubuntu18_deb_latest-[[i]]
