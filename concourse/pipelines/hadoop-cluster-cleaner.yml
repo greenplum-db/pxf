@@ -1,3 +1,4 @@
+---
 resource_types:
 - name: slack-notification
   type: registry-image
