@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:empty-lines
 ## ======================================================================
 ## ANCHORS
 ## ======================================================================
@@ -180,7 +181,6 @@ resources:
 
 ## ---------- Docker Images ----------
 {% set gp_ver = None %}
-
 {% for gp_ver in range(5, 7) %}
 - name: gpdb[[gp_ver]]-pxf-dev-centos7-image
   type: registry-image
@@ -300,7 +300,6 @@ resources:
 
 ## ---------- PXF Build Artifacts ----------
 {% set gp_ver = None %}
-
 {% for gp_ver in range(5, 7) %}
 - name: pxf_gp[[gp_ver]]_tarball_rhel7
   type: gcs
@@ -617,7 +616,7 @@ jobs:
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
-{% endif %}   # if gp7_cli ends here
+{% endif %}{# if gp7_cli ends here #}
 {% set gp_ver = None %}
 
 ## ---------- Extended Tests ----------
@@ -1376,5 +1375,5 @@ jobs:
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
-{% endif %}   # if gp7_multinode ends here
+{% endif %}{# if gp7_multinode ends here #}
 {% set gp_ver = None %}

@@ -84,6 +84,7 @@ jobs:
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
       GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       GOOGLE_ZONE: ((ud/pxf/common/google-zone))
+      # yamllint disable rule:line-length
       IMAGE_LIST: "gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-rocky8-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf gpdb7-rocky8-test-pxf"
       IMAGE_TAG: ((gcp-image-tag))
     config:

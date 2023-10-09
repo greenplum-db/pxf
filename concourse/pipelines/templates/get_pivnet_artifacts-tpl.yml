@@ -183,6 +183,7 @@ jobs:
       params:
         GPDB_VERSION: 6
         LIST_OF_DIRS: gpdb6_rhel7_rpm_latest-[[i]],gpdb6_rhel8_rpm_latest-[[i]],gpdb6_ubuntu18_deb_latest-[[i]]
+        # yamllint disable rule:line-length
         LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm,greenplum-db-GPDB_VERSION-rhel8-x86_64.rpm,greenplum-db-GPDB_VERSION-ubuntu18.04-amd64.deb
         PIVNET_API_TOKEN: ((ud/pxf/secrets/pivnet-uaa-refresh-token))
         PIVNET_CLI_DIR: pivnet_cli
