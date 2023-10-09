@@ -1,106 +1,107 @@
+---
 ## ======================================================================
 ## RESOURCES
 ## ======================================================================
 resources:
-  - name: gcloud
-    type: registry-image
-    icon: docker
-    source:
-      repository: google/cloud-sdk
-      tag: slim
+- name: gcloud
+  type: registry-image
+  icon: docker
+  source:
+    repository: google/cloud-sdk
+    tag: slim
 
-  - name: pxf-dev-base-cloudbuild-trigger
-    type: git
-    icon: git
-    source:
-      branch: ((pxf-git-branch))
-      uri: ((ud/pxf/common/git-remote))
-      paths:
-        - concourse/docker/pxf-dev-base
-        - concourse/scripts/check_docker_images_and_tag.bash
+- name: pxf-dev-base-cloudbuild-trigger
+  type: git
+  icon: git
+  source:
+    branch: ((pxf-git-branch))
+    uri: ((ud/pxf/common/git-remote))
+    paths:
+    - concourse/docker/pxf-dev-base
+    - concourse/scripts/check_docker_images_and_tag.bash
 
-  - name: base-images-trigger
-    type: git
-    icon: git
-    source:
-      uri: ((ud/pxf/common/gp-image-baking-repo-uri))
-      branch: ((ud/pxf/common/gp-image-baking-repo-branch))
-      private_key: ((ud/pxf/secrets/gp-image-baking-repo-key))
-      paths:
-        - images/docker/gpdb5/gpdb5-centos7-build-test
-        - images/docker/gpdb6/gpdb6-centos7-build
-        - images/docker/gpdb6/gpdb6-centos7-test
-        - images/docker/gpdb6/gpdb6-ubuntu18.04-test
-        - images/docker/gpdb6/gpdb6-oel7-test
-        - images/docker/gpdb6/gpdb6-rhel8-test
-        - images/docker/gpdb6/gpdb6-rocky8-build
-        - images/docker/gpdb7/gpdb7-centos7-test
-        - images/docker/gpdb7/gpdb7-rhel8-test
-        - images/docker/gpdb7/gpdb7-rocky8-test
+- name: base-images-trigger
+  type: git
+  icon: git
+  source:
+    uri: ((ud/pxf/common/gp-image-baking-repo-uri))
+    branch: ((ud/pxf/common/gp-image-baking-repo-branch))
+    private_key: ((ud/pxf/secrets/gp-image-baking-repo-key))
+    paths:
+    - images/docker/gpdb5/gpdb5-centos7-build-test
+    - images/docker/gpdb6/gpdb6-centos7-build
+    - images/docker/gpdb6/gpdb6-centos7-test
+    - images/docker/gpdb6/gpdb6-ubuntu18.04-test
+    - images/docker/gpdb6/gpdb6-oel7-test
+    - images/docker/gpdb6/gpdb6-rhel8-test
+    - images/docker/gpdb6/gpdb6-rocky8-build
+    - images/docker/gpdb7/gpdb7-centos7-test
+    - images/docker/gpdb7/gpdb7-rhel8-test
+    - images/docker/gpdb7/gpdb7-rocky8-test
 
 ## ======================================================================
 ## JOBS
 ## ======================================================================
 jobs:
-  - name: check_upstream_base_images
-    max_in_flight: 1
-    plan:
-    - in_parallel:
-      - get: gcloud
-      - get: pxf_src
-        resource: pxf-dev-base-cloudbuild-trigger
-      - get: base-images-trigger
-        trigger: true
-    - task: trigger_builds
-      image: gcloud
-      params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-        TRIGGER_LIST: "pxf-dev-base rpmrebuild"
-      config:
-        platform: linux
-        inputs:
-          - name: pxf_src
-        run:
-          path: pxf_src/concourse/scripts/trigger_cloudbuild.bash
+- name: check_upstream_base_images
+  max_in_flight: 1
+  plan:
+  - in_parallel:
+    - get: gcloud
+    - get: pxf_src
+      resource: pxf-dev-base-cloudbuild-trigger
+    - get: base-images-trigger
+      trigger: true
+  - task: trigger_builds
+    image: gcloud
+    params:
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+      GOOGLE_ZONE: ((ud/pxf/common/google-zone))
+      TRIGGER_LIST: "pxf-dev-base rpmrebuild"
+    config:
+      platform: linux
+      inputs:
+      - name: pxf_src
+      run:
+        path: pxf_src/concourse/scripts/trigger_cloudbuild.bash
 
-  - name: check_pxf-dev-base_images
-    max_in_flight: 1
-    plan:
-    - in_parallel:
-      - get: gcloud
-      - get: pxf_src
-        resource: pxf-dev-base-cloudbuild-trigger
-        trigger: true
-      - get: base-images-trigger
-        passed: [check_upstream_base_images]
-        trigger: true
-    - task: check_docker_images_and_tag
-      timeout: 30m
-      image: gcloud
-      params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-        IMAGE_LIST: "gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-rocky8-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf gpdb7-rocky8-test-pxf"
-        IMAGE_TAG: ((gcp-image-tag))
-      config:
-        platform: linux
-        inputs:
-          - name: pxf_src
-        run:
-          path: pxf_src/concourse/scripts/check_docker_images_and_tag.bash
-    - task: trigger_builds
-      image: gcloud
-      params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-        TRIGGER_LIST: "pxf-dev-server"
-      config:
-        platform: linux
-        inputs:
-          - name: pxf_src
-        run:
-          path: pxf_src/concourse/scripts/trigger_cloudbuild.bash
+- name: check_pxf-dev-base_images
+  max_in_flight: 1
+  plan:
+  - in_parallel:
+    - get: gcloud
+    - get: pxf_src
+      resource: pxf-dev-base-cloudbuild-trigger
+      trigger: true
+    - get: base-images-trigger
+      passed: [check_upstream_base_images]
+      trigger: true
+  - task: check_docker_images_and_tag
+    timeout: 30m
+    image: gcloud
+    params:
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+      GOOGLE_ZONE: ((ud/pxf/common/google-zone))
+      IMAGE_LIST: "gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-rocky8-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf gpdb7-rocky8-test-pxf"
+      IMAGE_TAG: ((gcp-image-tag))
+    config:
+      platform: linux
+      inputs:
+      - name: pxf_src
+      run:
+        path: pxf_src/concourse/scripts/check_docker_images_and_tag.bash
+  - task: trigger_builds
+    image: gcloud
+    params:
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+      GOOGLE_ZONE: ((ud/pxf/common/google-zone))
+      TRIGGER_LIST: "pxf-dev-server"
+    config:
+      platform: linux
+      inputs:
+      - name: pxf_src
+      run:
+        path: pxf_src/concourse/scripts/trigger_cloudbuild.bash
