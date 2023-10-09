@@ -131,8 +131,8 @@ anchors:
     run:
       path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
     inputs:
-      - name: pxf_src
-      - name: dataproc_env_files
+    - name: pxf_src
+    - name: dataproc_env_files
     platform: linux
   image: ccp-7-image
   params:
@@ -148,8 +148,8 @@ anchors:
     run:
       path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
     inputs:
-      - name: pxf_src
-      - name: dataproc_env_files
+    - name: pxf_src
+    - name: dataproc_env_files
     platform: linux
   image: ccp-7-image
   params:
@@ -285,10 +285,10 @@ resources:
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
     ignore_paths:
-      - docs/**
-      - singlecluster/**
-      - NOTICE
-      - README.md
+    - docs/**
+    - singlecluster/**
+    - NOTICE
+    - README.md
 
 - name: ccp_src
   type: git
@@ -388,7 +388,7 @@ resources:
     tag: latest
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endfor %} {# gp5, gp6 #}
+{% endfor %}{# gp5, gp6 #}
 
 {% for gp_ver in range(6, 8) %}
 - name: gpdb[[gp_ver]]-pxf-dev-rocky8-image
@@ -399,7 +399,7 @@ resources:
     tag: latest
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endfor %} {# gp6, gp7 #}
+{% endfor %}{# gp6, gp7 #}
 {% set gp_ver = None %}
 
 - name: gpdb6-pxf-dev-oel7-image
@@ -477,7 +477,7 @@ resources:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
-{% endfor %} {# range(num_gpdb5_versions) #}
+{% endfor %}{# range(num_gpdb5_versions) #}
 {% set gp_ver = None %}
 
 {% set gp_ver = 6 %}
@@ -497,7 +497,7 @@ resources:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-ubuntu18.04-amd64.deb
-{% endfor %} {# range(num_gpdb6_versions) #}
+{% endfor %}{# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
 
 {% set gp_ver = 6 %}
@@ -509,7 +509,7 @@ resources:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel8-x86_64.rpm
-{% endfor %} {# range(num_gpdb6_versions) #}
+{% endfor %}{# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
 
 {% set gp_ver = 7 %}
@@ -521,7 +521,7 @@ resources:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-el8-x86_64.rpm
-{% endfor %} {# range(num_gpdb7_versions) #}
+{% endfor %}{# range(num_gpdb7_versions) #}
 {% set gp_ver = None %}
 
 ## ---------- PXF 5 (for GPDB 6) Artifact ---------------
@@ -654,7 +654,7 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% endfor %} {# gp_ver 5 and 6 #}
+{% endfor %}{# gp_ver 5 and 6 #}
 
 - name: test_pxf-gp6-hdp2_on_oel7
   plan:
@@ -779,7 +779,7 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% endfor %} {# gp_ver 6 and 7 #}
+{% endfor %}{# gp_ver 6 and 7 #}
 {% set gp_ver = None %}
 
 ## ---------- Testing Gate ----------
@@ -801,7 +801,7 @@ jobs:
     - get: pxf_gp5_tarball_rhel7
       passed: [test_pxf-gp5-hdp2_on_rhel7]
     - get: gpdb5_rhel7_rpm_latest-0
-      passed: [ test_pxf-gp5-hdp2_on_rhel7 ]
+      passed: [test_pxf-gp5-hdp2_on_rhel7]
 {% set gp_ver = 6 %}
     - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
       passed: [test_pxf-gp[[gp_ver]]-hdp2_on_ubuntu18]
@@ -970,7 +970,7 @@ jobs:
       passed: [testing_gate_for_pxf-gp]
       trigger: true
     - get: pxf_package
-      resource: pxf6_6_gp6_rhel7_released # for upgrade test
+      resource: pxf6_6_gp6_rhel7_released   # for upgrade test
     - get: pxf_tarball
       resource: pxf_gp[[gp_ver]]_tarball_rhel7
       passed: [testing_gate_for_pxf-gp]
@@ -1226,7 +1226,7 @@ jobs:
       passed: [testing_gate_for_pxf-gp]
       trigger: true
     - get: pxf_artifact
-      resource: pxf5_gp6_rhel7_released # for upgrade test
+      resource: pxf5_gp6_rhel7_released   # for upgrade test
     - get: pxf_tarball
       resource: pxf_gp[[gp_ver]]_tarball_rhel7
       passed: [testing_gate_for_pxf-gp]
@@ -1309,7 +1309,7 @@ jobs:
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
-    - do: # Generate IPA Hadoop cluster
+    - do:   # Generate IPA Hadoop cluster
       - put: terraform_ipa_hadoop
         params:
           action: create
@@ -1327,7 +1327,7 @@ jobs:
   - task: setup_pxf_5_latest
     input_mapping:
       terraform: terraform_gpdb
-      pxf_tarball: pxf_tarball_ignore # do not install from the artifact
+      pxf_tarball: pxf_tarball_ignore   # do not install from the artifact
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
@@ -1621,7 +1621,7 @@ jobs:
             path: pxf_src/concourse/scripts/test.bash
 {% endfor %}
 {% set num_versions = None %}
-{% endfor %} {# both gp5 and gp6 #}
+{% endfor %}{# both gp5 and gp6 #}
 
 {% set gp_ver = 6 %}
 - name: test_pxf-gp[[gp_ver]]_backward_compatibility_on_ubuntu18
