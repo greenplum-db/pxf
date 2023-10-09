@@ -1,3 +1,4 @@
+---
 ## ======================================================================
 ## RESOURCE TYPES
 ## ======================================================================
@@ -11,138 +12,138 @@ resource_types:
 ## RESOURCES
 ## ======================================================================
 resources:
-  - name: hdp2_tars_tarball
-    type: s3
-    icon: s3
-    source:
-      access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
-      secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
-      bucket: ((ud/pxf/common/aws-bucket-name))
-      region_name: ((ud/common/aws-region))
-      versioned_file: hortonworks/HDP-2.5.3.0-centos6-tars-tarball.tar.gz
+- name: hdp2_tars_tarball
+  type: s3
+  icon: s3
+  source:
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    versioned_file: hortonworks/HDP-2.5.3.0-centos6-tars-tarball.tar.gz
 
-  - name: hdp3_tars_tarball
-    type: s3
-    icon: s3
-    source:
-      access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
-      secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
-      bucket: ((ud/pxf/common/aws-bucket-name))
-      region_name: ((ud/common/aws-region))
-      versioned_file: hortonworks/HDP-3.1.4.0-centos7-tars-tarball.tar.gz
+- name: hdp3_tars_tarball
+  type: s3
+  icon: s3
+  source:
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    versioned_file: hortonworks/HDP-3.1.4.0-centos7-tars-tarball.tar.gz
 
-  - name: cdh_tars_tarball
-    type: s3
-    icon: s3
-    source:
-      access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
-      secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
-      bucket: ((ud/pxf/common/aws-bucket-name))
-      region_name: ((ud/common/aws-region))
-      versioned_file: cloudera/CDH-5.12.2.tar.gz
+- name: cdh_tars_tarball
+  type: s3
+  icon: s3
+  source:
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    versioned_file: cloudera/CDH-5.12.2.tar.gz
 
-  - name: jdbc
-    type: s3
-    icon: s3
-    source:
-      access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
-      secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
-      bucket: ((ud/pxf/common/aws-bucket-name))
-      region_name: ((ud/common/aws-region))
-      versioned_file: jdbc/postgresql-jdbc-8.4.704.jar
+- name: jdbc
+  type: s3
+  icon: s3
+  source:
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
+    bucket: ((ud/pxf/common/aws-bucket-name))
+    region_name: ((ud/common/aws-region))
+    versioned_file: jdbc/postgresql-jdbc-8.4.704.jar
 
-  - name: singlecluster-hdp2-gcs
-    type: google-cloud-storage
-    icon: google-drive
-    source:
-      bucket: ((ud/pxf/common/build-resources-bucket-name))
-      json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
-      versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
+- name: singlecluster-hdp2-gcs
+  type: google-cloud-storage
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
+    versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
-  - name: singlecluster-hdp3-gcs
-    type: google-cloud-storage
-    icon: google-drive
-    source:
-      bucket: ((ud/pxf/common/build-resources-bucket-name))
-      json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
-      versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
+- name: singlecluster-hdp3-gcs
+  type: google-cloud-storage
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
+    versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 
-  - name: singlecluster-cdh-gcs
-    type: google-cloud-storage
-    icon: google-drive
-    source:
-      bucket: ((ud/pxf/common/build-resources-bucket-name))
-      json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
-      versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
+- name: singlecluster-cdh-gcs
+  type: google-cloud-storage
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/gsc-ci-service-account-key))
+    versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
 
-  - name: pxf_singlecluster
-    type: git
-    icon: git
-    source:
-      branch: ((pxf-git-branch))
-      uri: ((ud/pxf/common/git-remote))
-      paths: [singlecluster/*]
+- name: pxf_singlecluster
+  type: git
+  icon: git
+  source:
+    branch: ((pxf-git-branch))
+    uri: ((ud/pxf/common/git-remote))
+    paths: [singlecluster/*]
 
-  - name: gpdb6-centos7
-    type: registry-image
-    icon: docker
-    source:
-      repository: gcr.io/data-gpdb-public-images/gpdb6-centos7-test
-      tag: latest
+- name: gpdb6-centos7
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-public-images/gpdb6-centos7-test
+    tag: latest
 
 ## ======================================================================
 ## JOBS
 ## ======================================================================
 jobs:
-  - name: singlecluster_noarch_cdh
-    plan:
-    - in_parallel:
-      - get: cdh_tars_tarball
-        trigger: true
-      - get: jdbc
-      - get: gpdb6-centos7
-      - get: pxf_src
-        resource: pxf_singlecluster
-        trigger: true
-    - task: package_singlecluster
-      file: pxf_src/singlecluster/package_singlecluster_cdh.yml
-      image: gpdb6-centos7
-    - put: singlecluster-cdh-gcs
-      params:
-        file: artifacts/singlecluster-CDH.tar.gz
+- name: singlecluster_noarch_cdh
+  plan:
+  - in_parallel:
+    - get: cdh_tars_tarball
+      trigger: true
+    - get: jdbc
+    - get: gpdb6-centos7
+    - get: pxf_src
+      resource: pxf_singlecluster
+      trigger: true
+  - task: package_singlecluster
+    file: pxf_src/singlecluster/package_singlecluster_cdh.yml
+    image: gpdb6-centos7
+  - put: singlecluster-cdh-gcs
+    params:
+      file: artifacts/singlecluster-CDH.tar.gz
 
-  - name: singlecluster_noarch_hdp2
-    plan:
-    - in_parallel:
-      - get: hdp_tars_tarball
-        resource: hdp2_tars_tarball
-        trigger: true
-      - get: jdbc
-      - get: gpdb6-centos7
-      - get: pxf_src
-        resource: pxf_singlecluster
-        trigger: true
-    - task: package_singlecluster
-      file: pxf_src/singlecluster/package_singlecluster_hdp2.yml
-      image: gpdb6-centos7
-    - put: singlecluster-hdp2-gcs
-      params:
-        file: artifacts/singlecluster-HDP.tar.gz
+- name: singlecluster_noarch_hdp2
+  plan:
+  - in_parallel:
+    - get: hdp_tars_tarball
+      resource: hdp2_tars_tarball
+      trigger: true
+    - get: jdbc
+    - get: gpdb6-centos7
+    - get: pxf_src
+      resource: pxf_singlecluster
+      trigger: true
+  - task: package_singlecluster
+    file: pxf_src/singlecluster/package_singlecluster_hdp2.yml
+    image: gpdb6-centos7
+  - put: singlecluster-hdp2-gcs
+    params:
+      file: artifacts/singlecluster-HDP.tar.gz
 
-  - name: singlecluster_noarch_hdp3
-    plan:
-    - in_parallel:
-      - get: hdp_tars_tarball
-        resource: hdp3_tars_tarball
-        trigger: true
-      - get: jdbc
-      - get: gpdb6-centos7
-      - get: pxf_src
-        resource: pxf_singlecluster
-        trigger: true
-    - task: package_singlecluster
-      file: pxf_src/singlecluster/package_singlecluster_hdp3.yml
-      image: gpdb6-centos7
-    - put: singlecluster-hdp3-gcs
-      params:
-        file: artifacts/singlecluster-HDP.tar.gz
+- name: singlecluster_noarch_hdp3
+  plan:
+  - in_parallel:
+    - get: hdp_tars_tarball
+      resource: hdp3_tars_tarball
+      trigger: true
+    - get: jdbc
+    - get: gpdb6-centos7
+    - get: pxf_src
+      resource: pxf_singlecluster
+      trigger: true
+  - task: package_singlecluster
+    file: pxf_src/singlecluster/package_singlecluster_hdp3.yml
+    image: gpdb6-centos7
+  - put: singlecluster-hdp3-gcs
+    params:
+      file: artifacts/singlecluster-HDP.tar.gz
