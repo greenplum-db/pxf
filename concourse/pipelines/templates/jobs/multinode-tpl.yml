@@ -92,7 +92,7 @@
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
-  - do: # Generate IPA Hadoop cluster
+  - do:   # Generate IPA Hadoop cluster
     - put: terraform_ipa_hadoop
       params:
         action: create

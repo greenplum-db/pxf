@@ -9,8 +9,8 @@ anchors:
     run:
       path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
     inputs:
-      - name: pxf_src
-      - name: dataproc_env_files
+    - name: pxf_src
+    - name: dataproc_env_files
     platform: linux
   image: ccp-7-image
   params:
@@ -26,8 +26,8 @@ anchors:
     run:
       path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
     inputs:
-      - name: pxf_src
-      - name: dataproc_env_files
+    - name: pxf_src
+    - name: dataproc_env_files
     platform: linux
   image: ccp-7-image
   params:
@@ -190,7 +190,7 @@ resources:
     tag: ((pxf-dev-image-tag))
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endfor %} {# gp5, gp6, and gp7 #}
+{% endfor %}{# gp5, gp6, and gp7 #}
 
 {% for gp_ver in range(6, 8) %}
 - name: gpdb[[gp_ver]]-pxf-dev-rocky8-image
@@ -223,7 +223,6 @@ resources:
     tag: ((pxf-dev-image-tag))
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-
 {% set gp_ver = None %}
 
 {% if multinode or multinode_no_impersonation or ambari or file or gp7_cli or gp7_multinode %}
@@ -541,23 +540,23 @@ jobs:
 - name: test_pxf-gp[[gp_ver]]-hdp2_on_rhel8
   plan:
   - in_parallel:
-      - get: pxf_src
-        passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-        trigger: true
-      - get: pxf_tarball
-        resource: pxf_gp[[gp_ver]]_tarball_rhel8
-        passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-      - get: gpdb_package
-        resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-        passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-      - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-        passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-      - get: pxf-automation-dependencies
+    - get: pxf_src
+      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_gp[[gp_ver]]_tarball_rhel8
+      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+    - get: pxf-automation-dependencies
 {% if gp_ver == 7 %}
-      - get: gp6-python-libs
+    - get: gp6-python-libs
 {% endif %}
-      - get: singlecluster
-        resource: singlecluster-hdp2
+    - get: singlecluster
+      resource: singlecluster-hdp2
   - task: test_pxf-gp[[gp_ver]]-hdp2_on_rhel8
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
@@ -574,28 +573,28 @@ jobs:
 - name: test_pxf-fdw-gp[[gp_ver]]-hdp2_on_rhel8
   plan:
   - in_parallel:
-      - get: pxf_src
-        passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-        trigger: true
-      - get: pxf_tarball
-        resource: pxf_gp[[gp_ver]]_tarball_rhel8
-        passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+    - get: pxf_src
+      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_gp[[gp_ver]]_tarball_rhel8
+      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
 {% if gp_ver == 6 %}
-      - get: pxf_fdw_tarball
-        resource: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
-        passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+    - get: pxf_fdw_tarball
+      resource: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
+      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
 {% endif %}
-      - get: gpdb_package
-        resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-        passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
+      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
 {% if gp_ver == 7 %}
-      - get: gp6-python-libs
+    - get: gp6-python-libs
 {% endif %}
-      - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-        passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-      - get: pxf-automation-dependencies
-      - get: singlecluster
-        resource: singlecluster-hdp2
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
   - task: test_pxf-fdw-gp[[gp_ver]]-hdp2_on_rhel8
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
@@ -618,7 +617,7 @@ jobs:
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
-{% endif %} # if gp7_cli ends here
+{% endif %}   # if gp7_cli ends here
 {% set gp_ver = None %}
 
 ## ---------- Extended Tests ----------
@@ -1080,7 +1079,7 @@ jobs:
       passed: [build_pxf-gp[[gp_ver]]_on_rhel7]
       trigger: true
     - get: pxf_artifact
-      resource: pxf5_gp6_rhel7_released # for upgrade test
+      resource: pxf5_gp6_rhel7_released   # for upgrade test
     - get: pxf_tarball
       resource: pxf_gp[[gp_ver]]_tarball_rhel7
       passed: [build_pxf-gp[[gp_ver]]_on_rhel7]
@@ -1163,7 +1162,7 @@ jobs:
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
-    - do: # Generate IPA Hadoop cluster
+    - do:   # Generate IPA Hadoop cluster
       - put: terraform_ipa_hadoop
         params:
           action: create
@@ -1181,7 +1180,7 @@ jobs:
   - task: setup_pxf_5_latest
     input_mapping:
       terraform: terraform_gpdb
-      pxf_tarball: pxf_tarball_ignore # do not install from the artifact
+      pxf_tarball: pxf_tarball_ignore   # do not install from the artifact
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
@@ -1377,5 +1376,5 @@ jobs:
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
-{% endif %} # if gp7_multinode ends here
+{% endif %}   # if gp7_multinode ends here
 {% set gp_ver = None %}
