@@ -18,7 +18,6 @@ resources:
     uri: ((ud/pxf/common/git-remote))
     paths:
     - concourse/docker/pxf-dev-base
-    - concourse/scripts/check_docker_images_and_tag.bash
 
 - name: base-images-trigger
   type: git
