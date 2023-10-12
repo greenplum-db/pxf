@@ -288,6 +288,15 @@ resources:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel8-x86_64.rpm
+
+## ---------- Greenplum 6 RHEL9 Release Candidate ----------
+- name: gpdb[[gp_ver]]_rhel9_rpm_latest-0
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: maintenance/release-candidates/gpdb[[gp_ver]]/greenplum-db-server-([[gp_ver]].*)-rhel9-x86_64.rpm
 {% set gp_ver = None %}
 
 {% set gp_ver = 7 %}
@@ -298,25 +307,16 @@ resources:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-el8-x86_64.rpm
-{% set gp_ver = None %}
-
-## ---------- Greenplum 6 RHEL9 Release Candidate ----------
-- name: gpdb6_rhel9_rpm_latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: maintenance/release-candidates/gpdb6/greenplum-db-server-(6.*)-rhel9-x86_64.rpm
 
 ## ---------- Greenplum 7 RHEL9 Release Candidate ----------
-- name: gpdb7_rhel9_rpm_latest-0
+- name: gpdb[[gp_ver]]_rhel9_rpm_latest-0
   type: gcs
   icon: google-drive
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/release-candidates/gpdb7/greenplum-db-server-(7.*)-el9-x86_64.rpm
+    regexp: server/release-candidates/gpdb[[gp_ver]]/greenplum-db-server-([[gp_ver]].*)-el9-x86_64.rpm
+{% set gp_ver = None %}
 
 ## ---------- PXF 5 Artifact ---------------
 {% if multinode %}
@@ -366,9 +366,7 @@ resources:
     bucket: ((ud/pxf/common/build-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
-{% endfor %}
 
-{% for gp_ver in range(6, 8) %}
 - name: pxf_gp[[gp_ver]]_tarball_rhel9
   type: gcs
   icon: google-drive
