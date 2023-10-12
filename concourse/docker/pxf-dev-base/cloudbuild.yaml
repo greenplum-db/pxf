@@ -1,3 +1,4 @@
+---
 # In root pxf directory, run the following command to build this builder.
 # $ gcloud builds submit . --config=concourse/docker/pxf-dev-base/cloudbuild.yaml \
 #  --substitutions=_BASE_IMAGE_REPOSITORY=gcr.io/data-gpdb-public-images,COMMIT_SHA=<tagname>,_PXF_BUILD_BUCKET=<bucketname>
@@ -45,8 +46,8 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb5/centos7/Dockerfile'
   - '/workspace/build/'
   waitFor:
-    - apache-maven-binaries
-    - gpdb5-centos7-test-pxf-image-cache
+  - apache-maven-binaries
+  - gpdb5-centos7-test-pxf-image-cache
 
 ##############################################################################
 # GPDB 6 Images
@@ -76,8 +77,8 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb6/centos7/Dockerfile'
   - '/workspace/build/'
   waitFor:
-    - gpdb6-centos7-test-pxf-image-cache
-    - apache-maven-binaries
+  - gpdb6-centos7-test-pxf-image-cache
+  - apache-maven-binaries
 
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb6-rocky8-test-pxf-image-cache
@@ -103,8 +104,8 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb6/rocky8/Dockerfile'
   - '/workspace/build/'
   waitFor:
-    - apache-maven-binaries
-    - gpdb6-rocky8-test-pxf-image-cache
+  - apache-maven-binaries
+  - gpdb6-rocky8-test-pxf-image-cache
 
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb6-rocky9-test-pxf-image-cache
@@ -130,8 +131,8 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb6/rocky9/Dockerfile'
   - '/workspace/build/'
   waitFor:
-    - apache-maven-binaries
-    - gpdb6-rocky9-test-pxf-image-cache
+  - apache-maven-binaries
+  - gpdb6-rocky9-test-pxf-image-cache
 
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb6-ubuntu18.04-test-pxf-image-cache
@@ -157,8 +158,8 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb6/ubuntu18.04/Dockerfile'
   - '/workspace/build/'
   waitFor:
-    - apache-maven-binaries
-    - gpdb6-ubuntu18.04-test-pxf-image-cache
+  - apache-maven-binaries
+  - gpdb6-ubuntu18.04-test-pxf-image-cache
 
 # An image for gpdb6 running on OEL7
 - name: 'gcr.io/cloud-builders/docker'
@@ -185,8 +186,8 @@ steps:
   - 'concourse/docker/pxf-dev-base/gpdb6/oel7/Dockerfile'
   - '/workspace/build/'
   waitFor:
-    - apache-maven-binaries
-    - gpdb6-oel7-test-pxf-image-cache
+  - apache-maven-binaries
+  - gpdb6-oel7-test-pxf-image-cache
 
 ##############################################################################
 # GPDB 7 Images
@@ -197,56 +198,56 @@ steps:
   id: gpdb7-rocky8-test-pxf-image-cache
   entrypoint: 'bash'
   args:
-    - '-c'
-    - |
-      mkdir -p /workspace/build
-      docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:latest || exit 0
+  - '-c'
+  - |
+    mkdir -p /workspace/build
+    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:latest || exit 0
   waitFor: ['-']
 
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb7-rocky8-test-pxf-image
   args:
-    - 'build'
-    - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-rocky8-test:latest'
-    - '--build-arg=GO_VERSION=${_GO_VERSION}'
-    - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
-    - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:$COMMIT_SHA'
-    - '--cache-from'
-    - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:latest'
-    - '-f'
-    - 'concourse/docker/pxf-dev-base/gpdb7/rocky8/Dockerfile'
-    - '/workspace/build/'
+  - 'build'
+  - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-rocky8-test:latest'
+  - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
+  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:$COMMIT_SHA'
+  - '--cache-from'
+  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky8-test-pxf:latest'
+  - '-f'
+  - 'concourse/docker/pxf-dev-base/gpdb7/rocky8/Dockerfile'
+  - '/workspace/build/'
   waitFor:
-    - apache-maven-binaries
-    - gpdb7-rocky8-test-pxf-image-cache
+  - apache-maven-binaries
+  - gpdb7-rocky8-test-pxf-image-cache
 
   # Greenplum 7 Rocky 9 Image
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb7-rocky9-test-pxf-image-cache
   entrypoint: 'bash'
   args:
-    - '-c'
-    - |
-      mkdir -p /workspace/build
-      docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:latest || exit 0
+  - '-c'
+  - |
+    mkdir -p /workspace/build
+    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:latest || exit 0
   waitFor: ['-']
 
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb7-rocky9-test-pxf-image
   args:
-    - 'build'
-    - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-rocky9-test:latest'
-    - '--build-arg=GO_VERSION=${_GO_VERSION}'
-    - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
-    - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:$COMMIT_SHA'
-    - '--cache-from'
-    - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:latest'
-    - '-f'
-    - 'concourse/docker/pxf-dev-base/gpdb7/rocky9/Dockerfile'
-    - '/workspace/build/'
+  - 'build'
+  - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb7-rocky9-test:latest'
+  - '--build-arg=GO_VERSION=${_GO_VERSION}'
+  - '--build-arg=GO_SHA256SUM=${_GO_SHA256SUM}'
+  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:$COMMIT_SHA'
+  - '--cache-from'
+  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-rocky9-test-pxf:latest'
+  - '-f'
+  - 'concourse/docker/pxf-dev-base/gpdb7/rocky9/Dockerfile'
+  - '/workspace/build/'
   waitFor:
-    - apache-maven-binaries
-    - gpdb7-rocky9-test-pxf-image-cache
+  - apache-maven-binaries
+  - gpdb7-rocky9-test-pxf-image-cache
 
 substitutions:
   _GO_VERSION: '1.21.3' # default values
