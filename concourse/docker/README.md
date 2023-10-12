@@ -57,6 +57,7 @@ flowchart TD
     gp7_rocky9_latest[gpdb7-rocky9-test:latest]
     gp6_centos7_build[gpdb6-centos7-build:latest]
     gp6_rocky8_build[gpdb6-rocky8-build:latest]
+    gp6_rocky9_build[gpdb6-rocky9-build:latest]
 
     class gp5_centos7_latest gcrPublicStyle
     class gp6_centos7_latest gcrPublicStyle
@@ -93,9 +94,11 @@ flowchart TD
   subgraph rpmrebuild [rpmrebuild/cloudbuild.yaml]
     rpm_docker_centos7[centos/Dockerfile]
     rpm_docker_rocky8[rocky/Dockerfile]
+    rpm_docker_rocky9[rocky/Dockerfile]
 
     class rpm_docker_centos7 dockerfileStyle
     class rpm_docker_rocky8 dockerfileStyle
+    class rpm_docker_rocky9 dockerfileStyle
   end
   class rpmrebuild subgraphStyle
 
@@ -141,9 +144,11 @@ flowchart TD
 
     rpm_centos7_latest[rpmrebuild-centos7:latest]
     rpm_rocky8_latest[rpmrebuild-rocky8:latest]
+    rpm_rocky9_latest[rpmrebuild-rocky9:latest]
 
     class rpm_centos7_latest latestStyle
     class rpm_rocky8_latest latestStyle
+    class rpm_rocky9_latest latestStyle
   end
   class gcr_data_gpdb_ud subgraphStyle
 
@@ -216,6 +221,8 @@ flowchart TD
   rpm_docker_centos7 --> rpm_centos7_latest
   gp6_rocky8_build --> rpm_docker_rocky8
   rpm_docker_rocky8 --> rpm_rocky8_latest
+  gp6_rocky9_build --> rpm_docker_rocky9
+  rpm_docker_rocky9 --> rpm_rocky9_latest
 
   gp6_centos7_pxf_latest --> server_dockerfile
   server_dockerfile -- "CloudBuild (add singlecluster, build deps, & automation deps)" --> gp6_centos7_pxf_hdp2_sha
@@ -253,4 +260,5 @@ flowchart TD
 
   rpm_centos7_latest --> build
   rpm_rocky8_latest --> build
+  rpm_rocky9_latest --> build
 ```
