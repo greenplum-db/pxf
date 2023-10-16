@@ -13,8 +13,6 @@ RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && echo "${GO_SHA256SUM} /tmp/go.tgz" | sha256sum --check \
     && rm -rf /usr/local/go && mkdir /opt/pxf && tar -C /opt/pxf -xzf go.tgz && rm go.tgz
 
-ARG USER_HOME_DIR="/root"
-
 # install dependencies that are missing on the base images
 # glibc-common is for adding locales
 RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn \

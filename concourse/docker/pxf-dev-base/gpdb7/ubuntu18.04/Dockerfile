@@ -15,8 +15,6 @@ RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
 
 # install dependencies that are missing on the base images
 # install a specific version of perl for tinc
-ARG USER_HOME_DIR="/root"
-
 RUN apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev curl sudo jq openjdk-8-jdk openjdk-11-jdk \
     && apt-get clean \

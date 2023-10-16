@@ -28,8 +28,6 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio \
     && chmod +x /opt/minio/bin/minio \
     && chown -R minio:minio /opt/minio
 
-ARG USER_HOME_DIR="/root"
-
 # install dependencies that are missing on the base images
 RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn \
     && /usr/bin/pip2 install paramiko --no-cache-dir
