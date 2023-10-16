@@ -10,3 +10,7 @@
   ansible.builtin.shell:
     cmd: "ipa-client-install --principal admin --unattended --server ccp-{{ cluster_name }}-ipa.{{ ansible_domain }} --domain {{ ansible_domain }} --password {{ ipa_password }}"
     creates: /var/log/ipaclient-install.log
+  register: result
+  until: result.rc == 0
+  retries: 2
+  delay: 15

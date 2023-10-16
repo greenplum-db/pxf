@@ -74,14 +74,28 @@
 
 # providing the absolute path for ipa-getkeytab since due to some reason it was not recognizing the
 # ipa-getkeytab and without && it is not reporting error in case the principal already exists.
-- name: Create HDFS service principal and export keytab
+- name: Create HDFS service principal
   ansible.builtin.shell:
     cmd: |
-      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }}  &&
+      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }} &&
       ipa service-add hdfs/{{ ansible_fqdn }}@{{ ansible_domain | upper }} &&
+      kdestroy
+  register: result
+  until: result.rc == 0
+  retries: 2
+  delay: 15
+
+- name: Export keytab for HDFS service principal
+  ansible.builtin.shell:
+    cmd: |
+      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }} &&
       /usr/sbin/ipa-getkeytab -p hdfs/{{ ansible_fqdn }}@{{ ansible_domain | upper }}  -k /opt/security/keytab/hdfs.service.keytab &&
       kdestroy
     creates: /opt/security/keytab/hdfs.service.keytab
+  register: result
+  until: result.rc == 0
+  retries: 2
+  delay: 15
 
 # This Kerberos principal and keytab is used for
 # `dfs.namenode.kerberos.internal.spnego.principal`; attempts to re-use the
@@ -91,17 +105,45 @@
 - name: Create HTTP service principal
   ansible.builtin.shell:
     cmd: |
-      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }}  &&
+      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }} &&
       ipa service-add HTTP/{{ ansible_fqdn }}@{{ ansible_domain | upper }} &&
+      kdestroy
+  register: result
+  until: result.rc == 0
+  retries: 2
+  delay: 15
+
+- name: Export keytab for HTTP service principal
+  ansible.builtin.shell:
+    cmd: |
+      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }} &&
       /usr/sbin/ipa-getkeytab -p HTTP/{{ ansible_fqdn }}@{{ ansible_domain | upper }} -k /opt/security/keytab/spnego.service.keytab &&
       kdestroy
     creates: /opt/security/keytab/spnego.service.keytab
+  register: result
+  until: result.rc == 0
+  retries: 2
+  delay: 15
 
 - name: Create Hive service principal and export keytab
   ansible.builtin.shell:
     cmd: |
-      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }}  &&
+      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }} &&
       ipa service-add hive/{{ ansible_fqdn }}@{{ ansible_domain | upper }} &&
+      kdestroy
+  register: result
+  until: result.rc == 0
+  retries: 2
+  delay: 15
+
+- name: Export keytab for Hive service principal
+  ansible.builtin.shell:
+    cmd: |
+      echo {{ ipa_password }} | kinit admin@{{ ansible_domain | upper }} &&
       /usr/sbin/ipa-getkeytab -p hive/{{ ansible_fqdn }}@{{ ansible_domain | upper }}  -k /opt/security/keytab/hive.service.keytab &&
       kdestroy
     creates: /opt/security/keytab/hive.service.keytab
+  register: result
+  until: result.rc == 0
+  retries: 2
+  delay: 15
