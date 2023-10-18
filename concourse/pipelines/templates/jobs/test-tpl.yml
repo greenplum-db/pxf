@@ -1,0 +1,36 @@
+## Template for generating test jobs in the dev and build pipeline
+
+- name: test_pxf-gp[[gp_ver]]-hdp2_on_[[platform_ver]]
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [build_pxf-gp[[gp_ver]]_on_[[build_platform_ver]]]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_gp[[gp_ver]]_tarball_[[gpdb_os_platform]][[os_ver]]
+      passed: [build_pxf-gp[[gp_ver]]_on_[[build_platform_ver]]]
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_[[gpdb_os_platform]][[os_ver]]_[[pkg_type]]_latest-0
+      passed: [build_pxf-gp[[gp_ver]]_on_[[build_platform_ver]]]
+    - get: gpdb[[gp_ver]]-pxf-dev-[[platform_ver]]-image
+      {# If the platform_ver matches build_platform_ver then add the passed condition #}
+      {% if [[platform_ver]] == [[build_platform_ver]] %}
+      passed: [build_pxf-gp[[gp_ver]]_on_[[build_platform_ver]]]
+      {% endif %}
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: test_pxf-gp[[gp_ver]]-hdp2_on_[[platform_ver]]
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb[[gp_ver]]-pxf-dev-[[platform_ver]]-image
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GP_VER: [[gp_ver]]
+      GROUP: gpdb,proxy,profile
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      {% if platform == 'ubuntu' %}
+      PXF_BASE_DIR: /home/gpadmin/pxf
+      {% endif %}
+{% if slack_notification %}
+    <<: *slack_alert
+{% endif %}

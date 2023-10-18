@@ -1,0 +1,25 @@
+## Template for generating build jobs in the dev and build pipeline
+
+- name: build_pxf-gp[[gp_ver]]_on_[[platform_ver]]
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      trigger: true
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_[[gpdb_os_platform]][[os_ver]]_[[pkg_type]]_latest-0
+    - get: gpdb[[gp_ver]]-pxf-dev-[[platform_ver]]-image
+    - get: pxf-build-dependencies
+  - task: build_pxf-gp[[gp_ver]]_on_[[platform_ver]]
+    image: gpdb[[gp_ver]]-pxf-dev-[[platform_ver]]-image
+    file: pxf_src/concourse/tasks/build.yml
+    params:
+      LICENSE: ((ud/pxf/common/rpm-license))
+      VENDOR: ((ud/pxf/common/[[pkg_type]]-vendor))
+  - put: pxf_gp[[gp_ver]]_tarball_[[gpdb_os_platform]][[os_ver]]
+    params:
+      file: [[pxf_tarball_filename]]
+{% if gp_ver == '6'  and platform_ver == 'rocky8' %}
+  - put: pxf_fdw_gp[[gp_ver]]_tarball_[[gpdb_os_platform]][[os_ver]]
+    params:
+      file: [[pxf_fdw_tarball_filename]]
+{% endif %}

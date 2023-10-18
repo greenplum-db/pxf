@@ -369,220 +369,109 @@ resources:
 ## ======================================================================
 jobs:
 
-## ---------- Centos 7 Swimlane ----------
-{% for gp_ver in range(5, 7) %}
-- name: build_pxf-gp[[gp_ver]]_on_rhel7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      trigger: true
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
-  - task: build_pxf-gp[[gp_ver]]_on_rhel7
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    file: pxf_src/concourse/tasks/build.yml
-    params:
-      LICENSE: ((ud/pxf/common/rpm-license))
-      VENDOR: ((ud/pxf/common/rpm-vendor))
-  - put: pxf_gp[[gp_ver]]_tarball_rhel7
-    params:
-      file: dist/pxf-gp[[gp_ver]]-*.el7.tar.gz
+## ======================================================================
+##                    Build and Sanity Test Swimlanes
+## ----------------------------------------------------------------------
+##
+## The creation of the PXF Build and Sanity test jobs are driven by
+## the following platform_gp_combinations dictionary definition:
+##
+##   gp_ver: GPDB Major Version
+##   execution_os: OS platform in which build and test jobs are executed
+##   os_ver: OS Major version
+##   build_os: OS Platform in which the build was performed
+##
+## ----------------------------------------------------------------------
+{% set platform_gp_combinations = [
+    {'gp_ver': '5', 'execution_os': 'centos', 'os_ver': '7',  'build_os': 'centos'},
+    {'gp_ver': '6', 'execution_os': 'centos', 'os_ver': '7',  'build_os': 'centos'},
+    {'gp_ver': '6', 'execution_os': 'rocky',  'os_ver': '8',  'build_os': 'rocky'},
+    {'gp_ver': '6', 'execution_os': 'oel',    'os_ver': '7',  'build_os': 'centos'},
+    {'gp_ver': '6', 'execution_os': 'ubuntu', 'os_ver': '18', 'build_os': 'ubuntu'},
+    {'gp_ver': '7', 'execution_os': 'rocky',  'os_ver': '8',  'build_os': 'rocky'}] %}
 
-- name: test_pxf-gp[[gp_ver]]-hdp2_on_rhel7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel7]
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-hdp2_on_rhel7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
+{% for config in platform_gp_combinations %}
+
+    {% set gp_ver = config.gp_ver %}
+    {% set platform = config.execution_os %}
+    {% set os_ver = config.os_ver %}
+    {% set build_platform = config.build_os %}
+
+    {% set platform_ver = platform ~ os_ver %}
+    {% set build_platform_ver = build_platform ~ os_ver %}
+
+    {% if platform in ['ubuntu'] %}
+      {% set pkg_type = 'deb' %}
+      {% set gpdb_os_platform = 'ubuntu' %}
+      {% set pxf_tarball_filename = 'dist/pxf-gp' ~ gp_ver ~ '-*-ubuntu' ~ os_ver ~ '.04' ~ '.tar.gz' %}
+      {% set pxf_fdw_tarball_filename = '' %}{# Doesn't apply for ubuntu platform #}
+    {% else %}
+      {% set pkg_type = 'rpm' %}
+      {% set gpdb_os_platform = 'rhel' %}
+      {% set pxf_tarball_filename = 'dist/pxf-gp' ~ gp_ver ~ '-*.el' ~ os_ver ~ '.tar.gz' %}
+      {% set pxf_fdw_tarball_filename = 'dist/pxf-fdw-gp' ~ gp_ver ~ '-*.el' ~ os_ver ~ '.tar.gz' %}
+    {% endif %}
+
+    {# OEL doesn't have a separate build job #}
+    {% if platform != 'oel' %}
+      {% include 'jobs/build-tpl.yml' %}
+    {% endif %}
+
+    {% include 'jobs/test-tpl.yml' %}
 {% endfor %}
 
-{% if oel7 %}
-- name: test_pxf-gp6-hdp2_on_oel7
+## ======================================================================
+##                             FDW Test Job
+## ----------------------------------------------------------------------
+##
+## The creation of the PXF FDW test jobs are driven by the following
+## platform_gp_combinations dictionary definition:
+##
+##   gp_ver: GPDB Major Version
+##   execution_os: OS platform in which build and test jobs are executed
+##   os_ver: OS Major version
+##   build_os: OS Platform in which the build was performed
+##
+## ----------------------------------------------------------------------
+{% set platform_gp_combinations = [
+    {'gp_ver': '6', 'execution_os': 'rocky', 'os_ver': '8', 'build_os': 'rocky'},
+    {'gp_ver': '7', 'execution_os': 'rocky', 'os_ver': '8', 'build_os': 'rocky'}] %}
+
+{% for config in platform_gp_combinations %}
+    {% set gp_ver = config.gp_ver %}
+    {% set platform = config.execution_os %}
+    {% set os_ver = config.os_ver %}
+    {% set build_platform = config.build_os %}
+
+    {% set platform_ver = platform ~ os_ver %}
+    {% set gpdb_os_platform = 'rhel' %}{# This only supports RHEL platform #}
+    {% set pkg_type = 'rpm' %}
+
+- name: test_pxf-fdw-gp[[gp_ver]]-hdp2_on_[[platform_ver]]
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [build_pxf-gp6_on_rhel7]
+      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_gp6_tarball_rhel7
-      passed: [build_pxf-gp6_on_rhel7]
-    - get: gpdb_package
-      resource: gpdb6_rhel7_rpm_latest-0
-      passed: [build_pxf-gp6_on_rhel7]
-    - get: gpdb6-pxf-dev-oel7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp6-hdp2_on_oel7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb6-pxf-dev-oel7-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: 6
-      GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
-
-## ---------- Ubuntu 18 Swimlane ----------
-{% set gp_ver = 6 %}
-- name: build_pxf-gp[[gp_ver]]_on_ubuntu18
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      trigger: true
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
-    - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-    - get: pxf-build-dependencies
-  - task: build_pxf-gp[[gp_ver]]_on_ubuntu18
-    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-    file: pxf_src/concourse/tasks/build.yml
-    params:
-      LICENSE: ((ud/pxf/common/rpm-license))
-      VENDOR: ((ud/pxf/common/deb-maintainer))
-  - put: pxf_gp[[gp_ver]]_tarball_ubuntu18
-    params:
-      file: dist/pxf-gp[[gp_ver]]-*-ubuntu18.04.tar.gz
-
-- name: test_pxf-gp[[gp_ver]]-hdp2_on_ubuntu18
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_ubuntu18]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_ubuntu18
-      passed: [build_pxf-gp[[gp_ver]]_on_ubuntu18]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_ubuntu18]
-    - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-      passed: [build_pxf-gp[[gp_ver]]_on_ubuntu18]
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-hdp2_on_ubuntu18
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
-      PXF_BASE_DIR: /home/gpadmin/pxf
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% set gp_ver = None %}
-
-## ---------- RHEL 8 Swimlane (uses Rocky 8 images) ----------
-{% for gp_ver in range(6, 8) %}
-- name: build_pxf-gp[[gp_ver]]_on_rhel8
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      trigger: true
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-    - get: pxf-build-dependencies
-  - task: build_pxf-gp[[gp_ver]]_on_rhel8
-    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-    file: pxf_src/concourse/tasks/build.yml
-    params:
-      LICENSE: ((ud/pxf/common/rpm-license))
-      VENDOR: ((ud/pxf/common/rpm-vendor))
-  - put: pxf_gp[[gp_ver]]_tarball_rhel8
-    params:
-      file: dist/pxf-gp[[gp_ver]]-*.el8.tar.gz
-{% if gp_ver == 6 %}
-  - put: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
-    params:
-      file: dist/pxf-fdw-gp[[gp_ver]]-*.el8.tar.gz
-{% endif %}
-
-- name: test_pxf-gp[[gp_ver]]-hdp2_on_rhel8
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel8
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-hdp2_on_rhel8
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% endfor %}
-{% set gp_ver = None %}
-
-## ---------- FDW RHEL 8 Swimlane ----------
-{% for gp_ver in range(6, 8) %}
-- name: test_pxf-fdw-gp[[gp_ver]]-hdp2_on_rhel8
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel8
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-{% if gp_ver == 6 %}
+      resource: pxf_gp[[gp_ver]]_tarball_[[gpdb_os_platform]][[os_ver]]
+      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
+{% if gp_ver == '6' %}
     - get: pxf_fdw_tarball
-      resource: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+      resource: pxf_fdw_gp[[gp_ver]]_tarball_[[gpdb_os_platform]][[os_ver]]
+      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
 {% endif %}
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-      passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
+      resource: gpdb[[gp_ver]]_[[gpdb_os_platform]][[os_ver]]_[[pkg_type]]_latest-0
+      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
+    - get: gpdb[[gp_ver]]-pxf-dev-[[platform_ver]]-image
+      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: test_pxf-fdw-gp[[gp_ver]]-hdp2_on_rhel8
+  - task: test_pxf-fdw-gp[[gp_ver]]-hdp2_on_[[platform_ver]]
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    image: gpdb[[gp_ver]]-pxf-dev-[[platform_ver]]-image
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
@@ -590,7 +479,6 @@ jobs:
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       USE_FDW: true
 {% endfor %}
-{% set gp_ver = None %}
 
 ## ---------- GP7 PXF CLI tests ----------
 
