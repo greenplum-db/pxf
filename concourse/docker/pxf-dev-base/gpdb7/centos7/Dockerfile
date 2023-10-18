@@ -24,9 +24,7 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio \
 
 # install dependencies that are missing on the base images
 RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn \
-    && yum install -y rpm-build python-devel jq sudo java-1.8.0-openjdk-devel java-11-openjdk-devel && yum clean all \
-    && cd /tmp && /usr/bin/pip install --upgrade pip==20.3.3 \
-    && /usr/bin/pip install paramiko --no-cache-dir
+    && yum install -y rpm-build jq sudo java-1.8.0-openjdk-devel java-11-openjdk-devel && yum clean all
 
 # create user gpadmin since GPDB cannot run under root
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \

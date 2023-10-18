@@ -11,7 +11,6 @@ MAVEN_TEST_OPTS+= -B -e
 PXF_TMP_LIB := $(HOME)/automation_tmp_lib
 BASE_PATH   ?= /mnt/nfs/var/nfsshare
 USE_FDW     ?= false
-USE_TINC    ?= false
 
 ifneq "$(TEST)" ""
 	MAVEN_TEST_OPTS+= -Dtest=$(TEST)
@@ -21,7 +20,7 @@ ifneq "$(GROUP)" ""
 	MAVEN_TEST_OPTS+= -Dgroups=$(GROUP)
 endif
 
-MAVEN_TEST_OPTS+= -Djava.awt.headless=true -DuseFDW=$(USE_FDW) -DuseTinc=$(USE_TINC)
+MAVEN_TEST_OPTS+= -Djava.awt.headless=true -DuseFDW=$(USE_FDW)
 
 ifneq "$(OFFLINE)" "true"
 	MAVEN_TEST_OPTS+= -U
@@ -123,11 +122,11 @@ clean: clean-logs
 	@rm -rf $(PXF_TMP_LIB)
 
 clean-logs:
-	@rm -rf automation_logs/* tincrepo/main/log/* run-results/*
-	@find tincrepo/main/pxf/. -type d -name results -exec rm -rf {} +
-	@find tincrepo/main/pxf/. -type f -name regression.diffs -delete
-	@find tincrepo/main/pxf/. -type d -name "output" -exec rm -rf {} +
-	@find tincrepo/main/pxf/. -type f -name "*segment_logs" -exec rm -rf {} +
+	@rm -rf automation_logs/* run-results/*
+	@find sqlrepo -type d -name results -exec rm -rf {} +
+	@find sqlrepo -type f -name regression.diffs -delete
+	@find sqlrepo -type d -name "output" -exec rm -rf {} +
+	@find sqlrepo -type f -name "*segment_logs" -exec rm -rf {} +
 
 dev: symlink_pxf_jars
 	$(MVN) $(MAVEN_TEST_OPTS) package -DskipTests=true

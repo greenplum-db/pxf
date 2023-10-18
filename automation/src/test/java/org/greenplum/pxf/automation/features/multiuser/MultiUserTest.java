@@ -89,6 +89,6 @@ public class MultiUserTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security"})
     public void testUsers() throws Exception {
-        runTincTest("pxf.features.multi_user.runTest");
+        runSqlTest("features/multi_user");
     }
 }

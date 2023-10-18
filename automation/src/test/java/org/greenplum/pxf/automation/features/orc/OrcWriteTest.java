@@ -154,7 +154,7 @@ public class OrcWriteTest extends BaseFeature {
         insertDataWithoutNulls(gpdbTableNamePrefix, 33); // > 30 to let the DATE field to repeat the value
 
         // use PXF *:orc profile to read the data
-        runTincTest("pxf.features.orc.write.primitive_types.runTest");
+        runSqlTest("features/orc/write/primitive_types");
     }
 
     /*
@@ -212,7 +212,7 @@ public class OrcWriteTest extends BaseFeature {
         gpdb.createTableAndVerify(exHiveJdbcTable);
 
         // use PXF hive:jdbc profile to read the data
-        runTincTest("pxf.features.orc.write.primitive_types_with_hive.runTest");
+        runSqlTest("features/orc/write/primitive_types_with_hive");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -224,7 +224,7 @@ public class OrcWriteTest extends BaseFeature {
 
         insertDataWithNulls(gpdbTableNamePrefix, 33);
 
-        runTincTest("pxf.features.orc.write.primitive_types_nulls.runTest");
+        runSqlTest("features/orc/write/primitive_types_nulls");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -237,7 +237,7 @@ public class OrcWriteTest extends BaseFeature {
         // write 3 batches and 1 row of data (1024*3+1=3073) to make sure batch is properly reset when reused
         insertDataWithoutNulls(gpdbTableNamePrefix, 3073);
 
-        runTincTest("pxf.features.orc.write.primitive_types_large.runTest");
+        runSqlTest("features/orc/write/primitive_types_large");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -249,7 +249,7 @@ public class OrcWriteTest extends BaseFeature {
 
         insertDataWithTimestamps(gpdbTableNamePrefix, 10, 5);
 
-        runTincTest("pxf.features.orc.write.timestamp_with_timezone_types.runTest");
+        runSqlTest("features/orc/write/timestamp_with_timezone_types");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -263,7 +263,7 @@ public class OrcWriteTest extends BaseFeature {
         insertArrayDataWithNulls(gpdbTableNamePrefix, 33, 17); // > 30 to let the DATE field to repeat the value
 
         // use PXF *:orc profile to read the data
-        runTincTest("pxf.features.orc.write.primitive_types_array_with_nulls.runTest");
+        runSqlTest("features/orc/write/primitive_types_array_with_nulls");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -277,7 +277,7 @@ public class OrcWriteTest extends BaseFeature {
         insertArrayDataWithNullElements(gpdbTableNamePrefix, 33, 17); // > 30 to let the DATE field to repeat the value
 
         // use PXF *:orc profile to read the data
-        runTincTest("pxf.features.orc.write.primitive_types_array_null_elements.runTest");
+        runSqlTest("features/orc/write/primitive_types_array_null_elements");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -307,7 +307,7 @@ public class OrcWriteTest extends BaseFeature {
         prepareReadableExternalTable(gpdbTableNamePrefix + "_text", new String[]{"id integer", "text_arr text[]"}, fullTestPath + "_text", false);
 
         // use the heap table to insert data into the external tables
-        runTincTest("pxf.features.orc.write.primitive_types_array_multi.runTest");
+        runSqlTest("features/orc/write/primitive_types_array_multi");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -317,7 +317,7 @@ public class OrcWriteTest extends BaseFeature {
 
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_DECIMAL_WITH_LARGE_PRECISION_TABLE_COLUMNS, fullTestPath);
 
-        runTincTest("pxf.features.orc.write.decimal_with_large_precision_defined.runTest");
+        runSqlTest("features/orc/write/decimal_with_large_precision_defined");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -327,7 +327,7 @@ public class OrcWriteTest extends BaseFeature {
 
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
 
-        runTincTest("pxf.features.orc.write.decimal_with_large_precision_not_defined.runTest");
+        runSqlTest("features/orc/write/decimal_with_large_precision_not_defined");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -337,7 +337,7 @@ public class OrcWriteTest extends BaseFeature {
 
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
 
-        runTincTest("pxf.features.orc.write.decimal_with_large_integer_digit.runTest");
+        runSqlTest("features/orc/write/decimal_with_large_integer_digit");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -348,7 +348,7 @@ public class OrcWriteTest extends BaseFeature {
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
         prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
 
-        runTincTest("pxf.features.orc.write.decimal_with_large_scale.runTest");
+        runSqlTest("features/orc/write/decimal_with_large_scale");
     }
 
     private void insertDataWithoutNulls(String exTable, int numRows) throws Exception {

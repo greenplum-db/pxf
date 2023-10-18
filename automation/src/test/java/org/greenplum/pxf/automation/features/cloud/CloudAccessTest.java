@@ -166,7 +166,7 @@ public class CloudAccessTest extends BaseFeature {
         }
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest("pxf.features.cloud_access." + name + ".runTest");
+        runSqlTest("features/cloud_access/" + name);
     }
 
     private void runTestScenarioForWrite(String name, String server, boolean creds) throws Exception {
@@ -191,6 +191,6 @@ public class CloudAccessTest extends BaseFeature {
         }
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest("pxf.features.cloud_access." + name + ".runTest");
+        runSqlTest("features/cloud_access/" + name);
     }
 }

@@ -39,15 +39,6 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
-## TODO Remove this resource block once Tinc is replaced with pg_regress.
-- name: gp6-python-libs
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-resources-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: automation-dependencies/gp6-python-libs.tar.gz
-
 - name: singlecluster-hdp2
   type: gcs
   icon: google-drive
@@ -334,7 +325,6 @@ jobs:
     - get: gpdb7-pxf-dev-rocky8-image
     - get: ccp-7-image
     - get: pxf-automation-dependencies
-    - get: gp6-python-libs
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: test_gpdb-7_with_pxf-gp7-hdp2_on_rhel8

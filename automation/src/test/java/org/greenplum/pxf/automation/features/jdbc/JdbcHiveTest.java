@@ -241,7 +241,7 @@ public class JdbcHiveTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security"})
     public void jdbcHiveRead() throws Exception {
-        runTincTest("pxf.features.jdbc.hive.runTest");
+        runSqlTest("features/jdbc/hive");
     }
 
     // Fails with the error: ERROR:  PXF server error : java.io.DataInputStream cannot be cast to [B
@@ -250,7 +250,7 @@ public class JdbcHiveTest extends BaseFeature {
     public void jdbcHiveWrite() throws Exception {
         prepareDataForWriteTest();
         createTablesForWriteTest(hive, "hive", "db-hive");
-        runTincTest("pxf.features.jdbc.hive_writable.runTest");
+        runSqlTest("features/jdbc/hive_writable");
     }
 
     @Test(groups = {"features", "multiClusterSecurity"})
@@ -268,7 +268,7 @@ public class JdbcHiveTest extends BaseFeature {
         prepareData(hive2, hdfs2, HIVE_TYPES_FILE_NAME_2);
         createTables(hive2, "db-hive-kerberos", GPDB_TYPES_TABLE_NAME_2, GPDB_QUERY_TABLE_NAME_2);
 
-        runTincTest("pxf.features.jdbc.two_secured_hive.runTest");
+        runSqlTest("features/jdbc/two_secured_hive");
     }
 
     @FailsWithFDW
@@ -287,7 +287,7 @@ public class JdbcHiveTest extends BaseFeature {
 
         createTablesForWriteTest(hive2, "hive2", "db-hive-kerberos");
 
-        runTincTest("pxf.features.jdbc.write_two_secured_hive.runTest");
+        runSqlTest("features/jdbc/write_two_secured_hive");
     }
 
     @Test(groups = {"features", "multiClusterSecurity"})
@@ -298,7 +298,7 @@ public class JdbcHiveTest extends BaseFeature {
         prepareData(hiveNonSecure, hdfsNonSecure, HIVE_TYPES_FILE_NAME_3);
         createTables(hiveNonSecure, "db-hive-non-secure", GPDB_TYPES_TABLE_NAME_3, GPDB_QUERY_TABLE_NAME_3);
 
-        runTincTest("pxf.features.jdbc.secured_and_non_secured_hive.runTest");
+        runSqlTest("features/jdbc/secured_and_non_secured_hive");
     }
 
     @FailsWithFDW
@@ -311,6 +311,6 @@ public class JdbcHiveTest extends BaseFeature {
         createTablesForWriteTest(hive, "hive", "db-hive");
         createTablesForWriteTest(hiveNonSecure, "hive_non_secure", "db-hive-non-secure");
 
-        runTincTest("pxf.features.jdbc.write_secured_and_non_secured_hive.runTest");
+        runSqlTest("features/jdbc/write_secured_and_non_secured_hive");
     }
 }

@@ -144,7 +144,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         fetchAndVerifyAvroHcfsFiles("primitives.json", "xz");
 
         // check using GPDB readable external table that what went into HCFS is correct
-        runTincTest("pxf.features.hdfs.writable.avro.primitives_generate_schema.runTest");
+        runSqlTest("features/hdfs/writable/avro/primitives_generate_schema");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -166,7 +166,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         fetchAndVerifyAvroHcfsFiles("primitives.json", "null");
 
         // check using GPDB readable external table that what went into HCFS is correct
-        runTincTest("pxf.features.hdfs.writable.avro.primitives_generate_schema_with_no_compression.runTest");
+        runSqlTest("features/hdfs/writable/avro/primitives_generate_schema_with_no_compression");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -189,7 +189,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         fetchAndVerifyAvroHcfsFiles("complex_records.json", "bzip2");
 
         // check using GPDB readable external table that what went into HCFS is correct
-        runTincTest("pxf.features.hdfs.writable.avro.complex_generate_schema.runTest");
+        runSqlTest("features/hdfs/writable/avro/complex_generate_schema");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -219,7 +219,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         fetchAndVerifyAvroHcfsFiles("primitives_no_union.json", "snappy");
 
         // check using GPDB readable external table that what went into HCFS is correct
-        runTincTest("pxf.features.hdfs.writable.avro.primitives_user_provided_schema_on_hcfs.runTest");
+        runSqlTest("features/hdfs/writable/avro/primitives_user_provided_schema_on_hcfs");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -258,7 +258,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         fetchAndVerifyAvroHcfsFiles("complex_no_union.json", "deflate");
 
         // check using GPDB readable external table that what went into HCFS is correct
-        runTincTest("pxf.features.hdfs.writable.avro.complex_user_provided_schema_on_classpath.runTest");
+        runSqlTest("features/hdfs/writable/avro/complex_user_provided_schema_on_classpath");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -288,7 +288,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         fetchAndVerifyAvroHcfsFiles("array_with_nulls.json", "deflate");
 
         // check using GPDB readable external table that what went into HCFS is correct
-        runTincTest("pxf.features.hdfs.writable.avro.array_user_schema_w_nulls.runTest");
+        runSqlTest("features/hdfs/writable/avro/array_user_schema_w_nulls");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -310,7 +310,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         fetchAndVerifyAvroHcfsFiles("null_values.json", "deflate");
 
         // check using GPDB readable external table that what went into HCFS is correct
-        runTincTest("pxf.features.hdfs.writable.avro.null_values.runTest");
+        runSqlTest("features/hdfs/writable/avro/null_values");
     }
 
     @Override

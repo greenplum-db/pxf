@@ -75,17 +75,9 @@
         <port>10000</port>
     </hive>
 
-    <tinc>
-        <class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
-        <host>localhost</host>
-        <gphome>$GPHOME</gphome>
-        <tincFolder>tinc/main</tincFolder>
-        <tincTestsFolder>tincrepo/main</tincTestsFolder>
-    </tinc>
-
     <regress>
         <class>org.greenplum.pxf.automation.components.regress.Regress</class>
-        <regressTestFolder>tincrepo/main</regressTestFolder>
+        <regressTestFolder>sqlrepo</regressTestFolder>
         <dbName>pxfautomation</dbName>
     </regress>
 

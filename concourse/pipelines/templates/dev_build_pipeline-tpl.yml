@@ -126,14 +126,6 @@ resources:
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
-- name: gp6-python-libs
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-resources-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: automation-dependencies/gp6-python-libs.tar.gz
-
 - name: singlecluster-hdp2
   type: gcs
   icon: google-drive
@@ -551,9 +543,6 @@ jobs:
     - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
       passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
     - get: pxf-automation-dependencies
-{% if gp_ver == 7 %}
-    - get: gp6-python-libs
-{% endif %}
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: test_pxf-gp[[gp_ver]]-hdp2_on_rhel8
@@ -586,9 +575,6 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel8_rpm_latest-0
       passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
-{% if gp_ver == 7 %}
-    - get: gp6-python-libs
-{% endif %}
     - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
       passed: [build_pxf-gp[[gp_ver]]_on_rhel8]
     - get: pxf-automation-dependencies

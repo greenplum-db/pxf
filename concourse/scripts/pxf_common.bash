@@ -53,11 +53,6 @@ function inflate_dependencies() {
 		tarballs+=(regression-tools/regression-tools.tar.gz)
 	fi
 
-	# when running automation against GP7, we need python2 dependencies shipped with gp6 to make Tinc work
-	# if required, these libraries will be fetched by a CI pipeline under gp6-python-libs directory
-	if [[ -f gp6-python-libs/gp6-python-libs.tar.gz ]]; then
-		tarballs+=(gp6-python-libs/gp6-python-libs.tar.gz)
-	fi
 	(( ${#tarballs[@]} == 0 )) && return
 	for t in "${tarballs[@]}"; do
 		tar -xzf "${t}" -C ~gpadmin
@@ -89,7 +84,7 @@ function set_env() {
 function run_pxf_automation() {
 	# Let's make sure that automation/singlecluster directories are writeable
 	chmod a+w pxf_src/automation pxf_src/automation/pxf_regress /singlecluster || true
-	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
+	find pxf_src/automation/sqlrepo -type d -exec chmod a+w {} \;
 
 	local extension_name="pxf"
 	if [[ ${USE_FDW} == "true" ]]; then
@@ -209,8 +204,6 @@ function install_gpdb_binary() {
 		python_dir=python${python_version}/dist-packages
 		export_pythonpath+=:/usr/local/lib/$python_dir
 	fi
-
-	echo "$export_pythonpath" >> "${PXF_SRC}/automation/tinc/main/tinc_env.sh"
 }
 
 function install_gpdb_package() {
@@ -254,8 +247,6 @@ function install_gpdb_package() {
 		echo "Unsupported operating system '$(source /etc/os-release && echo "${PRETTY_NAME}")'. Exiting..."
 		exit 1
 	fi
-
-	echo "$export_pythonpath" >> "${PXF_SRC}/automation/tinc/main/tinc_env.sh"
 
 	# create symlink to allow pgregress to run (hardcoded to look for /usr/local/greenplum-db-devel/psql)
 	rm -rf /usr/local/greenplum-db-devel

@@ -210,7 +210,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -226,7 +226,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.three_byte.runTest");
+        runSqlTest("features/multibyte_delimiter/three_byte");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -242,7 +242,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.four_byte.runTest");
+        runSqlTest("features/multibyte_delimiter/four_byte");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -258,7 +258,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.multi_char.runTest");
+        runSqlTest("features/multibyte_delimiter/multi_char");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -268,7 +268,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_twobyte_withcrlf_data", dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_crlf.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte_with_crlf");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -281,7 +281,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_twobyte_withcr_data", dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_cr.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte_with_cr");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -293,7 +293,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_twobyte_wrongformatter_data", dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_wrong_formatter.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte_wrong_formatter");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -306,7 +306,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_twobyte_nodelim_data", tableSpec, dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_no_delim.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte_no_delim");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -319,7 +319,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_twobyte_wrong_delim_data", tableSpec, dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_delim.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte_with_wrong_delim");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -329,7 +329,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_twobyte_withquote_data", dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte_with_quote");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -346,9 +346,9 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // however, this is not the case for GP5 and for versions of GP6 older than 6.24.0
         // therefore, we must run 2 different sets of tests to check for the expected error
         if (gpdb.getVersion() >= 6) {
-            runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_eol.runTest");
+            runSqlTest("features/multibyte_delimiter/two_byte_with_wrong_eol");
         } else {
-            runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_eol_5X.runTest");
+            runSqlTest("features/multibyte_delimiter/two_byte_with_wrong_eol_5X");
         }
     }
 
@@ -366,9 +366,9 @@ public class MultibyteDelimiterTest extends BaseFeature {
         // however, this is not the case for GP5 and for versions of GP6 older than 6.24.0
         // therefore, we must run 2 different sets of tests to check for the expected error
         if (gpdb.getVersion() >= 6) {
-            runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_quote.runTest");
+            runSqlTest("features/multibyte_delimiter/two_byte_with_wrong_quote");
         } else {
-            runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_quote_5X.runTest");
+            runSqlTest("features/multibyte_delimiter/two_byte_with_wrong_quote_5X");
         }
     }
 
@@ -381,7 +381,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_twobyte_withquote_withescape_data", dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_quote_and_escape.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte_with_quote_and_escape");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -395,7 +395,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_twobyte_wrong_escape_data", tableSpec, dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_wrong_escape.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte_with_wrong_escape");
     }
 
     // users should still be able to use a normal delimiter with this formatter
@@ -406,7 +406,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_onebyte_data", dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.one_byte.runTest");
+        runSqlTest("features/multibyte_delimiter/one_byte");
     }
 
 
@@ -424,7 +424,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_onecol_data", dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.one_col.runTest");
+        runSqlTest("features/multibyte_delimiter/one_col");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -441,7 +441,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_onecol_quote_data", dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.one_col_quote.runTest");
+        runSqlTest("features/multibyte_delimiter/one_col_quote");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -467,7 +467,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
                 protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory())+ "/bzip2/",
                 new String[] {"delimiter='¤'"});
 
-        runTincTest("pxf.features.multibyte_delimiter.two_byte_with_bzip2.runTest");
+        runSqlTest("features/multibyte_delimiter/two_byte_with_bzip2");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -479,7 +479,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_quote_escape_newline_data", dataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.quote_escape_newline.runTest");
+        runSqlTest("features/multibyte_delimiter/quote_escape_newline");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -508,7 +508,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_encoding", encodedDataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.encoding.runTest");
+        runSqlTest("features/multibyte_delimiter/encoding");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -527,7 +527,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_encoding_bytes", tableSpec, encodedDataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.encoding_bytes.runTest");
+        runSqlTest("features/multibyte_delimiter/encoding_bytes");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -543,7 +543,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_encoding_quote", encodedDataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.encoding_quote.runTest");
+        runSqlTest("features/multibyte_delimiter/encoding_quote");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -559,7 +559,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         runScenario("pxf_multibyte_encoding_quote_escape", encodedDataTable, fileSpec);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.encoding_quote_escape.runTest");
+        runSqlTest("features/multibyte_delimiter/encoding_quote_escape");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -579,7 +579,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
                 "file://" + resourcePath + "simple.json", null);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.wrong_profile.runTest");
+        runSqlTest("features/multibyte_delimiter/wrong_profile");
     }
 
     @Test(groups = {"gpdb", "hcfs", "security"})
@@ -595,7 +595,7 @@ public class MultibyteDelimiterTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         // verify results
-        runTincTest("pxf.features.multibyte_delimiter.no_profile.runTest");
+        runSqlTest("features/multibyte_delimiter/no_profile");
     }
 
     private void createCsvExternalTable(String name, String[] cols, String path, String[] formatterOptions) throws Exception {

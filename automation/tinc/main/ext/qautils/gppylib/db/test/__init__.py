@@ -1,9 +1,0 @@
-import unittest2 as unittest
-from qautils.gppylib.db.dbconn import connect, DbURL
-
-def skipIfDatabaseDown():
-    try:
-        dbconn = connect(DbURL())
-    except:
-        return unittest.skip("database must be up")
-    return lambda o: o             

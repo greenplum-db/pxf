@@ -128,7 +128,7 @@ public class HBaseProxySmokeTest extends BaseSmoke {
 
     @Override
     protected void queryResults() throws Exception {
-        runTincTest("pxf.proxy.hbase_small_data.runTest");
+        runSqlTest("proxy/hbase_small_data");
     }
 
     @Test(groups = { "proxy", "hbase" })

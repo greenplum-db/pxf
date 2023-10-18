@@ -117,8 +117,8 @@ public class HcfsFixedwidthWriteTest extends BaseWritableFeature {
 
     /**
      * Runs a test scenario of inserting data from Greenplum internal table into a PXF writable external table
-     * and then reading it back using PXF readable external table in the Tinc test
-     * @param name name of the scenario, used by convention in names of external tables and tinc tests
+     * and then reading it back using PXF readable external table in the SQL test
+     * @param name name of the scenario, used by convention in names of external tables and SQL tests
      * @param formatterDelimiter delimiter value to specify for fixedwidth formatter
      * @param pxfDelimiter delimiter value to specify for PXF external table NEWLINE option
      * @param compression true if compression should be use for writable table, false otherwise
@@ -156,7 +156,7 @@ public class HcfsFixedwidthWriteTest extends BaseWritableFeature {
         }
         gpdb.createTableAndVerify(readableExTable);
 
-        runTincTest("pxf.features.hcfs.fixedwidth.write.small_data_correct_" + name + ".runTest");
+        runSqlTest("features/hcfs/fixedwidth/write/small_data_correct_" + name);
     }
 
     /**

@@ -92,7 +92,7 @@ public class S3SelectTest extends BaseFeature {
     @Test(groups = {"gpdb", "s3"})
     public void testCsvWithHeadersUsingHeaderInfoWithWrongColumnNames() throws Exception {
         String[] userParameters = {"FILE_HEADER=USE", "S3_SELECT=ON"};
-        runTestScenario("errors.", "csv_use_headers_with_wrong_col_names", "s3", "csv", s3Path,
+        runTestScenario("errors/", "csv_use_headers_with_wrong_col_names", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleCsvFile, "/" + s3Path + sampleCsvFile,
                 "|", userParameters, PXF_S3_SELECT_INVALID_COLS);
     }
@@ -207,6 +207,6 @@ public class S3SelectTest extends BaseFeature {
 
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest(String.format("pxf.features.s3_select.%s%s.runTest", qualifier, name));
+        runSqlTest(String.format("features/s3_select/%s%s", qualifier, name));
     }
 }

@@ -17,9 +17,6 @@ su - gpadmin -c ${SCRIPT_DIR}/install_greenplum.bash
 source ~gpadmin/.pxfrc
 chown -R gpadmin:gpadmin ${GPHOME}
 
-# rename python distro shipped with Greenplum so that system python is used for Tinc tests
-mv ${GPHOME}/ext/python/ ${GPHOME}/ext/python2
-
 # remove existing PXF, if any, that could come pre-installed with Greenplum RPM
 if [[ -d ${GPHOME}/pxf ]]; then
     echo; echo "=====> Removing PXF installed with GPDB <====="; echo

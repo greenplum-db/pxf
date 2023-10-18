@@ -132,7 +132,7 @@ public class HiveVectorizedOrcTest extends HiveBaseTest {
         gpdb.createTableAndVerify(gpdbNativeTable);
         gpdb.copyData(exTable, gpdbNativeTable);
 
-        runTincTest("pxf.features.hive.orc_primitive_types_no_timestamp.runTest");
+        runSqlTest("features/hive/orc_primitive_types_no_timestamp");
     }
 
     @Test(groups = { "hive", "features", "gpdb", "security" })
@@ -155,7 +155,7 @@ public class HiveVectorizedOrcTest extends HiveBaseTest {
         exTable.setUserParameters(new String[] { "VECTORIZE=true" });
         createTable(exTable);
 
-        runTincTest("pxf.features.hive.orc_repeating.runTest");
+        runSqlTest("features/hive/orc_repeating");
     }
 
 }

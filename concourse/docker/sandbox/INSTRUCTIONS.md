@@ -2,7 +2,7 @@
 
 
 This PXF Sandbox (docker image) is available in docker hub (only accessible by gpdb-ud group).
- 
+
 ```
 docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb<gp_ver>-centos7-test-pxf:latest
 ```
@@ -42,7 +42,7 @@ sed -i "s/^UsePAM yes/UsePAM no/g" /etc/ssh/sshd_config
 
 ## Setup Hadoop/PXF
 ```
-export JAVA_HOME=/etc/alternatives/java_sdk 
+export JAVA_HOME=/etc/alternatives/java_sdk
 export GPHOME=/usr/local/greenplum-db-devel
 export PXF_HOME=${GPHOME}/pxf
 export singlecluster=/singlecluster
@@ -71,8 +71,6 @@ popd
 hostname -f > /tmp/hosts.txt
 /usr/sbin/sshd
 su --login --command "source /usr/local/greenplum-db-devel/greenplum_path.sh && gpseginstall -f /tmp/hosts.txt -u gpadmin -p gpadmin"
-psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
-cp -r ${psi_dir} ${GPHOME}/lib/python
 
 cd && rm -f run.sh
 echo /usr/sbin/sshd >> run.sh
@@ -80,7 +78,7 @@ echo export JAVA_HOME=/etc/alternatives/java_sdk >> run.sh
 export GPHOME=/usr/local/greenplum-db-devel >> run.sh
 echo /singlecluster/bin/start-hdfs.sh >> run.sh
 echo 'su gpadmin -c "export JAVA_HOME=/etc/alternatives/java_sdk && /usr/local/greenplum-db-devel/pxf/bin/pxf start"' >> run.sh
-echo 'su gpadmin -c "source /usr/local/greenplum-db-devel/greenplum_path.sh && export MASTER_DATA_DIRECTORY=/home/gpadmin/data/master/gpseg-1 && gpstart -a"' >> run.sh 
+echo 'su gpadmin -c "source /usr/local/greenplum-db-devel/greenplum_path.sh && export MASTER_DATA_DIRECTORY=/home/gpadmin/data/master/gpseg-1 && gpstart -a"' >> run.sh
 chmod +x run.sh
 # cat run.sh
 ```
@@ -132,8 +130,6 @@ chown -R gpadmin:gpadmin /usr/local/greenplum-db-devel
 su - gpadmin
 
 # Create demo cluster with GPDB
-sudo pip install psi
-sudo cp -r $(find /usr/lib64 -name psi | sort -r | head -1) ${GPHOME}/lib/python
 cd /home/build/gpdb
 source /usr/local/greenplum-db-devel/greenplum_path.sh
 make create-demo-cluster

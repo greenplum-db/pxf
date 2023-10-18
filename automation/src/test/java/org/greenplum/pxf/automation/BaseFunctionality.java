@@ -50,13 +50,13 @@ public abstract class BaseFunctionality extends BaseTestParent {
     }
 
     @Override
-    protected void runTincTest(String tincTest) throws Exception {
+    protected void runSqlTest(String sqlTestPath) throws Exception {
         try {
-            if (!tincTest.contains("hcatalog")) {
-                super.runTincTest(tincTest);
+            if (!sqlTestPath.contains("hcatalog")) {
+                super.runSqlTest(sqlTestPath);
             }  // else These features/test cases are not supported. Do Nothing.
         } catch (Exception e) {
-            throw new Exception("Tinc Failure (" + e.getMessage() + ")");
+            throw new Exception("Regress Failure (" + e.getMessage() + ")");
         }
     }
 }

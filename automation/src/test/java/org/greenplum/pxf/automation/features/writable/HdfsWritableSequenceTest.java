@@ -147,7 +147,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
 
                 Assert.assertNotEquals(hdfs.listSize(hdfsDir), 0);
 
-                runTincTest("pxf.features.hdfs.readable.sequence.custom_writable.runTest");
+                runSqlTest("features/hdfs/readable/sequence/custom_writable");
                 ++testNum;
             }
         }
@@ -173,7 +173,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
 
         readableExTable = prepareReadableSequenceTable("pxf_sequence_circle_type_r",
                 fields, hdfsDir, schemaPackage + customSchemaWithCircleFileName);
-        runTincTest("pxf.features.hdfs.writable.sequence.circle.runTest");
+        runSqlTest("features/hdfs/writable/sequence/circle");
     }
 
     /**
@@ -257,7 +257,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
 
         readableExTable = prepareReadableSequenceTable("pxf_recordkey_text_type_r",
                 fields, hdfsDir, schemaPackage + customSchemaFileName);
-        runTincTest("pxf.features.hdfs.writable.sequence.recordkey_text.runTest");
+        runSqlTest("features/hdfs/writable/sequence/recordkey_text");
     }
 
     /**
@@ -294,7 +294,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
 
         readableExTable = prepareReadableSequenceTable("pxf_recordkey_int_type_r",
                 fields, hdfsDir, schemaPackage + customSchemaFileName);
-        runTincTest("pxf.features.hdfs.writable.sequence.recordkey_int.runTest");
+        runSqlTest("features/hdfs/writable/sequence/recordkey_int");
     }
 
     /**

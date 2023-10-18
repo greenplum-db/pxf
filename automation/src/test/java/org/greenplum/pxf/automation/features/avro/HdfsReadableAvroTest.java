@@ -150,7 +150,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         prepareReadableTable("avrotest_simple", new String[]{"name text", "age int"}, hdfsPath + avroSimpleFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.simple.runTest");
+        runSqlTest("features/hdfs/readable/avro/simple");
     }
 
     /**
@@ -171,7 +171,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 "type_boolean  bool"}, hdfsPath + avroTypesFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.supported_primitive_types.runTest");
+        runSqlTest("features/hdfs/readable/avro/supported_primitive_types");
     }
 
     /**
@@ -188,7 +188,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.array_types.runTest");
+        runSqlTest("features/hdfs/readable/avro/array_types");
     }
 
     /**
@@ -201,7 +201,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         prepareReadableTable("avrotest_complex", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.complex_types.runTest");
+        runSqlTest("features/hdfs/readable/avro/complex_types");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -211,7 +211,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setFormat("TEXT");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.complex_types_text.runTest");
+        runSqlTest("features/hdfs/readable/avro/complex_types_text");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -221,7 +221,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setFormat("CSV");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.complex_types_csv.runTest");
+        runSqlTest("features/hdfs/readable/avro/complex_types_csv");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -239,7 +239,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 hdfsPath + avroLogicalTypeFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.logical_types.runTest");
+        runSqlTest("features/hdfs/readable/avro/logical_types");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -254,7 +254,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
             hdfsPath + avroLogicalDecimalTypeFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.logical_decimal_types.runTest");
+        runSqlTest("features/hdfs/readable/avro/logical_decimal_types");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -272,7 +272,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 hdfsPath + arrayOfLogicalTypesFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.array_of_logical_types.runTest");
+        runSqlTest("features/hdfs/readable/avro/array_of_logical_types");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -285,7 +285,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setExternalDataSchema(schemaPath);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.errors.logical_incorrect_schema_test.runTest");
+        runSqlTest("features/hdfs/readable/avro/errors/logical_incorrect_schema_test");
     }
 
     /**
@@ -301,7 +301,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setExternalDataSchema(schemaPath);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.complex_types.runTest");
+        runSqlTest("features/hdfs/readable/avro/complex_types");
     }
 
     /**
@@ -316,7 +316,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setExternalDataSchema(schemaPath);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.complex_types.runTest");
+        runSqlTest("features/hdfs/readable/avro/complex_types");
     }
 
     /**
@@ -329,7 +329,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         prepareReadableTable("avrotest_null", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.null_values.runTest");
+        runSqlTest("features/hdfs/readable/avro/null_values");
     }
 
     /**
@@ -368,7 +368,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 "meta_handlers                varchar(1000)"}, hdfsPath + avroComplexNullFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.complex_null_values.runTest");
+        runSqlTest("features/hdfs/readable/avro/complex_null_values");
     }
 
     /**
@@ -383,7 +383,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setExternalDataSchema(avroInSequenceArraysSchemaFile);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.avro_in_sequence_arrays.runTest");
+        runSqlTest("features/hdfs/readable/avro/avro_in_sequence_arrays");
     }
 
     /**
@@ -399,7 +399,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setFormatter("pxfwritable_import");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.avro_in_sequence_arrays.runTest");
+        runSqlTest("features/hdfs/readable/avro/avro_in_sequence_arrays");
     }
 
 
@@ -417,7 +417,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setExternalDataSchema(schemaPath);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.avro_in_sequence_arrays.runTest");
+        runSqlTest("features/hdfs/readable/avro/avro_in_sequence_arrays");
     }
 
     /**
@@ -447,7 +447,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.multi_files.runTest");
+        runSqlTest("features/hdfs/readable/avro/multi_files");
     }
 
     /**
@@ -471,7 +471,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
             prepareReadableTable("avro_codec", AVRO_SEQUENCE_FILE_FIELDS, fileName);
             gpdb.createTableAndVerify(exTable);
             // Verify results
-            runTincTest("pxf.features.hdfs.readable.avro.codec.runTest");
+            runSqlTest("features/hdfs/readable/avro/codec");
         }
     }
 
@@ -489,7 +489,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 "alive boolean"}, hdfsPath + avroSimpleFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.errors.extra_field.runTest");
+        runSqlTest("features/hdfs/readable/avro/errors/extra_field");
     }
 
     /**
@@ -505,7 +505,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 hdfsPath + avroSimpleFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.errors.missing_field.runTest");
+        runSqlTest("features/hdfs/readable/avro/errors/missing_field");
     }
 
     /**
@@ -522,7 +522,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setExternalDataSchema("i_do_not_exist");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.avro.errors.no_schema_file.runTest");
+        runSqlTest("features/hdfs/readable/avro/errors/no_schema_file");
     }
 
     private void prepareData() throws Exception {

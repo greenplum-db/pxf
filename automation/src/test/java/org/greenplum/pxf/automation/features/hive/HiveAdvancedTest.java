@@ -6,7 +6,6 @@ import org.greenplum.pxf.automation.AdvancedFunctionality;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
-import org.testng.annotations.Test;
 
 /**
  * Tests Hive plugin in PXF
@@ -38,6 +37,6 @@ public class HiveAdvancedTest extends AdvancedFunctionality {
         exTable.setPort(pxfPort);
         gpdb.createTableAndVerify(exTable);
         cluster.stop(PhdCluster.EnumClusterServices.hive);
-        runTincTest("pxf.features.hive.errors.hiveMetastoreDown.runTest");
+        runSqlTest("features/hive/errors/hiveMetastoreDown");
     }
 }

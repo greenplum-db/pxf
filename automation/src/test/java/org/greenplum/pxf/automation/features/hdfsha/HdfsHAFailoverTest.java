@@ -41,20 +41,20 @@ public class HdfsHAFailoverTest extends BaseFunctionality {
         // create PXF external table for impersonation based on Constrained Delegation
         createReadablePxfTable("hdfs-ipa", locationTestUser);
 
-        // run tinc to read PXF data, it will issue 2 queries per PXF server to cache the tokens / use them
-        runTincTest("pxf.features.hdfsha.step_1_pre_failover.runTest");
+        // run SQL test to read PXF data, it will issue 2 queries per PXF server to cache the tokens / use them
+        runSqlTest("features/hdfsha/step_1_pre_failover");
 
         // failover the namenode to standby
         hdfs.failover("nn01", "nn02");
 
-        // run tinc to read PXF data, it will issue 2 queries per PXF server to cache the tokens / use them
-        runTincTest("pxf.features.hdfsha.step_2_after_failover.runTest");
+        // run SQL test to read PXF data, it will issue 2 queries per PXF server to cache the tokens / use them
+        runSqlTest("features/hdfsha/step_2_after_failover");
 
         // failover the namenode back
         hdfs.failover("nn02", "nn01");
 
-        // run tinc to read PXF data, it will issue 2 queries per PXF server to cache the tokens / use them
-        runTincTest("pxf.features.hdfsha.step_3_after_failover_back.runTest");
+        // run SQL test to read PXF data, it will issue 2 queries per PXF server to cache the tokens / use them
+        runSqlTest("features/hdfsha/step_3_after_failover_back");
     }
 
     private String prepareData(String hdpUser) throws Exception {

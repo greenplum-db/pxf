@@ -94,7 +94,7 @@ public class AlterTableTest extends BaseFeature {
                 PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet/" + PARQUET_PRIMITIVE_TYPES, "parquet");
         setParamsAndVerifyTable();
 
-        runTincTest("pxf.features.general.alter.pxfwritable_import.with_column_projection.runTest");
+        runSqlTest("features/general/alter/pxfwritable_import/with_column_projection");
     }
 
     // TODO: Determine the reason why FDW is failing with the below class cast exception:
@@ -123,7 +123,7 @@ public class AlterTableTest extends BaseFeature {
                 PARQUET_TABLE_SUBSET_COLUMNS, hdfsPath + "/parquet-write/" + PARQUET_WRITE_PRIMITIVES, "parquet");
         setParamsAndVerifyTable();
 
-        runTincTest("pxf.features.general.alter.pxfwritable_export.parquet.runTest");
+        runSqlTest("features/general/alter/pxfwritable_export/parquet");
     }
 
     @Test(groups = {"features", "gpdb", "security"})
@@ -141,7 +141,7 @@ public class AlterTableTest extends BaseFeature {
         setParamsAndVerifyTable();
 
         // Verify results
-        runTincTest("pxf.features.general.alter.pxfwritable_import.without_column_projection.runTest");
+        runSqlTest("features/general/alter/pxfwritable_import/without_column_projection");
     }
 
     /**
@@ -167,7 +167,7 @@ public class AlterTableTest extends BaseFeature {
                 }, hdfsPath + "/csv/" + fileName, ",");
         setParamsAndVerifyTable();
 
-        runTincTest("pxf.features.general.alter.csv.runTest");
+        runSqlTest("features/general/alter/csv");
     }
 
     private void setParamsAndVerifyTable() throws Exception

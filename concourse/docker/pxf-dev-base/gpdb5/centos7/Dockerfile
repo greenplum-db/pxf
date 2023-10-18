@@ -49,8 +49,6 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && echo -e "password\npassword" | passwd gpadmin 2> /dev/null \
     && { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts \
     && chown -R gpadmin:gpadmin /home/gpadmin/.ssh \
-    # install psi
-    && /usr/bin/pip install psi --no-cache-dir \
     # remove any java customization
     && rm -rf /etc/profile.d/java.sh \
     # configure gpadmin limits

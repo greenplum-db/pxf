@@ -135,13 +135,13 @@ public class ColumnProjectionTest extends BaseFeature {
              (16 rows)
              */
             if (FDWUtils.useFDW) {
-                runTincTest("pxf.features.columnprojection.checkColumnProjection_fdw.runTest");
+                runSqlTest("features/columnprojection/checkColumnProjection_fdw");
             }
             else {
-                runTincTest("pxf.features.columnprojection.checkColumnProjection_gp7.runTest");
+                runSqlTest("features/columnprojection/checkColumnProjection_gp7");
             }
         } else {
-            runTincTest("pxf.features.columnprojection.checkColumnProjection.runTest");
+            runSqlTest("features/columnprojection/checkColumnProjection");
         }
     }
 }

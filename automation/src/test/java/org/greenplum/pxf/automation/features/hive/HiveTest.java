@@ -160,8 +160,8 @@ public class HiveTest extends HiveBaseTest {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
-        runTincTest("pxf.features.hcatalog.small_data.runTest");
+        runSqlTest("features/hive/small_data");
+        runSqlTest("features/hcatalog/small_data");
     }
 
     @Test(groups = {"features", "security"})
@@ -174,7 +174,7 @@ public class HiveTest extends HiveBaseTest {
                 prepareTableData(hdfsNonSecure, hiveNonSecure, null, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME_3);
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE_NON_SECURE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable3, true, "SERVER=hdfs-non-secure");
 
-        runTincTest("pxf.features.hive.secured_and_non_secured_hive.runTest");
+        runSqlTest("features/hive/secured_and_non_secured_hive");
     }
 
     /**
@@ -188,8 +188,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(GPDB_HIVE_TYPES_TABLE,
                 PXF_HIVE_TYPES_COLS, hiveTypesTable);
 
-        runTincTest("pxf.features.hive.primitive_types.runTest");
-        runTincTest("pxf.features.hcatalog.primitive_types.runTest");
+        runSqlTest("features/hive/primitive_types");
+        runSqlTest("features/hcatalog/primitive_types");
     }
 
     /**
@@ -204,7 +204,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SUBSET_COLS, hiveSmallDataTable);
 
-        runTincTest("pxf.features.hive.column_subset.runTest");
+        runSqlTest("features/hive/column_subset");
     }
 
     /**
@@ -221,7 +221,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SUBSET_FMT_COLS, hivePartitionedTable);
 
-        runTincTest("pxf.features.hive.column_subset_partitioned_table.runTest");
+        runSqlTest("features/hive/column_subset_partitioned_table");
     }
 
     /**
@@ -238,17 +238,17 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveParquetForAlterTable);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
+        runSqlTest("features/hive/small_data");
 
         hive.runQuery("ALTER TABLE " + hiveParquetForAlterTable.getName() + " ADD COLUMNS (new1 int)");
         hive.runQuery("INSERT INTO TABLE " + hiveParquetForAlterTable.getName() +
                 " VALUES ('row11', 's_16', 11, 16, 100)");
 
         // Re-run the test to make sure we can still read the hive table
-        runTincTest("pxf.features.hive.small_data.runTest");
+        runSqlTest("features/hive/small_data");
 
         gpdb.runQuery("ALTER EXTERNAL TABLE " + PXF_HIVE_SMALL_DATA_TABLE + " ADD COLUMN new1 INT");
-        runTincTest("pxf.features.hive.small_data_alter.runTest");
+        runSqlTest("features/hive/small_data_alter");
     }
 
     /**
@@ -263,7 +263,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_BINARY_TABLE,
                 new String[]{"b1 BYTEA"}, hiveBinaryTable);
 
-        runTincTest("pxf.features.hive.binary_data.runTest");
+        runSqlTest("features/hive/binary_data");
     }
 
     /**
@@ -278,8 +278,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcTable);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
-        runTincTest("pxf.features.hcatalog.small_data_orc.runTest");
+        runSqlTest("features/hive/small_data");
+        runSqlTest("features/hcatalog/small_data_orc");
     }
 
     /**
@@ -294,8 +294,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveRcTable, false);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
-        runTincTest("pxf.features.hcatalog.small_data_rc.runTest");
+        runSqlTest("features/hive/small_data");
+        runSqlTest("features/hcatalog/small_data_rc");
     }
 
     /**
@@ -310,8 +310,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveSequenceTable);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
-        runTincTest("pxf.features.hcatalog.small_data_seq.runTest");
+        runSqlTest("features/hive/small_data");
+        runSqlTest("features/hcatalog/small_data_seq");
     }
 
     /**
@@ -326,8 +326,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveParquetTable);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
-        runTincTest("pxf.features.hcatalog.small_data_parquet.runTest");
+        runSqlTest("features/hive/small_data");
+        runSqlTest("features/hcatalog/small_data_parquet");
     }
 
     /**
@@ -342,7 +342,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_AS_TEXT_COLS, hiveOpenCsvTable);
 
-        runTincTest("pxf.features.hive.small_data_as_text.runTest");
+        runSqlTest("features/hive/small_data_as_text");
     }
 
     /**
@@ -357,8 +357,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveAvroTable);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
-        runTincTest("pxf.features.hcatalog.small_data_avro.runTest");
+        runSqlTest("features/hive/small_data");
+        runSqlTest("features/hcatalog/small_data_avro");
     }
 
     /**
@@ -376,8 +376,8 @@ public class HiveTest extends HiveBaseTest {
 
         createExternalTable("pxf_hive_view_table", new String[]{"t1 TEXT"}, hiveTable);
 
-        runTincTest("pxf.features.hive.errors.hiveViews.runTest");
-        runTincTest("pxf.features.hcatalog.errors.hiveViews.runTest");
+        runSqlTest("features/hive/errors/hiveViews");
+        runSqlTest("features/hcatalog/errors/hiveViews");
     }
 
     /**
@@ -392,8 +392,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable("pxf_none_hive_table",
                 new String[]{"t1    TEXT", "num1  INTEGER"}, hiveTable);
 
-        runTincTest("pxf.features.hive.errors.notExistingHiveTable.runTest");
-        runTincTest("pxf.features.hcatalog.errors.notExistingHiveTable.runTest");
+        runSqlTest("features/hive/errors/notExistingHiveTable");
+        runSqlTest("features/hcatalog/errors/notExistingHiveTable");
     }
 
     /**
@@ -409,8 +409,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_PARTITIONED_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hivePartitionedTable);
 
-        runTincTest("pxf.features.hive.hive_partitioned_table.runTest");
-        runTincTest("pxf.features.hcatalog.hive_partitioned_table.runTest");
+        runSqlTest("features/hive/hive_partitioned_table");
+        runSqlTest("features/hcatalog/hive_partitioned_table");
     }
 
     /**
@@ -429,7 +429,7 @@ public class HiveTest extends HiveBaseTest {
 
         createExternalTable(PXF_HIVE_PARQUET_TIMESTAMP_TABLE, PARQUET_TIMESTAMP_COLS, parquetTimestampTable);
 
-        runTincTest("pxf.features.hive.parquet_timestamp.runTest");
+        runSqlTest("features/hive/parquet_timestamp");
     }
 
     /**
@@ -453,7 +453,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_PARTITIONED_PPD_TABLE,
                 PXF_HIVE_SMALLDATA_PPD_COLS, hivePartitionedPPDTable);
 
-        runTincTest("pxf.features.hive.hive_partitioned_ppd_table.runTest");
+        runSqlTest("features/hive/hive_partitioned_ppd_table");
     }
 
     /**
@@ -512,7 +512,7 @@ public class HiveTest extends HiveBaseTest {
         exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
         createTable(exTable);
 
-        runTincTest("pxf.features.hive.hive_partitioned_ppd_table_customfilters.runTest");
+        runSqlTest("features/hive/hive_partitioned_ppd_table_customfilters");
     }
 
     /**
@@ -529,7 +529,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_PARTITIONED_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hivePartitionedTable);
 
-        runTincTest("pxf.features.hive.hive_partitioned_table_union_all.runTest");
+        runSqlTest("features/hive/hive_partitioned_table_union_all");
     }
 
     /**
@@ -548,7 +548,7 @@ public class HiveTest extends HiveBaseTest {
         gpdb.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
                 "ANALYZE for Hive plugin is not supported", true);
 
-        runTincTest("pxf.features.hive.default_analyze.runTest");
+        runSqlTest("features/hive/default_analyze");
     }
 
     /**
@@ -564,8 +564,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_COLLECTIONS_TABLE,
                 PXF_HIVE_COLLECTION_COLS, hiveCollectionTable);
 
-        runTincTest("pxf.features.hive.collection_types.runTest");
-        runTincTest("pxf.features.hcatalog.collection_types.runTest");
+        runSqlTest("features/hive/collection_types");
+        runSqlTest("features/hcatalog/collection_types");
     }
 
     /**
@@ -583,7 +583,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 tableFieldTypes, hiveSmallDataTable);
 
-        runTincTest("pxf.features.hive.errors.columnDataTypeMisMatch.runTest");
+        runSqlTest("features/hive/errors/columnDataTypeMisMatch");
     }
 
     /**
@@ -599,7 +599,7 @@ public class HiveTest extends HiveBaseTest {
         exTable.setProfile(EnumPxfDefaultProfiles.HBase.toString());
         createTable(exTable);
 
-        runTincTest("pxf.features.hive.errors.incorrectProfile.runTest");
+        runSqlTest("features/hive/errors/incorrectProfile");
     }
 
     /**
@@ -620,7 +620,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 nonMatchingColumnNames, hiveSmallDataTable);
 
-        runTincTest("pxf.features.hive.errors.columnNameMismatch.runTest");
+        runSqlTest("features/hive/errors/columnNameMismatch");
     }
 
     /**
@@ -641,8 +641,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveTable);
 
-        runTincTest("pxf.features.hive.noDataFilePresentForHive.runTest");
-        runTincTest("pxf.features.hcatalog.noDataFilePresentForHive.runTest");
+        runSqlTest("features/hive/noDataFilePresentForHive");
+        runSqlTest("features/hcatalog/noDataFilePresentForHive");
     }
 
     /**
@@ -713,7 +713,7 @@ public class HiveTest extends HiveBaseTest {
         exTable.setName(extTableName + "_complex");
         createTable(exTable);
 
-        runTincTest("pxf.features.hive.partitionFilterPushDown.runTest");
+        runSqlTest("features/hive/partitionFilterPushDown");
     }
 
     /**
@@ -745,7 +745,7 @@ public class HiveTest extends HiveBaseTest {
         exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
         createTable(exTable);
 
-        runTincTest("pxf.features.hive.errors.invalidFilterPushDown.runTest");
+        runSqlTest("features/hive/errors/invalidFilterPushDown");
     }
 
     /**
@@ -763,8 +763,8 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(HIVE_PARTITIONS_ALL_TYPES,
                 PXF_HIVE_TYPES_COLS, hiveManyPartitionsTable);
 
-        runTincTest("pxf.features.hive.partitions_all_types.runTest");
-        runTincTest("pxf.features.hcatalog.partitions_all_types.runTest");
+        runSqlTest("features/hive/partitions_all_types");
+        runSqlTest("features/hcatalog/partitions_all_types");
     }
 
     /**
@@ -862,7 +862,7 @@ public class HiveTest extends HiveBaseTest {
         // Create pxf table
         createExternalTable("hive_30k_parts", new String[]{"i INT", "date_i TEXT"}, hiveTable);
 
-        runTincTest("pxf.features.hive.partitions_30k.runTest");
+        runSqlTest("features/hive/partitions_30k");
     }
 
     /**
@@ -875,7 +875,7 @@ public class HiveTest extends HiveBaseTest {
 
         // start transaction, query tables, stop transaction. then query different tables in the same session.
         preparePartitionedData();
-        runTincTest("pxf.features.hcatalog.transaction.runTest");
+        runSqlTest("features/hcatalog/transaction");
     }
 
     /**
@@ -891,7 +891,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_PARTITIONED_CLUSTERED_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hivePartitionedClusteredTable);
 
-        runTincTest("pxf.features.hcatalog.hive_partitioned_clustered_table.runTest");
+        runSqlTest("features/hcatalog/hive_partitioned_clustered_table");
     }
 
     /**
@@ -907,7 +907,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_PARTITIONED_CLUSTERED_SORTED_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hivePartitionedClusteredSortedTable);
 
-        runTincTest("pxf.features.hcatalog.hive_partitioned_clustered_sorted_table.runTest");
+        runSqlTest("features/hcatalog/hive_partitioned_clustered_sorted_table");
     }
 
     /**
@@ -924,7 +924,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_PARTITIONED_SKEWED_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hivePartitionedSkewedTable);
 
-        runTincTest("pxf.features.hcatalog.hive_partitioned_skewed_table.runTest");
+        runSqlTest("features/hcatalog/hive_partitioned_skewed_table");
     }
 
     /**
@@ -940,7 +940,7 @@ public class HiveTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_PARTITIONED_SKEWED_STORED_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hivePartitionedSkewedStoredAsDirsTable);
 
-        runTincTest("pxf.features.hcatalog.hive_partitioned_skewed_stored_as_dirs_table.runTest");
+        runSqlTest("features/hcatalog/hive_partitioned_skewed_stored_as_dirs_table");
     }
 
     /**
@@ -1034,7 +1034,7 @@ public class HiveTest extends HiveBaseTest {
         // Create Hive table with partitions, when each partition has different data
         createGenerateHivePartitionTable("reg_heterogen_diff_data_partitions");
 
-        runTincTest("pxf.features.hcatalog.heterogeneous_table.runTest");
+        runSqlTest("features/hcatalog/heterogeneous_table");
     }
 
     /**
@@ -1053,8 +1053,8 @@ public class HiveTest extends HiveBaseTest {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS, hiveTable);
 
-        runTincTest("pxf.features.hcatalog.aggregate_queries.runTest");
-        runTincTest("pxf.features.hive.aggregate_queries.runTest");
+        runSqlTest("features/hcatalog/aggregate_queries");
+        runSqlTest("features/hive/aggregate_queries");
     }
 
     /**
@@ -1075,7 +1075,7 @@ public class HiveTest extends HiveBaseTest {
 
         createExternalTable("pxf_hive_table_with_skipheader", PXF_HIVE_SMALLDATA_COLS, hiveTableWithSkipHeader);
 
-        runTincTest("pxf.features.hive.skip_header_rows.runTest");
+        runSqlTest("features/hive/skip_header_rows");
     }
 
     /**
@@ -1095,7 +1095,7 @@ public class HiveTest extends HiveBaseTest {
         // create PXF external table with a narrower subset of columns (no 'ext_par' and 'ext_hive_par' columns)
         createExternalTable("pxf_hive_parquet_mismatch", PXF_HIVE_PARQUET_MISMATCH_COLS, hiveParquetMismatchTable);
 
-        runTincTest("pxf.features.hive.parquet_mismatch.runTest");
+        runSqlTest("features/hive/parquet_mismatch");
     }
 
     /**
@@ -1120,7 +1120,7 @@ public class HiveTest extends HiveBaseTest {
 
         createExternalTable(PXF_HIVE_NESTED_STRUCT_TABLE, PXF_HIVE_NESTED_STRUCT_COLS, hiveNestedStructTable);
 
-        runTincTest("pxf.features.hive.nested_struct.runTest");
+        runSqlTest("features/hive/nested_struct");
 
         // recreate table stored as TEXTFILE
         hiveNestedStructTable = new HiveTable(HIVE_NESTED_STRUCT_TABLE, HIVE_NESTED_STRUCT_COLS);
@@ -1134,7 +1134,7 @@ public class HiveTest extends HiveBaseTest {
                 " SELECT NAMED_STRUCT('field1', NAMED_STRUCT('subfield1', 'a really \"fancy\" string', 'subfield2', 'test string'), 'field2', 1002) as t1" +
                 " FROM " + HIVE_SMALL_DATA_TABLE + " LIMIT 1");
 
-        runTincTest("pxf.features.hive.nested_struct.runTest");
+        runSqlTest("features/hive/nested_struct");
     }
 
 }

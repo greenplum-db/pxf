@@ -1,9 +1,0 @@
-[ccltest]
-Description=PostgresSQL driver for greenplum
-Driver=unset
-Database=gptest
-Servername=127.0.0.1
-UserName=gpadmin
-Password=
-Port=5432
-ReadOnly=No

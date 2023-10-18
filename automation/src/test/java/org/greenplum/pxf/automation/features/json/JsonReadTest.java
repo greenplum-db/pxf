@@ -4,7 +4,6 @@ import annotations.FailsWithFDW;
 import annotations.WorksWithFDW;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.features.BaseFeature;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
@@ -150,7 +149,7 @@ public class JsonReadTest extends BaseFeature {
         prepareExternalTable("jsontest_simple", new String[]{"name text", "age int"}, hdfsPath + FILENAME_SIMPLE + SUFFIX_JSON, "custom");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.simple.runTest");
+        runSqlTest("features/hdfs/readable/json/simple");
     }
 
     /**
@@ -163,7 +162,7 @@ public class JsonReadTest extends BaseFeature {
         prepareExternalTable("jsontest_supported_primitive_types", SUPPORTED_PRIMITIVE_FIELDS, hdfsPath + FILENAME_TYPES + SUFFIX_JSON, "custom");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.supported_primitive_types.runTest");
+        runSqlTest("features/hdfs/readable/json/supported_primitive_types");
     }
 
     /**
@@ -176,7 +175,7 @@ public class JsonReadTest extends BaseFeature {
         prepareExternalTable("jsontest_supported_primitive_types", SUPPORTED_PRIMITIVE_FIELDS, hdfsPath + FILENAME_TYPES + SUFFIX_JSON, "CSV");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.supported_primitive_types.runTest");
+        runSqlTest("features/hdfs/readable/json/supported_primitive_types");
     }
 
     /**
@@ -198,7 +197,7 @@ public class JsonReadTest extends BaseFeature {
                 "SPLIT_BY_FILE=true"});
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.pretty_print.runTest");
+        runSqlTest("features/hdfs/readable/json/pretty_print");
     }
 
     /**
@@ -219,7 +218,7 @@ public class JsonReadTest extends BaseFeature {
                 "SPLIT_BY_FILE=true"});
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.missing_identifier.runTest");
+        runSqlTest("features/hdfs/readable/json/missing_identifier");
     }
 
     /**
@@ -243,7 +242,7 @@ public class JsonReadTest extends BaseFeature {
                 "SPLIT_BY_FILE=true"});
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.exceed_max_size.runTest");
+        runSqlTest("features/hdfs/readable/json/exceed_max_size");
     }
 
     /**
@@ -275,7 +274,7 @@ public class JsonReadTest extends BaseFeature {
                 "SPLIT_BY_FILE=true"});
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.malformed_record.runTest");
+        runSqlTest("features/hdfs/readable/json/malformed_record");
     }
 
     /**
@@ -298,7 +297,7 @@ public class JsonReadTest extends BaseFeature {
                 "SPLIT_BY_FILE=true"});
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.malformed_record_csv.runTest");
+        runSqlTest("features/hdfs/readable/json/malformed_record_csv");
     }
 
     /**
@@ -324,7 +323,7 @@ public class JsonReadTest extends BaseFeature {
         exTable.setErrorTable("true");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.malformed_record_with_reject_limit.runTest");
+        runSqlTest("features/hdfs/readable/json/malformed_record_with_reject_limit");
     }
 
     /**
@@ -350,7 +349,7 @@ public class JsonReadTest extends BaseFeature {
         exTable.setErrorTable("true");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.malformed_record_with_reject_limit_csv.runTest");
+        runSqlTest("features/hdfs/readable/json/malformed_record_with_reject_limit_csv");
     }
 
     /**
@@ -367,7 +366,7 @@ public class JsonReadTest extends BaseFeature {
         prepareExternalTable("jsontest_mismatched_types", SUPPORTED_PRIMITIVE_FIELDS, hdfsPath + FILENAME_MISMATCHED_TYPES + SUFFIX_JSON, "custom");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.mismatched_types.runTest");
+        runSqlTest("features/hdfs/readable/json/mismatched_types");
     }
 
     /**
@@ -387,7 +386,7 @@ public class JsonReadTest extends BaseFeature {
         exTable.setErrorTable("true");
         gpdb.createTableAndVerify(exTable);
         // Verify results
-        runTincTest("pxf.features.hdfs.readable.json.mismatched_types_with_reject_limit.runTest");
+        runSqlTest("features/hdfs/readable/json/mismatched_types_with_reject_limit");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -406,11 +405,11 @@ public class JsonReadTest extends BaseFeature {
         prepareExternalTable("jsontest_array_as_text_projections", ARRAYS_AS_TEXT_PROJECTIONS_FIELDS, hdfsPath + FILENAME_JSON_ARRAY + SUFFIX_JSON, "custom");
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest("pxf.features.hdfs.readable.json.array_as_text.runTest");
+        runSqlTest("features/hdfs/readable/json/array_as_text");
 
         // test using JSON functions (available in Greenplum 6+) to convert from TEXT fields into native arrays
         if (gpdb.getVersion() >= 6) {
-            runTincTest("pxf.features.hdfs.readable.json.json_functions.runTest");
+            runSqlTest("features/hdfs/readable/json/json_functions");
         }
     }
 

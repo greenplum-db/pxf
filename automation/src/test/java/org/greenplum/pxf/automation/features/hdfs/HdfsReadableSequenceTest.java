@@ -118,6 +118,6 @@ public class HdfsReadableSequenceTest extends BaseFeature {
 
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest("pxf.features.hdfs.readable.sequence.custom_writable.runTest");
+        runSqlTest("features/hdfs/readable/sequence/custom_writable");
     }
 }

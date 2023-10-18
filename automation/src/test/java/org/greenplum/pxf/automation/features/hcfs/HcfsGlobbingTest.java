@@ -113,7 +113,7 @@ public class HcfsGlobbingTest extends BaseFeature {
     }
 
     private void runTestScenario(String testGroup) throws Exception {
-        runTincTest("pxf.features.hcfs.globbing." + testGroup + ".runTest");
+        runSqlTest("features/hcfs/globbing/" + testGroup);
     }
 
     private void prepareTestScenario(String testName, String data1, String data2, String data3, String data4, String glob) throws Exception {

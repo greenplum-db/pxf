@@ -1,7 +1,6 @@
 package org.greenplum.pxf.automation.features.multiserver;
 
 import jsystem.framework.sut.SutFactory;
-import jsystem.framework.system.SystemObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
@@ -182,27 +181,27 @@ public class MultiServerTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security"})
     public void testHdfsAndCloudServers() throws Exception {
-        runTincTest("pxf.features.multi_server.hdfs_and_cloud.runTest");
+        runSqlTest("features/multi_server/hdfs_and_cloud");
     }
 
     @Test(groups = {"features", "multiClusterSecurity"})
     public void testTwoSecuredServers() throws Exception {
-        runTincTest("pxf.features.multi_server.two_secure_hdfs.runTest");
+        runSqlTest("features/multi_server/two_secure_hdfs");
     }
 
     @Test(groups = {"features", "multiClusterSecurity"})
     public void testSecureServerAndNonSecuredServer() throws Exception {
-        runTincTest("pxf.features.multi_server.secure_hdfs_and_non_secure_hdfs.runTest");
+        runSqlTest("features/multi_server/secure_hdfs_and_non_secure_hdfs");
     }
 
     @Test(groups = {"features", "multiClusterSecurity"})
     public void testTwoSecuredServersNonSecureServerAndCloudServer() throws Exception {
         if (hdfsIpa != null) {
             // in an environment with an IPA hadoop cluster run the test that also queries that cluster
-            runTincTest("pxf.features.multi_server.test_all_ipa.runTest");
+            runSqlTest("features/multi_server/test_all_ipa");
         } else {
             // in an environment without an IPA hadoop cluster run the test that does not include queries to IPA cluster
-            runTincTest("pxf.features.multi_server.test_all.runTest");
+            runSqlTest("features/multi_server/test_all");
         }
     }
 }

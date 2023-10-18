@@ -59,6 +59,6 @@ public class FailOverTest extends BaseFeature {
 
         gpdb.createTableAndVerify(pxfExternalTable);
 
-        runTincTest("pxf.features.general.outOfMemory.runTest");
+        runSqlTest("features/general/outOfMemory");
     }
 }

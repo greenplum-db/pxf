@@ -2,13 +2,9 @@ package org.greenplum.pxf.automation.features.filterpushdown;
 
 import annotations.SkipForFDW;
 import annotations.WorksWithFDW;
-import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.features.BaseFeature;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.testng.annotations.Test;
-
-import java.io.File;
 
 /**
  * Functional PXF filter pushdown cases
@@ -35,7 +31,7 @@ public class FilterPushDownTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "security"})
     public void checkFilterPushDown() throws Exception {
         preparePxfTable(COMMA);
-        runTincTest("pxf.features.filterpushdown.checkFilterPushDown.runTest");
+        runSqlTest("features/filterpushdown/checkFilterPushDown");
     }
 
     /**
@@ -46,7 +42,7 @@ public class FilterPushDownTest extends BaseFeature {
     @SkipForFDW // the guc used in the test is not applicable to FDW and has no effect
     public void checkFilterPushDownDisabled() throws Exception {
         preparePxfTable(COMMA);
-        runTincTest("pxf.features.filterpushdown.checkFilterPushDownDisabled.runTest");
+        runSqlTest("features/filterpushdown/checkFilterPushDownDisabled");
     }
 
     /**
@@ -56,7 +52,7 @@ public class FilterPushDownTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "security"})
     public void checkFilterStringHexDelimiter() throws Exception {
         preparePxfTable("E'\\x01'");
-        runTincTest("pxf.features.filterpushdown.checkFilterPushDownHexDelimiter.runTest");
+        runSqlTest("features/filterpushdown/checkFilterPushDownHexDelimiter");
     }
 
     /**

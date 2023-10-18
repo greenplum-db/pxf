@@ -424,7 +424,7 @@ public class HiveTextTest extends HiveBaseTest {
         hive.runQuery("INSERT INTO TABLE " + hiveTable.getName() +
                 " SELECT * FROM " + hiveSmallDataTable.getName());
 
-        runTincTest("pxf.features.hcatalog.hive_text_custom_delimiter.runTest");
+        runSqlTest("features/hcatalog/hive_text_custom_delimiter");
     }
 
     /**
@@ -435,7 +435,7 @@ public class HiveTextTest extends HiveBaseTest {
     @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security"})
     public void hiveTextTableOptimizedProfile() throws Exception {
 
-        runTincTest("pxf.features.hcatalog.heterogeneous_table_three_text_partitions.runTest");
+        runSqlTest("features/hcatalog/heterogeneous_table_three_text_partitions");
     }
 
     /**
@@ -455,8 +455,8 @@ public class HiveTextTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveTable);
 
-        runTincTest("pxf.features.hcatalog.aggregate_queries.runTest");
-        runTincTest("pxf.features.hive.aggregate_queries.runTest");
+        runSqlTest("features/hcatalog/aggregate_queries");
+        runSqlTest("features/hive/aggregate_queries");
     }
 
     /**
@@ -477,7 +477,7 @@ public class HiveTextTest extends HiveBaseTest {
 
         createExternalTable("pxf_hive_table_with_skipheader_text", PXF_HIVE_SMALLDATA_COLS, hiveTableWithSkipHeader);
 
-        runTincTest("pxf.features.hive.text_skip_header_rows.runTest");
+        runSqlTest("features/hive/text_skip_header_rows");
     }
 
     /**

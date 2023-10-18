@@ -63,7 +63,7 @@ function run_pxf_automation() {
 
 	# Let's make sure that automation/singlecluster directories are writeable
 	chmod a+w pxf_src/automation /singlecluster || true
-	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
+	find pxf_src/automation/sqlrepo -type d -exec chmod a+w {} \;
 
 	su gpadmin -c "
 		source '${GPHOME}/greenplum_path.sh' &&

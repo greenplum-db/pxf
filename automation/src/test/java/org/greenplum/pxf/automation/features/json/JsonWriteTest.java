@@ -166,10 +166,10 @@ public class JsonWriteTest extends BaseWritableFeature {
         writableExTable.setEncoding("LATIN1"); // set a non-UTF8 encoding for the table
         createTable(writableExTable);
 
-        // 2. run the Tinc test that inserts data as CTAS, which should fail and verifies the error message
+        // 2. run the SQL test that inserts data as CTAS, which should fail and verifies the error message
         // for external table with pxfwritable_export formatter (default setup for this test) the actual error
         // will be produced by the formatter, not PXF, but for FDW or CSV wire format PXF error should show
-        runTincTest("pxf.features.hdfs.writable.json.invalid_encoding.runTest");
+        runSqlTest("features/hdfs/writable/json/invalid_encoding");
     }
 
     @Test(groups = {"gpdb", "security", "hcfs"})
@@ -180,13 +180,13 @@ public class JsonWriteTest extends BaseWritableFeature {
         writableExTable.setUserParameters(new String[]{"ROOT= "});
         createTable(writableExTable);
 
-        // 2. run the Tinc test that inserts data as CTAS, which should fail and verifies the error message
-        runTincTest("pxf.features.hdfs.writable.json.empty_root.runTest");
+        // 2. run the SQL test that inserts data as CTAS, which should fail and verifies the error message
+        runSqlTest("features/hdfs/writable/json/empty_root");
     }
 
     /**
      * Runs a test scenario with a given name. The test creates a writable external table, inserts data into it, then
-     * creates a readable external table and calls a Tinc test to read the data and compare with the expected output.
+     * creates a readable external table and calls a SQL test to read the data and compare with the expected output.
      *
      * @param scenario         name of the scenario, gets factored into the names of tables
      * @param fields           schema for the external tables
@@ -232,8 +232,8 @@ public class JsonWriteTest extends BaseWritableFeature {
         }
         createTable(readableExTable);
 
-        // 5. run the Tinc test that queries the data back using the corresponding readable external table
-        runTincTest("pxf.features.hdfs.writable.json." + scenario + ".runTest");
+        // 5. run the SQL test that queries the data back using the corresponding readable external table
+        runSqlTest("features/hdfs/writable/json/" + scenario);
     }
 
 }

@@ -97,17 +97,9 @@
         <host>non-secure-hadoop</host>
         <port>10000</port>
     </hiveNonSecure>
-    <tinc>
-        <class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
-        <host>localhost</host>
-        <userName>gpadmin</userName>
-        <gphome>/usr/local/greenplum-db-devel</gphome>
-        <tincFolder>tinc/main</tincFolder>
-        <tincTestsFolder>tincrepo/main</tincTestsFolder>
-    </tinc>
     <regress>
         <class>org.greenplum.pxf.automation.components.regress.Regress</class>
-        <regressTestFolder>tincrepo/main</regressTestFolder>
+        <regressTestFolder>sqlrepo</regressTestFolder>
         <dbName>pxfautomation</dbName>
     </regress>
     <pxf>

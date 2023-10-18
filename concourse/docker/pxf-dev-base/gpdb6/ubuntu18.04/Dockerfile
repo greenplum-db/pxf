@@ -14,8 +14,6 @@ RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && rm -rf /usr/local/go && mkdir /opt/pxf && tar -C /opt/pxf -xzf go.tgz && rm go.tgz
 
 # install dependencies that are missing on the base images
-# install a specific version of perl for tinc
-
 RUN apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev curl sudo jq \
     && apt-get clean \
@@ -44,8 +42,6 @@ RUN locale-gen en_US.UTF-8 \
     && echo "gpadmin:password" | chpasswd 2> /dev/null \
     && { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts \
     && chown -R gpadmin:gpadmin /home/gpadmin \
-    # install dependencies as gpadmin
-    && su gpadmin -c "pip install psi paramiko --no-cache-dir" \
     # configure gpadmin limits
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft core unlimited' \
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft nproc 131072' \

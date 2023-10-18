@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
  * This class runs the proxy smoke test against a Hadoop cluster with Kerberos constrained delegation
  * enabled by an IPA server. It is supposed to be used only for MultiServer setup and leverages the setup logic
  * in the parent class. It specifies the correct HDFS target name from the SUT file as well as PXF configuration
- * server name and the suffix for the GPDB PXF external table. It runs its own TINC test that is very similar
+ * server name and the suffix for the GPDB PXF external table. It runs its own SQL test that is very similar
  * to the regular proxy test, but the name of the PXF table is different.
  */
 public class HdfsProxyIPASmokeTest extends HdfsProxySmokeTest {
@@ -47,7 +47,7 @@ public class HdfsProxyIPASmokeTest extends HdfsProxySmokeTest {
 
     @Override
     protected void queryResults() throws Exception {
-        runTincTest("pxf.proxy.small_data_ipa.runTest");
+        runSqlTest("proxy/small_data_ipa");
     }
 
     @Test(groups = {"proxySecurityIpa"})

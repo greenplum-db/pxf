@@ -18,9 +18,7 @@ RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
 RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn \
     # explicitly reinstall glibc-common to add back deleted charmaps
     && yum reinstall -y glibc-common \
-    && yum install -y rpm-build python-devel jq sudo && yum clean all \
-    && cd /tmp && /usr/bin/pip install --upgrade pip==20.2.4 \
-    && /usr/bin/pip install psi paramiko --no-cache-dir
+    && yum install -y rpm-build jq sudo && yum clean all
 
 # create user gpadmin since GPDB cannot run under root
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \

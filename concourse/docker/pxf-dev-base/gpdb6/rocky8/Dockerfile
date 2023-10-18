@@ -29,8 +29,7 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio \
     && chown -R minio:minio /opt/minio
 
 # install dependencies that are missing on the base images
-RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn \
-    && /usr/bin/pip2 install paramiko --no-cache-dir
+RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn
 
 # create rsa key for the root user
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \

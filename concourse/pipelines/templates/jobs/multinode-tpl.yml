@@ -21,7 +21,6 @@
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-    - get: gp6-python-libs
   - in_parallel:
     - do:
       - put: terraform_gpdb

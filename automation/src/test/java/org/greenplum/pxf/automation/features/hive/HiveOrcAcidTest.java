@@ -81,7 +81,7 @@ public class HiveOrcAcidTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE + "_orc" + ACID_POSTPEND,
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcSmallDataTable);
 
-        runTincTest("pxf.features.hive.small_data_orc_acid.runTest");
+        runSqlTest("features/hive/small_data_orc_acid");
     }
 
 
@@ -98,7 +98,7 @@ public class HiveOrcAcidTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_PARTITIONED_TABLE + ACID_POSTPEND,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hiveOrcPartitionedTable);
 
-        runTincTest("pxf.features.hive.hive_partitioned_table_orc_acid.runTest");
+        runSqlTest("features/hive/hive_partitioned_table_orc_acid");
     }
 
 }

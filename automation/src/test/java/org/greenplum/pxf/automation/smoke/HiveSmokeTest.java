@@ -66,8 +66,8 @@ public class HiveSmokeTest extends BaseSmoke {
 
     @Override
     protected void queryResults() throws Exception {
-        runTincTest("pxf.smoke.small_data.runTest");
-        runTincTest("pxf.smoke.hcatalog_small_data.runTest");
+        runSqlTest("smoke/small_data");
+        runSqlTest("smoke/hcatalog_small_data");
     }
 
     @Test(groups = { "smoke", "gpdb", "security" })

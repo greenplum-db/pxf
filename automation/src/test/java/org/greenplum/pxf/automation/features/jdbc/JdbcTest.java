@@ -386,22 +386,22 @@ public class JdbcTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void singleFragmentTable() throws Exception {
-        runTincTest("pxf.features.jdbc.single_fragment.runTest");
+        runSqlTest("features/jdbc/single_fragment");
     }
 
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void multipleFragmentsTables() throws Exception {
-        runTincTest("pxf.features.jdbc.multiple_fragments.runTest");
+        runSqlTest("features/jdbc/multiple_fragments");
     }
 
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void readServerConfig() throws Exception {
-        runTincTest("pxf.features.jdbc.server_config.runTest");
+        runSqlTest("features/jdbc/server_config");
     }
 
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void readViewSessionParams() throws Exception {
-        runTincTest("pxf.features.jdbc.session_params.runTest");
+        runSqlTest("features/jdbc/session_params");
     }
 
     @FailsWithFDW
@@ -410,38 +410,38 @@ public class JdbcTest extends BaseFeature {
     // [B (java.io.DataInputStream and [B are in module java.base of loader 'bootstrap')
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTable() throws Exception {
-        runTincTest("pxf.features.jdbc.writable.runTest");
+        runSqlTest("features/jdbc/writable");
     }
 
     @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTableNoBatch() throws Exception {
-        runTincTest("pxf.features.jdbc.writable_nobatch.runTest");
+        runSqlTest("features/jdbc/writable_nobatch");
     }
 
     @FailsWithFDW
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTablePool() throws Exception {
-        runTincTest("pxf.features.jdbc.writable_pool.runTest");
+        runSqlTest("features/jdbc/writable_pool");
     }
 
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcColumns() throws Exception {
-        runTincTest("pxf.features.jdbc.columns.runTest");
+        runSqlTest("features/jdbc/columns");
     }
 
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcColumnProjection() throws Exception {
-        runTincTest("pxf.features.jdbc.column_projection.runTest");
+        runSqlTest("features/jdbc/column_projection");
     }
 
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcReadableTableNoBatch() throws Exception {
-        runTincTest("pxf.features.jdbc.readable_nobatch.runTest");
+        runSqlTest("features/jdbc/readable_nobatch");
     }
 
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcNamedQuery() throws Exception {
-        runTincTest("pxf.features.jdbc.named_query.runTest");
+        runSqlTest("features/jdbc/named_query");
     }
 }

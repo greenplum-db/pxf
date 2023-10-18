@@ -1,6 +1,5 @@
 package org.greenplum.pxf.automation.features.hive;
 
-import jsystem.utils.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -180,8 +179,8 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE + "_orc",
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcSmallDataTable);
 
-        runTincTest("pxf.features.hive.small_data_orc.runTest");
-        runTincTest("pxf.features.hcatalog.small_data.runTest");
+        runSqlTest("features/hive/small_data_orc");
+        runSqlTest("features/hcatalog/small_data");
     }
 
     /**
@@ -196,7 +195,7 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SUBSET_COLS, hiveOrcSmallDataTable);
 
-        runTincTest("pxf.features.hive.column_subset.runTest");
+        runSqlTest("features/hive/column_subset");
     }
 
     /**
@@ -213,7 +212,7 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SUBSET_FMT_COLS, hiveOrcPartitionedTable);
 
-        runTincTest("pxf.features.hive.column_subset_partitioned_table_orc.runTest");
+        runSqlTest("features/hive/column_subset_partitioned_table_orc");
     }
 
     /**
@@ -228,7 +227,7 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_BINARY_TABLE + "_orc",
                 new String[] { "b1 BYTEA" }, hiveBinaryOrcDataTable);
 
-        runTincTest("pxf.features.hive.binary_orc_data.runTest");
+        runSqlTest("features/hive/binary_orc_data");
     }
 
     /**
@@ -242,8 +241,8 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcTable);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
-        runTincTest("pxf.features.hcatalog.small_data_orc.runTest");
+        runSqlTest("features/hive/small_data");
+        runSqlTest("features/hcatalog/small_data_orc");
     }
 
     /**
@@ -255,9 +254,9 @@ public class HiveOrcTest extends HiveBaseTest {
     @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
     public void storeAsOrcAllTypesHive1AndHive2() throws Exception {
 
-        runTincTest("pxf.features.hive.orc_primitive_types.runTest");
+        runSqlTest("features/hive/orc_primitive_types");
         // TODO: hcatalog based access still uses the older Hive profile
-        runTincTest("pxf.features.hcatalog.hive_orc_all_types.runTest");
+        runSqlTest("features/hcatalog/hive_orc_all_types");
     }
 
     /**
@@ -269,7 +268,7 @@ public class HiveOrcTest extends HiveBaseTest {
     @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security" })
     public void storeAsOrcAllTypesHive1Only() throws Exception {
 
-        runTincTest("pxf.features.hive.orc_primitive_types_hive1_only.runTest");
+        runSqlTest("features/hive/orc_primitive_types_hive1_only");
     }
 
     /**
@@ -280,7 +279,7 @@ public class HiveOrcTest extends HiveBaseTest {
     @Test(groups = { "hive", "features", "gpdb", "security" })
     public void queryWithNotPushedDownOperators() throws Exception {
 
-        runTincTest("pxf.features.hive.orc_operators_no_ppd.runTest");
+        runSqlTest("features/hive/orc_operators_no_ppd");
     }
 
     /**
@@ -295,8 +294,8 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable("pxf_hive_orc_snappy",
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcSnappyTable);
 
-        runTincTest("pxf.features.hive.orc_snappy.runTest");
-        runTincTest("pxf.features.hcatalog.hive_orc_snappy.runTest");
+        runSqlTest("features/hive/orc_snappy");
+        runSqlTest("features/hcatalog/hive_orc_snappy");
     }
 
     /**
@@ -311,8 +310,8 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_ORC_ZLIB_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcZlibTable);
 
-        runTincTest("pxf.features.hive.orc_zlib.runTest");
-        runTincTest("pxf.features.hcatalog.hive_orc_zlib.runTest");
+        runSqlTest("features/hive/orc_zlib");
+        runSqlTest("features/hcatalog/hive_orc_zlib");
     }
 
     /**
@@ -326,7 +325,7 @@ public class HiveOrcTest extends HiveBaseTest {
         prepareOrcMultiFileData();
         createExternalTable(PXF_HIVE_ORC_MULTIFILE_TABLE, PXF_HIVE_SMALLDATA_COLS, hiveOrcMultiFileTable);
 
-        runTincTest("pxf.features.hive.orc_multifile.runTest");
+        runSqlTest("features/hive/orc_multifile");
     }
 
     /**
@@ -340,7 +339,7 @@ public class HiveOrcTest extends HiveBaseTest {
         prepareOrcMultiFileData();
         createExternalVectorizedTable(PXF_HIVE_ORC_MULTIFILE_VECTORIZED_TABLE, PXF_HIVE_SMALLDATA_COLS, hiveOrcMultiFileTable);
 
-        runTincTest("pxf.features.hive.orc_multifile_vectorized.runTest");
+        runSqlTest("features/hive/orc_multifile_vectorized");
     }
 
     /**
@@ -359,7 +358,7 @@ public class HiveOrcTest extends HiveBaseTest {
         gpdb.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
                 "ANALYZE for HiveRc, HiveText, and HiveOrc plugins is not supported", true);
 
-        runTincTest("pxf.features.hive.default_analyze.runTest");
+        runSqlTest("features/hive/default_analyze");
     }
 
     /**
@@ -375,7 +374,7 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_PARTITIONED_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hiveOrcPartitionedTable);
 
-        runTincTest("pxf.features.hive.hive_partitioned_table_one_format.runTest");
+        runSqlTest("features/hive/hive_partitioned_table_one_format");
     }
 
     /**
@@ -393,7 +392,7 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_COLLECTIONS_TABLE,
                 PXF_HIVE_COLLECTION_COLS, hiveOrcCollectionTable);
 
-        runTincTest("pxf.features.hive.hive_collection_types.runTest");
+        runSqlTest("features/hive/hive_collection_types");
     }
 
     /**
@@ -418,9 +417,9 @@ public class HiveOrcTest extends HiveBaseTest {
         exTable.setUserParameters(new String[] { "TEST-FRAGMENTS-NUM=10" });
         createTable(exTable);
 
-        runTincTest("pxf.features.hcatalog.aggregate_queries.runTest");
-        runTincTest("pxf.features.hive.aggregate_queries.runTest");
-        runTincTest("pxf.features.hive.aggregate_queries_multiple_fragments_per_file.runTest");
+        runSqlTest("features/hcatalog/aggregate_queries");
+        runSqlTest("features/hive/aggregate_queries");
+        runSqlTest("features/hive/aggregate_queries_multiple_fragments_per_file");
     }
 
     /**
@@ -442,14 +441,14 @@ public class HiveOrcTest extends HiveBaseTest {
 
         createExternalTable("pxf_hive_table_with_skipheader_orc", PXF_HIVE_SMALLDATA_COLS, hiveOrcSkipHeaderTable);
 
-        runTincTest("pxf.features.hive.orc_skip_header_rows.runTest");
+        runSqlTest("features/hive/orc_skip_header_rows");
     }
 
     @Test(groups = {"hive", "features", "gpdb"})
     public void hiveOrcLargeData() throws Exception {
         prepareOrcLargeData(8192);
         createExternalTable("pxf_hive_orc_large_data", PXF_ORC_LARGE_DATA_COLS, hiveOrcLargeDataTable);
-        runTincTest("pxf.features.hive.orc_large_data.runTest");
+        runSqlTest("features/hive/orc_large_data");
     }
 
 }

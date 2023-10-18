@@ -65,7 +65,7 @@ public class DatabaseEncodingTest extends BaseFeature {
         waitForFiles(filename);
         prepareReadableExternalTable(gpdb, "db_encoding_read_utf8", hdfsPath + filename);
 
-        runTincTest("pxf.features.general.databaseEncoding.readUTF8.runTest");
+        runSqlTest("features/general/databaseEncoding/readUTF8");
     }
 
     /**
@@ -80,7 +80,7 @@ public class DatabaseEncodingTest extends BaseFeature {
         waitForFiles(filename);
         prepareReadableExternalTable(nonUtf8Gpdb, "db_encoding_read_other", hdfsPath + filename);
 
-        runTincTest("pxf.features.general.databaseEncoding.readOtherEncoding.runTest");
+        runSqlTest("features/general/databaseEncoding/readOtherEncoding");
     }
 
     /**
@@ -96,7 +96,7 @@ public class DatabaseEncodingTest extends BaseFeature {
         waitForFiles(filename);
         prepareReadableExternalTable(nonUtf8Gpdb, "db_encoding_read_other", hdfsPath + filename);
 
-        runTincTest("pxf.features.general.databaseEncoding.readOtherEncoding.runTest");
+        runSqlTest("features/general/databaseEncoding/readOtherEncoding");
     }
 
     @Test(groups = {"features", "gpdb", "security"})
@@ -108,7 +108,7 @@ public class DatabaseEncodingTest extends BaseFeature {
         waitForFiles(filename);
         prepareReadableExternalTable(gpdb, "db_encoding_read_utf8", hdfsPath + filename);
 
-        runTincTest("pxf.features.general.databaseEncoding.readUTF8.runTest");
+        runSqlTest("features/general/databaseEncoding/readUTF8");
     }
 
     private void prepareReadableExternalTable(Gpdb database, String name, String path) throws Exception {

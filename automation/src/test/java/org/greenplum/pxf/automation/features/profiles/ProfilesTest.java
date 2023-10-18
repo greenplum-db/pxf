@@ -84,7 +84,7 @@ public class ProfilesTest extends BaseFeature {
     protected void sanity() throws Exception {
 
         gpdb.createTableAndVerify(exTable);
-        runVerificationTinc();
+        runVerificationSql();
     }
 
     /**
@@ -114,7 +114,7 @@ public class ProfilesTest extends BaseFeature {
 
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString().toUpperCase());
         gpdb.createTableAndVerify(exTable);
-        runVerificationTinc();
+        runVerificationSql();
     }
 
     /**
@@ -129,7 +129,7 @@ public class ProfilesTest extends BaseFeature {
         exTable.setUserParameters(new String[]{"Ready=Go", "Profile=" +
                 EnumPxfDefaultProfiles.HdfsTextSimple.toString()});
         gpdb.createTableAndVerify(exTable);
-        runVerificationTinc();
+        runVerificationSql();
     }
 
     /**
@@ -159,7 +159,7 @@ public class ProfilesTest extends BaseFeature {
         cluster.restart(PhdCluster.EnumClusterServices.pxf);
         exTable.setProfile("BeHereNow");
         gpdb.createTableAndVerify(exTable);
-        runVerificationTinc();
+        runVerificationSql();
     }
 
     /**
@@ -176,7 +176,7 @@ public class ProfilesTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         gpdb.createTableAndVerify(exTable);
 
-        runVerificationTinc();
+        runVerificationSql();
 
         exTable.setFragmenter(null);
         exTable.setAccessor(null);
@@ -208,8 +208,8 @@ public class ProfilesTest extends BaseFeature {
         }
     }
 
-    private void runVerificationTinc() throws Exception {
+    private void runVerificationSql() throws Exception {
 
-        runTincTest("pxf.features.profiles.small_data.runTest");
+        runSqlTest("features/profiles/small_data");
     }
 }

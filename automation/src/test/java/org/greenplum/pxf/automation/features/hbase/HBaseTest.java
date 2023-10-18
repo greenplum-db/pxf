@@ -358,7 +358,7 @@ public class HBaseTest extends BaseFeature {
         exTableNullHBase.setHost(pxfHost);
         exTableNullHBase.setPort(pxfPort);
         gpdb.createTableAndVerify(exTableNullHBase);
-        runTincTest("pxf.features.hbase.errors.differentColumnsNames.runTest");
+        runSqlTest("features/hbase/errors/differentColumnsNames");
     }
 
     /**
@@ -374,7 +374,7 @@ public class HBaseTest extends BaseFeature {
 
         try {
             hbase.disableTable(lookupTable);
-            runTincTest("pxf.features.hbase.errors.lookupTable.runTest");
+            runSqlTest("features/hbase/errors/lookupTable");
         } finally {
             hbase.enableTable(lookupTable);
         }
@@ -393,7 +393,7 @@ public class HBaseTest extends BaseFeature {
 
         try {
             hbase.dropTable(lookupTable, false);
-            runTincTest("pxf.features.hbase.errors.lookupTable.runTest");
+            runSqlTest("features/hbase/errors/lookupTable");
         } finally {
             prepareLookupTable();
         }
@@ -415,7 +415,7 @@ public class HBaseTest extends BaseFeature {
             // because a table has to have at least one column.
             hbase.addColumn(lookupTable,new String[] { "no_mapping" });
             hbase.removeColumn(lookupTable, new String[] { "mapping" });
-            runTincTest("pxf.features.hbase.errors.lookupTable.runTest");
+            runSqlTest("features/hbase/errors/lookupTable");
         } finally {
             prepareLookupTable();
         }
@@ -457,7 +457,7 @@ public class HBaseTest extends BaseFeature {
         notExistsHBaseTableExtTable.setHost(pxfHost);
         notExistsHBaseTableExtTable.setPort(pxfPort);
         gpdb.createTableAndVerify(notExistsHBaseTableExtTable);
-        runTincTest("pxf.features.hbase.errors.notExistingHBaseTable.runTest");
+        runSqlTest("features/hbase/errors/notExistingHBaseTable");
     }
 
     /**
@@ -480,7 +480,7 @@ public class HBaseTest extends BaseFeature {
         dataPreparer.setNumberOfSplits(numberOfRegions);
         // prepare all data flow
         prepareDataChain(multiDataHBaseTable, dataPreparer, rowsPerRegion);
-        runTincTest("pxf.features.hbase.multiRegionsData.runTest");
+        runSqlTest("features/hbase/multiRegionsData");
     }
 
     /**
@@ -495,7 +495,7 @@ public class HBaseTest extends BaseFeature {
         // Perform Analyze on external table and check suitable Warnings
         gpdb.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
                 "ANALYZE for HBase plugin is not supported", true);
-        runTincTest("pxf.features.hbase.default_analyze.runTest");
+        runSqlTest("features/hbase/default_analyze");
     }
 
     /**
@@ -541,7 +541,7 @@ public class HBaseTest extends BaseFeature {
                             null), false, true);
         }
         // verify query results
-        runTincTest("pxf.features.hbase.longQualifierNoLookup.runTest");
+        runSqlTest("features/hbase/longQualifierNoLookup");
     }
 
     /**
@@ -583,7 +583,7 @@ public class HBaseTest extends BaseFeature {
         externalTable.setHost(pxfHost);
         externalTable.setPort(pxfPort);
         gpdb.createTableAndVerify(externalTable);
-        runTincTest("pxf.features.hbase.longQualifierWithLookup.runTest");
+        runSqlTest("features/hbase/longQualifierWithLookup");
     }
 
     /**
@@ -621,15 +621,15 @@ public class HBaseTest extends BaseFeature {
      * @param externalTable External Table pointing to the HBase table
      * @param whereClause SQL filter expression
      * @param filterString serialized filter string match to the relevant case or NO_FILTER
-     * @param tincCase name of tinc case to run
+     * @param sqlTestPath path of SQL test case to run
      *
      * @throws Exception if test fails to run
      */
     private void verifyFilterResults(HBaseTable hbaseTable, ReadableExternalTable externalTable,
-            String whereClause, String filterString, String tincCase) throws Exception {
+            String whereClause, String filterString, String sqlTestPath) throws Exception {
 
         verifyFilterResults(hbaseTable, externalTable, whereClause, filterString,
-                tincCase, true);
+                sqlTestPath, true);
     }
 
     /**
@@ -643,31 +643,31 @@ public class HBaseTest extends BaseFeature {
      * @param externalTable External Table pointing to the HBase table
      * @param whereClause SQL filter expression
      * @param filterString serialized filter string match to the relevant case or NO_FILTER
-     * @param tincCase name of tinc case to run
+     * @param sqlTestPath path of SQL test case to run
      * @param verifyFilterString some cases do not required injecting serialized filter string and
      *            verify results - false for not verifying
      *
      * @throws Exception if test fails to run
      */
     private void verifyFilterResults(HBaseTable hbaseTable, ReadableExternalTable externalTable,
-            String whereClause, String filterString, String tincCase, boolean verifyFilterString) throws Exception {
+            String whereClause, String filterString, String sqlTestPath, boolean verifyFilterString) throws Exception {
 
         // check using no filter pushdown
         gpdb.runQuery("SET gp_external_enable_filter_pushdown = off");
-        // run tinc case to verify filter is working
-        runTincTest("pxf.features.hbase." + tincCase + ".runTest");
+        // run SQL test case to verify filter is working
+        runSqlTest("features/hbase/" + sqlTestPath);
         // check with filter pushdown
         gpdb.runQuery("SET gp_external_enable_filter_pushdown = on");
-        // run tinc case to see filter is working
-        runTincTest("pxf.features.hbase." + tincCase + ".runTest");
+        // run SQL test case to see filter is working
+        runSqlTest("features/hbase/" + sqlTestPath);
         // use FilterPrinterAccessor to get the serialized filter in the pxf side
         createAndQueryPxfGpdbFilterTable(hbaseTable, externalTable.getFields(), whereClause, filterString);
         if (verifyFilterString) {
             // create another GPDB external table that uses HBaseAccessorWithFilter to get the
             // filter as user parameter
             createPxfHBaseFilterTable(filterString, hbaseTable, externalTable.getFields());
-            // run tinc case to get filtered results
-            runTincTest("pxf.features.hbase.filter_accessor." + tincCase + ".runTest");
+            // run SQL test case to get filtered results
+            runSqlTest("features/hbase/filter_accessor/" + sqlTestPath);
         }
     }
 

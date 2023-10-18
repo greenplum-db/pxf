@@ -118,7 +118,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(GPDB_HIVE_TYPES_TABLE,
                 PXF_HIVE_TYPES_LIMITED_COLS, hiveRcTypes, true);
 
-        runTincTest("pxf.features.hive.rc_types.runTest");
+        runSqlTest("features/hive/rc_types");
     }
 
     /**
@@ -144,7 +144,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable("gpdb_hive_binary", new String[]{
                 "t1 TEXT", "num1 INTEGER", "data1 BYTEA", "data2 BYTEA"}, hiveTable, true);
 
-        runTincTest("pxf.features.hive.rc_binary_data.runTest");
+        runSqlTest("features/hive/rc_binary_data");
     }
 
     /**
@@ -160,7 +160,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(GPDB_HIVE_TYPES_TABLE,
                 mismatchedFields, hiveRcTypes, false);
 
-        runTincTest("pxf.features.hive.errors.rc_mismatchedTypes.runTest");
+        runSqlTest("features/hive/errors/rc_mismatchedTypes");
     }
 
     /**
@@ -174,7 +174,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveRcTable, true);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
+        runSqlTest("features/hive/small_data");
     }
 
     /**
@@ -193,7 +193,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 nonMatchingColumnNames, hiveRcTable, true);
 
-        runTincTest("pxf.features.hive.errors.partitionNameMismatch.runTest");
+        runSqlTest("features/hive/errors/partitionNameMismatch");
     }
 
     /**
@@ -209,7 +209,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SUBSET_COLS, hiveRcTable, true);
 
-        runTincTest("pxf.features.hive.column_subset.runTest");
+        runSqlTest("features/hive/column_subset");
     }
 
     /**
@@ -234,7 +234,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SUBSET_FMT_COLS, hiveTable, true);
 
-        runTincTest("pxf.features.hive.column_subset_partitioned_table_rc.runTest");
+        runSqlTest("features/hive/column_subset_partitioned_table_rc");
     }
 
     /**
@@ -251,17 +251,17 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveRcForAlterTable, true);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
+        runSqlTest("features/hive/small_data");
 
         hive.runQuery("ALTER TABLE " + hiveRcForAlterTable.getName() + " ADD COLUMNS (new1 int)");
         hive.runQuery("INSERT INTO TABLE " + hiveRcForAlterTable.getName() +
                 " VALUES ('row11', 's_16', 11, 16, 100)");
 
         // Re-run the test to make sure we can still read the hive table
-        runTincTest("pxf.features.hive.small_data.runTest");
+        runSqlTest("features/hive/small_data");
 
         gpdb.runQuery("ALTER EXTERNAL TABLE " + PXF_HIVE_SMALL_DATA_TABLE + " ADD COLUMN new1 INT");
-        runTincTest("pxf.features.hive.small_data_alter.runTest");
+        runSqlTest("features/hive/small_data_alter");
     }
 
     /**
@@ -275,7 +275,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveRcTableNoSerde, false);
 
-        runTincTest("pxf.features.hive.small_data.runTest");
+        runSqlTest("features/hive/small_data");
     }
 
     /**
@@ -300,7 +300,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_HETEROGEN_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hiveTable, true);
 
-        runTincTest("pxf.features.hive.rc_partitions.runTest");
+        runSqlTest("features/hive/rc_partitions");
     }
 
     /**
@@ -322,7 +322,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_HETEROGEN_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hiveTable, false);
 
-        runTincTest("pxf.features.hive.rc_partitions.runTest");
+        runSqlTest("features/hive/rc_partitions");
     }
 
     /**
@@ -377,7 +377,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_HETEROGEN_TABLE + "_using_filter",
                 PXF_HIVE_SMALLDATA_PRT_COLS, hiveTable, false);
 
-        runTincTest("pxf.features.hive.rc_filter_partitions.runTest");
+        runSqlTest("features/hive/rc_filter_partitions");
     }
 
     /**
@@ -395,7 +395,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_HETEROGEN_TABLE + "_using_filter",
                 PXF_HIVE_SMALLDATA_PRT_COLS, hiveTable, true);
 
-        runTincTest("pxf.features.hive.rc_filter_no_partitions.runTest");
+        runSqlTest("features/hive/rc_filter_no_partitions");
     }
 
     /**
@@ -572,7 +572,7 @@ public class HiveRcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveTable, true);
 
-        runTincTest("pxf.features.hcatalog.aggregate_queries.runTest");
-        runTincTest("pxf.features.hive.aggregate_queries.runTest");
+        runSqlTest("features/hcatalog/aggregate_queries");
+        runSqlTest("features/hive/aggregate_queries");
     }
 }

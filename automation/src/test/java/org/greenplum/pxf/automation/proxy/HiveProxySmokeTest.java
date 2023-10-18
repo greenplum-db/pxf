@@ -134,7 +134,7 @@ public class HiveProxySmokeTest extends BaseSmoke {
 
     @Override
     protected void queryResults() throws Exception {
-        runTincTest("pxf.proxy.hive_small_data.runTest");
+        runSqlTest("proxy/hive_small_data");
     }
 
     @Test(groups = {"proxy", "hive", "proxySecurity"})

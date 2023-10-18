@@ -101,7 +101,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
 
     @Override
     protected void queryResults() throws Exception {
-        runTincTest("pxf.proxy.small_data.runTest");
+        runSqlTest("proxy/small_data");
     }
 
     @Test(groups = {"proxy", "hdfs", "proxySecurity"})

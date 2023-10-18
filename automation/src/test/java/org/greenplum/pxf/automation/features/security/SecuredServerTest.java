@@ -26,7 +26,7 @@ public class SecuredServerTest extends BaseFeature {
         exTable.setServer("SERVER=secure-hdfs-invalid-principal");
 
         gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.general.secured.errors.invalid_principal.runTest");
+        runSqlTest("features/general/secured/errors/invalid_principal");
     }
 
     @Test(groups = {"features", "multiClusterSecurity"})
@@ -45,6 +45,6 @@ public class SecuredServerTest extends BaseFeature {
         exTable.setServer("SERVER=secure-hdfs-invalid-keytab");
 
         gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.general.secured.errors.invalid_keytab.runTest");
+        runSqlTest("features/general/secured/errors/invalid_keytab");
     }
 }

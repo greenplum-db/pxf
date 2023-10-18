@@ -104,57 +104,57 @@ public class OrcReadTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcReadPrimitives() throws Exception {
-        runTincTest("pxf.features.orc.read.primitive_types.runTest");
+        runSqlTest("features/orc/read/primitive_types");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcReadPrimitivesMapByPosition() throws Exception {
         prepareReadableExternalTable(PXF_ORC_TABLE, ORC_TABLE_COLUMNS,
                 hdfsPath + ORC_PRIMITIVE_TYPES, true);
-        runTincTest("pxf.features.orc.read.primitive_types.runTest");
+        runSqlTest("features/orc/read/primitive_types");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcReadPrimitivesWithUnorderedSubsetFile() throws Exception {
         prepareReadableExternalTable("pxf_orc_primitive_types_with_subset",
                 ORC_TABLE_COLUMNS, hdfsPath + "orc_types*.orc");
-        runTincTest("pxf.features.orc.read.primitive_types_with_subset.runTest");
+        runSqlTest("features/orc/read/primitive_types_with_subset");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcReadSubset() throws Exception {
         prepareReadableExternalTable("pxf_orc_primitive_types_subset",
                 ORC_TABLE_COLUMNS_SUBSET, hdfsPath + ORC_PRIMITIVE_TYPES);
-        runTincTest("pxf.features.orc.read.read_subset.runTest");
+        runSqlTest("features/orc/read/read_subset");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcPredicatePushDown() throws Exception {
-        runTincTest("pxf.features.orc.read.pushdown.runTest");
+        runSqlTest("features/orc/read/pushdown");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcPredicatePushDownMapByPosition() throws Exception {
         prepareReadableExternalTable(PXF_ORC_TABLE, ORC_TABLE_COLUMNS, hdfsPath + ORC_PRIMITIVE_TYPES, true);
-        runTincTest("pxf.features.orc.read.pushdown.runTest");
+        runSqlTest("features/orc/read/pushdown");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcReadLists() throws Exception {
         prepareReadableExternalTable("pxf_orc_list_types", ORC_LIST_TYPES_TABLE_COLUMNS, hdfsPath + ORC_LIST_TYPES);
-        runTincTest("pxf.features.orc.read.list_types.runTest");
+        runSqlTest("features/orc/read/list_types");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcReadBpCharAndVarCharListsAsTextArr() throws Exception {
         prepareReadableExternalTable("pxf_orc_bpchar_varchar_list_types_as_textarr", ORC_LIST_TYPES_TABLE_COLUMNS_TEXT, hdfsPath + ORC_LIST_TYPES);
-        runTincTest("pxf.features.orc.read.bpchar_varchar_list_types_as_textarr.runTest");
+        runSqlTest("features/orc/read/bpchar_varchar_list_types_as_textarr");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcReadMultiDimensionalLists() throws Exception {
         prepareReadableExternalTable("pxf_orc_multidim_list_types", ORC_LIST_TYPES_TABLE_COLUMNS, hdfsPath + ORC_MULTIDIM_LIST_TYPES);
-        runTincTest("pxf.features.orc.read.multidim_list_types.runTest");
+        runSqlTest("features/orc/read/multidim_list_types");
     }
 
     /*
@@ -172,7 +172,7 @@ public class OrcReadTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcReadStringsContainingNullByte() throws Exception {
         prepareReadableExternalTable("pxf_orc_null_in_string", ORC_NULL_IN_STRING_COLUMNS, hdfsPath + ORC_NULL_IN_STRING);
-        runTincTest("pxf.features.orc.read.null_in_string.runTest");
+        runSqlTest("features/orc/read/null_in_string");
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path) throws Exception {

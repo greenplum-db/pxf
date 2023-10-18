@@ -42,7 +42,7 @@ public class MultiBlockDataSmokeTest extends BaseSmoke {
 
     @Override
     protected void queryResults() throws Exception {
-        runTincTest("pxf.smoke.multi_block.runTest");
+        runSqlTest("smoke/multi_block");
     }
 
     @Test(groups = "smoke")

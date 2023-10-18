@@ -51,7 +51,7 @@ public class WritableSmokeTest extends BaseSmoke {
 
     @Override
     protected void queryResults() throws Exception {
-        runTincTest("pxf.smoke.small_data.runTest");
+        runSqlTest("smoke/small_data");
     }
 
     @Test(groups = "smoke")

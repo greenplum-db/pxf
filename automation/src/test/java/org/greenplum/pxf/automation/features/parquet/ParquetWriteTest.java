@@ -172,7 +172,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
             sleep(10000);
         }
 
-        runTincTest("pxf.features.parquet.padded_char_pushdown.runTest");
+        runSqlTest("features/parquet/padded_char_pushdown");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -207,7 +207,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         prepareReadableExternalTable("pxf_parquet_read_undefined_precision_numeric",
                 UNDEFINED_PRECISION_NUMERIC, hdfsPath + fileName);
 
-        runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision.runTest");
+        runSqlTest("features/parquet/decimal/numeric_undefined_precision");
     }
 
     // Numeric precision not defined, test round flag when data precision overflow. An error should be thrown
@@ -218,7 +218,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         String writableExternalTableName = "pxf_parquet_write_undefined_precision_numeric_large_data_length";
         prepareNumericWritableExtTable(filePathName, fileName, writableExternalTableName, false, false);
 
-        runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision_large_data_length.runTest");
+        runSqlTest("features/parquet/decimal/numeric_undefined_precision_large_data_length");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -232,7 +232,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         prepareReadableExternalTable("pxf_parquet_read_numeric",
                 PARQUET_TABLE_DECIMAL_COLUMNS, hdfsPath + fileName);
 
-        runTincTest("pxf.features.parquet.decimal.numeric.runTest");
+        runSqlTest("features/parquet/decimal/numeric");
     }
 
     // Numeric precision defined, when provided precision overflow. An error should be thrown with either error flag, round flag or ignore flag
@@ -243,7 +243,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         String writableExternalTableName = "parquet_write_defined_large_precision_numeric";
         prepareNumericWritableExtTable(filePathName, fileName, writableExternalTableName, true, true);
 
-        runTincTest("pxf.features.parquet.decimal.numeric_with_large_precision.runTest");
+        runSqlTest("features/parquet/decimal/numeric_with_large_precision");
     }
 
     // Numeric precision not defined, test round flag when data integer digits overflow. An error should be thrown
@@ -254,7 +254,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         String writableExternalTableName = "parquet_write_undefined_precision_numeric_large_integer_digit";
         prepareNumericWritableExtTable(filePathName, fileName, writableExternalTableName, false, false);
 
-        runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision_large_integer_digit.runTest");
+        runSqlTest("features/parquet/decimal/numeric_undefined_precision_large_integer_digit");
     }
 
     // Numeric precision not defined, test rounding off when data integer digits overflow.
@@ -269,7 +269,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         prepareReadableExternalTable("pxf_parquet_read_undefined_precision_numeric_large_scale",
                 UNDEFINED_PRECISION_NUMERIC, hdfsPath + fileName);
 
-        runTincTest("pxf.features.parquet.decimal.numeric_undefined_precision_large_scale.runTest");
+        runSqlTest("features/parquet/decimal/numeric_undefined_precision_large_scale");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -284,7 +284,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         waitForAsyncWriteToSucceedOnHCFS("parquet_write_list");
 
         prepareReadableExternalTable(readTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath);
-        runTincTest("pxf.features.parquet.write_list.list.runTest");
+        runSqlTest("features/parquet/write_list/list");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -303,7 +303,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
 
         prepareReadableExternalTable(readTableName, PARQUET_TIMESTAMP_LIST_TABLE_COLUMNS, fullTestPath);
 
-        runTincTest("pxf.features.parquet.write_list.timestamp_list.runTest");
+        runSqlTest("features/parquet/write_list/timestamp_list");
     }
 
     /*
@@ -378,7 +378,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         exHiveJdbcTable.setPort(pxfPort);
         gpdb.createTableAndVerify(exHiveJdbcTable);
 
-        runTincTest("pxf.features.parquet.write_list.write_list_read_with_hive.runTest");
+        runSqlTest("features/parquet/write_list/write_list_read_with_hive");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -409,7 +409,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         waitForAsyncWriteToSucceedOnHCFS("parquet_write_lists_with_user_provided_schema_file_on_hcfs");
 
         prepareReadableExternalTable(readTableName, PARQUET_LIST_TABLE_COLUMNS, fullTestPath);
-        runTincTest("pxf.features.parquet.write_list.write_with_valid_schema_hcfs.runTest");
+        runSqlTest("features/parquet/write_list/write_with_valid_schema_hcfs");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
@@ -434,7 +434,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
         // update the writableExTable with schema file provided
         gpdb.createTableAndVerify(writableExTable);
 
-        runTincTest("pxf.features.parquet.write_list.write_with_invalid_schema_hcfs.runTest");
+        runSqlTest("features/parquet/write_list/write_with_invalid_schema_hcfs");
     }
 
     private void runWritePrimitivesScenario(String writeTableName, String readTableName,
@@ -450,7 +450,7 @@ public class ParquetWriteTest extends BaseWritableFeature {
                 "CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm, " +
                 "f, bg, b, tn, sml, vc1, c1, bin FROM " + readTableName);
 
-        runTincTest("pxf.features.parquet.primitive_types.runTest");
+        runSqlTest("features/parquet/primitive_types");
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path) throws Exception {

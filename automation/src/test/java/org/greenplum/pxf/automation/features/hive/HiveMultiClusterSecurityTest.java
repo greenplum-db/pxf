@@ -51,7 +51,7 @@ import org.testng.annotations.Test;
                 prepareTableData(hdfs2, hive2, null, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME_2);
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE_SECURE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable2, true, "SERVER=hdfs-secure");
 
-        runTincTest("pxf.features.hive.two_secured_hive.runTest");
+        runSqlTest("features/hive/two_secured_hive");
     }
 
 }

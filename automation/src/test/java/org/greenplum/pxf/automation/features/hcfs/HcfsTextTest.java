@@ -4,7 +4,6 @@ import annotations.SkipForFDW;
 import annotations.WorksWithFDW;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
-import org.greenplum.pxf.automation.utils.system.FDWUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -70,6 +69,6 @@ public class HcfsTextTest extends BaseFeature {
 
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest("pxf.features.hcfs.text." + name + ".runTest");
+        runSqlTest("features/hcfs/text/" + name);
     }
 }

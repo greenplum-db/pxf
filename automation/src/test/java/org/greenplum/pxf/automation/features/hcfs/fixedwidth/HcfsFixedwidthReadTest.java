@@ -84,7 +84,7 @@ public class HcfsFixedwidthReadTest extends BaseFeature {
         prepareReadableTable("fixedwidth_in_small_correct", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + "lines/nocomp/" + fixedwidthSmallCorrectFileName);
         gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.hcfs.fixedwidth.read.small_data_correct.runTest");
+        runSqlTest("features/hcfs/fixedwidth/read/small_data_correct");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -92,7 +92,7 @@ public class HcfsFixedwidthReadTest extends BaseFeature {
         prepareReadableTable("fixedwidth_in_small_correct_gzip", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + "lines/gzip/" + fixedwidthSmallCorrectGzipFileName);
         gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.hcfs.fixedwidth.read.small_data_correct_gzip.runTest");
+        runSqlTest("features/hcfs/fixedwidth/read/small_data_correct_gzip");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -100,7 +100,7 @@ public class HcfsFixedwidthReadTest extends BaseFeature {
         prepareReadableTable("fixedwidth_in_small_correct_mixed", SMALL_DATA_FIELDS, SMALL_DATA_FORMATTER_OPTIONS,
                 hdfsPath + "lines");
         gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.hcfs.fixedwidth.read.small_data_correct_mixed.runTest");
+        runSqlTest("features/hcfs/fixedwidth/read/small_data_correct_mixed");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -109,7 +109,7 @@ public class HcfsFixedwidthReadTest extends BaseFeature {
                 hdfsPath + "lines/nocomp/" + fixedwidthSmallCorrectFileName);
         exTable.setFormatterMixedCase(true);
         gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.hcfs.fixedwidth.read.small_data_correct_alternating_case_ddl.runTest");
+        runSqlTest("features/hcfs/fixedwidth/read/small_data_correct_alternating_case_ddl");
     }
 
     // ========== Delimiter Tests ==========
@@ -129,7 +129,7 @@ public class HcfsFixedwidthReadTest extends BaseFeature {
         exTable.addUserParameter("NEWLINE=@#$");
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest("pxf.features.hcfs.fixedwidth.read.small_data_correct_custom_delim.runTest");
+        runSqlTest("features/hcfs/fixedwidth/read/small_data_correct_custom_delim");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -147,7 +147,7 @@ public class HcfsFixedwidthReadTest extends BaseFeature {
         exTable.addUserParameter("NEWLINE=cr");
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest("pxf.features.hcfs.fixedwidth.read.small_data_correct_cr_delim.runTest");
+        runSqlTest("features/hcfs/fixedwidth/read/small_data_correct_cr_delim");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
@@ -167,7 +167,7 @@ public class HcfsFixedwidthReadTest extends BaseFeature {
         exTable.addUserParameter("NEWLINE=crlf");
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest("pxf.features.hcfs.fixedwidth.read.small_data_correct_crlf_delim.runTest");
+        runSqlTest("features/hcfs/fixedwidth/read/small_data_correct_crlf_delim");
     }
 
     private void prepareReadableTable(String name, String[] fields, String[] formatterOptions, String path) {
