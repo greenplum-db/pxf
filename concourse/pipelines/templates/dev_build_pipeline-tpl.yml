@@ -377,43 +377,38 @@ jobs:
 ## the following platform_gp_combinations dictionary definition:
 ##
 ##   gp_ver: GPDB Major Version
-##   execution_os: OS platform in which build and test jobs are executed
-##   os_ver: OS Major version
 ##   build_os: OS Platform in which the build was performed
+##   test_os: OS platform in which test jobs are executed
+##   os_ver: OS Major version
 ##
 ## ----------------------------------------------------------------------
 {% set platform_gp_combinations = [
-    {'gp_ver': '5', 'execution_os': 'centos', 'os_ver': '7',  'build_os': 'centos'},
-    {'gp_ver': '6', 'execution_os': 'centos', 'os_ver': '7',  'build_os': 'centos'},
-    {'gp_ver': '6', 'execution_os': 'rocky',  'os_ver': '8',  'build_os': 'rocky'},
-    {'gp_ver': '6', 'execution_os': 'oel',    'os_ver': '7',  'build_os': 'centos'},
-    {'gp_ver': '6', 'execution_os': 'ubuntu', 'os_ver': '18', 'build_os': 'ubuntu'},
-    {'gp_ver': '7', 'execution_os': 'rocky',  'os_ver': '8',  'build_os': 'rocky'}] %}
+    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'},
+    {'gp_ver': '6', 'build_os': 'rocky', 'test_os': 'rocky', 'os_ver': '8'},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel', 'os_ver': '7'},
+    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18'},
+    {'gp_ver': '7', 'build_os': 'rocky', 'test_os': 'rocky', 'os_ver': '8'}] %}
 
 {% for config in platform_gp_combinations %}
 
-    {% set gp_ver = config.gp_ver %}
-    {% set platform = config.execution_os %}
-    {% set os_ver = config.os_ver %}
-    {% set build_platform = config.build_os %}
+    {% set test_platform = config.test_os ~ config.os_ver %}
+    {% set build_platform = config.build_os ~ config.os_ver %}
 
-    {% set platform_ver = platform ~ os_ver %}
-    {% set build_platform_ver = build_platform ~ os_ver %}
-
-    {% if platform in ['ubuntu'] %}
+    {% if config.test_os in ['ubuntu'] %}
       {% set pkg_type = 'deb' %}
       {% set gpdb_os_platform = 'ubuntu' %}
-      {% set pxf_tarball_filename = 'dist/pxf-gp' ~ gp_ver ~ '-*-ubuntu' ~ os_ver ~ '.04' ~ '.tar.gz' %}
+      {% set pxf_tarball_filename = 'dist/pxf-gp' ~ config.gp_ver ~ '-*-ubuntu' ~ config.os_ver ~ '.04' ~ '.tar.gz' %}
       {% set pxf_fdw_tarball_filename = '' %}{# Doesn't apply for ubuntu platform #}
-    {% else %}
+    {% else %} {# Else section applies to centos, rocky and oel platforms #}
       {% set pkg_type = 'rpm' %}
       {% set gpdb_os_platform = 'rhel' %}
-      {% set pxf_tarball_filename = 'dist/pxf-gp' ~ gp_ver ~ '-*.el' ~ os_ver ~ '.tar.gz' %}
-      {% set pxf_fdw_tarball_filename = 'dist/pxf-fdw-gp' ~ gp_ver ~ '-*.el' ~ os_ver ~ '.tar.gz' %}
+      {% set pxf_tarball_filename = 'dist/pxf-gp' ~ config.gp_ver ~ '-*.el' ~ config.os_ver ~ '.tar.gz' %}
+      {% set pxf_fdw_tarball_filename = 'dist/pxf-fdw-gp' ~ config.gp_ver ~ '-*.el' ~ config.os_ver ~ '.tar.gz' %}
     {% endif %}
 
     {# OEL doesn't have a separate build job #}
-    {% if platform != 'oel' %}
+    {% if config.test_os != 'oel' %}
       {% include 'jobs/build-tpl.yml' %}
     {% endif %}
 
@@ -428,53 +423,51 @@ jobs:
 ## platform_gp_combinations dictionary definition:
 ##
 ##   gp_ver: GPDB Major Version
-##   execution_os: OS platform in which build and test jobs are executed
-##   os_ver: OS Major version
 ##   build_os: OS Platform in which the build was performed
+##   test_os: OS platform in which test jobs are executed
+##   os_ver: OS Major version
 ##
 ## ----------------------------------------------------------------------
 {% set platform_gp_combinations = [
-    {'gp_ver': '6', 'execution_os': 'rocky', 'os_ver': '8', 'build_os': 'rocky'},
-    {'gp_ver': '7', 'execution_os': 'rocky', 'os_ver': '8', 'build_os': 'rocky'}] %}
+    {'gp_ver': '6', 'build_os': 'rocky', 'test_os': 'rocky', 'os_ver': '8'},
+    {'gp_ver': '7', 'build_os': 'rocky', 'test_os': 'rocky', 'os_ver': '8'}] %}
 
 {% for config in platform_gp_combinations %}
-    {% set gp_ver = config.gp_ver %}
-    {% set platform = config.execution_os %}
-    {% set os_ver = config.os_ver %}
-    {% set build_platform = config.build_os %}
 
-    {% set platform_ver = platform ~ os_ver %}
+    {% set test_platform = config.test_os ~ config.os_ver %}
+    {% set build_platform = config.build_os ~ config.os_ver %}
+
     {% set gpdb_os_platform = 'rhel' %}{# This only supports RHEL platform #}
     {% set pkg_type = 'rpm' %}
 
-- name: test_pxf-fdw-gp[[gp_ver]]-hdp2_on_[[platform_ver]]
+- name: test_pxf-fdw-gp[[config.gp_ver]]-hdp2_on_[[test_platform]]
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
+      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_[[gpdb_os_platform]][[os_ver]]
-      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
-{% if gp_ver == '6' %}
+      resource: pxf_gp[[config.gp_ver]]_tarball_[[gpdb_os_platform]][[config.os_ver]]
+      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
+{% if config.gp_ver == '6' %}
     - get: pxf_fdw_tarball
-      resource: pxf_fdw_gp[[gp_ver]]_tarball_[[gpdb_os_platform]][[os_ver]]
-      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
+      resource: pxf_fdw_gp[[config.gp_ver]]_tarball_[[gpdb_os_platform]][[config.os_ver]]
+      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
 {% endif %}
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]_[[gpdb_os_platform]][[os_ver]]_[[pkg_type]]_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
-    - get: gpdb[[gp_ver]]-pxf-dev-[[platform_ver]]-image
-      passed: [build_pxf-gp[[gp_ver]]_on_[[platform_ver]]]
+      resource: gpdb[[config.gp_ver]]_[[gpdb_os_platform]][[config.os_ver]]_[[pkg_type]]_latest-0
+      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
+    - get: gpdb[[config.gp_ver]]-pxf-dev-[[test_platform]]-image
+      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: test_pxf-fdw-gp[[gp_ver]]-hdp2_on_[[platform_ver]]
+  - task: test_pxf-fdw-gp[[config.gp_ver]]-hdp2_on_[[test_platform]]
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-[[platform_ver]]-image
+    image: gpdb[[config.gp_ver]]-pxf-dev-[[test_platform]]-image
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
+      GP_VER: [[config.gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       USE_FDW: true
