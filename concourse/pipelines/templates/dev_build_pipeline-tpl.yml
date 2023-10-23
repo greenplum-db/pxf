@@ -370,10 +370,10 @@ resources:
 jobs:
 
 ## ======================================================================
-##                    Build and Sanity Test Swimlanes
+##                    Build and Basic SingleNode Test Swimlanes
 ## ----------------------------------------------------------------------
 ##
-## The creation of the PXF Build and Sanity test jobs are driven by
+## The creation of the PXF Build and Basic SingleNode test jobs are driven by
 ## the following platform_gp_combinations dictionary definition:
 ##
 ##   gp_ver: GPDB Major Version
