@@ -898,7 +898,7 @@ jobs:
       generate_random_name: true
       terraform_source: ccp_src/google/
       vars:
-        PLATFORM: centos7
+        PLATFORM: centos7-gpdb[[gp_ver]]  # there is only a centos-gpdb6 platform, this is ok as this test is only run with gp6
         number_of_nodes: ((number_of_gpdb_nodes))
         segments_per_host: 4
         instance_type: n1-standard-4
@@ -915,13 +915,13 @@ jobs:
       AWS_DEFAULT_REGION: ((ud/common/aws-region))
       BUCKET_PATH: ((tf-bucket-path))
       BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-      PLATFORM: centos7
+      PLATFORM: centos7-gpdb[[gp_ver]]  # there is only a centos-gpdb6 platform, this is ok as this test is only run with gp6
       CLOUD_PROVIDER: google
       GPDB_RPM: true
   - task: initialize_greenplum
     file: ccp_src/ci/tasks/gpinitsystem.yml
     params:
-      PLATFORM: centos7
+      PLATFORM: centos7-gpdb[[gp_ver]]  # there is only a centos-gpdb6 platform, this is ok as this test is only run with gp6
   - task: setup-nfs
     input_mapping:
       terraform: terraform_gpdb
@@ -1190,7 +1190,7 @@ jobs:
           generate_random_name: true
           terraform_source: ccp_src/google/
           vars:
-            PLATFORM: centos7
+            PLATFORM: centos7-gpdb[[gp_ver]]  # there is only a centos-gpdb6 platform, this is ok as this test is only run with gp6
             number_of_nodes: ((number_of_gpdb_nodes))
             extra_nodes: 1
             segments_per_host: 4
@@ -1209,14 +1209,14 @@ jobs:
           AWS_DEFAULT_REGION: ((ud/common/aws-region))
           BUCKET_PATH: ((tf-bucket-path))
           BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-          PLATFORM: centos7
+          PLATFORM: centos7-gpdb[[gp_ver]]  # there is only a centos-gpdb6 platform, this is ok as this test is only run with gp6
           CLOUD_PROVIDER: google
           GPDB_RPM: true
       - in_parallel:
         - task: initialize_greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
           params:
-            PLATFORM: centos7
+            PLATFORM: centos7-gpdb[[gp_ver]]  # there is only a centos-gpdb6 platform, this is ok as this test is only run with gp6
         - task: install_hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
           image: gpdb[[gp_ver]]-pxf-dev-centos7-image
@@ -1348,7 +1348,7 @@ jobs:
           generate_random_name: true
           terraform_source: ccp_src/google/
           vars:
-            PLATFORM: centos7
+            PLATFORM: centos7-gpdb[[gp_ver]]  # there is only a centos-gpdb6 platform, this is ok as this test is only run with gp6
             WITH_MIRRORS: false
             number_of_nodes: ((number_of_gpdb_nodes))
             extra_nodes: 1
@@ -1368,14 +1368,14 @@ jobs:
           AWS_DEFAULT_REGION: ((ud/common/aws-region))
           BUCKET_PATH: ((tf-bucket-path))
           BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-          PLATFORM: centos7
+          PLATFORM: centos7-gpdb[[gp_ver]]  # there is only a centos-gpdb6 platform, this is ok as this test is only run with gp6
           CLOUD_PROVIDER: google
           GPDB_RPM: true
       - in_parallel:
         - task: initialize_greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
           params:
-            PLATFORM: centos7
+            PLATFORM: centos7-gpdb[[gp_ver]]  # there is only a centos-gpdb6 platform, this is ok as this test is only run with gp6
             POSTGRES_CONF_ADDONS:
             - wal_level=minimal
             - max_wal_senders=0
