@@ -11,7 +11,7 @@ ADD apache-maven.tar.gz /usr/share
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
     && echo "${GO_SHA256SUM} /tmp/go.tgz" | sha256sum --check \
-    && rm -rf /usr/local/go && mkdir /opt/pxf && tar -C /opt/pxf -xzf go.tgz && rm go.tgz
+    && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tgz && rm go.tgz
 
 # install dependencies that are missing on the base images
 RUN apt-get update -y \
@@ -57,7 +57,7 @@ RUN locale-gen en_US.UTF-8 \
     && echo >> ~gpadmin/.pxfrc 'export GPHD_ROOT=/singlecluster' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_HOME=/usr/local/pxf-gp6' \
     && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64' \
-    && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/opt/pxf/go/bin:$PATH' \
+    && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/usr/local/go/bin:$PATH' \
     && ln -s ~gpadmin/.pxfrc ~root \
     && echo >> ~gpadmin/.bashrc 'source ~/.pxfrc' \
     && echo >> ~gpadmin/.bash_profile '[[ -f ~/.bashrc ]] && . ~/.bashrc' \

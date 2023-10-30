@@ -31,7 +31,7 @@ steps:
     args: [ './server/gradlew', '--gradle-user-home=/workspace/.gradle', '-Dorg.gradle.daemon=false', '-b', './server/build.gradle', 'test', 'stage' ]
     waitFor: [ 'untar-pxf-build-dependencies' ]
 
-  - name: golang:1.19
+  - name: golang:1.21.3
     id: golang-build
     entrypoint: 'bash'
     args:

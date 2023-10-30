@@ -194,8 +194,8 @@ steps:
     - gpdb7-rocky8-test-pxf-image-cache
 
 substitutions:
-  _GO_VERSION: '1.19.6' # default values
-  _GO_SHA256SUM: 'e3410c676ced327aec928303fef11385702a5562fd19d9a1750d5a2979763c3d' # sha256 for 1.19.6
+  _GO_VERSION: '1.21.3' # default values
+  _GO_SHA256SUM: '1241381b2843fae5a9707eec1f8fb2ef94d827990582c7c7c32f5bdfbfd420c8' # sha256 for 1.21.3
   _MAVEN_VERSION: '3.9.3' # default values
 
 # Push images to Cloud Build to Container Registry

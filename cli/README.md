@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-1. Ensure you are set up for PXF development by following the README.md at the root of this repository. This tool requires Go version 1.19 or higher. Follow the directions [here](https://golang.org/doc/) to get the language set up.
+1. Ensure you are set up for PXF development by following the README.md at the root of this repository. This tool requires Go version 1.21 or higher. Follow the directions [here](https://golang.org/doc/) to get the language set up.
 
 1. Run the tests
    ```

@@ -9,7 +9,7 @@ ARG GO_SHA256SUM
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
     && echo "${GO_SHA256SUM} /tmp/go.tgz" | sha256sum --check \
-    && rm -rf /usr/local/go && mkdir /opt/pxf && tar -C /opt/pxf -xzf go.tgz && rm go.tgz
+    && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tgz && rm go.tgz
 
 # add Java 8, Java 11, jq and rpm-build
 RUN yum install -y rpm-build java-1.8.0-openjdk-devel jq && yum clean all \
@@ -66,7 +66,7 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && echo >> ~gpadmin/.pxfrc 'export GPHD_ROOT=/singlecluster' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_HOME=/usr/local/pxf-gp5' \
     && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk' \
-    && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/opt/pxf/go/bin:$PATH' \
+    && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/usr/local/go/bin:$PATH' \
     && ln -s ~gpadmin/.pxfrc ~root \
     && echo >> ~gpadmin/.bashrc 'source ~/.pxfrc' \
     && chown -R gpadmin:gpadmin ~gpadmin

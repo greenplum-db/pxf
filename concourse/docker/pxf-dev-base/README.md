@@ -29,7 +29,7 @@ directory. The `cloudbuild.yaml` file produces the following docker images:
 
 You can build these images individually by first setting these local variables:
 ```
-export GO_VERSION=1.19.6
+export GO_VERSION=1.21.3
 export MAVEN_VERSION=3.9.2
 ```
 ## Greenplum 5 Images
