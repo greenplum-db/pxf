@@ -10,17 +10,35 @@ GPDB_VERSION=$(<"${GPDB_PKG_DIR}/version")
 
 function install_gpdb() {
     local pkg_file
-    # ${GPDB_PKG_DIR}/url file contains full URL of the object
-    pkg_file=$(<"${GPDB_PKG_DIR}/url")
-    # extract the installer file name
-    pkg_file="${pkg_file##*/}"
     if command -v rpm; then
+
+        # extract the OS major version
+        os_major_version=$(cat /etc/os-release | grep VERSION_ID | tr -dc '0-9.'| cut -d \. -f1)
+
+        # there is only a GPDB server RPM available for RHEL9
+        if [[ $os_major_version -eq "9" ]]; then
+            gpdb_file_name="greenplum-db-server"
+        else
+            gpdb_file_name="greenplum-db"
+        fi
+
+        # For GP7 and above, a new rhel8 & rocky8 distro identifier
+        # (el8) has been introduced.
+        if [[ ${GPDB_VERSION%%.*} -ge 7 ]]; then
+            DISTRO_MATCHING_PATTERN="el"
+        else
+            DISTRO_MATCHING_PATTERN="r"
+        fi
+
+        pkg_file=$(find "${GPDB_PKG_DIR}" -name "${gpdb_file_name}-${GPDB_VERSION}-${DISTRO_MATCHING_PATTERN}*-x86_64.rpm")
+
         echo "Installing RPM ${pkg_file}..."
-        rpm --quiet -ivh "${GPDB_PKG_DIR}/${pkg_file}" >/dev/null
+        rpm --quiet -ivh "${pkg_file}" >/dev/null
     elif command -v apt-get; then
-        echo "Installing DEB ${pkg_file}..."
         # apt-get wants a full path
-        apt-get install -qq "${PWD}/${GPDB_PKG_DIR}/${pkg_file}" >/dev/null
+        pkg_file=$(find "${PWD}/${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-ubuntu18.04-amd64.deb")
+        echo "Installing DEB ${pkg_file}..."
+        apt-get install -qq "${pkg_file}" >/dev/null
     else
         echo "Unsupported operating system '$(source /etc/os-release && echo "${PRETTY_NAME}")'. Exiting..."
         exit 1
