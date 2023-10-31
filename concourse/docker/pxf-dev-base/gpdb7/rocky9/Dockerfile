@@ -25,7 +25,7 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio \
 # install dependencies that are missing on the base images
 RUN ln -s /usr/share/apache-maven-*/bin/mvn /usr/bin/mvn
 
-# automation tests use jsystem and requires the older SHA1 crypto policy
+# automation tests use jsystem and requires the older SHA1 crypto policy, include it here
 RUN update-crypto-policies --set DEFAULT:SHA1
 
 # create rsa key for the root user
