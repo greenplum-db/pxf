@@ -19,6 +19,7 @@ function install_gpdb() {
         if [[ $os_major_version -eq "9" ]]; then
             gpdb_file_name="greenplum-db-server"
         else
+            # if no os major version is found, we will just fall into the default case here
             gpdb_file_name="greenplum-db"
         fi
 
@@ -29,7 +30,6 @@ function install_gpdb() {
         else
             DISTRO_MATCHING_PATTERN="r"
         fi
-
         pkg_file=$(find "${GPDB_PKG_DIR}" -name "${gpdb_file_name}-${GPDB_VERSION}-${DISTRO_MATCHING_PATTERN}*-x86_64.rpm")
 
         echo "Installing RPM ${pkg_file}..."
@@ -109,7 +109,7 @@ function package_pxf_fdw() {
 install_gpdb
 # installation of GPDB from RPM/DEB doesn't ensure that the installation location will match the version
 # given in the gpdb_package, so set the GPHOME after installation
-# In case of we are testing a dev version( 6.25.3+dev.6.54a3437 ), GPDB_VERSION%%+* will remove extra string from + onwards
+# In case we are testing a dev version (i.e: 6.25.3+dev.6.54a3437), GPDB_VERSION%%+* will remove any extra string from + onwards
 GPHOME=$(find /usr/local/ -name "greenplum-db-${GPDB_VERSION%%+*}*")
 inflate_dependencies
 compile_pxf
