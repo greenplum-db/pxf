@@ -1,0 +1,15 @@
+{# Template for a Greenplum package resource definition.
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #}
+
+{# include Greenplum package only if both build and test platform are the same to avoid duplicates #}
+{% if x.build_platform == x.test_platform %}
+- name: gpdb[[x.gp_ver]]_[[x.release_platform]]_[[x.pkg_type]]_latest-0
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    regexp: latest-0_gpdb[[x.gp_ver]]/greenplum-db-([[x.gp_ver]].*)-[[x.greenplum_platform]]-[[x.pkg_arch]].[[x.pkg_type]]
+{% endif %}

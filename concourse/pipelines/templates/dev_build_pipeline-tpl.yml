@@ -1,5 +1,34 @@
 ---
 # yamllint disable rule:empty-lines
+
+{# import macros to use in this template #}
+{% import "macros/macros.j2" as macros %}
+
+{#
+# ======================================================================
+# BUILD and TEST Combinations for PXF
+# ======================================================================
+
+# gp_ver   : major Greenplum version
+# build_os : the name of the OS used to build PXF artifacts
+# test_os  : the name of the OS used to test  PXF artifacts
+# os_ver   : the version of the OS
+# test_fdw : whether to test PXF FDW extension in this configuration
+#
+# when iterating over the entries, use the following pattern:
+# {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+#     <do whatever rendering you need for a combination, can use {% include '.../some-template.yml' %} >
+# {% endcall %}
+#}
+
+{% set build_test_pxf_combinations = [
+    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true },
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false},
+    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true }] %}
+
 ## ======================================================================
 ## ANCHORS
 ## ======================================================================
@@ -172,50 +201,9 @@ resources:
 {% endif %}
 
 ## ---------- Docker Images ----------
-{% set gp_ver = None %}
-{% for gp_ver in range(5, 7) %}
-- name: gpdb[[gp_ver]]-pxf-dev-centos7-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
-    tag: ((pxf-dev-image-tag))
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endfor %}{# gp5, gp6, and gp7 #}
-
-{% for gp_ver in range(6, 8) %}
-- name: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rocky8-test-pxf
-    tag: ((pxf-dev-image-tag))
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endfor %}
-
-{% if oel7 %}
-- name: gpdb6-pxf-dev-oel7-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-oel7-test-pxf
-    tag: ((pxf-dev-image-tag))
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endif %}
-
-{% set gp_ver = 6 %}
-- name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
-    tag: ((pxf-dev-image-tag))
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% set gp_ver = None %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% include 'resources/pxf-test-image.yml' %}
+{% endcall %}
 
 {% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
 - name: ccp-7-image
@@ -234,51 +222,14 @@ resources:
 {% endif %}
 
 ## ---------- Greenplum Packages ----------
-{% set gp_ver = 5 %}
-- name: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
-{% set gp_ver = None %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% include 'resources/greenplum-package.yml' %}
+{% endcall %}
 
-{% set gp_ver = 6 %}
-- name: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
-
-- name: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-ubuntu18.04-amd64.deb
-
-- name: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel8-x86_64.rpm
-{% set gp_ver = None %}
-
-{% set gp_ver = 7 %}
-- name: gpdb[[gp_ver]]_rhel8_rpm_latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-el8-x86_64.rpm
-{% set gp_ver = None %}
+## ---------- PXF Artifacts ----------
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% include 'resources/pxf-artifact.yml' %}
+{% endcall %}
 
 ## ---------- PXF 5 Artifact ---------------
 {% if multinode %}
@@ -289,46 +240,6 @@ resources:
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
 {% endif %}
-
-## ---------- PXF Build Artifacts ----------
-{% set gp_ver = None %}
-{% for gp_ver in range(5, 7) %}
-- name: pxf_gp[[gp_ver]]_tarball_rhel7
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]].el7.tar.gz
-{% endfor %}
-
-{% set gp_ver = 6 %}
-- name: pxf_gp[[gp_ver]]_tarball_ubuntu18
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
-
-- name: pxf_fdw_gp[[gp_ver]]_tarball_rhel8
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-fdw-gp[[gp_ver]].el8.tar.gz
-{% set gp_ver = None %}
-
-{% for gp_ver in range(6, 8) %}
-- name: pxf_gp[[gp_ver]]_tarball_rhel8
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf6/pxf-gp[[gp_ver]].el8.tar.gz
-{% endfor %}
 
 ## ---------- Auxiliary Resources ----------
 {% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
@@ -369,114 +280,32 @@ resources:
 ## ======================================================================
 jobs:
 
-## ======================================================================
-##                    Build and Basic SingleNode Test Swimlanes
-## ----------------------------------------------------------------------
-##
-## The creation of the PXF Build and Basic SingleNode test jobs are driven by
-## the following platform_gp_combinations dictionary definition:
-##
-##   gp_ver: GPDB Major Version
-##   build_os: OS Platform in which the build was performed
-##   test_os: OS platform in which test jobs are executed
-##   os_ver: OS Major version
-##
-## NOTE: The oel7 platform only includes a test job. The inclusion of
-## the oel7 test job is controlled by the Makefile OEL7 (disbled by
-## default) parameter.
-## ----------------------------------------------------------------------
-{% set platform_gp_combinations = [
-    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'},
-    {'gp_ver': '6', 'build_os': 'rocky', 'test_os': 'rocky', 'os_ver': '8'},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel', 'os_ver': '7'},
-    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18'},
-    {'gp_ver': '7', 'build_os': 'rocky', 'test_os': 'rocky', 'os_ver': '8'}] %}
+## ---------- Build and Basic Singlenode Test Swimlanes ----------
 
-{% for config in platform_gp_combinations %}
-
-    {% set test_platform = config.test_os ~ config.os_ver %}
-    {% set build_platform = config.build_os ~ config.os_ver %}
-
-    {% if config.test_os in ['ubuntu'] %}
-      {% set pkg_type = 'deb' %}
-      {% set gpdb_os_platform = 'ubuntu' %}
-      {% set pxf_tarball_filename = 'dist/pxf-gp' ~ config.gp_ver ~ '-*-ubuntu' ~ config.os_ver ~ '.04' ~ '.tar.gz' %}
-      {% set pxf_fdw_tarball_filename = '' %}{# Doesn't apply for ubuntu platform #}
-    {% else %} {# Else section applies to centos, rocky and oel platforms #}
-      {% set pkg_type = 'rpm' %}
-      {% set gpdb_os_platform = 'rhel' %}
-      {% set pxf_tarball_filename = 'dist/pxf-gp' ~ config.gp_ver ~ '-*.el' ~ config.os_ver ~ '.tar.gz' %}
-      {% set pxf_fdw_tarball_filename = 'dist/pxf-fdw-gp' ~ config.gp_ver ~ '-*.el' ~ config.os_ver ~ '.tar.gz' %}
+{# include a build job for all OS other than OEL (which does not have a separate build job) #}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_os != 'oel' %}
+        {% include 'jobs/build-tpl.yml' %}
     {% endif %}
+{% endcall %}
 
-    {# OEL doesn't have a separate build job #}
-    {% if config.test_os != 'oel' %}
-      {% include 'jobs/build-tpl.yml' %}
+{# include a non-FDW test job #}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_os != 'oel' or oel7 %}
+        {% do x.update({'use_fdw': 'false'}) %}
+        {% do x.update({'fdw_suffix': ''}) %}
+        {% include 'jobs/test-tpl.yml' %}
     {% endif %}
+{% endcall %}
 
-    {% if config.test_os != 'oel' or oel7 %}
-      {% include 'jobs/test-tpl.yml' %}
+{# include an FDW test job if supported by the swimlane #}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_fdw is sameas true %}
+        {% do x.update({'use_fdw': 'true'}) %}
+        {% do x.update({'fdw_suffix': '-fdw'}) %}
+        {% include 'jobs/test-tpl.yml' %}
     {% endif %}
-{% endfor %}
-
-## ======================================================================
-##                             FDW Test Job
-## ----------------------------------------------------------------------
-##
-## The creation of the PXF FDW test jobs are driven by the following
-## platform_gp_combinations dictionary definition:
-##
-##   gp_ver: GPDB Major Version
-##   build_os: OS Platform in which the build was performed
-##   test_os: OS platform in which test jobs are executed
-##   os_ver: OS Major version
-##
-## ----------------------------------------------------------------------
-{% set platform_gp_combinations = [
-    {'gp_ver': '6', 'build_os': 'rocky', 'test_os': 'rocky', 'os_ver': '8'},
-    {'gp_ver': '7', 'build_os': 'rocky', 'test_os': 'rocky', 'os_ver': '8'}] %}
-
-{% for config in platform_gp_combinations %}
-
-    {% set test_platform = config.test_os ~ config.os_ver %}
-    {% set build_platform = config.build_os ~ config.os_ver %}
-
-    {% set gpdb_os_platform = 'rhel' %}{# This only supports RHEL platform #}
-    {% set pkg_type = 'rpm' %}
-
-- name: test_pxf-fdw-gp[[config.gp_ver]]-hdp2_on_[[test_platform]]
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[config.gp_ver]]_tarball_[[gpdb_os_platform]][[config.os_ver]]
-      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
-{% if config.gp_ver == '6' %}
-    - get: pxf_fdw_tarball
-      resource: pxf_fdw_gp[[config.gp_ver]]_tarball_[[gpdb_os_platform]][[config.os_ver]]
-      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
-{% endif %}
-    - get: gpdb_package
-      resource: gpdb[[config.gp_ver]]_[[gpdb_os_platform]][[config.os_ver]]_[[pkg_type]]_latest-0
-      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
-    - get: gpdb[[config.gp_ver]]-pxf-dev-[[test_platform]]-image
-      passed: [build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]]
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-fdw-gp[[config.gp_ver]]-hdp2_on_[[test_platform]]
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[config.gp_ver]]-pxf-dev-[[test_platform]]-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[config.gp_ver]]
-      GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      USE_FDW: true
-{% endfor %}
+{% endcall %}
 
 ## ---------- GP7 PXF CLI tests ----------
 

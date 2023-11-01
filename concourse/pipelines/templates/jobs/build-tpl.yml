@@ -1,32 +1,29 @@
-## Template for generating build jobs in the dev and build pipeline
+{# Template for a PXF build job definition.
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #}
 
-## Following variables are expected to be passed to set the build job
-## config.gp_ver = GPDB Major version
-## config.os_ver = OS Major version
-## build_platform = build_os + os_ver
-## gpdb_os_platform = GPDB RPM OS ( rhel or ubuntu)
-## pkg_type = rpm or deb
-
-- name: build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]
+- name: build_pxf-gp[[x.gp_ver]]_on_[[x.build_platform]]
   plan:
   - in_parallel:
     - get: pxf_src
       trigger: true
     - get: gpdb_package
-      resource: gpdb[[config.gp_ver]]_[[gpdb_os_platform]][[config.os_ver]]_[[pkg_type]]_latest-0
-    - get: gpdb[[config.gp_ver]]-pxf-dev-[[build_platform]]-image
+      resource: gpdb[[x.gp_ver]]_[[x.release_platform]]_[[x.pkg_type]]_latest-0
+    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.build_platform]]-image
     - get: pxf-build-dependencies
-  - task: build_pxf-gp[[config.gp_ver]]_on_[[build_platform]]
-    image: gpdb[[config.gp_ver]]-pxf-dev-[[build_platform]]-image
+  - task: build_pxf-gp[[x.gp_ver]]_on_[[x.build_platform]]
+    image: gpdb[[x.gp_ver]]-pxf-dev-[[x.build_platform]]-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((ud/pxf/common/rpm-license))
-      VENDOR: ((ud/pxf/common/[[pkg_type]]-vendor))
-  - put: pxf_gp[[config.gp_ver]]_tarball_[[gpdb_os_platform]][[config.os_ver]]
+      VENDOR: ((ud/pxf/common/[[x.pkg_type]]-vendor))
+  - put: pxf_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
     params:
-      file: [[pxf_tarball_filename]]
-{% if config.gp_ver == '6'  and build_platform == 'rocky8' %}
-  - put: pxf_fdw_gp[[config.gp_ver]]_tarball_[[gpdb_os_platform]][[config.os_ver]]
+      file: dist/[[x.pxf_tarball_filename_regex]]
+{# PXF FDW Build Artifact for GP6 only (since PXF FDW extension is not packaged into pxf-gp6 tarball) #}
+{% if x.gp_ver == '6' and x.test_fdw %}
+  - put: pxf_fdw_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
     params:
-      file: [[pxf_fdw_tarball_filename]]
+      file: dist/[[x.pxf_fdw_tarball_filename_regex]]
 {% endif %}

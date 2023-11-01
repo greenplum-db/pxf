@@ -1,0 +1,29 @@
+{# Template for a PXF build artifact resource definition. 
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file  
+ #}
+  
+{# include PXF artifact only if both build and test platform are the same to avoid duplicates #}
+{% if x.build_platform == x.test_platform %}
+
+{# PXF Build Artifact #}
+- name: pxf_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    versioned_file: dev/[[x.user]]-[[x.branch]]/snapshots/pxf6/pxf-gp[[x.gp_ver]][[x.pxf_tarball_infix]][[x.release_platform]].tar.gz
+
+{# PXF FDW Build Artifact for GP6 only (since PXF FDW extension is not packaged into pxf-gp6 tarball) #}
+{% if x.gp_ver == '6' and x.test_fdw %}
+- name: pxf_fdw_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    versioned_file: dev/[[x.user]]-[[x.branch]]/snapshots/pxf6/pxf-fdw-gp[[x.gp_ver]][[x.pxf_tarball_infix]][[x.release_platform]].tar.gz
+{% endif %}
+
+{% endif %}  {# end of conditional package definitions #}

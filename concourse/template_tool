@@ -22,7 +22,7 @@ TEMPLATE_ENVIRONMENT = Environment(
     lstrip_blocks=True,
     variable_start_string='[[',  # 'default {{ has conflict with pipeline syntax'
     variable_end_string=']]',
-    extensions=['jinja2.ext.loopcontrols'])
+    extensions=['jinja2.ext.loopcontrols', 'jinja2.ext.do'])
 
 
 class PxfParser(argparse.ArgumentParser):

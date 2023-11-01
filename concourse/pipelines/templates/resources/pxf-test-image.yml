@@ -1,0 +1,16 @@
+{# Template for a PXF test docker image resource definition.
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #}
+
+{# include test docker image for all OS other than OEL (unless requested by a Makefile parameter #}
+{% if x.test_platform != 'oel7' or oel7 %}
+- name: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[x.gp_ver]]-[[x.test_platform]]-test-pxf
+    tag: ((pxf-dev-image-tag))
+    username: _json_key
+    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+{% endif %}

@@ -1,0 +1,59 @@
+{#
+  Macro that takes an array of config dictionaries, iterated over them and for each swimlane:
+  - creates a dictionary with the original attributes
+  - adds derived attributes to the dictionary
+  - passes this dictionary in a callback method to the caller
+  - renders the result of a callback method
+
+  Each config in the input parameter array is a dictionary with the folowing attributes:
+  - 'gp_ver'   : major Greenplum version
+  - 'build_os' : the name of the OS for building PXF artifacts
+  - 'test_os'  : the name of the OS for testing  PXF artifacts
+  - 'os_ver'   : the version of the OS
+  - 'test_fdw' : whether to test PXF FDW extension in this configuration
+
+  Additional derived attributes added to the "x" context dictionary:
+  - 'build_platform'     : the name and version of the OS for building PXF artifacts
+  - 'test_platform'      : the name and version of the OS for testing  PXF artifacts
+  - 'pkg_type'           : the type of the PXF artifact package (rpm or deb)
+  - 'pkg_arch'           : the machine architecture of the package (x86_64 or amd64)
+  - 'release_platform'   : the platform used in PXF  artifact file names (el7, el8, el9, ubuntu18.04)
+  - 'greenplum_platform' : the platform used in GPDB artifact file names (rhel7, rhel8, el9, ubuntu18.04)
+  - 'pxf_tarball_infix'  : the symbol separating the platform in the PXF artifact names
+#}
+{% macro for_each_config(configs) %}
+    {% for conf in configs %}
+        {# set local variables for a given loop iteration #}
+        {% set x = dict(conf) %}
+        {% do x.update({'build_platform': x.build_os ~ x.os_ver}) %}
+        {% do x.update({'test_platform' : x.test_os  ~ x.os_ver}) %}
+
+        {# set OS specific variable values #}
+        {% if conf.test_os in [ 'ubuntu' ] %}
+            {% do x.update({'pkg_type': 'deb'}) %}
+            {% do x.update({'pkg_arch': 'amd64'}) %}
+            {% do x.update({'release_platform': 'ubuntu' ~ x.os_ver}) %}
+            {% do x.update({'pxf_tarball_infix': '-'}) %}
+        {% else %} {# other operating systems: centos, rocky and oel #}
+            {% do x.update({'pkg_type': 'rpm'}) %}
+            {% do x.update({'pkg_arch': 'x86_64'}) %}
+            {% do x.update({'release_platform': 'el' ~ x.os_ver}) %}
+            {% do x.update({'pxf_tarball_infix': '.'}) %}
+        {% endif %}
+
+        {# adjust Greenplum release platform due to historical inconsistencies #}
+        {% if x.release_platform == 'el7' %}
+            {% do x.update({'greenplum_platform': 'rhel7'}) %}
+        {% elif x.release_platform == 'el8' and x.gp_ver < '7' %}
+            {% do x.update({'greenplum_platform': 'rhel8'}) %}
+        {% else %}
+            {% do x.update({'greenplum_platform': x.release_platform}) %}
+        {% endif %}
+
+        {% do x.update({'pxf_tarball_filename_regex':     'pxf-gp'     ~ x.gp_ver ~ '-*' ~ x.pxf_tarball_infix ~ x.release_platform ~ '.tar.gz'}) %}
+        {% do x.update({'pxf_fdw_tarball_filename_regex': 'pxf-fdw-gp' ~ x.gp_ver ~ '-*' ~ x.pxf_tarball_infix ~ x.release_platform ~ '.tar.gz'}) %}
+
+        {# render the result of callback passing the resulting context specific to this loop iteration #}
+[[caller(x)]]
+    {% endfor %}
+{% endmacro %}
