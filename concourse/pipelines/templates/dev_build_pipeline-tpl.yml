@@ -98,7 +98,9 @@ resources:
 {% endif %}
 
 ## ---------- Slack Notification ----------
+{% if slack_notification %}
   [[macros.resource_slack_notification('ud-pipeline-bot-' ~ user ~ '-webhook')]]
+{% endif %}
 
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
