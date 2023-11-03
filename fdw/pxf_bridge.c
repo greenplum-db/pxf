@@ -34,6 +34,32 @@ static size_t FillBuffer(PxfFdwScanState *pxfsstate, char *start, size_t size);
 #endif
 
 /*
+ * Clean up churl related data structures from the PXF FDW scan state.
+ */
+void
+PxfBridgeImportCleanup(PxfFdwScanState *pxfsstate)
+{
+	if (pxfsstate == NULL)
+		return;
+
+	churl_cleanup(pxfsstate->churl_handle, false);
+	pxfsstate->churl_handle = NULL;
+
+	churl_headers_cleanup(pxfsstate->churl_headers);
+	pxfsstate->churl_headers = NULL;
+
+	if (pxfsstate->uri.data)
+	{
+		pfree(pxfsstate->uri.data);
+	}
+
+	if (pxfsstate->options)
+	{
+		pfree(pxfsstate->options);
+	}
+}
+
+/*
  * Clean up churl related data structures from the PXF FDW modify state.
  */
 void
