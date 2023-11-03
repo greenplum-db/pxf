@@ -26,9 +26,11 @@
     {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': false},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': true },
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_cloud': false},
     {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_cloud': false},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false}] %}
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false}] %}
 
 {# define supported clouds and whether their testing is requested by the Makefile via context variables #}
 {% set clouds = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio} %}
@@ -227,7 +229,29 @@ resources:
 
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% include 'resources/greenplum-package.yml' %}
+    {% if x.os_ver == '9' and x.gp_ver == '6' %}
+        {# define RPMs for rocky9 until they are released into standard locations #}
+- name: gpdb6-el9-rpm-latest-0
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: maintenance/release-candidates/gpdb6/greenplum-db-server-(6.*)-rhel9-x86_64.rpm
+
+    {% elif x.os_ver == '9' and x.gp_ver == '7' %}
+
+- name: gpdb7-el9-rpm-latest-0
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: server/release-candidates/gpdb7/greenplum-db-server-(7.*)-el9-x86_64.rpm
+
+    {% else %}
+        {% include 'resources/greenplum-package.yml' %}
+    {% endif %}
 {% endcall %}
 
 ## ---------- PXF Artifacts ----------
