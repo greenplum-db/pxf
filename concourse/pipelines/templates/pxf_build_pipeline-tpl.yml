@@ -1,4 +1,40 @@
 ---
+# yamllint disable rule:empty-lines
+
+{# import macros to use in this template #}
+{% import "macros/macros.j2" as macros %}
+
+{#
+# ======================================================================
+# BUILD and TEST Combinations for PXF
+# ======================================================================
+
+# gp_ver     : major Greenplum version
+# build_os   : the name of the OS used to build PXF artifacts
+# test_os    : the name of the OS used to test  PXF artifacts
+# os_ver     : the version of the OS
+# test_fdw   : whether to test PXF FDW extension in this configuration
+# test_cloud : whether to test PXF against cloud external systems
+#
+# when iterating over the entries, use the following pattern:
+# {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+#     <do whatever rendering you need for a combination, can use {% include '.../some-template.yml' %} >
+# {% endcall %}
+#}
+
+{% set build_test_pxf_combinations = [
+    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': false},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': true },
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_cloud': false},
+    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_cloud': false},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false}] %}
+
+{# define supported clouds and whether their testing is requested by the Makefile via context variables #}
+{% set clouds = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio} %}
+
 {# change num_gpdb5_versions & num_gpdb6_versions in Makefile to download/test more Greenplum versions #}
 {# number of backwards compatibility tasks that can run at once #}
 {% set max_concurrent_bc_tasks = 3 %}
@@ -368,50 +404,9 @@ resources:
     regexp: [[ environment ]]/shipit/greenplum-pxf-(.*).txt
 
 ## ---------- Docker Images ----------
-{% set gp_ver = None %}
-
-{% for gp_ver in range(5, 7) %}
-- name: gpdb[[gp_ver]]-pxf-dev-centos7-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
-    tag: latest
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endfor %}{# gp5, gp6 #}
-
-{% for gp_ver in range(6, 8) %}
-- name: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-rocky8-test-pxf
-    tag: latest
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endfor %}{# gp6, gp7 #}
-{% set gp_ver = None %}
-
-- name: gpdb6-pxf-dev-oel7-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-oel7-test-pxf
-    tag: latest
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-
-{% set gp_ver = 6 %}
-- name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
-    tag: latest
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% include 'resources/pxf-test-image.yml' %}
+{% endcall %}
 {% set gp_ver = None %}
 
 - name: rpmrebuild-centos7-image
@@ -459,61 +454,33 @@ resources:
 {% endif %}
 
 ## ---------- Greenplum Packages ----------
-{% set gp_ver = 5 %}
-{% for i in range(num_gpdb5_versions) %}
-- name: gpdb[[gp_ver]]_rhel7_rpm_latest-[[i]]
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% for i in range(num_gpdb5_versions) %}
+        {% if x.os_ver == '9' and x.gp_ver == '6' %}
+        {# define RPMs for rocky9 until they are released into standard locations #}
+- name: gpdb6-el9-rpm-latest-[[i]]
   type: gcs
   icon: google-drive
   source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
-{% endfor %}{# range(num_gpdb5_versions) #}
-{% set gp_ver = None %}
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: maintenance/release-candidates/gpdb6/greenplum-db-server-(6.*)-rhel9-x86_64.rpm
 
-{% set gp_ver = 6 %}
-{% for i in range(num_gpdb6_versions) %}
-- name: gpdb[[gp_ver]]_rhel7_rpm_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel7-x86_64.rpm
+    {% elif x.os_ver == '9' and x.gp_ver == '7' %}
 
-- name: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
+- name: gpdb7-el9-rpm-latest-[[i]]
   type: gcs
   icon: google-drive
   source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-ubuntu18.04-amd64.deb
-{% endfor %}{# range(num_gpdb6_versions) #}
-{% set gp_ver = None %}
+    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: server/release-candidates/gpdb7/greenplum-db-server-(7.*)-el9-x86_64.rpm
 
-{% set gp_ver = 6 %}
-{% for i in range(num_gpdb6_versions) %}
-- name: gpdb[[gp_ver]]_rhel8_rpm_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-rhel8-x86_64.rpm
-{% endfor %}{# range(num_gpdb6_versions) #}
-{% set gp_ver = None %}
-
-{% set gp_ver = 7 %}
-{% for i in range(num_gpdb7_versions) %}
-- name: gpdb[[gp_ver]]_rhel8_rpm_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-([[gp_ver]].*)-el8-x86_64.rpm
-{% endfor %}{# range(num_gpdb7_versions) #}
-{% set gp_ver = None %}
+        {% else %}
+            {% include 'resources/greenplum-package.yml' %}
+        {% endif %}
+    {% endfor %}
+    {% endcall %}
 
 ## ---------- PXF 5 (for GPDB 6) Artifact ---------------
 - name: pxf5_gp6_rhel7_released
