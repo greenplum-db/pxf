@@ -6,11 +6,11 @@
 {# include Greenplum package only if both build and test platform are the same to avoid duplicates #}
 {# for example, the 'oel7' test platform does not have an 'oel7' build job and uses 'centos7' artifacts #}
 {% if x.build_platform == x.test_platform %}
-- name: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
+- name: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-[[i]]
   type: gcs
   icon: google-drive
   source:
     bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-0_gpdb[[x.gp_ver]]/greenplum-db-([[x.gp_ver]].*)-[[x.greenplum_platform]]-[[x.pkg_arch]].[[x.pkg_type]]
+    regexp: latest-[[i]]_gpdb[[x.gp_ver]]/greenplum-db-([[x.gp_ver]].*)-[[x.greenplum_platform]]-[[x.pkg_arch]].[[x.pkg_type]]
 {% endif %}
