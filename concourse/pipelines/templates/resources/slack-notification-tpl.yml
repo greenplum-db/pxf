@@ -3,7 +3,7 @@
  # Expects a 'url_key' variable to be set
  #}
 
-- name: slack-alert
+- name: [[slack_alert_name]]
   type: slack-notification
   source:
     url: (([[url_key]]))

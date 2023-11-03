@@ -88,7 +88,7 @@
     {% include 'resources/github-repo-tpl.yml' %}
 {% endmacro %}
 
-{% macro resource_slack_notification(url_key) %}
+{% macro resource_slack_notification(slack_alert_name, url_key) %}
     {% include 'resources/slack-notification-tpl.yml' %}
 {% endmacro %}
 

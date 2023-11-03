@@ -1,0 +1,23 @@
+{# Template for a PXF build artifact resource definition.
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #}
+
+{# include Release artifact only if both build and test platform are the same to avoid duplicates #}
+{% if x.build_platform == x.test_platform %}
+{% if x.os_ver != '9' %}
+
+{# Release Drop Artifact #}
+- name: pxf-gp[[x.gp_ver]]-[[x.greenplum_platform]]-release-to-releng
+  type: gcs
+  source:
+    bucket: ((ud/pxf/[[environment]]/releng-drop-bucket-name))
+    json_key: ((concourse-gcs-resources-service-account-key))
+{% if x.build_os == 'ubuntu' %}
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb[[x.gp_ver]]/pxf-gp[[x.gp_ver]]-(.*)-2-[[x.release_platform]]-[[x.pkg_arch]]-[[x.pkg_type]]
+{% else %}
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb[[x.gp_ver]]/pxf-gp[[x.gp_ver]]-(.*)-2.[[x.release_platform]].[[x.pkg_arch]].[[x.pkg_type]]
+{% endif %}
+
+{% endif %}
+{% endif %}  {# end of conditional package definitions #}

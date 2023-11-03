@@ -121,7 +121,7 @@ resources:
 
 ## ---------- Slack Notification ----------
 {% if slack_notification %}
-    [[macros.resource_slack_notification('ud-pipeline-bot-' ~ user ~ '-webhook')]]
+    [[macros.resource_slack_notification('slack-alert', 'ud-pipeline-bot-' ~ user ~ '-webhook')]]
 {% endif %}
 
 ## ---------- Greenplum Packages ----------

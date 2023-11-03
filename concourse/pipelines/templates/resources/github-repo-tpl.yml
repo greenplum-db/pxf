@@ -10,6 +10,11 @@
 {% if repo_name == 'pxf' %}
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
+    ignore_paths:
+      - docs/**
+      - singlecluster/**
+      - NOTICE
+      - README.md
 {% elif repo_name == 'ccp' %}
     branch: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-branch))
     private_key: ((gp-concourse-cluster-provisioner-git-key))
