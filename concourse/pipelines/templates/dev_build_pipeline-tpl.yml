@@ -39,70 +39,11 @@
 ## ANCHORS
 ## ======================================================================
 anchors:
-- &destroy_dataproc_1
-  task: cleanup-dataproc-1
-  config:
-    run:
-      path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
-    inputs:
-    - name: pxf_src
-    - name: dataproc_env_files
-    platform: linux
-  image: ccp-7-image
-  params:
-    GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
-    GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-    GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-
-- &destroy_dataproc_2
-  task: cleanup-dataproc-2
-  input_mapping:
-    dataproc_env_files: dataproc_2_env_files
-  config:
-    run:
-      path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
-    inputs:
-    - name: pxf_src
-    - name: dataproc_env_files
-    platform: linux
-  image: ccp-7-image
-  params:
-    GOOGLE_CREDENTIALS: ((ud/pxf/secrets/kerberos-ccp-ci-service-account-key))
-    GOOGLE_PROJECT_ID: ((ud/pxf/common/kerberos-google-project-id))
-    GOOGLE_ZONE: ((ud/pxf/common/kerberos-google-zone))
-
-- &destroy_gpdb_cluster
-  put: terraform-gpdb
-  resource: terraform
-  params:
-    action: destroy
-    env_name_file: terraform-gpdb/name
-    terraform_source: ccp_src/google/
-  get_params:
-    action: destroy
-
-- &destroy_hadoop_cluster
-  put: terraform-ipa-hadoop
-  params:
-    action: destroy
-    env_name_file: terraform_ipa_hadoop/name
-    terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
-  get_params:
-    action: destroy
-
-{% if slack_notification %}
-- &slack_alert
-  on_failure:
-    put: slack-alert
-    params:
-      text: |
-        <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went red :blob_slightly_frowning_face:
-  on_success:
-    put: slack-alert
-    params:
-      text: |
-        <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went green! :smile:
-{% endif %}
+  [[macros.anchor_destroy_dataproc(1)]]
+  [[macros.anchor_destroy_dataproc(2)]]
+  [[macros.anchor_destroy_cluster('gpdb')]]
+  [[macros.anchor_destroy_cluster('hadoop')]]
+  [[macros.anchor_slack_notification(slack_notification)]]
 
 ## ======================================================================
 ## RESOURCE TYPES
@@ -110,153 +51,68 @@ anchors:
 resource_types:
 
 {% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
-- name: terraform
-  type: registry-image
-  source:
-    repository: gcr.io/data-gpdb-ud/terraform-resource
-    tag: 0.11.15
-    username: _json_key
-    password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
+    [[macros.registry_image('terraform', 'gcr.io/data-gpdb-ud/terraform-resource', '0.11.15')]]
 {% endif %}
 
 {% if multinode or gp7_multinode %}
-- name: terraform-0.14.10
-  type: registry-image
-  source:
-    repository: ljfranklin/terraform-resource
-    tag: 0.14.10
+    [[macros.registry_image('terraform-0.14.10', 'ljfranklin/terraform-resource', '0.14.10')]]
 {% endif %}
 
-- name: gcs
-  type: registry-image
-  source:
-    repository: frodenas/gcs-resource
+[[macros.registry_image('gcs', 'frodenas/gcs-resource', '')]]
 
 {% if slack_notification %}
-- name: slack-notification
-  type: registry-image
-  source:
-    repository: cfcommunity/slack-notification-resource
-    tag: latest
+    [[macros.registry_image('slack-notification', 'cfcommunity/slack-notification-resource', 'latest')]]
 {% endif %}
 
 ## ======================================================================
 ## RESOURCES
 ## ======================================================================
 resources:
+  [[macros.resource_pxf_dependencies('build')]]
+  [[macros.resource_pxf_dependencies('automation')]]
 
-- name: pxf-build-dependencies
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-resources-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
-
-- name: pxf-automation-dependencies
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-resources-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
-
-- name: singlecluster-hdp2
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-resources-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
-
-{% if cdh %}
-- name: singlecluster-cdh
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-resources-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
-{% endif %}
+  [[macros.resource_singlecluster('hdp2')]]
 
 {% if hdp3 %}
-- name: singlecluster-hdp3
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/build-resources-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
+  [[macros.resource_singlecluster('hdp3')]]
+{% endif %}
+
+{% if cdh %}
+  [[macros.resource_singlecluster('cdh')]]
 {% endif %}
 
 ## ---------- Github Repos ----------
-- name: pxf-src
-  type: git
-  icon: git
-  source:
-    branch: ((pxf-git-branch))
-    uri: ((ud/pxf/common/git-remote))
+  [[macros.resource_github_repo('pxf')]]
 
 {% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
-- name: ccp-src
-  type: git
-  source:
-    branch: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-branch))
-    private_key: ((gp-concourse-cluster-provisioner-git-key))
-    uri: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-remote))
+  [[macros.resource_github_repo('ccp')]]
 {% endif %}
 
 ## ---------- Docker Images ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% include 'resources/pxf-test-image.yml' %}
+    {% include 'resources/pxf-test-image-tpl.yml' %}
 {% endcall %}
 
 {% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
-- name: ccp-7-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-public-images/ccp
-    tag: latest
+  [[macros.registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
 {% endif %}
 
-{% if slack_notification %}
-- name: slack-alert
-  type: slack-notification
-  source:
-    url: ((ud-pipeline-bot-[[user]]-webhook))
-{% endif %}
+## ---------- Slack Notification ----------
+  [[macros.resource_slack_notification('ud-pipeline-bot-' ~ user ~ '-webhook')]]
 
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.os_ver == '9' and x.gp_ver == '6' %}
+    {% if x.os_ver == '9' %}
         {# define RPMs for rocky9 until they are released into standard locations #}
-- name: gpdb6-el9-rpm-latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: maintenance/release-candidates/gpdb6/greenplum-db-server-(6.*)-rhel9-x86_64.rpm
-
-    {% elif x.os_ver == '9' and x.gp_ver == '7' %}
-
-- name: gpdb7-el9-rpm-latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/release-candidates/gpdb7/greenplum-db-server-(7.*)-el9-x86_64.rpm
-
+        {% include 'resources/greenplum-rocky9-package-tpl.yml' %}
     {% else %}
-        {% include 'resources/greenplum-package.yml' %}
+        {% include 'resources/greenplum-package-tpl.yml' %}
     {% endif %}
 {% endcall %}
 
 ## ---------- PXF Artifacts ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% include 'resources/pxf-artifact.yml' %}
+    {% include 'resources/pxf-artifact-tpl.yml' %}
 {% endcall %}
 
 ## ---------- PXF 5 Artifact ---------------
@@ -361,9 +217,6 @@ jobs:
     {% set passed = '[build-pxf-gp7-rocky8]' %}
     {% include 'jobs/test-cli-tpl.yml' %}
     {% set passed = None %}
-    {% if slack_notification %}
-    <<: *slack_alert
-    {% endif %}
 {% endif %} {# if gp7_cli ends here #}
 {% set gp_ver = None %}
 

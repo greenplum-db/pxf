@@ -1,0 +1,16 @@
+{# Template for a PXF dependencies resource definition.
+ #
+ # Expects a 'dependency_type' variable to be set with the values 'build' or 'automation'
+ #}
+
+{% if dependency_type not in ['build','automation'] %}
+    raise 'Invalid value of dependency_type variable: ' ~ dependency_type
+{% endif %}
+- name: pxf-[[dependency_type]]-dependencies
+  type: gcs
+  icon: google-drive
+  source:
+    {# same bucket for both types #}
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    versioned_file: [[dependency_type]]-dependencies/pxf-[[dependency_type]]-dependencies.tar.gz

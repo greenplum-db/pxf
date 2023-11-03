@@ -70,3 +70,6 @@
       <<: *destroy_gpdb_cluster
     image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
+{% if slack_notification %}
+    <<: *slack_alert
+{% endif %}

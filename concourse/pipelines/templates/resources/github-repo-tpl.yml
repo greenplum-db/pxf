@@ -1,0 +1,18 @@
+{# Template for a Github repository resource definition.
+ #
+ # Expects a 'repo_name" variable set to 'pxf' or 'ccp' value
+ #}
+
+- name: [[repo_name]]-src
+  type: git
+  icon: git
+  source:
+{% if repo_name == 'pxf' %}
+    branch: ((pxf-git-branch))
+    uri: ((ud/pxf/common/git-remote))
+{% elif repo_name == 'ccp' %}
+    branch: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-branch))
+    private_key: ((gp-concourse-cluster-provisioner-git-key))
+    uri: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-remote))
+{% endif %}
+

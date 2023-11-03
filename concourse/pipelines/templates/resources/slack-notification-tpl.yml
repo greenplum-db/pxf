@@ -1,0 +1,12 @@
+{# Template for a Slack notification resource definition.
+ #
+ # Expects a 'url_key" variable to be set
+ #}
+
+{% if slack_notification %}
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: (([[url_key]]))
+{% endif %}
+

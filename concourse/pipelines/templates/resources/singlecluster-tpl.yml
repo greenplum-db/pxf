@@ -1,0 +1,12 @@
+{# Template for a singlecluster resource definition.
+ #
+ # Expects a 'hadoop_distro' variable to be set
+ #}
+
+- name: singlecluster-[[hadoop_distro]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/build-resources-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    versioned_file: singlecluster/[[hadoop_distro|upper]]/singlecluster-[[hadoop_distro|upper]].tar.gz

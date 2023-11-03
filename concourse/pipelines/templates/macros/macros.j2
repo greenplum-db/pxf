@@ -57,3 +57,38 @@
 [[caller(x)]]
     {% endfor %}
 {% endmacro %}
+
+{# ----- ANCHOR macros ----- #}
+{% macro anchor_destroy_dataproc(cluster_index) %}
+    {% include 'anchors/destroy-dataproc-tpl.yml' %}
+{% endmacro %}
+
+{% macro anchor_destroy_cluster(cluster_type) %}
+    {% include 'anchors/destroy-cluster-tpl.yml' %}
+{% endmacro %}
+
+{% macro anchor_slack_notification(use_slack) %}
+    {% include 'anchors/slack-alert-tpl.yml' %}
+{% endmacro %}
+
+{# ----- RESOURCE TYPES macros ----- #}
+{% macro registry_image(image_name, image_repository, image_tag) %}
+    {% include 'resource_types/registry-image-tpl.yml' %}
+{% endmacro %}
+
+{# ----- RESOURCES macros ----- #}
+{% macro resource_pxf_dependencies(dependency_type) %}
+    {% include 'resources/pxf-dependencies-tpl.yml' %}
+{% endmacro %}
+
+{% macro resource_singlecluster(hadoop_distro) %}
+    {% include 'resources/singlecluster-tpl.yml' %}
+{% endmacro %}
+
+{% macro resource_github_repo(repo_name) %}
+    {% include 'resources/github-repo-tpl.yml' %}
+{% endmacro %}
+
+{% macro resource_slack_notification(url_key) %}
+    {% include 'resources/slack-notification-tpl.yml' %}
+{% endmacro %}
