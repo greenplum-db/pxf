@@ -76,7 +76,7 @@ anchors:
   resource: terraform
   params:
     action: destroy
-    env_name_file: terraform_gpdb/name
+    env_name_file: terraform-gpdb/name
     terraform_source: ccp_src/google/
   get_params:
     action: destroy
