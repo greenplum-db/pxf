@@ -9,6 +9,7 @@
 
 - name: [[image_name]]
   type: registry-image
+  icon: docker
   source:
     repository: [[image_repository]]
 {% if image_tag and image_tag != '' %}
