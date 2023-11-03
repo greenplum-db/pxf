@@ -5,7 +5,7 @@
 
 {# include Greenplum package only if both build and test platform are the same to avoid duplicates #}
 {% if x.build_platform == x.test_platform %}
-- name: gpdb[[x.gp_ver]]_[[x.release_platform]]_[[x.pkg_type]]_latest-0
+- name: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
   type: gcs
   icon: google-drive
   source:

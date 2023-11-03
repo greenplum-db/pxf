@@ -34,7 +34,7 @@ HDP2                        ?= false
 HDP3                        ?= false
 S3                          ?= false
 ADL                         ?= false
-WASB                        ?= false
+WASBS                       ?= false
 GS                          ?= false
 MINIO                       ?= false
 OEL7                        ?= false
@@ -121,7 +121,7 @@ set-dev-build-pipeline:
 		file=$(FILE) \
 		s3=$(S3) \
 		adl=$(ADL) \
-		wasb=$(WASB) \
+		wasbs=$(WASBS) \
 		gs=$(GS) \
 		minio=$(MINIO) \
 		oel7=$(OEL7) \

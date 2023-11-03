@@ -24,7 +24,6 @@ TEMPLATE_ENVIRONMENT = Environment(
     variable_end_string=']]',
     extensions=['jinja2.ext.loopcontrols', 'jinja2.ext.do'])
 
-
 class PxfParser(argparse.ArgumentParser):
     """PXF Parser: adds error method to argparser"""
     def error(self, message):
@@ -32,11 +31,9 @@ class PxfParser(argparse.ArgumentParser):
         # self.print_help(sys.stderr)
         sys.exit(2)
 
-
 def render_template(template_filename, context):
     """Render template"""
     return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
-
 
 def create_pipeline():
     """create_pipeline: substitutes user-defined vars with the jinja rendering"""

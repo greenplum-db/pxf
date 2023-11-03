@@ -1,34 +1,43 @@
-{# Template for a PXF build job definition.
+{# Template for a PXF basic test job definition.
  #
- # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file and these additional fields:
+ #
+ # x.use_fdw - whether to use FDW extension for testing (otherwise the external table extension will be used)
  #}
 
-- name: test_pxf[[x.fdw_suffix]]-gp[[x.gp_ver]]-hdp2_on_[[x.test_platform]]
+{% if x.use_fdw == 'true' %}
+    {% set extension = 'fdw' %}
+{% else %}
+    {% set extension = 'ext' %}
+{% endif %}
+
+- name: test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [build_pxf-gp[[x.gp_ver]]_on_[[x.build_platform]]]
+      resource: pxf-src
+      passed: [build-pxf-gp[[x.gp_ver]]-[[x.build_platform]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
-      passed: [build_pxf-gp[[x.gp_ver]]_on_[[x.build_platform]]]
+      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+      passed: [build-pxf-gp[[x.gp_ver]]-[[x.build_platform]]]
 {% if x.gp_ver == '6' and x.use_fdw == 'true' %}
     - get: pxf_fdw_tarball
-      resource: pxf_fdw_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
-      passed: [build_pxf-gp[[x.gp_ver]]_on_[[x.build_platform]]]
+      resource: pxf-fdw-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+      passed: [build-pxf-gp[[x.gp_ver]]-[[x.build_platform]]]
 {% endif %}
     - get: gpdb_package
-      resource: gpdb[[x.gp_ver]]_[[x.release_platform]]_[[x.pkg_type]]_latest-0
-      passed: [build_pxf-gp[[x.gp_ver]]_on_[[x.build_platform]]]
+      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
+      passed: [build-pxf-gp[[x.gp_ver]]-[[x.build_platform]]]
     - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
       {# if the image was also used to build the artifact, add a 'passed' condition #}
 {% if [[x.test_platform]] == [[x.build_platform]] %}
-      passed: [build_pxf-gp[[x.gp_ver]]_on_[[x.build_platform]]]
+      passed: [build-pxf-gp[[x.gp_ver]]-[[x.build_platform]]]
 {% endif %}
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: test_pxf[[x.fdw_suffix]]-gp[[x.gp_ver]]-hdp2_on_[[x.test_platform]]
+  - task: test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
     params:

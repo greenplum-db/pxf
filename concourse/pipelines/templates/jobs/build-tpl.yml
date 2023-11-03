@@ -3,27 +3,28 @@
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #}
 
-- name: build_pxf-gp[[x.gp_ver]]_on_[[x.build_platform]]
+- name: build-pxf-gp[[x.gp_ver]]-[[x.build_platform]]
   plan:
   - in_parallel:
     - get: pxf_src
+      resource: pxf-src
       trigger: true
     - get: gpdb_package
-      resource: gpdb[[x.gp_ver]]_[[x.release_platform]]_[[x.pkg_type]]_latest-0
+      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
     - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.build_platform]]-image
     - get: pxf-build-dependencies
-  - task: build_pxf-gp[[x.gp_ver]]_on_[[x.build_platform]]
+  - task: build-pxf-gp[[x.gp_ver]]-[[x.build_platform]]
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.build_platform]]-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((ud/pxf/common/rpm-license))
       VENDOR: ((ud/pxf/common/[[x.pkg_type]]-vendor))
-  - put: pxf_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
+  - put: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
     params:
       file: dist/[[x.pxf_tarball_filename_regex]]
 {# PXF FDW Build Artifact for GP6 only (since PXF FDW extension is not packaged into pxf-gp6 tarball) #}
 {% if x.gp_ver == '6' and x.test_fdw %}
-  - put: pxf_fdw_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
+  - put: pxf-fdw-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
     params:
       file: dist/[[x.pxf_fdw_tarball_filename_regex]]
 {% endif %}

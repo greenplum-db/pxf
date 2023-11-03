@@ -9,11 +9,12 @@
 # BUILD and TEST Combinations for PXF
 # ======================================================================
 
-# gp_ver   : major Greenplum version
-# build_os : the name of the OS used to build PXF artifacts
-# test_os  : the name of the OS used to test  PXF artifacts
-# os_ver   : the version of the OS
-# test_fdw : whether to test PXF FDW extension in this configuration
+# gp_ver     : major Greenplum version
+# build_os   : the name of the OS used to build PXF artifacts
+# test_os    : the name of the OS used to test  PXF artifacts
+# os_ver     : the version of the OS
+# test_fdw   : whether to test PXF FDW extension in this configuration
+# test_cloud : whether to test PXF against cloud external systems
 #
 # when iterating over the entries, use the following pattern:
 # {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
@@ -22,19 +23,22 @@
 #}
 
 {% set build_test_pxf_combinations = [
-    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false},
-    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true },
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false},
-    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true }] %}
+    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': false},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': true },
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_cloud': false},
+    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_cloud': false},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false}] %}
+
+{# define supported clouds and whether their testing is requested by the Makefile via context variables #}
+{% set clouds = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio} %}
 
 ## ======================================================================
 ## ANCHORS
 ## ======================================================================
 anchors:
 - &destroy_dataproc_1
-  task: cleanup_dataproc_1
+  task: cleanup-dataproc-1
   config:
     run:
       path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
@@ -49,7 +53,7 @@ anchors:
     GOOGLE_ZONE: ((ud/pxf/common/google-zone))
 
 - &destroy_dataproc_2
-  task: cleanup_dataproc_2
+  task: cleanup-dataproc-2
   input_mapping:
     dataproc_env_files: dataproc_2_env_files
   config:
@@ -66,7 +70,7 @@ anchors:
     GOOGLE_ZONE: ((ud/pxf/common/kerberos-google-zone))
 
 - &destroy_gpdb_cluster
-  put: terraform_gpdb
+  put: terraform-gpdb
   resource: terraform
   params:
     action: destroy
@@ -76,7 +80,7 @@ anchors:
     action: destroy
 
 - &destroy_hadoop_cluster
-  put: terraform_ipa_hadoop
+  put: terraform-ipa-hadoop
   params:
     action: destroy
     env_name_file: terraform_ipa_hadoop/name
@@ -184,7 +188,7 @@ resources:
 {% endif %}
 
 ## ---------- Github Repos ----------
-- name: pxf_src
+- name: pxf-src
   type: git
   icon: git
   source:
@@ -192,7 +196,7 @@ resources:
     uri: ((ud/pxf/common/git-remote))
 
 {% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
-- name: ccp_src
+- name: ccp-src
   type: git
   source:
     branch: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-branch))
@@ -233,7 +237,7 @@ resources:
 
 ## ---------- PXF 5 Artifact ---------------
 {% if multinode %}
-- name: pxf5_gp6_rhel7_released
+- name: pxf5-gp6-rhel7-released
   type: gcs
   source:
     bucket: ((ud/pxf/prod/releng-drop-bucket-name))
@@ -261,7 +265,7 @@ resources:
 {% endif %}
 
 {% if multinode or gp7_multinode %}
-- name: terraform_ipa_hadoop
+- name: terraform-ipa-hadoop
   type: terraform-0.14.10
   source:
     env:
@@ -289,11 +293,10 @@ jobs:
     {% endif %}
 {% endcall %}
 
-{# include a non-FDW test job #}
+{# include a non-FDW test job for all OS other than OEL (unless requested in the Makefile) #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_os != 'oel' or oel7 %}
         {% do x.update({'use_fdw': 'false'}) %}
-        {% do x.update({'fdw_suffix': ''}) %}
         {% include 'jobs/test-tpl.yml' %}
     {% endif %}
 {% endcall %}
@@ -302,44 +305,65 @@ jobs:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_fdw is sameas true %}
         {% do x.update({'use_fdw': 'true'}) %}
-        {% do x.update({'fdw_suffix': '-fdw'}) %}
         {% include 'jobs/test-tpl.yml' %}
+    {% endif %}
+{% endcall %}
+
+## ---------- HCFS Cloud tests ----------
+{# include a non-FDW test job for all clouds if supported and requested in the Makefile #}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_cloud is sameas true %}
+        {# iterate over possible clouds, include a test job if a given cloud requested in the Makefile #}
+        {% for cloud, test_requested in clouds.items() %}
+            {% if test_requested %}
+                {% do x.update({'use_fdw': 'false'}) %}
+                {% do x.update({'use_impers': 'false'}) %}
+                {% do x.update({'protocol': cloud}) %}
+                {% include 'jobs/test-hcfs-tpl.yml' %}
+                {# for S3 only, also include an impersonation job #}
+                {% if x.protocol == 's3' %}
+                    {% do x.update({'use_impers': 'true'}) %}
+                    {% include 'jobs/test-hcfs-tpl.yml' %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
     {% endif %}
 {% endcall %}
 
 ## ---------- GP7 PXF CLI tests ----------
 
 {% if gp7_cli %}
-{% set gp_ver = 7 %}
-{% set passed = '[build_pxf-gp7_on_rocky8]' %}
-{% include 'jobs/cli-tpl.yml' %}
-{% set passed = None %}
-{% if slack_notification %}
+    {% set gp_ver = 7 %}
+    {% set passed = '[build-pxf-gp7-rocky8]' %}
+    {% include 'jobs/test-cli-tpl.yml' %}
+    {% set passed = None %}
+    {% if slack_notification %}
     <<: *slack_alert
-{% endif %}
-{% endif %}{# if gp7_cli ends here #}
+    {% endif %}
+{% endif %} {# if gp7_cli ends here #}
 {% set gp_ver = None %}
 
 ## ---------- Extended Tests ----------
 {% set gp_ver = 6 %}
 {% if hdp2 %}
-- name: test_pxf-gp[[gp_ver]]-hdp2-no-impers_on_rhel7
+- name: test-pxf-gp[[gp_ver]]-ext-hdp2-no-impers-centos7
   plan:
   - in_parallel:
     - get: pxf_src
+      resource: pxf-src
       passed: [build_pxf-gp[[gp_ver]]_on_centos7]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-gp[[gp_ver]]-tarball-el7
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
+      passed: [build_pxf-gp[[gp_ver]]-centos7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-hdp2-no-impers_on_rhel7
+  - task: test-pxf-gp[[gp_ver]]-ext-hdp2-no-impers-centos7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
@@ -351,23 +375,24 @@ jobs:
 {% endif %}
 
 {% if hdp3 %}
-- name: test_pxf-gp[[gp_ver]]-hdp3_on_rhel7
+- name: test-pxf-gp[[gp_ver]]-ext-hdp3-centos7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-src
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-gp[[gp_ver]]-tarball-el7
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp3
-  - task: test_pxf-gp[[gp_ver]]-hdp3_on_rhel7
+  - task: test-pxf-gp[[gp_ver]]-ext-hdp3-centos7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
@@ -381,23 +406,24 @@ jobs:
 {% endif %}
 
 {% if jdk11 %}
-- name: test_pxf-gp[[gp_ver]]-hdp2-jdk11_on_rhel7
+- name: test-pxf-gp[[gp_ver]]-ext-hdp2-jdk11-centos7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-src
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-gp[[gp_ver]]-tarball-el7
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-hdp2-jdk11_on_rhel7
+  - task: test-pxf-gp[[gp_ver]]-ext-hdp2-jdk11-centos7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
@@ -412,23 +438,24 @@ jobs:
 {% endif %}
 
 {% if cdh %}
-- name: test_pxf-gp[[gp_ver]]-cdh_on_rhel7
+- name: test-pxf-gp[[gp_ver]]-ext-cdh-centos7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-src
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-gp[[gp_ver]]-tarball-el7
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-cdh
-  - task: test_pxf-gp[[gp_ver]]-cdh_on_rhel7
+  - task: test-pxf-gp[[gp_ver]]-ext-cdh-centos7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     # CDH often fails on HBASE permission grant
@@ -447,26 +474,28 @@ jobs:
 ## ---------- FILE tests -----------------
 
 {% if file %}
-- name: test_pxf-gp[[gp_ver]]-file-no-impers_on_rhel7
+- name: test-pxf-gp[[gp_ver]]-file-no-impers-centos7
   max_in_flight: 2
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-src
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-gp[[gp_ver]]-tarball-el7
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
+      resource: ccp-src
     - get: ccp-7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - put: terraform_gpdb
+  - put: terraform-gpdb
     resource: terraform
     params:
       action: create
@@ -479,10 +508,10 @@ jobs:
         segments_per_host: 4
         instance_type: n1-standard-4
         ccp_reap_minutes: 60
-  - task: generate_greenplum_cluster
+  - task: generate-greenplum-cluster
     input_mapping:
       gpdb_rpm: gpdb_package
-      terraform: terraform_gpdb
+      terraform: terraform-gpdb
     file: ccp_src/ci/tasks/gen_cluster.yml
     image: ccp-7-image
     params:
@@ -494,18 +523,18 @@ jobs:
       PLATFORM: centos7
       CLOUD_PROVIDER: google
       GPDB_RPM: true
-  - task: initialize_greenplum
+  - task: initialize-greenplum
     file: ccp_src/ci/tasks/gpinitsystem.yml
   - task: setup-nfs
     input_mapping:
-      terraform: terraform_gpdb
+      terraform: terraform-gpdb
     file: pxf_src/concourse/tasks/install_nfs_on_ccp.yml
     image: ccp-7-image
     params:
       BASE_PATH: /mnt/nfs/var/nfsshare
-  - task: setup_pxf
+  - task: setup-pxf
     input_mapping:
-      terraform: terraform_gpdb
+      terraform: terraform-gpdb
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
@@ -515,10 +544,10 @@ jobs:
       INSTALL_GPHDFS: false
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       SKIP_HADOOP_SETUP: true
-  - task: test_pxf-gp[[gp_ver]]-file-no-impers_on_rhel7
+  - task: test-pxf-gp[[gp_ver]]-ext-file-no-impers-centos7
     on_success:
       do:
-      - put: terraform_gpdb
+      - put: terraform-gpdb
         resource: terraform
         params:
           action: destroy
@@ -541,222 +570,35 @@ jobs:
 {% endif %}
 {% endif %}
 
-## ---------- HCFS Cloud tests ----------
-
-{% if s3 %}
-- name: test_pxf-gp[[gp_ver]]-s3_on_rhel7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-s3_on_rhel7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: hcfs,s3
-      PROTOCOL: s3
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-
-- name: test_pxf-gp[[gp_ver]]-s3-no-impers_on_rhel7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-s3-no-impers_on_rhel7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: hcfs,s3
-      IMPERSONATION: false
-      PROTOCOL: s3
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
-
-{% if adl %}
-- name: test_pxf-gp[[gp_ver]]-adl-no-impers_on_rhel7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-adl-no-impers_on_rhel7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      ADL_ACCOUNT: ((ud/pxf/common/adl-account))
-      ADL_CLIENT_ID: ((ud/pxf/secrets/adl-client-id))
-      ADL_CREDENTIAL: ((ud/pxf/secrets/adl-credential))
-      ADL_REFRESH_URL: ((ud/pxf/common/adl-refresh-url))
-      GP_VER: [[gp_ver]]
-      GROUP: hcfs
-      IMPERSONATION: false
-      PROTOCOL: adl
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
-
-{% if wasb %}
-- name: test_pxf-gp[[gp_ver]]-wasb-no-impers_on_rhel7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-wasb-no-impers_on_rhel7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      WASB_ACCOUNT_NAME: ((ud/pxf/common/wasb-account-name))
-      WASB_ACCOUNT_KEY: ((ud/pxf/secrets/wasb-account-key))
-      GP_VER: [[gp_ver]]
-      GROUP: hcfs
-      IMPERSONATION: false
-      PROTOCOL: wasbs
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
-
-{% if gs %}
-- name: test_pxf-gp[[gp_ver]]-gs-no-impers_on_rhel7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-gs-no-impers_on_rhel7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/gsc-ci-service-account-key))
-      GP_VER: [[gp_ver]]
-      GROUP: hcfs
-      IMPERSONATION: false
-      PROTOCOL: gs
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
-
-{% if minio %}
-- name: test_pxf-gp[[gp_ver]]-minio-no-impers_on_rhel7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test_pxf-gp[[gp_ver]]-minio-no-impers_on_rhel7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      GP_VER: [[gp_ver]]
-      GROUP: hcfs
-      IMPERSONATION: false
-      PROTOCOL: minio
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
 
 ## ---------- Multi-node tests ----------
 {% if multinode %}
-- name: test_pxf-gp[[gp_ver]]-hdp2-secure-multi-impers_on_rhel7
+- name: test_pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
   max_in_flight: 2
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-src
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
       trigger: true
     - get: pxf_artifact
-      resource: pxf5_gp6_rhel7_released   # for upgrade test
+      resource: pxf5-gp6-rhel7-released   # for upgrade test
     - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-gp[[gp_ver]]-tarball-el7
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
+      resource: ccp-src
     - get: ccp-7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - in_parallel:
     - do:
-      - put: terraform_gpdb
+      - put: terraform-gpdb
         resource: terraform
         params:
           action: create
@@ -771,10 +613,10 @@ jobs:
             instance_type: n1-standard-4
             ccp_reap_minutes: 120
             standby_master: true
-      - task: generate_greenplum_cluster
+      - task: generate-greenplum-cluster
         input_mapping:
           gpdb_rpm: gpdb_package
-          terraform: terraform_gpdb
+          terraform: terraform-gpdb
         file: ccp_src/ci/tasks/gen_cluster.yml
         image: ccp-7-image
         params:
@@ -787,16 +629,16 @@ jobs:
           CLOUD_PROVIDER: google
           GPDB_RPM: true
       - in_parallel:
-        - task: initialize_greenplum
+        - task: initialize-greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
-        - task: install_hadoop
+        - task: install-hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
           image: gpdb[[gp_ver]]-pxf-dev-centos7-image
           params:
             ACCESS_KEY_ID: ((tf-machine-access-key-id))
             SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
             IMPERSONATION: ((enable-impersonation-multinode))
-    - task: generate_hadoop_cluster_1
+    - task: generate-hadoop-cluster-1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       params:
         GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
@@ -805,7 +647,7 @@ jobs:
         IMAGE_VERSION: ((dataproc-image-version))
         KERBEROS: ((kerberos-enabled))
         ccp_reap_minutes: 120
-    - task: generate_hadoop_cluster_2
+    - task: generate-hadoop-cluster-2
       file: pxf_src/concourse/tasks/install_dataproc.yml
       output_mapping:
         dataproc_env_files: dataproc_2_env_files
@@ -825,23 +667,25 @@ jobs:
         PROXY_USER: gpuser
         SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
     - do:   # Generate IPA Hadoop cluster
-      - put: terraform_ipa_hadoop
+      - put: terraform-ipa-hadoop
         params:
           action: create
           generate_random_name: true
           terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
           vars:
             gcp_project: ((ud/pxf/common/ipa-google-project-id))
-      - task: generate_multinode_hadoop_cluster
+      - task: generate-multinode-hadoop-cluster
         file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
         image: gpdb[[gp_ver]]-pxf-dev-centos7-image
+        input_mapping:
+          terraform_ipa_hadoop: terraform-ipa-hadoop
         params:
           ANSIBLE_VAR_gcp_storage_bucket: ((ud/pxf/common/build-resources-bucket-name))
           ANSIBLE_VAR_ipa_password: ((ud/pxf/secrets/ipa-password))
           ANSIBLE_VAR_ssl_store_password: ((ud/pxf/secrets/ssl-store-password))
-  - task: setup_pxf_5_latest
+  - task: setup-pxf-5-latest
     input_mapping:
-      terraform: terraform_gpdb
+      terraform: terraform-gpdb
       pxf_tarball: pxf_tarball_ignore   # do not install from the artifact
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
@@ -853,15 +697,15 @@ jobs:
       KERBEROS: ((kerberos-enabled))
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       PXF_VERSION: 5
-  - task: upgrade_to_pxf_6
+  - task: upgrade-to-pxf-6
     input_mapping:
-      terraform: terraform_gpdb
+      terraform: terraform-gpdb
     file: pxf_src/concourse/tasks/upgrade_pxf_on_ccp.yml
     image: ccp-7-image
     params:
       GP_VER: [[gp_ver]]
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
-  - task: test_pxf-gp[[gp_ver]]-hdp2-secure-multi-impers_on_rhel7
+  - task: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
@@ -875,7 +719,7 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: security,proxySecurity,proxySecurityIpa,multiClusterSecurity
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
-  - task: test_pxf_cli
+  - task: test-pxf-cli
     on_success:
       in_parallel:
         steps:
@@ -891,28 +735,30 @@ jobs:
 {% endif %}
 
 {% if multinode_no_impersonation %}
-- name: test_pxf-gp[[gp_ver]]-hdp2-secure-multi-no-impers_on_rhel7
+- name: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
   max_in_flight: 2
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-src
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: pxf-gp[[gp_ver]]-tarball-el7
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
+      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
+      passed: [build-pxf-gp[[gp_ver]]-centos7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
+      resource: ccp-src
     - get: ccp-7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - in_parallel:
     - do:
-      - put: terraform_gpdb
+      - put: terraform-gpdb
         resource: terraform
         params:
           action: create
@@ -928,10 +774,10 @@ jobs:
             instance_type: n1-standard-4
             ccp_reap_minutes: 120
             standby_master: false
-      - task: generate_greenplum_cluster
+      - task: generate-greenplum-cluster
         input_mapping:
           gpdb_rpm: gpdb_package
-          terraform: terraform_gpdb
+          terraform: terraform-gpdb
         file: ccp_src/ci/tasks/gen_cluster.yml
         image: ccp-7-image
         params:
@@ -944,7 +790,7 @@ jobs:
           CLOUD_PROVIDER: google
           GPDB_RPM: true
       - in_parallel:
-        - task: initialize_greenplum
+        - task: initialize-greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
           params:
             POSTGRES_CONF_ADDONS:
@@ -953,14 +799,14 @@ jobs:
             - gp_dispatch_keepalives_idle=30
             - gp_dispatch_keepalives_interval=10
             - gp_dispatch_keepalives_count=4
-        - task: install_hadoop
+        - task: install-hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
           image: gpdb[[gp_ver]]-pxf-dev-centos7-image
           params:
             ACCESS_KEY_ID: ((tf-machine-access-key-id))
             SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
             IMPERSONATION: ((enable-impersonation-multinode))
-    - task: generate_hadoop_cluster_1
+    - task: generate-hadoop-cluster-1
       file: pxf_src/concourse/tasks/install_dataproc.yml
       params:
         GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
@@ -969,7 +815,7 @@ jobs:
         IMAGE_VERSION: ((dataproc-image-version))
         KERBEROS: ((kerberos-enabled))
         ccp_reap_minutes: 120
-    - task: generate_hadoop_cluster_2
+    - task: generate-hadoop-cluster-2
       file: pxf_src/concourse/tasks/install_dataproc.yml
       output_mapping:
         dataproc_env_files: dataproc_2_env_files
@@ -988,9 +834,9 @@ jobs:
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
-  - task: setup_pxf
+  - task: setup-pxf
     input_mapping:
-      terraform: terraform_gpdb
+      terraform: terraform-gpdb
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
@@ -1000,7 +846,7 @@ jobs:
       GP_VER: [[gp_ver]]
       KERBEROS: ((kerberos-enabled))
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-  - task: test_pxf-gp[[gp_ver]]-hdp2-secure-multi-no-impers_on_rhel7
+  - task: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
@@ -1014,7 +860,7 @@ jobs:
       GP_VER: [[gp_ver]]
       GROUP: security,multiClusterSecurity
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-  - task: test_pxf_cli
+  - task: test-pxf-cli
     on_success:
       in_parallel:
         steps:
@@ -1023,7 +869,6 @@ jobs:
         - *destroy_gpdb_cluster
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
-
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
@@ -1031,12 +876,11 @@ jobs:
 
 ## ---------- Multi-node test for GP7 ----------
 {% if gp7_multinode %}
-{% set gp_ver = 7 %}
-{% set passed = '[build_pxf-gp7_on_rocky8]' %}
-{% include 'jobs/multinode-tpl.yml'%}
-{% set passed = None %}
+    {% set gp_ver = 7 %}
+    {% set passed = '[build-pxf-gp7-rocky8]' %}
+    {% include 'jobs/test-multinode-tpl.yml'%}
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
-{% endif %}{# if gp7_multinode ends here #}
+{% endif %}
 {% set gp_ver = None %}
