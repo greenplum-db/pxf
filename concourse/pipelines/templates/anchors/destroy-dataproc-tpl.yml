@@ -1,0 +1,25 @@
+{# Template for an anchor that destroys a dataproc cluster.
+ #
+ # Expects a 'cluster_index' variable to be set
+ #}
+
+{% set google_prefix = '' %}
+- &destroy_dataproc_[[cluster_index]]
+  task: cleanup-dataproc-[[cluster_index]]
+{% if cluster_index == 2 %}
+  {% set google_prefix = 'kerberos-' %}
+  input_mapping:
+    dataproc_env_files: dataproc_2_env_files
+{% endif %}
+  config:
+    run:
+      path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
+    inputs:
+    - name: pxf_src
+    - name: dataproc_env_files
+    platform: linux
+  image: ccp-7-image
+  params:
+    GOOGLE_CREDENTIALS: ((ud/pxf/secrets/[[google_prefix]]ccp-ci-service-account-key))
+    GOOGLE_PROJECT_ID: ((ud/pxf/common/[[google_prefix]]google-project-id))
+    GOOGLE_ZONE: ((ud/pxf/common/[[google_prefix]]google-zone))
