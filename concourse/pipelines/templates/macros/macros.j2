@@ -72,8 +72,9 @@
 {% endmacro %}
 
 {# ----- RESOURCE TYPES macros ----- #}
-{% macro registry_image(image_name, image_repository, image_tag) %}
-    {% include 'resource_types/registry-image-tpl.yml' %}
+{% macro resource_type_registry_image(image_name, image_repository, image_tag) %}
+    {% set resource_type = true %}
+    {% include 'resources/registry-image-tpl.yml' %}
 {% endmacro %}
 
 {# ----- RESOURCES macros ----- #}
@@ -91,4 +92,9 @@
 
 {% macro resource_slack_notification(url_key) %}
     {% include 'resources/slack-notification-tpl.yml' %}
+{% endmacro %}
+
+{% macro resource_registry_image(image_name, image_repository, image_tag) %}
+    {% set resource_type = false %}
+    {% include 'resources/registry-image-tpl.yml' %}
 {% endmacro %}

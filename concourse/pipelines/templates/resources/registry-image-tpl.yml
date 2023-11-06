@@ -5,12 +5,13 @@
  # image_name       - name of the resource type
  # image_repository - repository
  # image_tag        - tag (optional)
+ # resource_type    - whether this is a resource type definition (true / false)
  #}
 
 - name: [[image_name]]
   type: registry-image
 {# add icon unless this renders for 'gcs' which is a resource_type instead of a resource #}
-{% if image_name != 'gcs' %}
+{% if not resource_type %}
   icon: docker
 {% endif %}
   source:
