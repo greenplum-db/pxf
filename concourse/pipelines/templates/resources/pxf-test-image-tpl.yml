@@ -4,7 +4,6 @@
  #}
 
 {# include test docker image for all OS other than OEL (unless requested by a Makefile parameter) #}
-{% if x.test_platform != 'oel7' or oel7 %}
 - name: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
   type: registry-image
   icon: docker
@@ -13,4 +12,3 @@
     tag: ((pxf-image-tag))
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-{% endif %}

@@ -112,7 +112,9 @@ resources:
 
 ## ---------- Docker Images ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% include 'resources/pxf-test-image-tpl.yml' %}
+    {% if x.test_platform != 'oel7' or oel7 %}
+        {% include 'resources/pxf-test-image-tpl.yml' %}
+    {% endif %}
 {% endcall %}
 
 {% if use_ccp %}
