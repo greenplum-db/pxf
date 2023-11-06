@@ -330,10 +330,8 @@ jobs:
 
 {# include a non-FDW test job for all OS other than OEL (unless requested in the Makefile) #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.test_os != 'oel' or oel7 %}
-        {% do x.update({'use_fdw': 'false'}) %}
-        {% include 'jobs/test-tpl.yml' %}
-    {% endif %}
+      {% do x.update({'use_fdw': 'false'}) %}
+      {% include 'jobs/test-tpl.yml' %}
 {% endcall %}
 
 {# include an FDW test job if supported by the swimlane #}
