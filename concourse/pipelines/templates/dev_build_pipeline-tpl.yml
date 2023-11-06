@@ -119,46 +119,16 @@ resources:
 
 ## ---------- PXF 5 Artifact ---------------
 {% if multinode %}
-- name: pxf5-gp6-rhel7-released
-  type: gcs
-  source:
-    bucket: ((ud/pxf/prod/releng-drop-bucket-name))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
+[[macros.resource_pxf5_gp6_el7_artifact()]]
 {% endif %}
 
 ## ---------- Auxiliary Resources ----------
 {% if multinode or multinode_no_impersonation or file or gp7_cli or gp7_multinode %}
-- name: terraform
-  type: terraform
-  source:
-    env:
-      AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
-    vars:
-      project_id: ((ud/pxf/common/google-project-id))
-    storage:
-      access_key_id: ((tf-machine-access-key-id))
-      secret_access_key: ((tf-machine-secret-access-key))
-      region_name: ((ud/common/aws-region))
-      bucket: ((ud/pxf/common/tf-bucket-name))
-      bucket_path: ((tf-bucket-path))
+[[macros.resource_terraform('terraform', false)]]
 {% endif %}
 
 {% if multinode or gp7_multinode %}
-- name: terraform-ipa-hadoop
-  type: terraform-0.14.10
-  source:
-    env:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ipa-ccp-ci-service-account-key))
-    delete_on_failure: true
-    storage:
-      bucket: ((ud/pxf/common/tf-bucket-name))
-      bucket_path: ((ud/pxf/common/tf-bucket-path-hadoop))
-      region_name: ((ud/common/aws-region))
-      access_key_id: ((tf-machine-access-key-id))
-      secret_access_key: ((tf-machine-secret-access-key))
+[[macros.resource_terraform('terraform-ipa-hadoop', true)]]
 {% endif %}
 
 ## ======================================================================
@@ -461,7 +431,7 @@ jobs:
       passed: [build-pxf-gp[[gp_ver]]-centos7]
       trigger: true
     - get: pxf_artifact
-      resource: pxf5-gp6-rhel7-released   # for upgrade test
+      resource: pxf5-gp6-el7-released   # for upgrade test
     - get: pxf_tarball
       resource: pxf-gp[[gp_ver]]-tarball-el7
       passed: [build-pxf-gp[[gp_ver]]-centos7]

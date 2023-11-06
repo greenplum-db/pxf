@@ -1,7 +1,7 @@
 {# Template for a registry-image resource type definition.
  #
  # Expects the following variables to be set:
-
+ #
  # image_name       - name of the resource type
  # image_repository - repository
  # image_tag        - tag (optional)

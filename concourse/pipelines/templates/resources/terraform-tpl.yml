@@ -1,0 +1,31 @@
+{# Template for a Terraform resource definition.
+ #
+ # Expects the following variables to be set:
+ #
+ # terraform_name - name of the resource
+ # is_ipa         - whether this resource is for creating an IPA Hadoop cluster
+ #}
+
+{# customize IPA settings until the dependent logic is standardized #}
+{% set terraform_type_suffix = '-0.14.10' if is_ipa else '' %}
+{% set credential_key_prefix = 'ipa-'     if is_ipa else '' %}
+{% set bucket_path_key       = 'ud/pxf/common/tf-bucket-path-hadoop' if is_ipa else 'tf-bucket-path' %}
+
+- name: [[terraform_name]]
+  type: terraform[[terraform_type_suffix]]
+  source:
+    delete_on_failure: true
+    env:
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/[[credential_key_prefix]]ccp-ci-service-account-key))
+    storage:
+      access_key_id: ((tf-machine-access-key-id))
+      bucket: ((ud/pxf/common/tf-bucket-name))
+      bucket_path: (([[bucket_path_key]]))
+      region_name: ((ud/common/aws-region))
+      secret_access_key: ((tf-machine-secret-access-key))
+    vars:
+{% if is_ipa %}
+      gcp_project: ((ud/pxf/common/ipa-google-project-id))
+{% else %}
+      project_id: ((ud/pxf/common/google-project-id))
+{% endif %}

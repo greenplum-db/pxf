@@ -1,0 +1,12 @@
+{# Template for a PXF5 GP6 EL7 build artifact resource definition.
+ #
+ # Does not expect any variables to be set.
+ #}
+  
+- name: pxf5-gp6-el7-released
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/prod/releng-drop-bucket-name))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
