@@ -23,17 +23,27 @@
 #}
 
 {% set build_test_pxf_combinations = [
-    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': false},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': true },
-    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false},
-    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_cloud': false},
-    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_cloud': false},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false}] %}
+    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': true , 'test_features': ['hdp2','hdp3','cdh','jdk11']},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_cloud': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_cloud': false, 'test_features': []},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false, 'test_features': []},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false, 'test_features': []}] %}
 
 {# define supported clouds and whether their testing is requested by the Makefile via context variables #}
 {% set clouds = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio} %}
+
+{# define supported test features and whether their testing is requested by the Makefile via context variables #}
+{% set features = {'hdp2': hdp2, 'hdp3': hdp3, 'cdh': cdh, 'jdk11': jdk11} %}
+
+{# define supported external system targets #}
+{% set targets = ['hdp2', 'hdp3', 'cdh'] %}
+
+{# define default target and impersonation for all test jobs #}
+{% set default_target = 'hdp2' %}
+{% set default_impers = 'true' %}
 
 ## ======================================================================
 ## ANCHORS
@@ -149,6 +159,8 @@ jobs:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_os != 'oel' or oel7 %}
         {% do x.update({'use_fdw': 'false'}) %}
+        {% do x.update({'use_impers': default_impers}) %}
+        {% do x.update({'target': default_target}) %}
         {% include 'jobs/test-tpl.yml' %}
     {% endif %}
 {% endcall %}
@@ -157,6 +169,8 @@ jobs:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_fdw is sameas true %}
         {% do x.update({'use_fdw': 'true'}) %}
+        {% do x.update({'use_impers': default_impers}) %}
+        {% do x.update({'target': default_target}) %}
         {% include 'jobs/test-tpl.yml' %}
     {% endif %}
 {% endcall %}
@@ -182,6 +196,27 @@ jobs:
     {% endif %}
 {% endcall %}
 
+## ---------- Additional (Feature) tests ----------
+{# include a non-FDW test job for all clouds if supported and requested in the Makefile #}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {# iterate over features defined for the given swimlane #}
+    {% for test_feature in x.test_features %}
+        {# if the fhe given feature is requested by the Makefile, create a non-FDW job for it #}
+        {% if features[test_feature] %}
+            {% do x.update({'use_fdw': 'false'}) %}
+            {# if the purpose of the test is to try a different target, use it, otherwise use a default target for the job name #}
+            {% set target = test_feature if test_feature in targets else default_target %}
+            {% do x.update({'target': target}) %}
+            {# request a no-impers flavor of the default target as the other one is already a default test job #}
+            {% set use_impers = 'false' if test_feature == default_target else 'true' %}
+            {% do x.update({'use_impers': use_impers}) %}
+            {# define a feature name to go into the test job name, unless it is a test against a target only #}
+            {% do x.update({'feature': test_feature}) if test_feature not in targets %}
+            {% include 'jobs/test-tpl.yml' %}
+        {% endif %}
+    {% endfor %}
+{% endcall %}
+
 ## ---------- GP7 PXF CLI tests ----------
 
 {% if gp7_cli %}
@@ -191,134 +226,6 @@ jobs:
     {% set passed = None %}
 {% endif %} {# if gp7_cli ends here #}
 {% set gp_ver = None %}
-
-## ---------- Extended Tests ----------
-{% set gp_ver = 6 %}
-{% if hdp2 %}
-- name: test-pxf-gp[[gp_ver]]-ext-hdp2-no-impers-centos7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [build_pxf-gp[[gp_ver]]_on_centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf-gp[[gp_ver]]-tarball-el7
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
-      passed: [build_pxf-gp[[gp_ver]]-centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test-pxf-gp[[gp_ver]]-ext-hdp2-no-impers-centos7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      GP_VER: [[gp_ver]]
-      IMPERSONATION: false
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
-
-{% if hdp3 %}
-- name: test-pxf-gp[[gp_ver]]-ext-hdp3-centos7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf-gp[[gp_ver]]-tarball-el7
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp3
-  - task: test-pxf-gp[[gp_ver]]-ext-hdp3-centos7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
-
-{% if jdk11 %}
-- name: test-pxf-gp[[gp_ver]]-ext-hdp2-jdk11-centos7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf-gp[[gp_ver]]-tarball-el7
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test-pxf-gp[[gp_ver]]-ext-hdp2-jdk11-centos7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
-      RUN_JDK_VERSION: 11
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
-
-{% if cdh %}
-- name: test-pxf-gp[[gp_ver]]-ext-cdh-centos7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf-gp[[gp_ver]]-tarball-el7
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
-      passed: [build-pxf-gp[[gp_ver]]-centos7]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-cdh
-  - task: test-pxf-gp[[gp_ver]]-ext-cdh-centos7
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    # CDH often fails on HBASE permission grant
-    attempts: 3
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
-      HADOOP_CLIENT: CDH
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% endif %}
 
 ## ---------- FILE tests -----------------
 

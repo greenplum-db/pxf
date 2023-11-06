@@ -2,16 +2,17 @@
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file and these additional fields:
  #
- # x.use_fdw - whether to use FDW extension for testing (otherwise the external table extension will be used)
+ # x.use_fdw    - whether to use FDW extension for testing (otherwise the external table extension will be used)
+ # x.use_impers - whether to use impersonation for the test job
+ # x.target     - the target external system type (such as hdp2 or cdh)
+ # x.feature    - the name of the feature being tested, optional
  #}
 
-{% if x.use_fdw == 'true' %}
-    {% set extension = 'fdw' %}
-{% else %}
-    {% set extension = 'ext' %}
-{% endif %}
+{% set extension     = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
+{% set impers_infix  = '-no-impers'    if x.use_impers  == 'false' else ''    %}
+{% set feature_infix = '-' ~ x.feature if x.feature and not x.feature == '' else '' %}
 
-- name: test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
+- name: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
   plan:
   - in_parallel:
     - get: pxf_src
@@ -36,14 +37,25 @@
 {% endif %}
     - get: pxf-automation-dependencies
     - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
+      resource: singlecluster-[[x.target]]
+  - task: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+{% if x.target =='cdh' %}
+    {# CDH often fails on HBASE permission grant #}
+    attempts: 3
+{% endif %}
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[x.gp_ver]]
       GROUP: gpdb,proxy,profile
+{% if x.target =='cdh' %}
+      HADOOP_CLIENT: CDH
+{% endif %}
+      IMPERSONATION: [[x.use_impers]]
+{% if x.feature =='jdk11' %}
+      RUN_JDK_VERSION: 11
+{% endif %}
 {% if x.test_os == 'ubuntu' %}
       PXF_BASE_DIR: /home/gpadmin/pxf
 {% endif %}
