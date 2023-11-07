@@ -210,14 +210,14 @@ resources:
 {% endcall %}
 
 {% for gp_ver in range(5, 8) %}
-- name: pxf_gp[[gp_ver]]_osl_to_releng
+- name: pxf-gp[[gp_ver]]-osl-to-releng
   type: gcs
   source:
     bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb[[gp_ver]]/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
 
-- name: pxf_gp[[gp_ver]]_odp_to_releng
+- name: pxf-gp[[gp_ver]]-odp-to-releng
   type: gcs
   source:
     bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
@@ -226,14 +226,13 @@ resources:
 {% endfor %}
 {% set gp_ver = None %}
 
-
 ## ---------- RelEng Drop Artifacts for tarballs ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% include 'resources/release-tarball-artifact-tpl.yml' %}
 {% endcall %}
 
 ## ---------- PXF ShipIt resources ----------
-- name: pxf_shipit_file
+- name: pxf-shipit-file
   type: gcs
   icon: google-drive
   source:
@@ -1050,7 +1049,7 @@ jobs:
       fail_fast: false
       steps:
 {% for i in range(1, num_gpdb6_versions) %}
-      - task: test-against-greenplum-latest-[[i]]_rhel8
+      - task: test-against-greenplum-latest-[[i]]-rocky8
         image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
         config:
           platform: linux
@@ -1086,166 +1085,167 @@ jobs:
       passed: [compatibility-gate-for-pxf-gp]
       resource: pxf-gp[[gp_ver]]-tarball-el8
 {% set gp_ver = None %}
-#
-### ---------- Artifact Promotion Gate ----------
-#- name: promote_pxf_for_gp5_gp6_gp7_artifacts
-#  old_name: Promote pxf-gp5 and pxf-gp6 Artifacts
-#  plan:
-#  - in_parallel:
-#    - get: pxf_src
-#      trigger: true
-#      passed:
-#{% for gp_ver in range(5, 7) %}
-#      - test_pxf-gp[[gp_ver]]_backward_compatibility_on_rhel7
-#{% endfor %}
-#{% set gp_ver = None %}
-#{% for gp_ver in range(6, 8) %}
-#      - test_pxf-gp[[gp_ver]]_backward_compatibility_on_rhel8
-#{% endfor %}
-#{% set gp_ver = 6 %}
-#      - test_pxf-gp[[gp_ver]]_backward_compatibility_on_ubuntu18
-#{% set gp_ver = None %}
-#{% for gp_ver in range(5, 7) %}
-#    - get: pxf_gp[[gp_ver]]_tarball_rhel7
-#      passed:
-#      - test_pxf-gp[[gp_ver]]_backward_compatibility_on_rhel7
-#{% endfor %}
-#{% set gp_ver = None %}
-#{% for gp_ver in range(6, 8) %}
-#    - get: pxf_gp[[gp_ver]]_tarball_rhel8
-#      passed:
-#      - test_pxf-gp[[gp_ver]]_backward_compatibility_on_rhel8
-#{% endfor %}
-#{% set gp_ver = 6 %}
-#    - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
-#      passed:
-#      - test_pxf-gp[[gp_ver]]_backward_compatibility_on_ubuntu18
-#{% set gp_ver = None %}
-#    - get: google-cloud-sdk-slim-image
-#  - task: promote_pxf_for_gp5_gp6_gp7_artifacts
-#    image: google-cloud-sdk-slim-image
-#    file: pxf_src/concourse/tasks/promote_pxf_artifacts.yml
-#    params:
-#      ENVIRONMENT: [[ environment ]]
-#      GCS_RELEASES_BUCKET: ((ud/pxf/common/releases-bucket-name))
-#      GCS_RELEASES_PATH: [[ environment ]]/releases
-#      GIT_BRANCH: ((pxf-git-branch))
-#      GIT_EMAIL: ((ud/pxf/common/git-deploy-email))
-#      GIT_REMOTE_URL: ((ud/pxf/[[ environment ]]/git-remote-ssh-url))
-#      GIT_SSH_KEY: ((ud/pxf/secrets/git-deploy-key))
-#      GIT_USERNAME: ((ud/pxf/common/git-deploy-username))
-#      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
-#{% if slack_notification %}
-#    <<: *slack_alert
-#{% endif %}
-#
-#- name: publish_pxf-gp5_gp6_gp7_artifacts_to_gp-releng
-#  old_name: Publish_pxf-gp5_and_pxf-gp6_Artifacts_to_GP-RelEng
-#  plan:
-#  - in_parallel:
-#    - get: pxf_src
-#      passed:
-#      - promote_pxf_for_gp5_gp6_gp7_artifacts
-#    - get: pxf_shipit_file
-#      trigger: true
-#    - get: google-cloud-sdk-slim-image
-#    - get: rpmrebuild-centos7-image
-#    - get: rpmrebuild-rocky8-image
-#    - get: gpdb6-pxf-dev-ubuntu18-image
-#  - task: get_pxf-gp5_and_pxf-gp6_artifacts_from_releases_directory
-#    image: google-cloud-sdk-slim-image
-#    file: pxf_src/concourse/tasks/get_pxf_release_artifacts.yml
-#    params:
-#      GCS_ODP_PATH: [[ environment ]]/ODP
-#      GCS_OSL_PATH: [[ environment ]]/OSL
-#      GCS_RELEASES_BUCKET: ((ud/pxf/common/releases-bucket-name))
-#      GCS_RELEASES_PATH: [[ environment ]]/releases
-#      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
-#  #  - in_parallel: does not work since all tasks modify pxf_artifacts
-#{% for gp_ver in range(5, 7) %}
-#  - task: add_osl_file_to_pxf-gp[[gp_ver]]_rpm_on_rhel7
-#    image: rpmrebuild-centos7-image
-#    file: pxf_src/concourse/tasks/add_osl_rpm.yml
-#    params:
-#      GP_VER: [[gp_ver]]
-#      REDHAT_MAJOR_VERSION: 7
-#{% endfor %}
-#{% set gp_ver = 6 %}
-#  - task: add_osl_file_to_pxf-gp[[gp_ver]]_rpm_on_rhel8
-#    image: rpmrebuild-rocky8-image
-#    file: pxf_src/concourse/tasks/add_osl_rpm.yml
-#    params:
-#      GP_VER: [[gp_ver]]
-#      REDHAT_MAJOR_VERSION: 8
-#  - task: add_osl_file_to_pxf-gp[[gp_ver]]_deb_on_ubuntu18.04
-#    file: pxf_src/concourse/tasks/add_osl_deb.yml
-#    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-#    params:
-#      GP_VER: [[gp_ver]]
-#{% set gp_ver = 7 %}
-#  - task: add_osl_file_to_pxf-gp[[gp_ver]]_rpm_on_rhel8
-#    image: rpmrebuild-rocky8-image
-#    file: pxf_src/concourse/tasks/add_osl_rpm.yml
-#    params:
-#      GP_VER: [[gp_ver]]
-#      REDHAT_MAJOR_VERSION: 8
-#{% set gp_ver = None %}
-#{% for gp_ver in range(5, 7) %}
-#  - task: generate_pxf_binary_tarball_from_pxf-gp[[gp_ver]]_on_rhel7_rpm
-#    file: pxf_src/concourse/tasks/generate_tarball_from_rpm.yml
-#    image: rpmrebuild-centos7-image
-#    params:
-#      GP_VER: [[gp_ver]]
-#{% endfor %}
-#  - task: generate_slack_message
-#    image: google-cloud-sdk-slim-image
-#    file: pxf_src/concourse/tasks/generate_slack_message.yml
-#    params:
-#      PXF_OSL_FILE_PREFIX: ((ud/pxf/common/osl-file-prefix))
-#      PXF_ODP_FILE_PREFIX: ((ud/pxf/common/odp-file-prefix))
-#      PXF_SLACK_CHANNEL_NAME: ((ud/pxf/common/slack-channel-name))
-#      PXF_SLACK_CHANNEL_LINK: ((ud/pxf/secrets/slack-channel-link))
-#      RELENG_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-drop-path))
-#      RELENG_OSL_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-osl-drop-path))
-#      RELENG_ODP_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-odp-drop-path))
-#  - in_parallel:
-#    - put: pxf-gp5-rhel7-release-to-releng
-#      params:
-#        file: pxf_artifacts/licensed/pxf-gp5-*-2.el7.x86_64.rpm
-#    - put: pxf-gp6-rhel7-release-to-releng
-#      params:
-#        file: pxf_artifacts/licensed/pxf-gp6-*-2.el7.x86_64.rpm
-#    - put: pxf-gp6-rhel8-release-to-releng
-#      params:
-#        file: pxf_artifacts/licensed/pxf-gp6-*-2.el8.x86_64.rpm
-#    - put: pxf-gp6-ubuntu18.04-release-to-releng
-#      params:
-#        file: pxf_artifacts/licensed/pxf-gp6-*-2-ubuntu18.04-amd64.deb
-#    - put: pxf-gp7-el8-release-to-releng
-#      params:
-#        file: pxf_artifacts/licensed/pxf-gp7-*-2.el8.x86_64.rpm
-#    - put: pxf-gp5-tarball-release-to-releng
-#      params:
-#        file: pxf_artifacts/licensed/gp5/pxf-gp5-*-el7.x86_64.tar.gz
-#    - put: pxf-gp6-tarball-release-to-releng
-#      params:
-#        file: pxf_artifacts/licensed/gp6/pxf-gp6-*-el7.x86_64.tar.gz
-#{% for gp_ver in range(5, 8) %}
-#    - put: pxf_gp[[gp_ver]]_odp_to_releng
-#      params:
-#        file: pxf_artifacts/((ud/pxf/common/odp-file-prefix))*.tar.gz
-#    - put: pxf_gp[[gp_ver]]_osl_to_releng
-#      params:
-#        file: pxf_artifacts/((ud/pxf/common/osl-file-prefix))*.txt
-#{% endfor %}
-#{% if slack_notification %}
-#  - put: notify-releng
-#    params:
-#      text_file: pxf_artifacts/slack_message.txt
-#      text: |
-#        ${TEXT_FILE_CONTENT}
-#
-#        ---
-#        Generated by UD CI build job: ${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}
-#        UD CI build job link: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}
-#{% endif %}
+
+## ---------- Artifact Promotion Gate ----------
+- name: promote-pxf-for-gp5-gp6-gp7-artifacts
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf-src
+      trigger: true
+      passed:
+{% for gp_ver in range(5, 7) %}
+      - test-pxf-gp[[gp_ver]]-backward-compatibility-centos7
+{% endfor %}
+{% set gp_ver = None %}
+{% for gp_ver in range(6, 8) %}
+      - test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
+{% endfor %}
+{% set gp_ver = None %}
+{% set gp_ver = 6 %}
+      - test-pxf-gp[[gp_ver]]-backward-compatibility-ubuntu18.04
+{% set gp_ver = None %}
+{% for gp_ver in range(5, 7) %}
+    - get: pxf-gp[[gp_ver]]-tarball-el7
+      passed:
+      - test-pxf-gp[[gp_ver]]-backward-compatibility-centos7
+{% endfor %}
+{% set gp_ver = None %}
+{% for gp_ver in range(6, 8) %}
+    - get: pxf-gp[[gp_ver]]-tarball-el8
+      passed:
+      - test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
+{% endfor %}
+{% set gp_ver = 6 %}
+    - get: pxf-gp[[gp_ver]]-tarball-ubuntu18.04
+      passed:
+      - test-pxf-gp[[gp_ver]]-backward-compatibility-ubuntu18.04
+{% set gp_ver = None %}
+    - get: google-cloud-sdk-slim-image
+  - task: promote-pxf-for-gp5-gp6-gp7-artifacts
+    image: google-cloud-sdk-slim-image
+    file: pxf_src/concourse/tasks/promote_pxf_artifacts.yml
+    params:
+      ENVIRONMENT: [[ environment ]]
+      GCS_RELEASES_BUCKET: ((ud/pxf/common/releases-bucket-name))
+      GCS_RELEASES_PATH: [[ environment ]]/releases
+      GIT_BRANCH: ((pxf-git-branch))
+      GIT_EMAIL: ((ud/pxf/common/git-deploy-email))
+      GIT_REMOTE_URL: ((ud/pxf/[[ environment ]]/git-remote-ssh-url))
+      GIT_SSH_KEY: ((ud/pxf/secrets/git-deploy-key))
+      GIT_USERNAME: ((ud/pxf/common/git-deploy-username))
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
+{% if slack_notification %}
+    <<: *slack_alert
+{% endif %}
+
+- name: publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf-src
+      passed:
+      - promote-pxf-for-gp5-gp6-gp7-artifacts
+    - get: pxf-shipit-file
+      trigger: true
+    - get: google-cloud-sdk-slim-image
+    - get: rpmrebuild-centos7-image
+    - get: rpmrebuild-rocky8-image
+    - get: gpdb6-pxf-dev-ubuntu18.04-image
+  - task: get-pxf-gp5-and-pxf-gp6-artifacts-from-releases-directory
+    image: google-cloud-sdk-slim-image
+    file: pxf_src/concourse/tasks/get_pxf_release_artifacts.yml
+    params:
+      GCS_ODP_PATH: [[ environment ]]/ODP
+      GCS_OSL_PATH: [[ environment ]]/OSL
+      GCS_RELEASES_BUCKET: ((ud/pxf/common/releases-bucket-name))
+      GCS_RELEASES_PATH: [[ environment ]]/releases
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
+  #  - in_parallel: does not work since all tasks modify pxf_artifacts
+{% for gp_ver in range(5, 7) %}
+  - task: add-osl-file-to-pxf-gp[[gp_ver]]-rpm-centos7
+    image: rpmrebuild-centos7-image
+    file: pxf_src/concourse/tasks/add_osl_rpm.yml
+    params:
+      GP_VER: [[gp_ver]]
+      REDHAT_MAJOR_VERSION: 7
+{% endfor %}
+{% set gp_ver = 6 %}
+  - task: add-osl-file-to-pxf-gp[[gp_ver]]-rpm-rocky8
+    image: rpmrebuild-rocky8-image
+    file: pxf_src/concourse/tasks/add_osl_rpm.yml
+    params:
+      GP_VER: [[gp_ver]]
+      REDHAT_MAJOR_VERSION: 8
+  - task: add-osl-file-to-pxf-gp[[gp_ver]]-deb-ubuntu18.04
+    file: pxf_src/concourse/tasks/add_osl_deb.yml
+    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
+    params:
+      GP_VER: [[gp_ver]]
+{% set gp_ver = 7 %}
+  - task: add-osl-file-to-pxf-gp[[gp_ver]]-rpm-rocky8
+    image: rpmrebuild-rocky8-image
+    file: pxf_src/concourse/tasks/add_osl_rpm.yml
+    params:
+      GP_VER: [[gp_ver]]
+      REDHAT_MAJOR_VERSION: 8
+{% set gp_ver = None %}
+{% for gp_ver in range(5, 7) %}
+  - task: generate-pxf-binary-tarball-from-pxf-gp[[gp_ver]]-centos7-rpm
+    file: pxf_src/concourse/tasks/generate_tarball_from_rpm.yml
+    image: rpmrebuild-centos7-image
+    params:
+      GP_VER: [[gp_ver]]
+{% endfor %}
+  - task: generate-slack-message
+    image: google-cloud-sdk-slim-image
+    file: pxf_src/concourse/tasks/generate_slack_message.yml
+    params:
+      PXF_OSL_FILE_PREFIX: ((ud/pxf/common/osl-file-prefix))
+      PXF_ODP_FILE_PREFIX: ((ud/pxf/common/odp-file-prefix))
+      PXF_SLACK_CHANNEL_NAME: ((ud/pxf/common/slack-channel-name))
+      PXF_SLACK_CHANNEL_LINK: ((ud/pxf/secrets/slack-channel-link))
+      RELENG_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-drop-path))
+      RELENG_OSL_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-osl-drop-path))
+      RELENG_ODP_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-odp-drop-path))
+  - in_parallel:
+    - put: pxf-gp5-rhel7-release-to-releng
+      params:
+        file: pxf_artifacts/licensed/pxf-gp5-*-2.el7.x86_64.rpm
+    - put: pxf-gp6-rhel7-release-to-releng
+      params:
+        file: pxf_artifacts/licensed/pxf-gp6-*-2.el7.x86_64.rpm
+    - put: pxf-gp6-rhel8-release-to-releng
+      params:
+        file: pxf_artifacts/licensed/pxf-gp6-*-2.el8.x86_64.rpm
+    - put: pxf-gp6-ubuntu18.04-release-to-releng
+      params:
+        file: pxf_artifacts/licensed/pxf-gp6-*-2-ubuntu18.04-amd64.deb
+    - put: pxf-gp7-el8-release-to-releng
+      params:
+        file: pxf_artifacts/licensed/pxf-gp7-*-2.el8.x86_64.rpm
+    - put: pxf-gp5-tarball-release-to-releng
+      params:
+        file: pxf_artifacts/licensed/gp5/pxf-gp5-*-el7.x86_64.tar.gz
+    - put: pxf-gp6-tarball-release-to-releng
+      params:
+        file: pxf_artifacts/licensed/gp6/pxf-gp6-*-el7.x86_64.tar.gz
+{% for gp_ver in range(5, 8) %}
+    - put: pxf-gp[[gp_ver]]-odp-to-releng
+      params:
+        file: pxf_artifacts/((ud/pxf/common/odp-file-prefix))*.tar.gz
+    - put: pxf-gp[[gp_ver]]-osl-to-releng
+      params:
+        file: pxf_artifacts/((ud/pxf/common/osl-file-prefix))*.txt
+{% endfor %}
+{% if slack_notification %}
+  - put: notify-releng
+    params:
+      text_file: pxf_artifacts/slack_message.txt
+      text: |
+        ${TEXT_FILE_CONTENT}
+
+        ---
+        Generated by UD CI build job: ${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}
+        UD CI build job link: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}
+{% endif %}
