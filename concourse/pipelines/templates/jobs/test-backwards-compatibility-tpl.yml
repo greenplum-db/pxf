@@ -1,0 +1,52 @@
+{# Template for a PXF backwards compatibility job definition.
+  #
+  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file and these additional fields:
+  #
+  # x.num_versions    - the number of GPDB versions to test against
+  #}
+{% if x.build_platform == x.test_platform %}
+
+- name: test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf-src
+      passed: [compatibility-gate-for-pxf-gp]
+      trigger: true
+    - get: pxf_tarball
+      passed: [compatibility-gate-for-pxf-gp]
+      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    - get: singlecluster
+      resource: singlecluster-hdp2
+{% for i in range(1, x.num_versions) %}{# start at 1 because all previous testing was done using latest-0 #}
+    - get: gpdb_package_latest-[[i]]
+      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-[[i]]
+{% endfor %}
+  - in_parallel:
+      limit: [[max_concurrent_bc_tasks]]
+      fail_fast: false
+      steps:
+{% for i in range(1, x.num_versions) %}
+      - task: test-against-greenplum-latest-[[i]]-[[x.test_platform]]
+        image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+        config:
+          platform: linux
+          inputs:
+            - name: gpdb_package_latest-[[i]]
+            - name: pxf_src
+            - name: pxf_tarball
+            - name: singlecluster
+          params:
+            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
+            GROUP: HdfsSmokeTest,WritableSmokeTest
+            HADOOP_CLIENT: hdp
+            IMPERSONATION: true
+            PGPORT: 5432
+            PG_REGRESS: true
+            GP_VER: [[x.gp_ver]]
+          run:
+            path: pxf_src/concourse/scripts/test.bash
+{% endfor %}
+
+{% endif %}

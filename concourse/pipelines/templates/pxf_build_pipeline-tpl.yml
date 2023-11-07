@@ -931,160 +931,21 @@ jobs:
 {% set gp_ver = None %}
 
 ## ---------- Compatibility Testing ----------
-{% for gp_ver in range(5, 7) %}
-{% set num_versions = num_gpdb5_versions %}
-{% if gp_ver == 6 %}
-  {% set num_versions = num_gpdb6_versions %}
-{% endif %}
-- name: test-pxf-gp[[gp_ver]]-backward-compatibility-centos7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [compatibility-gate-for-pxf-gp]
-      trigger: true
-    - get: pxf_tarball
-      passed: [compatibility-gate-for-pxf-gp]
-      resource: pxf-gp[[gp_ver]]-tarball-el7
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: singlecluster
-      resource: singlecluster-hdp2
-{% for i in range(1, num_versions) %}
-    - get: gpdb_package_latest-[[i]]
-      resource: gpdb[[gp_ver]]-el7-rpm-latest-[[i]]
-{% endfor %}
-  - in_parallel:
-      limit: [[max_concurrent_bc_tasks]]
-      fail_fast: false
-      steps:
-{% for i in range(1, num_versions) %}
-      - task: test-against-greenplum-latest-[[i]]-centos7
-        image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-        config:
-          platform: linux
-          inputs:
-          - name: gpdb_package_latest-[[i]]
-          - name: pxf_src
-          - name: pxf_tarball
-          - name: singlecluster
-          params:
-            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-            GROUP: HdfsSmokeTest,WritableSmokeTest
-            HADOOP_CLIENT: hdp
-            IMPERSONATION: true
-            PGPORT: 5432
-            PG_REGRESS: true
-            GP_VER: [[gp_ver]]
-          run:
-            path: pxf_src/concourse/scripts/test.bash
-{% endfor %}
-{% set num_versions = None %}
-{% endfor %}{# both gp5 and gp6 #}
-
-{% set gp_ver = 6 %}
-- name: test-pxf-gp[[gp_ver]]-backward-compatibility-ubuntu18.04
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [compatibility-gate-for-pxf-gp]
-      trigger: true
-    - get: pxf_tarball
-      passed: [compatibility-gate-for-pxf-gp]
-      resource: pxf-gp[[gp_ver]]-tarball-ubuntu18.04
-    - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18.04-image
-    - get: singlecluster
-      resource: singlecluster-hdp2
-{% for i in range(1, num_gpdb6_versions) %}
-    - get: gpdb_package_latest-[[i]]
-      resource: gpdb[[gp_ver]]-ubuntu18.04-deb-latest-[[i]]
-{% endfor %}
-  - in_parallel:
-      limit: [[max_concurrent_bc_tasks]]
-      fail_fast: false
-      steps:
-{% for i in range(1, num_gpdb6_versions) %}
-      - task: test-against-greenplum-latest-[[i]]-ubuntu18.04
-        image: gpdb[[gp_ver]]-pxf-dev-ubuntu18.04-image
-        config:
-          platform: linux
-          inputs:
-          - name: gpdb_package_latest-[[i]]
-          - name: pxf_src
-          - name: pxf_tarball
-          - name: singlecluster
-          params:
-            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-            GROUP: HdfsSmokeTest,WritableSmokeTest
-            HADOOP_CLIENT: hdp
-            IMPERSONATION: true
-            PGPORT: 5432
-            PG_REGRESS: true
-            GP_VER: [[gp_ver]]
-          run:
-            path: pxf_src/concourse/scripts/test.bash
-{% endfor %}
-{% set gp_ver = None %}
-
-{% set gp_ver = 6 %}
-- name: test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [compatibility-gate-for-pxf-gp]
-      trigger: true
-    - get: pxf_tarball
-      passed: [compatibility-gate-for-pxf-gp]
-      resource: pxf-gp[[gp_ver]]-tarball-el8
-    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-    - get: singlecluster
-      resource: singlecluster-hdp2
-{% for i in range(1, num_gpdb6_versions) %}
-    - get: gpdb_package_latest-[[i]]
-      resource: gpdb[[gp_ver]]-el8-rpm-latest-[[i]]
-{% endfor %}
-  - in_parallel:
-      limit: [[max_concurrent_bc_tasks]]
-      fail_fast: false
-      steps:
-{% for i in range(1, num_gpdb6_versions) %}
-      - task: test-against-greenplum-latest-[[i]]-rocky8
-        image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-        config:
-          platform: linux
-          inputs:
-          - name: gpdb_package_latest-[[i]]
-          - name: pxf_src
-          - name: pxf_tarball
-          - name: singlecluster
-          params:
-            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-            GROUP: HdfsSmokeTest,WritableSmokeTest
-            HADOOP_CLIENT: hdp
-            IMPERSONATION: true
-            PGPORT: 5432
-            PG_REGRESS: true
-            GP_VER: [[gp_ver]]
-          run:
-            path: pxf_src/concourse/scripts/test.bash
-{% endfor %}
-{% set gp_ver = None %}
-
-## ---------- This is a No-Op job for GP7 and once the GP7 ----------
-## ---------- is released this can be updated and like the GP6 job above ----------
-{% set gp_ver = 7 %}
-- name: test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [compatibility-gate-for-pxf-gp]
-      trigger: true
-    - get: pxf_tarball
-      passed: [compatibility-gate-for-pxf-gp]
-      resource: pxf-gp[[gp_ver]]-tarball-el8
-{% set gp_ver = None %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.gp_ver == '5' %}
+        {% set num_versions = num_gpdb5_versions | int %}
+    {% elif x.gp_ver == '6' %}
+        {% set num_versions = num_gpdb6_versions | int %}
+    {% else %}
+        {% set num_versions = 1 %}
+    {% endif %}
+    {% do x.update({'num_versions': num_versions}) %}
+    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
+          {% if x.os_ver != '9' %}
+        {% include 'jobs/test-backwards-compatibility-tpl.yml' %}
+          {% endif %}
+    {% endif %}
+{% endcall %}
 
 ## ---------- Artifact Promotion Gate ----------
 - name: promote-pxf-for-gp5-gp6-gp7-artifacts
