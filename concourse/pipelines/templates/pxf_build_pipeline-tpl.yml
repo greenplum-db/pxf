@@ -262,14 +262,21 @@ resources:
 
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% set i = 0 %}
+    {% if x.gp_ver == '5' %}
+        {% set num_versions = num_gpdb5_versions | int %}
+    {% elif x.gp_ver == '6' %}
+        {% set num_versions = num_gpdb6_versions | int %}
+    {% else %}
+        {% set num_versions = 1 %}
+    {% endif %}
+    {% do x.update({'num_versions': num_versions}) %}
+
     {% if x.os_ver == '9' %}
         {# define RPMs for rocky9 until they are released into standard locations #}
         {% include 'resources/greenplum-rocky9-package-tpl.yml' %}
     {% else %}
         {% include 'resources/greenplum-package-tpl.yml' %}
     {% endif %}
-    {% set i = None %}
 {% endcall %}
 
 ## ---------- PXF 5 (for GPDB 6) Artifact ---------------
@@ -340,11 +347,8 @@ jobs:
       - test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
 {% endcall %}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.test_fdw is sameas true %}
-        {% set extension = 'fdw' %}
-    {% else %}
-        {% set extension = 'ext' %}
-    {% endif %}
+        {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
+
     - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
       passed:
         {% if x.test_fdw is sameas true %}
@@ -848,215 +852,240 @@ jobs:
 {% set passed = None %}
 {% set gp_ver = None %}
 
-### ---------- Compatibility Gate ----------
-#{% set gp_ver = 6 %}
-#- name: compatibility_gate_for_pxf-gp
-#  plan:
-#  - in_parallel:
-#    - get: pxf_src
-#      passed:
-#      - test_pxf-gp[[gp_ver]]-hdp2-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-hdp3_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-hdp2-jdk11_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-cdh_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-file-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-s3_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-s3-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-adl-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-gs-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-minio-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-hdp2-secure-multi-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-hdp2-secure-multi-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-hdp2-upgrade-extension_on_rhel7
-#{% set gp_ver = 7 %}
-#      - test_pxf-gp[[gp_ver]]-hdp2-secure-multi-impers_on_rhel8
-#      - test_pxf-gp[[gp_ver]]-cli_on_rhel8
-#{% set gp_ver = None %}
-#      trigger: true
-#{% set gp_ver = 5 %}
-#    - get: pxf_gp[[gp_ver]]_tarball_rhel7
-#      passed:
-#      - testing_gate_for_pxf-gp
-#{% set gp_ver = None %}
-#{% set gp_ver = 6 %}
-#    - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
-#      passed:
-#      - testing_gate_for_pxf-gp
-#    - get: pxf_gp[[gp_ver]]_tarball_rhel8
-#      passed:
-#      - testing_gate_for_pxf-gp
-#    - get: pxf_gp[[gp_ver]]_tarball_rhel7
-#      passed:
-#      - test_pxf-gp[[gp_ver]]-hdp2-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-hdp3_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-hdp2-jdk11_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-cdh_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-file-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-s3_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-s3-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-adl-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-gs-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-minio-no-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-hdp2-secure-multi-impers_on_rhel7
-#      - test_pxf-gp[[gp_ver]]-hdp2-secure-multi-no-impers_on_rhel7
-#{% set gp_ver = 7 %}
-#    - get: pxf_gp[[gp_ver]]_tarball_rhel8
-#      passed:
-#      - test_pxf-gp[[gp_ver]]-hdp2-secure-multi-impers_on_rhel8
-#      - test_pxf-gp[[gp_ver]]-cli_on_rhel8
-#{% set gp_ver = None %}
-#
-### ---------- Compatibility Testing ----------
-#{% for gp_ver in range(5, 7) %}
-#{% set num_versions = num_gpdb5_versions %}
-#{% if gp_ver == 6 %}
-#  {% set num_versions = num_gpdb6_versions %}
-#{% endif %}
-#- name: test_pxf-gp[[gp_ver]]_backward_compatibility_on_rhel7
-#  plan:
-#  - in_parallel:
-#    - get: pxf_src
-#      passed: [compatibility_gate_for_pxf-gp]
-#      trigger: true
-#    - get: pxf_tarball
-#      passed: [compatibility_gate_for_pxf-gp]
-#      resource: pxf_gp[[gp_ver]]_tarball_rhel7
-#    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-#    - get: singlecluster
-#      resource: singlecluster-hdp2
-#{% for i in range(1, num_versions) %}
-#    - get: gpdb_package_latest-[[i]]
-#      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-[[i]]
-#{% endfor %}
-#  - in_parallel:
-#      limit: [[max_concurrent_bc_tasks]]
-#      fail_fast: false
-#      steps:
-#{% for i in range(1, num_versions) %}
-#      - task: test_against_greenplum_latest-[[i]]_rhel7
-#        image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-#        config:
-#          platform: linux
-#          inputs:
-#          - name: gpdb_package_latest-[[i]]
-#          - name: pxf_src
-#          - name: pxf_tarball
-#          - name: singlecluster
-#          params:
-#            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-#            GROUP: HdfsSmokeTest,WritableSmokeTest
-#            HADOOP_CLIENT: hdp
-#            IMPERSONATION: true
-#            PGPORT: 5432
-#            PG_REGRESS: true
-#            GP_VER: [[gp_ver]]
-#          run:
-#            path: pxf_src/concourse/scripts/test.bash
-#{% endfor %}
-#{% set num_versions = None %}
-#{% endfor %}{# both gp5 and gp6 #}
-#
-#{% set gp_ver = 6 %}
-#- name: test_pxf-gp[[gp_ver]]_backward_compatibility_on_ubuntu18
-#  plan:
-#  - in_parallel:
-#    - get: pxf_src
-#      passed: [compatibility_gate_for_pxf-gp]
-#      trigger: true
-#    - get: pxf_tarball
-#      passed: [compatibility_gate_for_pxf-gp]
-#      resource: pxf_gp[[gp_ver]]_tarball_ubuntu18
-#    - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-#    - get: singlecluster
-#      resource: singlecluster-hdp2
-#{% for i in range(1, num_gpdb6_versions) %}
-#    - get: gpdb_package_latest-[[i]]
-#      resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-[[i]]
-#{% endfor %}
-#  - in_parallel:
-#      limit: [[max_concurrent_bc_tasks]]
-#      fail_fast: false
-#      steps:
-#{% for i in range(1, num_gpdb6_versions) %}
-#      - task: test_against_greenplum_latest-[[i]]_ubuntu18
-#        image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-#        config:
-#          platform: linux
-#          inputs:
-#          - name: gpdb_package_latest-[[i]]
-#          - name: pxf_src
-#          - name: pxf_tarball
-#          - name: singlecluster
-#          params:
-#            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-#            GROUP: HdfsSmokeTest,WritableSmokeTest
-#            HADOOP_CLIENT: hdp
-#            IMPERSONATION: true
-#            PGPORT: 5432
-#            PG_REGRESS: true
-#            GP_VER: [[gp_ver]]
-#          run:
-#            path: pxf_src/concourse/scripts/test.bash
-#{% endfor %}
-#{% set gp_ver = None %}
-#
-#{% set gp_ver = 6 %}
-#- name: test_pxf-gp[[gp_ver]]_backward_compatibility_on_rhel8
-#  plan:
-#  - in_parallel:
-#    - get: pxf_src
-#      passed: [compatibility_gate_for_pxf-gp]
-#      trigger: true
-#    - get: pxf_tarball
-#      passed: [compatibility_gate_for_pxf-gp]
-#      resource: pxf_gp[[gp_ver]]_tarball_rhel8
-#    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-#    - get: singlecluster
-#      resource: singlecluster-hdp2
-#{% for i in range(1, num_gpdb6_versions) %}
-#    - get: gpdb_package_latest-[[i]]
-#      resource: gpdb[[gp_ver]]_rhel8_rpm_latest-[[i]]
-#{% endfor %}
-#  - in_parallel:
-#      limit: [[max_concurrent_bc_tasks]]
-#      fail_fast: false
-#      steps:
-#{% for i in range(1, num_gpdb6_versions) %}
-#      - task: test_against_greenplum_latest-[[i]]_rhel8
-#        image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
-#        config:
-#          platform: linux
-#          inputs:
-#          - name: gpdb_package_latest-[[i]]
-#          - name: pxf_src
-#          - name: pxf_tarball
-#          - name: singlecluster
-#          params:
-#            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-#            GROUP: HdfsSmokeTest,WritableSmokeTest
-#            HADOOP_CLIENT: hdp
-#            IMPERSONATION: true
-#            PGPORT: 5432
-#            PG_REGRESS: true
-#            GP_VER: [[gp_ver]]
-#          run:
-#            path: pxf_src/concourse/scripts/test.bash
-#{% endfor %}
-#{% set gp_ver = None %}
-#
-### ---------- This is a No-Op job for GP7 and once the GP7 ----------
-### ---------- is released this can be updated and like the GP6 job above ----------
-#{% set gp_ver = 7 %}
-#- name: test_pxf-gp[[gp_ver]]_backward_compatibility_on_rhel8
-#  plan:
-#  - in_parallel:
-#    - get: pxf_src
-#      passed: [compatibility_gate_for_pxf-gp]
-#      trigger: true
-#    - get: pxf_tarball
-#      passed: [compatibility_gate_for_pxf-gp]
-#      resource: pxf_gp[[gp_ver]]_tarball_rhel8
-#{% set gp_ver = None %}
+## ---------- Compatibility Gate ----------
+- name: compatibility-gate-for-pxf-gp
+  plan:
+  - in_parallel:
+    - get: pxf-src
+      trigger: true
+      passed:
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% for test_feature in x.test_features %}
+        {% set target = test_feature if (test_feature in distros or test_feature in clouds) else default_distro %}
+        {% do x.update({'target': target}) %}
+        {% set use_impers = 'false' if (test_feature in clouds or test_feature == default_distro) else 'true' %}
+        {% do x.update({'use_impers': use_impers}) %}
+        {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
+        {% set impers_infix     = '-no-impers'    if x.use_impers  == 'false' else ''    %}
+        {% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
+      - test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
+        {% set extension        = None %}
+        {% set impers_infix     = None %}
+        {% set feature_infix    = None %}
+        {% if test_feature == 's3' %}
+      - test-pxf-gp[[x.gp_ver]]-ext-s3-centos7
+        {% endif %}
+    {% endfor %}
+{% endcall %}
+{% set gp_ver = 6 %}
+      - test-pxf-gp[[gp_ver]]-ext-hdp2-upgrade-extension-centos7
+      - test-pxf-gp[[gp_ver]]-file-no-impers-centos7
+      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
+      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
+{% set gp_ver = None %}
+{% set gp_ver = 7 %}
+      - test-pxf-gp[[gp_ver]]-cli-rocky8
+      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-rocky8
+{% set gp_ver = None %}
+{% set gp_ver = 5 %}
+    - get: pxf-gp[[gp_ver]]-tarball-el7
+      passed:
+      - testing-gate-for-pxf-gp
+{% set gp_ver = None %}
+{% set gp_ver = 6 %}
+    - get: pxf-gp[[gp_ver]]-tarball-ubuntu18.04
+      passed:
+      - testing-gate-for-pxf-gp
+    - get: pxf-gp[[gp_ver]]-tarball-el8
+      passed:
+      - testing-gate-for-pxf-gp
+    - get: pxf-gp[[gp_ver]]-tarball-el7
+      passed:
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% for test_feature in x.test_features %}
+        {% set target = test_feature if (test_feature in distros or test_feature in clouds) else default_distro %}
+        {% do x.update({'target': target}) %}
+        {% set use_impers = 'false' if (test_feature in clouds or test_feature == default_distro) else 'true' %}
+        {% do x.update({'use_impers': use_impers}) %}
+        {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
+        {% set impers_infix     = '-no-impers'    if x.use_impers  == 'false' else ''    %}
+        {% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
+      - test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
+        {% set extension        = None %}
+        {% set impers_infix     = None %}
+        {% set feature_infix    = None %}
+        {% if test_feature == 's3' %}
+      - test-pxf-gp[[x.gp_ver]]-ext-s3-centos7
+        {% endif %}
+    {% endfor %}
+{% endcall %}
+{% set gp_ver = 6 %}
+      - test-pxf-gp[[gp_ver]]-ext-hdp2-upgrade-extension-centos7
+      - test-pxf-gp[[gp_ver]]-file-no-impers-centos7
+      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
+      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
+{% set gp_ver = None %}
+{% set gp_ver = 7 %}
+    - get: pxf-gp[[gp_ver]]-tarball-el8
+      passed:
+      - test-pxf-gp[[gp_ver]]-cli-rocky8
+{% set gp_ver = None %}
+
+## ---------- Compatibility Testing ----------
+{% for gp_ver in range(5, 7) %}
+{% set num_versions = num_gpdb5_versions %}
+{% if gp_ver == 6 %}
+  {% set num_versions = num_gpdb6_versions %}
+{% endif %}
+- name: test-pxf-gp[[gp_ver]]-backward-compatibility-centos7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf-src
+      passed: [compatibility-gate-for-pxf-gp]
+      trigger: true
+    - get: pxf_tarball
+      passed: [compatibility-gate-for-pxf-gp]
+      resource: pxf-gp[[gp_ver]]-tarball-el7
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: singlecluster
+      resource: singlecluster-hdp2
+{% for i in range(1, num_versions) %}
+    - get: gpdb_package_latest-[[i]]
+      resource: gpdb[[gp_ver]]-el7-rpm-latest-[[i]]
+{% endfor %}
+  - in_parallel:
+      limit: [[max_concurrent_bc_tasks]]
+      fail_fast: false
+      steps:
+{% for i in range(1, num_versions) %}
+      - task: test-against-greenplum-latest-[[i]]-centos7
+        image: gpdb[[gp_ver]]-pxf-dev-centos7-image
+        config:
+          platform: linux
+          inputs:
+          - name: gpdb_package_latest-[[i]]
+          - name: pxf_src
+          - name: pxf_tarball
+          - name: singlecluster
+          params:
+            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
+            GROUP: HdfsSmokeTest,WritableSmokeTest
+            HADOOP_CLIENT: hdp
+            IMPERSONATION: true
+            PGPORT: 5432
+            PG_REGRESS: true
+            GP_VER: [[gp_ver]]
+          run:
+            path: pxf_src/concourse/scripts/test.bash
+{% endfor %}
+{% set num_versions = None %}
+{% endfor %}{# both gp5 and gp6 #}
+
+{% set gp_ver = 6 %}
+- name: test-pxf-gp[[gp_ver]]-backward-compatibility-ubuntu18.04
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf-src
+      passed: [compatibility-gate-for-pxf-gp]
+      trigger: true
+    - get: pxf_tarball
+      passed: [compatibility-gate-for-pxf-gp]
+      resource: pxf-gp[[gp_ver]]-tarball-ubuntu18.04
+    - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18.04-image
+    - get: singlecluster
+      resource: singlecluster-hdp2
+{% for i in range(1, num_gpdb6_versions) %}
+    - get: gpdb_package_latest-[[i]]
+      resource: gpdb[[gp_ver]]-ubuntu18.04-deb-latest-[[i]]
+{% endfor %}
+  - in_parallel:
+      limit: [[max_concurrent_bc_tasks]]
+      fail_fast: false
+      steps:
+{% for i in range(1, num_gpdb6_versions) %}
+      - task: test-against-greenplum-latest-[[i]]-ubuntu18.04
+        image: gpdb[[gp_ver]]-pxf-dev-ubuntu18.04-image
+        config:
+          platform: linux
+          inputs:
+          - name: gpdb_package_latest-[[i]]
+          - name: pxf_src
+          - name: pxf_tarball
+          - name: singlecluster
+          params:
+            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
+            GROUP: HdfsSmokeTest,WritableSmokeTest
+            HADOOP_CLIENT: hdp
+            IMPERSONATION: true
+            PGPORT: 5432
+            PG_REGRESS: true
+            GP_VER: [[gp_ver]]
+          run:
+            path: pxf_src/concourse/scripts/test.bash
+{% endfor %}
+{% set gp_ver = None %}
+
+{% set gp_ver = 6 %}
+- name: test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf-src
+      passed: [compatibility-gate-for-pxf-gp]
+      trigger: true
+    - get: pxf_tarball
+      passed: [compatibility-gate-for-pxf-gp]
+      resource: pxf-gp[[gp_ver]]-tarball-el8
+    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    - get: singlecluster
+      resource: singlecluster-hdp2
+{% for i in range(1, num_gpdb6_versions) %}
+    - get: gpdb_package_latest-[[i]]
+      resource: gpdb[[gp_ver]]-el8-rpm-latest-[[i]]
+{% endfor %}
+  - in_parallel:
+      limit: [[max_concurrent_bc_tasks]]
+      fail_fast: false
+      steps:
+{% for i in range(1, num_gpdb6_versions) %}
+      - task: test-against-greenplum-latest-[[i]]_rhel8
+        image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+        config:
+          platform: linux
+          inputs:
+          - name: gpdb_package_latest-[[i]]
+          - name: pxf_src
+          - name: pxf_tarball
+          - name: singlecluster
+          params:
+            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
+            GROUP: HdfsSmokeTest,WritableSmokeTest
+            HADOOP_CLIENT: hdp
+            IMPERSONATION: true
+            PGPORT: 5432
+            PG_REGRESS: true
+            GP_VER: [[gp_ver]]
+          run:
+            path: pxf_src/concourse/scripts/test.bash
+{% endfor %}
+{% set gp_ver = None %}
+
+## ---------- This is a No-Op job for GP7 and once the GP7 ----------
+## ---------- is released this can be updated and like the GP6 job above ----------
+{% set gp_ver = 7 %}
+- name: test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf-src
+      passed: [compatibility-gate-for-pxf-gp]
+      trigger: true
+    - get: pxf_tarball
+      passed: [compatibility-gate-for-pxf-gp]
+      resource: pxf-gp[[gp_ver]]-tarball-el8
+{% set gp_ver = None %}
 #
 ### ---------- Artifact Promotion Gate ----------
 #- name: promote_pxf_for_gp5_gp6_gp7_artifacts
