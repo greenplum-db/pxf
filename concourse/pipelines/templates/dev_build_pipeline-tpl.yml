@@ -4,6 +4,10 @@
 {# import macros to use in this template #}
 {% import "macros/macros.j2" as macros %}
 
+{# define supported test features (single-cluster test jobs) and whether their testing is requested by the Makefile via context variables #}
+{% set requested_features = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio, 'hdp2': hdp2, 'hdp3': hdp3, 'cdh': cdh, 'jdk11': jdk11} %}
+{% set supported_features = requested_features.keys()|list %}
+
 {#
 # ======================================================================
 # BUILD and TEST Combinations for PXF
@@ -24,7 +28,7 @@
 
 {% set build_test_pxf_combinations = [
     {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': false, 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': true , 'test_features': ['hdp2','hdp3','cdh','jdk11']},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': true , 'test_features': supported_features},
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false, 'test_features': []},
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false, 'test_features': []},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_cloud': false, 'test_features': []},
@@ -32,17 +36,15 @@
     {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false, 'test_features': []},
     {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false, 'test_features': []}] %}
 
-{# define supported clouds and whether their testing is requested by the Makefile via context variables #}
-{% set clouds = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio} %}
 
-{# define supported test features and whether their testing is requested by the Makefile via context variables #}
-{% set features = {'hdp2': hdp2, 'hdp3': hdp3, 'cdh': cdh, 'jdk11': jdk11} %}
+{# define supported clouds that have their own 'protocols' #}
+{% set clouds = ['s3', 'gs', 'adl', 'wasbs', 'minio'] %}
 
-{# define supported external system targets #}
-{% set targets = ['hdp2', 'hdp3', 'cdh'] %}
+{# define distros we use for singlecluster setup #}
+{% set distros = ['hdp2', 'hdp3', 'cdh'] %}
 
-{# define default target and impersonation for all test jobs #}
-{% set default_target = 'hdp2' %}
+{# define default distro and impersonation for all test jobs #}
+{% set default_distro = 'hdp2' %}
 {% set default_impers = 'true' %}
 
 ## ======================================================================
@@ -146,7 +148,7 @@ resources:
 ## ======================================================================
 jobs:
 
-## ---------- Build and Basic Singlenode Test Swimlanes ----------
+## ---------- Build and Basic single node Test Swimlanes ----------
 
 {# include a build job for all OS other than OEL (which does not have a separate build job) #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
@@ -160,7 +162,8 @@ jobs:
     {% if x.test_os != 'oel' or oel7 %}
         {% do x.update({'use_fdw': 'false'}) %}
         {% do x.update({'use_impers': default_impers}) %}
-        {% do x.update({'target': default_target}) %}
+        {% do x.update({'target': default_distro}) %}
+        {% do x.update({'distro': default_distro}) %}
         {% include 'jobs/test-tpl.yml' %}
     {% endif %}
 {% endcall %}
@@ -170,49 +173,47 @@ jobs:
     {% if x.test_fdw is sameas true %}
         {% do x.update({'use_fdw': 'true'}) %}
         {% do x.update({'use_impers': default_impers}) %}
-        {% do x.update({'target': default_target}) %}
+        {% do x.update({'target': default_distro}) %}
+        {% do x.update({'distro': default_distro}) %}
         {% include 'jobs/test-tpl.yml' %}
     {% endif %}
 {% endcall %}
 
-## ---------- HCFS Cloud tests ----------
-{# include a non-FDW test job for all clouds if supported and requested in the Makefile #}
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.test_cloud is sameas true %}
-        {# iterate over possible clouds, include a test job if a given cloud requested in the Makefile #}
-        {% for cloud, test_requested in clouds.items() %}
-            {% if test_requested %}
-                {% do x.update({'use_fdw': 'false'}) %}
-                {% do x.update({'use_impers': 'false'}) %}
-                {% do x.update({'protocol': cloud}) %}
-                {% include 'jobs/test-hcfs-tpl.yml' %}
-                {# for S3 only, also include an impersonation job #}
-                {% if x.protocol == 's3' %}
-                    {% do x.update({'use_impers': 'true'}) %}
-                    {% include 'jobs/test-hcfs-tpl.yml' %}
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-    {% endif %}
-{% endcall %}
+## ---------- Extended Feature (clouds, distros, jdk) tests ----------
 
-## ---------- Additional (Feature) tests ----------
 {# include a non-FDW test job for all clouds if supported and requested in the Makefile #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {# iterate over features defined for the given swimlane #}
     {% for test_feature in x.test_features %}
         {# if the fhe given feature is requested by the Makefile, create a non-FDW job for it #}
-        {% if features[test_feature] %}
+        {% if requested_features[test_feature] %}
             {% do x.update({'use_fdw': 'false'}) %}
-            {# if the purpose of the test is to try a different target, use it, otherwise use a default target for the job name #}
-            {% set target = test_feature if test_feature in targets else default_target %}
+
+            {# if the purpose of the test is to try a different distro/cloud, use it, otherwise use a default distro for the job name #}
+            {% set target = test_feature if (test_feature in distros or test_feature in clouds) else default_distro %}
             {% do x.update({'target': target}) %}
-            {# request a no-impers flavor of the default target as the other one is already a default test job #}
-            {% set use_impers = 'false' if test_feature == default_target else 'true' %}
+
+            {# set the distro to use for the test job's single cluster, use default if the feature are not a distro #}
+            {% set distro = test_feature if test_feature in distros else default_distro %}
+            {% do x.update({'distro': distro}) %}
+
+            {# request a no-impers job for clouds and the default distro (as basic test job is default distro with impersonation) #}
+            {% set use_impers = 'false' if (test_feature in clouds or test_feature == default_distro) else 'true' %}
             {% do x.update({'use_impers': use_impers}) %}
-            {# define a feature name to go into the test job name, unless it is a test against a target only #}
-            {% do x.update({'feature': test_feature}) if test_feature not in targets %}
+
+            {# define a protocol if the feature is a cloud test #}
+            {% do x.update({'protocol': test_feature }) if test_feature in clouds %}
+
+            {# define a feature name to go into the test job name, unless it is a test against a distro/cloud only #}
+            {% do x.update({'feature': test_feature}) if test_feature not in distros and test_feature not in clouds %}
             {% include 'jobs/test-tpl.yml' %}
+
+            {# for S3 only, also include an additional impersonation job #}
+            {% if test_feature == 's3' %}
+                {% do x.update({'use_impers': 'true'}) %}
+                {% include 'jobs/test-hcfs-tpl.yml' %}
+            {% endif %}
+
         {% endif %}
     {% endfor %}
 {% endcall %}
@@ -228,7 +229,7 @@ jobs:
 {% set gp_ver = None %}
 
 ## ---------- FILE tests -----------------
-
+{% set gp_ver = 6 %}
 {% if file %}
 - name: test-pxf-gp[[gp_ver]]-file-no-impers-centos7
   max_in_flight: 2

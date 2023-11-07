@@ -4,13 +4,24 @@
  #
  # x.use_fdw    - whether to use FDW extension for testing (otherwise the external table extension will be used)
  # x.use_impers - whether to use impersonation for the test job
- # x.target     - the target external system type (such as hdp2 or cdh)
+ # x.target     - the target external system type
+ # x.distro     - the distro to use for a singlecluster image
+ # x.protocol   - the protocol to use for cloud tests
  # x.feature    - the name of the feature being tested, optional
  #}
 
-{% set extension     = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
-{% set impers_infix  = '-no-impers'    if x.use_impers  == 'false' else ''    %}
-{% set feature_infix = '-' ~ x.feature if x.feature and not x.feature == '' else '' %}
+{% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
+{% set impers_infix     = '-no-impers'    if x.use_impers  == 'false' else ''    %}
+{% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
+{% if x.protocol %}
+    {% if x.protocol == 's3' %}
+        {% set test_group = 'hcfs,s3' %}
+    {% else %}
+        {% set test_group = 'hcfs' %}
+    {% endif %}
+{% else %}
+    {% set test_group = 'gpdb,proxy,profile' %}
+{% endif %}
 
 - name: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
   plan:
@@ -37,30 +48,46 @@
 {% endif %}
     - get: pxf-automation-dependencies
     - get: singlecluster
-      resource: singlecluster-[[x.target]]
+      resource: singlecluster-[[x.distro]]
   - task: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
-{% if x.target =='cdh' %}
+{% if x.distro == 'cdh' %}
     {# CDH often fails on HBASE permission grant #}
     attempts: 3
 {% endif %}
     params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[x.gp_ver]]
-      GROUP: gpdb,proxy,profile
-{% if x.target =='cdh' %}
+      GROUP: [[test_group]]
+{% if x.target == 'cdh' %}
       HADOOP_CLIENT: CDH
 {% endif %}
       IMPERSONATION: [[x.use_impers]]
-{% if x.feature =='jdk11' %}
+{% if x.protocol %}
+      PROTOCOL: [[x.protocol]]
+{% endif %}
+{% if x.feature == 'jdk11' %}
       RUN_JDK_VERSION: 11
 {% endif %}
 {% if x.test_os == 'ubuntu' %}
       PXF_BASE_DIR: /home/gpadmin/pxf
 {% endif %}
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       USE_FDW: [[x.use_fdw]]
+{# --- include credential for external clouds --- #}
+{# S3 credentials are needed for all tests for CloudAccessTest #}
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+{% if x.protocol == 'adl' %}
+      ADL_ACCOUNT: ((ud/pxf/common/adl-account))
+      ADL_CLIENT_ID: ((ud/pxf/secrets/adl-client-id))
+      ADL_CREDENTIAL: ((ud/pxf/secrets/adl-credential))
+      ADL_REFRESH_URL: ((ud/pxf/common/adl-refresh-url))
+{% elif x.protocol == 'wasbs' %}
+      WASB_ACCOUNT_NAME: ((ud/pxf/common/wasb-account-name))
+      WASB_ACCOUNT_KEY: ((ud/pxf/secrets/wasb-account-key))
+{% elif x.protocol == 'gs' %}
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/gsc-ci-service-account-key))
+{% endif %}
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
