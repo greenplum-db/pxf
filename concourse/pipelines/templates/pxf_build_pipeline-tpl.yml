@@ -248,6 +248,7 @@ resources:
 
   [[macros.resource_registry_image('rpmrebuild-centos7-image', 'gcr.io/data-gpdb-ud/rpmrebuild-centos7', 'latest')]]
   [[macros.resource_registry_image('rpmrebuild-rocky8-image', 'gcr.io/data-gpdb-ud/rpmrebuild-rocky8', 'latest')]]
+  [[macros.resource_registry_image('rpmrebuild-rocky9-image', 'gcr.io/data-gpdb-ud/rpmrebuild-rocky9', 'latest')]]
 
   [[macros.resource_registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
 
@@ -982,6 +983,7 @@ jobs:
     - get: google-cloud-sdk-slim-image
     - get: rpmrebuild-centos7-image
     - get: rpmrebuild-rocky8-image
+    - get: rpmrebuild-rocky9-image
     - get: gpdb6-pxf-dev-ubuntu18.04-image
   - task: get-pxf-gp5-and-pxf-gp6-artifacts-from-releases-directory
     image: google-cloud-sdk-slim-image
@@ -993,34 +995,22 @@ jobs:
       GCS_RELEASES_PATH: [[ environment ]]/releases
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
   #  - in_parallel: does not work since all tasks modify pxf_artifacts
-{% for gp_ver in range(5, 7) %}
-  - task: add-osl-file-to-pxf-gp[[gp_ver]]-rpm-centos7
-    image: rpmrebuild-centos7-image
-    file: pxf_src/concourse/tasks/add_osl_rpm.yml
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_os != 'oel' %}
+  - task: add-osl-file-to-pxf-gp[[x.gp_ver]]-[[x.pkg_type]]-[[x.test_platform]]
+    {% if x.test_os != 'ubuntu' %}
+    image: rpmrebuild-[[x.test_platform]]-image
+    {% else %}
+    image: gpdb6-pxf-dev-ubuntu18-image
+    {% endif %}
+    file: pxf_src/concourse/tasks/add_osl_[[x.pkg_type]].yml
     params:
-      GP_VER: [[gp_ver]]
-      REDHAT_MAJOR_VERSION: 7
-{% endfor %}
-{% set gp_ver = 6 %}
-  - task: add-osl-file-to-pxf-gp[[gp_ver]]-rpm-rocky8
-    image: rpmrebuild-rocky8-image
-    file: pxf_src/concourse/tasks/add_osl_rpm.yml
-    params:
-      GP_VER: [[gp_ver]]
-      REDHAT_MAJOR_VERSION: 8
-  - task: add-osl-file-to-pxf-gp[[gp_ver]]-deb-ubuntu18.04
-    file: pxf_src/concourse/tasks/add_osl_deb.yml
-    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-    params:
-      GP_VER: [[gp_ver]]
-{% set gp_ver = 7 %}
-  - task: add-osl-file-to-pxf-gp[[gp_ver]]-rpm-rocky8
-    image: rpmrebuild-rocky8-image
-    file: pxf_src/concourse/tasks/add_osl_rpm.yml
-    params:
-      GP_VER: [[gp_ver]]
-      REDHAT_MAJOR_VERSION: 8
-{% set gp_ver = None %}
+      GP_VER: [[x.gp_ver]]
+    {% if x.test_os != 'ubuntu' %}
+      REDHAT_MAJOR_VERSION: [[x.os_ver]]
+    {% endif %}
+    {% endif %}
+{% endcall %}
 {% for gp_ver in range(5, 7) %}
   - task: generate-pxf-binary-tarball-from-pxf-gp[[gp_ver]]-centos7-rpm
     file: pxf_src/concourse/tasks/generate_tarball_from_rpm.yml
@@ -1040,21 +1030,15 @@ jobs:
       RELENG_OSL_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-osl-drop-path))
       RELENG_ODP_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-odp-drop-path))
   - in_parallel:
-    - put: pxf-gp5-rhel7-release-to-releng
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.build_platform == x.test_platform %}
+    {% if x.os_ver != '9' %}
+    - put: pxf-gp[[x.gp_ver]]-[[x.greenplum_platform]]-release-to-releng
       params:
-        file: pxf_artifacts/licensed/pxf-gp5-*-2.el7.x86_64.rpm
-    - put: pxf-gp6-rhel7-release-to-releng
-      params:
-        file: pxf_artifacts/licensed/pxf-gp6-*-2.el7.x86_64.rpm
-    - put: pxf-gp6-rhel8-release-to-releng
-      params:
-        file: pxf_artifacts/licensed/pxf-gp6-*-2.el8.x86_64.rpm
-    - put: pxf-gp6-ubuntu18.04-release-to-releng
-      params:
-        file: pxf_artifacts/licensed/pxf-gp6-*-2-ubuntu18.04-amd64.deb
-    - put: pxf-gp7-el8-release-to-releng
-      params:
-        file: pxf_artifacts/licensed/pxf-gp7-*-2.el8.x86_64.rpm
+        file: pxf_artifacts/licensed/pxf-gp[[x.gp_ver]]-*-2?[[x.release_platform]]?[[x.pkg_arch]]?[[x.pkg_type]]
+    {% endif %}
+    {% endif %}
+{% endcall %}
     - put: pxf-gp5-tarball-release-to-releng
       params:
         file: pxf_artifacts/licensed/gp5/pxf-gp5-*-el7.x86_64.tar.gz
