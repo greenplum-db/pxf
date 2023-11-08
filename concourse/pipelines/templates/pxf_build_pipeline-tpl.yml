@@ -421,35 +421,7 @@ jobs:
 
 ## ---------- Extended Tests ----------
 {% set gp_ver = '6' %}
-
-- name: test-pxf-gp[[gp_ver]]-ext-hdp2-upgrade-extension-centos7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [testing-gate-for-pxf-gp]
-      trigger: true
-    - get: pxf_package
-      resource: pxf6_6-gp6-el7-released   # for upgrade test
-    - get: pxf_tarball
-      resource: pxf-gp[[gp_ver]]-tarball-el7
-      passed: [testing-gate-for-pxf-gp]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
-      passed: [testing-gate-for-pxf-gp]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: test-pxf-gp[[gp_ver]]-hdp2-new-extension-centos7
-    file: pxf_src/concourse/tasks/upgrade_extension.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: pxfExtensionVersion2
-      SECOND_GROUP: pxfExtensionVersion2_1
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+    {% include 'jobs/test-upgrade-extension-tpl.yml' %}
 
 ## ---------- FILE tests -----------------
 
