@@ -955,33 +955,26 @@ jobs:
       resource: pxf-src
       trigger: true
       passed:
-{% for gp_ver in range(5, 7) %}
-      - test-pxf-gp[[gp_ver]]-backward-compatibility-centos7
-{% endfor %}
-{% set gp_ver = None %}
-{% for gp_ver in range(6, 8) %}
-      - test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
-{% endfor %}
-{% set gp_ver = None %}
-{% set gp_ver = 6 %}
-      - test-pxf-gp[[gp_ver]]-backward-compatibility-ubuntu18.04
-{% set gp_ver = None %}
-{% for gp_ver in range(5, 7) %}
-    - get: pxf-gp[[gp_ver]]-tarball-el7
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.build_platform == x.test_platform %}
+    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
+          {% if x.os_ver != '9' %}
+      - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
+          {% endif %}
+    {% endif %}
+    {% endif %}
+{% endcall %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.build_platform == x.test_platform %}
+    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
+          {% if x.os_ver != '9' %}
+    - get: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
       passed:
-      - test-pxf-gp[[gp_ver]]-backward-compatibility-centos7
-{% endfor %}
-{% set gp_ver = None %}
-{% for gp_ver in range(6, 8) %}
-    - get: pxf-gp[[gp_ver]]-tarball-el8
-      passed:
-      - test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
-{% endfor %}
-{% set gp_ver = 6 %}
-    - get: pxf-gp[[gp_ver]]-tarball-ubuntu18.04
-      passed:
-      - test-pxf-gp[[gp_ver]]-backward-compatibility-ubuntu18.04
-{% set gp_ver = None %}
+      - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
+          {% endif %}
+    {% endif %}
+    {% endif %}
+{% endcall %}
     - get: google-cloud-sdk-slim-image
   - task: promote-pxf-for-gp5-gp6-gp7-artifacts
     image: google-cloud-sdk-slim-image
