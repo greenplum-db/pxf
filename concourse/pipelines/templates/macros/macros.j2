@@ -108,3 +108,59 @@
 {% macro resource_terraform(cluster_type) %}
     {% include 'resources/terraform-tpl.yml' %}
 {% endmacro %}
+
+{% macro job_group(name, filter, configs, clouds, distros) %}
+- name: [[name]]
+  jobs:
+{% call(x) for_each_config(configs) %}
+  {% if x.test_platform == filter or x.gp_ver == filter %}
+  {% if x.test_os != 'oel' %}
+  - build-pxf-gp[[x.gp_ver]]-[[x.test_platform]]
+  {% else %}
+  - build-pxf-gp[[x.gp_ver]]-centos7
+  {% endif %}
+  {% if x.test_fdw %}
+  {% set extension = 'fdw' %}
+  - test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
+  {% endif %}
+  {% set extension = 'ext' %}
+  - test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
+  {% set extension = '' %}
+    {% for test_feature in x.test_features %}
+        {% set target = test_feature if (test_feature in distros or test_feature in clouds) else 'hdp2' %}
+        {% do x.update({'target': target}) %}
+        {% set use_impers = 'false' if (test_feature in clouds or test_feature == 'hdp2') else 'true' %}
+        {% do x.update({'use_impers': use_impers}) %}
+        {% do x.update({'feature': test_feature}) if test_feature not in distros and test_feature not in clouds %}
+        {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
+        {% set impers_infix     = '-no-impers'    if x.use_impers  == 'false' else ''    %}
+        {% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
+  - test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
+        {% set extension        = None %}
+        {% set impers_infix     = None %}
+        {% set feature_infix    = None %}
+        {% if test_feature == 's3' %}
+  - test-pxf-gp[[x.gp_ver]]-ext-s3-centos7
+        {% endif %}
+    {% endfor %}
+    {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
+  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-upgrade-extension-[[x.test_platform]]
+  - test-pxf-gp[[x.gp_ver]]-file-no-impers-[[x.test_platform]]
+  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-no-impers-[[x.test_platform]]
+    {% endif %}
+    {% if x.test_platform == 'rocky8' and x.gp_ver == '7' %}
+  - test-pxf-gp[[x.gp_ver]]-cli-rocky8
+    {% endif %}
+    {% if x.test_multinode %}
+  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-[[x.test_platform]]
+    {% endif %}
+    {% if x.build_platform == x.test_platform %}
+    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
+  - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
+    {% endif %}
+    {% endif %}
+    {% endif %}
+{% endcall %}
+  - testing-gate-for-pxf-gp
+  - compatibility-gate-for-pxf-gp
+{% endmacro %}

@@ -3,9 +3,10 @@
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #}
 
-{# include PXF artifact only if both build and test platform are the same to avoid duplicates #}
-{% if x.build_platform == x.test_platform %}
-{% if x.gp_ver == '5' or x.gp_ver == '6' and x.greenplum_platform == 'rhel7' %}
+{# include release tarball artifacts only if the test os is centos to avoid duplicates #}
+{% if x.test_os == 'centos' %}
+{# release tarball artifacts are only needed for gp5 and gp6, we produce only rpms for gp7 #}
+{% if x.gp_ver != '7' %}
 
 {# Release Tarball Drop Artifact #}
 - name: pxf-gp[[x.gp_ver]]-tarball-release-to-releng

@@ -56,122 +56,76 @@
 groups:
 - name: all
   jobs:
-{% set gp_ver = None %}
-{% for gp_ver in range(5, 7) %}
-  - build-pxf-gp[[gp_ver]]-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-centos7
-{% endfor %}
-{% set gp_ver = 6 %}
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-oel7
-  - build-pxf-gp[[gp_ver]]-ubuntu18.04
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-ubuntu18.04
-{% for gp_ver in range(6, 8) %}
-  - build-pxf-gp[[gp_ver]]-rocky8
-  - build-pxf-gp[[gp_ver]]-rocky9
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-rocky8
-  - test-pxf-gp[[gp_ver]]-fdw-hdp2-rocky8
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-rocky9
-  - test-pxf-gp[[gp_ver]]-fdw-hdp2-rocky8
-{% endfor %}
-{% set gp_ver = None %}
-{% for gp_ver in range(5, 7) %}
-  - test-pxf-gp[[gp_ver]]-backward-compatibility-centos7
-{% endfor %}
-{% set gp_ver = 7 %}
-  - test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
-  - test-pxf-gp[[gp_ver]]-backward-compatibility-rocky9
-{% set gp_ver = None %}
-{% set gp_ver = 6 %}
-  - test-pxf-gp[[gp_ver]]-backward-compatibility-ubuntu18.04
-  - test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
-  - test-pxf-gp[[gp_ver]]-backward-compatibility-rocky9
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp3-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-jdk11-centos7
-  - test-pxf-gp[[gp_ver]]-ext-cdh-centos7
-  - test-pxf-gp[[gp_ver]]-file-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-s3-centos7
-  - test-pxf-gp[[gp_ver]]-ext-s3-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-adl-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-wasbs-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-gs-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-minio-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-upgrade-extension-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-rocky9
-{% set gp_ver = None %}
-{% set gp_ver = 7 %}
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-rocky8
-  - test-pxf-gp[[gp_ver]]-cli-rocky8
-{% set gp_ver = None %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+{% if x.test_os != 'oel' %}
+  - build-pxf-gp[[x.gp_ver]]-[[x.test_platform]]
+{% endif %}
+{% if x.test_fdw %}
+{% set extension = 'fdw' %}
+  - test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
+{% endif %}
+{% set extension = 'ext' %}
+  - test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
+{% set extension = '' %}
+    {% for test_feature in x.test_features %}
+        {% set target = test_feature if (test_feature in distros or test_feature in clouds) else default_distro %}
+        {% do x.update({'target': target}) %}
+        {% set use_impers = 'false' if (test_feature in clouds or test_feature == default_distro) else 'true' %}
+        {% do x.update({'use_impers': use_impers}) %}
+        {% do x.update({'feature': test_feature}) if test_feature not in distros and test_feature not in clouds %}
+        {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
+        {% set impers_infix     = '-no-impers'    if x.use_impers  == 'false' else ''    %}
+        {% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
+  - test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
+        {% set extension        = None %}
+        {% set impers_infix     = None %}
+        {% set feature_infix    = None %}
+        {% if test_feature == 's3' %}
+  - test-pxf-gp[[x.gp_ver]]-ext-s3-centos7
+        {% endif %}
+    {% endfor %}
+    {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
+  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-upgrade-extension-[[x.test_platform]]
+  - test-pxf-gp[[x.gp_ver]]-file-no-impers-[[x.test_platform]]
+  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-no-impers-[[x.test_platform]]
+    {% endif %}
+    {% if x.test_platform == 'rocky8' and x.gp_ver == '7' %}
+  - test-pxf-gp[[x.gp_ver]]-cli-rocky8
+    {% endif %}
+    {% if x.test_multinode %}
+  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-[[x.test_platform]]
+    {% endif %}
+    {% if x.build_platform == x.test_platform %}
+    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
+  - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
+    {% endif %}
+  {% endif %}
+{% endcall %}
   - testing-gate-for-pxf-gp
   - compatibility-gate-for-pxf-gp
   - promote-pxf-for-gp5-gp6-gp7-artifacts
   - publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng
 
-{% set gp_ver = None %}
-{% for gp_ver in range(5, 7) %}
-- name: gp[[gp_ver]]-centos7
+[[macros.job_group('centos7', 'centos7', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('oel7', 'oel7', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('rocky8', 'rocky8', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('rocky9',  'rocky9',build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('ubuntu18.04', 'ubuntu18.04',build_test_pxf_combinations, clouds, distros)]]
+
+[[macros.job_group('gp5', '5', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('gp6', '6', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('gp7', '7', build_test_pxf_combinations, clouds, distros)]]
+
+- name: backwards-compatibility
   jobs:
-  - build-pxf-gp[[gp_ver]]-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-centos7
-{% endfor %}
-- name: gp6-oel7
-  jobs:
-  - build-pxf-gp6-centos7
-  - test-pxf-gp6-ext-hdp2-oel7
-{% set gp_ver = 6 %}
-- name: gp[[gp_ver]]-ubuntu18.04
-  jobs:
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-ubuntu18.04
-  - build-pxf-gp[[gp_ver]]-ubuntu18.04
-{% set gp_ver = None %}
-{% for gp_ver in range(6, 8) %}
-- name: gp[[gp_ver]]-rocky8
-  jobs:
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-rocky8
-  - build-pxf-gp[[gp_ver]]-rocky8
-{% endfor %}
-{% set gp_ver = None %}
-{% set gp_ver = 6 %}
-- name: pxf_test-gp[[gp_ver]]-centos7
-  jobs:
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp3-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-jdk11-centos7
-  - test-pxf-gp[[gp_ver]]-ext-cdh-centos7
-  - test-pxf-gp[[gp_ver]]-file-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-s3-centos7
-  - test-pxf-gp[[gp_ver]]-ext-s3-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-adl-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-wasbs-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-gs-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-minio-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-upgrade-extension-centos7
-{% set gp_ver = None %}
-{% set gp_ver = 7 %}
-- name: pxf_test-gp[[gp_ver]]-rocky8
-  jobs:
-  - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-rocky8
-  - test-pxf-gp[[gp_ver]]-cli-rocky8
-{% set gp_ver = None %}
-- name: backwards_compatibility
-  jobs:
-{% set gp_ver = None %}
-{% for gp_ver in range(5, 7) %}
-  - test-pxf-gp[[gp_ver]]-backward-compatibility-centos7
-{% endfor %}
-{% set gp_ver = None %}
-{% for gp_ver in range(6, 8) %}
-  - test-pxf-gp[[gp_ver]]-backward-compatibility-rocky8
-{% endfor %}
-{% set gp_ver = 6 %}
-  - test-pxf-gp[[gp_ver]]-backward-compatibility-ubuntu18.04
-{% set gp_ver = None %}
-- name: promote_and_publish
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.build_platform == x.test_platform %}
+    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
+  - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
+    {% endif %}
+    {% endif %}
+{% endcall %}
+- name: promote-and-publish
   jobs:
   - promote-pxf-for-gp5-gp6-gp7-artifacts
   - publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng
@@ -708,16 +662,19 @@ jobs:
         {% endif %}
     {% endfor %}
 {% endcall %}
-{% set gp_ver = 6 %}
-      - test-pxf-gp[[gp_ver]]-ext-hdp2-upgrade-extension-centos7
-      - test-pxf-gp[[gp_ver]]-file-no-impers-centos7
-      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
-      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
-{% set gp_ver = None %}
-{% set gp_ver = 7 %}
-      - test-pxf-gp[[gp_ver]]-cli-rocky8
-      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-rocky8
-{% set gp_ver = None %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
+      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-upgrade-extension-[[x.test_platform]]
+      - test-pxf-gp[[x.gp_ver]]-file-no-impers-[[x.test_platform]]
+      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-no-impers-[[x.test_platform]]
+    {% endif %}
+    {% if x.test_platform == 'rocky8' and x.gp_ver == '7' %}
+      - test-pxf-gp[[x.gp_ver]]-cli-rocky8
+    {% endif %}
+    {% if x.test_multinode %}
+      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-[[x.test_platform]]
+    {% endif %}
+{% endcall %}
 {% set gp_ver = 5 %}
     - get: pxf-gp[[gp_ver]]-tarball-el7
       passed:
@@ -750,12 +707,16 @@ jobs:
         {% endif %}
     {% endfor %}
 {% endcall %}
-{% set gp_ver = 6 %}
-      - test-pxf-gp[[gp_ver]]-ext-hdp2-upgrade-extension-centos7
-      - test-pxf-gp[[gp_ver]]-file-no-impers-centos7
-      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
-      - test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
-{% set gp_ver = None %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
+      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-upgrade-extension-[[x.test_platform]]
+      - test-pxf-gp[[x.gp_ver]]-file-no-impers-[[x.test_platform]]
+      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-no-impers-[[x.test_platform]]
+      {% if x.test_multinode %}
+      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-[[x.test_platform]]
+      {% endif %}
+    {% endif %}
+{% endcall %}
 {% set gp_ver = 7 %}
     - get: pxf-gp[[gp_ver]]-tarball-el8
       passed:
