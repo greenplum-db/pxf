@@ -1,22 +1,25 @@
-## Variables that need to be set for this job:
-## - gp_ver = Greenplum Major Version
-## - passed = upstream job name that the artifacts need to pass before this job
+{# Template for a PXF basic test job definition.
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file and these additional fields:
+ #
+ # x.passed     - upstream job name that the artifacts need to pass before this job
+ #}
 
-- name: test-pxf-gp[[gp_ver]]-cli-rocky8
+- name: test-pxf-gp[[x.gp_ver]]-cli-[[x.test_platform]]
   max_in_flight: 2
   plan:
   - in_parallel:
     - get: pxf_src
       resource: pxf-src
-      passed: [[passed]]
+      passed: [[x.passed]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf-gp[[gp_ver]]-tarball-el8
+      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
       passed: [[passed]]
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]-el8-rpm-latest-0
+      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-rpm-latest-0
       passed: [[passed]]
-    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
     - get: ccp_src
       resource: ccp-src
     - get: ccp-7-image
@@ -30,7 +33,7 @@
           generate_random_name: true
           terraform_source: ccp_src/google/
           vars:
-            PLATFORM: rocky8-gpdb[[gp_ver]]
+            PLATFORM: [[x.test_platform]]-gpdb[[x.gp_ver]]
             number_of_nodes: ((number_of_gpdb_nodes))
             extra_nodes: 1
             segments_per_host: 4
@@ -49,7 +52,7 @@
           AWS_DEFAULT_REGION: ((ud/common/aws-region))
           BUCKET_PATH: ((tf-bucket-path))
           BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-          PLATFORM: rocky8-gpdb[[gp_ver]]
+          PLATFORM: [[x.test_platform]]-gpdb[[x.gp_ver]]
           CLOUD_PROVIDER: google
           GPDB_RPM: true
   - task: initialize-greenplum
@@ -63,12 +66,12 @@
       GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
       IMPERSONATION: false
       INSTALL_GPHDFS: false
-      GP_VER: [[gp_ver]]
+      GP_VER: [[x.gp_ver]]
       PXF_JVM_OPTS: ((pxf-jvm-opts))
   - task: test_pxf_cli
     on_success:
       <<: *destroy_gpdb_cluster
-    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
 {% if slack_notification %}
     <<: *slack_alert

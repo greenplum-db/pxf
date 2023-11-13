@@ -13,13 +13,16 @@
 {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
 {% set impers_infix     = '-no-impers'    if x.use_impers  == 'false' else ''    %}
 {% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
+
+{# determine the test groups to run #}
 {% if x.protocol %}
-    {% if x.protocol == 's3' %}
-        {% set test_group = 'hcfs,s3' %}
-    {% else %}
-        {% set test_group = 'hcfs' %}
-    {% endif %}
+    {# cloud tests run hcfs group, while for S3 we also run s3-specific tests #}
+    {% set test_group = 'hcfs,s3' if x.protocol == 's3' else 'hcfs' %}
+{% elif x.use_impers == 'false' %}
+    {# no impersonation tests should run a smoke group, define it here explicitly, do not rely on task default #}
+    {% set test_group = 'smoke' %}
 {% else %}
+    {# non-cloud impersonation tests (regular) run a standard group combination #}
     {% set test_group = 'gpdb,proxy,profile' %}
 {% endif %}
 

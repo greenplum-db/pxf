@@ -27,14 +27,14 @@
 #}
 
 {% set build_test_pxf_combinations = [
-    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': false, 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': true , 'test_features': supported_features},
-    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false, 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false, 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_cloud': false, 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_cloud': false, 'test_features': []},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false, 'test_features': []},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false, 'test_features': []}] %}
+    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cli': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cli': false, 'test_features': supported_features},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cli': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cli': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_cli': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_cli': false, 'test_features': []},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cli': true, 'test_features': []},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cli': false, 'test_features': []}] %}
 
 
 {# define supported clouds that have their own 'protocols' #}
@@ -211,7 +211,7 @@ jobs:
             {# for S3 only, also include an additional impersonation job #}
             {% if test_feature == 's3' %}
                 {% do x.update({'use_impers': 'true'}) %}
-                {% include 'jobs/test-hcfs-tpl.yml' %}
+                {% include 'jobs/test-tpl.yml' %}
             {% endif %}
 
         {% endif %}
@@ -220,13 +220,13 @@ jobs:
 
 ## ---------- GP7 PXF CLI tests ----------
 
-{% if gp7_cli %}
-    {% set gp_ver = 7 %}
-    {% set passed = '[build-pxf-gp7-rocky8]' %}
-    {% include 'jobs/test-cli-tpl.yml' %}
-    {% set passed = None %}
-{% endif %} {# if gp7_cli ends here #}
-{% set gp_ver = None %}
+{# include a CLI test, for now Makefile only defines the switch for GP7 #}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_cli is sameas true and x.gp_ver == '7' and gp7_cli %}
+        {% do x.update({'passed': '[build-pxf-gp7-' ~ x.build_platform ~ ']'}) %}
+        {% include 'jobs/test-cli-tpl.yml' %}
+    {% endif %}
+{% endcall %}
 
 ## ---------- FILE tests -----------------
 {% set gp_ver = 6 %}
