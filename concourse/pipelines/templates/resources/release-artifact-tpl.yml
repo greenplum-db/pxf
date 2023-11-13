@@ -13,11 +13,7 @@
   source:
     bucket: ((ud/pxf/[[environment]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-{% if x.build_os == 'ubuntu' %}
-    regexp: ((ud/pxf/common/releng-drop-path))/gpdb[[x.gp_ver]]/pxf-gp[[x.gp_ver]]-(.*)-2-[[x.release_platform]]-[[x.pkg_arch]]-[[x.pkg_type]]
-{% else %}
-    regexp: ((ud/pxf/common/releng-drop-path))/gpdb[[x.gp_ver]]/pxf-gp[[x.gp_ver]]-(.*)-2.[[x.release_platform]].[[x.pkg_arch]].[[x.pkg_type]]
-{% endif %}
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb[[x.gp_ver]]/[[x.pxf_release_package_filename_regex]]
 
 {% endif %}
 {% endif %}  {# end of conditional package definitions #}

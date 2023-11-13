@@ -51,6 +51,8 @@
         {% do x.update({'pxf_tarball_filename_regex':     'pxf-gp'     ~ x.gp_ver ~ '-*' ~ x.pxf_platform_infix ~ x.release_platform ~ '.tar.gz'}) %}
         {% do x.update({'pxf_fdw_tarball_filename_regex': 'pxf-fdw-gp' ~ x.gp_ver ~ '-*' ~ x.pxf_platform_infix ~ x.release_platform ~ '.tar.gz'}) %}
 
+        {% do x.update({'pxf_release_package_filename_regex': 'pxf-gp' ~ x.gp_ver ~ '-(.*)-2' ~ x.pxf_platform_infix ~ x.release_platform ~ x.pxf_platform_infix ~ x.pkg_arch ~ x.pxf_platform_infix ~ x.pkg_type }) %}
+
         {# render the result of callback passing the resulting context specific to this loop iteration #}
 [[caller(x)]]
     {% endfor %}
