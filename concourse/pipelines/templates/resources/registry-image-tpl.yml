@@ -23,4 +23,4 @@
 {% if image_repository.startswith('gcr.io/data-gpdb-ud') %}
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
-  {% endif %}
+{% endif %}

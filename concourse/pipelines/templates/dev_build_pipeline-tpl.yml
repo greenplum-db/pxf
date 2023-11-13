@@ -185,7 +185,7 @@ jobs:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {# iterate over features defined for the given swimlane #}
     {% for test_feature in x.test_features %}
-        {# if the fhe given feature is requested by the Makefile, create a non-FDW job for it #}
+        {# if the given feature is requested by the Makefile, create a non-FDW job for it #}
         {% if requested_features[test_feature] %}
             {% do x.update({'use_fdw': 'false'}) %}
 
@@ -202,7 +202,7 @@ jobs:
             {% do x.update({'use_impers': use_impers}) %}
 
             {# define a protocol if the feature is a cloud test #}
-            {% do x.update({'protocol': test_feature }) if test_feature in clouds %}
+            {% do x.update({'protocol': test_feature}) if test_feature in clouds %}
 
             {# define a feature name to go into the test job name, unless it is a test against a distro/cloud only #}
             {% do x.update({'feature': test_feature}) if test_feature not in distros and test_feature not in clouds %}
@@ -282,6 +282,8 @@ jobs:
       GPDB_RPM: true
   - task: initialize-greenplum
     file: ccp_src/ci/tasks/gpinitsystem.yml
+    params:
+      PLATFORM: centos7-gpdb[[gp_ver]]
   - task: setup-nfs
     input_mapping:
       terraform: terraform-gpdb
@@ -330,7 +332,7 @@ jobs:
 
 ## ---------- Multi-node tests ----------
 {% if multinode %}
-- name: test_pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
+- name: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-centos7
   max_in_flight: 2
   plan:
   - in_parallel:
@@ -388,6 +390,8 @@ jobs:
       - in_parallel:
         - task: initialize-greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
+          params:
+            PLATFORM: centos7-gpdb[[gp_ver]]
         - task: install-hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
           image: gpdb[[gp_ver]]-pxf-dev-centos7-image
@@ -543,13 +547,14 @@ jobs:
           AWS_DEFAULT_REGION: ((ud/common/aws-region))
           BUCKET_PATH: ((tf-bucket-path))
           BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-          PLATFORM: centos7
+          PLATFORM: centos7-gpdb[[gp_ver]]
           CLOUD_PROVIDER: google
           GPDB_RPM: true
       - in_parallel:
         - task: initialize-greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
           params:
+            PLATFORM: centos7-gpdb[[gp_ver]]
             POSTGRES_CONF_ADDONS:
             - wal_level=minimal
             - max_wal_senders=0

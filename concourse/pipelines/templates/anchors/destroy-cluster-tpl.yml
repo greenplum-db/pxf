@@ -9,7 +9,7 @@
     {% set terraform_source     = 'ccp_src/google/' %}
 {% else %}
     {% set put_suffix           = 'ipa-hadoop' %}
-    {% set env_name_file_suffix = '_ipa_hadoop' %}
+    {% set env_name_file_suffix = '-ipa-hadoop' %}
     {% set terraform_source     = 'pxf_src/concourse/terraform/ipa-multinode-hadoop' %}
 {% endif %}
 
