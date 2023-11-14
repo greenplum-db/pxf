@@ -25,12 +25,7 @@
 {% set passed = x.passed if x.passed else '[build-pxf-gp' ~ x.gp_ver ~ '-' ~ x.build_platform ~ ']' %}
 
 {% set name = 'test-pxf-gp' ~ x.gp_ver ~ '-' ~ extension ~ '-' ~ x.target ~ '-secure-multi-' ~ feature ~ '-' ~ x.test_platform %}
-{% set job_names.all = job_names.all + [name] %}
-{% if x.job_group == 'testing_gate_jobs' %}
-    {% set job_names.testing_gate_jobs = job_names.testing_gate_jobs + [name] %}
-{% elif x.job_group == 'compatibility_gate_jobs' %}
-  {% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + [name] %}
-{% endif%}
+{% do x.update({'job_name': name}) %}
 
 - name: [[name]]
   max_in_flight: 2

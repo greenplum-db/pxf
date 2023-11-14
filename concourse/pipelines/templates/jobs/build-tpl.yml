@@ -3,8 +3,10 @@
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #}
 
-{% set job_names.all = job_names.all + ['build-pxf-gp' ~ x.gp_ver ~ '-' ~x.build_platform] %}
-- name: build-pxf-gp[[x.gp_ver]]-[[x.build_platform]]
+{% set name = 'build-pxf-gp' ~ x.gp_ver ~ '-' ~ x.test_platform %}
+{% do x.update({'job_name': name}) %}
+
+- name: [[name]]
   plan:
   - in_parallel:
     - get: pxf_src

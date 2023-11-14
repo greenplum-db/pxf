@@ -1,6 +1,3 @@
-{% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-upgrade-extension-centos7'] %}
-{% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-upgrade-extension-centos7'] %}
-
 - name: test-pxf-gp[[gp_ver]]-ext-hdp2-upgrade-extension-centos7
   plan:
     - in_parallel:

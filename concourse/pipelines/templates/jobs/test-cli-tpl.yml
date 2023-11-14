@@ -4,14 +4,14 @@
  #
  # x.passed     - an array of upstream job names that the artifacts need to pass before this job (optional)
  #}
-{% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ x.gp_ver ~ '-cli-' ~ x.test_platform] %}
-{% set job_names.all = job_names.all + ['test-pxf-gp' ~ x.gp_ver ~ '-cli-' ~ x.test_platform] %}
-
 {# if x.passed was not provided, make it a build job on the same platform #}
 
 {% set passed = x.passed if x.passed else '[build-pxf-gp' ~ x.gp_ver ~ '-' ~ x.build_platform ~ ']' %}
 
-- name: test-pxf-gp[[x.gp_ver]]-cli-[[x.test_platform]]
+{% set name = 'test-pxf-gp' ~ x.gp_ver ~ '-cli-' ~ x.test_platform %}
+{% do x.update({'job_name': name}) %}
+
+- name: [[name]]
   max_in_flight: 2
   plan:
   - in_parallel:

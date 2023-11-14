@@ -4,7 +4,7 @@
 {# import macros to use in this template #}
 {% import "macros/macros.j2" as macros %}
 
-{% set job_names = namespace(testing_gate_jobs=[], compatibility_gate_jobs=[], all=[]) %}
+{% set job_names = namespace(basic_tests=[], extended_tests=[], all=[]) %}
 
 {# define supported test features (single-cluster test jobs) and whether their testing is requested by the Makefile via context variables #}
 {% set requested_features = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio, 'hdp2': hdp2, 'hdp3': hdp3, 'cdh': cdh, 'jdk11': jdk11} %}
@@ -201,6 +201,7 @@ jobs:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_os != 'oel' %}
         {% include 'jobs/build-tpl.yml' %}
+        {% set job_names.all = job_names.all + [x.job_name] %}
     {% endif %}
 {% endcall %}
 
@@ -210,8 +211,9 @@ jobs:
     {% do x.update({'use_impers': default_impers}) %}
     {% do x.update({'target': default_distro}) %}
     {% do x.update({'distro': default_distro}) %}
-    {% do x.update({'job_group': 'testing_gate_jobs'}) %}
     {% include 'jobs/test-tpl.yml' %}
+    {% set job_names.all = job_names.all + [x.job_name] %}
+    {% set job_names.basic_tests = job_names.basic_tests + [x.job_name] %}
 {% endcall %}
 
 {# include an FDW test job if supported by the swimlane #}
@@ -221,8 +223,9 @@ jobs:
         {% do x.update({'use_impers': default_impers}) %}
         {% do x.update({'target': default_distro}) %}
         {% do x.update({'distro': default_distro}) %}
-        {% do x.update({'job_group': 'testing_gate_jobs'}) %}
         {% include 'jobs/test-tpl.yml' %}
+        {% set job_names.all = job_names.all + [x.job_name] %}
+        {% set job_names.basic_tests = job_names.basic_tests + [x.job_name] %}
     {% endif %}
 {% endcall %}
 
@@ -235,7 +238,7 @@ jobs:
     - get: pxf-src
       trigger: true
       passed:
-        [[job_names.testing_gate_jobs]]
+        [[job_names.basic_tests]]
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
         {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
 
@@ -277,8 +280,7 @@ jobs:
 
 {# include a non-FDW test job for all clouds if supported #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% do x.update({ 'passed': 'testing-gate-for-pxf-gp' }) %}
-    {% do x.update({'job_group': 'compatibility_gate_jobs'}) %}
+    {% do x.update({ 'passed': '[testing-gate-for-pxf-gp]' }) %}
     {# iterate over features defined for the given swimlane #}
     {% for test_feature in x.test_features %}
         {% do x.update({'use_fdw': 'false'}) %}
@@ -301,19 +303,24 @@ jobs:
         {# define a feature name to go into the test job name, unless it is a test against a distro/cloud only #}
         {% do x.update({'feature': test_feature}) if test_feature not in distros and test_feature not in clouds %}
         {% include 'jobs/test-tpl.yml' %}
+        {% set job_names.all = job_names.all + [x.job_name] %}
+        {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
 
         {# for S3 only, also include an additional impersonation job #}
         {% if test_feature == 's3' %}
             {% do x.update({'use_impers': 'true'}) %}
             {% include 'jobs/test-tpl.yml' %}
+            {% set job_names.all = job_names.all + [x.job_name] %}
+            {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
         {% endif %}
-
     {% endfor %}
 {% endcall %}
 
 ## ---------- Extended Tests ----------
 {% set gp_ver = '6' %}
     {% include 'jobs/test-upgrade-extension-tpl.yml' %}
+    {% set job_names.extended_tests = job_names.extended_tests + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-upgrade-extension-centos7'] %}
+    {% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-upgrade-extension-centos7'] %}
 
 ## ---------- FILE tests -----------------
 
@@ -321,12 +328,14 @@ jobs:
     {% if x.test_file is sameas true %}
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         {% include 'jobs/test-file-tpl.yml' %}
+        {% set job_names.all = job_names.all + [x.job_name] %}
+        {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
     {% endif %}
 {% endcall %}
 
 
 ## ---------- Multi-node tests ----------
-{% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-secure-multi-no-impers-centos7'] %}
+{% set job_names.extended_tests = job_names.extended_tests + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-secure-multi-no-impers-centos7'] %}
 {% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-secure-multi-no-impers-centos7'] %}
 - name: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
   max_in_flight: 2
@@ -478,6 +487,8 @@ jobs:
 
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         {% include 'jobs/test-multinode-tpl.yml' %}
+        {% set job_names.all = job_names.all + [x.job_name] %}
+        {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
     {% endif %}
 {% endcall %}
 
@@ -487,6 +498,8 @@ jobs:
   {% if x.test_cli %}
   {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         {% include 'jobs/test-cli-tpl.yml' %}
+        {% set job_names.all = job_names.all + [x.job_name] %}
+        {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
     {% endif %}
 {% endcall %}
 
@@ -498,7 +511,7 @@ jobs:
     - get: pxf-src
       trigger: true
       passed:
-        [[job_names.compatibility_gate_jobs]]
+        [[job_names.extended_tests]]
 {% set gp_ver = 5 %}
     - get: pxf-gp[[gp_ver]]-tarball-el7
       passed:
@@ -557,10 +570,9 @@ jobs:
         {% set num_versions = 1 %}
     {% endif %}
     {% do x.update({'num_versions': num_versions}) %}
-    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
-          {% if x.os_ver != '9' %}
+    {% if x.test_os != 'oel' %}
         {% include 'jobs/test-backwards-compatibility-tpl.yml' %}
-          {% endif %}
+        {% set job_names.all = job_names.all + [x.job_name] %}
     {% endif %}
 {% endcall %}
 
@@ -725,7 +737,7 @@ groups:
   jobs:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.build_platform == x.test_platform %}
-    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
+    {% if x.test_os != 'oel' %}
   - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
     {% endif %}
     {% endif %}
