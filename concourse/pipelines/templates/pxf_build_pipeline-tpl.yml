@@ -4,6 +4,8 @@
 {# import macros to use in this template #}
 {% import "macros/macros.j2" as macros %}
 
+{% set job_names = namespace(testing_gate_jobs=[], compatibility_gate_jobs=[]) %}
+
 {# define supported test features (single-cluster test jobs) and whether their testing is requested by the Makefile via context variables #}
 {% set requested_features = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio, 'hdp2': hdp2, 'hdp3': hdp3, 'cdh': cdh, 'jdk11': jdk11} %}
 {% set supported_features = requested_features.keys()|list %}
@@ -277,6 +279,7 @@ jobs:
     {% do x.update({'use_impers': default_impers}) %}
     {% do x.update({'target': default_distro}) %}
     {% do x.update({'distro': default_distro}) %}
+    {% do x.update({'job_group': 'testing_gate_jobs'}) %}
     {% include 'jobs/test-tpl.yml' %}
 {% endcall %}
 
@@ -287,6 +290,7 @@ jobs:
         {% do x.update({'use_impers': default_impers}) %}
         {% do x.update({'target': default_distro}) %}
         {% do x.update({'distro': default_distro}) %}
+        {% do x.update({'job_group': 'testing_gate_jobs'}) %}
         {% include 'jobs/test-tpl.yml' %}
     {% endif %}
 {% endcall %}
@@ -299,14 +303,7 @@ jobs:
     - get: pxf-src
       trigger: true
       passed:
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.test_fdw is sameas true %}
-        {% set extension = 'fdw' %}
-      - test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
-    {% endif %}
-    {% set extension = 'ext' %}
-      - test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
-{% endcall %}
+        [[job_names.testing_gate_jobs]]
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
         {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
 
@@ -349,6 +346,7 @@ jobs:
 {# include a non-FDW test job for all clouds if supported #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% do x.update({ 'passed_gate': 'testing-gate-for-pxf-gp' }) %}
+    {% do x.update({'job_group': 'compatibility_gate_jobs'}) %}
     {# iterate over features defined for the given swimlane #}
     {% for test_feature in x.test_features %}
         {% do x.update({'use_fdw': 'false'}) %}
@@ -387,6 +385,7 @@ jobs:
 
 ## ---------- FILE tests -----------------
 
+{% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-file-no-impers-centos7'] %}
 - name: test-pxf-gp[[gp_ver]]-file-no-impers-centos7
   max_in_flight: 2
   plan:
@@ -482,7 +481,7 @@ jobs:
       PROTOCOL: file
 
 ## ---------- Multi-node tests ----------
-
+{% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-secure-multi-no-impers-centos7'] %}
 - name: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
   max_in_flight: 2
   plan:
@@ -622,6 +621,7 @@ jobs:
 
 ## ---------- Multi-node tests ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% do x.update({'job_group': 'compatibility_gate_jobs'}) %}
     {% if x.test_multinode is sameas true %}
         {% do x.update({'target': default_distro}) %}
         {% do x.update({'use_impers': default_impers}) %}
@@ -633,6 +633,7 @@ jobs:
 ## ---------- GP7 PXF CLI tests ----------
 {% set gp_ver = 7 %}
 {% set passed = '[testing-gate-for-pxf-gp]' %}
+{% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-cli-rocky8'] %}
     {% include 'jobs/test-cli-tpl.yml' %}
 {% set passed = None %}
 {% set gp_ver = None %}
@@ -644,37 +645,7 @@ jobs:
     - get: pxf-src
       trigger: true
       passed:
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% for test_feature in x.test_features %}
-        {% set target = test_feature if (test_feature in distros or test_feature in clouds) else default_distro %}
-        {% do x.update({'target': target}) %}
-        {% set use_impers = 'false' if (test_feature in clouds or test_feature == default_distro) else 'true' %}
-        {% do x.update({'use_impers': use_impers}) %}
-        {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
-        {% set impers_infix     = '-no-impers'    if x.use_impers  == 'false' else ''    %}
-        {% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
-      - test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
-        {% set extension        = None %}
-        {% set impers_infix     = None %}
-        {% set feature_infix    = None %}
-        {% if test_feature == 's3' %}
-      - test-pxf-gp[[x.gp_ver]]-ext-s3-centos7
-        {% endif %}
-    {% endfor %}
-{% endcall %}
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
-      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-upgrade-extension-[[x.test_platform]]
-      - test-pxf-gp[[x.gp_ver]]-file-no-impers-[[x.test_platform]]
-      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-no-impers-[[x.test_platform]]
-    {% endif %}
-    {% if x.test_platform == 'rocky8' and x.gp_ver == '7' %}
-      - test-pxf-gp[[x.gp_ver]]-cli-rocky8
-    {% endif %}
-    {% if x.test_multinode %}
-      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-[[x.test_platform]]
-    {% endif %}
-{% endcall %}
+        [[job_names.compatibility_gate_jobs]]
 {% set gp_ver = 5 %}
     - get: pxf-gp[[gp_ver]]-tarball-el7
       passed:

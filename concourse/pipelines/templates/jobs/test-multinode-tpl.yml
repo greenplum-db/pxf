@@ -24,7 +24,14 @@
 {# if x.passed was not provided, make it a build job on the same platform #}
 {% set passed = x.passed if x.passed else '[build-pxf-gp' ~ x.gp_ver ~ '-' ~ x.build_platform ~ ']' %}
 
-- name: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]]-secure-multi-[[feature]]-[[x.test_platform]]
+{% set name = 'test-pxf-gp' ~ x.gp_ver ~ '-' ~ extension ~ '-' ~ x.target ~ '-secure-multi-' ~ feature ~ '-' ~ x.test_platform %}
+{% if x.job_group == 'testing_gate_jobs' %}
+    {% set job_names.testing_gate_jobs = job_names.testing_gate_jobs + [name] %}
+{% elif x.job_group == 'compatibility_gate_jobs' %}
+  {% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + [name] %}
+{% endif%}
+
+- name: [[name]]
   max_in_flight: 2
   plan:
   - in_parallel:
