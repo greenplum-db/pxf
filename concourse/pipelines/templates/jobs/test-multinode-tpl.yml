@@ -1,8 +1,21 @@
-## Variables that need to be set for this job:
-## - gp_ver = Greenplum Major Version
-## - passed = upstream job name that the artifacts need to pass before this job
+{# Template for a PXF basic test job definition.
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file and these additional fields:
+ #
+ # x.use_fdw    - whether to use FDW extension for testing (otherwise the external table extension will be used)
+ # x.use_impers - whether to use impersonation for the test job
+ # x.target     - the target external system type
+ # x.distro     - the distro to use for a singlecluster image
+ # x.passed     - an array of upstream job names that the artifacts need to pass before this job
+ # x.with_upgrade - 'true' is the job should include an upgrade task from PXF5 to PXF6
+ #}
 
-- name: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-rocky8
+{% set extension        = 'fdw'          if x.use_fdw     == 'true'  else 'ext' %}
+
+{# if x.passed was not provided, make it a build job on the same platform #}
+{% set passed = x.passed if x.passed else '[build-pxf-gp' ~ x.gp_ver ~ '-' ~ x.build_platform ~ ']' %}
+
+- name: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]]-secure-multi-ipa-[[x.test_platform]]
   max_in_flight: 2
   plan:
   - in_parallel:
@@ -10,19 +23,30 @@
       resource: pxf-src
       passed: [[passed]]
       trigger: true
+{% if x.with_upgrade == 'true' %}
+    - get: pxf_artifact
+      resource: pxf5-gp6-el7-released   # for upgrade test
+{% endif %}
     - get: pxf_tarball
-      resource: pxf-gp[[gp_ver]]-tarball-el8
+      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
       passed: [[passed]]
     - get: gpdb_package
-      resource: gpdb[[gp_ver]]-el8-rpm-latest-0
+      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
       passed: [[passed]]
-    - get: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+      {# if the image was also used to build the artifact, add a 'passed' condition #}
+{% if [[x.test_platform]] == [[x.build_platform]] %}
+      passed: [[passed]]
+{% endif %}
+{% if x.os_ver == '9' %}
+    - get: gpdb[[x.gp_ver]]-pxf-dev-rocky8-image
+{% endif %}
     - get: ccp_src
       resource: ccp-src
     - get: ccp-7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
-      resource: singlecluster-hdp2
+      resource: singlecluster-[[x.distro]]
   - in_parallel:
     - do:
       - put: terraform-gpdb
@@ -33,7 +57,7 @@
           generate_random_name: true
           terraform_source: ccp_src/google/
           vars:
-            PLATFORM: rocky8-gpdb[[gp_ver]]
+            PLATFORM: [[x.test_platform]]-gpdb[[x.gp_ver]]
             number_of_nodes: ((number_of_gpdb_nodes))
             extra_nodes: 1
             segments_per_host: 4
@@ -52,15 +76,17 @@
           AWS_DEFAULT_REGION: ((ud/common/aws-region))
           BUCKET_PATH: ((tf-bucket-path))
           BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-          PLATFORM: rocky8-gpdb[[gp_ver]]
+          PLATFORM: [[x.test_platform]]-gpdb[[x.gp_ver]]
           CLOUD_PROVIDER: google
           GPDB_RPM: true
       - in_parallel:
         - task: initialize-greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
+          params:
+            PLATFORM: [[x.test_platform]]-gpdb[[x.gp_ver]]
         - task: install-hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
-          image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+          image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
           params:
             ACCESS_KEY_ID: ((tf-machine-access-key-id))
             SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
@@ -103,13 +129,46 @@
           gcp_project: ((ud/pxf/common/ipa-google-project-id))
     - task: generate-multinode-hadoop-cluster
       file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
-      image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+{% if x.os_ver == '9' %}
+      # OpenSSH SCP is deprecated in RHEL9 and it would affect the SCP commands that run in the
+      # install_multinode_hadoop.yml. See line 80 and 81 where we try to SCP down the hadoop and hive conf files.
+      # The container running this script does not need to be RHEL9 specific as we are just using the container
+      # to spin up a multinode hadoop cluster on a remote VM. For now, use the RHEL8 container.
+      # https://www.redhat.com/en/blog/openssh-scp-deprecation-rhel-9-what-you-need-know
+      image: gpdb[[x.gp_ver]]-pxf-dev-rocky8-image
+{% else %}
+      image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+{% endif %}
       input_mapping:
         terraform_ipa_hadoop: terraform-ipa-hadoop
       params:
         ANSIBLE_VAR_gcp_storage_bucket: ((ud/pxf/common/build-resources-bucket-name))
         ANSIBLE_VAR_ipa_password: ((ud/pxf/secrets/ipa-password))
         ANSIBLE_VAR_ssl_store_password: ((ud/pxf/secrets/ssl-store-password))
+{% if x.with_upgrade == 'true' %}
+  - task: setup-pxf-5-latest
+    input_mapping:
+      terraform: terraform-gpdb
+      pxf_tarball: pxf_tarball_ignore   # do not install from the artifact
+    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
+      GP_VER: [[x.gp_ver]]
+      IMPERSONATION: true
+      INSTALL_GPHDFS: false
+      KERBEROS: ((kerberos-enabled))
+      PXF_JVM_OPTS: ((pxf-jvm-opts))
+      PXF_VERSION: 5
+  - task: upgrade-to-pxf-6
+    input_mapping:
+      terraform: terraform-gpdb
+    file: pxf_src/concourse/tasks/upgrade_pxf_on_ccp.yml
+    image: ccp-7-image
+    params:
+      GP_VER: [[x.gp_ver]]
+      PXF_BASE_DIR: /home/gpadmin/pxf-boot
+{% else %}
   - task: setup-pxf
     input_mapping:
       terraform: terraform-gpdb
@@ -118,12 +177,13 @@
     params:
       IMPERSONATION: true
       INSTALL_GPHDFS: false
-      GP_VER: [[gp_ver]]
+      GP_VER: [[x.gp_ver]]
       KERBEROS: ((kerberos-enabled))
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
-  - task: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-impers-rocky8
-    image: gpdb[[gp_ver]]-pxf-dev-rocky8-image
+{% endif %}
+  - task: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]]-secure-multi-ipa-[[x.test_platform]]
+    image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
     params:
@@ -133,10 +193,15 @@
       HIVE_VERSION: 2
       IMPERSONATION: true
       KERBEROS: ((kerberos-enabled))
-      GP_VER: [[gp_ver]]
+      GP_VER: [[x.gp_ver]]
       GROUP: security,proxySecurity,proxySecurityIpa,multiClusterSecurity
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
+{% if x.test_platform == 'centos7' %}
+  - task: test-pxf-cli
+    image: gpdb[[x.gp_ver]]-pxf-dev-centos7-image
+    file: pxf_src/concourse/tasks/test_pxf_cli.yml
+{% endif %}
     on_success:
       in_parallel:
         steps:
@@ -144,3 +209,6 @@
         - *destroy_dataproc_2
         - *destroy_gpdb_cluster
         - *destroy_hadoop_cluster
+{% if slack_notification %}
+    <<: *slack_alert
+{% endif %}

@@ -27,6 +27,8 @@ FLY_OPTION_NON-INTERACTIVE   =
 SLACK                       ?= true
 # below are dev-build specific vars
 MULTINODE                   ?= false
+MULTINODE_EL8               ?= false
+MULTINODE_EL9               ?= false
 MULTINODE_NO_IMPERSONATION  ?= false
 JDK11                       ?= false
 CDH                         ?= false
@@ -40,7 +42,6 @@ MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
 GP7_CLI                     ?= false
-GP7_MULTINODE               ?= false
 # used to quickly modify the docker image tag being pulled ONLY in the dev_build_pipeline
 PXF_DEV_IMAGE_TAG           ?= latest
 
@@ -112,7 +113,8 @@ set-dev-build-pipeline:
 	$(TEMPLATE_CMD) --template dev_build_pipeline-tpl.yml --vars \
 		slack_notification=$(SLACK) \
 		multinode=$(MULTINODE) \
-		gp7_multinode=$(GP7_MULTINODE) \
+		multinode_el8=$(MULTINODE_EL8) \
+		multinode_el9=$(MULTINODE_EL9) \
 		multinode_no_impersonation=$(MULTINODE_NO_IMPERSONATION) \
 		jdk11=$(JDK11) \
 		cdh=$(CDH) \
