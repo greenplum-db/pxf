@@ -5,6 +5,7 @@
   # x.num_versions    - the number of GPDB versions to test against
   #}
 {% if x.build_platform == x.test_platform %}
+{% set job_names.all = job_names.all + ['test-pxf-gp' ~ x.gp_ver ~ '-backward-compatibility-' ~ x.test_platform] %}
 
 - name: test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
   plan:

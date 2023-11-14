@@ -4,7 +4,7 @@
 {# import macros to use in this template #}
 {% import "macros/macros.j2" as macros %}
 
-{% set job_names = namespace(testing_gate_jobs=[], compatibility_gate_jobs=[]) %}
+{% set job_names = namespace(testing_gate_jobs=[], compatibility_gate_jobs=[], all=[]) %}
 
 {# define supported test features (single-cluster test jobs) and whether their testing is requested by the Makefile via context variables #}
 {% set requested_features = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio, 'hdp2': hdp2, 'hdp3': hdp3, 'cdh': cdh, 'jdk11': jdk11} %}
@@ -55,82 +55,7 @@
 ## ======================================================================
 ## GROUPS
 ## ======================================================================
-groups:
-- name: all
-  jobs:
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-{% if x.test_os != 'oel' %}
-  - build-pxf-gp[[x.gp_ver]]-[[x.test_platform]]
-{% endif %}
-{% if x.test_fdw %}
-{% set extension = 'fdw' %}
-  - test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
-{% endif %}
-{% set extension = 'ext' %}
-  - test-pxf-gp[[x.gp_ver]]-[[extension]]-hdp2-[[x.test_platform]]
-{% set extension = '' %}
-    {% for test_feature in x.test_features %}
-        {% set target = test_feature if (test_feature in distros or test_feature in clouds) else default_distro %}
-        {% do x.update({'target': target}) %}
-        {% set use_impers = 'false' if (test_feature in clouds or test_feature == default_distro) else 'true' %}
-        {% do x.update({'use_impers': use_impers}) %}
-        {% do x.update({'feature': test_feature}) if test_feature not in distros and test_feature not in clouds %}
-        {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
-        {% set impers_infix     = '-no-impers'    if x.use_impers  == 'false' else ''    %}
-        {% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
-  - test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
-        {% set extension        = None %}
-        {% set impers_infix     = None %}
-        {% set feature_infix    = None %}
-        {% if test_feature == 's3' %}
-  - test-pxf-gp[[x.gp_ver]]-ext-s3-centos7
-        {% endif %}
-    {% endfor %}
-    {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
-  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-upgrade-extension-[[x.test_platform]]
-  - test-pxf-gp[[x.gp_ver]]-file-no-impers-[[x.test_platform]]
-  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-no-impers-[[x.test_platform]]
-    {% endif %}
-    {% if x.test_platform == 'rocky8' and x.gp_ver == '7' %}
-  - test-pxf-gp[[x.gp_ver]]-cli-rocky8
-    {% endif %}
-    {% if x.test_multinode %}
-  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-[[x.test_platform]]
-    {% endif %}
-    {% if x.build_platform == x.test_platform %}
-    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
-  - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
-    {% endif %}
-  {% endif %}
-{% endcall %}
-  - testing-gate-for-pxf-gp
-  - compatibility-gate-for-pxf-gp
-  - promote-pxf-for-gp5-gp6-gp7-artifacts
-  - publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng
 
-[[macros.job_group('centos7', 'centos7', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('oel7', 'oel7', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('rocky8', 'rocky8', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('rocky9',  'rocky9',build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('ubuntu18.04', 'ubuntu18.04',build_test_pxf_combinations, clouds, distros)]]
-
-[[macros.job_group('gp5', '5', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('gp6', '6', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('gp7', '7', build_test_pxf_combinations, clouds, distros)]]
-
-- name: backwards-compatibility
-  jobs:
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.build_platform == x.test_platform %}
-    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
-  - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
-    {% endif %}
-    {% endif %}
-{% endcall %}
-- name: promote-and-publish
-  jobs:
-  - promote-pxf-for-gp5-gp6-gp7-artifacts
-  - publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng
 
 ## ======================================================================
 ## ANCHORS
@@ -297,6 +222,7 @@ jobs:
 
 ## ---------- Testing Gate ----------
 
+{% set job_names.all = job_names.all + ['testing-gate-for-pxf-gp'] %}
 - name: testing-gate-for-pxf-gp
   plan:
   - in_parallel:
@@ -386,6 +312,7 @@ jobs:
 ## ---------- FILE tests -----------------
 
 {% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-file-no-impers-centos7'] %}
+{% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-file-no-impers-centos7'] %}
 - name: test-pxf-gp[[gp_ver]]-file-no-impers-centos7
   max_in_flight: 2
   plan:
@@ -482,6 +409,7 @@ jobs:
 
 ## ---------- Multi-node tests ----------
 {% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-secure-multi-no-impers-centos7'] %}
+{% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-secure-multi-no-impers-centos7'] %}
 - name: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
   max_in_flight: 2
   plan:
@@ -639,6 +567,7 @@ jobs:
 {% set gp_ver = None %}
 
 ## ---------- Compatibility Gate ----------
+{% set job_names.all = job_names.all + ['compatibility-gate-for-pxf-gp'] %}
 - name: compatibility-gate-for-pxf-gp
   plan:
   - in_parallel:
@@ -712,6 +641,7 @@ jobs:
 {% endcall %}
 
 ## ---------- Artifact Promotion Gate ----------
+{% set job_names.all = job_names.all + ['promote-pxf-for-gp5-gp6-gp7-artifacts'] %}
 - name: promote-pxf-for-gp5-gp6-gp7-artifacts
   plan:
   - in_parallel:
@@ -757,6 +687,7 @@ jobs:
     <<: *slack_alert
 {% endif %}
 
+{% set job_names.all = job_names.all + ['publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng'] %}
 - name: publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng
   plan:
   - in_parallel:
@@ -850,3 +781,32 @@ jobs:
         Generated by UD CI build job: ${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}
         UD CI build job link: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}
 {% endif %}
+
+groups:
+- name: all
+  jobs:
+    [[job_names.all]]
+
+[[macros.job_group('centos7', 'centos7', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('oel7', 'oel7', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('rocky8', 'rocky8', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('rocky9',  'rocky9',build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('ubuntu18.04', 'ubuntu18.04',build_test_pxf_combinations, clouds, distros)]]
+
+[[macros.job_group('gp5', '5', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('gp6', '6', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('gp7', '7', build_test_pxf_combinations, clouds, distros)]]
+
+- name: backwards-compatibility
+  jobs:
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.build_platform == x.test_platform %}
+    {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}
+  - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
+    {% endif %}
+    {% endif %}
+{% endcall %}
+- name: promote-and-publish
+  jobs:
+  - promote-pxf-for-gp5-gp6-gp7-artifacts
+  - publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng
