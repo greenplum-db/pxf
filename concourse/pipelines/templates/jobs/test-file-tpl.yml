@@ -2,7 +2,7 @@
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file and these additional fields:
  #
- # x.passed - upstream job name that the artifacts need to pass before this job
+ # x.passed - an array of upstream job names that the artifacts need to pass before this job
 #}
 
 {# if x.passed was not provided, make it a build job on the same platform #}
