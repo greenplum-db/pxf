@@ -29,14 +29,14 @@
 #}
 
 {% set build_test_pxf_combinations = [
-    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': false, 'test_multinode': false, 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_cloud': true , 'test_multinode': true , 'test_features': supported_features},
-    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false, 'test_multinode': false, 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false, 'test_multinode': true , 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_cloud': false, 'test_multinode': false, 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_cloud': false, 'test_multinode': false, 'test_features': []},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_cloud': false, 'test_multinode': true , 'test_features': []},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_cloud': false, 'test_multinode': false, 'test_features': []}] %}
+    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': true , 'test_cli': false, 'test_multi': true , 'test_features': supported_features},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': true , 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': true , 'test_multi': true , 'test_features': []},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []}] %}
 
 
 {# define supported clouds that have their own 'protocols' #}
@@ -48,6 +48,12 @@
 {# define default distro and impersonation for all test jobs #}
 {% set default_distro = 'hdp2' %}
 {% set default_impers = 'true' %}
+
+{# define whether CCP should be used #}
+{% set use_ccp = true %}
+
+{# define whether IPA should be used #}
+{% set use_ipa = true %}
 
 {# change num_gpdb5_versions & num_gpdb6_versions in Makefile to download/test more Greenplum versions #}
 {# number of backwards compatibility tasks that can run at once #}
@@ -271,7 +277,7 @@ jobs:
 
 {# include a non-FDW test job for all clouds if supported #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% do x.update({ 'passed_gate': 'testing-gate-for-pxf-gp' }) %}
+    {% do x.update({ 'passed': 'testing-gate-for-pxf-gp' }) %}
     {% do x.update({'job_group': 'compatibility_gate_jobs'}) %}
     {# iterate over features defined for the given swimlane #}
     {% for test_feature in x.test_features %}
@@ -299,7 +305,7 @@ jobs:
         {# for S3 only, also include an additional impersonation job #}
         {% if test_feature == 's3' %}
             {% do x.update({'use_impers': 'true'}) %}
-            {% include 'jobs/test-hcfs-tpl.yml' %}
+            {% include 'jobs/test-tpl.yml' %}
         {% endif %}
 
     {% endfor %}
@@ -311,101 +317,13 @@ jobs:
 
 ## ---------- FILE tests -----------------
 
-{% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-file-no-impers-centos7'] %}
-{% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-file-no-impers-centos7'] %}
-- name: test-pxf-gp[[gp_ver]]-file-no-impers-centos7
-  max_in_flight: 2
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [testing-gate-for-pxf-gp]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf-gp[[gp_ver]]-tarball-el7
-      passed: [testing-gate-for-pxf-gp]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
-      passed: [testing-gate-for-pxf-gp]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: ccp_src
-      resource: ccp-src
-    - get: ccp-7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - put: terraform-gpdb
-    resource: terraform
-    params:
-      action: create
-      delete_on_failure: true
-      generate_random_name: true
-      terraform_source: ccp_src/google/
-      vars:
-        PLATFORM: centos7-gpdb[[gp_ver]]
-        number_of_nodes: ((number_of_gpdb_nodes))
-        segments_per_host: 4
-        instance_type: n1-standard-4
-        ccp_reap_minutes: 60
-  - task: generate-greenplum-cluster
-    input_mapping:
-      gpdb_rpm: gpdb_package
-      terraform: terraform-gpdb
-    file: ccp_src/ci/tasks/gen_cluster.yml
-    image: ccp-7-image
-    params:
-      AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      AWS_DEFAULT_REGION: ((ud/common/aws-region))
-      BUCKET_PATH: ((tf-bucket-path))
-      BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-      PLATFORM: centos7-gpdb[[gp_ver]]
-      CLOUD_PROVIDER: google
-      GPDB_RPM: true
-  - task: initialize-greenplum
-    file: ccp_src/ci/tasks/gpinitsystem.yml
-    params:
-      PLATFORM: centos7-gpdb[[gp_ver]]
-  - task: setup-nfs
-    input_mapping:
-      terraform: terraform-gpdb
-    file: pxf_src/concourse/tasks/install_nfs_on_ccp.yml
-    image: ccp-7-image
-    params:
-      BASE_PATH: /mnt/nfs/var/nfsshare
-  - task: setup-pxf
-    input_mapping:
-      terraform: terraform-gpdb
-    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
-    image: ccp-7-image
-    params:
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-      GP_VER: [[gp_ver]]
-      IMPERSONATION: true
-      INSTALL_GPHDFS: false
-      PXF_JVM_OPTS: ((pxf-jvm-opts))
-      SKIP_HADOOP_SETUP: true
-  - task: test-pxf-gp[[gp_ver]]-ext-file-no-impers-centos7
-    on_success:
-      do:
-      - put: terraform-gpdb
-        resource: terraform
-        params:
-          action: destroy
-          env_name_file: terraform-gpdb/name
-          terraform_source: ccp_src/google/
-        get_params:
-          action: destroy
-    privileged: true
-    file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    params:
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-      BASE_PATH: /mnt/nfs/var/nfsshare
-      GP_VER: [[gp_ver]]
-      GROUP: hcfs
-      IMPERSONATION: false
-      PROTOCOL: file
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_file is sameas true %}
+        {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
+        {% include 'jobs/test-file-tpl.yml' %}
+    {% endif %}
+{% endcall %}
+
 
 ## ---------- Multi-node tests ----------
 {% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-secure-multi-no-impers-centos7'] %}
@@ -549,22 +467,28 @@ jobs:
 
 ## ---------- Multi-node tests ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% do x.update({'job_group': 'compatibility_gate_jobs'}) %}
-    {% if x.test_multinode is sameas true %}
+    {% if x.test_multi is sameas true %}
+        {% do x.update({'use_fdw': 'false'}) %}
         {% do x.update({'target': default_distro}) %}
-        {% do x.update({'use_impers': default_impers}) %}
-        {% set passed = '[testing-gate-for-pxf-gp]' %}
+        {% do x.update({'distro': default_distro}) %}
+
+        {# include upgrade task when running on centos7 only #}
+        {% set with_upgrade = 'true' if x.test_platform == 'centos7' else 'false' %}
+        {% do x.update({'with_upgrade': with_upgrade}) %}
+
+        {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         {% include 'jobs/test-multinode-tpl.yml' %}
     {% endif %}
 {% endcall %}
 
 ## ---------- GP7 PXF CLI tests ----------
-{% set gp_ver = 7 %}
-{% set passed = '[testing-gate-for-pxf-gp]' %}
-{% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ gp_ver ~ '-cli-rocky8'] %}
-    {% include 'jobs/test-cli-tpl.yml' %}
-{% set passed = None %}
-{% set gp_ver = None %}
+{# include a CLI test, for now Makefile only defines the switch for GP7 #}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+  {% if x.test_cli %}
+  {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
+        {% include 'jobs/test-cli-tpl.yml' %}
+    {% endif %}
+{% endcall %}
 
 ## ---------- Compatibility Gate ----------
 {% set job_names.all = job_names.all + ['compatibility-gate-for-pxf-gp'] %}
@@ -612,8 +536,8 @@ jobs:
       - test-pxf-gp[[x.gp_ver]]-ext-hdp2-upgrade-extension-[[x.test_platform]]
       - test-pxf-gp[[x.gp_ver]]-file-no-impers-[[x.test_platform]]
       - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-no-impers-[[x.test_platform]]
-      {% if x.test_multinode %}
-      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-[[x.test_platform]]
+      {% if x.test_multi %}
+      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-ipa-[[x.test_platform]]
       {% endif %}
     {% endif %}
 {% endcall %}

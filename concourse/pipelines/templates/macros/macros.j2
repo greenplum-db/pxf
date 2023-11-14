@@ -153,8 +153,8 @@
     {% if x.test_platform == 'rocky8' and x.gp_ver == '7' %}
   - test-pxf-gp[[x.gp_ver]]-cli-rocky8
     {% endif %}
-    {% if x.test_multinode %}
-  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-[[x.test_platform]]
+    {% if x.test_multi %}
+  - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-ipa-[[x.test_platform]]
     {% endif %}
     {% if x.build_platform == x.test_platform %}
     {% if x.test_os != 'oel' or x.test_os != 'ubuntu' %}

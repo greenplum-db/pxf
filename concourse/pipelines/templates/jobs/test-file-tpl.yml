@@ -8,6 +8,9 @@
 {# if x.passed was not provided, make it a build job on the same platform #}
 {% set passed = x.passed if x.passed else '[build-pxf-gp' ~ x.gp_ver ~ '-' ~ x.build_platform ~ ']' %}
 
+{% set job_names.compatibility_gate_jobs = job_names.compatibility_gate_jobs + ['test-pxf-gp' ~ x.gp_ver ~ '-file-no-impers-' ~ x.test_platform] %}
+{% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-file-no-impers-' ~ x.test_platform] %}
+
 - name: test-pxf-gp[[x.gp_ver]]-file-no-impers-[[x.test_platform]]
   max_in_flight: 2
   plan:
