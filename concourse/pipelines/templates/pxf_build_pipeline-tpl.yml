@@ -58,10 +58,6 @@
 {# change num_gpdb5_versions & num_gpdb6_versions in Makefile to download/test more Greenplum versions #}
 {# number of backwards compatibility tasks that can run at once #}
 {% set max_concurrent_bc_tasks = 3 %}
-## ======================================================================
-## GROUPS
-## ======================================================================
-
 
 ## ======================================================================
 ## ANCHORS
@@ -526,34 +522,9 @@ jobs:
       - testing-gate-for-pxf-gp
     - get: pxf-gp[[gp_ver]]-tarball-el7
       passed:
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% for test_feature in x.test_features %}
-        {% set target = test_feature if (test_feature in distros or test_feature in clouds) else default_distro %}
-        {% do x.update({'target': target}) %}
-        {% set use_impers = 'false' if (test_feature in clouds or test_feature == default_distro) else 'true' %}
-        {% do x.update({'use_impers': use_impers}) %}
-        {% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
-        {% set impers_infix     = '-no-impers'    if x.use_impers  == 'false' else ''    %}
-        {% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
-      - test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
-        {% set extension        = None %}
-        {% set impers_infix     = None %}
-        {% set feature_infix    = None %}
-        {% if test_feature == 's3' %}
-      - test-pxf-gp[[x.gp_ver]]-ext-s3-centos7
-        {% endif %}
-    {% endfor %}
-{% endcall %}
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
-      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-upgrade-extension-[[x.test_platform]]
-      - test-pxf-gp[[x.gp_ver]]-file-no-impers-[[x.test_platform]]
-      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-no-impers-[[x.test_platform]]
-      {% if x.test_multi %}
-      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-secure-multi-ipa-[[x.test_platform]]
-      {% endif %}
-    {% endif %}
-{% endcall %}
+{% for test in job_names.extended_tests if test.endswith('centos7') %}
+      - [[test]]
+{% endfor %}
 {% set gp_ver = 7 %}
     - get: pxf-gp[[gp_ver]]-tarball-el8
       passed:
@@ -718,30 +689,26 @@ jobs:
         UD CI build job link: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}
 {% endif %}
 
+## ======================================================================
+## GROUPS
+## ======================================================================
 groups:
 - name: all
   jobs:
     [[job_names.all]]
 
-[[macros.job_group('centos7', 'centos7', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('oel7', 'oel7', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('rocky8', 'rocky8', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('rocky9',  'rocky9',build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('ubuntu18.04', 'ubuntu18.04',build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('centos7', job_names.all)]]
+[[macros.job_group('oel7', job_names.all)]]
+[[macros.job_group('rocky8', job_names.all)]]
+[[macros.job_group('rocky9',  job_names.all)]]
+[[macros.job_group('ubuntu18.04', job_names.all)]]
 
-[[macros.job_group('gp5', '5', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('gp6', '6', build_test_pxf_combinations, clouds, distros)]]
-[[macros.job_group('gp7', '7', build_test_pxf_combinations, clouds, distros)]]
+[[macros.job_group('gp5', job_names.all)]]
+[[macros.job_group('gp6', job_names.all)]]
+[[macros.job_group('gp7', job_names.all)]]
 
-- name: backwards-compatibility
-  jobs:
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.build_platform == x.test_platform %}
-    {% if x.test_os != 'oel' %}
-  - test-pxf-gp[[x.gp_ver]]-backward-compatibility-[[x.test_platform]]
-    {% endif %}
-    {% endif %}
-{% endcall %}
+[[macros.job_group('backward-compatibility', job_names.all)]]
+
 - name: promote-and-publish
   jobs:
   - promote-pxf-for-gp5-gp6-gp7-artifacts
