@@ -1,4 +1,4 @@
-{# Template for a PXF basic test job definition.
+{# Template for a PXF multi-node test job definition.
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file and these additional fields:
  #
@@ -10,7 +10,7 @@
  # x.with_upgrade - 'true' is the job should include an upgrade task from PXF5 to PXF6
  #}
 
-{% set extension        = 'fdw'       if x.use_fdw    == 'true'  else 'ext'   %}
+{% set extension = 'fdw' if x.use_fdw == 'true' else 'ext' %}
 {% if x.use_impers == 'true' %}
     {% set feature = 'ipa' %}
     {% set ccp_default_conf = 'true' %}

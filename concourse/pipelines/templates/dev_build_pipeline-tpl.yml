@@ -63,11 +63,11 @@
 ## ANCHORS
 ## ======================================================================
 anchors:
-  [[macros.anchor_destroy_dataproc(1)]]
-  [[macros.anchor_destroy_dataproc(2)]]
-  [[macros.anchor_destroy_cluster('gpdb')]]
-  [[macros.anchor_destroy_cluster('hadoop')]]
-  [[macros.anchor_slack_notification(slack_notification)]]
+    [[macros.anchor_destroy_dataproc(1)]]
+    [[macros.anchor_destroy_dataproc(2)]]
+    [[macros.anchor_destroy_cluster('gpdb')]]
+    [[macros.anchor_destroy_cluster('hadoop')]]
+    [[macros.anchor_slack_notification(slack_notification)]]
 
 ## ======================================================================
 ## RESOURCE TYPES
@@ -82,7 +82,7 @@ resource_types:
     [[macros.resource_type_registry_image('terraform-0.14.10', 'ljfranklin/terraform-resource', '0.14.10')]]
 {% endif %}
 
-[[macros.resource_type_registry_image('gcs', 'frodenas/gcs-resource', '')]]
+    [[macros.resource_type_registry_image('gcs', 'frodenas/gcs-resource', '')]]
 
 {% if slack_notification %}
     [[macros.resource_type_registry_image('slack-notification', 'cfcommunity/slack-notification-resource', 'latest')]]
@@ -92,24 +92,24 @@ resource_types:
 ## RESOURCES
 ## ======================================================================
 resources:
-  [[macros.resource_pxf_dependencies('build')]]
-  [[macros.resource_pxf_dependencies('automation')]]
+    [[macros.resource_pxf_dependencies('build')]]
+    [[macros.resource_pxf_dependencies('automation')]]
 
-  [[macros.resource_singlecluster('hdp2')]]
+    [[macros.resource_singlecluster('hdp2')]]
 
 {% if hdp3 %}
-  [[macros.resource_singlecluster('hdp3')]]
+    [[macros.resource_singlecluster('hdp3')]]
 {% endif %}
 
 {% if cdh %}
-  [[macros.resource_singlecluster('cdh')]]
+    [[macros.resource_singlecluster('cdh')]]
 {% endif %}
 
 ## ---------- Github Repos ----------
-  [[macros.resource_github_repo('pxf')]]
+    [[macros.resource_github_repo('pxf')]]
 
 {% if use_ccp %}
-  [[macros.resource_github_repo('ccp')]]
+    [[macros.resource_github_repo('ccp')]]
 {% endif %}
 
 ## ---------- Docker Images ----------
@@ -118,12 +118,12 @@ resources:
 {% endcall %}
 
 {% if use_ccp %}
-  [[macros.resource_registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
+    [[macros.resource_registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
 {% endif %}
 
 ## ---------- Slack Notification ----------
 {% if slack_notification %}
-  [[macros.resource_slack_notification('ud-pipeline-bot-' ~ user ~ '-webhook')]]
+    [[macros.resource_slack_notification('ud-pipeline-bot-' ~ user ~ '-webhook')]]
 {% endif %}
 
 ## ---------- Greenplum Packages ----------
@@ -143,16 +143,16 @@ resources:
 
 ## ---------- PXF 5 Artifact ---------------
 {% if multinode %}
-[[macros.resource_pxf5_gp6_el7_artifact()]]
+    [[macros.resource_pxf5_gp6_el7_artifact()]]
 {% endif %}
 
 ## ---------- Auxiliary Resources ----------
 {% if use_ccp %}
-[[macros.resource_terraform('terraform', false)]]
+    [[macros.resource_terraform('terraform', false)]]
 {% endif %}
 
 {% if use_ipa %}
-[[macros.resource_terraform('terraform-ipa-hadoop', true)]]
+    [[macros.resource_terraform('terraform-ipa-hadoop', true)]]
 {% endif %}
 
 ## ======================================================================
@@ -161,7 +161,6 @@ resources:
 jobs:
 
 ## ---------- Build and Basic single node Test Swimlanes ----------
-
 {# include a build job for all OS other than OEL (which does not have a separate build job) #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_os != 'oel' %}
@@ -192,7 +191,6 @@ jobs:
 {% endcall %}
 
 ## ---------- Extended Feature (clouds, distros, jdk) tests ----------
-
 {# include a non-FDW test job for all clouds if supported and requested in the Makefile #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {# iterate over features defined for the given swimlane #}
@@ -232,21 +230,18 @@ jobs:
     {% endfor %}
 {% endcall %}
 
-## ---------- GP7 PXF CLI tests ----------
-
-{# include a CLI test, for now Makefile only defines the switch for GP7 #}
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.test_cli is sameas true and x.gp_ver == '7' and gp7_cli %}
-        {% include 'jobs/test-cli-tpl.yml' %}
-    {% endif %}
-{% endcall %}
-
 ## ---------- FILE tests -----------------
-
-{# include a FILE test #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_file is sameas true and file %}
         {% include 'jobs/test-file-tpl.yml' %}
+    {% endif %}
+{% endcall %}
+
+## ---------- GP7 PXF CLI tests ----------
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {# for now Makefile only defines the switch for GP7 #}
+    {% if x.test_cli is sameas true and x.gp_ver == '7' and gp7_cli %}
+        {% include 'jobs/test-cli-tpl.yml' %}
     {% endif %}
 {% endcall %}
 
