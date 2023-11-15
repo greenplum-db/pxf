@@ -130,8 +130,6 @@ resources:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% do x.update({'num_versions': 1}) %}
         {% include 'resources/greenplum-package-tpl.yml' %}
-
-    {% set i = None %}
 {% endcall %}
 
 ## ---------- PXF Artifacts ----------

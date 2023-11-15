@@ -134,7 +134,6 @@ resources:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% include 'resources/pxf-test-image-tpl.yml' %}
 {% endcall %}
-{% set gp_ver = None %}
 
   [[macros.resource_registry_image('rpmrebuild-centos7-image', 'gcr.io/data-gpdb-ud/rpmrebuild-centos7', 'latest')]]
   [[macros.resource_registry_image('rpmrebuild-rocky8-image', 'gcr.io/data-gpdb-ud/rpmrebuild-rocky8', 'latest')]]
@@ -192,7 +191,6 @@ resources:
 jobs:
 
 ## ---------- Build and Basic Singlenode Test Swimlanes ----------
-
 {# include a build job for all OS other than OEL (which does not have a separate build job) #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_os != 'oel' %}
@@ -273,7 +271,6 @@ jobs:
 {% endcall %}
 
 ## ---------- Extended Feature (clouds, distros, jdk) tests ----------
-
 {# include a non-FDW test job for all clouds if supported #}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% do x.update({ 'passed': '[testing-gate-for-pxf-gp]' }) %}
@@ -312,7 +309,7 @@ jobs:
     {% endfor %}
 {% endcall %}
 
-## ---------- Extended Tests ----------
+## ---------- Upgrade Extension Test ----------
 {% set gp_ver = '6' %}
     {% include 'jobs/test-upgrade-extension-tpl.yml' %}
     {% set job_names.extended_tests = job_names.extended_tests + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-upgrade-extension-centos7'] %}
@@ -323,6 +320,17 @@ jobs:
     {% if x.test_file is sameas true %}
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         {% include 'jobs/test-file-tpl.yml' %}
+        {% set job_names.all = job_names.all + [x.job_name] %}
+        {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
+    {% endif %}
+{% endcall %}
+
+## ---------- GP7 PXF CLI tests ----------
+{# include a CLI test, for now Makefile only defines the switch for GP7 #}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+  {% if x.test_cli %}
+  {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
+        {% include 'jobs/test-cli-tpl.yml' %}
         {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
     {% endif %}
@@ -353,17 +361,6 @@ jobs:
         {% do x.update({'distro': default_distro}) %}
         {% do x.update({'with_upgrade': 'false'}) %}
         {% include 'jobs/test-multinode-tpl.yml' %}
-        {% set job_names.all = job_names.all + [x.job_name] %}
-        {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
-    {% endif %}
-{% endcall %}
-
-## ---------- GP7 PXF CLI tests ----------
-{# include a CLI test, for now Makefile only defines the switch for GP7 #}
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-  {% if x.test_cli %}
-  {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
-        {% include 'jobs/test-cli-tpl.yml' %}
         {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
     {% endif %}
@@ -412,7 +409,7 @@ jobs:
     {% endif %}
     {% do x.update({'num_versions': num_versions}) %}
     {% if x.test_os != 'oel' %}
-        {% include 'jobs/test-backwards-compatibility-tpl.yml' %}
+        {% include 'jobs/test-backward-compatibility-tpl.yml' %}
         {% set job_names.all = job_names.all + [x.job_name] %}
     {% endif %}
 {% endcall %}
