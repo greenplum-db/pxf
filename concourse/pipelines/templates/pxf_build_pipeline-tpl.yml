@@ -319,7 +319,6 @@ jobs:
     {% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-upgrade-extension-centos7'] %}
 
 ## ---------- FILE tests -----------------
-
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_file is sameas true %}
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
@@ -329,151 +328,11 @@ jobs:
     {% endif %}
 {% endcall %}
 
-
-## ---------- Multi-node tests ----------
-{% set job_names.extended_tests = job_names.extended_tests + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-secure-multi-no-impers-centos7'] %}
-{% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-secure-multi-no-impers-centos7'] %}
-- name: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
-  max_in_flight: 2
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      resource: pxf-src
-      passed: [testing-gate-for-pxf-gp]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf-gp[[gp_ver]]-tarball-el7
-      passed: [testing-gate-for-pxf-gp]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]-el7-rpm-latest-0
-      passed: [testing-gate-for-pxf-gp]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: ccp_src
-      resource: ccp-src
-    - get: ccp-7-image
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - in_parallel:
-    - do:
-      - put: terraform-gpdb
-        resource: terraform
-        params:
-          action: create
-          delete_on_failure: true
-          generate_random_name: true
-          terraform_source: ccp_src/google/
-          vars:
-            PLATFORM: centos7-gpdb[[gp_ver]]
-            WITH_MIRRORS: false
-            number_of_nodes: ((number_of_gpdb_nodes))
-            extra_nodes: 1
-            segments_per_host: 4
-            instance_type: n1-standard-4
-            ccp_reap_minutes: 120
-            standby_master: false
-      - task: generate-greenplum-cluster
-        input_mapping:
-          gpdb_rpm: gpdb_package
-          terraform: terraform-gpdb
-        file: ccp_src/ci/tasks/gen_cluster.yml
-        image: ccp-7-image
-        params:
-          AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
-          AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-          AWS_DEFAULT_REGION: ((ud/common/aws-region))
-          BUCKET_PATH: ((tf-bucket-path))
-          BUCKET_NAME: ((ud/pxf/common/tf-bucket-name))
-          PLATFORM: centos7-gpdb[[gp_ver]]
-          CLOUD_PROVIDER: google
-          GPDB_RPM: true
-      - in_parallel:
-        - task: initialize-greenplum
-          file: ccp_src/ci/tasks/gpinitsystem.yml
-          params:
-            PLATFORM: centos7-gpdb[[gp_ver]]
-            POSTGRES_CONF_ADDONS:
-            - wal_level=minimal
-            - max_wal_senders=0
-            - gp_dispatch_keepalives_idle=30
-            - gp_dispatch_keepalives_interval=10
-            - gp_dispatch_keepalives_count=4
-        - task: install-hadoop
-          file: pxf_src/concourse/tasks/install_hadoop.yml
-          image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-          params:
-            ACCESS_KEY_ID: ((tf-machine-access-key-id))
-            SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-            IMPERSONATION: ((enable-impersonation-multinode))
-    - task: generate-hadoop-cluster-1
-      file: pxf_src/concourse/tasks/install_dataproc.yml
-      params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
-        GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-        GOOGLE_ZONE: ((ud/pxf/common/google-zone))
-        IMAGE_VERSION: ((dataproc-image-version))
-        KERBEROS: ((kerberos-enabled))
-        ccp_reap_minutes: 120
-    - task: generate-hadoop-cluster-2
-      file: pxf_src/concourse/tasks/install_dataproc.yml
-      output_mapping:
-        dataproc_env_files: dataproc_2_env_files
-      params:
-        GOOGLE_CREDENTIALS: ((ud/pxf/secrets/kerberos-ccp-ci-service-account-key))
-        GOOGLE_PROJECT_ID: ((ud/pxf/common/kerberos-google-project-id))
-        GOOGLE_ZONE: ((ud/pxf/common/kerberos-google-zone))
-        HADOOP_USER: gpuser
-        IMAGE_VERSION: ((dataproc-image-version))
-        INITIALIZATION_SCRIPT: gs://data-gpdb-ud-kerberos-scripts/scripts/initialization-for-kerberos.sh
-        INSTANCE_TAGS: bosh-network,data-gpdb-ud-access
-        KERBEROS: ((kerberos-enabled))
-        KEY: dataproc-kerberos-key
-        KEYRING: dataproc-kerberos
-        ccp_reap_minutes: 120
-        NO_ADDRESS: false
-        PROXY_USER: gpuser
-        SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
-  - task: setup-pxf
-    input_mapping:
-      terraform: terraform-gpdb
-    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
-    image: ccp-7-image
-    params:
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-      IMPERSONATION: false
-      INSTALL_GPHDFS: false
-      GP_VER: [[gp_ver]]
-      KERBEROS: ((kerberos-enabled))
-      PXF_JVM_OPTS: ((pxf-jvm-opts))
-  - task: test-pxf-gp[[gp_ver]]-ext-hdp2-secure-multi-no-impers-centos7
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
-    attempts: 2
-    params:
-      GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      HIVE_VERSION: 2
-      IMPERSONATION: false
-      KERBEROS: ((kerberos-enabled))
-      GP_VER: [[gp_ver]]
-      GROUP: security,multiClusterSecurity
-      PXF_JVM_OPTS: ((pxf-jvm-opts))
-  - task: test-pxf-cli
-    on_success:
-      in_parallel:
-        steps:
-        - *destroy_dataproc_1
-        - *destroy_dataproc_2
-        - *destroy_gpdb_cluster
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    file: pxf_src/concourse/tasks/test_pxf_cli.yml
-{% set gp_ver = None %}
-
 ## ---------- Multi-node tests ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_multi is sameas true %}
         {% do x.update({'use_fdw': 'false'}) %}
+        {% do x.update({'use_impers': 'true'}) %}
         {% do x.update({'target': default_distro}) %}
         {% do x.update({'distro': default_distro}) %}
 
@@ -482,6 +341,17 @@ jobs:
         {% do x.update({'with_upgrade': with_upgrade}) %}
 
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
+        {% include 'jobs/test-multinode-tpl.yml' %}
+        {% set job_names.all = job_names.all + [x.job_name] %}
+        {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
+    {% endif %}
+    {# multinode no impersonation job for now will only be for GP6 and Centos7 #}
+    {% if x.test_multi is sameas true and x.gp_ver == '6' and x.test_platform == 'centos7' %}
+        {% do x.update({'use_fdw': 'false'}) %}
+        {% do x.update({'use_impers': 'false'}) %}
+        {% do x.update({'target': default_distro}) %}
+        {% do x.update({'distro': default_distro}) %}
+        {% do x.update({'with_upgrade': 'false'}) %}
         {% include 'jobs/test-multinode-tpl.yml' %}
         {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
