@@ -5,15 +5,13 @@
 
 {# include Release artifact only if both build and test platform are the same to avoid duplicates #}
 {% if x.build_platform == x.test_platform %}
-{% if x.os_ver != '9' %}
 
 {# Release Drop Artifact #}
-- name: pxf-gp[[x.gp_ver]]-[[x.greenplum_platform]]-release-to-releng
+- name: pxf-gp[[x.gp_ver]]-[[x.test_platform]]-release-to-releng
   type: gcs
   source:
     bucket: ((ud/pxf/[[environment]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb[[x.gp_ver]]/[[x.pxf_release_package_filename_regex]]
 
-{% endif %}
 {% endif %}  {# end of conditional package definitions #}

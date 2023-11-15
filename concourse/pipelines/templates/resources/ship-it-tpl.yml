@@ -1,0 +1,7 @@
+- name: pxf-shipit-file
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/releases-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    regexp: [[ environment ]]/shipit/greenplum-pxf-(.*).txt

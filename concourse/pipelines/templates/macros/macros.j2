@@ -58,6 +58,16 @@
     {% endfor %}
 {% endmacro %}
 
+{% macro for_supported_gp_vers(configs) %}
+    {% set supported_gp_vers = configs | map(attribute='gp_ver') | list | unique %}
+    {% for gp_ver in supported_gp_vers %}
+            {# set local variables for a given loop iteration #}
+            {% set x = dict({'gp_ver': gp_ver}) %}
+        {# render the result of callback passing the resulting context specific to this loop iteration #}
+[[caller(x)]]
+    {% endfor %}
+{% endmacro %}
+
 {# ----- ANCHOR macros ----- #}
 {% macro anchor_destroy_dataproc(cluster_index) %}
     {% include 'anchors/destroy-dataproc-tpl.yml' %}
@@ -111,6 +121,11 @@
     {% include 'resources/terraform-tpl.yml' %}
 {% endmacro %}
 
+{% macro shipit_file(environment) %}
+    {% include 'resources/ship-it-tpl.yml' %}
+{% endmacro %}
+
+{# ----- JOB macros ----- #}
 {% macro job_group(name, list) %}
 - name: [[name]]
   jobs:
@@ -119,4 +134,13 @@
 {% endfor %}
   - testing-gate-for-pxf-gp
   - compatibility-gate-for-pxf-gp
+{% endmacro %}
+
+{% macro passed_job_names(list, x, include_oel) %}
+{% for test in list if (x.gp_ver in test and x.test_platform in test) %}
+      - [[test]]
+    {% if include_oel %}
+      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-oel7
+    {% endif %}
+{% endfor %}
 {% endmacro %}
