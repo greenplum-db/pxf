@@ -32,11 +32,9 @@
     {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': true , 'test_cli': false, 'test_multi': true , 'test_features': supported_features},
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
-    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': true , 'test_features': []},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
     {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': true , 'test_multi': true , 'test_features': []},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []}] %}
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': true , 'test_multi': true , 'test_features': []}] %}
 
 
 {# define supported clouds that have their own 'protocols' #}
@@ -118,7 +116,6 @@ resources:
 
   [[macros.resource_registry_image('rpmrebuild-centos7-image', 'gcr.io/data-gpdb-ud/rpmrebuild-centos7', 'latest')]]
   [[macros.resource_registry_image('rpmrebuild-rocky8-image', 'gcr.io/data-gpdb-ud/rpmrebuild-rocky8', 'latest')]]
-  [[macros.resource_registry_image('rpmrebuild-rocky9-image', 'gcr.io/data-gpdb-ud/rpmrebuild-rocky9', 'latest')]]
 
   [[macros.resource_registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
 
@@ -141,12 +138,7 @@ resources:
     {% endif %}
     {% do x.update({'num_versions': num_versions}) %}
 
-    {% if x.os_ver == '9' %}
-        {# define RPMs for rocky9 until they are released into standard locations #}
-        {% include 'resources/greenplum-rocky9-package-tpl.yml' %}
-    {% else %}
-        {% include 'resources/greenplum-package-tpl.yml' %}
-    {% endif %}
+      {% include 'resources/greenplum-package-tpl.yml' %}
 {% endcall %}
 
 ## ---------- PXF 5 (for GPDB 6) Artifact ---------------
@@ -345,7 +337,6 @@ groups:
 [[macros.job_group('centos7', job_names.all)]]
 [[macros.job_group('oel7', job_names.all)]]
 [[macros.job_group('rocky8', job_names.all)]]
-[[macros.job_group('rocky9',  job_names.all)]]
 [[macros.job_group('ubuntu18.04', job_names.all)]]
 
 [[macros.job_group('gp5', job_names.all)]]

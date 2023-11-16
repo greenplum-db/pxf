@@ -13,7 +13,6 @@
     - get: google-cloud-sdk-slim-image
     - get: rpmrebuild-centos7-image
     - get: rpmrebuild-rocky8-image
-    - get: rpmrebuild-rocky9-image
     - get: gpdb6-pxf-dev-ubuntu18.04-image
   - task: get-pxf-gp5-and-pxf-gp6-artifacts-from-releases-directory
     image: google-cloud-sdk-slim-image
