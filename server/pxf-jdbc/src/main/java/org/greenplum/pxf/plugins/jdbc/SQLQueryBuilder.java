@@ -58,7 +58,6 @@ public class SQLQueryBuilder {
                     Operator.EQUALS,
                     Operator.LIKE,
                     Operator.NOT_EQUALS,
-                    // TODO: In is not supported?
                     Operator.IN,
                     Operator.IS_NULL,
                     Operator.IS_NOT_NULL,

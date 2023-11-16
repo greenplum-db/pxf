@@ -242,12 +242,12 @@ dbop_pxfop_array_map pxf_supported_opr_scalar_array_op_expr[] =
 	/* float48 */
 	{1120 /* float48eq */ , PXFOP_IN, true},
 
-	/* varchar is not needed as it was converted to text */
+	/* varchar is not needed as it is relabeled to text */
 
 	/* bpchar */
 	{BPCharEqualOperator /* bpchareq */ , PXFOP_IN, true},
 
-	/* char is not needed as it was converted to bpchar */
+	/* char is not needed as it is relabeled to bpchar */
 
 	/* numeric */
 	{NumericEqualOperator /* numericeq */ , PXFOP_IN, true},
@@ -1327,7 +1327,7 @@ list_const_to_str(Const *constval, StringInfo buf)
 				}
 				break;
 			}
-		case TEXTARRAYOID: /* varchar will act as text */
+		case TEXTARRAYOID: /* varchar is relabeled to text */
 			{
 				char	   *value;
 
@@ -1365,7 +1365,7 @@ list_const_to_str(Const *constval, StringInfo buf)
 				}
 				break;
 			}
-		case 1014: /* bpchar array oid, char will act as bpchar */
+		case 1014: /* bpchar array oid, char is relabeled to bpchar */
 			{
 				char	   *value;
 
