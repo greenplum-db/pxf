@@ -11,6 +11,9 @@
 {% set name = 'test-pxf-gp' ~ x.gp_ver ~ '-file-no-impers-' ~ x.test_platform %}
 {% do x.update({'job_name': name}) %}
 
+{% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.test_platform %}
+{% do job_names.resources.update({tarball_resource_name: job_names.resources[tarball_resource_name] + [name]}) %}
+
 - name: [[name]]
   max_in_flight: 2
   plan:

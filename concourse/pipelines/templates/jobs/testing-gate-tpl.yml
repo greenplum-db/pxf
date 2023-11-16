@@ -4,18 +4,14 @@
   - in_parallel:
     - get: pxf-src
       trigger: true
-      passed:
-        [[job_names.basic_tests]]
+      passed: [[job_names.basic_tests]]
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
-      passed:
-[[macros.passed_job_names(job_names.basic_tests, x, false)]]
+      passed: [[job_names.resources['gpdb' ~x .gp_ver~'-pxf-dev-'~x.test_platform~'-image']]]
     {% if x.test_os != 'oel' %}
     - get: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
-      passed:
-[[macros.passed_job_names(job_names.basic_tests, x, (x.test_platform == 'centos7' and x.gp_ver == '6'))]]
+      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.test_platform]]]
     - get: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
-      passed:
-[[macros.passed_job_names(job_names.basic_tests, x, (x.test_platform == 'centos7' and x.gp_ver == '6'))]]
+      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.test_platform]]]
     {% endif %}
 {% endcall %}

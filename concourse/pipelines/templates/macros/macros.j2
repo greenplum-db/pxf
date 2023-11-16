@@ -136,11 +136,11 @@
   - compatibility-gate-for-pxf-gp
 {% endmacro %}
 
-{% macro passed_job_names(list, x, include_oel) %}
-{% for test in list if (x.gp_ver in test and x.test_platform in test) %}
-      - [[test]]
-    {% if include_oel %}
-      - test-pxf-gp[[x.gp_ver]]-ext-hdp2-oel7
-    {% endif %}
-{% endfor %}
+{% macro reset_passed_jobs(configs, job_names) %}
+{%call(x) for_each_config(configs) %}
+  {% set image_resource_name = 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform ~ '-image' %}
+  {% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.test_platform %}
+  {% do job_names.resources.update({image_resource_name : []}) %}
+  {% do job_names.resources.update({tarball_resource_name : []}) %}
+{% endcall %}
 {% endmacro %}
