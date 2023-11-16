@@ -47,9 +47,6 @@
 {% if [[x.test_platform]] == [[x.build_platform]] %}
       passed: [[passed]]
 {% endif %}
-{% if x.os_ver == '9' %}
-    - get: gpdb[[x.gp_ver]]-pxf-dev-rocky8-image
-{% endif %}
     - get: ccp_src
       resource: ccp-src
     - get: ccp-7-image
@@ -148,16 +145,7 @@
           gcp_project: ((ud/pxf/common/ipa-google-project-id))
     - task: generate-multinode-hadoop-cluster
       file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
-{% if x.os_ver == '9' %}
-      # OpenSSH SCP is deprecated in RHEL9 and it would affect the SCP commands that run in the
-      # install_multinode_hadoop.yml. See line 80 and 81 where we try to SCP down the hadoop and hive conf files.
-      # The container running this script does not need to be RHEL9 specific as we are just using the container
-      # to spin up a multinode hadoop cluster on a remote VM. For now, use the RHEL8 container.
-      # https://www.redhat.com/en/blog/openssh-scp-deprecation-rhel-9-what-you-need-know
-      image: gpdb[[x.gp_ver]]-pxf-dev-rocky8-image
-{% else %}
       image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
-{% endif %}
       input_mapping:
         terraform_ipa_hadoop: terraform-ipa-hadoop
       params:
