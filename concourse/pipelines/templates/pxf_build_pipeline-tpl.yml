@@ -178,8 +178,8 @@ jobs:
     {% do x.update({'target': default_distro}) %}
     {% do x.update({'distro': default_distro}) %}
     {% include 'jobs/test-tpl.yml' %}
-    {% set job_names.all = job_names.all + [x.job_name] %}
     {% set job_names.basic_tests = job_names.basic_tests + [x.job_name] %}
+    [[ macros.add_passing_job(x, job_names, x.job_name) ]]
 {% endcall %}
 
 {# include an FDW test job if supported by the swimlane #}
@@ -190,8 +190,8 @@ jobs:
         {% do x.update({'target': default_distro}) %}
         {% do x.update({'distro': default_distro}) %}
         {% include 'jobs/test-tpl.yml' %}
-        {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.basic_tests = job_names.basic_tests + [x.job_name] %}
+        [[ macros.add_passing_job(x, job_names, x.job_name) ]]
     {% endif %}
 {% endcall %}
 
@@ -226,15 +226,15 @@ jobs:
         {# define a feature name to go into the test job name, unless it is a test against a distro/cloud only #}
         {% do x.update({'feature': test_feature}) if test_feature not in distros and test_feature not in clouds %}
         {% include 'jobs/test-tpl.yml' %}
-        {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
+        [[ macros.add_passing_job(x, job_names, x.job_name) ]]
 
         {# for S3 only, also include an additional impersonation job #}
         {% if test_feature == 's3' %}
             {% do x.update({'use_impers': 'true'}) %}
             {% include 'jobs/test-tpl.yml' %}
-            {% set job_names.all = job_names.all + [x.job_name] %}
             {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
+            [[ macros.add_passing_job(x, job_names, x.job_name) ]]
         {% endif %}
     {% endfor %}
 {% endcall %}
@@ -251,8 +251,8 @@ jobs:
     {% if x.test_file is sameas true %}
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         {% include 'jobs/test-file-tpl.yml' %}
-        {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
+        [[ macros.add_passing_job(x, job_names, x.job_name) ]]
     {% endif %}
 {% endcall %}
 
@@ -262,8 +262,8 @@ jobs:
   {% if x.test_cli %}
   {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         {% include 'jobs/test-cli-tpl.yml' %}
-        {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
+        [[ macros.add_passing_job(x, job_names, x.job_name) ]]
     {% endif %}
 {% endcall %}
 
@@ -281,8 +281,8 @@ jobs:
 
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         {% include 'jobs/test-multinode-tpl.yml' %}
-        {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
+        [[ macros.add_passing_job(x, job_names, x.job_name) ]]
     {% endif %}
     {# multinode no impersonation job for now will only be for GP6 and Centos7 #}
     {% if x.test_multi is sameas true and x.gp_ver == '6' and x.test_platform == 'centos7' %}
@@ -292,8 +292,8 @@ jobs:
         {% do x.update({'distro': default_distro}) %}
         {% do x.update({'with_upgrade': 'false'}) %}
         {% include 'jobs/test-multinode-tpl.yml' %}
-        {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
+        [[ macros.add_passing_job(x, job_names, x.job_name) ]]
     {% endif %}
 {% endcall %}
 
@@ -316,8 +316,8 @@ jobs:
     {% do x.update({'max_concurrent_bc_tasks': 3}) %}
     {% if x.test_os != 'oel' %}
         {% include 'jobs/test-backward-compatibility-tpl.yml' %}
-        {% set job_names.all = job_names.all + [x.job_name] %}
         {% set job_names.backward_compatibility = job_names.backward_compatibility + [x.job_name] %}
+        [[ macros.add_passing_job(x, job_names, x.job_name) ]]
     {% endif %}
 {% endcall %}
 
