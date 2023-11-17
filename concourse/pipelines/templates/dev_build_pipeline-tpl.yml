@@ -9,7 +9,7 @@
 {% set supported_features = requested_features.keys() | list %}
 
 {# define whether multinode testing is requested for given EL OS versions #}
-{% set requested_multi = {'7': multinode_el7, '8': multinode_el8} %}
+{% set requested_multi = {'7': multinode_el7, '8': multinode_el8, '9': multinode_el9} %}
 
 {#
 # ======================================================================
@@ -36,9 +36,11 @@
     {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': true , 'test_cli': false, 'test_multi': true , 'test_features': supported_features},
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': true , 'test_features': []},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
     {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': true , 'test_multi': true , 'test_features': []}] %}
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': true , 'test_multi': true , 'test_features': []},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': []}] %}
 
 
 {# define supported clouds that have their own 'protocols' #}
@@ -54,10 +56,10 @@
 {% set gp_num_versions = { '5': num_gpdb5_versions, '6': num_gpdb6_versions, '7': num_gpdb7_versions} %}
 
 {# define whether CCP should be used #}
-{% set use_ccp = multinode_el7 or multinode_el8 or multinode_no_impersonation or file or gp7_cli %}
+{% set use_ccp = multinode_el7 or multinode_el8 or multinode_el9 or multinode_no_impersonation or file or gp7_cli %}
 
 {# define whether IPA should be used #}
-{% set use_ipa = multinode_el7 or multinode_el8 %}
+{% set use_ipa = multinode_el7 or multinode_el8 or multinode_el9 %}
 
 ## ======================================================================
 ## ANCHORS
@@ -131,7 +133,12 @@ resources:
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% do x.update({'gp_num_versions': gp_num_versions[x.gp_ver]}) %}
-    {% include 'resources/greenplum-package-tpl.yml' %}
+    {% if x.os_ver == '9' %}
+        {# define RPMs for rocky9 until they are released into standard locations #}
+        {% include 'resources/greenplum-rocky9-package-tpl.yml' %}
+    {% else %}
+        {% include 'resources/greenplum-package-tpl.yml' %}
+    {% endif %}
 {% endcall %}
 
 ## ---------- PXF Artifacts ----------

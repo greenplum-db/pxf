@@ -51,9 +51,11 @@
     {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': true},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': true , 'test_cli': false, 'test_multi': true , 'test_features': supported_features, 'generate_release_tarball': true},
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': true , 'test_features': [], 'generate_release_tarball': false},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false},
     {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': true , 'test_multi': true , 'test_features': [], 'generate_release_tarball': false}] %}
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': true , 'test_multi': true , 'test_features': [], 'generate_release_tarball': false},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false}] %}
 
 
 {# define supported clouds that have their own 'protocols' #}
@@ -168,7 +170,12 @@ resources:
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% do x.update({'gp_num_versions': gp_num_versions[x.gp_ver]}) %}
-    {% include 'resources/greenplum-package-tpl.yml' %}
+    {% if x.os_ver == '9' %}
+        {# define RPMs for rocky9 until they are released into standard locations #}
+        {% include 'resources/greenplum-rocky9-package-tpl.yml' %}
+    {% else %}
+        {% include 'resources/greenplum-package-tpl.yml' %}
+    {% endif %}
 {% endcall %}
 
 ## ---------- PXF Artifacts ----------
@@ -322,7 +329,11 @@ jobs:
 
 ## ---------- Compatibility Testing ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% do x.update({'gp_num_versions': gp_num_versions[x.gp_ver]}) %}
+    {% if x.os_ver == '9' %}
+        {% do x.update({'gp_num_versions': 1}) %}
+    {% else %}
+        {% do x.update({'gp_num_versions': gp_num_versions[x.gp_ver]}) %}
+    {% endif %}
     {# number of backwards compatibility tasks that can run at once #}
     {% do x.update({'max_concurrent_bc_tasks': 3}) %}
     {% if x.test_os != 'oel' %}

@@ -95,6 +95,5 @@
         <MASTER_DATA_DIRECTORY></MASTER_DATA_DIRECTORY>
         <PGPORT></PGPORT>
         <PGDATABASE></PGDATABASE>
-        <TERM>dumb</TERM>
     </shellsystemobject>
 </sut>

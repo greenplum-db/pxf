@@ -8,7 +8,7 @@ import ch.ethz.ssh2.Connection;
 
 /**
  * Extends {@link SSH} to connect using private key if exists instead of password connection.
- * 
+ *
  */
 public class PivotalSshRsa extends SSH {
 
@@ -46,7 +46,7 @@ public class PivotalSshRsa extends SSH {
 			try {
 				if (privateKeyFile != null && privateKeyFile.isFile()) {
 					System.out.println("Connecting using Private Key");
-					
+
 					// connect using private key
 					isAuthenticated = conn.authenticateWithPublicKey(username, privateKeyFile, "");
 				} else {
@@ -65,11 +65,7 @@ public class PivotalSshRsa extends SSH {
 		/* Create a session */
 		sess = conn.openSession();
 
-		if (xtermTerminal) {
-			sess.requestPTY("xterm", 80, 24, 640, 480, null);
-		} else {
-			sess.requestPTY("dumb", 200, 50, 0, 0, null);
-		}
+		sess.requestDumbPTY();
 
 		sess.startShell();
 

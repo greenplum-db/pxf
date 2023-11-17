@@ -11,6 +11,17 @@ GPDB_VERSION=$(<"${GPDB_PKG_DIR}/version")
 function install_gpdb() {
     local pkg_file
     if command -v rpm; then
+        # extract the OS major version
+        os_major_version=$(cat /etc/os-release | grep VERSION_ID | tr -dc '0-9.'| cut -d \. -f1)
+
+        # there is only a GPDB server RPM available for RHEL9
+        if [[ $os_major_version -eq "9" ]]; then
+            gpdb_file_name="greenplum-db-server"
+        else
+            # if no os major version is found, we will just fall into the default case here
+            gpdb_file_name="greenplum-db"
+        fi
+
         # For GP7 and above, a new rhel8 & rocky8 distro identifier
         # (el8) has been introduced.
         if [[ ${GPDB_VERSION%%.*} -ge 7 ]]; then
@@ -18,7 +29,7 @@ function install_gpdb() {
         else
             DISTRO_MATCHING_PATTERN="r"
         fi
-        pkg_file=$(find "${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-${DISTRO_MATCHING_PATTERN}*-x86_64.rpm")
+        pkg_file=$(find "${GPDB_PKG_DIR}" -name "${gpdb_file_name}-${GPDB_VERSION}-${DISTRO_MATCHING_PATTERN}*-x86_64.rpm")
 
         echo "Installing RPM ${pkg_file}..."
         rpm --quiet -ivh "${pkg_file}" >/dev/null
@@ -97,7 +108,8 @@ function package_pxf_fdw() {
 install_gpdb
 # installation of GPDB from RPM/DEB doesn't ensure that the installation location will match the version
 # given in the gpdb_package, so set the GPHOME after installation
-GPHOME=$(find /usr/local/ -name "greenplum-db-${GPDB_VERSION}*")
+# In case we are testing a dev version (i.e: 6.25.3+dev.6.54a3437), GPDB_VERSION%%+* will remove any extra string from + onwards
+GPHOME=$(find /usr/local/ -name "greenplum-db-${GPDB_VERSION%%+*}*")
 inflate_dependencies
 compile_pxf
 package_pxf

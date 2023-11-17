@@ -95,6 +95,25 @@ function add_testing_encoding() {
 	"
 }
 
+function update_crypto_policy() {
+	# SHA1 is deprecated in RHEL9: https://www.redhat.com/en/blog/rhel-security-sha-1-package-signatures-distrusted-rhel-9
+	# We need this security policy to run our automation tests in RHEL9
+	# update-crypto-policies is only available for Rocky9
+	if grep -i el9 /etc/os-release; then
+		ssh "${SSH_OPTS[@]}" gpadmin@cdw "
+			source ${GPHOME}/greenplum_path.sh &&
+			gpssh -f ~gpadmin/hostfile_all -v -u ${CCP_OS_USER} -s -e 'sudo update-crypto-policies --set DEFAULT:SHA1 && sudo systemctl restart sshd'
+			"
+		if [ $? -eq 0 ]; then
+			echo "Crypto policy updated and SSH restarted successfully."
+		else
+			echo "Failed to update crypto policy or restart SSH. Please check the logs for more information."
+		fi
+	else
+		echo "update-crypto-policies is supported only on Rocky9."
+	fi
+}
+
 function setup_pxf_on_cluster() {
 	# drop named query file for JDBC test to gpadmin's home on cdw
 	scp "${SSH_OPTS[@]}" pxf_src/automation/src/test/resources/{,hive-}report.sql gpadmin@cdw:
@@ -567,6 +586,9 @@ function _main() {
 
 	# widen access to cdw to all nodes in the cluster for JDBC test
 	update_pghba_conf "${gpdb_segments[@]}"
+
+	# set update_crypto_policy for Rocky9
+	update_crypto_policy
 
 	# Add the ru_RU.CP1251 encoding for testing
 	add_testing_encoding
