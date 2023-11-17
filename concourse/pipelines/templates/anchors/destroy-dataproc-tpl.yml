@@ -1,16 +1,13 @@
 {# Template for an anchor that destroys a dataproc cluster.
  #
- # Expects a 'cluster_index' variable to be set
+ # Expects a 'cluster_index' variable to be set to either '1' or '2'
  #}
 
-{% set google_prefix = '' %}
+{% set google_prefix = 'kerberos-' if cluster_index == 2 else '' %}
 - &destroy_dataproc_[[cluster_index]]
   task: cleanup-dataproc-[[cluster_index]]
-{% if cluster_index == 2 %}
-  {% set google_prefix = 'kerberos-' %}
   input_mapping:
-    dataproc_env_files: dataproc_2_env_files
-{% endif %}
+    dataproc_env_files: dataproc_[[cluster_index]]_env_files
   config:
     run:
       path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash

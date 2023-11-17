@@ -4,6 +4,7 @@
  #}
   
 {# include PXF artifact only if both build and test platform are the same to avoid duplicates #}
+{# for example, the 'oel7' test platform does not have an 'oel7' build job and uses 'centos7' artifacts #}
 {% if x.build_platform == x.test_platform %}
 
 {# PXF Build Artifact #}
@@ -26,4 +27,4 @@
     versioned_file: dev/[[x.user]]-[[x.branch]]/snapshots/pxf6/pxf-fdw-gp[[x.gp_ver]][[x.pxf_platform_infix]][[x.release_platform]].tar.gz
 {% endif %}
 
-{% endif %}  {# end of conditional package definitions #}
+{% endif %}{# end of conditional package definitions #}

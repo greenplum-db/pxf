@@ -42,10 +42,8 @@
         {% endif %}
 
         {# adjust Greenplum release platform due to historical inconsistencies #}
-        {% if x.release_platform == 'el7' %}
-            {% do x.update({'greenplum_platform': 'rhel7'}) %}
-        {% elif x.release_platform == 'el8' and x.gp_ver < '7' %}
-            {% do x.update({'greenplum_platform': 'rhel8'}) %}
+        {% if x.gp_ver in ['5', '6'] and x.release_platform.startswith('el') %}
+            {% do x.update({'greenplum_platform': 'rh' ~ x.release_platform}) %}
         {% else %}
             {% do x.update({'greenplum_platform': x.release_platform}) %}
         {% endif %}
@@ -103,6 +101,6 @@
     {% include 'resources/pxf5-gp6-el7-artifact-tpl.yml' %}
 {% endmacro %}
 
-{% macro resource_terraform(terraform_name, is_ipa) %}
+{% macro resource_terraform(cluster_type) %}
     {% include 'resources/terraform-tpl.yml' %}
 {% endmacro %}

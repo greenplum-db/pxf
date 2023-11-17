@@ -10,9 +10,4 @@
     params:
       text: |
         <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went red :blob_slightly_frowning_face:
-  on_success:
-    put: slack-alert
-    params:
-      text: |
-        <${ATC_EXTERNAL_URL}/builds/$BUILD_ID|$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME> went green! :smile:
 {% endif %}

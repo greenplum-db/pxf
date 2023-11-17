@@ -31,7 +31,6 @@
     - get: singlecluster
       resource: singlecluster-[[default_distro]]
   - put: terraform-gpdb
-    resource: terraform
     params:
       action: create
       delete_on_failure: true

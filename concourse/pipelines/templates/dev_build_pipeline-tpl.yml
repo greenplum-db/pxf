@@ -141,11 +141,11 @@ resources:
 
 ## ---------- Auxiliary Resources ----------
 {% if use_ccp %}
-    [[macros.resource_terraform('terraform', false)]]
+    [[macros.resource_terraform('gpdb')]]
 {% endif %}
 
 {% if use_ipa %}
-    [[macros.resource_terraform('terraform-ipa-hadoop', true)]]
+    [[macros.resource_terraform('ipa-hadoop')]]
 {% endif %}
 
 ## ======================================================================

@@ -3,7 +3,7 @@
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #}
 
-{# include test docker image for all OS other than OEL (unless requested by a Makefile parameter #}
+{# include test docker image for all OS other than OEL (unless requested by a Makefile parameter) #}
 {% if x.test_platform != 'oel7' or oel7 %}
 - name: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
   type: registry-image

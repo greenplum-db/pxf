@@ -2,16 +2,16 @@
  #
  # Expects the following variables to be set:
  #
- # terraform_name - name of the resource
- # is_ipa         - whether this resource is for creating an IPA Hadoop cluster
+ # cluster_type - type of the cluster to create - 'gpdb or 'ipa-hadoop'
  #}
 
 {# customize IPA settings until the dependent logic is standardized #}
-{% set terraform_type_suffix = '-0.14.10' if is_ipa else '' %}
-{% set credential_key_prefix = 'ipa-'     if is_ipa else '' %}
-{% set bucket_path_key       = 'ud/pxf/common/tf-bucket-path-hadoop' if is_ipa else 'tf-bucket-path' %}
+{% set terraform_type_suffix = '-0.14.10'                            if cluster_type == 'ipa-hadoop' else '' %}
+{% set credential_key_prefix = 'ipa-'                                if cluster_type == 'ipa-hadoop' else '' %}
+{% set bucket_path_key       = 'ud/pxf/common/tf-bucket-path-hadoop' if cluster_type == 'ipa-hadoop' else 'tf-bucket-path' %}
+{% set project_property_name = 'gcp_project'                         if cluster_type == 'ipa-hadoop' else 'project_id' %}
 
-- name: [[terraform_name]]
+- name: terraform-[[cluster_type]]
   type: terraform[[terraform_type_suffix]]
   source:
     delete_on_failure: true
@@ -24,8 +24,4 @@
       region_name: ((ud/common/aws-region))
       secret_access_key: ((tf-machine-secret-access-key))
     vars:
-{% if is_ipa %}
-      gcp_project: ((ud/pxf/common/ipa-google-project-id))
-{% else %}
-      project_id: ((ud/pxf/common/google-project-id))
-{% endif %}
+      [[project_property_name]]: ((ud/pxf/common/[[credential_key_prefix]]google-project-id))

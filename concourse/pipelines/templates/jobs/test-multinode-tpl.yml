@@ -56,7 +56,6 @@
   - in_parallel:
     - do:
       - put: terraform-gpdb
-        resource: terraform
         params:
           action: create
           delete_on_failure: true
@@ -108,6 +107,8 @@
             IMPERSONATION: ((enable-impersonation-multinode))
     - task: generate-hadoop-cluster-1
       file: pxf_src/concourse/tasks/install_dataproc.yml
+      output_mapping:
+        dataproc_env_files: dataproc_1_env_files
       params:
         GOOGLE_CREDENTIALS: ((ud/pxf/secrets/ccp-ci-service-account-key))
         GOOGLE_PROJECT_ID: ((ud/pxf/common/google-project-id))
@@ -221,7 +222,7 @@
         - *destroy_dataproc_2
         - *destroy_gpdb_cluster
 {% if x.use_impers == 'true' %}
-        - *destroy_hadoop_cluster
+        - *destroy_ipa-hadoop_cluster
 {% endif %}
 {% if slack_notification %}
     <<: *slack_alert

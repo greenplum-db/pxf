@@ -1,24 +1,15 @@
 {# Template for an anchor that destroys a cluster.
  #
- # Expects a 'cluster_type' variable to be set to either 'gpdb' or 'hadoop'
+ # Expects a 'cluster_type' variable to be set to either 'gpdb' or 'ipa-hadoop'
  #}
 
-{% if cluster_type == 'gpdb' %}
-    {% set suffix               = 'gpdb' %}
-    {% set terraform_source     = 'ccp_src/google/' %}
-{% else %}
-    {% set suffix               = 'ipa-hadoop' %}
-    {% set terraform_source     = 'pxf_src/concourse/terraform/ipa-multinode-hadoop' %}
-{% endif %}
+{% set terraform_source = 'ccp_src/google/' if cluster_type == 'gpdb' else 'pxf_src/concourse/terraform/ipa-multinode-hadoop' %}
 
 - &destroy_[[cluster_type]]_cluster
-  put: terraform-[[suffix]]
-{% if cluster_type == 'gpdb' %}
-  resource: terraform
-{% endif %}
+  put: terraform-[[cluster_type]]
   params:
     action: destroy
-    env_name_file: terraform-[[suffix]]/name
+    env_name_file: terraform-[[cluster_type]]/name
     terraform_source: [[terraform_source]]
   get_params:
     action: destroy

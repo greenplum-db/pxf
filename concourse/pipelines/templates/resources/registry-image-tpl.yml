@@ -10,7 +10,7 @@
 
 - name: [[image_name]]
   type: registry-image
-{# add icon unless this renders for 'gcs' which is a resource_type instead of a resource #}
+{# add icon unless this is for a resource_type instead of a resource #}
 {% if not resource_type %}
   icon: docker
 {% endif %}
