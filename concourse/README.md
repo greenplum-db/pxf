@@ -95,8 +95,8 @@ To deploy dev pipeline against gpdb 5X_STABLE and 6X_STABLE branches, use:
 make -C "${HOME}/workspace/pxf/concourse" dev
 ```
 
-To deploy multi-node dev pipeline, you can specify either the `MULTINODE`, `MULTINODE_EL8` or
-`MULTINODE_NO_IMPERSONATION`, which will also run CLI tests:
+To deploy multi-node dev pipeline, you can specify either the `MULTINODE` for EL7, `MULTINODE_EL8` for EL8 or
+`MULTINODE_NO_IMPERSONATION` for EL7, which will also run CLI tests:
 
 ```shell
 MULTINODE=true make -C "${HOME}/workspace/pxf/concourse" dev

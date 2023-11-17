@@ -4,23 +4,21 @@
  #}
 
 {% if cluster_type == 'gpdb' %}
-    {% set put_suffix           = 'gpdb' %}
-    {% set env_name_file_suffix = '-gpdb' %}
+    {% set suffix               = 'gpdb' %}
     {% set terraform_source     = 'ccp_src/google/' %}
 {% else %}
-    {% set put_suffix           = 'ipa-hadoop' %}
-    {% set env_name_file_suffix = '-ipa-hadoop' %}
+    {% set suffix               = 'ipa-hadoop' %}
     {% set terraform_source     = 'pxf_src/concourse/terraform/ipa-multinode-hadoop' %}
 {% endif %}
 
 - &destroy_[[cluster_type]]_cluster
-  put: terraform-[[put_suffix]]
+  put: terraform-[[suffix]]
 {% if cluster_type == 'gpdb' %}
   resource: terraform
 {% endif %}
   params:
     action: destroy
-    env_name_file: terraform[[env_name_file_suffix]]/name
+    env_name_file: terraform-[[suffix]]/name
     terraform_source: [[terraform_source]]
   get_params:
     action: destroy

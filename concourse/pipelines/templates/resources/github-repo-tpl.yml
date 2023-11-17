@@ -1,6 +1,6 @@
 {# Template for a Github repository resource definition.
  #
- # Expects a 'repo_name" variable set to 'pxf' or 'ccp' value
+ # Expects a 'repo_name' variable set to 'pxf' or 'ccp' value
  #}
 
 - name: [[repo_name]]-src
