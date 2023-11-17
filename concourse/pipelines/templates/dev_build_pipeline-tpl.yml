@@ -9,7 +9,7 @@
 {% set supported_features = requested_features.keys()|list %}
 
 {# define whether multinode testing is requested for given EL OS versions #}
-{% set requested_multi = {'7': multinode, '8': multinode_el8} %}
+{% set requested_multi = {'7': multinode_el7, '8': multinode_el8} %}
 
 {#
 # ======================================================================
@@ -52,10 +52,10 @@
 {% set default_impers = 'true' %}
 
 {# define whether CCP should be used #}
-{% set use_ccp = multinode or multinode_el8 or multinode_no_impersonation or file or gp7_cli %}
+{% set use_ccp = multinode_el7 or multinode_el8 or multinode_no_impersonation or file or gp7_cli %}
 
 {# define whether IPA should be used #}
-{% set use_ipa = multinode or multinode_el8 %}
+{% set use_ipa = multinode_el7 or multinode_el8 %}
 
 ## ======================================================================
 ## ANCHORS
@@ -135,7 +135,7 @@ resources:
 {% endcall %}
 
 ## ---------- PXF 5 Artifact ---------------
-{% if multinode %}
+{% if multinode_el7 %}
     [[macros.resource_pxf5_gp6_el7_artifact()]]
 {% endif %}
 

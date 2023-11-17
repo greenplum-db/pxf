@@ -26,7 +26,7 @@ TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
 SLACK                       ?= true
 # below are dev-build specific vars
-MULTINODE                   ?= false
+MULTINODE_EL7               ?= false
 MULTINODE_EL8               ?= false
 MULTINODE_NO_IMPERSONATION  ?= false
 JDK11                       ?= false
@@ -111,7 +111,7 @@ set-dev-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template dev_build_pipeline-tpl.yml --vars \
 		slack_notification=$(SLACK) \
-		multinode=$(MULTINODE) \
+		multinode_el7=$(MULTINODE_EL7) \
 		multinode_el8=$(MULTINODE_EL8) \
 		multinode_no_impersonation=$(MULTINODE_NO_IMPERSONATION) \
 		jdk11=$(JDK11) \

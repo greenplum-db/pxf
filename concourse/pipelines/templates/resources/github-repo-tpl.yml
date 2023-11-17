@@ -15,4 +15,3 @@
     private_key: ((gp-concourse-cluster-provisioner-git-key))
     uri: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-remote))
 {% endif %}
-

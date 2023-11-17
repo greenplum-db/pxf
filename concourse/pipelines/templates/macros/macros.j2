@@ -19,7 +19,7 @@
   - 'pkg_arch'           : the machine architecture of the package (x86_64 or amd64)
   - 'release_platform'   : the platform used in PXF  artifact file names (el7, el8, el9, ubuntu18.04)
   - 'greenplum_platform' : the platform used in GPDB artifact file names (rhel7, rhel8, el9, ubuntu18.04)
-  - 'pxf_tarball_infix'  : the symbol separating the platform in the PXF artifact names
+  - 'pxf_platform_infix' : the symbol separating the platform in the PXF artifact names
 #}
 {% macro for_each_config(configs) %}
     {% for conf in configs %}
@@ -33,12 +33,12 @@
             {% do x.update({'pkg_type': 'deb'}) %}
             {% do x.update({'pkg_arch': 'amd64'}) %}
             {% do x.update({'release_platform': 'ubuntu' ~ x.os_ver}) %}
-            {% do x.update({'pxf_tarball_infix': '-'}) %}
+            {% do x.update({'pxf_platform_infix': '-'}) %}
         {% else %} {# other operating systems: centos, rocky and oel #}
             {% do x.update({'pkg_type': 'rpm'}) %}
             {% do x.update({'pkg_arch': 'x86_64'}) %}
             {% do x.update({'release_platform': 'el' ~ x.os_ver}) %}
-            {% do x.update({'pxf_tarball_infix': '.'}) %}
+            {% do x.update({'pxf_platform_infix': '.'}) %}
         {% endif %}
 
         {# adjust Greenplum release platform due to historical inconsistencies #}
@@ -50,8 +50,8 @@
             {% do x.update({'greenplum_platform': x.release_platform}) %}
         {% endif %}
 
-        {% do x.update({'pxf_tarball_filename_regex':     'pxf-gp'     ~ x.gp_ver ~ '-*' ~ x.pxf_tarball_infix ~ x.release_platform ~ '.tar.gz'}) %}
-        {% do x.update({'pxf_fdw_tarball_filename_regex': 'pxf-fdw-gp' ~ x.gp_ver ~ '-*' ~ x.pxf_tarball_infix ~ x.release_platform ~ '.tar.gz'}) %}
+        {% do x.update({'pxf_tarball_filename_regex':     'pxf-gp'     ~ x.gp_ver ~ '-*' ~ x.pxf_platform_infix ~ x.release_platform ~ '.tar.gz'}) %}
+        {% do x.update({'pxf_fdw_tarball_filename_regex': 'pxf-fdw-gp' ~ x.gp_ver ~ '-*' ~ x.pxf_platform_infix ~ x.release_platform ~ '.tar.gz'}) %}
 
         {# render the result of callback passing the resulting context specific to this loop iteration #}
 [[caller(x)]]
