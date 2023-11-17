@@ -37,6 +37,7 @@
   {% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-centos7' %}
   {% do job_names.resources.update({tarball_resource_name: job_names.resources[tarball_resource_name] + [name]}) %}
 {% endif %}
+
 - name: [[name]]
   plan:
   - in_parallel:

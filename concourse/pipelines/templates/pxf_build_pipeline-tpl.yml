@@ -15,12 +15,15 @@
 # BUILD and TEST Combinations for PXF
 # ======================================================================
 
-# gp_ver     : major Greenplum version
-# build_os   : the name of the OS used to build PXF artifacts
-# test_os    : the name of the OS used to test  PXF artifacts
-# os_ver     : the version of the OS
-# test_fdw   : whether to test PXF FDW extension in this configuration
-# test_cloud : whether to test PXF against cloud external systems
+# gp_ver        : major Greenplum version
+# build_os      : the name of the OS used to build PXF artifacts
+# test_os       : the name of the OS used to test  PXF artifacts
+# os_ver        : the version of the OS
+# test_fdw      : whether to test PXF FDW extension in this configuration
+# test_file     : whether to test PXF with FILE protocol in this configuration
+# test_cli      : whether to test PXF CLI functionality in this configuration
+# test_multi    : whether to test PXF against multi-node Hadoop clusters in this configuration
+# test_features : an array of features to test PXF with in this configuration
 #
 # when iterating over the entries, use the following pattern:
 # {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
@@ -53,44 +56,42 @@
 {# define whether IPA should be used #}
 {% set use_ipa = true %}
 
-{# change num_gpdb5_versions & num_gpdb6_versions in Makefile to download/test more Greenplum versions #}
-
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
 ## ======================================================================
 ## ANCHORS
 ## ======================================================================
 anchors:
-  [[macros.anchor_destroy_dataproc(1)]]
-  [[macros.anchor_destroy_dataproc(2)]]
-  [[macros.anchor_destroy_cluster('gpdb')]]
-  [[macros.anchor_destroy_cluster('hadoop')]]
-  [[macros.anchor_slack_notification(slack_notification)]]
+    [[macros.anchor_destroy_dataproc(1)]]
+    [[macros.anchor_destroy_dataproc(2)]]
+    [[macros.anchor_destroy_cluster('gpdb')]]
+    [[macros.anchor_destroy_cluster('ipa-hadoop')]]
+    [[macros.anchor_slack_notification(slack_notification)]]
 
 ## ======================================================================
 ## RESOURCE TYPES
 ## ======================================================================
 resource_types:
-  [[macros.resource_type_registry_image('terraform', 'gcr.io/data-gpdb-ud/terraform-resource', '0.11.15')]]
-  [[macros.resource_type_registry_image('terraform-0.14.10', 'ljfranklin/terraform-resource', '0.14.10')]]
-  [[macros.resource_type_registry_image('gcs', 'frodenas/gcs-resource', '')]]
-  [[macros.resource_type_registry_image('slack-notification', 'cfcommunity/slack-notification-resource', 'latest')]]
+    [[macros.resource_type_registry_image('terraform', 'gcr.io/data-gpdb-ud/terraform-resource', '0.11.15')]]
+    [[macros.resource_type_registry_image('terraform-0.14.10', 'ljfranklin/terraform-resource', '0.14.10')]]
+    [[macros.resource_type_registry_image('gcs', 'frodenas/gcs-resource', '')]]
+    [[macros.resource_type_registry_image('slack-notification', 'cfcommunity/slack-notification-resource', 'latest')]]
 
 ## ======================================================================
 ## RESOURCES
 ## ======================================================================
 resources:
-  [[macros.resource_pxf_dependencies('build')]]
-  [[macros.resource_pxf_dependencies('automation')]]
+    [[macros.resource_pxf_dependencies('build')]]
+    [[macros.resource_pxf_dependencies('automation')]]
 
 ## ---------- Single Cluster tarballs ----------
-  [[macros.resource_singlecluster('hdp2')]]
-  [[macros.resource_singlecluster('hdp3')]]
-  [[macros.resource_singlecluster('cdh')]]
+    [[macros.resource_singlecluster('hdp2')]]
+    [[macros.resource_singlecluster('hdp3')]]
+    [[macros.resource_singlecluster('cdh')]]
 
 ## ---------- Github Repos ----------
-  [[macros.resource_github_repo('pxf')]]
-  [[macros.resource_github_repo('ccp')]]
+    [[macros.resource_github_repo('pxf')]]
+    [[macros.resource_github_repo('ccp')]]
 
 ## ---------- RelEng Drop Artifacts ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
@@ -114,17 +115,17 @@ resources:
     {% include 'resources/pxf-test-image-tpl.yml' %}
 {% endcall %}
 
-  [[macros.resource_registry_image('rpmrebuild-centos7-image', 'gcr.io/data-gpdb-ud/rpmrebuild-centos7', 'latest')]]
-  [[macros.resource_registry_image('rpmrebuild-rocky8-image', 'gcr.io/data-gpdb-ud/rpmrebuild-rocky8', 'latest')]]
+    [[macros.resource_registry_image('rpmrebuild-centos7-image', 'gcr.io/data-gpdb-ud/rpmrebuild-centos7', 'latest')]]
+    [[macros.resource_registry_image('rpmrebuild-rocky8-image', 'gcr.io/data-gpdb-ud/rpmrebuild-rocky8', 'latest')]]
 
-  [[macros.resource_registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
+    [[macros.resource_registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
 
-  [[macros.resource_registry_image('google-cloud-sdk-slim-image', 'google/cloud-sdk', '402.0.0-slim')]]
+    [[macros.resource_registry_image('google-cloud-sdk-slim-image', 'google/cloud-sdk', '402.0.0-slim')]]
 
 ## ---------- Slack Notification ----------
 {% if slack_notification %}
-  [[macros.resource_slack_notification('slack-alert', 'ud-pipeline-bot-dev-webhook')]]
-  [[macros.resource_slack_notification('notify-releng', 'ud-pipeline-bot-gp-releng-webhook')]]
+    [[macros.resource_slack_notification('slack-alert', 'ud-pipeline-bot-dev-webhook')]]
+    [[macros.resource_slack_notification('notify-releng', 'ud-pipeline-bot-gp-releng-webhook')]]
 {% endif %}
 
 ## ---------- Greenplum Packages ----------
@@ -138,24 +139,24 @@ resources:
     {% endif %}
     {% do x.update({'num_versions': num_versions}) %}
 
-      {% include 'resources/greenplum-package-tpl.yml' %}
+    {% include 'resources/greenplum-package-tpl.yml' %}
 {% endcall %}
 
-## ---------- PXF 5 (for GPDB 6) Artifact ---------------
-  [[macros.resource_pxf5_gp6_el7_artifact()]]
-
-## ---------- PXF 6.6 (for GPDB 6) Artifact ---------------
-# This is for extension upgrade testing. PXF 6.6.X contains extension version 2.0. PXF 6.7.+ contains version 2.1
-  [[macros.resource_pxf6_6_gp6_el7_artifact()]]
-
-## ---------- PXF Build Artifacts ----------
+## ---------- PXF Artifacts ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% include 'resources/pxf-artifact-tpl.yml' %}
 {% endcall %}
 
+## ---------- PXF 5 Artifact ---------------
+    [[macros.resource_pxf5_gp6_el7_artifact()]]
+
+## ---------- PXF 6.6 Artifact ---------------
+# This is for extension upgrade testing. PXF 6.6.X contains extension version 2.0. PXF 6.7.+ contains version 2.1
+    [[macros.resource_pxf6_6_gp6_el7_artifact()]]
+
 ## ---------- Auxiliary Resources ----------
-  [[macros.resource_terraform('terraform', false)]]
-  [[macros.resource_terraform('terraform-ipa-hadoop', true)]]
+    [[macros.resource_terraform('gpdb')]]
+    [[macros.resource_terraform('ipa-hadoop')]]
 
 ## ======================================================================
 ## JOBS

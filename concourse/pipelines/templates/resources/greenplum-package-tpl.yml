@@ -1,6 +1,10 @@
 {# Template for a Greenplum package resource definition.
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #
+ # x.num_versions  - a value that determines the number of Greenplum packages needed for testing
+ #                   this resource is used for backward compatibility testing against previous Greenplum packages
+ #                   and the default is set to 1 to use the latest Greenplum package (latest_0) for testing
  #}
 
 {# include Greenplum package only if both build and test platform are the same to avoid duplicates #}
