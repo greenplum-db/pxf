@@ -240,11 +240,14 @@ jobs:
 {% endcall %}
 
 ## ---------- Upgrade Extension Test ----------
-{% set gp_ver = '6' %}
-    {% include 'jobs/test-upgrade-extension-tpl.yml' %}
-    {% set job_names.extended_tests = job_names.extended_tests + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-upgrade-extension-centos7'] %}
-    {% set job_names.all = job_names.all + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-upgrade-extension-centos7'] %}
-    {% do job_names.resources.update({'pxf-gp' ~ gp_ver ~ '-tarball-centos7': job_names.resources['pxf-gp' ~ gp_ver ~ '-tarball-centos7'] + ['test-pxf-gp' ~ gp_ver ~ '-ext-hdp2-upgrade-extension-centos7']}) %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
+        {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
+        {% include 'jobs/test-upgrade-extension-tpl.yml' %}
+        {% set job_names.extended_tests = job_names.extended_tests + [x.job_name] %}
+        [[ macros.add_passing_job(x, job_names, x.job_name) ]]
+    {% endif %}
+{% endcall %}
 
 ## ---------- FILE tests -----------------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
