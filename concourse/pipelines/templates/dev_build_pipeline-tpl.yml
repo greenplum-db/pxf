@@ -64,7 +64,7 @@ anchors:
     [[macros.anchor_destroy_dataproc(1)]]
     [[macros.anchor_destroy_dataproc(2)]]
     [[macros.anchor_destroy_cluster('gpdb')]]
-    [[macros.anchor_destroy_cluster('hadoop')]]
+    [[macros.anchor_destroy_cluster('ipa-hadoop')]]
     [[macros.anchor_slack_notification(slack_notification)]]
 
 ## ======================================================================
