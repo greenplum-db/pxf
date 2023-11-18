@@ -328,7 +328,7 @@ jobs:
 ## ---------- Artifact Promotion Gate ----------
 {% include 'jobs/promote-pxf-artifacts-tpl.yml' %}
 
-{% include 'jobs/publish-pxf-artifacts-to-releng-tpl.yml' %}
+{% include 'jobs/publish-pxf-artifacts-tpl.yml' %}
 
 ## ======================================================================
 ## GROUPS
