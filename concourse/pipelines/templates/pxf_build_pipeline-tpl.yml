@@ -99,7 +99,7 @@ resources:
 {% endcall %}
 
 {% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
-    {% include 'resources/releng-osl-odp-tpl.yml' %}
+    {% include 'resources/release-osl-odp-tpl.yml' %}
 {% endcall %}
 
 ## ---------- RelEng Drop Artifacts for tarballs ----------
