@@ -136,28 +136,29 @@
         PROXY_USER: gpuser
         SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
 {% if x.use_impers == 'true' %}
-  - do:   # Generate IPA Hadoop cluster
-    - put: terraform-ipa-hadoop
-      params:
-        action: create
-        generate_random_name: true
-        terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
-        vars:
-          gcp_project: ((ud/pxf/common/ipa-google-project-id))
-    - task: generate-multinode-hadoop-cluster
-      file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
-      image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
-      input_mapping:
-        terraform_ipa_hadoop: terraform-ipa-hadoop
-      params:
-        ANSIBLE_VAR_gcp_storage_bucket: ((ud/pxf/common/build-resources-bucket-name))
-        ANSIBLE_VAR_ipa_password: ((ud/pxf/secrets/ipa-password))
-        ANSIBLE_VAR_ssl_store_password: ((ud/pxf/secrets/ssl-store-password))
+    - do:   # Generate IPA Hadoop cluster
+      - put: terraform-ipa-hadoop
+        params:
+          action: create
+          generate_random_name: true
+          terraform_source: pxf_src/concourse/terraform/ipa-multinode-hadoop
+          vars:
+            gcp_project: ((ud/pxf/common/ipa-google-project-id))
+      - task: generate-multinode-hadoop-cluster
+        file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
+        image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+        input_mapping:
+          terraform_ipa_hadoop: terraform-ipa-hadoop
+        params:
+          ANSIBLE_VAR_gcp_storage_bucket: ((ud/pxf/common/build-resources-bucket-name))
+          ANSIBLE_VAR_ipa_password: ((ud/pxf/secrets/ipa-password))
+          ANSIBLE_VAR_ssl_store_password: ((ud/pxf/secrets/ssl-store-password))
 {% endif %}{# end of conditional IPA cluster generation #}
 {% if x.with_upgrade == 'true' %}
   - task: setup-pxf-5-latest
     input_mapping:
       terraform: terraform-gpdb
+      dataproc_env_files: dataproc_1_env_files
       pxf_tarball: pxf_tarball_ignore   # do not install from the artifact
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
@@ -181,6 +182,7 @@
   - task: setup-pxf
     input_mapping:
       terraform: terraform-gpdb
+      dataproc_env_files: dataproc_1_env_files
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
@@ -194,6 +196,8 @@
 {% endif %}
 {% endif %}{# end of upgrade if/else block #}
   - task: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]]-secure-multi-[[feature]]-[[x.test_platform]]
+    input_mapping:
+      dataproc_env_files: dataproc_1_env_files
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
