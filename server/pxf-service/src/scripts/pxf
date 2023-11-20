@@ -260,8 +260,7 @@ function installExtensions() {
             echoGreen "Installing Greenplum External Table PXF Extension into '${GPHOME}'"
 
             local target_control_file="${GPHOME}/share/postgresql/extension/pxf.control"
-            cp -Lv "${parent_script_dir}/gpextable/pxf.control" "${target_control_file}"
-            chmod 644 "${target_control_file}"
+            install --verbose --mode=0644 "${parent_script_dir}/gpextable/pxf.control" "${target_control_file}" || fail "cannot install pxf.control to '${target_control_file}'"
         fi
     fi
     if [[ -d ${parent_script_dir}/fdw ]]; then
@@ -273,8 +272,7 @@ function installExtensions() {
             echoGreen "Installing Greenplum Foreign Data Wrapper PXF Extension into '${GPHOME}'"
 
             local target_control_file="${GPHOME}/share/postgresql/extension/pxf_fdw.control"
-            cp -Lv "${parent_script_dir}/fdw/pxf_fdw.control" "${target_control_file}"
-            chmod 644 "${target_control_file}"
+            install --verbose --mode=0644 "${parent_script_dir}/fdw/pxf_fdw.control" "${target_control_file}" || fail "cannot install pxf_fdw.control to '${target_control_file}'"
         fi
     fi
 }
