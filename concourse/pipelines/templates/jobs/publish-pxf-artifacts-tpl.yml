@@ -1,5 +1,5 @@
 {% set name = 'publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng' %}
-{% set job_names.all = job_names.all + [name] %}
+{% do x.update({'job_name': name}) %}
 - name: [[name]]
   plan:
   - in_parallel:
@@ -24,7 +24,7 @@
       GCS_RELEASES_PATH: [[ environment ]]/releases
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
   #  - in_parallel: does not work since all tasks modify pxf_artifacts
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+{% call(x) for_each_config(build_test_pxf_combinations) %}
     {% if x.test_os != 'oel' %}
   - task: add-osl-file-to-pxf-gp[[x.gp_ver]]-[[x.pkg_type]]-[[x.test_platform]]
     {% if x.test_os != 'ubuntu' %}
@@ -40,7 +40,7 @@
     {% endif %}
     {% endif %}
 {% endcall %}
-{% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
+{% call(x) for_supported_gp_vers(build_test_pxf_combinations) %}
     {# we only generate the tarball for gp5, gp6 centos7 builds #}
     {% if x.gp_ver != '7' %}
   - task: generate-pxf-binary-tarball-from-pxf-gp[[x.gp_ver]]-centos7-rpm
@@ -62,14 +62,14 @@
       RELENG_OSL_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-osl-drop-path))
       RELENG_ODP_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-odp-drop-path))
   - in_parallel:
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+{% call(x) for_each_config(build_test_pxf_combinations) %}
     {% if x.build_platform == x.test_platform %}
     - put: pxf-gp[[x.gp_ver]]-[[x.test_platform]]-release-to-releng
       params:
         file: pxf_artifacts/licensed/pxf-gp[[x.gp_ver]]-*-2?[[x.release_platform]]?[[x.pkg_arch]]?[[x.pkg_type]]
     {% endif %}
 {% endcall %}
-{% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
+{% call(x) for_supported_gp_vers(build_test_pxf_combinations) %}
     {# we only generate the tarball for gp5, gp6 centos7 builds #}
     {% if x.gp_ver != '7' %}
     - put: pxf-gp[[x.gp_ver]]-tarball-release-to-releng
@@ -77,7 +77,7 @@
         file: pxf_artifacts/licensed/gp[[x.gp_ver]]/pxf-gp[[x.gp_ver]]-*-el7.x86_64.tar.gz
     {% endif %}
 {% endcall %}
-{% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
+{% call(x) for_supported_gp_vers(build_test_pxf_combinations) %}
     - put: pxf-gp[[x.gp_ver]]-odp-to-releng
       params:
         file: pxf_artifacts/((ud/pxf/common/odp-file-prefix))*.tar.gz

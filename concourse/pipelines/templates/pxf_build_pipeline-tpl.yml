@@ -187,7 +187,7 @@ jobs:
 {% endcall %}
 
 ## ---------- Testing Gate ----------
-[[macros.add_job('jobs/testing-gate-tpl.yml', job_names, environment)]]
+[[macros.add_job('jobs/testing-gate-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -285,7 +285,7 @@ jobs:
 {% endcall %}
 
 ## ---------- Compatibility Gate ----------
-[[macros.add_job('jobs/compatibility-gate-tpl.yml', job_names, environment)]]
+[[macros.add_job('jobs/compatibility-gate-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -301,9 +301,9 @@ jobs:
 {% endcall %}
 
 ## ---------- Artifact Promotion Gate ----------
-[[macros.add_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment)]]
+[[macros.add_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
 
-{% include 'jobs/publish-pxf-artifacts-tpl.yml' %}
+[[macros.add_job('jobs/publish-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
 
 ## ======================================================================
 ## GROUPS

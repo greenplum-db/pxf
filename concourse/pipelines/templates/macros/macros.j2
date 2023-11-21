@@ -175,7 +175,7 @@
   {% do job_names.tests.update({extra_list_name: job_names.tests[extra_list_name] + [x.job_name]}) %}
 {% endmacro %}
 
-{% macro add_job(file_name, job_names, env_var) %}
+{% macro add_job(file_name, job_names, env_var, build_test_pxf_combinations) %}
   {% set x = dict() %}
   {% set environment = env_var %}
   {% include file_name %}
