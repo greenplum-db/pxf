@@ -1,4 +1,4 @@
-{% set name = 'promote-pxf-for-gp5-gp6-gp7-artifacts' %}
+{% set name = 'promote-pxf-artifacts' %}
 {% do x.update({'job_name': name}) %}
 - name: [[name]]
   plan:

@@ -326,5 +326,5 @@ groups:
 
 - name: promote-and-publish
   jobs:
-  - promote-pxf-for-gp5-gp6-gp7-artifacts
-  - publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng
+  - promote-pxf-artifacts
+  - publish-pxf-artifacts-to-gp-releng

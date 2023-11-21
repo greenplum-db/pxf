@@ -1,4 +1,9 @@
-{% set name = 'publish-pxf-gp5-gp6-gp7-artifacts-to-gp-releng' %}
+{# Template for a PXF publish job definition.
+  #
+  # Calls to macros in this file do not need to be pre-pended with `macros`
+  #}
+
+{% set name = 'publish-pxf-artifacts-to-gp-releng' %}
 {% do x.update({'job_name': name}) %}
 - name: [[name]]
   plan:
@@ -6,7 +11,7 @@
     - get: pxf_src
       resource: pxf-src
       passed:
-      - promote-pxf-for-gp5-gp6-gp7-artifacts
+      - promote-pxf-artifacts
     - get: pxf_shipit_file
       resource: pxf-shipit-file
       trigger: true
@@ -76,8 +81,6 @@
       params:
         file: pxf_artifacts/licensed/gp[[x.gp_ver]]/pxf-gp[[x.gp_ver]]-*-el7.x86_64.tar.gz
     {% endif %}
-{% endcall %}
-{% call(x) for_supported_gp_vers(build_test_pxf_combinations) %}
     - put: pxf-gp[[x.gp_ver]]-odp-to-releng
       params:
         file: pxf_artifacts/((ud/pxf/common/odp-file-prefix))*.tar.gz
