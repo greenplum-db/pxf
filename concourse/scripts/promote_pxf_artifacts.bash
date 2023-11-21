@@ -14,7 +14,7 @@ set -e
 echo "Authenticating with Google service account..."
 gcloud auth activate-service-account --key-file=<(echo "${GOOGLE_CREDENTIALS}") >/dev/null 2>&1
 
-tarballs=(pxf_gp*_tarball_*/*gz)
+tarballs=(pxf-gp*-tarball-*/*gz)
 if (( ${#tarballs[@]} < 1 )); then
 	echo "Couldn't find any tarballs, check pipeline task inputs..."
 	exit 1

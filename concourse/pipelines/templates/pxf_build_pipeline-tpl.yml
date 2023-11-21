@@ -4,7 +4,7 @@
 {# import macros to use in this template #}
 {% import "macros/macros.j2" as macros %}
 
-{% set job_names = namespace(all=[], tests={'basic':[], 'extended':[], 'backward_compatibility':[]}, resources={}) %}
+{% set job_names = namespace(all=[], tests={'basic':[], 'extended':[], 'backward_compatibility':[]}, images={}, tarballs={}, gpdb_packages={}) %}
 
 {# define supported test features (single-cluster test jobs) and whether their testing is requested by the Makefile via context variables #}
 {% set requested_features = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio, 'hdp2': hdp2, 'hdp3': hdp3, 'cdh': cdh, 'jdk11': jdk11} %}
@@ -187,7 +187,7 @@ jobs:
 {% endcall %}
 
 ## ---------- Testing Gate ----------
-{% include 'jobs/testing-gate-tpl.yml' %}
+[[macros.add_job('jobs/testing-gate-tpl.yml', job_names, environment)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -285,7 +285,7 @@ jobs:
 {% endcall %}
 
 ## ---------- Compatibility Gate ----------
-{% include 'jobs/compatibility-gate-tpl.yml' %}
+[[macros.add_job('jobs/compatibility-gate-tpl.yml', job_names, environment)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -301,7 +301,7 @@ jobs:
 {% endcall %}
 
 ## ---------- Artifact Promotion Gate ----------
-{% include 'jobs/promote-pxf-artifacts-tpl.yml' %}
+[[macros.add_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment)]]
 
 {% include 'jobs/publish-pxf-artifacts-tpl.yml' %}
 

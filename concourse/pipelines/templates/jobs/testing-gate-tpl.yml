@@ -1,18 +1,20 @@
 {% set name = 'testing-gate-for-pxf-gp' %}
-{% set job_names.all = job_names.all + [name] %}
+{% do x.update({'job_name': name}) %}
 - name: [[name]]
   plan:
   - in_parallel:
     - get: pxf-src
       trigger: true
       passed: [[job_names.tests['basic']]]
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
-      passed: [[job_names.resources['gpdb' ~x .gp_ver~'-pxf-dev-'~x.test_platform~'-image']]]
-    {% if x.test_os != 'oel' %}
-    - get: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
-      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.release_platform]]]
-    - get: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
-      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.release_platform]]]
-    {% endif %}
-{% endcall %}
+{% for image in job_names.images.keys() | list %}
+    - get: [[image]]
+      passed: [[job_names.images[image]]]
+{% endfor %}
+{% for tarball in job_names.tarballs.keys() | list %}
+    - get: [[tarball]]
+      passed: [[job_names.tarballs[tarball]]]
+{% endfor %}
+{% for gpdb_package in job_names.gpdb_packages.keys() | list %}
+    - get: [[gpdb_package]]
+      passed: [[job_names.gpdb_packages[gpdb_package]]]
+{% endfor %}

@@ -153,8 +153,10 @@
   {%call(x) for_each_config(configs) %}
     {% set image_resource_name = 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform ~ '-image' %}
     {% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.release_platform %}
-    {% do job_names.resources.update({image_resource_name : []}) %}
-    {% do job_names.resources.update({tarball_resource_name : []}) %}
+    {% set gpdb_resource_name = 'gpdb' ~ x.gp_ver ~ '-' ~ x.release_platform ~ '-' ~ x.pkg_type ~ '-latest-0'%}
+    {% do job_names.images.update({image_resource_name : []}) %}
+    {% do job_names.tarballs.update({tarball_resource_name : []}) %}
+    {% do job_names.gpdb_packages.update({gpdb_resource_name : []}) %}
   {% endcall %}
 {% endmacro %}
 
@@ -162,10 +164,20 @@
   {% set job_names.all = job_names.all + [x.job_name] %}
 
   {% set image_resource_name = 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform ~ '-image' %}
-  {% do job_names.resources.update({image_resource_name: job_names.resources[image_resource_name] + [x.job_name]}) %}
+  {% do job_names.images.update({image_resource_name: job_names.images[image_resource_name] + [x.job_name]}) %}
 
   {% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.release_platform %}
-  {% do job_names.resources.update({tarball_resource_name: job_names.resources[tarball_resource_name] + [x.job_name]}) %}
+  {% do job_names.tarballs.update({tarball_resource_name: job_names.tarballs[tarball_resource_name] + [x.job_name]}) %}
+
+  {% set gpdb_resource_name = 'gpdb' ~ x.gp_ver ~ '-' ~ x.release_platform ~ '-' ~ x.pkg_type ~ '-latest-0'%}
+  {% do job_names.gpdb_packages.update({gpdb_resource_name: job_names.gpdb_packages[gpdb_resource_name] + [x.job_name]}) %}
 
   {% do job_names.tests.update({extra_list_name: job_names.tests[extra_list_name] + [x.job_name]}) %}
+{% endmacro %}
+
+{% macro add_job(file_name, job_names, env_var) %}
+  {% set x = dict() %}
+  {% set environment = env_var %}
+  {% include file_name %}
+  {% set job_names.all = job_names.all + [x.job_name] %}
 {% endmacro %}

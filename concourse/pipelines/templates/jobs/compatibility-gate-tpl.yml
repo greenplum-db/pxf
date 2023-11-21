@@ -1,18 +1,16 @@
 {% set name = 'compatibility-gate-for-pxf-gp' %}
-{% set job_names.all = job_names.all + [name] %}
+{% do x.update({'job_name': name}) %}
 - name: [[name]]
   plan:
   - in_parallel:
     - get: pxf-src
       trigger: true
       passed: [[job_names.tests['extended']]]
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-{% if x.test_platform == x.build_platform %}
-    - get: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
-    {% if job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.release_platform] | length == 0 %}
+{% for tarball in job_names.tarballs.keys() | list %}
+    - get: [[tarball]]
+    {% if job_names.tarballs[tarball] | length == 0 %}
       passed: ['testing-gate-for-pxf-gp']
     {% else %}
-      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.release_platform]]]
+      passed: [[job_names.tarballs[tarball]]]
     {% endif %}
-{% endif %}
-{% endcall %}
+{% endfor %}

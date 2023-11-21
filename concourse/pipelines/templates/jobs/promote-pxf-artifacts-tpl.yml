@@ -1,5 +1,5 @@
 {% set name = 'promote-pxf-for-gp5-gp6-gp7-artifacts' %}
-{% set job_names.all = job_names.all + [name] %}
+{% do x.update({'job_name': name}) %}
 - name: [[name]]
   plan:
   - in_parallel:
@@ -7,15 +7,10 @@
       resource: pxf-src
       trigger: true
       passed: [[job_names.tests['backward_compatibility']]]
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.build_platform == x.test_platform %}
-    {% if x.test_os != 'oel' %}
-    - get: pxf_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
-      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
-      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.release_platform]]]
-    {% endif %}
-    {% endif %}
-{% endcall %}
+{% for tarball in job_names.tarballs.keys() | list %}
+    - get: [[tarball]]
+      passed: [[job_names.tarballs[tarball]]]
+{% endfor %}
     - get: google-cloud-sdk-slim-image
   - task: [[name]]
     image: google-cloud-sdk-slim-image
@@ -32,13 +27,9 @@
     config:
       inputs:
         - name: pxf_src
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.build_platform == x.test_platform %}
-    {% if x.test_os != 'oel' %}
-        - name: pxf_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
-    {% endif %}
-    {% endif %}
-{% endcall %}
+{% for tarball in job_names.tarballs.keys() | list %}
+        - name: [[tarball]]
+{% endfor %}
       platform: linux
       run:
         path: pxf_src/concourse/scripts/promote_pxf_artifacts.bash
