@@ -12,7 +12,7 @@
     {% if x.test_os != 'oel' %}
     - get: pxf_gp[[x.gp_ver]]_tarball_[[x.release_platform]]
       resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
-      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.test_platform]]]
+      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.release_platform]]]
     {% endif %}
     {% endif %}
 {% endcall %}

@@ -10,8 +10,8 @@
       passed: [[job_names.resources['gpdb' ~x .gp_ver~'-pxf-dev-'~x.test_platform~'-image']]]
     {% if x.test_os != 'oel' %}
     - get: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
-      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.test_platform]]]
+      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.release_platform]]]
     - get: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
-      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.test_platform]]]
+      passed: [[job_names.resources['pxf-gp' ~x .gp_ver~'-tarball-'~x.release_platform]]]
     {% endif %}
 {% endcall %}

@@ -139,7 +139,7 @@
 {% macro reset_passed_jobs(configs, job_names) %}
 {%call(x) for_each_config(configs) %}
   {% set image_resource_name = 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform ~ '-image' %}
-  {% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.test_platform %}
+  {% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.release_platform %}
   {% do job_names.resources.update({image_resource_name : []}) %}
   {% do job_names.resources.update({tarball_resource_name : []}) %}
 {% endcall %}
@@ -151,6 +151,6 @@
 {% set image_resource_name = 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform ~ '-image' %}
 {% do job_names.resources.update({image_resource_name: job_names.resources[image_resource_name] + [job]}) %}
 
-{% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.test_platform %}
+{% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.release_platform %}
 {% do job_names.resources.update({tarball_resource_name: job_names.resources[tarball_resource_name] + [job]}) %}
 {% endmacro %}
