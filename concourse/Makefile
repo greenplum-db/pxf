@@ -88,7 +88,7 @@ set-build-pipeline:
 set-dev-release-pipeline: PXF_IMAGE_TAG=$(PXF_DEV_IMAGE_TAG)
 set-dev-release-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
-	$(TEMPLATE_CMD) --template pxf_build_pipeline-tpl.yml --vars \
+	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		environment=dev \
 		slack_notification=false \
 		git_branch=$(BRANCH) \
