@@ -212,10 +212,12 @@ jobs:
         {% do x.update({'use_impers': use_impers}) %}
 
         {# define a protocol if the feature is a cloud test #}
-        {% do x.update({'protocol': test_feature}) if test_feature in clouds else x.update({'protocol': ''})  %}
+        {% set protocol = test_feature if test_feature in clouds else '' %}
+        {% do x.update({'protocol': protocol}) %}
 
         {# define a feature name to go into the test job name, unless it is a test against a distro/cloud only #}
-        {% do x.update({'feature': test_feature}) if test_feature not in distros and test_feature not in clouds %}
+        {% set feature = test_feature if test_feature not in distros and test_feature not in clouds else '' %}
+        {% do x.update({'feature': feature}) %}
         {% include 'jobs/test-tpl.yml' %}
         [[ macros.add_passing_job(x, job_names, 'extended') ]]
 
@@ -303,6 +305,7 @@ jobs:
 ## ---------- Artifact Promotion Gate ----------
 [[macros.add_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
 
+## ---------- Artifact Publishing to RelEng ----------
 [[macros.add_job('jobs/publish-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
 
 ## ======================================================================
@@ -321,10 +324,3 @@ groups:
 [[macros.job_group('gp5', job_names.all)]]
 [[macros.job_group('gp6', job_names.all)]]
 [[macros.job_group('gp7', job_names.all)]]
-
-[[macros.job_group('backward-compatibility', job_names.all)]]
-
-- name: promote-and-publish
-  jobs:
-  - promote-pxf-artifacts
-  - publish-pxf-artifacts-to-gp-releng
