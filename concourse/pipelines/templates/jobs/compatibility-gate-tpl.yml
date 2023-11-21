@@ -1,5 +1,6 @@
-{% set job_names.all = job_names.all + ['compatibility-gate-for-pxf-gp'] %}
-- name: compatibility-gate-for-pxf-gp
+{% set name = 'compatibility-gate-for-pxf-gp' %}
+{% set job_names.all = job_names.all + [name] %}
+- name: [[name]]
   plan:
   - in_parallel:
     - get: pxf-src
