@@ -6,7 +6,7 @@
     - get: pxf_src
       resource: pxf-src
       trigger: true
-      passed: [[job_names.backward_compatibility]]
+      passed: [[job_names.tests['backward_compatibility']]]
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.build_platform == x.test_platform %}
     {% if x.test_os != 'oel' %}

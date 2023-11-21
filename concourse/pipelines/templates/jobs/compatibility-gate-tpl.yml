@@ -4,7 +4,7 @@
   - in_parallel:
     - get: pxf-src
       trigger: true
-      passed: [[job_names.extended_tests]]
+      passed: [[job_names.tests['extended']]]
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
 {% if x.test_platform == x.build_platform %}
     - get: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
