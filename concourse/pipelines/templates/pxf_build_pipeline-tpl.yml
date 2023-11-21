@@ -130,15 +130,7 @@ resources:
 
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.gp_ver == '5' %}
-        {% set num_versions = num_gpdb5_versions | int %}
-    {% elif x.gp_ver == '6' %}
-        {% set num_versions = num_gpdb6_versions | int %}
-    {% else %}
-        {% set num_versions = 1 %}
-    {% endif %}
-    {% do x.update({'num_versions': num_versions}) %}
-
+    [[macros.set_num_versions(x, num_gpdb5_versions, num_gpdb6_versions, num_gpdb7_versions)]]
     {% include 'resources/greenplum-package-tpl.yml' %}
 {% endcall %}
 
@@ -299,14 +291,7 @@ jobs:
 
 ## ---------- Compatibility Testing ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.gp_ver == '5' %}
-        {% set num_versions = num_gpdb5_versions | int %}
-    {% elif x.gp_ver == '6' %}
-        {% set num_versions = num_gpdb6_versions | int %}
-    {% else %}
-        {% set num_versions = 1 %}
-    {% endif %}
-    {% do x.update({'num_versions': num_versions}) %}
+    [[macros.set_num_versions(x, num_gpdb5_versions, num_gpdb6_versions, num_gpdb7_versions)]]
     {# number of backwards compatibility tasks that can run at once #}
     {% do x.update({'max_concurrent_bc_tasks': 3}) %}
     {% if x.test_os != 'oel' %}

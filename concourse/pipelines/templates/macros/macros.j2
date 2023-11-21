@@ -68,6 +68,19 @@
     {% endfor %}
 {% endmacro %}
 
+{% macro set_num_versions(x, gp5_val, gp6_val, gp7_val) %}
+    {% if x.gp_ver == '5' %}
+        {% set num_versions = gp5_val | int %}
+    {% elif x.gp_ver == '6' %}
+        {% set num_versions = gp6_val | int %}
+    {% elif x.gp_ver == '7' %}
+        {% set num_versions = gp7_val | int %}
+    {% else %}
+        {% set num_versions = 1 %}
+    {% endif %}
+    {% do x.update({'num_versions': num_versions}) %}
+{% endmacro %}
+
 {# ----- ANCHOR macros ----- #}
 {% macro anchor_destroy_dataproc(cluster_index) %}
     {% include 'anchors/destroy-dataproc-tpl.yml' %}
