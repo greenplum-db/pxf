@@ -65,12 +65,6 @@
 {% set default_distro = 'hdp2' %}
 {% set default_impers = 'true' %}
 
-{# define whether CCP should be used #}
-{% set use_ccp = true %}
-
-{# define whether IPA should be used #}
-{% set use_ipa = true %}
-
 {# ensure that there are no jobs initially in the list, additionally, initialize any necessary lists #}
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
