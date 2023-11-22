@@ -62,7 +62,7 @@ longevity: set-longevity-pipeline
 # ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-build-pipeline
 set-build-pipeline: SLACK=true
-set-build-pipeline: PXF_IMAGE_TAG=latest
+set-build-pipeline:
 set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
@@ -78,14 +78,13 @@ set-build-pipeline:
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--var=pxf-git-branch=main \
 		--var=pxf-build-bucket-prefix=prod \
-		--var=pxf-image-tag=$(PXF_IMAGE_TAG) \
+		--var=gpdb-pxf-dev-image-tag=latest \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
 
 .PHONY: set-dev-release-pipeline
-set-dev-release-pipeline: PXF_IMAGE_TAG=$(PXF_DEV_IMAGE_TAG)
 set-dev-release-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
@@ -104,14 +103,13 @@ set-dev-release-pipeline:
 		--var=pxf-git-branch=${BRANCH} \
 		--var=pxf-build-bucket-prefix=dev/$(USER)-$(BRANCH) \
 		--var=pxf-releases-bucket-prefix=dev/$(USER)-$(BRANCH) \
-		--var=pxf-image-tag=$(PXF_IMAGE_TAG) \
+		--var=gpdb-pxf-dev-image-tag=$(PXF_DEV_IMAGE_TAG) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${DEV_BUILD_PIPELINE_NAME}"
 
 .PHONY: set-dev-build-pipeline
-set-dev-build-pipeline: PXF_IMAGE_TAG=$(PXF_DEV_IMAGE_TAG)
 set-dev-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template dev_build_pipeline-tpl.yml --vars \
@@ -143,7 +141,7 @@ set-dev-build-pipeline:
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--var=pxf-git-branch=${BRANCH} \
-		--var=pxf-image-tag=$(PXF_IMAGE_TAG) \
+		--var=gpdb-pxf-dev-image-tag=$(PXF_DEV_IMAGE_TAG) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:

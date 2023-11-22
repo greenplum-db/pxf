@@ -9,6 +9,6 @@
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[x.gp_ver]]-[[x.test_platform]]-test-pxf
-    tag: ((pxf-image-tag))
+    tag: ((gpdb-pxf-dev-image-tag))
     username: _json_key
     password: ((ud/pxf/secrets/pxf-cloudbuild-service-account-key))
