@@ -1,7 +1,15 @@
-{# Template for a PXF publish job definition.
-  #
-  # Calls to macros in this file do not need to be pre-pended with `macros`
-  #}
+{# Template for the PXF publish job definition.
+ #
+ # As this is a sub-template that is called by the macros.js file,
+ # calls to other defined macros do not need to be pre-pended with
+ # `macros`
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #
+ # Also expects the following variables to be set:
+ # build_test_pxf_combinations - the full set config dictionaries
+ # environment                 - either prod or dev depending on pipeline setting
+ #}
 
 {% do x.update({'job_name': 'publish-pxf-artifacts-to-gp-releng'}) %}
 - name: [[x.job_name]]

@@ -20,7 +20,8 @@
     - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
     - get: singlecluster
       resource: singlecluster-hdp2
-{% for i in range(1, x.num_versions) %}{# start at 1 because all previous testing was done using latest-0 #}
+{# start at 1 because all previous testing was done using latest-0 #}
+{% for i in range(1, x.num_versions) %}
     - get: gpdb_package_latest-[[i]]
       resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-[[i]]
 {% endfor %}

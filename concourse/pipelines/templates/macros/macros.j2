@@ -1,11 +1,11 @@
 {#
-  Macro that takes an array of config dictionaries, iterated over them and for each swimlane:
+  Macro that takes an array of config dictionaries, iterates over them and for each swimlane:
   - creates a dictionary with the original attributes
   - adds derived attributes to the dictionary
   - passes this dictionary in a callback method to the caller
   - renders the result of a callback method
 
-  Each config in the input parameter array is a dictionary with the folowing attributes:
+  Each config in the input parameter array is a dictionary with the following attributes:
   - 'gp_ver'   : major Greenplum version
   - 'build_os' : the name of the OS for building PXF artifacts
   - 'test_os'  : the name of the OS for testing  PXF artifacts
@@ -58,6 +58,15 @@
     {% endfor %}
 {% endmacro %}
 
+{#
+  Macro that takes an array of config dictionaries, iterates over them and determines
+  the set of supported Greenplum versions.
+  The for each supported Greenplum version, it does the following:
+    - creates a dictionary with one attribute
+       - 'gp_ver'   : major Greenplum version
+    - passes this dictionary in a callback method to the caller
+    - renders the result of a callback method
+#}
 {% macro for_supported_gp_vers(configs) %}
     {% set supported_gp_vers = configs | map(attribute='gp_ver') | list | unique %}
     {% for gp_ver in supported_gp_vers %}
@@ -68,6 +77,15 @@
     {% endfor %}
 {% endmacro %}
 
+{#
+  Macro that takes an array of config dictionaries, iterates over them and determines
+  the set of supported Greenplum versions.
+  The for each supported Greenplum version, it does the following:
+    - creates a dictionary with one attribute
+       - 'gp_ver'   : major Greenplum version
+    - passes this dictionary in a callback method to the caller
+    - renders the result of a callback method
+#}
 {% macro set_num_versions(x, gp5_val, gp6_val, gp7_val) %}
     {% if x.gp_ver == '5' %}
         {% set num_versions = gp5_val | int %}

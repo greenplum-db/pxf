@@ -4,6 +4,21 @@
 {# import macros to use in this template #}
 {% import "macros/macros.j2" as macros %}
 
+{# Define global namespace to track jobs that were added to the pipeline
+# the variable set here will become populated as the pipeline is set
+#
+# all      - will contain all jobs created by this pipeline
+# tests    - a dictionary where the 3 keys are a subset of tests needed for passing conditions
+#            The three keys are the following
+#              - 'basic' - the initial set of testing jobs (used by the testing gate)
+#              - 'extended' - the set of extended tests (used by the compatibility gate)
+#              - 'backward_compatibility' - all backward compatibility tests (used by the promotion gate)
+#
+# The following variables get reset after each gate in anticipation of the next gate:
+# images        - a dictionary where the image name is the key and the value is a list of tests the image has passed
+# tarballs      - a dictionary where the tarball name is the key and the value is a list of tests the tarball has passed
+# gpdb_packages - a dictionary where the Greenplum package name is the key and the value is a list of tests it has passed
+#}
 {% set job_names = namespace(all=[], tests={'basic':[], 'extended':[], 'backward_compatibility':[]}, images={}, tarballs={}, gpdb_packages={}) %}
 
 {# define supported test features (single-cluster test jobs) and whether their testing is requested by the Makefile via context variables #}
@@ -56,6 +71,7 @@
 {# define whether IPA should be used #}
 {% set use_ipa = true %}
 
+{# ensure that there are no jobs initially in the list, additionally, initialize any necessary lists #}
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
 ## ======================================================================

@@ -1,5 +1,6 @@
 {# Template for a Slack notification resource definition.
  #
+ # Expects a 'slack_alert_name' variable to be set
  # Expects a 'url_key' variable to be set
  #}
 

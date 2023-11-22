@@ -7,8 +7,9 @@
  #                   and the default is set to 1 to use the latest Greenplum package (latest_0) for testing
  #}
 
-{# include Greenplum package only if both build and test platform are the same to avoid duplicates #}
-{# for example, the 'oel7' test platform does not have an 'oel7' build job and uses 'centos7' artifacts #}
+{# include Greenplum package only if both build and test platform are the same to avoid duplicates
+ # for example, the 'oel7' test platform does not have an 'oel7' build job and uses 'centos7' artifacts
+ #}
 {% if x.build_platform == x.test_platform %}
 {% for i in range(0, x.num_versions) %}
 - name: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-[[i]]
