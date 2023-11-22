@@ -34,11 +34,13 @@
             {% do x.update({'pkg_arch': 'amd64'}) %}
             {% do x.update({'release_platform': 'ubuntu' ~ x.os_ver}) %}
             {% do x.update({'pxf_platform_infix': '-'}) %}
+            {% do x.update({'pxf_release_repackage_image': 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.build_platform ~ '-image' }) %}
         {% else %} {# other operating systems: centos, rocky and oel #}
             {% do x.update({'pkg_type': 'rpm'}) %}
             {% do x.update({'pkg_arch': 'x86_64'}) %}
             {% do x.update({'release_platform': 'el' ~ x.os_ver}) %}
             {% do x.update({'pxf_platform_infix': '.'}) %}
+            {% do x.update({'pxf_release_repackage_image': 'rpmrebuild-' ~ x.build_platform ~ '-image' }) %}
         {% endif %}
 
         {# adjust Greenplum release platform due to historical inconsistencies #}

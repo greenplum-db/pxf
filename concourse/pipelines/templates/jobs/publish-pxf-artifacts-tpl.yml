@@ -1,9 +1,9 @@
 {# Template for the PXF publish job definition.
  #
  # As this is a sub-template that is called by the macros.js file,
- # calls to other defined macros do not need to be pre-pended with
- # `macros` as the entire macros file is already in scope from the
- # calling location.
+ # calls in this file to other defined macros do not need to be
+ # pre-pended with `macros` as the entire macros file is already
+ # in scope from the calling location.
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #
@@ -40,11 +40,7 @@
 {% call(x) for_each_config(build_test_pxf_combinations) %}
     {% if x.test_os != 'oel' %}
   - task: add-osl-file-to-pxf-gp[[x.gp_ver]]-[[x.pkg_type]]-[[x.test_platform]]
-    {% if x.test_os != 'ubuntu' %}
-    image: rpmrebuild-[[x.test_platform]]-image
-    {% else %}
-    image: gpdb6-pxf-dev-ubuntu18.04-image
-    {% endif %}
+    image: [[x.pxf_release_repackage_image]]
     file: pxf_src/concourse/tasks/add_osl_[[x.pkg_type]].yml
     params:
       GP_VER: [[x.gp_ver]]
@@ -53,12 +49,11 @@
     {% endif %}
     {% endif %}
 {% endcall %}
-{% call(x) for_supported_gp_vers(build_test_pxf_combinations) %}
-    {# we only generate the tarball for gp5, gp6 centos7 builds #}
-    {% if x.gp_ver != '7' %}
-  - task: generate-pxf-binary-tarball-from-pxf-gp[[x.gp_ver]]-centos7-rpm
-    file: pxf_src/concourse/tasks/generate_tarball_from_rpm.yml
-    image: rpmrebuild-centos7-image
+{% call(x) for_each_config(build_test_pxf_combinations) %}
+    {% if x.generate_release_tarball is sameas true %}
+  - task: generate-pxf-binary-tarball-from-pxf-gp[[x.gp_ver]]-[[x.test_platform]]-rpm
+    file: pxf_src/concourse/tasks/generate_tarball_from_[[x.pkg_type]].yml
+    image: [[x.pxf_release_repackage_image]]
     params:
       GP_VER: [[x.gp_ver]]
     {% endif %}
