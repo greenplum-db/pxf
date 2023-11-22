@@ -30,7 +30,7 @@
     - get: ccp-7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
-      resource: singlecluster-[[default_distro]]
+      resource: singlecluster-[[x.distro]]
   - put: terraform-gpdb
     params:
       action: create
@@ -81,7 +81,7 @@
       INSTALL_GPHDFS: false
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       SKIP_HADOOP_SETUP: true
-  - task: test-pxf-gp[[x.gp_ver]]-ext-file-no-impers-[[x.test_platform]]
+  - task: [[x.job_name]]
     on_success:
       <<: *destroy_gpdb_cluster
     privileged: true

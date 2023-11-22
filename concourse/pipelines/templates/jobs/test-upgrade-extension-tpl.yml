@@ -29,7 +29,7 @@
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: test-pxf-gp[[x.gp_ver]]-hdp2-new-extension-[[x.test_platform]]
+  - task: [[x.job_name]]
     file: pxf_src/concourse/tasks/upgrade_extension.yml
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
     params:

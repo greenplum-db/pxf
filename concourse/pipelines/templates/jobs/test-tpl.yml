@@ -57,7 +57,7 @@
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-[[x.distro]]
-  - task: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]][[feature_infix]][[impers_infix]]-[[x.test_platform]]
+  - task: [[x.job_name]]
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
 {% if x.distro == 'cdh' %}

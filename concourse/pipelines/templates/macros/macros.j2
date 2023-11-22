@@ -52,6 +52,9 @@
         {% do x.update({'pxf_fdw_tarball_filename_regex': 'pxf-fdw-gp' ~ x.gp_ver ~ '-*' ~ x.pxf_platform_infix ~ x.release_platform ~ '.tar.gz'}) %}
 
         {% do x.update({'pxf_release_package_filename_regex': 'pxf-gp' ~ x.gp_ver ~ '-(.*)-2' ~ x.pxf_platform_infix ~ x.release_platform ~ x.pxf_platform_infix ~ x.pkg_arch ~ x.pxf_platform_infix ~ x.pkg_type }) %}
+        {% if x.generate_release_tarball is sameas true %}
+            {% do x.update({'pxf_release_tarball_filename_regex': 'pxf-gp' ~ x.gp_ver ~ '-(.*)-' ~ x.release_platform ~ x.pxf_platform_infix ~ x.pkg_arch ~ '.tar.gz'}) %}
+        {% endif %}
 
         {# render the result of callback passing the resulting context specific to this loop iteration #}
 [[caller(x)]]
@@ -157,16 +160,8 @@
 {% endmacro %}
 
 {# ----- JOB macros ----- #}
-{% macro job_group(name, list) %}
-- name: [[name]]
-  jobs:
-  {% for test in list if name in test %}
-  - [[test]]
-  {% endfor %}
-  - testing-gate-for-pxf-gp
-  - compatibility-gate-for-pxf-gp
-  - promote-pxf-artifacts
-  - publish-pxf-artifacts-to-gp-releng
+{% macro job_group(name, job_list) %}
+    {% include 'jobs/job-groups-tpl.yml' %}
 {% endmacro %}
 
 {% macro reset_passed_jobs(configs, job_names) %}
@@ -180,7 +175,8 @@
     {% endcall %}
 {% endmacro %}
 
-{% macro add_passing_job(x, job_names, extra_list_name) %}
+{% macro add_test_job(file_name, x, job_names, extra_list_name) %}
+    {% include file_name %}
     {% set job_names.all = job_names.all + [x.job_name] %}
 
     {% set image_resource_name = 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform ~ '-image' %}
@@ -195,7 +191,7 @@
     {% do job_names.tests.update({extra_list_name: job_names.tests[extra_list_name] + [x.job_name]}) %}
 {% endmacro %}
 
-{% macro add_job(file_name, job_names, env_var, build_test_pxf_combinations) %}
+{% macro add_gate_job(file_name, job_names, env_var, build_test_pxf_combinations) %}
     {% set x = dict() %}
     {% set environment = env_var %}
     {% include file_name %}

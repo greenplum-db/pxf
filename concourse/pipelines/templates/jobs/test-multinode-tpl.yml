@@ -196,7 +196,7 @@
       PXF_BASE_DIR: /home/gpadmin/pxf-boot
 {% endif %}
 {% endif %}{# end of upgrade if/else block #}
-  - task: test-pxf-gp[[x.gp_ver]]-[[extension]]-[[x.target]]-secure-multi-[[feature]]-[[x.test_platform]]
+  - task: [[x.job_name]]
     input_mapping:
       dataproc_env_files: dataproc_1_env_files
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image

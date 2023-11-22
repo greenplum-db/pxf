@@ -14,7 +14,7 @@
       resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
     - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.build_platform]]-image
     - get: pxf-build-dependencies
-  - task: build-pxf-gp[[x.gp_ver]]-[[x.build_platform]]
+  - task: [[x.job_name]]
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.build_platform]]-image
     file: pxf_src/concourse/tasks/build.yml
     params:
