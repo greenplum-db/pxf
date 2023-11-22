@@ -156,6 +156,10 @@ test_register_gphome_not_writable() {
   # then : it fails
   assert_not_equals "${status}" 0 "pxf cluster register (GPHOME/share/postgresql/extension not writable) should fail"
   # and : prints an useful error message
+  # on RHEL7, the error message from 'install' can include Unicode single
+  # quotes depending on what the system's locale is. this 'sed' command
+  # replaces Unicode single quotes (U+2018 & U+2019) with the ASCII equivalent.
+  result="$(echo "${result}" | sed -e "s/\xe2\x80\x98/'/" -e "s/\xe2\x80\x99/'/")"
   assert_equals "${expected_register_error_message}" "${result}" "an error message should be printed when pxf cluster register fails"
 
   for host in "${all_cluster_hosts[@]}"; do
