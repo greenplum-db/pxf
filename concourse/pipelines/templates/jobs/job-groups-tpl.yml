@@ -1,0 +1,15 @@
+{# Template for a Slack notification resource definition.
+  #
+  # Expects a 'name' variable to be set
+  # Expects a 'job_list' variable to be set
+  #}
+
+- name: [[name]]
+  jobs:
+  {% for test in job_list if name in test %}
+  - [[test]]
+  {% endfor %}
+  - testing-gate-for-pxf-gp
+  - compatibility-gate-for-pxf-gp
+  - promote-pxf-artifacts
+  - publish-pxf-artifacts-to-gp-releng
