@@ -1,10 +1,11 @@
-{# Template for a PXF build artifact resource definition. 
+{# Template for a PXF build artifact resource definition.
  #
- # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file  
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #}
-  
-{# include PXF artifact only if both build and test platform are the same to avoid duplicates #}
-{# for example, the 'oel7' test platform does not have an 'oel7' build job and uses 'centos7' artifacts #}
+
+{# include PXF artifact only if both build and test platform are the same to avoid duplicates
+ # for example, the 'oel7' test platform does not have an 'oel7' build job and uses 'centos7' artifacts
+ #}
 {% if x.build_platform == x.test_platform %}
 
 {# PXF Build Artifact #}

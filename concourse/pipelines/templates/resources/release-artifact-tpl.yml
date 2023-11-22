@@ -1,12 +1,14 @@
-{# Template for a PXF build artifact resource definition.
+{# Template for a PXF release drop artifact resource definition.
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #
+ # Also expects the following variables to be set:
+ # environment - either prod or dev depending on pipeline setting
  #}
 
 {# include Release artifact only if both build and test platform are the same to avoid duplicates #}
 {% if x.build_platform == x.test_platform %}
 
-{# Release Drop Artifact #}
 - name: pxf-gp[[x.gp_ver]]-[[x.test_platform]]-release-to-releng
   type: gcs
   source:
@@ -14,4 +16,4 @@
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb[[x.gp_ver]]/[[x.pxf_release_package_filename_regex]]
 
-{% endif %}  {# end of conditional package definitions #}
+{% endif %}

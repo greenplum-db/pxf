@@ -2,6 +2,7 @@
  #
  # PXF 6.6 is the last version containing PXF extension version 2.0.
  # We use this to test upgrading from extension version 2.0 to 2.1.
+ #
  # Does not expect any variables to be set.
  #}
 

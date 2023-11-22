@@ -1,4 +1,4 @@
-{# Template for a PXF build artifact resource definition.
+{# Template for a PXF release tarball artifact resource definition.
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #}
@@ -8,7 +8,6 @@
 {# release tarball artifacts are only needed for gp5 and gp6, we produce only rpms for gp7 #}
 {% if x.gp_ver != '7' %}
 
-{# Release Tarball Drop Artifact #}
 - name: pxf-gp[[x.gp_ver]]-tarball-release-to-releng
   type: gcs
   source:
@@ -17,4 +16,4 @@
     regexp: ((ud/pxf/common/releng-drop-path))/gpdb[[x.gp_ver]]/pxf-gp[[x.gp_ver]]-(.*)-[[x.release_platform]].[[x.pkg_arch]].tar.gz
 
 {% endif %}
-{% endif %}  {# end of conditional package definitions #}
+{% endif %}

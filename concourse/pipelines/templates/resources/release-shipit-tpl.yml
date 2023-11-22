@@ -1,3 +1,7 @@
+{# Template for the PXF shipit file resource definition.
+ #
+ # Expects an 'environment' that is either prod or dev depending on pipeline setting
+ #}
 - name: pxf-shipit-file
   type: gcs
   icon: google-drive
