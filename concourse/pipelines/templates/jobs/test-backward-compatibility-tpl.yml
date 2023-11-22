@@ -34,10 +34,10 @@
         config:
           platform: linux
           inputs:
-            - name: gpdb_package_latest-[[i]]
-            - name: pxf_src
-            - name: pxf_tarball
-            - name: singlecluster
+          - name: gpdb_package_latest-[[i]]
+          - name: pxf_src
+          - name: pxf_tarball
+          - name: singlecluster
           params:
             GPDB_PKG_DIR: gpdb_package_latest-[[i]]
             GROUP: HdfsSmokeTest,WritableSmokeTest

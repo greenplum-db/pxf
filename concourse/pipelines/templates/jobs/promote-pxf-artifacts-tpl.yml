@@ -25,9 +25,9 @@
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
     config:
       inputs:
-        - name: pxf_src
+      - name: pxf_src
 {% for tarball in job_names.tarballs.keys() | list %}
-        - name: [[tarball]]
+      - name: [[tarball]]
 {% endfor %}
       platform: linux
       run:

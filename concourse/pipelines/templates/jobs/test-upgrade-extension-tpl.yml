@@ -11,30 +11,30 @@
 {% do x.update({'job_name': 'test-pxf-gp' ~ x.gp_ver ~ '-ext-hdp2-upgrade-extension-' ~ x.test_platform}) %}
 - name: [[x.job_name]]
   plan:
-    - in_parallel:
-        - get: pxf_src
-          resource: pxf-src
-          passed: [[passed]]
-          trigger: true
-        - get: pxf_package
-          resource: pxf6_6-gp[[x.gp_ver]]-[[x.release_platform]]-released   # for upgrade test
-        - get: pxf_tarball
-          resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
-          passed: [[passed]]
-        - get: gpdb_package
-          resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-rpm-latest-0
-          passed: [[passed]]
-        - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
-          passed: [[passed]]
-        - get: pxf-automation-dependencies
-        - get: singlecluster
-          resource: singlecluster-hdp2
-    - task: test-pxf-gp[[x.gp_ver]]-hdp2-new-extension-[[x.test_platform]]
-      file: pxf_src/concourse/tasks/upgrade_extension.yml
-      image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
-      params:
-        ACCESS_KEY_ID: ((tf-machine-access-key-id))
-        GP_VER: [[x.gp_ver]]
-        GROUP: pxfExtensionVersion2
-        SECOND_GROUP: pxfExtensionVersion2_1
-        SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf-src
+      passed: [[passed]]
+      trigger: true
+    - get: pxf_package
+      resource: pxf6_6-gp[[x.gp_ver]]-[[x.release_platform]]-released   # for upgrade test
+    - get: pxf_tarball
+      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+      passed: [[passed]]
+    - get: gpdb_package
+      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-rpm-latest-0
+      passed: [[passed]]
+    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+      passed: [[passed]]
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: test-pxf-gp[[x.gp_ver]]-hdp2-new-extension-[[x.test_platform]]
+    file: pxf_src/concourse/tasks/upgrade_extension.yml
+    image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GP_VER: [[x.gp_ver]]
+      GROUP: pxfExtensionVersion2
+      SECOND_GROUP: pxfExtensionVersion2_1
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
