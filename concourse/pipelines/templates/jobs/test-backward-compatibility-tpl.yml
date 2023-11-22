@@ -6,10 +6,8 @@
   #}
 {% if x.build_platform == x.test_platform %}
 
-{% set name = 'test-pxf-gp' ~ x.gp_ver ~ '-backward-compatibility-' ~ x.test_platform %}
-{% do x.update({'job_name': name}) %}
-
-- name: [[name]]
+{% do x.update({'job_name': 'test-pxf-gp' ~ x.gp_ver ~ '-backward-compatibility-' ~ x.test_platform}) %}
+- name: [[x.job_name]]
   plan:
   - in_parallel:
     - get: pxf_src

@@ -1,6 +1,5 @@
-{% set name = 'compatibility-gate-for-pxf-gp' %}
-{% do x.update({'job_name': name}) %}
-- name: [[name]]
+{% do x.update({'job_name': 'compatibility-gate-for-pxf-gp'}) %}
+- name: [[x.job_name]]
   plan:
   - in_parallel:
     - get: pxf-src

@@ -3,9 +3,8 @@
   # Calls to macros in this file do not need to be pre-pended with `macros`
   #}
 
-{% set name = 'publish-pxf-artifacts-to-gp-releng' %}
-{% do x.update({'job_name': name}) %}
-- name: [[name]]
+{% do x.update({'job_name': 'publish-pxf-artifacts-to-gp-releng'}) %}
+- name: [[x.job_name]]
   plan:
   - in_parallel:
     - get: pxf_src
@@ -23,10 +22,10 @@
     image: google-cloud-sdk-slim-image
     file: pxf_src/concourse/tasks/get_pxf_release_artifacts.yml
     params:
-      GCS_ODP_PATH: [[ environment ]]/ODP
-      GCS_OSL_PATH: [[ environment ]]/OSL
+      GCS_ODP_PATH: [[environment]]/ODP
+      GCS_OSL_PATH: [[environment]]/OSL
       GCS_RELEASES_BUCKET: ((ud/pxf/common/releases-bucket-name))
-      GCS_RELEASES_PATH: [[ environment ]]/releases
+      GCS_RELEASES_PATH: [[environment]]/releases
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
   #  - in_parallel: does not work since all tasks modify pxf_artifacts
 {% call(x) for_each_config(build_test_pxf_combinations) %}
@@ -63,9 +62,9 @@
       PXF_ODP_FILE_PREFIX: ((ud/pxf/common/odp-file-prefix))
       PXF_SLACK_CHANNEL_NAME: ((ud/pxf/common/slack-channel-name))
       PXF_SLACK_CHANNEL_LINK: ((ud/pxf/secrets/slack-channel-link))
-      RELENG_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-drop-path))
-      RELENG_OSL_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-osl-drop-path))
-      RELENG_ODP_DROP_URL: gs://((ud/pxf/[[ environment ]]/releng-drop-bucket-name))/((ud/pxf/common/releng-odp-drop-path))
+      RELENG_DROP_URL: gs://((ud/pxf/[[environment]]/releng-drop-bucket-name))/((ud/pxf/common/releng-drop-path))
+      RELENG_OSL_DROP_URL: gs://((ud/pxf/[[environment]]/releng-drop-bucket-name))/((ud/pxf/common/releng-osl-drop-path))
+      RELENG_ODP_DROP_URL: gs://((ud/pxf/[[environment]]/releng-drop-bucket-name))/((ud/pxf/common/releng-odp-drop-path))
   - in_parallel:
 {% call(x) for_each_config(build_test_pxf_combinations) %}
     {% if x.build_platform == x.test_platform %}

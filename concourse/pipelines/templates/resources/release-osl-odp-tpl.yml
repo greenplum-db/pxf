@@ -6,13 +6,13 @@
 - name: pxf-gp[[x.gp_ver]]-osl-to-releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
+    bucket: ((ud/pxf/[[environment]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-osl-drop-path))/gpdb[[x.gp_ver]]/((ud/pxf/common/osl-file-prefix))_(.*)_GA.txt
 
 - name: pxf-gp[[x.gp_ver]]-odp-to-releng
   type: gcs
   source:
-    bucket: ((ud/pxf/[[ environment ]]/releng-drop-bucket-name))
+    bucket: ((ud/pxf/[[environment]]/releng-drop-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((ud/pxf/common/releng-odp-drop-path))/gpdb[[x.gp_ver]]/((ud/pxf/common/odp-file-prefix))-(.*)-ODP.tar.gz
