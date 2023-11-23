@@ -128,7 +128,7 @@ resources:
 
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    [[macros.set_num_versions(x, num_gpdb5_versions, num_gpdb6_versions, num_gpdb7_versions)]]
+    {% do x.update({'num_versions': gp_num_versions[x.gp_ver]}) %}
     {% include 'resources/greenplum-package-tpl.yml' %}
 {% endcall %}
 

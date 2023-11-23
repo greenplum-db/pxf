@@ -66,7 +66,7 @@
 {#
   Macro that takes an array of config dictionaries, iterates over them and determines
   the set of supported Greenplum versions.
-  The for each supported Greenplum version, it does the following:
+  Then for each supported Greenplum version, it does the following:
     - creates a dictionary with one attribute
        - 'gp_ver'   : major Greenplum version
     - passes this dictionary in a callback method to the caller
@@ -80,28 +80,6 @@
         {# render the result of callback passing the resulting context specific to this loop iteration #}
 [[caller(x)]]
     {% endfor %}
-{% endmacro %}
-
-{#
-  Macro that takes an array of config dictionaries, iterates over them and determines
-  the set of supported Greenplum versions.
-  The for each supported Greenplum version, it does the following:
-    - creates a dictionary with one attribute
-       - 'gp_ver'   : major Greenplum version
-    - passes this dictionary in a callback method to the caller
-    - renders the result of a callback method
-#}
-{% macro set_num_versions(x, gp5_val, gp6_val, gp7_val) %}
-    {% if x.gp_ver == '5' %}
-        {% set num_versions = gp5_val | int %}
-    {% elif x.gp_ver == '6' %}
-        {% set num_versions = gp6_val | int %}
-    {% elif x.gp_ver == '7' %}
-        {% set num_versions = gp7_val | int %}
-    {% else %}
-        {% set num_versions = 1 %}
-    {% endif %}
-    {% do x.update({'num_versions': num_versions}) %}
 {% endmacro %}
 
 {# ----- ANCHOR macros ----- #}
@@ -179,7 +157,7 @@
 
 {% macro add_test_job(file_name, x, job_names, extra_list_name) %}
     {% include file_name %}
-    {% set job_names.all = job_names.all + [x.job_name] %}
+    {% do job_names.all.append(x.job_name) %}
 
     {% set image_resource_name = 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform ~ '-image' %}
     {% do job_names.images.update({image_resource_name: job_names.images[image_resource_name] + [x.job_name]}) %}
@@ -194,8 +172,13 @@
 {% endmacro %}
 
 {% macro add_gate_job(file_name, job_names, env_var, build_test_pxf_combinations) %}
+    {% set supported_build_platforms={}%}
+    {% call(x) for_each_config(build_test_pxf_combinations) %}
+        {% do supported_build_platforms.update({ x.build_platform : x.pxf_release_repackage_image}) %}
+    {% endcall %}
+    {# set a fake dictionary so that the job can populate the job_name #}
     {% set x = dict() %}
     {% set environment = env_var %}
     {% include file_name %}
-    {% set job_names.all = job_names.all + [x.job_name] %}
+    {% do job_names.all.append(x.job_name) %}
 {% endmacro %}

@@ -65,6 +65,8 @@
 {% set default_distro = 'hdp2' %}
 {% set default_impers = 'true' %}
 
+{% set gp_num_versions = { '5': num_gpdb5_versions, '6': num_gpdb6_versions, '7': num_gpdb7_versions} %}
+
 {# ensure that there are no jobs initially in the list, additionally, initialize any necessary lists #}
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -142,7 +144,7 @@ resources:
 
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    [[macros.set_num_versions(x, num_gpdb5_versions, num_gpdb6_versions, num_gpdb7_versions)]]
+    {% do x.update({'num_versions': gp_num_versions[x.gp_ver]}) %}
     {% include 'resources/greenplum-package-tpl.yml' %}
 {% endcall %}
 
@@ -297,7 +299,7 @@ jobs:
 
 ## ---------- Compatibility Testing ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    [[macros.set_num_versions(x, num_gpdb5_versions, num_gpdb6_versions, num_gpdb7_versions)]]
+    {% do x.update({'num_versions': gp_num_versions[x.gp_ver]}) %}
     {# number of backwards compatibility tasks that can run at once #}
     {% do x.update({'max_concurrent_bc_tasks': 3}) %}
     {% if x.test_os != 'oel' %}
@@ -319,10 +321,15 @@ groups:
   jobs:
     [[job_names.all]]
 
-[[macros.job_group('centos7', job_names.all)]]
-[[macros.job_group('oel7', job_names.all)]]
-[[macros.job_group('rocky8', job_names.all)]]
-[[macros.job_group('ubuntu18.04', job_names.all)]]
+{% set supported_test_platforms = [] %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_plaform not in supported_test_platforms %}
+        {% do supported_test_platforms.append(x.test_platform) %}
+    {% endif%}
+{% endcall %}
+{% for platform in supported_test_platforms %}
+    [[macros.job_group(platform, job_names.all)]]
+{% endfor %}
 
 {% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
     [[macros.job_group('gp' ~ x.gp_ver, job_names.all)]]

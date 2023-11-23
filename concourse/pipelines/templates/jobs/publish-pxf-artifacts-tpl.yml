@@ -10,6 +10,8 @@
  # Also expects the following variables to be set:
  # build_test_pxf_combinations - the full set config dictionaries
  # environment                 - either prod or dev depending on pipeline setting
+ # supported_build_platforms   - a dictionary containing the set of supported build platforms
+ #                               and the values are the images needed for release repackaging
  #}
 
 {% do x.update({'job_name': 'publish-pxf-artifacts-to-gp-releng'}) %}
@@ -24,9 +26,9 @@
       resource: pxf-shipit-file
       trigger: true
     - get: google-cloud-sdk-slim-image
-    - get: rpmrebuild-centos7-image
-    - get: rpmrebuild-rocky8-image
-    - get: gpdb6-pxf-dev-ubuntu18.04-image
+{% for build_platform in supported_build_platforms.keys() %}
+    - get: [[supported_build_platforms[build_platform]]]
+{% endfor %}
   - task: get-pxf-gp5-and-pxf-gp6-artifacts-from-releases-directory
     image: google-cloud-sdk-slim-image
     file: pxf_src/concourse/tasks/get_pxf_release_artifacts.yml
