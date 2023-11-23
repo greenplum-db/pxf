@@ -67,6 +67,15 @@
 
 {% set gp_num_versions = { '5': num_gpdb5_versions, '6': num_gpdb6_versions, '7': num_gpdb7_versions} %}
 
+{% set supported_test_platforms = [] %}
+{% set supported_build_platforms = {} %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.test_platform not in supported_test_platforms %}
+        {% do supported_test_platforms.append(x.test_platform) %}
+    {% endif%}
+    {% do supported_build_platforms.update({ x.build_platform : x.pxf_release_repackage_image}) %}
+{% endcall %}
+
 {# ensure that there are no jobs initially in the list, additionally, initialize any necessary lists #}
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -129,8 +138,11 @@ resources:
     {% include 'resources/pxf-test-image-tpl.yml' %}
 {% endcall %}
 
-    [[macros.resource_registry_image('rpmrebuild-centos7-image', 'gcr.io/data-gpdb-ud/rpmrebuild-centos7', 'latest')]]
-    [[macros.resource_registry_image('rpmrebuild-rocky8-image', 'gcr.io/data-gpdb-ud/rpmrebuild-rocky8', 'latest')]]
+{% for build_platform in supported_build_platforms.keys() %}
+    {% if build_platform != 'ubuntu18.04' %}
+    [[macros.resource_registry_image('rpmrebuild-' ~ build_platform ~ '-image', 'gcr.io/data-gpdb-ud/rpmrebuild-' ~ build_platform, 'latest')]]
+    {% endif %}
+{% endfor %}
 
     [[macros.resource_registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
 
@@ -199,7 +211,7 @@ jobs:
 {% endcall %}
 
 ## ---------- Testing Gate ----------
-[[macros.add_gate_job('jobs/testing-gate-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
+[[macros.add_gate_job('jobs/testing-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, supported_build_platforms)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -281,7 +293,7 @@ jobs:
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         [[macros.add_test_job('jobs/test-multinode-tpl.yml', x, job_names, 'extended')]]
     {% endif %}
-    {# multinode no impersonation job for now will only be for GP6 and Centos7 #}
+    {# multinode no impersonation job for now will only be for GP6 with Centos7 #}
     {% if x.test_multi is sameas true and x.gp_ver == '6' and x.test_platform == 'centos7' %}
         {% do x.update({'use_fdw': 'false'}) %}
         {% do x.update({'use_impers': 'false'}) %}
@@ -293,7 +305,7 @@ jobs:
 {% endcall %}
 
 ## ---------- Compatibility Gate ----------
-[[macros.add_gate_job('jobs/compatibility-gate-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
+[[macros.add_gate_job('jobs/compatibility-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, supported_build_platforms)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -308,10 +320,10 @@ jobs:
 {% endcall %}
 
 ## ---------- Artifact Promotion Gate ----------
-[[macros.add_gate_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
+[[macros.add_gate_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, supported_build_platforms)]]
 
 ## ---------- Artifact Publication Gate ----------
-[[macros.add_gate_job('jobs/publish-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations)]]
+[[macros.add_gate_job('jobs/publish-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, supported_build_platforms)]]
 
 ## ======================================================================
 ## GROUPS
@@ -321,12 +333,6 @@ groups:
   jobs:
     [[job_names.all]]
 
-{% set supported_test_platforms = [] %}
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.test_plaform not in supported_test_platforms %}
-        {% do supported_test_platforms.append(x.test_platform) %}
-    {% endif%}
-{% endcall %}
 {% for platform in supported_test_platforms %}
     [[macros.job_group(platform, job_names.all)]]
 {% endfor %}

@@ -6,8 +6,6 @@
  # environment - either prod or dev depending on pipeline setting
  #}
 
-{# release tarball artifacts are only needed for gp5 and gp6, we produce only rpms for gp7 #}
-
 - name: pxf-gp[[x.gp_ver]]-tarball-release-to-releng
   type: gcs
   source:

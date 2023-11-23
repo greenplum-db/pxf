@@ -171,11 +171,7 @@
     {% do job_names.tests.update({extra_list_name: job_names.tests[extra_list_name] + [x.job_name]}) %}
 {% endmacro %}
 
-{% macro add_gate_job(file_name, job_names, env_var, build_test_pxf_combinations) %}
-    {% set supported_build_platforms={}%}
-    {% call(x) for_each_config(build_test_pxf_combinations) %}
-        {% do supported_build_platforms.update({ x.build_platform : x.pxf_release_repackage_image}) %}
-    {% endcall %}
+{% macro add_gate_job(file_name, job_names, env_var, build_test_pxf_combinations, supported_build_platforms) %}
     {# set a fake dictionary so that the job can populate the job_name #}
     {% set x = dict() %}
     {% set environment = env_var %}
