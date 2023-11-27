@@ -2,16 +2,16 @@
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #
- # x.num_versions  - a value that determines the number of Greenplum packages needed for testing
- #                   this resource is used for backward compatibility testing against previous Greenplum packages
- #                   and the default is set to 1 to use the latest Greenplum package (latest_0) for testing
+ # x.gp_num_versions  - a value that determines the number of Greenplum packages needed for testing
+ #                      this resource is used for backward compatibility testing against previous Greenplum packages
+ #                      and the default is set to 1 to use the latest Greenplum package (latest_0) for testing
  #}
 
 {# include Greenplum package only if both build and test platform are the same to avoid duplicates
  # for example, the 'oel7' test platform does not have an 'oel7' build job and uses 'centos7' artifacts
  #}
 {% if x.build_platform == x.test_platform %}
-{% for i in range(0, x.num_versions) %}
+{% for i in range(0, x.gp_num_versions) %}
 - name: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-[[i]]
   type: gcs
   icon: google-drive

@@ -50,6 +50,7 @@
             {% do x.update({'greenplum_platform': x.release_platform}) %}
         {% endif %}
 
+        {# create known filename regexes #}
         {% do x.update({'pxf_tarball_filename_regex':     'pxf-gp'     ~ x.gp_ver ~ '-*' ~ x.pxf_platform_infix ~ x.release_platform ~ '.tar.gz'}) %}
         {% do x.update({'pxf_fdw_tarball_filename_regex': 'pxf-fdw-gp' ~ x.gp_ver ~ '-*' ~ x.pxf_platform_infix ~ x.release_platform ~ '.tar.gz'}) %}
 
@@ -140,7 +141,7 @@
 {% endmacro %}
 
 {# ----- JOB macros ----- #}
-{% macro job_group(name, job_list) %}
+{% macro job_group(group_name, job_list) %}
     {% include 'jobs/job-groups-tpl.yml' %}
 {% endmacro %}
 
@@ -171,7 +172,7 @@
     {% do job_names.tests.update({extra_list_name: job_names.tests[extra_list_name] + [x.job_name]}) %}
 {% endmacro %}
 
-{% macro add_gate_job(file_name, job_names, env_var, build_test_pxf_combinations, supported_build_platforms) %}
+{% macro add_gate_job(file_name, job_names, env_var, build_test_pxf_combinations, pxf_release_repackage_images) %}
     {# set a fake dictionary so that the job can populate the job_name #}
     {% set x = dict() %}
     {% set environment = env_var %}

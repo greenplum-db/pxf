@@ -5,7 +5,7 @@
 {% import "macros/macros.j2" as macros %}
 
 {# Define global namespace to track jobs that were added to the pipeline
-# the variable set here will become populated as the pipeline is set
+# the variables set here will become populated as the pipeline is set
 #
 # all      - will contain all jobs created by this pipeline
 # tests    - a dictionary where the 3 keys are a subset of tests needed for passing conditions
@@ -67,14 +67,24 @@
 
 {% set gp_num_versions = { '5': num_gpdb5_versions, '6': num_gpdb6_versions, '7': num_gpdb7_versions} %}
 
+{# Build a list of supported test platforms using the configuration matrix above
+# This will also separately build a list of release repackages images needed for each platform.
+#
+# As we do not produce an OEL artifact, the pxf_release_repackage_images dictionary will not
+# have an entry for OEL. However, it is considered a supported test platform.
+#}
 {% set supported_test_platforms = [] %}
-{% set supported_build_platforms = {} %}
+{% set pxf_release_repackage_images = {} %}
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_platform not in supported_test_platforms %}
-        {% do supported_test_platforms.append(x.test_platform) %}
+    {# get the list of all platforms that we test against #}
+    {% do supported_test_platforms.append(x.test_platform) %}
     {% endif%}
-    {% do supported_build_platforms.update({ x.build_platform : x.pxf_release_repackage_image}) %}
+
+    {# get the list of all platforms that we build against and the image needed release repackaging on that platform #}
+    {% do pxf_release_repackage_images.update({ x.build_platform : x.pxf_release_repackage_image}) %}
 {% endcall %}
+{% set supported_build_platforms = pxf_release_repackage_images.keys() | list %}
 
 {# ensure that there are no jobs initially in the list, additionally, initialize any necessary lists #}
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
@@ -138,7 +148,7 @@ resources:
     {% include 'resources/pxf-test-image-tpl.yml' %}
 {% endcall %}
 
-{% for build_platform in supported_build_platforms.keys() %}
+{% for build_platform in supported_build_platforms %}
     {% if build_platform != 'ubuntu18.04' %}
     [[macros.resource_registry_image('rpmrebuild-' ~ build_platform ~ '-image', 'gcr.io/data-gpdb-ud/rpmrebuild-' ~ build_platform, 'latest')]]
     {% endif %}
@@ -156,7 +166,7 @@ resources:
 
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% do x.update({'num_versions': gp_num_versions[x.gp_ver]}) %}
+    {% do x.update({'gp_num_versions': gp_num_versions[x.gp_ver]}) %}
     {% include 'resources/greenplum-package-tpl.yml' %}
 {% endcall %}
 
@@ -211,7 +221,7 @@ jobs:
 {% endcall %}
 
 ## ---------- Testing Gate ----------
-[[macros.add_gate_job('jobs/testing-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, supported_build_platforms)]]
+[[macros.add_gate_job('jobs/testing-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -305,13 +315,13 @@ jobs:
 {% endcall %}
 
 ## ---------- Compatibility Gate ----------
-[[macros.add_gate_job('jobs/compatibility-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, supported_build_platforms)]]
+[[macros.add_gate_job('jobs/compatibility-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
 ## ---------- Compatibility Testing ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% do x.update({'num_versions': gp_num_versions[x.gp_ver]}) %}
+    {% do x.update({'gp_num_versions': gp_num_versions[x.gp_ver]}) %}
     {# number of backwards compatibility tasks that can run at once #}
     {% do x.update({'max_concurrent_bc_tasks': 3}) %}
     {% if x.test_os != 'oel' %}
@@ -320,10 +330,10 @@ jobs:
 {% endcall %}
 
 ## ---------- Artifact Promotion Gate ----------
-[[macros.add_gate_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, supported_build_platforms)]]
+[[macros.add_gate_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images)]]
 
 ## ---------- Artifact Publication Gate ----------
-[[macros.add_gate_job('jobs/publish-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, supported_build_platforms)]]
+[[macros.add_gate_job('jobs/publish-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images)]]
 
 ## ======================================================================
 ## GROUPS

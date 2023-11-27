@@ -8,7 +8,7 @@
 {# if x.passed was not provided, make it a build job on the same platform #}
 {% set passed = x.passed if x.passed else '[build-pxf-gp' ~ x.gp_ver ~ '-' ~ x.build_platform ~ ']' %}
 
-{% do x.update({'job_name': 'test-pxf-gp' ~ x.gp_ver ~ '-file-no-impers-' ~ x.test_platform}) %}
+{% do x.update({'job_name': 'test-pxf-gp' ~ x.gp_ver ~ '-ext-file-no-impers-' ~ x.test_platform}) %}
 - name: [[x.job_name]]
   max_in_flight: 2
   plan:

@@ -63,7 +63,6 @@ longevity: set-longevity-pipeline
 .PHONY: set-build-pipeline
 set-build-pipeline: SLACK=true
 set-build-pipeline:
-set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		environment=prod \

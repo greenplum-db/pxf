@@ -74,7 +74,7 @@
       INSTALL_GPHDFS: false
       GP_VER: [[x.gp_ver]]
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-  - task: test_pxf_cli
+  - task: [[x.job_name]]
     on_success:
       <<: *destroy_gpdb_cluster
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image

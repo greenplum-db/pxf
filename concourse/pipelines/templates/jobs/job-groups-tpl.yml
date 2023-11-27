@@ -1,13 +1,15 @@
-{# Template for a Slack notification resource definition.
-  #
-  # Expects a 'name' variable to be set
-  # Expects a 'job_list' variable to be set
-  #}
+{# Template for a job group definition.
+ #
+ # Expects a 'group_name' variable to be set. This value is both the name of the job and also the filter condition
+ # which determines the list of jobs to add to the group
+ # Expects a 'job_list' variable to be set. This should be the full list of jobs in the pipeline.
+ #}
 
-- name: [[name]]
+- name: [[group_name]]
   jobs:
-  {% for test in job_list if name in test %}
-  - [[test]]
+  {# only add the job to the list if the job_name contains the name of the group #}
+  {% for job_name in job_list if group_name in job_name %}
+  - [[job_name]]
   {% endfor %}
   - testing-gate-for-pxf-gp
   - compatibility-gate-for-pxf-gp
