@@ -11,21 +11,21 @@
       resource: pxf-src
       trigger: true
     - get: gpdb_package
-      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
-    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.build_platform]]-image
+      resource: [[x.gpdb_package_resource_name]]
+    - get: [[x.build_image_resource_name]]
     - get: pxf-build-dependencies
   - task: [[x.job_name]]
-    image: gpdb[[x.gp_ver]]-pxf-dev-[[x.build_platform]]-image
+    image: [[x.build_image_resource_name]]
     file: pxf_src/concourse/tasks/build.yml
     params:
       LICENSE: ((ud/pxf/common/rpm-license))
       VENDOR: ((ud/pxf/common/[[x.pkg_type]]-vendor))
-  - put: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+  - put: [[x.pxf_tarball_resource_name]]
     params:
       file: dist/[[x.pxf_tarball_filename_regex]]
 {# PXF FDW Build Artifact for GP6 only (since PXF FDW extension is not packaged into pxf-gp6 tarball) #}
 {% if x.gp_ver == '6' and x.test_fdw %}
-  - put: pxf-fdw-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+  - put: [[x.pxf_fdw_tarball_resource_name]]
     params:
       file: dist/[[x.pxf_fdw_tarball_filename_regex]]
 {% endif %}

@@ -18,12 +18,12 @@
       passed: [[passed]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+      resource: [[x.pxf_tarball_resource_name]]
       passed: [[passed]]
     - get: gpdb_package
-      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-rpm-latest-0
+      resource: [[x.gpdb_package_resource_name]]
       passed: [[passed]]
-    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    - get: [[x.test_image_resource_name]]
       passed: [[passed]]
     - get: ccp_src
       resource: ccp-src
@@ -77,7 +77,7 @@
   - task: [[x.job_name]]
     on_success:
       <<: *destroy_gpdb_cluster
-    image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    image: [[x.test_image_resource_name]]
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
 {% if slack_notification %}
     <<: *slack_alert

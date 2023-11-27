@@ -19,19 +19,19 @@
     - get: pxf_package
       resource: pxf6_6-gp[[x.gp_ver]]-[[x.release_platform]]-released   # for upgrade test
     - get: pxf_tarball
-      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+      resource: [[x.pxf_tarball_resource_name]]
       passed: [[passed]]
     - get: gpdb_package
-      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-rpm-latest-0
+      resource: [[x.gpdb_package_resource_name]]
       passed: [[passed]]
-    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    - get: [[x.test_image_resource_name]]
       passed: [[passed]]
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: [[x.job_name]]
     file: pxf_src/concourse/tasks/upgrade_extension.yml
-    image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    image: [[x.test_image_resource_name]]
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[x.gp_ver]]

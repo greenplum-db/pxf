@@ -59,6 +59,15 @@
             {% do x.update({'pxf_release_tarball_filename_regex': 'pxf-gp' ~ x.gp_ver ~ '-(.*)-' ~ x.release_platform ~ x.pxf_platform_infix ~ x.pkg_arch ~ '.tar.gz'}) %}
         {% endif %}
 
+        {# create known resource names #}
+        {% do x.update({'build_image_resource_name': 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.build_platform ~ '-image'}) %}
+        {% do x.update({'test_image_resource_name':  'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform  ~ '-image'}) %}
+        {% do x.update({'gpdb_package_resource_name': 'gpdb' ~ x.gp_ver ~ '-' ~ x.release_platform ~ '-' ~ x.pkg_type ~ '-latest-0'}) %}
+        {% do x.update({'pxf_tarball_resource_name': 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.release_platform}) %}
+        {% if x.test_fdw is sameas true %}
+            {% do x.update({'pxf_fdw_tarball_resource_name': 'pxf-fdw-gp' ~ x.gp_ver ~ '-tarball-' ~ x.release_platform}) %}
+        {% endif %}
+
         {# render the result of callback passing the resulting context specific to this loop iteration #}
 [[caller(x)]]
     {% endfor %}
@@ -147,12 +156,9 @@
 
 {% macro reset_passed_jobs(configs, job_names) %}
     {% call(x) for_each_config(configs) %}
-        {% set image_resource_name = 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform ~ '-image' %}
-        {% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.release_platform %}
-        {% set gpdb_resource_name = 'gpdb' ~ x.gp_ver ~ '-' ~ x.release_platform ~ '-' ~ x.pkg_type ~ '-latest-0'%}
-        {% do job_names.images.update({image_resource_name : []}) %}
-        {% do job_names.tarballs.update({tarball_resource_name : []}) %}
-        {% do job_names.gpdb_packages.update({gpdb_resource_name : []}) %}
+        {% do job_names.images.update({x.test_image_resource_name : []}) %}
+        {% do job_names.tarballs.update({x.pxf_tarball_resource_name : []}) %}
+        {% do job_names.gpdb_packages.update({x.gpdb_package_resource_name : []}) %}
     {% endcall %}
 {% endmacro %}
 

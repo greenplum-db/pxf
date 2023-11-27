@@ -15,9 +15,9 @@
       passed: [compatibility-gate-for-pxf-gp]
       trigger: true
     - get: pxf_tarball
+      resource: [[x.pxf_tarball_resource_name]]
       passed: [compatibility-gate-for-pxf-gp]
-      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
-    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    - get: [[x.test_image_resource_name]]
     - get: singlecluster
       resource: singlecluster-hdp2
 {# start at 1 because all previous testing was done using latest-0 #}
@@ -31,7 +31,7 @@
       steps:
 {% for i in range(1, x.gp_num_versions) %}
       - task: test-against-greenplum-latest-[[i]]-[[x.test_platform]]
-        image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+        image: [[x.test_image_resource_name]]
         config:
           platform: linux
           inputs:

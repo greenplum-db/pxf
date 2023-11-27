@@ -38,12 +38,12 @@
       resource: pxf5-gp6-el7-released   # for upgrade test
 {% endif %}
     - get: pxf_tarball
-      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+      resource: [[x.pxf_tarball_resource_name]]
       passed: [[passed]]
     - get: gpdb_package
-      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
+      resource: [[x.gpdb_package_resource_name]]
       passed: [[passed]]
-    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    - get: [[x.test_image_resource_name]]
       {# if the image was also used to build the artifact, add a 'passed' condition #}
 {% if [[x.test_platform]] == [[x.build_platform]] %}
       passed: [[passed]]
@@ -101,7 +101,7 @@
 {% endif %}
         - task: install-hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
-          image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+          image: [[x.test_image_resource_name]]
           params:
             ACCESS_KEY_ID: ((tf-machine-access-key-id))
             SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
@@ -147,7 +147,7 @@
             gcp_project: ((ud/pxf/common/ipa-google-project-id))
       - task: generate-multinode-hadoop-cluster
         file: pxf_src/concourse/tasks/install_multinode_hadoop.yml
-        image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+        image: [[x.test_image_resource_name]]
         input_mapping:
           terraform_ipa_hadoop: terraform-ipa-hadoop
         params:
@@ -199,7 +199,7 @@
   - task: [[x.job_name]]
     input_mapping:
       dataproc_env_files: dataproc_1_env_files
-    image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    image: [[x.test_image_resource_name]]
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
     params:
@@ -217,7 +217,7 @@
 {% endif %}
 {% if x.test_platform == 'centos7' %}
   - task: test-pxf-cli
-    image: gpdb[[x.gp_ver]]-pxf-dev-centos7-image
+    image: [[x.test_image_resource_name]]
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
 {% endif %}
     on_success:

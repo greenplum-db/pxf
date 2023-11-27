@@ -39,7 +39,7 @@
       passed: [[passed]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf-gp[[x.gp_ver]]-tarball-[[x.release_platform]]
+      resource: [[x.pxf_tarball_resource_name]]
       passed: [[passed]]
 {% if x.gp_ver == '6' and x.use_fdw == 'true' %}
     - get: pxf_fdw_tarball
@@ -47,9 +47,9 @@
       passed: [[passed]]
 {% endif %}
     - get: gpdb_package
-      resource: gpdb[[x.gp_ver]]-[[x.release_platform]]-[[x.pkg_type]]-latest-0
+      resource: [[x.gpdb_package_resource_name]]
       passed: [[passed]]
-    - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    - get: [[x.test_image_resource_name]]
       {# if the image was also used to build the artifact, add a 'passed' condition #}
 {% if [[x.test_platform]] == [[x.build_platform]] %}
       passed: [[passed]]
@@ -59,7 +59,7 @@
       resource: singlecluster-[[x.distro]]
   - task: [[x.job_name]]
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
+    image: [[x.test_image_resource_name]]
 {% if x.distro == 'cdh' %}
     {# CDH often fails on HBASE permission grant #}
     attempts: 3
