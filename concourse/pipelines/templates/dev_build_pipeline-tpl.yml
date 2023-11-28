@@ -51,6 +51,8 @@
 {% set default_distro = 'hdp2' %}
 {% set default_impers = 'true' %}
 
+{% set gp_num_versions = { '5': num_gpdb5_versions, '6': num_gpdb6_versions, '7': num_gpdb7_versions} %}
+
 {# define whether CCP should be used #}
 {% set use_ccp = multinode_el7 or multinode_el8 or multinode_no_impersonation or file or gp7_cli %}
 
@@ -229,6 +231,7 @@ jobs:
 ## ---------- FILE tests -----------------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_file is sameas true and file %}
+        {% do x.update({'distro': default_distro}) %}
         {% include 'jobs/test-file-tpl.yml' %}
     {% endif %}
 {% endcall %}
