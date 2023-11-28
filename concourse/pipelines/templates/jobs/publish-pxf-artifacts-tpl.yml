@@ -1,9 +1,7 @@
 {# Template for the PXF publish job definition.
  #
- # As this is a sub-template that is called by the macros.js file,
- # calls in this file to other defined macros do not need to be
- # pre-pended with `macros` as the entire macros file is already
- # in scope from the calling location.
+ # As this is a sub-template that is called by the macros.js file, calls in this file to other defined
+ # macros do not need to be pre-pended with `macros` as the entire macros file is already in scope.
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #

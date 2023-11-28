@@ -15,9 +15,10 @@
 #              - 'backward_compatibility' - all backward compatibility tests (used by the promotion gate)
 #
 # The following variables get reset after each gate in anticipation of the next gate:
-# images        - a dictionary where the image name is the key and the value is a list of tests the image has passed
-# tarballs      - a dictionary where the tarball name is the key and the value is a list of tests the tarball has passed
-# gpdb_packages - a dictionary where the Greenplum package name is the key and the value is a list of tests it has passed
+# images        - a dictionary where the image resource name is the key and the value is a list of tests the image has passed
+#                     ex: {'gpdb6-pxf-dev-centos7-image': ['test-pxf-gp6-ext-hdp2-centos7']} could be in the dictionary
+# tarballs      - a dictionary where the tarball resource name is the key and the value is a list of tests the tarball has passed
+# gpdb_packages - a dictionary where the Greenplum package resource name is the key and the value is a list of tests it has passed
 #}
 {% set job_names = namespace(all=[], tests={'basic':[], 'extended':[], 'backward_compatibility':[]}, images={}, tarballs={}, gpdb_packages={}) %}
 
