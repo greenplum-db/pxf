@@ -54,9 +54,9 @@
         {% do x.update({'pxf_tarball_filename_regex':     'pxf-gp'     ~ x.gp_ver ~ '-*' ~ x.pxf_platform_infix ~ x.release_platform ~ '.tar.gz'}) %}
         {% do x.update({'pxf_fdw_tarball_filename_regex': 'pxf-fdw-gp' ~ x.gp_ver ~ '-*' ~ x.pxf_platform_infix ~ x.release_platform ~ '.tar.gz'}) %}
 
-        {% do x.update({'pxf_release_package_filename_regex': 'pxf-gp' ~ x.gp_ver ~ '-(.*)-2' ~ x.pxf_platform_infix ~ x.release_platform ~ x.pxf_platform_infix ~ x.pkg_arch ~ x.pxf_platform_infix ~ x.pkg_type }) %}
+        {% do x.update({'pxf_release_package_filename_regex': 'pxf-gp' ~ x.gp_ver ~ '-*-2' ~ x.pxf_platform_infix ~ x.release_platform ~ x.pxf_platform_infix ~ x.pkg_arch ~ '.' ~ x.pkg_type }) %}
         {% if x.generate_release_tarball is sameas true %}
-            {% do x.update({'pxf_release_tarball_filename_regex': 'pxf-gp' ~ x.gp_ver ~ '-(.*)-' ~ x.release_platform ~ x.pxf_platform_infix ~ x.pkg_arch ~ '.tar.gz'}) %}
+            {% do x.update({'pxf_release_tarball_filename_regex': 'pxf-gp' ~ x.gp_ver ~ '-*-' ~ x.release_platform ~ x.pxf_platform_infix ~ x.pkg_arch ~ '.tar.gz'}) %}
         {% endif %}
 
         {# create known resource names #}
