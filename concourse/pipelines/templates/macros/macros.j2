@@ -166,14 +166,9 @@
     {% include file_name %}
     {% do job_names.all.append(x.job_name) %}
 
-    {% set image_resource_name = 'gpdb' ~ x.gp_ver ~ '-pxf-dev-' ~ x.test_platform ~ '-image' %}
-    {% do job_names.images.update({image_resource_name: job_names.images[image_resource_name] + [x.job_name]}) %}
-
-    {% set tarball_resource_name = 'pxf-gp' ~ x.gp_ver ~ '-tarball-' ~ x.release_platform %}
-    {% do job_names.tarballs.update({tarball_resource_name: job_names.tarballs[tarball_resource_name] + [x.job_name]}) %}
-
-    {% set gpdb_resource_name = 'gpdb' ~ x.gp_ver ~ '-' ~ x.release_platform ~ '-' ~ x.pkg_type ~ '-latest-0'%}
-    {% do job_names.gpdb_packages.update({gpdb_resource_name: job_names.gpdb_packages[gpdb_resource_name] + [x.job_name]}) %}
+    {% do job_names.images.update({x.test_image_resource_name: job_names.images[x.test_image_resource_name] + [x.job_name]}) %}
+    {% do job_names.tarballs.update({x.pxf_tarball_resource_name: job_names.tarballs[x.pxf_tarball_resource_name] + [x.job_name]}) %}
+    {% do job_names.gpdb_packages.update({x.gpdb_package_resource_name: job_names.gpdb_packages[x.gpdb_package_resource_name] + [x.job_name]}) %}
 
     {% do job_names.tests.update({extra_list_name: job_names.tests[extra_list_name] + [x.job_name]}) %}
 {% endmacro %}
