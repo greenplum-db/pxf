@@ -162,7 +162,7 @@
     {% endcall %}
 {% endmacro %}
 
-{% macro add_test_job(file_name, x, job_names, extra_list_name) %}
+{% macro add_test_job(file_name, x, job_names, extra_list_name, slack_notification) %}
     {% include file_name %}
     {% do job_names.all.append(x.job_name) %}
 
@@ -173,7 +173,7 @@
     {% do job_names.tests.update({extra_list_name: job_names.tests[extra_list_name] + [x.job_name]}) %}
 {% endmacro %}
 
-{% macro add_gate_job(file_name, job_names, env_var, build_test_pxf_combinations, pxf_release_repackage_images) %}
+{% macro add_gate_job(file_name, job_names, env_var, build_test_pxf_combinations, pxf_release_repackage_images, slack_notification) %}
     {# set a fake dictionary so that the job can populate the job_name #}
     {% set x = dict() %}
     {% set environment = env_var %}

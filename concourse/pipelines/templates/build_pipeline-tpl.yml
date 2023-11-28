@@ -207,7 +207,7 @@ jobs:
     {% do x.update({'use_impers': default_impers}) %}
     {% do x.update({'target': default_distro}) %}
     {% do x.update({'distro': default_distro}) %}
-    [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'basic')]]
+    [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'basic', slack_notification)]]
 {% endcall %}
 
 {# include an FDW test job if supported by the swimlane #}
@@ -217,12 +217,12 @@ jobs:
         {% do x.update({'use_impers': default_impers}) %}
         {% do x.update({'target': default_distro}) %}
         {% do x.update({'distro': default_distro}) %}
-        [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'basic')]]
+        [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'basic', slack_notification)]]
     {% endif %}
 {% endcall %}
 
 ## ---------- Testing Gate ----------
-[[macros.add_gate_job('jobs/testing-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images)]]
+[[macros.add_gate_job('jobs/testing-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images, slack_notification)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -253,12 +253,12 @@ jobs:
         {# define a feature name to go into the test job name, unless it is a test against a distro/cloud only #}
         {% set feature = test_feature if test_feature not in distros and test_feature not in clouds else '' %}
         {% do x.update({'feature': feature}) %}
-        [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'extended')]]
+        [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'extended', slack_notification)]]
 
         {# for S3 only, also include an additional impersonation job #}
         {% if test_feature == 's3' %}
             {% do x.update({'use_impers': 'true'}) %}
-            [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'extended')]]
+            [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'extended', slack_notification)]]
         {% endif %}
     {% endfor %}
 {% endcall %}
@@ -267,7 +267,7 @@ jobs:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
-        [[macros.add_test_job('jobs/test-upgrade-extension-tpl.yml', x, job_names, 'extended')]]
+        [[macros.add_test_job('jobs/test-upgrade-extension-tpl.yml', x, job_names, 'extended', slack_notification)]]
     {% endif %}
 {% endcall %}
 
@@ -276,7 +276,7 @@ jobs:
     {% if x.test_file is sameas true %}
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
         {% do x.update({'distro': default_distro}) %}
-        [[macros.add_test_job('jobs/test-file-tpl.yml', x, job_names, 'extended')]]
+        [[macros.add_test_job('jobs/test-file-tpl.yml', x, job_names, 'extended', slack_notification)]]
     {% endif %}
 {% endcall %}
 
@@ -285,7 +285,7 @@ jobs:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
   {% if x.test_cli %}
   {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
-        [[macros.add_test_job('jobs/test-cli-tpl.yml', x, job_names, 'extended')]]
+        [[macros.add_test_job('jobs/test-cli-tpl.yml', x, job_names, 'extended', slack_notification)]]
     {% endif %}
 {% endcall %}
 
@@ -302,7 +302,7 @@ jobs:
         {% do x.update({'with_upgrade': with_upgrade}) %}
 
         {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
-        [[macros.add_test_job('jobs/test-multinode-tpl.yml', x, job_names, 'extended')]]
+        [[macros.add_test_job('jobs/test-multinode-tpl.yml', x, job_names, 'extended', slack_notification)]]
     {% endif %}
     {# multinode no impersonation job for now will only be for GP6 with Centos7 #}
     {% if x.test_multi is sameas true and x.gp_ver == '6' and x.test_platform == 'centos7' %}
@@ -311,12 +311,12 @@ jobs:
         {% do x.update({'target': default_distro}) %}
         {% do x.update({'distro': default_distro}) %}
         {% do x.update({'with_upgrade': 'false'}) %}
-        [[macros.add_test_job('jobs/test-multinode-tpl.yml', x, job_names, 'extended')]]
+        [[macros.add_test_job('jobs/test-multinode-tpl.yml', x, job_names, 'extended', slack_notification)]]
     {% endif %}
 {% endcall %}
 
 ## ---------- Compatibility Gate ----------
-[[macros.add_gate_job('jobs/compatibility-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images)]]
+[[macros.add_gate_job('jobs/compatibility-gate-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images, slack_notification)]]
 
 [[macros.reset_passed_jobs(build_test_pxf_combinations, job_names)]]
 
@@ -326,15 +326,15 @@ jobs:
     {# number of backwards compatibility tasks that can run at once #}
     {% do x.update({'max_concurrent_bc_tasks': 3}) %}
     {% if x.test_os != 'oel' %}
-        [[macros.add_test_job('jobs/test-backward-compatibility-tpl.yml', x, job_names, 'backward_compatibility')]]
+        [[macros.add_test_job('jobs/test-backward-compatibility-tpl.yml', x, job_names, 'backward_compatibility', slack_notification)]]
     {% endif %}
 {% endcall %}
 
 ## ---------- Artifact Promotion Gate ----------
-[[macros.add_gate_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images)]]
+[[macros.add_gate_job('jobs/promote-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images, slack_notification)]]
 
 ## ---------- Artifact Publication Gate ----------
-[[macros.add_gate_job('jobs/publish-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images)]]
+[[macros.add_gate_job('jobs/publish-pxf-artifacts-tpl.yml', job_names, environment, build_test_pxf_combinations, pxf_release_repackage_images, slack_notification)]]
 
 ## ======================================================================
 ## GROUPS
