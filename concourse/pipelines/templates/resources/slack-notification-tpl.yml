@@ -7,4 +7,4 @@
 - name: [[slack_alert_name]]
   type: slack-notification
   source:
-    url: (([[url_key]]))
+    url: ((ud/pxf/secrets/[[url_key]]))
