@@ -29,12 +29,14 @@ pxf_gp5_odp_releng_url="${RELENG_ODP_DROP_URL}/gpdb5/${PXF_ODP_FILE_PREFIX}-${ve
 pxf_gp6_tarball_releng_url="${RELENG_DROP_URL}/gpdb6/pxf-gp6-${version}-el7.x86_64.tar.gz"
 pxf_gp6_el7_releng_url="${RELENG_DROP_URL}/gpdb6/pxf-gp6-${version}-2.el7.x86_64.rpm"
 pxf_gp6_el8_releng_url="${RELENG_DROP_URL}/gpdb6/pxf-gp6-${version}-2.el8.x86_64.rpm"
+pxf_gp6_el9_releng_url="${RELENG_DROP_URL}/gpdb6/pxf-gp6-${version}-2.el9.x86_64.rpm"
 pxf_gp6_ubuntu18_releng_url="${RELENG_DROP_URL}/gpdb6/pxf-gp6-${version}-2-ubuntu18.04-amd64.deb"
 pxf_gp6_osl_releng_url="${RELENG_OSL_DROP_URL}/gpdb6/${PXF_OSL_FILE_PREFIX}_${version}_GA.txt"
 pxf_gp6_odp_releng_url="${RELENG_ODP_DROP_URL}/gpdb6/${PXF_ODP_FILE_PREFIX}-${version}-ODP.tar.gz"
 
 # compute artifact URLs for GPDB7
 pxf_gp7_el8_releng_url="${RELENG_DROP_URL}/gpdb7/pxf-gp7-${version}-2.el8.x86_64.rpm"
+pxf_gp7_el9_releng_url="${RELENG_DROP_URL}/gpdb7/pxf-gp7-${version}-2.el9.x86_64.rpm"
 pxf_gp7_osl_releng_url="${RELENG_OSL_DROP_URL}/gpdb7/${PXF_OSL_FILE_PREFIX}_${version}_GA.txt"
 pxf_gp7_odp_releng_url="${RELENG_ODP_DROP_URL}/gpdb7/${PXF_ODP_FILE_PREFIX}-${version}-ODP.tar.gz"
 
@@ -58,12 +60,14 @@ The GPDB6 artifacts are:
 * ${pxf_gp6_tarball_releng_url}
 * ${pxf_gp6_el7_releng_url}
 * ${pxf_gp6_el8_releng_url}
+* ${pxf_gp6_el9_releng_url}
 * ${pxf_gp6_ubuntu18_releng_url}
 * ${pxf_gp6_osl_releng_url}
 * ${pxf_gp6_odp_releng_url}
 
 The GPDB7 artifacts are:
 * ${pxf_gp7_el8_releng_url}
+* ${pxf_gp7_el9_releng_url}
 * ${pxf_gp7_osl_releng_url}
 * ${pxf_gp7_odp_releng_url}
 
