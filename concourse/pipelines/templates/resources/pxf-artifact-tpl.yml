@@ -15,7 +15,7 @@
   source:
     bucket: ((ud/pxf/common/build-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: dev/[[x.user]]-[[x.branch]]/snapshots/pxf6/pxf-gp[[x.gp_ver]][[x.pxf_platform_infix]][[x.release_platform]].tar.gz
+    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-gp[[x.gp_ver]][[x.pxf_platform_infix]][[x.release_platform]].tar.gz
 
 {# PXF FDW Build Artifact for GP6 only (since PXF FDW extension is not packaged into pxf-gp6 tarball) #}
 {% if x.gp_ver == '6' and x.test_fdw %}
@@ -25,7 +25,7 @@
   source:
     bucket: ((ud/pxf/common/build-bucket-name))
     json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: dev/[[x.user]]-[[x.branch]]/snapshots/pxf6/pxf-fdw-gp[[x.gp_ver]][[x.pxf_platform_infix]][[x.release_platform]].tar.gz
+    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf6/pxf-fdw-gp[[x.gp_ver]][[x.pxf_platform_infix]][[x.release_platform]].tar.gz
 {% endif %}
 
 {% endif %}{# end of conditional package definitions #}

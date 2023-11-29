@@ -140,6 +140,7 @@ set-dev-build-pipeline:
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--var=pxf-git-branch=${BRANCH} \
+		--var=pxf-build-bucket-prefix=dev/$(USER)-$(BRANCH) \
 		--var=gpdb-pxf-dev-image-tag=$(PXF_DEV_IMAGE_TAG) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
