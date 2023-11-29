@@ -329,6 +329,8 @@ jobs:
 
 ## ---------- Compatibility Testing ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {# rocky9 is a new platform and there are no previous versions of gpdb to test against.
+     # this conditional can be removed once there are at least gp_num_versions of rocky9 gpdb builds #}
     {% if x.os_ver == '9' %}
         {% do x.update({'gp_num_versions': 1}) %}
     {% else %}
