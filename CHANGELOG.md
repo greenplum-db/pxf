@@ -1,5 +1,15 @@
 # Changelog
 
+## 6.9.0 (12/04/2023)
+
+### Enhancements:
+
+- [#1035](https://github.com/greenplum-db/pxf/pull/1035) Upgrade snappy-java to 1.1.10.4
+- [#1040](https://github.com/greenplum-db/pxf/pull/1040) Bump golang.org/x/net from 0.7.0 to 0.17.0 in /cli
+- [#1044](https://github.com/greenplum-db/pxf/pull/1044) Upgrade Go toolchain to 1.21.3
+- [#1047](https://github.com/greenplum-db/pxf/pull/1047) Fix pxf register command
+- [#1058](https://github.com/greenplum-db/pxf/pull/1058) Add RHEL9 Support
+
 ## 6.8.0 (09/25/2023)
 
 ### Enhancements:
