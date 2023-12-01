@@ -17,7 +17,7 @@ function install_gpdb() {
         # there is only a GPDB server RPM available for RHEL9
         case "${VERSION_ID}" in
         9.*) gpdb_file_name="greenplum-db-server" ;;
-        7.*|8.*) gpdb_file_name="greenplum-db" ;;
+        7|8.*) gpdb_file_name="greenplum-db" ;;
         *)
             echo >&2 "unknown value found in /etc/os-release for VERSION_ID: ${VERSION_ID}"
             exit 1
