@@ -66,11 +66,9 @@ public class PivotalSshRsa extends SSH {
 		sess = conn.openSession();
 
 		/*
-		 PXF CLI uses colored output that was causing extraneous output when using xterm terminal in automation
-		 tests on RHEL9. This does not happen when using a dumb terminal. This is ok because PXF CLI is currently
-		 not terminal aware and will output color regardless of which terminal is in use.
-
-		 Should the PXF CLI become terminal-aware, it may then be necessary to use different terminals.
+		 There are commands in automation that are terminal-aware and return colored output. This was
+		 causing extraneous output when using xterm terminal in automation tests on RHEL9, causing tests to fail.
+		 This does not happen when using a "dumb" PTY as the commands will not emit ANSI escape sequences.
 		 */
 		sess.requestDumbPTY();
 

@@ -107,7 +107,8 @@ function update_crypto_policy() {
 		if [ $? -eq 0 ]; then
 			echo "Crypto policy updated and SSH restarted successfully."
 		else
-			echo "Failed to update crypto policy or restart SSH. Please check the logs for more information."
+			echo >&2 "Failed to update crypto policy or restart SSH. Please check the logs for more information."
+			exit 1
 		fi
 	else
 		echo "update-crypto-policies is supported only on Rocky9."

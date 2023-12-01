@@ -11,16 +11,18 @@ GPDB_VERSION=$(<"${GPDB_PKG_DIR}/version")
 function install_gpdb() {
     local pkg_file
     if command -v rpm; then
-        # extract the OS major version
-        os_major_version=$(cat /etc/os-release | grep VERSION_ID | tr -dc '0-9.'| cut -d \. -f1)
+        # source the os-release
+        . /etc/os-release
 
         # there is only a GPDB server RPM available for RHEL9
-        if [[ $os_major_version -eq "9" ]]; then
-            gpdb_file_name="greenplum-db-server"
-        else
-            # if no os major version is found, we will just fall into the default case here
-            gpdb_file_name="greenplum-db"
-        fi
+        case "${VERSION_ID}" in
+        9.*) gpdb_file_name="greenplum-db-server" ;;
+        7.*|8.*) gpdb_file_name="greenplum-db" ;;
+        *)
+            echo >&2 "unknown value found in /etc/os-release for VERSION_ID: ${VERSION_ID}"
+            exit 1
+            ;;
+        esac
 
         # For GP7 and above, a new rhel8 & rocky8 distro identifier
         # (el8) has been introduced.
