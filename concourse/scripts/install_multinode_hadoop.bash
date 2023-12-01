@@ -55,7 +55,7 @@ jq <"${metadata_path}" -r '.ansible_variables' >"${ansible_play_path}"/config.ym
 env | sed -e '/^ANSIBLE_VAR_/!d;s/ANSIBLE_VAR_\(.*\)=\(.*\)/\1: \2/' >>"${ansible_play_path}"/config.yml
 
 if ! type ansible-playbook &>/dev/null; then
-	yum install -y ansible
+	yum install -y ansible-core
 fi
 
 pushd "${ansible_play_path}" || exit 1
@@ -77,8 +77,10 @@ jq <"${metadata_path}" -r ".etc_hosts" >ipa_env_files/etc_hostfile
 echo "${hadoop_namenode_1}" >ipa_env_files/nn01
 echo "${hadoop_namenode_2}" >ipa_env_files/nn02
 mkdir -p ipa_env_files/conf
-scp "${hadoop_namenode_1}:\$HADOOP_PREFIX/etc/hadoop/*-site.xml" ipa_env_files/conf/
-scp "${hadoop_namenode_2}:\$HIVE_HOME/conf/hive-site.xml" ipa_env_files/conf/
+export $(ssh ${hadoop_namenode_1} "env | grep HADOOP_PREFIX")
+rsync "${hadoop_namenode_1}:${HADOOP_PREFIX}/etc/hadoop/*-site.xml" ipa_env_files/conf/
+export $(ssh ${hadoop_namenode_2} "env | grep HIVE_HOME")
+rsync "${hadoop_namenode_2}:${HIVE_HOME}/conf/hive-site.xml" ipa_env_files/conf/
 
 cp ~/.ssh/"${cluster_name}" ipa_env_files/google_compute_engine
 cp ~/.ssh/"${cluster_name}".pub ipa_env_files/google_compute_engine.pub
@@ -99,8 +101,8 @@ cat <<EOF >ipa_env_files/krb5_domain_realm
 	.${domain_name} = ${domain_name^^}
 EOF
 
-scp "${ipa_server}":~/hadoop.user.keytab ipa_env_files/
-scp "${ipa_server}":~/pxf.service.keytab ipa_env_files/
+rsync "${ipa_server}":~/hadoop.user.keytab ipa_env_files/
+rsync "${ipa_server}":~/pxf.service.keytab ipa_env_files/
 
 # list environment files
 find ipa_env_files -type f

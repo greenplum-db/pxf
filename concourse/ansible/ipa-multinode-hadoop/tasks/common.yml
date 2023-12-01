@@ -19,6 +19,12 @@
     state: latest
     lock_timeout: 300
 
+- name: install rsync
+  ansible.builtin.yum:
+    name: "rsync"
+    state: latest
+    lock_timeout: 300
+
 - name: remove oslogin_trustedca.pub
   ansible.builtin.file:
     path: /etc/ssh/oslogin_trustedca.pub
