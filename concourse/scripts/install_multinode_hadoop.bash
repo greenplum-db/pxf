@@ -79,9 +79,9 @@ jq <"${metadata_path}" -r ".etc_hosts" >ipa_env_files/etc_hostfile
 echo "${hadoop_namenode_1}" >ipa_env_files/nn01
 echo "${hadoop_namenode_2}" >ipa_env_files/nn02
 mkdir -p ipa_env_files/conf
-export $(ssh ${hadoop_namenode_1} "env | grep HADOOP_PREFIX")
+export HADOOP_PREFIX="$(ssh ${hadoop_namenode_1} "printenv HADOOP_PREFIX")"
 rsync "${hadoop_namenode_1}:${HADOOP_PREFIX}/etc/hadoop/*-site.xml" ipa_env_files/conf/
-export $(ssh ${hadoop_namenode_2} "env | grep HIVE_HOME")
+export HIVE_HOME="$(ssh ${hadoop_namenode_2} "printenv HIVE_HOME")"
 rsync "${hadoop_namenode_2}:${HIVE_HOME}/conf/hive-site.xml" ipa_env_files/conf/
 
 cp ~/.ssh/"${cluster_name}" ipa_env_files/google_compute_engine

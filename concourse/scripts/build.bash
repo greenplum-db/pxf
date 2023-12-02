@@ -100,6 +100,7 @@ install_gpdb
 # installation of GPDB from RPM/DEB doesn't ensure that the installation location will match the version
 # given in the gpdb_package, so set the GPHOME after installation
 # In case we are testing a dev version (i.e: 6.25.3+dev.6.54a3437), GPDB_VERSION%%+* will remove any extra string from + onwards
+# TODO: revert this change when there are publicly available distributions of rocky9 GPDB rpms
 GPHOME=$(find /usr/local/ -name "greenplum-db-${GPDB_VERSION%%+*}*")
 inflate_dependencies
 compile_pxf
