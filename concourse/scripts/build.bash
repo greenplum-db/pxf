@@ -18,7 +18,7 @@ function install_gpdb() {
         else
             DISTRO_MATCHING_PATTERN="r"
         fi
-        # there is only a GPDB server RPM available for RHEL9 so match for either greenplum-db or greenplum-db-server
+        # allow for both greenplum-db or greenplum-db-server names in case the build is performed against a server-only RPM of Greenplum
         pkg_file=$(find "${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-${DISTRO_MATCHING_PATTERN}*-x86_64.rpm" \
                                        -o -name "greenplum-db-server-${GPDB_VERSION}-${DISTRO_MATCHING_PATTERN}*-x86_64.rpm")
 

@@ -215,8 +215,6 @@ function install_gpdb_package() {
 
 	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH' pkg_file version
 	gpdb_package=${PWD}/${GPDB_PKG_DIR:-gpdb_package}
-	# obtain full version name
-	gpdb_version=$(<"${gpdb_package}/version")
 
 	if command -v rpm; then
 		# install GPDB RPM
@@ -252,8 +250,11 @@ function install_gpdb_package() {
 
 	# create symlink to allow pgregress to run (hardcoded to look for /usr/local/greenplum-db-devel/psql)
 	rm -rf /usr/local/greenplum-db-devel
+	# obtain full version name
+	local gpdb_version
+	gpdb_version="$(<"${gpdb_package}/version")"
 	# in case of dev builds, get simplified version from the version file
-	version=${gpdb_version%%+*}
+	local version="${gpdb_version%%+*}"
 	gphome_dir=$(find /usr/local/ -name "greenplum-db-${version}*" -type d)
 	ln -sf "${gphome_dir}" /usr/local/greenplum-db-devel
 	# change permissions to gpadmin
