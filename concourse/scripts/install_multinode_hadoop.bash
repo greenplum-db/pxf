@@ -55,7 +55,6 @@ jq <"${metadata_path}" -r '.ansible_variables' >"${ansible_play_path}"/config.ym
 env | sed -e '/^ANSIBLE_VAR_/!d;s/ANSIBLE_VAR_\(.*\)=\(.*\)/\1: \2/' >>"${ansible_play_path}"/config.yml
 
 if ! type ansible-playbook &>/dev/null; then
-	# we cannot use ansible core as Centos7 does not have ansible core
 	yum install -y ansible
 fi
 
