@@ -79,9 +79,9 @@ echo "${hadoop_namenode_1}" >ipa_env_files/nn01
 echo "${hadoop_namenode_2}" >ipa_env_files/nn02
 mkdir -p ipa_env_files/conf
 export HADOOP_PREFIX="$(ssh ${hadoop_namenode_1} "printenv HADOOP_PREFIX")"
-rsync "${hadoop_namenode_1}:${HADOOP_PREFIX}/etc/hadoop/*-site.xml" ipa_env_files/conf/
+scp "${hadoop_namenode_1}:${HADOOP_PREFIX}/etc/hadoop/*-site.xml" ipa_env_files/conf/
 export HIVE_HOME="$(ssh ${hadoop_namenode_2} "printenv HIVE_HOME")"
-rsync "${hadoop_namenode_2}:${HIVE_HOME}/conf/hive-site.xml" ipa_env_files/conf/
+scp "${hadoop_namenode_2}:${HIVE_HOME}/conf/hive-site.xml" ipa_env_files/conf/
 
 cp ~/.ssh/"${cluster_name}" ipa_env_files/google_compute_engine
 cp ~/.ssh/"${cluster_name}".pub ipa_env_files/google_compute_engine.pub
@@ -102,8 +102,8 @@ cat <<EOF >ipa_env_files/krb5_domain_realm
 	.${domain_name} = ${domain_name^^}
 EOF
 
-rsync "${ipa_server}":~/hadoop.user.keytab ipa_env_files/
-rsync "${ipa_server}":~/pxf.service.keytab ipa_env_files/
+scp "${ipa_server}":~/hadoop.user.keytab ipa_env_files/
+scp "${ipa_server}":~/pxf.service.keytab ipa_env_files/
 
 # list environment files
 find ipa_env_files -type f
