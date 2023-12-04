@@ -50,6 +50,7 @@ function compile_pxf() {
 
     bash -c "
         source ~/.pxfrc
+        unset LD_LIBRARY_PATH
         VENDOR='${VENDOR}' LICENSE='${LICENSE}' make -C '${PWD}/pxf_src' ${MAKE_TARGET}
     "
 }
@@ -84,6 +85,7 @@ function package_pxf_fdw() {
     # build PXF FDW extension separately
     bash -c "
         source ~/.pxfrc
+        unset LD_LIBRARY_PATH
         make -C '${PWD}/pxf_src/fdw' stage
     "
     # get the filename of previously built main PXF tarball to use its full name as a suffix
