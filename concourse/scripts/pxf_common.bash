@@ -120,7 +120,7 @@ function run_pxf_automation() {
 		time make GROUP=${GROUP} test
 
 		# if the test is successful, create certification file
-		gpdb_build_from_sql=\$(psql -c 'select version()' | grep Greenplum | cut -d ' ' -f 6,8)
+		gpdb_build_from_sql=\$(source \$GPHOME/greenplum_path.sh && psql -c 'select version()' | grep Greenplum | cut -d ' ' -f 6,8)
 		gpdb_build_clean=\${gpdb_build_from_sql%)}
 		pxf_version=\$(< ${PXF_HOME}/version)
 		echo "GPDB-\${gpdb_build_clean/ commit:/-}-PXF-\${pxf_version}" > "${PWD}/certification/certification.txt"
