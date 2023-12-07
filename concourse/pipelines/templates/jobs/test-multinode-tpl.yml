@@ -69,7 +69,7 @@
             extra_nodes: 1
             segments_per_host: 4
             instance_type: n1-standard-4
-            ccp_reap_minutes: 120
+            ccp_reap_minutes: 180
             standby_master: [[ccp_default_conf]]
       - task: generate-greenplum-cluster
         input_mapping:
@@ -116,7 +116,7 @@
         GOOGLE_ZONE: ((ud/pxf/common/google-zone))
         IMAGE_VERSION: ((dataproc-image-version))
         KERBEROS: ((kerberos-enabled))
-        ccp_reap_minutes: 120
+        ccp_reap_minutes: 180
     - task: generate-hadoop-cluster-2
       file: pxf_src/concourse/tasks/install_dataproc.yml
       output_mapping:
@@ -132,7 +132,7 @@
         KERBEROS: ((kerberos-enabled))
         KEY: dataproc-kerberos-key
         KEYRING: dataproc-kerberos
-        ccp_reap_minutes: 120
+        ccp_reap_minutes: 180
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: ((ud/pxf/secrets/kerberos-pxf-secrets-bucket-name))
