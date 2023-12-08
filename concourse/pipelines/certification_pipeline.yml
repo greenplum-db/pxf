@@ -52,16 +52,7 @@ resources:
   type: git
   icon: git
   source:
-    # This pipeline should be using a release tag for running
-    # the certification tests, but the build jobs are red on the latest release
-    # of PXF (currently 6.8.0) because of a change in concourse 7.8.x behavior
-    # where gpadmin doesn't own /home/gpadmin. The change only impacts PXF CI code
-    # and not the product's functionality. Until the next release of PXF is tagged
-    # this pipeline should be pointed at the main branch and have the pxf_src
-    # resource pinned to the commit with the fixed CI code. After the next
-    # release, this should be reverted back to using a tag_filter.
-    # TODO: revert this change and unpin resouce in UI.
-    #tag_filter: release-*
+    tag_filter: release-*
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
