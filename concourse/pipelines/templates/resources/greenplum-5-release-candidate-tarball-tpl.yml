@@ -1,0 +1,18 @@
+{# Template for a PXF build artifact resource definition.
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #}
+
+{# include PXF artifact only if both build and test platform are the same to avoid duplicates
+ # for example, the 'oel7' test platform does not have an 'oel7' build job and uses 'centos7' artifacts
+ #}
+
+- name: gpdb[[x.gp_ver]]-tarball-[[x.test_platform]]
+  type: s3
+  icon: aws
+  source:
+    access_key_id: ((ud/pxf/secrets/aws-bucket-access-key-id))
+    bucket: ((ud/pxf/common/gpdb-stable-builds-bucket-name))
+    region_name: ((ud/common/aws-region))
+    secret_access_key: ((ud/pxf/secrets/aws-bucket-secret-access-key))
+    versioned_file: release_candidates/bin_gpdb_[[x.test_platform]]/gpdb[[x.gp_ver]]/bin_gpdb.tar.gz

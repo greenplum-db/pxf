@@ -184,12 +184,16 @@ set-pr-build-pipeline:
 
 .PHONY: set-certification-pipeline
 set-certification-pipeline:
-	@$(FLY_CMD) --target=$(CONCOURSE) \
+	@PIPELINE_FILE=$$(mktemp) && \
+	$(TEMPLATE_CMD) --template certification_pipeline-tpl.yml --vars \
+		slack_notification=true >"$${PIPELINE_FILE}" && \
+	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \
 		--pipeline=$(CERTIFICATION_PIPELINE_NAME) \
-		--config pipelines/certification_pipeline.yml \
+		--config "$${PIPELINE_FILE}" \
 		--var=pxf-git-branch=${BRANCH} \
-		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/certification_pipeline.yml has errors"
+		--var=gpdb-pxf-dev-image-tag=latest \
+		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${CERTIFICATION_PIPELINE_NAME}"

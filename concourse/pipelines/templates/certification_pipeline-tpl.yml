@@ -1,0 +1,148 @@
+---
+# yamllint disable rule:empty-lines
+
+{# import macros to use in this template #}
+{% import "macros/macros.j2" as macros %}
+
+{% set build_test_pxf_combinations = [
+    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8'},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9'},
+    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04'},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8'},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9'}] %}
+
+## ======================================================================
+## ANCHORS
+## ======================================================================
+anchors:
+    [[macros.anchor_slack_notification(slack_notification)]]
+
+## ======================================================================
+## RESOURCE TYPES
+## ======================================================================
+resource_types:
+    [[macros.resource_type_registry_image('gcs', 'frodenas/gcs-resource', '')]]
+    [[macros.resource_type_registry_image('slack-notification', 'cfcommunity/slack-notification-resource', 'latest')]]
+
+## ======================================================================
+## RESOURCES
+## ======================================================================
+resources:
+    [[macros.resource_pxf_dependencies('automation')]]
+    [[macros.resource_singlecluster('hdp2')]]
+
+## ---------- Github Repos ----------
+- name: pxf_src
+  type: git
+  icon: git
+  source:
+    tag_filter: release-*
+    branch: ((pxf-git-branch))
+    uri: ((ud/pxf/common/git-remote))
+
+## ---------- Docker Images ----------
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% include 'resources/pxf-test-image-tpl.yml' %}
+{% endcall %}
+
+    [[macros.resource_registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
+
+## ---------- Greenplum Release Candidate Tarballs ----------
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% if x.gp_ver == '5' %}
+        {% include 'resources/greenplum-5-release-candidate-tarball-tpl.yml' %}
+    {% else %}
+        {% include 'resources/greenplum-release-candidate-tarball-tpl.yml' %}
+    {% endif %}
+{% endcall %}
+
+## ---------- PXF Released RPM Artifacts ----------
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% include 'resources/pxf-released-artifact-tpl.yml' %}
+{% endcall %}
+
+    [[macros.resource_slack_notification('slack-alert', 'ud-pipeline-bot-ud-dev-webhook')]]
+
+## ======================================================================
+## JOBS
+## ======================================================================
+jobs:
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% include 'jobs/certify-gpdb-with-pxf-tpl.yml' %}
+{% endcall %}
+
+#
+### ---------- Reporting Gates ----------
+#- name: reporting_gate_for_pxf-gp5
+#  plan:
+#  - in_parallel:
+#    - get: pxf_src
+#    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
+#    - get: gpdb5_tarball_rhel7
+#      passed:
+#      - certify_gpdb-5_with_pxf-gp5_on_rhel7
+#      trigger: true
+#    - get: pxf_gp5_rpm_rhel7
+#      passed:
+#      - certify_gpdb-5_with_pxf-gp5_on_rhel7
+#      trigger: true
+#    - get: ccp-7-image
+#  - task: print_report_for_gpdb-5_with_pxf-gp5_artifacts
+#    file: pxf_src/concourse/tasks/certification_list.yml
+#    image: ccp-7-image
+#    params:
+#      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
+#      GP_VER: 5
+#      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+#
+#- name: reporting_gate_for_pxf-gp6
+#  plan:
+#  - in_parallel:
+#    - get: pxf_src
+#    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
+#    - get: gpdb6_tarball_rhel7
+#      passed:
+#      - certify_gpdb-6_with_pxf-gp6_on_rhel7
+#      trigger: true
+#    - get: pxf_gp6_rpm_rhel7
+#      passed:
+#      - certify_gpdb-6_with_pxf-gp6_on_rhel7
+#      trigger: true
+#    - get: pxf_gp6_rpm_rhel8
+#      passed:
+#      - certify_gpdb-6_with_pxf-gp6_on_rhel8
+#    - get: pxf_gp6_deb_ubuntu18
+#      passed:
+#      - certify_gpdb-6_with_pxf-gp6_on_ubuntu_18.04
+#    - get: ccp-7-image
+#  - task: print_report_for_gpdb-6_with_pxf-gp6_artifacts
+#    file: pxf_src/concourse/tasks/certification_list.yml
+#    image: ccp-7-image
+#    params:
+#      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
+#      GP_VER: 6
+#      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+#
+#- name: reporting_gate_for_pxf-gp7
+#  plan:
+#  - in_parallel:
+#    - get: pxf_src
+#    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
+#    - get: gpdb7_tarball_rhel8
+#      passed:
+#      - certify_gpdb-7_with_pxf-gp7_on_rhel8
+#      trigger: true
+#    - get: pxf_gp7_rpm_rhel8
+#      passed:
+#      - certify_gpdb-7_with_pxf-gp7_on_rhel8
+#      trigger: true
+#    - get: ccp-7-image
+#  - task: print_report_for_gpdb-7_with_pxf-gp7_artifacts
+#    file: pxf_src/concourse/tasks/certification_list.yml
+#    image: ccp-7-image
+#    params:
+#      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
+#      GP_VER: 7
+#      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications

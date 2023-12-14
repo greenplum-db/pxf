@@ -1,0 +1,16 @@
+{# Template for a PXF build artifact resource definition.
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #}
+
+{# include PXF artifact only if both build and test platform are the same to avoid duplicates
+ # for example, the 'oel7' test platform does not have an 'oel7' build job and uses 'centos7' artifacts
+ #}
+
+- name: pxf-gp[[x.gp_ver]]-[[x.pkg_type]]-[[x.test_platform]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/releases-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    regexp: prod/releases/gp[[x.gp_ver]]/pxf-gp[[x.gp_ver]]-(.*)-1.[[x.release_platform]][[x.pxf_platform_infix]][[x.pkg_arch]].[[x.pkg_type]]

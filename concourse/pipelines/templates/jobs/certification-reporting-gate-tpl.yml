@@ -1,0 +1,29 @@
+{# Template for the PXF compatibility gate job definition.
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
+ #
+ # Also expects the following variables to be set:
+ # job_names - the global namespace variable containing information about passing conditions
+ #}
+
+- name: reporting_gate_for_pxf-gp[[x.gp_ver]]
+  plan:
+  - in_parallel:
+    - get: pxf_src
+    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
+    - get: gpdb[[x.gp_ver]]-tarball-[[x.test_platform]]
+      passed:
+      - certify_gpdb-[[x.gp_ver]]_with_pxf-gp[[x.gp_ver]]_on_[[x.test_platform]]
+      trigger: true
+    - get: xf_gp[[x.gp_ver]]_[[x.pkg_type]]_[[x.test_platform]]
+      passed:
+        - certify_gpdb-[[x.gp_ver]]_with_pxf-gp[[x.gp_ver]]_on_[[x.test_platform]]
+      trigger: true
+    - get: ccp-7-image
+  - task: print_report_for_gpdb-[[x.gp_ver]]_with_pxf-gp[[x.gp_ver]]_artifacts
+    file: pxf_src/concourse/tasks/certification_list.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
+      GP_VER: [[x.gp_ver]]
+      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
