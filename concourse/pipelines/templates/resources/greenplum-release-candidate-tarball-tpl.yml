@@ -13,4 +13,4 @@
   source:
     bucket: ((ud/pxf/common/gpdb-concourse-resources-prod-bucket-name))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/gpdb[[x.gp_ver]]/server-rc-(.*)-[[x.release_platform]]_x86_64.tar.gz
+    regexp: [[x.greenplum_rc_regex]]
