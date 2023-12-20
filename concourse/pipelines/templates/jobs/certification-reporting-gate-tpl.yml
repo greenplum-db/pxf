@@ -1,4 +1,4 @@
-{# Template for the PXF compatibility gate job definition.
+{# Template for the PXF certification reporting gate job definition.
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #
@@ -10,9 +10,9 @@
   plan:
   - in_parallel:
     - get: pxf_src
-    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
+    # gpdb release candidate tarballs and PXF packaqges used in testing jobs
 {% for gpdb_tarball_name in job_names.gpdb_tarballs.keys() | list %}
-    {# only add the job to the list if the job_name contains the name of the group #}
+    {# only add the job to the list if the job_name contains the string `gpdb[[x.gp_ver]]` #}
     {% if 'gpdb' ~ x.gp_ver in gpdb_tarball_name %}
     - get: [[gpdb_tarball_name]]
       passed:
@@ -21,7 +21,7 @@
     {% endif %}
 {% endfor %}
 {% for pxf_package_name in job_names.pxf_packages.keys() | list %}
-    {# only add the job to the list if the job_name contains the name of the group #}
+    {# only add the job to the list if the job_name contains the string `gp[[x.gp_ver]]` #}
     {% if 'gp' ~ x.gp_ver in pxf_package_name %}
     - get: [[pxf_package_name]]
       passed:

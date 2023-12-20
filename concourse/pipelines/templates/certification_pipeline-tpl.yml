@@ -85,7 +85,6 @@ jobs:
     {% do job_names.gpdb_tarballs.update({x.gpdb_tarball_name: x.job_name}) %}
 {% endcall %}
 
-
 ## ---------- Reporting Gates ----------
 {% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
     {% include 'jobs/certification-reporting-gate-tpl.yml' %}
