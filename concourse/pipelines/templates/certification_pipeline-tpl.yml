@@ -18,10 +18,8 @@
     {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'    , 'greenplum_rc_regex':''},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'    , 'greenplum_rc_regex':'server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.tar.gz'},
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8'    , 'greenplum_rc_regex':'server/published/gpdb6/server-rc-(.*)-rhel8_x86_64.tar.gz'},
-    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9'    , 'greenplum_rc_regex':'server/release-candidates/gpdb6/greenplum-db-server-(6\.([0-9]|[1-8][0-9]|9[0-8])\..*\+dev\..*)-.*-rhel9.tar.gz'},
     {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'greenplum_rc_regex':'server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.debug.tar.gz'},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8'    , 'greenplum_rc_regex':'server/published/main/server-rc-7.(.*)-el8_x86_64.tar.gz'},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9'    , 'greenplum_rc_regex':'server/release-candidates/gpdb7/greenplum-db-server-(7\.([0-9]|[1-8][0-9]|9[0-8])\..*\+dev\..*)-.*-el9.tar.gz'}] %}
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8'    , 'greenplum_rc_regex':'server/published/main/server-rc-7.(.*)-el8_x86_64.tar.gz'}] %}
 
 ## ======================================================================
 ## ANCHORS
