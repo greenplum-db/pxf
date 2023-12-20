@@ -6,21 +6,31 @@
  # job_names - the global namespace variable containing information about passing conditions
  #}
 
-- name: reporting_gate_for_pxf-gp[[x.gp_ver]]
+- name: reporting-gate-for-pxf-gp[[x.gp_ver]]
   plan:
   - in_parallel:
     - get: pxf_src
     # gpdb release candidate tarballs and PXF RPMs used in testing jobs
-    - get: gpdb[[x.gp_ver]]-tarball-[[x.test_platform]]
+{% for gpdb_tarball_name in job_names.gpdb_tarballs.keys() | list %}
+    {# only add the job to the list if the job_name contains the name of the group #}
+    {% if 'gpdb' ~ x.gp_ver in gpdb_tarball_name %}
+    - get: [[gpdb_tarball_name]]
       passed:
-      - certify_gpdb-[[x.gp_ver]]_with_pxf-gp[[x.gp_ver]]_on_[[x.test_platform]]
+        - [[job_names.gpdb_tarballs[gpdb_tarball_name]]]
       trigger: true
-    - get: xf_gp[[x.gp_ver]]_[[x.pkg_type]]_[[x.test_platform]]
+    {% endif %}
+{% endfor %}
+{% for pxf_package_name in job_names.pxf_packages.keys() | list %}
+    {# only add the job to the list if the job_name contains the name of the group #}
+    {% if 'gp' ~ x.gp_ver in pxf_package_name %}
+    - get: [[pxf_package_name]]
       passed:
-        - certify_gpdb-[[x.gp_ver]]_with_pxf-gp[[x.gp_ver]]_on_[[x.test_platform]]
+        - [[job_names.pxf_packages[pxf_package_name]]]
       trigger: true
+    {% endif %}
+{% endfor %}
     - get: ccp-7-image
-  - task: print_report_for_gpdb-[[x.gp_ver]]_with_pxf-gp[[x.gp_ver]]_artifacts
+  - task: print-report-for-gpdb[[x.gp_ver]]-with-pxf-gp[[x.gp_ver]]-artifacts
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:

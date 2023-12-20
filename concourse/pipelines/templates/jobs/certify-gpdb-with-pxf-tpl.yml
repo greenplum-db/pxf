@@ -1,20 +1,21 @@
-{# Template for the PXF compatibility gate job definition.
+{# Template for the PXF certification job definition.
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file
  #
- # Also expects the following variables to be set:
- # job_names - the global namespace variable containing information about passing conditions
  #}
+{% do x.update({'job_name': 'certify-gpdb' ~ x.gp_ver ~ '-with-pxf-gp' ~ x.gp_ver ~ '-' ~ x.test_platform}) %}
+{% do x.update({'gpdb_tarball_name': 'gpdb' ~ x.gp_ver ~ '-tarball-' ~ x.test_platform}) %}
+{% do x.update({'pxf_package_name': 'pxf-gp' ~ x.gp_ver ~ '-' ~ x.pkg_type ~ '-' ~ x.test_platform}) %}
 
-- name: certify-gpdb[[x.gp_ver]]-with-pxf-gp[[x.gp_ver]]-[[x.test_platform]]
+- name: [[x.job_name]]
   plan:
   - in_parallel:
     - get: pxf_src
     - get: bin_gpdb
-      resource: gpdb[[x.gp_ver]]-tarball-[[x.test_platform]]
+      resource: [[x.gpdb_tarball_name]]
       trigger: true
     - get: pxf_package
-      resource: pxf-gp[[x.gp_ver]]-[[x.pkg_type]]-[[x.test_platform]]
+      resource: [[x.pxf_package_name]]
       trigger: true
     - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
     - get: ccp-7-image

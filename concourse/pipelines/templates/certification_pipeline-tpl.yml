@@ -4,6 +4,16 @@
 {# import macros to use in this template #}
 {% import "macros/macros.j2" as macros %}
 
+{# Define global namespace to track jobs that were added to the pipeline
+# the variables set here will become populated as the pipeline is set
+#
+#
+# The following variables get reset after each gate in anticipation of the next gate:
+# pxf_packages  - a dictionary where the PXF package name is the key and the value is the test the package has passed
+# gpdb_tarballs - a dictionary where the Greenplum tarball name is the key and the value is the test it has passed
+#}
+{% set job_names = namespace(pxf_packages={}, gpdb_tarballs={}) %}
+
 {% set build_test_pxf_combinations = [
     {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'    , 'greenplum_rc_regex':''},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7'    , 'greenplum_rc_regex':'server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.tar.gz'},
@@ -71,78 +81,12 @@ resources:
 jobs:
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% include 'jobs/certify-gpdb-with-pxf-tpl.yml' %}
+    {% do job_names.pxf_packages.update({x.pxf_package_name: x.job_name}) %}
+    {% do job_names.gpdb_tarballs.update({x.gpdb_tarball_name: x.job_name}) %}
 {% endcall %}
 
 
 ## ---------- Reporting Gates ----------
-- name: reporting-gate-for-pxf-gp5
-  plan:
-  - in_parallel:
-    - get: pxf_src
-    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
-    - get: gpdb5-tarball-centos7
-      passed:
-      - certify-gpdb5-with-pxf-gp5-centos7
-      trigger: true
-    - get: pxf-gp5-rpm-centos7
-      passed:
-      - certify-gpdb5-with-pxf-gp5-centos7
-      trigger: true
-    - get: ccp-7-image
-  - task: print-report-for-gpdb5-with-pxf-gp5-artifacts
-    file: pxf_src/concourse/tasks/certification_list.yml
-    image: ccp-7-image
-    params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
-      GP_VER: 5
-      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
-
-- name: reporting-gate-for-pxf-gp6
-  plan:
-  - in_parallel:
-    - get: pxf_src
-    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
-    - get: gpdb6-tarball-centos7
-      passed:
-      - certify-gpdb6-with-pxf-gp6-centos7
-      trigger: true
-    - get: pxf-gp6-rpm-centos7
-      passed:
-      - certify-gpdb6-with-pxf-gp6-centos7
-      trigger: true
-    - get: pxf-gp6-rpm-rocky8
-      passed:
-      - certify-gpdb6-with-pxf-gp6-rocky8
-    - get: pxf-gp6-deb-ubuntu18.04
-      passed:
-      - certify-gpdb6-with-pxf-gp6-ubuntu18.04
-    - get: ccp-7-image
-  - task: print-report-for-gpdb6-with-pxf-gp6-artifacts
-    file: pxf_src/concourse/tasks/certification_list.yml
-    image: ccp-7-image
-    params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
-      GP_VER: 6
-      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
-
-- name: reporting-gate-for-pxf-gp7
-  plan:
-  - in_parallel:
-    - get: pxf_src
-    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
-    - get: gpdb7-tarball-rocky8
-      passed:
-      - certify-gpdb7-with-pxf-gp7-rocky8
-      trigger: true
-    - get: pxf-gp7-rpm-rocky8
-      passed:
-      - certify-gpdb7-with-pxf-gp7-rocky8
-      trigger: true
-    - get: ccp-7-image
-  - task: print-report-for-gpdb7-with-pxf-gp7-artifacts
-    file: pxf_src/concourse/tasks/certification_list.yml
-    image: ccp-7-image
-    params:
-      GOOGLE_CREDENTIALS: ((ud/pxf/secrets/pxf-storage-service-account-key))
-      GP_VER: 7
-      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+{% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
+    {% include 'jobs/certification-reporting-gate-tpl.yml' %}
+{% endcall %}
