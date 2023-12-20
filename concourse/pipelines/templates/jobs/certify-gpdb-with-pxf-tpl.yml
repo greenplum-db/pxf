@@ -6,7 +6,7 @@
  # job_names - the global namespace variable containing information about passing conditions
  #}
 
-- name: certify_gpdb-[[x.gp_ver]]_with_pxf-gp[[x.gp_ver]]_on_[[x.test_platform]]
+- name: certify-gpdb[[x.gp_ver]]-with-pxf-gp[[x.gp_ver]]-[[x.test_platform]]
   plan:
   - in_parallel:
     - get: pxf_src
@@ -21,7 +21,7 @@
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: test_gpdb-[[x.gp_ver]]_with_pxf-gp[[x.gp_ver]]-hdp2_on_[[x.test_platform]]
+  - task: test-gpdb[[x.gp_ver]]-with-pxf-gp[[x.gp_ver]]-hdp2-[[x.test_platform]]
     <<: *slack_alert
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image

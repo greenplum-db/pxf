@@ -75,21 +75,21 @@ jobs:
 
 
 ## ---------- Reporting Gates ----------
-- name: reporting_gate_for_pxf-gp5
+- name: reporting-gate-for-pxf-gp5
   plan:
   - in_parallel:
     - get: pxf_src
     # gpdb release candidate tarballs and PXF RPMs used in testing jobs
     - get: gpdb5-tarball-centos7
       passed:
-      - certify_gpdb-5_with_pxf-gp5_on_centos7
+      - certify-gpdb5-with-pxf-gp5-centos7
       trigger: true
     - get: pxf-gp5-rpm-centos7
       passed:
-      - certify_gpdb-5_with_pxf-gp5_on_centos7
+      - certify-gpdb5-with-pxf-gp5-centos7
       trigger: true
     - get: ccp-7-image
-  - task: print_report_for_gpdb-5_with_pxf-gp5_artifacts
+  - task: print-report-for-gpdb5-with-pxf-gp5-artifacts
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
@@ -97,27 +97,27 @@ jobs:
       GP_VER: 5
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
-- name: reporting_gate_for_pxf-gp6
+- name: reporting-gate-for-pxf-gp6
   plan:
   - in_parallel:
     - get: pxf_src
     # gpdb release candidate tarballs and PXF RPMs used in testing jobs
     - get: gpdb6-tarball-centos7
       passed:
-      - certify_gpdb-6_with_pxf-gp6_on_centos7
+      - certify-gpdb6-with-pxf-gp6-centos7
       trigger: true
     - get: pxf-gp6-rpm-centos7
       passed:
-      - certify_gpdb-6_with_pxf-gp6_on_centos7
+      - certify-gpdb6-with-pxf-gp6-centos7
       trigger: true
     - get: pxf-gp6-rpm-rocky8
       passed:
-      - certify_gpdb-6_with_pxf-gp6_on_rocky8
+      - certify-gpdb6-with-pxf-gp6-rocky8
     - get: pxf-gp6-deb-ubuntu18.04
       passed:
-      - certify_gpdb-6_with_pxf-gp6_on_ubuntu18.04
+      - certify-gpdb6-with-pxf-gp6-ubuntu18.04
     - get: ccp-7-image
-  - task: print_report_for_gpdb-6_with_pxf-gp6_artifacts
+  - task: print-report-for-gpdb6-with-pxf-gp6-artifacts
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
@@ -125,21 +125,21 @@ jobs:
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
-- name: reporting_gate_for_pxf-gp7
+- name: reporting-gate-for-pxf-gp7
   plan:
   - in_parallel:
     - get: pxf_src
     # gpdb release candidate tarballs and PXF RPMs used in testing jobs
     - get: gpdb7-tarball-rocky8
       passed:
-      - certify_gpdb-7_with_pxf-gp7_on_rocky8
+      - certify-gpdb7-with-pxf-gp7-rocky8
       trigger: true
     - get: pxf-gp7-rpm-rocky8
       passed:
-      - certify_gpdb-7_with_pxf-gp7_on_rocky8
+      - certify-gpdb7-with-pxf-gp7-rocky8
       trigger: true
     - get: ccp-7-image
-  - task: print_report_for_gpdb-7_with_pxf-gp7_artifacts
+  - task: print-report-for-gpdb7-with-pxf-gp7-artifacts
     file: pxf_src/concourse/tasks/certification_list.yml
     image: ccp-7-image
     params:
