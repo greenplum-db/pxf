@@ -33,7 +33,7 @@
       GP_VER: [[x.gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-  - task: upload_certification_for_gpdb-[[x.gp_ver]]_with_pxf-gp[[x.gp_ver]]-hdp2_on_[[x.test_platform]]
+  - task: upload-certification-for-gpdb[[x.gp_ver]]-with-pxf-gp[[x.gp_ver]]-hdp2-[[x.test_platform]]
     file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
