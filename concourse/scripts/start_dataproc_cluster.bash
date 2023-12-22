@@ -22,9 +22,9 @@ SECRETS_BUCKET=${SECRETS_BUCKET:-data-gpdb-ud-pxf-secrets}
 SUBNETWORK=${SUBNETWORK:-dynamic}
 ZONE=${GOOGLE_ZONE:-us-central1-a}
 
-pip3 install petname
+apt install golang-petname
 
-CLUSTER_NAME=${CLUSTER_NAME:-ccp-$(petname)}
+CLUSTER_NAME=${CLUSTER_NAME:-ccp-$(golang-petname)}
 # remove any . in the value and lower case it as dataproc names can not contain dots or capital letters
 CLUSTER_NAME=${CLUSTER_NAME//./}
 CLUSTER_NAME=$(echo ${CLUSTER_NAME} | tr '[:upper:]' '[:lower:]')
