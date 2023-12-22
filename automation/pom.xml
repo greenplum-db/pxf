@@ -231,6 +231,12 @@
             <version>1.10.11</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+
         <!-- AWS Dependencies -->
         <dependency>
             <groupId>com.amazonaws</groupId>

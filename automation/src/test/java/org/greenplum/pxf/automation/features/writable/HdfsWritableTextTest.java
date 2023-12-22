@@ -1,5 +1,8 @@
 package org.greenplum.pxf.automation.features.writable;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
+
 import annotations.SkipForFDW;
 import annotations.WorksWithFDW;
 import org.apache.commons.lang.StringUtils;
@@ -596,6 +599,8 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         if (protocol != ProtocolEnum.HDFS) {
             sleep(10000);
         }
+        short size = hdfs.getReplicationSize();
+        await().atMost(10, SECONDS).until(() -> hdfs.getCheckStatus() == 0);
         List<String> files = hdfs.list(hdfsPath);
         Table resultTable = new Table("result_table", null);
         int index = 0;
