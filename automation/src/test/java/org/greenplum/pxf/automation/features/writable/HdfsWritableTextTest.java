@@ -1,7 +1,7 @@
 package org.greenplum.pxf.automation.features.writable;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 
 import annotations.SkipForFDW;
 import annotations.WorksWithFDW;
@@ -28,6 +28,8 @@ import java.util.Random;
 import java.util.TimeZone;
 
 import static java.lang.Thread.sleep;
+import static org.awaitility.Awaitility.with;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Testing cases for PXF Writable feature for Text formats (Text, CSV) and compressions.
@@ -599,8 +601,10 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         if (protocol != ProtocolEnum.HDFS) {
             sleep(10000);
         }
-        short size = hdfs.getReplicationSize();
-        await().atMost(10, SECONDS).until(() -> hdfs.getCheckStatus() == 0);
+        with().pollInterval(20, MILLISECONDS)
+            .and().with().pollDelay(20, MILLISECONDS)
+            .await().atMost(300, SECONDS)
+            .until(() -> hdfs.doesFileExist("/" + hdfsPath));
         List<String> files = hdfs.list(hdfsPath);
         Table resultTable = new Table("result_table", null);
         int index = 0;
