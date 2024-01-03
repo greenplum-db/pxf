@@ -96,6 +96,6 @@
 {% elif x.protocol == 'gs' %}
       GOOGLE_CREDENTIALS: ((ud/pxf/secrets/gsc-ci-service-account-key))
 {% endif %}
-{% if slack_notification %}
-    <<: *slack_alert
+{% if gchat_notification %}
+    <<: *gchat_alert
 {% endif %}

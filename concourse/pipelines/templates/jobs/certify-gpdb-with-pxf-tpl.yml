@@ -23,8 +23,8 @@
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: test-gpdb[[x.gp_ver]]-with-pxf-gp[[x.gp_ver]]-hdp2-[[x.test_platform]]
-{% if slack_notification %}
-    <<: *slack_alert
+{% if gchat_notification %}
+    <<: *gchat_alert
 {% endif %}
     file: pxf_src/concourse/tasks/test_certification.yml
     image: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image

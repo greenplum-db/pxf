@@ -1,0 +1,10 @@
+{# Template for a Google chat notification resource definition.
+ #
+ # Expects a 'alert_name' variable to be set
+ # Expects a 'url_key' variable to be set
+ #}
+
+- name: [[alert_name]]
+  type: google-chat-notify-resource
+  source:
+    url: ((ud/pxf/secrets/[[url_key]]))

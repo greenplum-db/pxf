@@ -90,7 +90,7 @@
       params:
         file: pxf_artifacts/((ud/pxf/common/osl-file-prefix))*.txt
 {% endcall %}
-{% if slack_notification %}
+{% if gchat_notification %}
   - put: notify-releng
     params:
       text_file: pxf_artifacts/slack_message.txt

@@ -67,7 +67,7 @@ set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		environment=prod \
-		slack_notification=$(SLACK) \
+		gchat_notification=$(SLACK) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
 		num_gpdb7_versions=$(NUM_GPDB7_VERSIONS) >"$${PIPELINE_FILE}" && \
@@ -89,7 +89,7 @@ set-dev-release-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		environment=dev \
-		slack_notification=false \
+		gchat_notification=false \
 		git_branch=$(BRANCH) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
@@ -113,7 +113,7 @@ set-dev-release-pipeline:
 set-dev-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template dev_build_pipeline-tpl.yml --vars \
-		slack_notification=$(SLACK) \
+		gchat_notification=$(SLACK) \
 		multinode_el7=$(MULTINODE_EL7) \
 		multinode_el8=$(MULTINODE_EL8) \
 		multinode_el9=$(MULTINODE_EL9) \
@@ -165,7 +165,7 @@ set-hadoop-cluster-cleaner:
 set-pr-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template pr_pipeline-tpl.yml --vars \
-		slack_notification=false \
+		gchat_notification=false \
 		pr_pipeline=true \
 		num_gpdb5_versions=1 \
 		num_gpdb6_versions=1 \
@@ -186,7 +186,7 @@ set-pr-build-pipeline:
 set-certification-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template certification_pipeline-tpl.yml --vars \
-		slack_notification=true >"$${PIPELINE_FILE}" && \
+		gchat_notification=true >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \
 		--pipeline=$(CERTIFICATION_PIPELINE_NAME) \

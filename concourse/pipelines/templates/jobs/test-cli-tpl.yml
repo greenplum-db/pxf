@@ -79,6 +79,6 @@
       <<: *destroy_gpdb_cluster
     image: [[x.test_image_resource_name]]
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
-{% if slack_notification %}
-    <<: *slack_alert
+{% if gchat_notification %}
+    <<: *gchat_alert
 {% endif %}

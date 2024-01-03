@@ -229,6 +229,6 @@
 {% if x.use_impers == 'true' %}
         - *destroy_ipa-hadoop_cluster
 {% endif %}
-{% if slack_notification %}
-    <<: *slack_alert
+{% if gchat_notification %}
+    <<: *gchat_alert
 {% endif %}

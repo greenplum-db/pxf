@@ -69,7 +69,7 @@ anchors:
     [[macros.anchor_destroy_dataproc(2)]]
     [[macros.anchor_destroy_cluster('gpdb')]]
     [[macros.anchor_destroy_cluster('ipa-hadoop')]]
-    [[macros.anchor_slack_notification(slack_notification)]]
+    [[macros.anchor_gchat_notification(gchat_notification)]]
 
 ## ======================================================================
 ## RESOURCE TYPES
@@ -86,8 +86,8 @@ resource_types:
 
     [[macros.resource_type_registry_image('gcs', 'frodenas/gcs-resource', '')]]
 
-{% if slack_notification %}
-    [[macros.resource_type_registry_image('slack-notification', 'cfcommunity/slack-notification-resource', 'latest')]]
+{% if gchat_notification %}
+    [[macros.resource_type_registry_image('google-chat-notify-resource', 'springio/google-chat-notify-resource', '0.0.1-SNAPSHOT')]]
 {% endif %}
 
 ## ======================================================================
@@ -126,8 +126,8 @@ resources:
 {% endif %}
 
 ## ---------- Slack Notification ----------
-{% if slack_notification %}
-    [[macros.resource_slack_notification('slack-alert', 'ud-pipeline-bot-' ~ user ~ '-webhook')]]
+{% if gchat_notification %}
+    [[macros.resource_gchat_notification('gchat-alert', 'ud-pipeline-bot-' ~ user ~ '-gchat-webhook')]]
 {% endif %}
 
 ## ---------- Greenplum Packages ----------

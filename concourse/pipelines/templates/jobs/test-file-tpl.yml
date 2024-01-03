@@ -94,6 +94,6 @@
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: file
-{% if slack_notification %}
-    <<: *slack_alert
+{% if gchat_notification %}
+    <<: *gchat_alert
 {% endif %}

@@ -25,7 +25,7 @@ resources:
     branch: ((pxf-git-branch))
     uri: ((ud/pxf/common/git-remote))
 
-- name: slack-alert
+- name: gchat-alert
   type: slack-notification
   source:
     url: ((ud/pxf/secrets/ud-pipeline-bot-ud-dev-webhook))
@@ -35,7 +35,7 @@ jobs:
   build_logs_to_retain: 50
   max_in_flight: 1
   on_failure:
-    put: slack-alert
+    put: gchat-alert
     params:
       text: |
         [$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME/$BUILD_NAME] failed:
