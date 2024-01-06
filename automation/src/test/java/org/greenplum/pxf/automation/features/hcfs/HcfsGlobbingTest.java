@@ -9,6 +9,9 @@ import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.with;
@@ -129,12 +132,12 @@ public class HcfsGlobbingTest extends BaseFeature {
         prepareTableData(path, data2, "2b");
         prepareTableData(path, data3, "3c");
         prepareTableData(path, data4, "4d");
-        String datafile = data4 != null ? data4 :
-                          data3 != null ? data3 :
-                          data2 != null ? data2 :
-                          data1 != null ? data1 : null;
 
-        if (datafile != null) {
+        // there is an assumption that if data3 has value, then data1, data2 will have values
+        // however, there is a possibility that these values could be null and if so, find the last non-null value
+        // so that we can watch and wait to make sure all of the files exist, before continuing the test
+        Optional<String> datafile = Stream.of(data4, data3, data2, data1).filter(data -> data != null).findFirst();
+        if (datafile.isPresent()) {
             with().pollInterval(20, MILLISECONDS)
                 .and().with().pollDelay(20, MILLISECONDS)
                 .await().atMost(300, SECONDS)
