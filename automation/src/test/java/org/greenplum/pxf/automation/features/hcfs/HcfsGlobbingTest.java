@@ -140,7 +140,7 @@ public class HcfsGlobbingTest extends BaseFeature {
         if (datafile.isPresent()) {
             with().pollInterval(20, MILLISECONDS)
                 .and().with().pollDelay(20, MILLISECONDS)
-                .await().atMost(300, SECONDS)
+                .await().atMost(120, SECONDS)
                 .until(() -> hdfs.doesFileExist("/" + hdfs.getWorkingDirectory() + "/" + path + "/" + datafile));
         }
 
