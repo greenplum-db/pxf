@@ -9,6 +9,7 @@ import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -136,12 +137,12 @@ public class HcfsGlobbingTest extends BaseFeature {
         // there is an assumption that if data3 has value, then data1, data2 will have values
         // however, there is a possibility that these values could be null and if so, find the last non-null value
         // so that we can watch and wait to make sure all of the files exist, before continuing the test
-        Optional<String> datafile = Stream.of(data4, data3, data2, data1).filter(data -> data != null).findFirst();
+        Optional<String> datafile = Stream.of(data4, data3, data2, data1).filter(Objects::nonNull).findFirst();
         if (datafile.isPresent()) {
             with().pollInterval(20, MILLISECONDS)
                 .and().with().pollDelay(20, MILLISECONDS)
                 .await().atMost(120, SECONDS)
-                .until(() -> hdfs.doesFileExist("/" + hdfs.getWorkingDirectory() + "/" + path + "/" + datafile));
+                .until(() -> hdfs.doesFileExist("/" + hdfs.getWorkingDirectory() + "/" + path + "/" + datafile.get()));
         }
 
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
