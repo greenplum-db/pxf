@@ -226,20 +226,23 @@ set-cloudbuild-pipeline-base:
 pivnet: set-pivnet-pipeline
 
 .PHONY: set-pivnet-pipeline
-set-pivnet-pipeline:
-	@PIPELINE_FILE=$$(mktemp) && \
-	$(TEMPLATE_CMD) --template get_pivnet_artifacts-tpl.yml --vars \
-		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
-		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
+set-pivnet-pipeline: generate-pivnet-pipeline
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \
 		--pipeline=${PIVNET_PIPELINE_NAME} \
-		--config "$${PIPELINE_FILE}" \
+		--config ./generated/get_pivnet_artifacts.yml \
 		--var pxf-git-branch=$(BRANCH) \
-		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
+		${FLY_OPTION_NON-INTERACTIVE}
 
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${PIVNET_PIPELINE_NAME}"
+
+.PHONY: generate-pivnet-pipeline
+generate-pivnet-pipeline:
+	mkdir -p generated
+	$(TEMPLATE_CMD) --template get_pivnet_artifacts-tpl.yml --vars \
+		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
+		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >./generated/get_pivnet_artifacts.yml
 
 .PHONY: singlecluster
 singlecluster:

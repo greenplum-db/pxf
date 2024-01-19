@@ -90,6 +90,6 @@ jobs:
 {% endcall %}
 
 ## ---------- Reporting Gates ----------
-{% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
+{% call(x) macros.for_each_gp_ver(build_test_pxf_combinations) %}
     {% include 'jobs/certification-reporting-gate-tpl.yml' %}
 {% endcall %}

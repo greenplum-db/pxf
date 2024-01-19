@@ -1,203 +1,32 @@
 ---
+{% import "macros/macros.j2" as macros %}
 {% set attempts = 3 %}
 resource_types:
-- name: gcs
-  type: registry-image
-  source:
-    repository: frodenas/gcs-resource
+    [[macros.resource_type_registry_image('gcs', 'frodenas/gcs-resource', '')]]
 
 resources:
+    [[macros.resource_timer('12h')]]
+    [[macros.resource_github_repo('pxf')]]
+    [[macros.resource_registry_image('ubuntu18', 'gcr.io/data-gpdb-public-images/gpdb6-ubuntu18.04-build', 'latest')]]
+    [[macros.resource_pivnet_cli()]]
 
-- name: twice-a-day
-  type: time
-  icon: clock-outline
-  source:
-    interval: 12h
+{% set build_test_pxf_combinations = [
+    {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': true},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': true , 'test_cli': false, 'test_multi': true , 'test_features': supported_features, 'generate_release_tarball': true},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false},
+    {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false}] %}
 
-- name: pxf_src
-  type: git
-  icon: git
-  source:
-    branch: ((pxf-git-branch))
-    uri: ((ud/pxf/common/git-remote))
+{% set gp_num_versions = { '5': num_gpdb5_versions, '6': num_gpdb6_versions, '7': num_gpdb7_versions} %}
 
-- name: ubuntu18
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-public-images/gpdb6-ubuntu18.04-build
-    tag: latest
-
-- name: pivnet_cli
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    versioned_file: pivotal-cf/pivnet-cli/pivnet
-
-{% for i in range(num_gpdb5_versions) %}
-- name: gpdb5_rhel7_rpm_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb5/greenplum-db-(.*)-rhel7-x86_64.rpm
-
-{% endfor %}
-{% for i in range(num_gpdb6_versions) %}
-- name: gpdb6_rhel7_rpm_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
-
-- name: gpdb6_rhel8_rpm_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-rhel8-x86_64.rpm
-
-- name: gpdb6_ubuntu18_deb_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
-    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
-{% endfor %}
+{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
+    {% do x.update(gp_num_versions=gp_num_versions[x.gp_ver]) %}
+    {% include 'resources/greenplum-package-tpl.yml' %}
+{% endcall %}
 
 jobs:
-- name: download_latest_pivnet_cli
-  plan:
-  - in_parallel:
-    - get: twice-a-day
-      trigger: true
-    - get: pxf_src
-    - get: ubuntu18
-    - get: pivnet_cli
-  - task: get_latest_pivnet_cli
-    attempts: [[attempts]]
-    image: ubuntu18
-    config:
-      platform: linux
-      inputs:
-      - name: pxf_src
-      - name: pivnet_cli
-      outputs:
-      - name: pivnet_cli
-      params:
-        PIVNET_CLI_DIR: pivnet_cli
-      run:
-        path: pxf_src/concourse/scripts/download_pivnet_cli.bash
-  - put: pivnet_cli
-    params:
-      file: pivnet_cli/pivnet
+{% include 'jobs/download_latest_pivnet_cli.yml' %}
 
-- name: get_greenplum_product_files_gp5
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [download_latest_pivnet_cli]
-    - get: ubuntu18
-    - get: pivnet_cli
-      passed: [download_latest_pivnet_cli]
-      trigger: true
-{% for i in range(num_gpdb5_versions) %}
-    - get: gpdb5_rhel7_rpm_latest-[[i]]
-{% endfor %}
-{% for i in range(num_gpdb5_versions - 1, -1, -1) %}
-  - task: get_greenplum_product_files_gp5_latest-[[i]]
-    attempts: [[attempts]]
-    # this task will fail on centos6
-    image: ubuntu18
-    config:
-      platform: linux
-      inputs:
-      - name: pxf_src
-      - name: pivnet_cli
-      - name: gpdb5_rhel7_rpm_latest-[[i]]
-      {% if i > 0 %}
-      # save a download from pivnet if not fetching latest
-      - name: gpdb5_rhel7_rpm_latest-[[i - 1]]
-      {% endif %}
-      outputs:
-      - name: gpdb5_rhel7_rpm_latest-[[i]]
-      params:
-        GPDB_VERSION: 5
-        LIST_OF_DIRS: gpdb5_rhel7_rpm_latest-[[i]]
-        LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm
-        PIVNET_API_TOKEN: ((ud/pxf/secrets/pivnet-uaa-refresh-token))
-        PIVNET_CLI_DIR: pivnet_cli
-        PRODUCT_SLUG: pivotal-gpdb
-        VERSIONS_BEFORE_LATEST: [[i]]
-      run:
-        path: pxf_src/concourse/scripts/get_product_files.bash
-  - put: gpdb5_rhel7_rpm_latest-[[i]]
-    params:
-      file: gpdb5_rhel7_rpm_latest-[[i]]/greenplum-db-5.*-rhel7-x86_64.rpm
-{% endfor %}
-
-- name: get_greenplum_product_files_gp6
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [download_latest_pivnet_cli]
-    - get: ubuntu18
-    - get: pivnet_cli
-      passed: [download_latest_pivnet_cli]
-      trigger: true
-{% for i in range(num_gpdb6_versions) %}
-    - get: gpdb6_rhel7_rpm_latest-[[i]]
-    - get: gpdb6_rhel8_rpm_latest-[[i]]
-    - get: gpdb6_ubuntu18_deb_latest-[[i]]
-{% endfor %}
-{% for i in range(num_gpdb6_versions - 1, -1, -1) %}
-  - task: get_greenplum_product_files_gp6_latest-[[i]]
-    attempts: [[attempts]]
-    # this task will fail on centos6
-    image: ubuntu18
-    config:
-      platform: linux
-      inputs:
-      - name: pxf_src
-      - name: pivnet_cli
-      - name: gpdb6_rhel7_rpm_latest-[[i]]
-      - name: gpdb6_rhel8_rpm_latest-[[i]]
-      - name: gpdb6_ubuntu18_deb_latest-[[i]]
-      {% if i > 0 %}
-      # save a download from pivnet if not fetching latest
-      - name: gpdb6_rhel7_rpm_latest-[[i - 1]]
-      - name: gpdb6_rhel8_rpm_latest-[[i - 1]]
-      - name: gpdb6_ubuntu18_deb_latest-[[i - 1]]
-      {% endif %}
-      outputs:
-      - name: gpdb6_rhel7_rpm_latest-[[i]]
-      - name: gpdb6_rhel8_rpm_latest-[[i]]
-      - name: gpdb6_ubuntu18_deb_latest-[[i]]
-      params:
-        GPDB_VERSION: 6
-        LIST_OF_DIRS: gpdb6_rhel7_rpm_latest-[[i]],gpdb6_rhel8_rpm_latest-[[i]],gpdb6_ubuntu18_deb_latest-[[i]]
-        # yamllint disable rule:line-length
-        LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm,greenplum-db-GPDB_VERSION-rhel8-x86_64.rpm,greenplum-db-GPDB_VERSION-ubuntu18.04-amd64.deb
-        PIVNET_API_TOKEN: ((ud/pxf/secrets/pivnet-uaa-refresh-token))
-        PIVNET_CLI_DIR: pivnet_cli
-        PRODUCT_SLUG: pivotal-gpdb
-        VERSIONS_BEFORE_LATEST: [[i]]
-      run:
-        path: pxf_src/concourse/scripts/get_product_files.bash
-  - put: gpdb6_rhel7_rpm_latest-[[i]]
-    params:
-      file: gpdb6_rhel7_rpm_latest-[[i]]/greenplum-db-6.*-rhel7-x86_64.rpm
-  - put: gpdb6_rhel8_rpm_latest-[[i]]
-    params:
-      file: gpdb6_rhel8_rpm_latest-[[i]]/greenplum-db-6.*-rhel8-x86_64.rpm
-  - put: gpdb6_ubuntu18_deb_latest-[[i]]
-    params:
-      file: gpdb6_ubuntu18_deb_latest-[[i]]/greenplum-db-6.*-ubuntu18.04-amd64.deb
-{% endfor %}
+{% call(x) macros.for_each_gp_ver(build_test_pxf_combinations) %}
+    {% do x.update(gp_num_versions=gp_num_versions[x.gp_ver]) %}
+    {% include 'jobs/get_greenplum_product_files.yml' %}
+{% endcall %}

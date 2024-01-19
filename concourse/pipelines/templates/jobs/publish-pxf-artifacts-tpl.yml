@@ -82,7 +82,7 @@
         file: pxf_artifacts/licensed/gp[[x.gp_ver]]/[[x.pxf_release_tarball_filename_regex]]
     {% endif %}
 {% endcall %}
-{% call(x) for_supported_gp_vers(build_test_pxf_combinations) %}
+{% call(x) for_each_gp_ver(build_test_pxf_combinations) %}
     - put: pxf-gp[[x.gp_ver]]-odp-to-releng
       params:
         file: pxf_artifacts/((ud/pxf/common/odp-file-prefix))*.tar.gz

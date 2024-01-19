@@ -132,7 +132,7 @@ resources:
     {% include 'resources/release-artifact-tpl.yml' %}
 {% endcall %}
 
-{% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
+{% call(x) macros.for_each_gp_ver(build_test_pxf_combinations) %}
     {% include 'resources/release-osl-odp-tpl.yml' %}
 {% endcall %}
 
@@ -361,6 +361,6 @@ groups:
     [[macros.job_group(platform, job_names.all)]]
 {% endfor %}
 
-{% call(x) macros.for_supported_gp_vers(build_test_pxf_combinations) %}
+{% call(x) macros.for_each_gp_ver(build_test_pxf_combinations) %}
     [[macros.job_group('gp' ~ x.gp_ver, job_names.all)]]
 {% endcall %}

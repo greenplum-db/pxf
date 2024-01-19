@@ -1,0 +1,10 @@
+{# Template for PivNet CLI resource stored in GCS.
+ #}
+
+- name: pivnet_cli
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((ud/pxf/common/pivnet-artifacts-bucket-name))
+    json_key: ((ud/pxf/secrets/pxf-storage-service-account-key))
+    versioned_file: pivotal-cf/pivnet-cli/pivnet

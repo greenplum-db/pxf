@@ -1,0 +1,70 @@
+{# Template for downloading releases from PivNet
+ #
+ # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file (for_each_gp_ver)
+ # Required attributes:
+ #   - attempts        : number of times to attempt downloading product files before failing
+ #   - gp_ver          : Greenplum major version
+ #   - gp_num_versions : number of previous release of Greenplum (minor or mainteance) for this Greenplum major version to download
+ #   - platforms       : list of Greenplum platforms to download for this Greenplum major version
+ #}
+
+- name: get_greenplum_product_files_gp[[x.gp_ver]]
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf-src
+      passed: [download_latest_pivnet_cli]
+    - get: ubuntu18
+    - get: pivnet_cli
+      passed: [download_latest_pivnet_cli]
+      trigger: true
+    {% for i in range(x.gp_num_versions) %}
+        {% for p in x.platforms %}
+    - get: [[p.gpdb_package_resource_name ~ '-' ~ i]]
+        {% endfor %}
+    {% endfor %}
+    {% for i in range(x.gp_num_versions) | reverse %}
+  - task: get_greenplum_product_files_gp[[x.gp_ver]]_latest-[[i]]
+    attempts: [[attempts if attempts is not none else 1]]
+    # this task will fail on centos6
+    image: ubuntu18
+    config:
+      platform: linux
+      inputs:
+      - name: pxf_src
+      - name: pivnet_cli
+        {% for p in x.platforms %}
+      - name: [[p.gpdb_package_resource_name ~ '-' ~ i]]
+        {% endfor %}
+        {% if i > 0 %}
+      # save a download from pivnet if not fetching latest
+            {% for p in x.platforms %}
+      - name: [[p.gpdb_package_resource_name ~ '-' ~ (i-1)]]
+            {% endfor %}
+        {% endif %}
+      outputs:
+        {% for p in x.platforms %}
+      - name: [[p.gpdb_package_resource_name ~ '-' ~ i]]
+        {% endfor %}
+        {% set dirs = [] %}
+        {% set products = [] %}
+        {% for p in x.platforms %}
+            {% do dirs.append(p.gpdb_package_resource_name ~ '-' ~ i) %}
+            {% do products.append(p.gpdb_package_file_name) %}
+        {% endfor %}
+      params:
+        GPDB_VERSION: [[x.gp_ver]]
+        LIST_OF_DIRS: [[dirs | join(',')]]
+        LIST_OF_PRODUCTS: [[products | join(',')]]
+        PIVNET_API_TOKEN: ((ud/pxf/secrets/pivnet-uaa-refresh-token))
+        PIVNET_CLI_DIR: pivnet_cli
+        PRODUCT_SLUG: pivotal-gpdb
+        VERSIONS_BEFORE_LATEST: [[i]]
+      run:
+        path: pxf_src/concourse/scripts/get_product_files.bash
+        {% for p in x.platforms %}
+  - put: [[p.gpdb_package_resource_name ~ '-' ~ i]]
+    params:
+      file: [[p.gpdb_package_resource_name ~ '-' ~ i]]/[[p.gpdb_package_file_glob]]
+        {% endfor %}
+    {% endfor %}

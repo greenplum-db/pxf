@@ -1,0 +1,30 @@
+{# Template for job to download latest release of PivNet CLI
+ #
+ # Can optionally set an 'attempts' variable to set the number of attempts
+ #}
+- name: download_latest_pivnet_cli
+  plan:
+  - in_parallel:
+    - get: twice-a-day
+      trigger: true
+    - get: pxf_src
+      resource: pxf-src
+    - get: ubuntu18
+    - get: pivnet_cli
+  - task: get_latest_pivnet_cli
+    attempts: [[attempts if attempts is not none else 1]]
+    image: ubuntu18
+    config:
+      platform: linux
+      inputs:
+      - name: pxf_src
+      - name: pivnet_cli
+      outputs:
+      - name: pivnet_cli
+      params:
+        PIVNET_CLI_DIR: pivnet_cli
+      run:
+        path: pxf_src/concourse/scripts/download_pivnet_cli.bash
+  - put: pivnet_cli
+    params:
+      file: pivnet_cli/pivnet
