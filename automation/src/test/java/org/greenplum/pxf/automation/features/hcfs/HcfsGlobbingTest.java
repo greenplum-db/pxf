@@ -9,6 +9,9 @@ import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -134,16 +137,15 @@ public class HcfsGlobbingTest extends BaseFeature {
         prepareTableData(path, data3, "3c");
         prepareTableData(path, data4, "4d");
 
-        // there is an assumption that if data3 has value, then data1, data2 will have values
-        // however, there is a possibility that these values could be null and if so, find the last non-null value
-        // so that we can watch and wait to make sure all of the files exist, before continuing the test
-        Optional<String> datafile = Stream.of(data4, data3, data2, data1).filter(Objects::nonNull).findFirst();
-        if (datafile.isPresent()) {
+        // wait until all of the files exist, before continuing the test
+        List<String> datafiles = new ArrayList();
+        Collections.addAll(datafiles, data1, data2, data3, data4);
+        datafiles.parallelStream().forEach(datafile -> {
             with().pollInterval(20, MILLISECONDS)
                 .and().with().pollDelay(20, MILLISECONDS)
                 .await().atMost(120, SECONDS)
-                .until(() -> hdfs.doesFileExist("/" + hdfs.getWorkingDirectory() + "/" + path + "/" + datafile.get()));
-        }
+                .until(() -> hdfs.doesFileExist("/" + hdfs.getWorkingDirectory() + "/" + path + "/" + datafile));
+        });
 
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
 
