@@ -170,9 +170,9 @@ resources:
 ## ---------- Greenplum Packages ----------
 {% call(x) macros.for_each_config(build_test_pxf_combinations) %}
     {% do x.update({'gp_num_versions': gp_num_versions[x.gp_ver]}) %}
-    {% if x.os_ver == '9' %}
+    {% if x.gp_ver == '7' and x.os_ver == '9' %}
         {# define RPMs for rocky9 until they are released into standard locations #}
-        {% include 'resources/greenplum-rocky9-package-tpl.yml' %}
+        {% include 'resources/greenplum-7-rocky9-package-tpl.yml' %}
     {% else %}
         {% include 'resources/greenplum-package-tpl.yml' %}
     {% endif %}

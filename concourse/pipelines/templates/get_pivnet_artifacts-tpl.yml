@@ -14,6 +14,7 @@ resources:
     {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': true},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': true , 'test_cli': false, 'test_multi': true , 'test_features': supported_features, 'generate_release_tarball': true},
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false},
+    {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': true , 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false},
     {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false}] %}
 
 {% set gp_num_versions = { '5': num_gpdb5_versions, '6': num_gpdb6_versions, '7': num_gpdb7_versions} %}
