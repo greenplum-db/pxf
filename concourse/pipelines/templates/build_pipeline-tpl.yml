@@ -163,8 +163,8 @@ resources:
 
 ## ---------- Google Chat Notification ----------
 {% if gchat_notification %}
-    [[macros.resource_gchat_notification('gchat-alert', 'ud-pipeline-bot-gp-ud-gchat-webhook')]]
-    [[macros.resource_gchat_notification('notify-releng', 'ud-pipeline-bot-gp-extended-gchat-webhook')]]
+    [[macros.resource_gchat_notification('gchat-alert', 'gchat-gp-extended-federation-ci-webhook')]]
+    [[macros.resource_gchat_notification('notify-releng', 'gchat-gp-extended-ci-webhook')]]
 {% endif %}
 
 ## ---------- Greenplum Packages ----------

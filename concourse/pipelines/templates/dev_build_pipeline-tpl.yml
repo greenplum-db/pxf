@@ -127,7 +127,7 @@ resources:
 
 ## ---------- Google Chat Notification ----------
 {% if gchat_notification %}
-    [[macros.resource_gchat_notification('gchat-alert', 'ud-pipeline-bot-' ~ user ~ '-gchat-webhook')]]
+    [[macros.resource_gchat_notification('gchat-alert', 'gchat-' ~ user ~ '-ci-webhook')]]
 {% endif %}
 
 ## ---------- Greenplum Packages ----------

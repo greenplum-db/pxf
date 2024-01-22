@@ -28,7 +28,7 @@ resources:
 - name: gchat-alert
   type: gchat-notification
   source:
-    url: ((ud/pxf/secrets/ud-pipeline-bot-gp-ud-gchat-webhook))
+    url: ((ud/pxf/secrets/gchat-gp-extended-federation-ci-webhook))
 
 jobs:
 - name: hadoop-cluster-cleaner
