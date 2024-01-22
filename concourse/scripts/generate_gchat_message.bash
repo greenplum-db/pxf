@@ -7,8 +7,8 @@ set -e
 : "${RELENG_DROP_URL:?RELENG_DROP_URL must be set}"
 : "${RELENG_OSL_DROP_URL:?RELENG_OSL_DROP_URL must be set}"
 : "${RELENG_ODP_DROP_URL:?RELENG_ODP_DROP_URL must be set}"
-: "${PXF_SLACK_CHANNEL_NAME:?PXF_SLACK_CHANNEL_NAME must be set}"
-: "${PXF_SLACK_CHANNEL_LINK:?PXF_SLACK_CHANNEL_LINK must be set}"
+: "${PXF_GOOGLE_SPACE_NAME:?PXF_GOOGLE_SPACE_NAME must be set}"
+: "${PXF_GOOGLE_SPACE_LINK:?PXF_GOOGLE_SPACE_LINK must be set}"
 
 function fail() {
   echo "Error: $1"
@@ -40,10 +40,10 @@ pxf_gp7_el9_releng_url="${RELENG_DROP_URL}/gpdb7/pxf-gp7-${version}-2.el9.x86_64
 pxf_gp7_osl_releng_url="${RELENG_OSL_DROP_URL}/gpdb7/${PXF_OSL_FILE_PREFIX}_${version}_GA.txt"
 pxf_gp7_odp_releng_url="${RELENG_ODP_DROP_URL}/gpdb7/${PXF_ODP_FILE_PREFIX}-${version}-ODP.tar.gz"
 
-echo "Generating Slack Message"
+echo "Generating Google Space Message"
 
-# generate Slack message
-tee pxf_artifacts/slack_message.txt << EOF
+# generate Google Space message
+tee pxf_artifacts/gchat_message.txt << EOF
 Hi @gp-releng,
 
 The new PXF release ${version} is ready to be published to VMware Tanzu Network.
@@ -74,7 +74,7 @@ The GPDB7 artifacts are:
 Can you please upload the artifacts and the OSL / ODP files to the Greenplum Tanzu Network Release for our product, PXF?
 The OSL file should appear as "Open Source Licenses for PXF ${version}".
 
-Once the artifacts are published to the Tanzu Network site, please post a message in the #${PXF_SLACK_CHANNEL_NAME} slack channel:
-${PXF_SLACK_CHANNEL_LINK}
+Once the artifacts are published to the Tanzu Network site, please post a message in the #${PXF_GOOGLE_SPACE_NAME} Google Space:
+${PXF_GOOGLE_SPACE_LINK}
 
 EOF

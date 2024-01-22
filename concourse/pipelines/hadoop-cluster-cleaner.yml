@@ -1,10 +1,10 @@
 ---
 resource_types:
-- name: slack-notification
+- name: gchat-notification
   type: registry-image
   source:
-    repository: cfcommunity/slack-notification-resource
-    tag: latest
+    repository: springio/google-chat-notify-resource
+    tag: 0.0.1-SNAPSHOT
 
 resources:
 - name: timer
@@ -26,7 +26,7 @@ resources:
     uri: ((ud/pxf/common/git-remote))
 
 - name: gchat-alert
-  type: slack-notification
+  type: gchat-notification
   source:
     url: ((ud/pxf/secrets/ud-pipeline-bot-gp-ud-gchat-webhook))
 

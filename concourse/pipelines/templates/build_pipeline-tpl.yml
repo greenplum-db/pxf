@@ -161,7 +161,7 @@ resources:
 
     [[macros.resource_registry_image('google-cloud-sdk-slim-image', 'google/cloud-sdk', '402.0.0-slim')]]
 
-## ---------- Slack Notification ----------
+## ---------- Google Chat Notification ----------
 {% if gchat_notification %}
     [[macros.resource_gchat_notification('gchat-alert', 'ud-pipeline-bot-gp-ud-gchat-webhook')]]
     [[macros.resource_gchat_notification('notify-releng', 'ud-pipeline-bot-gp-extended-gchat-webhook')]]

@@ -125,7 +125,7 @@ resources:
     [[macros.resource_registry_image('ccp-7-image', 'gcr.io/data-gpdb-public-images/ccp', 'latest')]]
 {% endif %}
 
-## ---------- Slack Notification ----------
+## ---------- Google Chat Notification ----------
 {% if gchat_notification %}
     [[macros.resource_gchat_notification('gchat-alert', 'ud-pipeline-bot-' ~ user ~ '-gchat-webhook')]]
 {% endif %}

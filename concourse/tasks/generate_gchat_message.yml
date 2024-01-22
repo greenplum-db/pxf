@@ -14,11 +14,11 @@ outputs:
 params:
   PXF_OSL_FILE_PREFIX:
   PXF_ODP_FILE_PREFIX:
-  PXF_SLACK_CHANNEL_NAME:
-  PXF_SLACK_CHANNEL_LINK:
+  PXF_GOOGLE_SPACE_NAME:
+  PXF_GOOGLE_SPACE_LINK:
   RELENG_DROP_URL:
   RELENG_OSL_DROP_URL:
   RELENG_ODP_DROP_URL:
 
 run:
-  path: pxf_src/concourse/scripts/generate_slack_message.bash
+  path: pxf_src/concourse/scripts/generate_gchat_message.bash
