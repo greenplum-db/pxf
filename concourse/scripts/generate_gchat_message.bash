@@ -44,7 +44,7 @@ echo "Generating Google Space Message"
 
 # generate Google Space message
 tee pxf_artifacts/gchat_message.txt << EOF
-Hi @gp-releng,
+Hi Releng Team,
 
 The new PXF release ${version} is ready to be published to VMware Tanzu Network.
 
