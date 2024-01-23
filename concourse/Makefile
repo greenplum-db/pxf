@@ -24,7 +24,7 @@ FLY_CMD                     ?= fly
 CHECK_CREDS                 ?= true
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
-NOTIFICATIONS               ?= true
+NOTIFY                      ?= true
 # below are dev-build specific vars
 MULTINODE_EL7               ?= false
 MULTINODE_EL8               ?= false
@@ -62,12 +62,12 @@ longevity: set-longevity-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-build-pipeline
-set-build-pipeline: NOTIFICATIONS=true
+set-build-pipeline: NOTIFY=true
 set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		environment=prod \
-		gchat_notification=$(NOTIFICATIONS) \
+		gchat_notification=$(NOTIFY) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
 		num_gpdb7_versions=$(NUM_GPDB7_VERSIONS) >"$${PIPELINE_FILE}" && \
@@ -113,7 +113,7 @@ set-dev-release-pipeline:
 set-dev-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template dev_build_pipeline-tpl.yml --vars \
-		gchat_notification=$(NOTIFICATIONS) \
+		gchat_notification=$(NOTIFY) \
 		multinode_el7=$(MULTINODE_EL7) \
 		multinode_el8=$(MULTINODE_EL8) \
 		multinode_el9=$(MULTINODE_EL9) \
