@@ -136,10 +136,12 @@ public class HcfsGlobbingTest extends BaseFeature {
         // wait until all the files exist, before continuing the test
         List<String> datafiles = Arrays.asList(data1, data2, data3, data4);
         datafiles.parallelStream().forEach(datafile -> {
-            with().pollInterval(20, MILLISECONDS)
-                .and().with().pollDelay(20, MILLISECONDS)
-                .await().atMost(120, SECONDS)
-                .until(() -> hdfs.doesFileExist("/" + hdfs.getWorkingDirectory() + "/" + path + "/" + datafile));
+            if (datafile != null) {
+                with().pollInterval(20, MILLISECONDS)
+                        .and().with().pollDelay(20, MILLISECONDS)
+                        .await().atMost(240, SECONDS)
+                        .until(() -> hdfs.doesFileExist("/" + hdfs.getWorkingDirectory() + "/" + path + "/" + datafile));
+            }
         });
 
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
