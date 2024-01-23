@@ -9,12 +9,8 @@ import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -137,9 +133,8 @@ public class HcfsGlobbingTest extends BaseFeature {
         prepareTableData(path, data3, "3c");
         prepareTableData(path, data4, "4d");
 
-        // wait until all of the files exist, before continuing the test
-        List<String> datafiles = new ArrayList();
-        Collections.addAll(datafiles, data1, data2, data3, data4);
+        // wait until all the files exist, before continuing the test
+        List<String> datafiles = Arrays.asList(data1, data2, data3, data4);
         datafiles.parallelStream().forEach(datafile -> {
             with().pollInterval(20, MILLISECONDS)
                 .and().with().pollDelay(20, MILLISECONDS)
