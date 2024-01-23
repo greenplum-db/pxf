@@ -76,5 +76,4 @@ The OSL file should appear as \"Open Source Licenses for PXF ${version}\".
 
 Once the artifacts are published to the Tanzu Network site, please post a message in the #${PXF_GOOGLE_SPACE_NAME} Google Space:
 ${PXF_GOOGLE_SPACE_LINK}
-
 EOF
