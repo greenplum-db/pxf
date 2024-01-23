@@ -51,25 +51,25 @@ The new PXF release ${version} is ready to be published to VMware Tanzu Network.
 We have uploaded PXF release artifacts to the following RelEng locations:
 
 The GPDB5 artifacts are:
-* ${pxf_gp5_tarball_releng_url}
-* ${pxf_gp5_el7_releng_url}
-* ${pxf_gp5_osl_releng_url}
-* ${pxf_gp5_odp_releng_url}
+* <${pxf_gp5_tarball_releng_url}>
+* <${pxf_gp5_el7_releng_url}>
+* <${pxf_gp5_osl_releng_url}>
+* <${pxf_gp5_odp_releng_url}>
 
 The GPDB6 artifacts are:
-* ${pxf_gp6_tarball_releng_url}
-* ${pxf_gp6_el7_releng_url}
-* ${pxf_gp6_el8_releng_url}
-* ${pxf_gp6_el9_releng_url}
-* ${pxf_gp6_ubuntu18_releng_url}
-* ${pxf_gp6_osl_releng_url}
-* ${pxf_gp6_odp_releng_url}
+* <${pxf_gp6_tarball_releng_url}>
+* <${pxf_gp6_el7_releng_url}>
+* <${pxf_gp6_el8_releng_url}>
+* <${pxf_gp6_el9_releng_url}>
+* <${pxf_gp6_ubuntu18_releng_url}>
+* <${pxf_gp6_osl_releng_url}>
+* <${pxf_gp6_odp_releng_url}>
 
 The GPDB7 artifacts are:
-* ${pxf_gp7_el8_releng_url}
-* ${pxf_gp7_el9_releng_url}
-* ${pxf_gp7_osl_releng_url}
-* ${pxf_gp7_odp_releng_url}
+* <${pxf_gp7_el8_releng_url}>
+* <${pxf_gp7_el9_releng_url}>
+* <${pxf_gp7_osl_releng_url}>
+* <${pxf_gp7_odp_releng_url}>
 
 Can you please upload the artifacts and the OSL / ODP files to the Greenplum Tanzu Network Release for our product, PXF?
 The OSL file should appear as \"Open Source Licenses for PXF ${version}\".
