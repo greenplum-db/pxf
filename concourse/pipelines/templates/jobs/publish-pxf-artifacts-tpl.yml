@@ -64,8 +64,8 @@
     params:
       PXF_OSL_FILE_PREFIX: ((ud/pxf/common/osl-file-prefix))
       PXF_ODP_FILE_PREFIX: ((ud/pxf/common/odp-file-prefix))
-      PXF_GOOGLE_SPACE_NAME: ((ud/pxf/common/google-space-name))
-      PXF_GOOGLE_SPACE_LINK: ((ud/pxf/secrets/google-space-link))
+      PXF_GCHAT_SPACE_NAME: ((ud/pxf/common/google-space-name))
+      PXF_GCHAT_SPACE_LINK: ((ud/pxf/secrets/google-space-link))
       RELENG_DROP_URL: gs://((ud/pxf/[[environment]]/releng-drop-bucket-name))/((ud/pxf/common/releng-drop-path))
       RELENG_OSL_DROP_URL: gs://((ud/pxf/[[environment]]/releng-drop-bucket-name))/((ud/pxf/common/releng-osl-drop-path))
       RELENG_ODP_DROP_URL: gs://((ud/pxf/[[environment]]/releng-drop-bucket-name))/((ud/pxf/common/releng-odp-drop-path))

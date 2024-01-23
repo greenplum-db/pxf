@@ -7,8 +7,8 @@ set -e
 : "${RELENG_DROP_URL:?RELENG_DROP_URL must be set}"
 : "${RELENG_OSL_DROP_URL:?RELENG_OSL_DROP_URL must be set}"
 : "${RELENG_ODP_DROP_URL:?RELENG_ODP_DROP_URL must be set}"
-: "${PXF_GOOGLE_SPACE_NAME:?PXF_GOOGLE_SPACE_NAME must be set}"
-: "${PXF_GOOGLE_SPACE_LINK:?PXF_GOOGLE_SPACE_LINK must be set}"
+: "${PXF_GCHAT_SPACE_NAME:?PXF_GCHAT_SPACE_NAME must be set}"
+: "${PXF_GCHAT_SPACE_LINK:?PXF_GCHAT_SPACE_LINK must be set}"
 
 function fail() {
   echo "Error: $1"
@@ -74,6 +74,6 @@ The GPDB7 artifacts are:
 Can you please upload the artifacts and the OSL / ODP files to the Greenplum Tanzu Network Release for our product, PXF?
 The OSL file should appear as \"Open Source Licenses for PXF ${version}\".
 
-Once the artifacts are published to the Tanzu Network site, please post a message in the #${PXF_GOOGLE_SPACE_NAME} Google Space:
-${PXF_GOOGLE_SPACE_LINK}
+Once the artifacts are published to the Tanzu Network site, please post a message in the ${PXF_GCHAT_SPACE_NAME} Google Chat Space:
+${PXF_GCHAT_SPACE_LINK}
 EOF
