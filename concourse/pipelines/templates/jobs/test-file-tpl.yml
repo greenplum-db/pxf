@@ -95,5 +95,5 @@
       IMPERSONATION: false
       PROTOCOL: file
 {% if gchat_notification %}
-    <<: *gchat_alert
+  <<: *gchat_alert
 {% endif %}

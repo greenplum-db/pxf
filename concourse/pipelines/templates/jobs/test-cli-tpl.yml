@@ -80,5 +80,5 @@
     image: [[x.test_image_resource_name]]
     file: pxf_src/concourse/tasks/test_pxf_cli.yml
 {% if gchat_notification %}
-    <<: *gchat_alert
+  <<: *gchat_alert
 {% endif %}

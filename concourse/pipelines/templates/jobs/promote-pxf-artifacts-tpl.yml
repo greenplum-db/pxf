@@ -42,5 +42,5 @@
       run:
         path: pxf_src/concourse/scripts/promote_pxf_artifacts.bash
 {% if gchat_notification %}
-    <<: *gchat_alert
+  <<: *gchat_alert
 {% endif %}
