@@ -50,5 +50,7 @@
           run:
             path: pxf_src/concourse/scripts/test.bash
 {% endfor %}
-
+{% if gchat_notification %}
+  <<: *gchat_alert
+{% endif %}
 {% endif %}

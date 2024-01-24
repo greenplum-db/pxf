@@ -38,3 +38,6 @@
       GROUP: pxfExtensionVersion2
       SECOND_GROUP: pxfExtensionVersion2_1
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+{% if gchat_notification %}
+  <<: *gchat_alert
+{% endif %}

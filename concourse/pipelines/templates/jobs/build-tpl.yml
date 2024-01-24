@@ -29,3 +29,6 @@
     params:
       file: dist/[[x.pxf_fdw_tarball_filename_regex]]
 {% endif %}
+{% if gchat_notification %}
+  <<: *gchat_alert
+{% endif %}
