@@ -239,10 +239,10 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         return new Path(pathString);
     }
 
-    public void waitForFile(String path) {
+    public void waitForFile(String path, int maxSecondsToWait) {
         with().pollInterval(20, MILLISECONDS)
                 .and().with().pollDelay(20, MILLISECONDS)
-                .await().atMost(240, SECONDS)
+                .await().atMost(maxSecondsToWait, SECONDS)
                 .until(() -> doesFileExist(getDatapath(path).toString()));
     }
 

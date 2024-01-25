@@ -133,7 +133,7 @@ public class HcfsGlobbingTest extends BaseFeature {
         List<String> datafiles = Arrays.asList(data1, data2, data3, data4);
         datafiles.parallelStream().forEach(datafile -> {
             if (datafile != null) {
-                hdfs.waitForFile(hdfs.getWorkingDirectory() + "/" + path + "/" + datafile);
+                hdfs.waitForFile(hdfs.getWorkingDirectory() + "/" + path + "/" + datafile, 240);
             }
         });
 
