@@ -53,6 +53,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static java.lang.Thread.sleep;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.with;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -234,6 +237,13 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         }
 
         return new Path(pathString);
+    }
+
+    public void waitForFile(String path) {
+        with().pollInterval(20, MILLISECONDS)
+                .and().with().pollDelay(20, MILLISECONDS)
+                .await().atMost(240, SECONDS)
+                .until(() -> doesFileExist(getDatapath(path).toString()));
     }
 
     @Override
