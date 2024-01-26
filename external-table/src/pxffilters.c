@@ -28,8 +28,10 @@
 #include "optimizer/clauses.h"
 #include "parser/parse_expr.h"
 #include "utils/builtins.h"
+#include "utils/date.h"
 #include "utils/guc.h"
 #include "utils/lsyscache.h"
+#include "utils/timestamp.h"
 
 static List *pxf_make_expression_items_list(List *quals, Node *parent);
 static void pxf_free_filter(PxfFilterDesc * filter);
@@ -182,6 +184,7 @@ dbop_pxfop_map pxf_supported_opr_op_expr[] =
 	{1059 /* bpcharle */ , PXFOP_LE},
 	{1061 /* bpcharge */ , PXFOP_GE},
 	{1057 /* bpcharne */ , PXFOP_NE},
+	{1211 /* bpcharlike */ , PXFOP_LIKE},
 
 	/* numeric */
 	{NumericEqualOperator /* numericeq */ , PXFOP_EQ},
@@ -231,14 +234,24 @@ dbop_pxfop_array_map pxf_supported_opr_scalar_array_op_expr[] =
 	/* timestamp */
 	{TimestampEqualOperator /* timestamp_eq */ , PXFOP_IN, true},
 
+	/* float4 */
+	{Float4EqualOperator /* float4eq */ , PXFOP_IN, true},
+
 	/* float8 */
 	{Float8EqualOperator /* float8eq */ , PXFOP_IN, true},
 
 	/* float48 */
 	{1120 /* float48eq */ , PXFOP_IN, true},
 
+	/* varchar is not needed as it is relabeled to text */
+
 	/* bpchar */
 	{BPCharEqualOperator /* bpchareq */ , PXFOP_IN, true},
+
+	/* char is not needed as it is relabeled to bpchar */
+
+	/* numeric */
+	{NumericEqualOperator /* numericeq */ , PXFOP_IN, true},
 };
 
 
@@ -257,11 +270,20 @@ Oid			pxf_supported_types[] =
 	CHAROID,
 	DATEOID,
 	TIMESTAMPOID,
+
 	/* complex datatypes */
 	INT2ARRAYOID,
 	INT4ARRAYOID,
 	INT8ARRAYOID,
-	TEXTARRAYOID
+	FLOAT4ARRAYOID,
+	FLOAT8ARRAYOID,
+	1231, /* numeric array oid */
+	TEXTARRAYOID,
+	1015, /* varchar array oid */
+	1014, /* bpchar array oid */
+	1002, /* char array oid */
+	1182, /* date array oid */
+	1115  /* timestamp array oid */
 };
 
 static void
@@ -837,6 +859,35 @@ scalar_array_op_expr_to_pxffilter(ScalarArrayOpExpr *expr, PxfFilterDesc * filte
 	if (!supported_operator_type_scalar_array_op_expr(expr->opno, filter, expr->useOr))
 		return false;
 
+	if (IsA(leftop, RelabelType))
+	{
+		/*
+		 * Checks if the arg is of type Var, and if it is uses the Var as the left operator
+		 */
+		RelabelType *relabelType = (RelabelType *) leftop;
+		Expr *exprNode = relabelType->arg;
+
+		if (IsA(exprNode, Var))
+		{
+			leftop = (Node *)exprNode;
+		}
+	}
+
+	if (IsA(rightop, RelabelType))
+	{
+		/*
+		 * Checks if the arg is of type Var, and if it is uses the Var as the right operator
+		 */
+		RelabelType *relabelType = (RelabelType *) rightop;
+		Expr *exprNode = relabelType->arg;
+
+		if (IsA(exprNode, Var))
+		{
+			rightop = (Node *)exprNode;
+		}
+	}
+
+	/* arguments must be VAR and CONST */
 	if (IsA(leftop, Var) &&IsA(rightop, Const))
 	{
 		filter->l.opcode = PXF_ATTR_CODE;
@@ -1187,7 +1238,8 @@ scalar_const_to_str(Const *constval, StringInfo buf)
  * list_const_to_str
  *
  * Extracts the value stored in a list constant to a string.
- * Currently supported data types: int2[], int4[], int8[], text[]
+ * Currently supported data types: int2[], int4[], int8[], text[],
+ * numeric[], bpchar[], real[], double precision[], date[], timestamp[]
  * Example:
  * Input: ['abc', 'xyz']
  * Output: s3dabcs3dxyz
@@ -1276,7 +1328,7 @@ list_const_to_str(Const *constval, StringInfo buf)
 				}
 				break;
 			}
-		case TEXTARRAYOID:
+		case TEXTARRAYOID: /* varchar is relabeled to text */
 			{
 				char	   *value;
 
@@ -1285,6 +1337,120 @@ list_const_to_str(Const *constval, StringInfo buf)
 				for (int i = 0; i < len; i++)
 				{
 					value = DatumGetCString(DirectFunctionCall1(textout, dats[i]));
+
+					appendStringInfo(interm_buf, "%s", value);
+
+					appendStringInfo(buf, "%c%d%c%s",
+									 PXF_SIZE_BYTES, interm_buf->len,
+									 PXF_CONST_DATA, interm_buf->data);
+					resetStringInfo(interm_buf);
+				}
+				break;
+			}
+		case 1231: /* numeric array oid */
+			{
+				char	   *value;
+
+				deconstruct_array(arr, NUMERICOID, -1, false, 'i', &dats, NULL, &len);
+
+				for (int i = 0; i < len; i++)
+				{
+					value = DatumGetCString(DirectFunctionCall1(numeric_out, dats[i]));
+
+					appendStringInfo(interm_buf, "%s", value);
+
+					appendStringInfo(buf, "%c%d%c%s",
+									 PXF_SIZE_BYTES, interm_buf->len,
+									 PXF_CONST_DATA, interm_buf->data);
+					resetStringInfo(interm_buf);
+				}
+				break;
+			}
+		case 1014: /* bpchar array oid, char is relabeled to bpchar */
+			{
+				char	   *value;
+
+				deconstruct_array(arr, BPCHAROID, -1, false, 'i', &dats, NULL, &len);
+
+				for (int i = 0; i < len; i++)
+				{
+					value = DatumGetCString(DirectFunctionCall1(bpcharout, dats[i]));
+
+					appendStringInfo(interm_buf, "%s", value);
+
+					appendStringInfo(buf, "%c%d%c%s",
+									 PXF_SIZE_BYTES, interm_buf->len,
+									 PXF_CONST_DATA, interm_buf->data);
+					resetStringInfo(interm_buf);
+				}
+				break;
+			}
+		case FLOAT4ARRAYOID:
+			{
+				char	   *value;
+
+				deconstruct_array(arr, FLOAT4OID, sizeof(value), true, 'i', &dats, NULL, &len);
+
+				for (int i = 0; i < len; i++)
+				{
+					value = DatumGetCString(DirectFunctionCall1(float4out, dats[i]));
+
+					appendStringInfo(interm_buf, "%s", value);
+
+					appendStringInfo(buf, "%c%d%c%s",
+									 PXF_SIZE_BYTES, interm_buf->len,
+									 PXF_CONST_DATA, interm_buf->data);
+					resetStringInfo(interm_buf);
+				}
+				break;
+			}
+		case FLOAT8ARRAYOID:
+			{
+				char	   *value;
+
+				deconstruct_array(arr, FLOAT8OID, sizeof(value), true, 'd', &dats, NULL, &len);
+
+				for (int i = 0; i < len; i++)
+				{
+					value = DatumGetCString(DirectFunctionCall1(float8out, dats[i]));
+
+					appendStringInfo(interm_buf, "%s", value);
+
+					appendStringInfo(buf, "%c%d%c%s",
+									 PXF_SIZE_BYTES, interm_buf->len,
+									 PXF_CONST_DATA, interm_buf->data);
+					resetStringInfo(interm_buf);
+				}
+				break;
+			}
+		case 1182: /* date array oid */
+			{
+				char	   *value;
+
+				deconstruct_array(arr, DATEOID, sizeof(value), true, 'i', &dats, NULL, &len);
+
+				for (int i = 0; i < len; i++)
+				{
+					value = DatumGetCString(DirectFunctionCall1(date_out, dats[i]));
+
+					appendStringInfo(interm_buf, "%s", value);
+
+					appendStringInfo(buf, "%c%d%c%s",
+									 PXF_SIZE_BYTES, interm_buf->len,
+									 PXF_CONST_DATA, interm_buf->data);
+					resetStringInfo(interm_buf);
+				}
+				break;
+			}
+		case 1115: /* timestamp array oid */
+			{
+				char	   *value;
+
+				deconstruct_array(arr, TIMESTAMPOID, sizeof(value), true, 'd', &dats, NULL, &len);
+
+				for (int i = 0; i < len; i++)
+				{
+					value = DatumGetCString(DirectFunctionCall1(timestamp_out, dats[i]));
 
 					appendStringInfo(interm_buf, "%s", value);
 

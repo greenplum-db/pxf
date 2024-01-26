@@ -73,7 +73,7 @@ public class JdbcPredicateBuilderTest {
         runScenario("a3c1700s4d1.11o2", "WHERE c3 > 1.11");
         runScenario("a3c1700s4d1.11o4", "WHERE c3 >= 1.11");
         runScenario("a3c1700s4d1.11o6", "WHERE c3 <> 1.11");
-        // IN operator is not yet supported for NUMERIC types
+        runScenario("a3m1231s4d1.11s4d2.21o10", "WHERE c3 IN (1.11,2.21)");
         runScenario("a3o8", "WHERE c3 IS NULL");
         runScenario("a3o9", "WHERE c3 IS NOT NULL");
         runScenario("a3o8l2", "WHERE NOT (c3 IS NULL)"); // ORCA
@@ -87,8 +87,8 @@ public class JdbcPredicateBuilderTest {
         runScenario("a4c1042s2dBBo2", "WHERE d4 > 'BB'");
         runScenario("a4c1042s2dBBo4", "WHERE d4 >= 'BB'");
         runScenario("a4c1042s2dBBo6", "WHERE d4 <> 'BB'");
-        // LIKE operator is not yet supported for CHAR types
-        // IN   operator is not yet supported for CHAR types
+        runScenario("a4c25s2dB%o7", "WHERE d4 LIKE 'B%'");
+        runScenario("a4m1014s2dBBs2dCCo10", "WHERE d4 IN ('BB','CC')");
         runScenario("a4o8", "WHERE d4 IS NULL");
         runScenario("a4o9", "WHERE d4 IS NOT NULL");
         runScenario("a4o8l2", "WHERE NOT (d4 IS NULL)"); // ORCA
@@ -103,8 +103,8 @@ public class JdbcPredicateBuilderTest {
         runScenario("a5c25s2dBBo2", "WHERE e5 > 'BB'");
         runScenario("a5c25s2dBBo4", "WHERE e5 >= 'BB'");
         runScenario("a5c25s2dBBo6", "WHERE e5 <> 'BB'");
-        // LIKE operator is not yet supported for VARCHAR types
-        // IN   operator is not yet supported for VARCHAR types
+        runScenario("a5c25s2dB%o7", "WHERE e5 LIKE 'B%'");
+        runScenario("a5m1009s2dBBs2dCCo10", "WHERE e5 IN ('BB','CC')");
         runScenario("a5o8", "WHERE e5 IS NULL");
         runScenario("a5o9", "WHERE e5 IS NOT NULL");
         runScenario("a5o8l2", "WHERE NOT (e5 IS NULL)"); // ORCA

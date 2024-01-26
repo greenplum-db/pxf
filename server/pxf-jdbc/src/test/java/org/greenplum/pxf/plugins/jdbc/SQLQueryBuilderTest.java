@@ -143,7 +143,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals(SQL, query);
+        assertEquals(SQL + " WHERE grade IN 'bad'", query);
     }
 
     @Test
