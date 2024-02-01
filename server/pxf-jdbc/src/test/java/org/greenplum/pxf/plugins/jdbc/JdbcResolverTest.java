@@ -127,10 +127,11 @@ class JdbcResolverTest {
 
     @Test
     void getFieldDateTimeWithoutWideRangeTest() throws SQLException {
-        boolean isDateWideRange = false;
+        isDateWideRange = false;
         Timestamp timestamp = Timestamp.valueOf("1977-12-11 11:15:30.1234");
         OneField oneField = getOneField(timestamp, DataType.TIMESTAMP.getOID(), "timestamp");
-        assertEquals("1977-12-11 11:15:30.1234", oneField.toString());
+        assertTrue(oneField.val instanceof String);
+        assertEquals("1977-12-11 11:15:30.1234", oneField.val);
     }
 
     @Test

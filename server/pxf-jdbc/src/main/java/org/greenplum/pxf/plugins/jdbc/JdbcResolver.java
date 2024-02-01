@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
@@ -223,7 +224,8 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         LocalDateTime localDateTime = result.getObject(colName, LocalDateTime.class);
                         value = localDateTime != null ? localDateTime.format(LOCAL_DATE_TIME_GET_FORMATTER) : null;
                     } else {
-                        value = result.getTimestamp(colName);
+                        Timestamp timestamp = result.getTimestamp(colName);
+                        value = timestamp != null ? timestamp.toLocalDateTime().format(GreenplumDateTime.DATETIME_FORMATTER) : null;
                     }
                     break;
                 case TIMESTAMP_WITH_TIME_ZONE:
