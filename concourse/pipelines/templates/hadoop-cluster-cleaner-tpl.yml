@@ -1,51 +1,36 @@
 ---
+# yamllint disable rule:empty-lines
+
+{# import macros to use in this template #}
+{% import "macros/macros.j2" as macros %}
+
+anchors:
+    [[macros.anchor_gchat_notification(gchat_notification)]]
+
 resource_types:
-- name: gchat-notification
-  type: registry-image
-  source:
-    repository: springio/google-chat-notify-resource
-    tag: 0.0.1-SNAPSHOT
+    [[macros.resource_type_registry_image('google-chat-notify-resource', 'springio/google-chat-notify-resource', '0.0.1-SNAPSHOT')]]
 
 resources:
-- name: timer
-  type: time
-  source:
-    interval: 10m
+    [[macros.resource_timer('timer', '10m')]]
 
-- name: ccp_src
-  type: git
-  source:
-    branch: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-branch))
-    private_key: ((gp-concourse-cluster-provisioner-git-key))
-    uri: ((ud/pxf/common/gp-concourse-cluster-provisioner-git-remote))
+    [[macros.resource_github_repo('ccp')]]
+    [[macros.resource_github_repo('pxf')]]
 
-- name: pxf_src
-  type: git
-  source:
-    branch: ((pxf-git-branch))
-    uri: ((ud/pxf/common/git-remote))
-
-- name: gchat-alert
-  type: gchat-notification
-  source:
-    url: ((ud/pxf/secrets/gchat-gp-extended-federation-ci-webhook))
+    [[macros.resource_gchat_notification('gchat-alert', 'gchat-gp-extended-federation-ci-webhook')]]
 
 jobs:
 - name: hadoop-cluster-cleaner
   build_logs_to_retain: 50
   max_in_flight: 1
-  on_failure:
-    put: gchat-alert
-    params:
-      text: |
-        FAILURE! <${ATC_EXTERNAL_URL}/builds/${BUILD_ID}|${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}> went red
+  <<: *gchat_alert
   plan:
   - in_parallel:
       steps:
       - get: timer
         trigger: true
       - get: ccp_src
-      - get: pxf_src
+        resource: ccp-src
+      - get: pxf-src
   - task: run-cleaner
     config:
       platform: linux
@@ -56,7 +41,7 @@ jobs:
           tag: latest
       inputs:
       - name: ccp_src
-      - name: pxf_src
+      - name: pxf-src
       params:
         AWS_ACCESS_KEY_ID: ((tf-machine-access-key-id))
         AWS_SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
@@ -67,6 +52,6 @@ jobs:
         LIFETIME_MINS: 240
         CLOUD: google
         GOOGLE_CLUSTER_PREFIX: ((ud/pxf/common/tf-bucket-path-hadoop))
-        TERRAFORM_INIT_PATH: /tmp/build/*/pxf_src/concourse/terraform/ipa-multinode-hadoop
+        TERRAFORM_INIT_PATH: /tmp/build/*/pxf-src/concourse/terraform/ipa-multinode-hadoop
       run:
         path: ccp_src/utilities/ClusterReaper/run_ccp_reaper.sh

@@ -5,7 +5,7 @@ resource_types:
     [[macros.resource_type_registry_image('gcs', 'frodenas/gcs-resource', '')]]
 
 resources:
-    [[macros.resource_timer('12h')]]
+    [[macros.resource_timer('twice-a-day', '12h')]]
     [[macros.resource_github_repo('pxf')]]
     [[macros.resource_registry_image('ubuntu18', 'gcr.io/data-gpdb-public-images/gpdb6-ubuntu18.04-build', 'latest')]]
     [[macros.resource_pivnet_cli()]]

@@ -1,9 +1,10 @@
 {# Template for a Concourse time resource definition.
  #
+ # Expects an 'name' variable to set.
  # Expects an 'interval' variable to set. Valid examples: '60s', '90m', '1h'
  #}
 
-- name: twice-a-day
+- name: [[name]]
   type: time
   icon: clock-outline
   source:
