@@ -11,12 +11,12 @@
   plan:
   - in_parallel:
     - get: pxf_src
+      trigger: true
     - get: bin_gpdb
       resource: [[x.gpdb_tarball_name]]
       trigger: true
     - get: pxf_package
       resource: [[x.pxf_package_name]]
-      trigger: true
     - get: gpdb[[x.gp_ver]]-pxf-dev-[[x.test_platform]]-image
     - get: ccp-7-image
     - get: pxf-automation-dependencies
