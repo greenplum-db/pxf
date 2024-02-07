@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.9.1 (02/06/2024)
+
+### Bug Fixes:
+
+- [#1070](https://github.com/greenplum-db/pxf/pull/1070) Upgrade gp-common-go-libs to 1.0.14
+- [#1074](https://github.com/greenplum-db/pxf/pull/1074) Bump Springboot to 2.7.18
+
 ## 6.9.0 (12/08/2023)
 
 ### Enhancements:
