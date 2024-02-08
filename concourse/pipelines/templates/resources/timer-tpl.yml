@@ -1,6 +1,6 @@
 {# Template for a Concourse time resource definition.
  #
- # Expects an 'name' variable to set.
+ # Expects an 'name' variable to be set.
  # Expects an 'interval' variable to set. Valid examples: '60s', '90m', '1h'
  #}
 
