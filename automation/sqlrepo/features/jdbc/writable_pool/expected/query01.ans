@@ -6,7 +6,7 @@ NOTICE:  ALTER TABLE / ADD UNIQUE will create implicit index "gpdb_types_pool_ta
 ALTER TABLE
 
 INSERT INTO pxf_jdbc_writable_pool SELECT t1, t2, num1 FROM gpdb_types;
-INSERT 0 25
+INSERT 0 26
 SELECT * FROM gpdb_types_pool_target ORDER BY t1;
           t1          |  t2  | num1
 ----------------------+------+------
@@ -28,6 +28,7 @@ SELECT * FROM gpdb_types_pool_target ORDER BY t1;
  row23_varchar_null   | s_16 |   11
  row24_char_null      | s_16 |   11
  row25_binary_null    | s_16 |   11
+ row26_uuid_null      | s_16 |   11
  row3                 | s_8  |    3
  row4                 | s_9  |    4
  row5                 | s_10 |    5
@@ -35,7 +36,7 @@ SELECT * FROM gpdb_types_pool_target ORDER BY t1;
  row7                 | s_12 |    7
  row8                 | s_13 |    8
  row9                 | s_14 |    9
-(25 rows)
+(26 rows)
 
 -- start_matchsubs
 --

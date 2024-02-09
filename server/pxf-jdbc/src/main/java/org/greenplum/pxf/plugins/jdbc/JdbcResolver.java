@@ -49,6 +49,7 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_TIME;
@@ -236,6 +237,9 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                                         column));
                     }
                     break;
+                case UUID:
+                    value = result.getObject(colName, java.util.UUID.class);
+                    break;
                 default:
                     throw new UnsupportedOperationException(
                             String.format("Field type '%s' (column '%s') is not supported",
@@ -337,6 +341,9 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         } else {
                             oneField.val = Date.valueOf(rawVal);
                         }
+                        break;
+                    case UUID:
+                        oneField.val = UUID.fromString(rawVal);
                         break;
                     default:
                         throw new UnsupportedOperationException(
@@ -450,6 +457,9 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                             statement.setDate(i, (Date) field.val);
                         }
                     }
+                    break;
+                case UUID:
+                    statement.setObject(i, field.val);
                     break;
                 default:
                     throw new IOException("The data tuple from JdbcResolver is corrupted");
