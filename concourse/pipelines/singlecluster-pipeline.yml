@@ -7,7 +7,6 @@ resource_types:
   type: registry-image
   source:
     repository: gcr.io/data-gpdb-public-images/gcs-resource
-    tag: v0.6.0
 
 ## ======================================================================
 ## RESOURCES

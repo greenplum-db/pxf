@@ -2,7 +2,7 @@
 {% import "macros/macros.j2" as macros %}
 {% set attempts = 3 %}
 resource_types:
-    [[macros.resource_type_registry_image('gcs', 'gcr.io/data-gpdb-public-images/gcs-resource', 'v0.6.0')]]
+    [[macros.resource_type_registry_image('gcs', 'gcr.io/data-gpdb-public-images/gcs-resource', '')]]
 
 resources:
     [[macros.resource_timer('twice-a-day', '12h')]]
