@@ -72,6 +72,7 @@ for ((i = 0; i < ${#product_files[@]}; i++)); do
 		case "${file}" in
 			*rhel7*) existing_file="$(find ${product_dirs[$i]}/ -name *rhel7*.rpm)" ;;
 			*rhel8*) existing_file="$(find ${product_dirs[$i]}/ -name *rhel8*.rpm)" ;;
+			*rhel9*) existing_file="$(find ${product_dirs[$i]}/ -name *rhel9*.rpm)" ;;
 			*ubuntu18*) existing_file="$(find ${product_dirs[$i]}/ -name *ubuntu18*.deb)" ;;
 			*)
 				echo "Unexpected file: ${file}"
