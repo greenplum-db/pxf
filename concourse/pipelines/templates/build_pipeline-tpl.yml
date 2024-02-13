@@ -108,7 +108,7 @@ anchors:
 resource_types:
     [[macros.resource_type_registry_image('terraform', 'gcr.io/data-gpdb-ud/terraform-resource', '0.11.15')]]
     [[macros.resource_type_registry_image('terraform-0.14.10', 'ljfranklin/terraform-resource', '0.14.10')]]
-    [[macros.resource_type_registry_image('gcs', 'frodenas/gcs-resource', '')]]
+    [[macros.resource_type_registry_image('gcs', 'gcr.io/data-gpdb-public-images/gcs-resource', 'v0.6.0')]]
     [[macros.resource_type_registry_image('google-chat-notify-resource', 'springio/google-chat-notify-resource', '0.0.1-SNAPSHOT')]]
 
 ## ======================================================================

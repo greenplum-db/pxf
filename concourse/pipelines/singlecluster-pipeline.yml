@@ -6,7 +6,8 @@ resource_types:
 - name: google-cloud-storage
   type: registry-image
   source:
-    repository: frodenas/gcs-resource
+    repository: gcr.io/data-gpdb-public-images/gcs-resource
+    tag: v0.6.0
 
 ## ======================================================================
 ## RESOURCES
