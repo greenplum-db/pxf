@@ -48,10 +48,3 @@ sed -i "s|module_pathname =.*|module_pathname = '${RPM_INSTALL_PREFIX}/fdw/pxf_f
 # only applies for old installations (pre 6.0.0)
 %__rm -f "${RPM_INSTALL_PREFIX}/conf/pxf-private.classpath"
 %__rm -rf "${RPM_INSTALL_PREFIX}/pxf-service"
-
-%posttrans
-# PXF v5 RPM installation removes the run directory during the %preun step.
-# The lack of run directory prevents PXF v6+ from starting up.
-# %posttrans of the new package is the only step that runs after the %preun
-# of the old package
-%{__install} -d -m 700 "${RPM_INSTALL_PREFIX}/run"
