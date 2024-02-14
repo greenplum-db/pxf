@@ -332,7 +332,9 @@ task stage(type: Copy) {
         into 'bin'
         filter { line -> line.replaceAll('_PXF_VERSION_', "${version}") }
     }
-    from('pxf-service/src/templates')
+    from('pxf-service/src/templates') {
+        into "templates"
+    }
     into "$buildDir/stage"
 
     doLast { new File("${buildDir}/stage/version").text = "${version}\n" }

@@ -43,26 +43,6 @@ sed -i "s|module_pathname =.*|module_pathname = '${RPM_INSTALL_PREFIX}/fdw/pxf_f
 %files
 %{prefix}
 
-# If a file is not marked as a config file, or if a file has not been altered
-# since installation, then it will be silently replaced by the version from the
-# RPM.
-
-# If a config file has been edited on disk, but is not actually different from
-# the file in the RPM then the edited version will be silently left in place.
-
-# When a config file has been edited and is different from the file in
-# the RPM, then the behavior is the following:
-# - %config(noreplace): The edited version will be left in place, and the new
-#                       version will be installed with an .rpmnew suffix.
-# - %config: The new file will be installed, and the the old edited version
-#            will be renamed with an .rpmsave suffix.
-
-# Configuration directories/files
-%config(noreplace) %{prefix}/conf/pxf-application.properties
-%config(noreplace) %{prefix}/conf/pxf-env.sh
-%config(noreplace) %{prefix}/conf/pxf-log4j2.xml
-%config(noreplace) %{prefix}/conf/pxf-profiles.xml
-
 %pre
 # cleanup files and directories created by 'pxf init' command
 # only applies for old installations (pre 6.0.0)
