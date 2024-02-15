@@ -17,8 +17,8 @@ DEV_CLOUDBUILD_PIPELINE_NAME ?= dev-cloudbuild-$(USER)-$(BRANCH)
 PERF_PIPELINE_NAME          ?= pxf_perf-$(SCALE)g-RHEL$(REDHAT_MAJOR_VERSION)
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS          ?= 10
-NUM_GPDB6_VERSIONS          ?=  9
-NUM_GPDB7_VERSIONS          ?=  1
+NUM_GPDB6_VERSIONS          ?= 10
+NUM_GPDB7_VERSIONS          ?= 10
 REDHAT_MAJOR_VERSION        ?= 7
 FLY_CMD                     ?= fly
 CHECK_CREDS                 ?= true
@@ -245,7 +245,8 @@ generate-pivnet-pipeline:
 	mkdir -p generated
 	$(TEMPLATE_CMD) --template get_pivnet_artifacts-tpl.yml --vars \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
-		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >./generated/get_pivnet_artifacts.yml
+		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
+		num_gpdb7_versions=$(NUM_GPDB7_VERSIONS)>./generated/get_pivnet_artifacts.yml
 
 .PHONY: singlecluster
 singlecluster:

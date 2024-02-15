@@ -15,13 +15,23 @@ chmod +x "${PIVNET_CLI_DIR}/pivnet"
 # log in to pivnet
 pivnet login "--api-token=${PIVNET_API_TOKEN}"
 
+num_gpdb_versions="$(pivnet --format=json releases --product-slug="${PRODUCT_SLUG}" | jq --raw-output --argjson gpdb \""${GPDB_VERSION}"\" '[.[] | select(.version | test("^" + $gpdb))] | length')"
+echo "Found ${num_gpdb_versions} on PivNet for GPDB ${GPDB_VERSION}"
+
+if ((VERSIONS_BEFORE_LATEST >= num_gpdb_versions)); then
+	echo "VERSION_BEFORE_LATEST (${VERSIONS_BEFORE_LATEST}) exceeds number of versions (${num_gpdb_versions}) on PivNet for Greenplum ${GPDB_VERSION}"
+	VERSIONS_BEFORE_LATEST=$((num_gpdb_versions - 1))
+	echo "Update VERSIONS_BEFORE_LATEST to ${VERSIONS_BEFORE_LATEST}"
+fi
+
 # get version numbers in sorted order
 # https://stackoverflow.com/questions/57071166/jq-find-the-max-in-quoted-values/57071319#57071319
 gpdb_version=$(
-	pivnet --format=json releases "--product-slug=${PRODUCT_SLUG}" | \
+	pivnet --format=json releases "--product-slug=${PRODUCT_SLUG}" |
 		jq --raw-output --argjson gpdb "\"${GPDB_VERSION}\"" --argjson m "${VERSIONS_BEFORE_LATEST}" \
-		'sort_by(.version | split(".") | select(.[0] == $gpdb) | map(tonumber))[-1-$m].version'
+			'[.[] | select(.version | test("^" + $gpdb)) | .version] | sort_by(split(".") | map(tonumber))[-1-$m]'
 )
+
 echo -e "Latest - ${VERSIONS_BEFORE_LATEST} GPDB version found:\n${GPDB_VERSION}X:\t${gpdb_version}"
 
 # get the string of product names and turn it into list with correct gpdb_version found above
@@ -41,7 +51,7 @@ for ((i = 0; i < ${#product_files[@]}; i++)); do
 	download_path=${product_dirs[$i]}/${file##*/}
 	# does the version in the bucket match what the list we pulled from pivnet?
 	[[ -e ${download_path} ]] || {
-	  # if it doesn't exist, look in the previous bucket for that version
+		# if it doesn't exist, look in the previous bucket for that version
 		echo "${download_path} does not exist, looking for version Latest - $((VERSIONS_BEFORE_LATEST - 1))"
 		new_version=$((VERSIONS_BEFORE_LATEST - 1))
 		# this assumes we are naming our paths with latest-X !
@@ -70,13 +80,14 @@ for ((i = 0; i < ${#product_files[@]}; i++)); do
 		echo "Did not find '${file}' in product files for GPDB '${gpdb_version}'"
 
 		case "${file}" in
-			*rhel7*) existing_file="$(find ${product_dirs[$i]}/ -name *rhel7*.rpm)" ;;
-			*rhel8*) existing_file="$(find ${product_dirs[$i]}/ -name *rhel8*.rpm)" ;;
-			*rhel9*) existing_file="$(find ${product_dirs[$i]}/ -name *rhel9*.rpm)" ;;
-			*ubuntu18*) existing_file="$(find ${product_dirs[$i]}/ -name *ubuntu18*.deb)" ;;
+			*rhel7*) existing_file="$(find "${product_dirs[$i]}/" -name "*rhel7*.rpm")" ;;
+			*el8*) existing_file="$(find "${product_dirs[$i]}/" -name "*el8*.rpm")" ;;
+			*el9*) existing_file="$(find "${product_dirs[$i]}/" -name "*el9*.rpm")" ;;
+			*ubuntu18*) existing_file="$(find "${product_dirs[$i]}/" -name "*ubuntu18*.deb")" ;;
 			*)
 				echo "Unexpected file: ${file}"
-				exit 1;;
+				exit 1
+				;;
 		esac
 
 		echo "Keeping existing file: ${existing_file}"

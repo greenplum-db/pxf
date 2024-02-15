@@ -96,16 +96,22 @@
         {% for p in platforms %}
             {% set y = dict() %}
             {% if p.build_os in [ 'centos', 'rocky' ] %}
-                {% do y.update({'greenplum_platform': 'rhel' ~ p.os_ver}) %}
                 {% do y.update({'release_platform':   'el' ~ p.os_ver}) %}
                 {% do y.update({'pkg_type':           'rpm'}) %}
                 {% do y.update({'pkg_arch':           'x86_64'}) %}
             {% else %}
-                {% do y.update({'greenplum_platform': 'ubuntu' ~ p.os_ver}) %}
                 {% do y.update({'release_platform':   'ubuntu' ~ p.os_ver}) %}
                 {% do y.update({'pkg_type':           'deb'}) %}
                 {% do y.update({'pkg_arch':           'amd64'}) %}
             {% endif %}
+
+            {# adjust Greenplum release platform due to historical inconsistencies #}
+            {% if x.gp_ver in ['5', '6'] and y.release_platform.startswith('el') %}
+                {% do y.update({'greenplum_platform': 'rh' ~ y.release_platform}) %}
+            {% else %}
+                {% do y.update({'greenplum_platform': y.release_platform}) %}
+            {% endif %}
+
             {% do y.update({'gpdb_package_resource_name':   "gpdb" ~ x.gp_ver ~ "-" ~ y.release_platform ~ "-" ~ y.pkg_type ~ "-latest"}) %}
             {% do y.update({'gpdb_package_file_name':       "greenplum-db-GPDB_VERSION-" ~ y.greenplum_platform ~ "-" ~ y.pkg_arch ~ "." ~ y.pkg_type}) %}
             {% do y.update({'gpdb_package_file_glob':       y.gpdb_package_file_name | replace("GPDB_VERSION", x.gp_ver ~ ".*")}) %}
