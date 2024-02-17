@@ -89,7 +89,8 @@ set-dev-release-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		environment=dev \
-		gchat_notification=false \
+		gchat_notification=$(NOTIFY) \
+		user=$(USER) \
 		git_branch=$(BRANCH) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
