@@ -2,7 +2,7 @@
 -- end_ignore
 -- @description query02 for JDBC query with date by partitioning
 SELECT t2, dec1, b::int, bin FROM pxf_jdbc_multiple_fragments_by_date WHERE num1 >= 5 ORDER BY t1;
-  t2  |      dec1      | b | bin
+  t2  |      dec1      | b | bin 
 ------+----------------+---+-----
  s_15 |    45678.00002 | 1 | 0
  s_16 |    0.123456789 | 0 | 1
@@ -18,7 +18,7 @@ SELECT t2, dec1, b::int, bin FROM pxf_jdbc_multiple_fragments_by_date WHERE num1
  s_16 |    0.123456789 | 0 | 1
  s_16 |    0.123456789 | 0 | 1
  s_16 |    0.123456789 | 0 | 1
- s_16 |    0.123456789 | 0 |
+ s_16 |    0.123456789 | 0 | 
  s_16 |    0.123456789 | 0 | 1
  s_10 | 0.000000000001 | 0 | 5
  s_11 |       1234.889 | 1 | 6

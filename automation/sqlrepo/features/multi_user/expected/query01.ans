@@ -15,7 +15,7 @@ DROP ROLE
 CREATE ROLE testuser LOGIN;
 CREATE ROLE
 SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin, 'escape') AS bin, u FROM pxf_jdbc_readable ORDER BY t1;
-          t1          |  t2  | num1 | dub1 |      dec1      |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin |                  u
+          t1          |  t2  | num1 | dub1 |      dec1      |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin |                  u                   
 ----------------------+------+------+------+----------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----+--------------------------------------
  row1                 | s_6  |    1 |    6 |        1.23456 | 2013-07-13 21:00:00 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a10
  row10                | s_15 |   10 |   15 |    45678.00002 | 2013-07-22 21:00:00 |  7.7 | 23456789 | t | 10 | 1000 | 2015-03-14 | abcde | USD | 0   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
@@ -35,7 +35,7 @@ SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin,
  row23_varchar_null   | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-26 |       | EUR | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1f
  row24_char_null      | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-27 | abcde |     | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a20
  row25_binary_null    | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-28 | abcde | USD |     | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21
- row26_uuid_null      | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-29 | abcde | USD | 1   |
+ row26_uuid_null      | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-29 | abcde | USD | 1   | 
  row3                 | s_8  |    3 |    8 |       -1.23456 | 2013-07-15 21:00:00 |  9.7 | 23456789 | f |  3 |  300 | 2015-03-07 | abcde | USD | 3   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a23
  row4                 | s_9  |    4 |    9 |    123456789.1 | 2013-07-16 21:00:00 | 10.7 | 23456789 | t |  4 |  400 | 2015-03-08 | abcde | USD | 4   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a24
  row5                 | s_10 |    5 |   10 | 0.000000000001 | 2013-07-17 21:00:00 | 11.7 | 23456789 | f |  5 |  500 | 2015-03-09 | abcde | USD | 5   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a25
@@ -48,7 +48,7 @@ SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin,
 \connect - testuser
 You are now connected to database "pxfautomation" as user "testuser".
 SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin, 'escape') AS bin, u FROM pxf_jdbc_readable ORDER BY t1;
-  t1  |  t2  | num1 | dub1 |   dec1   |         tm          |  r   |    bg    | b | tn | sml |     dt     |  vc1  | c1  | bin |                  u
+  t1  |  t2  | num1 | dub1 |   dec1   |         tm          |  r   |    bg    | b | tn | sml |     dt     |  vc1  | c1  | bin |                  u                   
 ------+------+------+------+----------+---------------------+------+----------+---+----+-----+------------+-------+-----+-----+--------------------------------------
  row3 | s_8  |    3 |    8 | -1.23456 | 2013-07-15 21:00:00 |  9.7 | 23456789 | f |  3 | 300 | 2015-03-07 | abcde | USD | 3   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a10
  row6 | s_11 |    6 |   11 | 1234.889 | 2013-07-18 21:00:00 | 12.7 | 23456789 | t |  6 | 600 | 2015-03-10 | abcde | USD | 6   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
@@ -58,7 +58,7 @@ SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin,
 \connect - :OLD_GP_USER
 You are now connected to database "pxfautomation" as user "gpadmin".
 SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin, 'escape') AS bin, u FROM pxf_jdbc_readable ORDER BY t1;
-          t1          |  t2  | num1 | dub1 |      dec1      |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin |                  u
+          t1          |  t2  | num1 | dub1 |      dec1      |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin |                  u                   
 ----------------------+------+------+------+----------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----+--------------------------------------
  row1                 | s_6  |    1 |    6 |        1.23456 | 2013-07-13 21:00:00 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a10
  row10                | s_15 |   10 |   15 |    45678.00002 | 2013-07-22 21:00:00 |  7.7 | 23456789 | t | 10 | 1000 | 2015-03-14 | abcde | USD | 0   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
@@ -78,7 +78,7 @@ SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, dt, vc1, c1, encode(bin,
  row23_varchar_null   | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-26 |       | EUR | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1f
  row24_char_null      | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-27 | abcde |     | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a20
  row25_binary_null    | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-28 | abcde | USD |     | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21
- row26_uuid_null      | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-29 | abcde | USD | 1   |
+ row26_uuid_null      | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-29 | abcde | USD | 1   | 
  row3                 | s_8  |    3 |    8 |       -1.23456 | 2013-07-15 21:00:00 |  9.7 | 23456789 | f |  3 |  300 | 2015-03-07 | abcde | USD | 3   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a23
  row4                 | s_9  |    4 |    9 |    123456789.1 | 2013-07-16 21:00:00 | 10.7 | 23456789 | t |  4 |  400 | 2015-03-08 | abcde | USD | 4   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a24
  row5                 | s_10 |    5 |   10 | 0.000000000001 | 2013-07-17 21:00:00 | 11.7 | 23456789 | f |  5 |  500 | 2015-03-09 | abcde | USD | 5   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a25
