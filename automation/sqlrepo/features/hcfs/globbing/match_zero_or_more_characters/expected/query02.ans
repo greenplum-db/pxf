@@ -1,31 +1,29 @@
--- start_ignore
--- end_ignore
 -- @description query02 tests glob to match any zero or more characters for example
 -- a.* will match a., a.txt, a.old.java, but it will not match .java
 --
 select * from hcfs_glob_match_zero_or_more_characters_2 order by name, num;
-         name         | num | dub |    longnum    | bool 
+         name         | num | dub |    longnum    | bool
 ----------------------+-----+-----+---------------+------
- 1a a._row_1          |   1 |   1 |  100000000000 | f
- 1a a._row_10         |  10 |  10 | 1000000000000 | t
- 1a a._row_11         |  11 |  11 | 1100000000000 | f
- 1a a._row_12         |  12 |  12 | 1200000000000 | t
- 1a a._row_13         |  13 |  13 | 1300000000000 | f
- 1a a._row_14         |  14 |  14 | 1400000000000 | t
- 1a a._row_15         |  15 |  15 | 1500000000000 | f
- 1a a._row_16         |  16 |  16 | 1600000000000 | t
- 1a a._row_17         |  17 |  17 | 1700000000000 | f
- 1a a._row_18         |  18 |  18 | 1800000000000 | t
- 1a a._row_19         |  19 |  19 | 1900000000000 | f
- 1a a._row_2          |   2 |   2 |  200000000000 | t
- 1a a._row_20         |  20 |  20 | 2000000000000 | t
- 1a a._row_3          |   3 |   3 |  300000000000 | f
- 1a a._row_4          |   4 |   4 |  400000000000 | t
- 1a a._row_5          |   5 |   5 |  500000000000 | f
- 1a a._row_6          |   6 |   6 |  600000000000 | t
- 1a a._row_7          |   7 |   7 |  700000000000 | f
- 1a a._row_8          |   8 |   8 |  800000000000 | t
- 1a a._row_9          |   9 |   9 |  900000000000 | f
+ 1a a.|_row_1         |   1 |   1 |  100000000000 | f
+ 1a a.|_row_10        |  10 |  10 | 1000000000000 | t
+ 1a a.|_row_11        |  11 |  11 | 1100000000000 | f
+ 1a a.|_row_12        |  12 |  12 | 1200000000000 | t
+ 1a a.|_row_13        |  13 |  13 | 1300000000000 | f
+ 1a a.|_row_14        |  14 |  14 | 1400000000000 | t
+ 1a a.|_row_15        |  15 |  15 | 1500000000000 | f
+ 1a a.|_row_16        |  16 |  16 | 1600000000000 | t
+ 1a a.|_row_17        |  17 |  17 | 1700000000000 | f
+ 1a a.|_row_18        |  18 |  18 | 1800000000000 | t
+ 1a a.|_row_19        |  19 |  19 | 1900000000000 | f
+ 1a a.|_row_2         |   2 |   2 |  200000000000 | t
+ 1a a.|_row_20        |  20 |  20 | 2000000000000 | t
+ 1a a.|_row_3         |   3 |   3 |  300000000000 | f
+ 1a a.|_row_4         |   4 |   4 |  400000000000 | t
+ 1a a.|_row_5         |   5 |   5 |  500000000000 | f
+ 1a a.|_row_6         |   6 |   6 |  600000000000 | t
+ 1a a.|_row_7         |   7 |   7 |  700000000000 | f
+ 1a a.|_row_8         |   8 |   8 |  800000000000 | t
+ 1a a.|_row_9         |   9 |   9 |  900000000000 | f
  2b a.txt_row_1       |   1 |   1 |  100000000000 | f
  2b a.txt_row_10      |  10 |  10 | 1000000000000 | t
  2b a.txt_row_11      |  11 |  11 | 1100000000000 | f
@@ -67,4 +65,3 @@ select * from hcfs_glob_match_zero_or_more_characters_2 order by name, num;
  3c a.old.java_row_8  |   8 |   8 |  800000000000 | t
  3c a.old.java_row_9  |   9 |   9 |  900000000000 | f
 (60 rows)
-

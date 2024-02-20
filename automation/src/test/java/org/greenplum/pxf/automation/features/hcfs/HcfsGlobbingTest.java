@@ -36,7 +36,7 @@ public class HcfsGlobbingTest extends BaseFeature {
     @Test(groups = {"gpdb", "hcfs", "security"})
     public void testMatchZeroOrMoreCharacters() throws Exception {
         prepareTestScenario("match_zero_or_more_characters_1", "a", "abc", "abc.p", "bacd", "a*");
-        prepareTestScenario("match_zero_or_more_characters_2", "a.", "a.txt", "a.old.java", ".java", "a.*");
+        prepareTestScenario("match_zero_or_more_characters_2", "a.|", "a.txt", "a.old.java", ".java", "a.*");
         prepareTestScenario("match_zero_or_more_characters_3", "a.txt.x", "ax", "ab37x", "bacd", "a*x");
         prepareTestScenario("match_zero_or_more_characters_4", "dir1/file1", "dir2/file2", "dir3/file1", null, "*/file1");
         prepareTestScenario("match_zero_or_more_characters_5", "dir1/file1", "file1", null, null, "*/file1");
