@@ -104,8 +104,8 @@ configure(javaProjects) {
             dependency("org.mortbay.jetty:jetty-util:6.1.26")
             dependency("org.objenesis:objenesis:2.1")
 
-            // revert once springboot provided postgresql is upgraded to bundle postgresql:42.4.3+
-            dependency("org.postgresql:postgresql:42.4.3")
+            // revert once springboot provided postgresql is upgraded to bundle postgresql:42.7.2+
+            dependency("org.postgresql:postgresql:42.7.2")
 
             dependency("org.simplify4u:slf4j-mock:2.3.0")
             dependency("org.threeten:threeten-extra:1.5.0")
