@@ -417,7 +417,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
             filesToDelete.add(new File(filePath + ".avro"));
             filesToDelete.add(new File(publicStage + "." + fileName + ".avro.crc"));
             hdfs.copyToLocal(srcPath, filePath + ".avro");
-            sleep(250);
+            sleep(1000);
             hdfs.writeJsonFileFromAvro("file://" + filePath + ".avro", filePath + ".json");
             hdfs.writeAvroMetadata("file://" + filePath + ".avro", filePath + ".meta");
             BufferedReader reader = new BufferedReader(new FileReader(filePath + ".meta"));
