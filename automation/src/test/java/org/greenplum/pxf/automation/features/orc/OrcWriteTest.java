@@ -8,8 +8,10 @@ import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
+import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
+import org.postgresql.util.PSQLException;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
@@ -119,6 +121,8 @@ public class OrcWriteTest extends BaseFeature {
     private static final String HIVE_JDBC_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
     private static final String HIVE_JDBC_URL_PREFIX = "jdbc:hive2://";
 
+    private static final Integer NUM_RETRIES = 5;
+
     private String gpdbTableNamePrefix;
     private String hdfsPath;
     private String fullTestPath;
@@ -151,8 +155,10 @@ public class OrcWriteTest extends BaseFeature {
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
         prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
 
-        insertDataWithoutNulls(gpdbTableNamePrefix, 33); // > 30 to let the DATE field to repeat the value
-
+        attemptInsert(() -> insertDataWithoutNulls(gpdbTableNamePrefix, 33), // > 30 to let the DATE field to repeat the value
+                33,
+                gpdbTableNamePrefix + "_readable",
+                NUM_RETRIES);
         // use PXF *:orc profile to read the data
         runSqlTest("features/orc/write/primitive_types");
     }
@@ -170,7 +176,26 @@ public class OrcWriteTest extends BaseFeature {
         fullTestPath = hdfsPath + "orc_primitive_types_with_hive";
 
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
-        insertDataWithoutNulls(gpdbTableNamePrefix, 33); // > 30 to let the DATE field to repeat the value
+
+        Integer retryCount = NUM_RETRIES;
+        boolean success = false;
+        for (int i = retryCount; i > 1; i--) {
+            if (success) {
+                break;
+            }
+            try {
+                insertDataWithoutNulls(gpdbTableNamePrefix, 33); // > 30 to let the DATE field to repeat the value
+                success = true;
+            } catch (PSQLException e) {
+                if (e.getMessage().contains("Operation could not be completed within the specified time")) {
+                    ReportUtils.startLevel(null, getClass(), String.format("Operation timed out, trying again. Retries left: %d : '%s'", retryCount, e.getMessage()));
+
+                    // operation timed out in the middle and not all the data was added, delete all the files and try again
+                    hdfs.removeDirectory(fullTestPath);
+                    success = false;
+                }
+            }
+        }
 
         // load the data into hive to check that PXF-written ORC files can be read by other data
         hiveTable = new HiveExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS_HIVE, "hdfs:/" + fullTestPath);
@@ -222,7 +247,10 @@ public class OrcWriteTest extends BaseFeature {
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS, fullTestPath);
         prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
 
-        insertDataWithNulls(gpdbTableNamePrefix, 33);
+        attemptInsert(() -> insertDataWithNulls(gpdbTableNamePrefix, 33),
+                33,
+                gpdbTableNamePrefix + "_readable",
+                NUM_RETRIES);
 
         runSqlTest("features/orc/write/primitive_types_nulls");
     }
@@ -235,7 +263,10 @@ public class OrcWriteTest extends BaseFeature {
         prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_TABLE_COLUMNS  , fullTestPath, false /*mapByPosition*/);
 
         // write 3 batches and 1 row of data (1024*3+1=3073) to make sure batch is properly reset when reused
-        insertDataWithoutNulls(gpdbTableNamePrefix, 3073);
+        attemptInsert(() -> insertDataWithoutNulls(gpdbTableNamePrefix, 3073),
+                3073,
+                gpdbTableNamePrefix + "_readable",
+                NUM_RETRIES);
 
         runSqlTest("features/orc/write/primitive_types_large");
     }
@@ -247,7 +278,10 @@ public class OrcWriteTest extends BaseFeature {
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_TIMESTAMP_TABLE_COLUMNS, fullTestPath);
         prepareReadableExternalTable(gpdbTableNamePrefix, ORC_TIMESTAMP_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
 
-        insertDataWithTimestamps(gpdbTableNamePrefix, 10, 5);
+        attemptInsert(() -> insertDataWithTimestamps(gpdbTableNamePrefix, 10, 5),
+                10,
+                gpdbTableNamePrefix + "_readable",
+                NUM_RETRIES);
 
         runSqlTest("features/orc/write/timestamp_with_timezone_types");
     }
@@ -260,7 +294,10 @@ public class OrcWriteTest extends BaseFeature {
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS, fullTestPath);
         prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
 
-        insertArrayDataWithNulls(gpdbTableNamePrefix, 33, 17); // > 30 to let the DATE field to repeat the value
+        attemptInsert(() -> insertArrayDataWithNulls(gpdbTableNamePrefix, 33, 17), // > 30 to let the DATE field to repeat the value
+                33,
+                gpdbTableNamePrefix + "_readable",
+                NUM_RETRIES);
 
         // use PXF *:orc profile to read the data
         runSqlTest("features/orc/write/primitive_types_array_with_nulls");
@@ -274,7 +311,10 @@ public class OrcWriteTest extends BaseFeature {
         prepareWritableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS, fullTestPath);
         prepareReadableExternalTable(gpdbTableNamePrefix, ORC_PRIMITIVE_ARRAYS_TABLE_COLUMNS, fullTestPath, false /*mapByPosition*/);
 
-        insertArrayDataWithNullElements(gpdbTableNamePrefix, 33, 17); // > 30 to let the DATE field to repeat the value
+        attemptInsert(() -> insertArrayDataWithNullElements(gpdbTableNamePrefix, 33, 17), // > 30 to let the DATE field to repeat the value
+                33,
+                gpdbTableNamePrefix + "_readable",
+                NUM_RETRIES);
 
         // use PXF *:orc profile to read the data
         runSqlTest("features/orc/write/primitive_types_array_null_elements");
@@ -497,6 +537,36 @@ public class OrcWriteTest extends BaseFeature {
             .add(isNull[15] ? "NULL" : String.format("'476f35e4-da1a-43cf-8f7c-950a%08d'", row % 100000000)) // DataType.UUID
             ;
         return rowBuilder.toString();
+    }
+
+    public interface ThrowingConsumer<T, E extends Exception> {
+        void accept() throws E;
+    }
+
+    private void attemptInsert(ThrowingConsumer operation, Integer numRows, String readableTableName, Integer retryCount) throws Exception {
+        if (retryCount == 0) {
+            return;
+        }
+
+        try {
+            operation.accept();
+        } catch (PSQLException e) {
+            if (e.getMessage().contains("Operation could not be completed within the specified time")) {
+                ReportUtils.startLevel(null, getClass(), String.format("Operation timed out, trying again. Retries left: %d : '%s'", retryCount, e.getMessage()));
+                Table analyticResult = new Table("analyticResult", null);
+                // see how much data was written before the operation timed out
+                gpdb.queryResults(analyticResult, String.format("SELECT COUNT(*) FROM %s", readableTableName));
+                String result = analyticResult.getData().get(0).get(0);
+
+                ReportUtils.startLevel(null, getClass(), String.format("Found %s records, expected %d", result, numRows));
+
+                // operation timed out in the middle and not all the data was added, delete all the files and try again
+                if (Integer.valueOf(result) < numRows) {
+                    hdfs.removeDirectory(fullTestPath);
+                    attemptInsert(operation, numRows, readableTableName, retryCount - 1);
+                }
+            }
+        }
     }
 
     private void prepareWritableExternalTable(String name, String[] fields, String path) throws Exception {
