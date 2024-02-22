@@ -110,6 +110,8 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
     private String fullTestPath;
     private ProtocolEnum protocol;
 
+    private static final Integer NUM_RETRIES = 5;
+
     @Override
     public void beforeClass() throws Exception {
         // path for storing data on HDFS (for processing by PXF)
@@ -137,7 +139,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         prepareReadableExternalTable(tableNamePrefix, AVRO_PRIMITIVE_READABLE_TABLE_COLS, fullTestPath);
         gpdb.createTableAndVerify(readableExTable);
 
-        attemptInsert(() -> insertPrimitives(writableExTable), "primitives.json", fullTestPath);
+        attemptInsert(() -> insertPrimitives(writableExTable), "primitives.json", fullTestPath, NUM_RETRIES);
 
         publicStage += "generateSchemaPrimitive/";
         // fetch all the segment-generated avro files and make them into json records
@@ -159,7 +161,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         prepareReadableExternalTable(tableNamePrefix, AVRO_PRIMITIVE_READABLE_TABLE_COLS, fullTestPath);
         gpdb.createTableAndVerify(readableExTable);
 
-        attemptInsert(() -> insertPrimitives(writableExTable), "primitives.json", fullTestPath);
+        attemptInsert(() -> insertPrimitives(writableExTable), "primitives.json", fullTestPath, NUM_RETRIES);
 
         publicStage += "generateSchemaPrimitive_withNoCompression/";
         // fetch all the segment-generated avro files and make them into json records
@@ -182,7 +184,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         prepareReadableExternalTable(tableNamePrefix, AVRO_COMPLEX_TABLE_COLS_W_ARRAYS_READABLE, fullTestPath);
         gpdb.createTableAndVerify(readableExTable);
 
-        attemptInsert(() -> insertComplex(writableExTable), "complex_records.json", fullTestPath);
+        attemptInsert(() -> insertComplex(writableExTable), "complex_records.json", fullTestPath, NUM_RETRIES);
 
         publicStage += "generateSchemaComplex/";
         // fetch all the segment-generated avro files and make them into json records
@@ -212,7 +214,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         prepareReadableExternalTable(tableNamePrefix, AVRO_PRIMITIVE_READABLE_TABLE_COLS, fullTestPath);
         gpdb.createTableAndVerify(readableExTable);
 
-        attemptInsert(() -> insertPrimitives(writableExTable), "primitives_no_union.json", fullTestPath);
+        attemptInsert(() -> insertPrimitives(writableExTable), "primitives_no_union.json", fullTestPath, NUM_RETRIES);
 
         publicStage += "userProvidedSchemaFileOnHcfsPrimitive/";
         // fetch all the segment-generated avro files and make them into json records
@@ -251,7 +253,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
                 fullTestPath);
         gpdb.createTableAndVerify(readableExTable);
 
-        attemptInsert(() -> insertComplex(writableExTable), "complex_no_union.json", fullTestPath);
+        attemptInsert(() -> insertComplex(writableExTable), "complex_no_union.json", fullTestPath, NUM_RETRIES);
 
         publicStage += "userProvidedSchemaFileOnClasspathComplex/";
         // fetch all the segment-generated avro files and make them into json records
@@ -281,7 +283,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
                 fullTestPath);
         gpdb.createTableAndVerify(readableExTable);
 
-        attemptInsert(() -> insertComplexNullArrays(writableExTable), "array_with_nulls.json", fullTestPath);
+        attemptInsert(() -> insertComplexNullArrays(writableExTable), "array_with_nulls.json", fullTestPath, NUM_RETRIES);
 
         publicStage += "userProvidedSchemaArrayWithNullsComplex/";
         // fetch all the segment-generated avro files and make them into json records
@@ -303,7 +305,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         prepareReadableExternalTable(tableNamePrefix, AVRO_COMPLEX_TABLE_COLS_W_ARRAYS_READABLE, fullTestPath);
         gpdb.createTableAndVerify(readableExTable);
 
-        attemptInsert(() -> insertComplexWithNulls(writableExTable), "null_values.json", fullTestPath);
+        attemptInsert(() -> insertComplexWithNulls(writableExTable), "null_values.json", fullTestPath, NUM_RETRIES);
 
         publicStage += "nullValues/";
         // fetch all the segment-generated avro files and make them into json records
@@ -405,12 +407,16 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
         void accept() throws E;
     }
 
-    private void attemptInsert(ThrowingConsumer operation, String file, String path) throws Exception {
+    private void attemptInsert(ThrowingConsumer operation, String file, String path, Integer retryCount) throws Exception {
+        if (retryCount == 0) {
+            return;
+        }
+
         try {
             operation.accept();
         } catch (PSQLException e) {
             if (e.getMessage().contains("Operation could not be completed within the specified time")) {
-                ReportUtils.startLevel(null, getClass(), String.format("Operation timed out, trying again: '%s'", e.getMessage()));
+                ReportUtils.startLevel(null, getClass(), String.format("Operation timed out, trying again. Retries left: %d : '%s'", retryCount, e.getMessage()));
                 Table analyticResult = new Table("analyticResult", null);
                 // see if it did not insert anything
                 gpdb.queryResults(analyticResult, String.format("SELECT COUNT(*) FROM %s", readableExTable.getName()));
@@ -427,7 +433,7 @@ public class HdfsWritableAvroTest extends BaseWritableFeature {
                 addJsonNodesToMap(jsonToCompare, resourcePath + file);
                 if (Integer.valueOf(result) < jsonToCompare.size()) {
                     hdfs.removeDirectory(path);
-                    operation.accept();
+                    attemptInsert(operation, file, path, retryCount - 1);
                 }
             }
         }
