@@ -216,7 +216,8 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         LocalDate localDate = result.getObject(colName, LocalDate.class);
                         value = localDate != null ? localDate.format(LOCAL_DATE_GET_FORMATTER) : null;
                     } else {
-                        value = result.getDate(colName);
+                        Date date = result.getDate(colName);
+                        value = date != null ? date.toLocalDate().format(GreenplumDateTime.DATE_FORMATTER) : null;
                     }
                     break;
                 case TIMESTAMP:

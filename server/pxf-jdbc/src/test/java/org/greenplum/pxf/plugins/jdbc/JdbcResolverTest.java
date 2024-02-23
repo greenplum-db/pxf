@@ -73,7 +73,8 @@ class JdbcResolverTest {
         isDateWideRange = false;
         Date date = Date.valueOf("1977-12-11");
         OneField oneField = getOneField(date, DataType.DATE.getOID(), "date");
-        assertEquals("1977-12-11", oneField.toString());
+        assertTrue(oneField.val instanceof String);
+        assertEquals("1977-12-11", oneField.val);
     }
 
     @Test

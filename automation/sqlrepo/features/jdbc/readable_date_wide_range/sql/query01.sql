@@ -10,9 +10,6 @@
 -- m/ERROR:  invalid byte sequence for encoding.*/
 -- s/ERROR:  invalid byte sequence for encoding.*/ERROR:  invalid input syntax./
 --
--- m/ERROR:  invalid input syntax.*/
--- s/ERROR:  invalid input syntax.*/ERROR:  invalid input syntax./
---
 -- m/ERROR:  time zone displacement out of range.*/
 -- s/ERROR:  time zone displacement out of range.*/ERROR:  time zone displacement out of range/
 --
