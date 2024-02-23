@@ -10,6 +10,7 @@ import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
@@ -288,6 +289,10 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitiveArraysMultidimensional() throws Exception {
+        if (ProtocolUtils.getProtocol() == ProtocolEnum.ADL) {
+            throw new SkipException("The test is extremely flaky with the ADL profile while we go through the Azure Gen1 Compatibility Layer");
+        }
+
         gpdbTableNamePrefix = "orc_primitive_arrays_multi";
         fullTestPath = hdfsPath + gpdbTableNamePrefix;
         // create heap table containing all the data
