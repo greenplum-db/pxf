@@ -22,12 +22,17 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: PXF Version ${{ github.ref }}
           body: |
-            ## 6.9.1 (02/06/2024)
+            ## 6.10.0 (02/27/2024)
+
+            ### Enhancements:
+
+            - [#1080](https://github.com/greenplum-db/pxf/pull/1080) Add support for UUID to JDBC profile
+            - [#1093](https://github.com/greenplum-db/pxf/pull/1093) Bump Postgresql JDBC driver to 42.7.2
 
             ### Bug Fixes:
 
-            - [#1070](https://github.com/greenplum-db/pxf/pull/1070) Upgrade gp-common-go-libs to 1.0.14
-            - [#1074](https://github.com/greenplum-db/pxf/pull/1074) Bump Springboot to 2.7.18
+            - [#1081](https://github.com/greenplum-db/pxf/pull/1081) Add automation test cases for JDBC profile DATE_WIDE_RANGE feature
+            - [#1096](https://github.com/greenplum-db/pxf/pull/1096) Add formatting for Date values
 
           draft: false
           prerelease: false
