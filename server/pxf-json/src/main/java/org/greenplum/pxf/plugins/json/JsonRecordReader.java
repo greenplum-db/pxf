@@ -93,8 +93,11 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         this.conf = conf;
         parser = new PartitionedJsonParser(jsonMemberName);
         currentLine = new Text();
-        pos = start;
-        filePos = start;
+        // set pos and filePos to lineRecordReader's position. If the split started in the middle of a line,
+        // we assume that the previous split has taken care of it, so we just need to be at the same starting
+        // point as the lineRecordReader.
+        pos = lineRecordReader.getPos();
+        filePos = lineRecordReader.getPos();
         key = lineRecordReader.createKey();
     }
 
@@ -135,22 +138,30 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 isObjectComplete = parser.parse(c);
             }
 
-            // we've completed an object but there might still be things in the buffer. Calculate the proper
-            // position of the JsonRecordReader
-            updatePos();
-
-            if (isObjectComplete && parser.foundObjectWithIdentifier()) {
+            // if we have gotten here there are 2 scenarios:
+            // the object is not complete, in which case we hit end of file
+            // the object is complete, in which case, determine if we found the identifier
+            if (!isObjectComplete) {
+                // if EOF, update pos to be filePos
+                pos = filePos;
+            } else {
                 String json = parser.getCompletedObject();
-                // check the char length of the json against the MAXLENGTH parameter
-                long jsonLength = json.length();
-                long jsonStart = pos - json.getBytes(StandardCharsets.UTF_8).length;
-                if (jsonLength > maxObjectLength) {
-                    LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + jsonStart);
-                } else {
-                    // the key is set to beginning of the json object
-                    key.set(jsonStart);
-                    value.set(json);
-                    return true;
+
+                // the object is complete so update the position
+                pos = pos + json.getBytes(StandardCharsets.UTF_8).length;
+
+                // if we found the identifier
+                if (parser.foundObjectWithIdentifier()) {
+                    // check the char length of the json against the MAXLENGTH parameter
+                    long jsonLength = json.length();
+                    if (jsonLength > maxObjectLength) {
+                        LOG.warn("Skipped JSON object of size " + json.length());
+                    } else {
+                        // the key is set to beginning of the json object
+                        key.set(jsonLength);
+                        value.set(json);
+                        return true;
+                    }
                 }
             }
         }
@@ -201,14 +212,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         }
     }
 
-    private void updatePos() {
-        if (currentLineBuffer != null) {
-            long unreadBytesInBuffer = currentLineBuffer.substring(currentLineIndex).getBytes(StandardCharsets.UTF_8).length;
-            pos = filePos - unreadBytesInBuffer;
-        } else {
-            pos = filePos;
-        }
-    }
     /**
      * Reads the next character in the buffer. It will pull the next line as necessary
      *
@@ -241,18 +244,26 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         // seek until we hit the first begin-object
         boolean inString = false;
         int i;
+        String readValues = "";
         // since we have not yet found a starting object, exit if either EOF (-1) or END_OF_SPLIT (-2)
         while ((i = readNextChar()) > EOF) {
             char c = (char) i;
+
+            // while scanning to start of object, we need to make sure we aren't losing our position
+            readValues += c;
             // if the current value is a backslash, then ignore the next value as it's an escaped char
             if (c == BACKSLASH) {
-                readNextChar();
+                int temp = readNextChar();
+                readValues += (char) temp;
             } else if (c == QUOTE) {
                 inString = !inString;
             } else if (c == START_BRACE && !inString) {
+                // the start brace will be accounted for later, so ignore it for now
+                pos = pos + readValues.getBytes(StandardCharsets.UTF_8).length - 1;
                 return true;
             }
         }
+        pos = pos + readValues.getBytes(StandardCharsets.UTF_8).length;
         return false;
     }
 
