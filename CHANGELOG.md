@@ -5,11 +5,8 @@
 ### Enhancements:
 
 - [#1080](https://github.com/greenplum-db/pxf/pull/1080) Add support for UUID to JDBC profile
-- [#1093](https://github.com/greenplum-db/pxf/pull/1093) Bump Postgresql JDBC driver to 42.7.2
-
-### Bug Fixes:
-
 - [#1081](https://github.com/greenplum-db/pxf/pull/1081) Add automation test cases for JDBC profile DATE_WIDE_RANGE feature
+- [#1093](https://github.com/greenplum-db/pxf/pull/1093) Bump Postgresql JDBC driver to 42.7.2
 - [#1096](https://github.com/greenplum-db/pxf/pull/1096) Add formatting for Date values
 
 ## 6.9.1 (02/06/2024)
