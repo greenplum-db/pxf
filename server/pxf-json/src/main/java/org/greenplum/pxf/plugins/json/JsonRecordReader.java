@@ -96,8 +96,8 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         // set pos and filePos to lineRecordReader's position. If the split started in the middle of a line,
         // we assume that the previous split has taken care of it, so we just need to be at the same starting
         // point as the lineRecordReader.
-        pos = lineRecordReader.getPos();
         filePos = lineRecordReader.getPos();
+        pos = filePos;
         key = lineRecordReader.createKey();
     }
 
@@ -139,29 +139,30 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             }
 
             // if we have gotten here there are 2 scenarios:
-            // the object is not complete, in which case we hit end of file
-            // the object is complete, in which case, determine if we found the identifier
+            // - the object is not complete, in which case we hit end of file
+            // - the object is complete, in which case, determine if we found the identifier
             if (!isObjectComplete) {
                 // if EOF, update pos to be filePos
                 pos = filePos;
-            } else {
-                String json = parser.getCompletedObject();
+                return false;
+            }
 
-                // the object is complete so update the position
-                pos = pos + json.getBytes(StandardCharsets.UTF_8).length;
+            String json = parser.getCompletedObject();
 
-                // if we found the identifier
-                if (parser.foundObjectWithIdentifier()) {
-                    // check the char length of the json against the MAXLENGTH parameter
-                    long jsonLength = json.length();
-                    if (jsonLength > maxObjectLength) {
-                        LOG.warn("Skipped JSON object of size " + json.length());
-                    } else {
-                        // the key is set to beginning of the json object
-                        key.set(jsonLength);
-                        value.set(json);
-                        return true;
-                    }
+            // the object is complete so update the position
+            pos = pos + json.getBytes(StandardCharsets.UTF_8).length;
+
+            // if we found the identifier
+            if (parser.foundObjectWithIdentifier()) {
+                // check the char length of the json against the MAXLENGTH parameter
+                long jsonLength = json.length();
+                if (jsonLength > maxObjectLength) {
+                    LOG.warn("Skipped JSON object of size " + json.length());
+                } else {
+                    // the key is set to beginning of the json object
+                    key.set(jsonLength);
+                    value.set(json);
+                    return true;
                 }
             }
         }
