@@ -29,10 +29,11 @@
 --
 -- end_matchsubs
 
-SET timezone='UTC';
+SET timezone='utc';
 SET
+
 SELECT * FROM pxf_jdbc_readable_date_wide_range_on ORDER BY t1;
-           t1           |  t2  | num1 | dub1 |      dec1      |           tm           |  r   |    bg    | b | tn | sml  |      dt       |  vc1  | c1  | bin |                  u                   |            tmz
+           t1           |  t2  | num1 | dub1 |      dec1      |           tm           |  r   |    bg    | b | tn | sml  |      dt       |  vc1  | c1  | bin |                  u                   |            tmz            
 ------------------------+------+------+------+----------------+------------------------+------+----------+---+----+------+---------------+-------+-----+-----+--------------------------------------+---------------------------
  row1                   | s_6  |    1 |    6 |        1.23456 | 2013-07-13 21:00:00    |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06    | abcd  | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a10 | 2013-07-13 17:00:00+00
  row10                  | s_15 |   10 |   15 |    45678.00002 | 2013-07-22 21:00:00    |  7.7 | 23456789 | t | 10 | 1000 | 2015-03-14    | abcde | USD | 0   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11 | 2013-07-22 08:00:00+00
@@ -41,8 +42,8 @@ SELECT * FROM pxf_jdbc_readable_date_wide_range_on ORDER BY t1;
  row13_int_null         | s_16 |      |   37 |    0.123456789 | 2013-07-23 21:00:00    |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-17    | abcde | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14 | 2013-07-23 12:00:00+00
  row14_double_null      | s_16 |   11 |      |    0.123456789 | 4713-07-23 21:00:00 BC |  7.7 | 23456789 | f | 11 | 1100 | 4713-03-18 BC | abcde | UAH | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15 | 4713-07-23 12:00:00+00 BC
  row15_decimal_null     | s_17 |   12 |   38 |                | 294276-07-24 21:00:00  |  7.7 | 23456789 | f | 11 | 1100 | 294276-03-19  | abcde | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16 | 294276-07-24 12:00:00+00
- row16_timestamp_null   | s_16 |   11 |   37 |    0.123456789 |                        |  7.7 | 23456789 | f | 11 | 1100 | 0020-01-03 BC | abcde | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a17 | 0018-01-07 21:00:00+00 BC
- row17_real_null        | s_16 |   11 |   37 |    0.123456789 | 2023-01-07 21:00:00    |      | 23456789 | f | 11 | 1100 | 2021-01-03    | abcde | EUR | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18 | 2023-01-07 12:00:00+00
+ row16_timestamp_null   | s_16 |   11 |   37 |    0.123456789 |                        |  7.7 | 23456789 | f | 11 | 1100 | 0020-01-03 BC | abcde | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a17 | 0001-07-18 21:00:00+00 BC
+ row17_real_null        | s_16 |   11 |   37 |    0.123456789 | 2023-01-07 21:00:00    |      | 23456789 | f | 11 | 1100 | 2021-01-03    | abcde | EUR | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18 | 0001-07-23 12:00:00+00
  row18_bigint_null      | s_16 |   11 |   37 |    0.123456789 | 0023-01-07 21:00:00 BC |  7.7 |          | f | 11 | 1100 | 2015-03-22    | abcde | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a19 | 2013-07-23 01:00:00+00
  row19_bool_null        | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00    |  7.7 | 23456789 |   | 11 | 1100 | 2015-03-23    | abcde | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1a | 2013-07-23 02:00:00+00
  row2                   | s_7  |    2 |    7 |        1.23456 | 2013-07-13 21:00:00    |  8.7 | 23456789 | t |  2 |   20 | 2015-03-06    | abcde | USD | 2   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1b | 2013-07-14 16:00:00+00
@@ -53,7 +54,7 @@ SELECT * FROM pxf_jdbc_readable_date_wide_range_on ORDER BY t1;
  row24_char_null        | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00    |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-27    | abcde |     | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a20 | 2013-07-23 12:00:00+00
  row25_binary_null      | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00    |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-28    | abcde | USD |     | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21 | 2013-07-23 12:00:00+00
  row26_uuid_null        | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00    |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-29    | abcde | USD | 1   |                                      | 2013-07-23 12:00:00+00
- row27_timestamptz_null | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00    |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-30    | abcde | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21 |
+ row27_timestamptz_null | s_16 |   11 |   37 |    0.123456789 | 2013-07-23 21:00:00    |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-30    | abcde | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21 | 
  row3                   | s_8  |    3 |    8 |       -1.23456 | 2013-07-15 21:00:00    |  9.7 | 23456789 | f |  3 |  300 | 2015-03-07    | abcde | USD | 3   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a23 | 2013-07-15 15:00:00+00
  row4                   | s_9  |    4 |    9 |    123456789.1 | 2013-07-16 21:00:00    | 10.7 | 23456789 | t |  4 |  400 | 2015-03-08    | abcde | USD | 4   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a24 | 2013-07-16 14:00:00+00
  row5                   | s_10 |    5 |   10 | 0.000000000001 | 2013-07-17 21:00:00    | 11.7 | 23456789 | f |  5 |  500 | 2015-03-09    | abcde | USD | 5   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a25 | 2013-07-17 13:00:00+00
@@ -61,6 +62,41 @@ SELECT * FROM pxf_jdbc_readable_date_wide_range_on ORDER BY t1;
  row7                   | s_12 |    7 |   12 |         0.0001 | 2013-07-19 21:00:00    |  7.7 | 23456789 | f |  7 |  700 | 2015-03-11    | abcde | USD | 7   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a27 | 2013-07-19 11:00:00+00
  row8                   | s_13 |    8 |   13 |    45678.00002 | 2013-07-20 21:00:00    |  7.7 | 23456789 | t |  8 |  800 | 2015-03-12    | abcde | EUR | 8   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a28 | 2013-07-20 10:00:00+00
  row9                   | s_14 |    9 |   14 |        23457.1 | 2013-07-21 21:00:00    |  7.7 | 23456789 | f |  9 |  900 | 2015-03-13    | abcde | UAH | 9   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a29 | 2013-07-21 09:00:00+00
+(27 rows)
+
+SET timezone='America/Los_Angeles';
+SET
+
+SELECT tmz FROM pxf_jdbc_readable_date_wide_range_on ORDER BY t1;
+               tmz               
+---------------------------------
+ 2013-07-13 10:00:00-07
+ 2013-07-22 01:00:00-07
+ 2013-07-23 00:00:00-07
+ 2013-07-23 04:07:02-07:52:58 BC
+ 2013-07-23 05:00:00-07
+ 4713-07-23 04:07:02-07:52:58 BC
+ 294276-07-24 05:00:00-07
+ 0001-07-18 13:07:02-07:52:58 BC
+ 0001-07-23 04:07:02-07:52:58
+ 2013-07-22 18:00:00-07
+ 2013-07-22 19:00:00-07
+ 2013-07-14 09:00:00-07
+ 2013-07-22 20:00:00-07
+ 2013-07-23 17:00:00-07
+ 2013-07-23 16:00:00-07
+ 2013-07-23 15:00:00-07
+ 2013-07-23 05:00:00-07
+ 2013-07-23 05:00:00-07
+ 2013-07-23 05:00:00-07
+ 
+ 2013-07-15 08:00:00-07
+ 2013-07-16 07:00:00-07
+ 2013-07-17 06:00:00-07
+ 2013-07-18 05:00:00-07
+ 2013-07-19 04:00:00-07
+ 2013-07-20 03:00:00-07
+ 2013-07-21 02:00:00-07
 (27 rows)
 
 SELECT tm FROM pxf_jdbc_readable_date_wide_range_off ORDER BY t1;
@@ -72,8 +108,5 @@ ERROR:  time zone displacement out of range
 CONTEXT:  External table pxf_jdbc_readable_date_wide_range_off
 
 SELECT tmz FROM pxf_jdbc_readable_date_wide_range_off ORDER BY t1;
-ERROR:  PXF server error : Field type 'TIMESTAMP_WITH_TIME_ZONE' is not supported
--- start_ignore
-HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
--- end_ignore
+ERROR:  time zone displacement out of range
 CONTEXT:  External table pxf_jdbc_readable_date_wide_range_off

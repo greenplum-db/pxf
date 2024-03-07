@@ -123,6 +123,15 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .optionalStart().appendPattern(DATE_TIME_FORMATTER_SPECIFIER).optionalEnd()
             .toFormatter();
 
+    private static final DateTimeFormatter OFFSET_DATE_TIME_SET_FORMATTER = (new DateTimeFormatterBuilder())
+            .appendValue(ChronoField.YEAR_OF_ERA, 1, 9, SignStyle.NORMAL).appendLiteral('-')
+            .appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, SignStyle.NORMAL).appendLiteral('-')
+            .appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NORMAL).appendLiteral(" ")
+            .append(ISO_LOCAL_TIME)
+            .appendOffset("+HH:mm", "Z")
+            .optionalStart().appendPattern(DATE_TIME_FORMATTER_SPECIFIER).optionalEnd()
+            .toFormatter();
+
     private static final Set<DataType> DATATYPES_SUPPORTED = EnumSet.of(
             DataType.VARCHAR,
             DataType.BPCHAR,
@@ -230,14 +239,11 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                     }
                     break;
                 case TIMESTAMP_WITH_TIME_ZONE:
+                    OffsetDateTime offsetDateTime = result.getObject(colName, OffsetDateTime.class);
                     if (isDateWideRange) {
-                        OffsetDateTime offsetDateTime = result.getObject(colName, OffsetDateTime.class);
                         value = offsetDateTime != null ? offsetDateTime.format(OFFSET_DATE_TIME_GET_FORMATTER) : null;
                     } else {
-                        throw new UnsupportedOperationException(
-                                String.format("Field type '%s' (column '%s') is not supported",
-                                        DataType.get(oneField.type),
-                                        column));
+                        value = offsetDateTime != null ? offsetDateTime.format(GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER) : null;
                     }
                     break;
                 case UUID:
@@ -330,6 +336,9 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         break;
                     case NUMERIC:
                         oneField.val = new BigDecimal(rawVal);
+                        break;
+                    case TIMESTAMP_WITH_TIME_ZONE:
+                        oneField.val = getOffsetDateTime(rawVal);
                         break;
                     case TIMESTAMP:
                         if (isDateWideRange) {
@@ -461,6 +470,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         }
                     }
                     break;
+                case TIMESTAMP_WITH_TIME_ZONE:
                 case UUID:
                     statement.setObject(i, field.val);
                     break;
@@ -495,6 +505,24 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             return LocalDateTime.parse(rawVal, LOCAL_DATE_TIME_SET_FORMATTER);
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to convert timestamp '" + rawVal + "' to the LocalDateTime class: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Convert a string to OffsetDateTime class with formatter
+     *
+     * @param rawVal the OffsetDateTime in a string format
+     * @return OffsetDateTime
+     */
+    private OffsetDateTime getOffsetDateTime(String rawVal) {
+        try {
+            if (isDateWideRange) {
+                return OffsetDateTime.parse(rawVal, OFFSET_DATE_TIME_SET_FORMATTER);
+            } else {
+                return OffsetDateTime.parse(rawVal, GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to convert timestamp with timezone '" + rawVal + "' to the OffsetDateTime class: " + e.getMessage(), e);
         }
     }
 }

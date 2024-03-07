@@ -35,9 +35,9 @@ public class JdbcTest extends BaseFeature {
             "vc1   varchar(5)",
             "c1    char(3)",
             "bin   bytea",
-            "u     uuid"
+            "u     uuid",
+            "tmz   timestamp with time zone"
     };
-    private static final String[] TYPES_TABLE_FIELDS_WITH_TIMESTAMPTZ = ArrayUtils.add(TYPES_TABLE_FIELDS, "tmz timestamp with time zone");
     private static final String[] PGSETTINGS_VIEW_FIELDS = new String[]{
             "name    text",
             "setting text"};
@@ -71,6 +71,7 @@ public class JdbcTest extends BaseFeature {
     private ExternalTable pxfJdbcReadServerConfigAll; // all server-based props coming from there, not DDL
     private ExternalTable pxfJdbcReadViewNoParams, pxfJdbcReadViewSessionParams;
     private ExternalTable pxfJdbcWritable;
+    private ExternalTable pxfJdbcWritableWithDateWideRange;
     private ExternalTable pxfJdbcWritableNoBatch;
     private ExternalTable pxfJdbcWritablePool;
     private ExternalTable pxfJdbcColumns;
@@ -81,7 +82,7 @@ public class JdbcTest extends BaseFeature {
     private static final String gpdbTypesWithDateWideRangeDataFileName = "gpdb_types_with_date_wide_range.txt";
     private static final String gpdbTypesDataFileName = "gpdb_types.txt";
     private static final String gpdbColumnsDataFileName = "gpdb_columns.txt";
-    private Table gpdbNativeTableTypes, gpdbNativeTableTypesWithDateWideRange, gpdbNativeTableColumns, gpdbWritableTargetTable;
+    private Table gpdbNativeTableTypes, gpdbNativeTableTypesWithDateWideRange, gpdbNativeTableColumns, gpdbWritableTargetTable, gpdbWritableTargetTableWithDateWideRange;
     private Table gpdbWritableTargetTableNoBatch, gpdbWritableTargetTablePool;
     private Table gpdbDeptTable, gpdbEmpTable;
 
@@ -116,7 +117,7 @@ public class JdbcTest extends BaseFeature {
                 + "/gpdb/" + gpdbTypesDataFileName), "E'\\t'", "E'\\\\N'", true);
 
         // create a table that is the same as above but with timestamp with time zone
-        gpdbNativeTableTypesWithDateWideRange = new Table("gpdb_types_with_date_wide_range", TYPES_TABLE_FIELDS_WITH_TIMESTAMPTZ);
+        gpdbNativeTableTypesWithDateWideRange = new Table("gpdb_types_with_date_wide_range", TYPES_TABLE_FIELDS);
         gpdbNativeTableTypesWithDateWideRange.setDistributionFields(new String[]{"t1"});
         gpdb.createTableAndVerify(gpdbNativeTableTypesWithDateWideRange);
         gpdb.copyFromFile(gpdbNativeTableTypesWithDateWideRange, new File(localDataResourcesFolder
@@ -126,6 +127,11 @@ public class JdbcTest extends BaseFeature {
         gpdbWritableTargetTable = new Table("gpdb_types_target", TYPES_TABLE_FIELDS);
         gpdbWritableTargetTable.setDistributionFields(new String[]{"t1"});
         gpdb.createTableAndVerify(gpdbWritableTargetTable);
+
+        // create a table to be filled by the writable test case
+        gpdbWritableTargetTableWithDateWideRange = new Table("gpdb_types_target_with_date_wide_range", TYPES_TABLE_FIELDS);
+        gpdbWritableTargetTableWithDateWideRange.setDistributionFields(new String[]{"t1"});
+        gpdb.createTableAndVerify(gpdbWritableTargetTableWithDateWideRange);
 
         // create a table to be filled by the writable test case with no batch
         gpdbWritableTargetTableNoBatch = new Table("gpdb_types_nobatch_target", TYPES_TABLE_FIELDS_SMALL);
@@ -297,6 +303,17 @@ public class JdbcTest extends BaseFeature {
         pxfJdbcWritable.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcWritable);
 
+        pxfJdbcWritableWithDateWideRange = TableFactory.getPxfJdbcWritableTable(
+                "pxf_jdbc_writable_date_wide_range_on",
+                TYPES_TABLE_FIELDS,
+                gpdbWritableTargetTableWithDateWideRange.getName(),
+                POSTGRES_DRIVER_CLASS,
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                gpdb.getUserName(), null);
+        pxfJdbcWritableWithDateWideRange.setHost(pxfHost);
+        pxfJdbcWritableWithDateWideRange.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcWritableWithDateWideRange);
+
         pxfJdbcWritableNoBatch = TableFactory.getPxfJdbcWritableTable(
                 "pxf_jdbc_writable_nobatch",
                 TYPES_TABLE_FIELDS_SMALL,
@@ -375,7 +392,7 @@ public class JdbcTest extends BaseFeature {
     private void prepareDateWideRange() throws Exception {
         pxfJdbcDateWideRangeOn = TableFactory.getPxfJdbcReadableTable(
                 "pxf_jdbc_readable_date_wide_range_on",
-                TYPES_TABLE_FIELDS_WITH_TIMESTAMPTZ,
+                TYPES_TABLE_FIELDS,
                 gpdbNativeTableTypesWithDateWideRange.getName(),
                 POSTGRES_DRIVER_CLASS,
                 GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
@@ -387,7 +404,7 @@ public class JdbcTest extends BaseFeature {
 
         pxfJdbcDateWideRangeOff = TableFactory.getPxfJdbcReadableTable(
                 "pxf_jdbc_readable_date_wide_range_off",
-                TYPES_TABLE_FIELDS_WITH_TIMESTAMPTZ,
+                TYPES_TABLE_FIELDS,
                 gpdbNativeTableTypesWithDateWideRange.getName(),
                 POSTGRES_DRIVER_CLASS,
                 GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
@@ -452,6 +469,15 @@ public class JdbcTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTable() throws Exception {
         runSqlTest("features/jdbc/writable");
+    }
+
+    @FailsWithFDW
+    // All the Writable Tests are failing with this Error:
+    // ERROR:  PXF server error : class java.io.DataInputStream cannot be cast to class
+    // [B (java.io.DataInputStream and [B are in module java.base of loader 'bootstrap')
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
+    public void jdbcWritableTableWithDateWideRange() throws Exception {
+        runSqlTest("features/jdbc/writable_date_wide_range");
     }
 
     @FailsWithFDW
