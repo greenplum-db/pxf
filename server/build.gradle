@@ -29,6 +29,10 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 }
 
+// override Spring Framework version to pick the Spring MVC 5.3.33 with the async race condition fix
+// https://github.com/spring-projects/spring-framework/issues/32342
+ext['spring-framework.version'] = '5.3.33'
+
 def javaProjects = subprojects.findAll {
     it.name.startsWith("pxf-")
 }
