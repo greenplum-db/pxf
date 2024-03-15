@@ -390,11 +390,11 @@ public class JsonRecordReaderTest {
 
         // +1 for open bracket + 1 for new line + 2 for spaces = 4
         // record 1 is 109 bytes = 113
-        // +2 for comma space + record 2 is 107 bytes = 224
-        // +2 for comma space + 2 for newline + record 3 is 108 bytes = 335
-        // +2 for comma space + record 4 is 124 bytes = 461
-        // +2 for comma space + record 5 is 103 bytes = 566
-        // +1 for end bracket = 567
+        // +1 for comma, +1 for space + record 2 is 107 bytes +1 for comma, +1 for newline = 224
+        // +2 for spaces + record 3 is 108 bytes = 334
+        // +1 for comma, +1 for space + record 4 is 124 bytes = 460
+        // +1 for comma, +1 for space + record 5 is 103 bytes = 565
+        // +1 for newline +1 for end bracket = 567
         jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüstömerstätüs");
         file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/straddle_split.json").toURI());
         path = new Path(file.getPath());

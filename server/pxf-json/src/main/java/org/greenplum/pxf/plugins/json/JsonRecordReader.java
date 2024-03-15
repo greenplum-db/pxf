@@ -142,7 +142,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             // - the object is not complete, in which case we hit end of file
             // - the object is complete, in which case, determine if we found the identifier
             if (!isObjectComplete) {
-                // if EOF, update pos to be filePos
+                // if we have gotten here, filePos is at EOF
                 pos = filePos;
                 return false;
             }
