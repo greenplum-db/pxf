@@ -245,27 +245,36 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         // seek until we hit the first begin-object
         boolean inString = false;
         int i;
-        String readValues = "";
+        StringBuilder readValues = new StringBuilder();
         // since we have not yet found a starting object, exit if either EOF (-1) or END_OF_SPLIT (-2)
         while ((i = readNextChar()) > EOF) {
             char c = (char) i;
 
             // while scanning to start of object, we need to make sure we aren't losing our position
-            readValues += c;
+            readValues.append(c);
+            checkLength(readValues, 1024);
             // if the current value is a backslash, then ignore the next value as it's an escaped char
             if (c == BACKSLASH) {
                 int temp = readNextChar();
-                readValues += (char) temp;
+                readValues.append((char) temp);
+                checkLength(readValues, 1024);
             } else if (c == QUOTE) {
                 inString = !inString;
             } else if (c == START_BRACE && !inString) {
                 // the start brace will be accounted for later, so ignore it for now
-                pos = pos + readValues.getBytes(StandardCharsets.UTF_8).length - 1;
+                pos = pos + readValues.toString().getBytes(StandardCharsets.UTF_8).length - 1;
                 return true;
             }
         }
-        pos = pos + readValues.getBytes(StandardCharsets.UTF_8).length;
+        pos = pos + readValues.toString().getBytes(StandardCharsets.UTF_8).length;
         return false;
+    }
+
+    private void checkLength(StringBuilder sb, int maxLength) {
+        if (sb.length() >= maxLength ){
+            pos = pos + sb.toString().getBytes(StandardCharsets.UTF_8).length;
+            sb.setLength(0);
+        }
     }
 
     /**
