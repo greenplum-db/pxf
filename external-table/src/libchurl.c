@@ -23,6 +23,8 @@
 #include "utils/fmgroids.h"
 #include "utils/guc.h"
 #include "utils/jsonapi.h"
+#include "utils/memutils.h"
+#include "utils/resowner.h"
 
 /* include libcurl without typecheck.
  * This allows wrapping curl_easy_setopt to be wrapped
@@ -82,6 +84,8 @@ typedef struct
 
 	/* true on upload, false on download */
 	bool		upload;
+
+	ResourceOwner owner;
 } churl_context;
 
 /*
@@ -90,6 +94,8 @@ typedef struct
 typedef struct
 {
 	struct curl_slist *headers;
+
+	ResourceOwner owner;
 } churl_settings;
 
 /* the null action object used for pure validation */
@@ -130,11 +136,35 @@ static char	   *get_http_error_msg(long http_ret_code, char *msg, char *curl_err
 static char	   *build_header_str(const char *format, const char *key, const char *value);
 static bool	IsValidJson(text *json);
 
+static void
+churl_headers_abort_callback(ResourceReleasePhase phase,
+						bool isCommit,
+						bool isTopLevel,
+						void *arg)
+{
+	churl_settings *settings = arg;
+
+	if (phase != RESOURCE_RELEASE_AFTER_LOCKS)
+		return;
+
+	if (settings->owner == CurrentResourceOwner)
+	{
+		if (isCommit)
+			elog(LOG, "pxf churl_headers reference leak: %p still referenced", arg);
+
+		churl_headers_cleanup(settings);
+	}
+}
 
 CHURL_HEADERS
 churl_headers_init(void)
 {
+	MemoryContext oldcontext = MemoryContextSwitchTo(CurTransactionContext);
 	churl_settings *settings = (churl_settings *) palloc0(sizeof(churl_settings));
+	MemoryContextSwitchTo(oldcontext);
+
+	settings->owner = CurTransactionResourceOwner;
+	RegisterResourceReleaseCallback(churl_headers_abort_callback, settings);
 
 	return (CHURL_HEADERS) settings;
 }
@@ -304,6 +334,8 @@ churl_headers_cleanup(CHURL_HEADERS headers)
 
 	if (!settings)
 		return;
+
+	UnregisterResourceReleaseCallback(churl_headers_abort_callback, settings);
 
 	if (settings->headers)
 		curl_slist_free_all(settings->headers);
@@ -531,10 +563,35 @@ churl_cleanup(CHURL_HANDLE handle, bool after_error)
 	churl_cleanup_context(context);
 }
 
+static void
+churl_context_abort_callback(ResourceReleasePhase phase,
+						bool isCommit,
+						bool isTopLevel,
+						void *arg)
+{
+	churl_context *context = arg;
+
+	if (phase != RESOURCE_RELEASE_AFTER_LOCKS)
+		return;
+
+	if (context->owner == CurrentResourceOwner)
+	{
+		if (isCommit)
+			elog(LOG, "pxf churl_context reference leak: %p still referenced", arg);
+
+		cleanup_curl_handle(context);
+	}
+}
+
 churl_context *
 churl_new_context()
 {
+	MemoryContext oldcontext = MemoryContextSwitchTo(CurTransactionContext);
 	churl_context *context = palloc0(sizeof(churl_context));
+	MemoryContextSwitchTo(oldcontext);
+
+	context->owner = CurTransactionResourceOwner;
+	RegisterResourceReleaseCallback(churl_context_abort_callback, context);
 
 	context->download_buffer = palloc0(sizeof(churl_buffer));
 	context->upload_buffer = palloc0(sizeof(churl_buffer));
@@ -716,6 +773,7 @@ finish_upload(churl_context *context)
 static void
 cleanup_curl_handle(churl_context *context)
 {
+	UnregisterResourceReleaseCallback(churl_context_abort_callback, context);
 	if (!context->curl_handle)
 		return;
 	if (context->multi_handle)
