@@ -42,6 +42,7 @@ MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
 GP7_CLI                     ?= false
+RELEASE_BRANCH              ?= main
 # used to quickly modify the docker image tag being pulled ONLY in the dev_build_pipeline
 PXF_DEV_IMAGE_TAG           ?= latest
 
@@ -49,6 +50,15 @@ SET_PIPELINE := set-pipeline
 ifeq ($(CHECK_CREDS), true)
 SET_PIPELINE += --check-creds
 endif
+
+ifneq "$(RELEASE_BRANCH)" "main"
+# substitute any / for - in the pipeline
+	RELEASE_NAME:=-$(shell echo $(subst /,-,$(RELEASE_BRANCH)) | tr A-Z a-z)
+else
+# if we're on the main branch, there should be no release name
+	RELEASE_NAME:=""
+endif
+SHIPIT_REGEX="pxf-build$(RELEASE_NAME)/greenplum-pxf-(.*).txt"
 
 .PHONY: build certification dev-release dev pr cloudbuild dev-cloudbuild longevity
 build: set-build-pipeline
@@ -73,18 +83,20 @@ set-build-pipeline:
 		num_gpdb7_versions=$(NUM_GPDB7_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		$(SET_PIPELINE) \
-		--pipeline=$(BUILD_PIPELINE_NAME) \
+		--pipeline=$(BUILD_PIPELINE_NAME)$(RELEASE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--var=pxf-git-branch=main \
+		--var=pxf-git-branch=$(RELEASE_BRANCH) \
 		--var=pxf-build-bucket-prefix=prod \
 		--var=gpdb-pxf-dev-image-tag=latest \
+		--var=shipit-regex=$(SHIPIT_REGEX) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
 
 .PHONY: set-dev-release-pipeline
+set-dev-release-pipeline: SHIPIT_REGEX="$(USER)-$(BRANCH)/greenplum-pxf-(.*).txt"
 set-dev-release-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
@@ -105,6 +117,7 @@ set-dev-release-pipeline:
 		--var=pxf-build-bucket-prefix=dev/$(USER)-$(BRANCH) \
 		--var=pxf-releases-bucket-prefix=dev/$(USER)-$(BRANCH) \
 		--var=gpdb-pxf-dev-image-tag=$(PXF_DEV_IMAGE_TAG) \
+		--var=shipit-regex=$(SHIPIT_REGEX) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
@@ -145,6 +158,7 @@ set-dev-build-pipeline:
 		--var=pxf-git-branch=${BRANCH} \
 		--var=pxf-build-bucket-prefix=dev/$(USER)-$(BRANCH) \
 		--var=gpdb-pxf-dev-image-tag=$(PXF_DEV_IMAGE_TAG) \
+		--var=shipit-regex=$(SHIPIT_REGEX) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
