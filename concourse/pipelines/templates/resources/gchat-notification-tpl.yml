@@ -7,4 +7,4 @@
 - name: [[alert_name]]
   type: google-chat-notify-resource
   source:
-    url: ((ud/pxf/secrets/[[url_key]]))
+    url: ((ud/secrets/[[url_key]]))
