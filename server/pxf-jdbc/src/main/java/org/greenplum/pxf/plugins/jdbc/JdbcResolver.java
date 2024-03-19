@@ -123,6 +123,11 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             .optionalStart().appendPattern(DATE_TIME_FORMATTER_SPECIFIER).optionalEnd()
             .toFormatter();
 
+    /**
+     * OFFSET_DATE_TIME_SET_FORMATTER is used to transfer String to OffsetDateTime.
+     * Examples: "1980-08-10 17:10:20-07" -> 1980-08-10T17:10:20-07; "123456-10-19 11:12:13+06:30" -> +123456-10-19T11:12:13+6:30;
+     * "1234-10-19 10:11:15.456+00 BC" -> -1233-10-19T10:11:15.456+00
+     */
     private static final DateTimeFormatter OFFSET_DATE_TIME_SET_FORMATTER = (new DateTimeFormatterBuilder())
             .appendValue(ChronoField.YEAR_OF_ERA, 1, 9, SignStyle.NORMAL).appendLiteral('-')
             .appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, SignStyle.NORMAL).appendLiteral('-')
@@ -240,11 +245,8 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                     break;
                 case TIMESTAMP_WITH_TIME_ZONE:
                     OffsetDateTime offsetDateTime = result.getObject(colName, OffsetDateTime.class);
-                    if (isDateWideRange) {
-                        value = offsetDateTime != null ? offsetDateTime.format(OFFSET_DATE_TIME_GET_FORMATTER) : null;
-                    } else {
-                        value = offsetDateTime != null ? offsetDateTime.format(GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER) : null;
-                    }
+                    DateTimeFormatter timestamptzFormatter = isDateWideRange ? OFFSET_DATE_TIME_GET_FORMATTER : GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER;
+                    value = offsetDateTime != null ? offsetDateTime.format(timestamptzFormatter) : null;
                     break;
                 case UUID:
                     value = result.getObject(colName, java.util.UUID.class);

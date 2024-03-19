@@ -301,6 +301,7 @@ public class JdbcTest extends BaseFeature {
                 gpdb.getUserName(), null);
         pxfJdbcWritable.setHost(pxfHost);
         pxfJdbcWritable.setPort(pxfPort);
+        pxfJdbcWritable.addUserParameter("date_wide_range=false");
         gpdb.createTableAndVerify(pxfJdbcWritable);
 
         pxfJdbcWritableWithDateWideRange = TableFactory.getPxfJdbcWritableTable(
@@ -312,6 +313,7 @@ public class JdbcTest extends BaseFeature {
                 gpdb.getUserName(), null);
         pxfJdbcWritableWithDateWideRange.setHost(pxfHost);
         pxfJdbcWritableWithDateWideRange.setPort(pxfPort);
+        pxfJdbcWritableWithDateWideRange.addUserParameter("date_wide_range=true");
         gpdb.createTableAndVerify(pxfJdbcWritableWithDateWideRange);
 
         pxfJdbcWritableNoBatch = TableFactory.getPxfJdbcWritableTable(

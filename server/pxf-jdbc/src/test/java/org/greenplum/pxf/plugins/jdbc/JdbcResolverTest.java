@@ -188,6 +188,13 @@ class JdbcResolverTest {
     }
 
     @Test
+    void getFieldOffsetDateTimeNull() throws SQLException {
+        isDateWideRange = false;
+        OneField oneField = getOneField(null, DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "timestamptz");
+        assertNull(oneField.val);
+    }
+
+    @Test
     void getFieldOffsetDateTimeWithWideRangeTest() throws SQLException {
         isDateWideRange = true;
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -476,6 +483,19 @@ class JdbcResolverTest {
         assertEquals(expectedOffsetDateTime, oneField.val);
     }
 
+    @Test
+    void setFieldOffsetDateTimeWithMoreThan4digitsInYearWithoutWideRangeTest() {
+        isDateWideRange = false;
+        String timestamptz = "12345-01-23 11:22:33.44+12:34";
+        assertThrows(IllegalArgumentException.class, () -> setFields(timestamptz, DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "timestamptz"));
+    }
+
+    @Test
+    void setFieldOffsetDateTimeWithEraWithoutWideRangeTest() throws ParseException {
+        isDateWideRange = false;
+        String timestamptz = "1234-01-23 11:22:33.44+12:34 BC";
+        assertThrows(IllegalArgumentException.class, () -> setFields(timestamptz, DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "timestamptz"));
+    }
     @Test
     void setFieldUUIDTest() throws ParseException {
         oneFieldList.add(new OneField(DataType.TEXT.getOID(), "decafbad-0000-0000-0000-000000000000"));
