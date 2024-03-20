@@ -38,6 +38,9 @@ public abstract class PxfErrorReporter<T> {
                 } else {
                     log.warn("Remote connection closed by the client (enable debug for the stacktrace).");
                 }
+            } else {
+                // some other IO error, log it as usual
+                log.error(StringUtils.defaultIfBlank(e.getMessage(), e.getClass().getName()), e);
             }
             // wrap into PxfRuntimeException and throw back so that it can be handled by the PxfExceptionHandler
             throw new PxfRuntimeException(e);
