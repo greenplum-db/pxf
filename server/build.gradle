@@ -32,6 +32,7 @@ plugins {
 // override Spring Framework version to pick the Spring MVC 5.3.33 with the async race condition fix
 // https://github.com/spring-projects/spring-framework/issues/32342
 ext['spring-framework.version'] = '5.3.33'
+ext['tomcat.version'] = '9.0.87'
 
 def javaProjects = subprojects.findAll {
     it.name.startsWith("pxf-")
