@@ -22,6 +22,8 @@
 {% elif x.use_impers == 'false' %}
     {# no impersonation tests should run a smoke group, define it here explicitly, do not rely on task default #}
     {% set test_group = 'smoke' %}
+{% elif x.feature == 'load' %}
+    {% set test_group = 'load' %}
 {% else %}
     {# non-cloud impersonation tests (regular) run a standard group combination #}
     {% set test_group = 'gpdb,proxy,profile' %}

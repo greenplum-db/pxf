@@ -202,6 +202,8 @@ function _main() {
 	if [[ -n ${GROUP} ]]; then
 		if [[ $PG_REGRESS == true ]]; then
 			run_pg_regress
+		elif [[ "${GROUP}" == "load" ]]; then
+		  run_load_test
 		else
 			run_pxf_automation
 		fi
