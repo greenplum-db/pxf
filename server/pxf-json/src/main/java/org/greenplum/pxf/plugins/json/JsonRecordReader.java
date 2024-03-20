@@ -150,7 +150,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
             String json = parser.getCompletedObject();
 
             // the object is complete so update the position
-            pos = pos + json.getBytes(StandardCharsets.UTF_8).length;
+            pos += json.getBytes(StandardCharsets.UTF_8).length;
 
             // if we found the identifier
             if (parser.foundObjectWithIdentifier()) {
@@ -159,7 +159,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 if (jsonLength > maxObjectLength) {
                     LOG.warn("Skipped JSON object of size " + json.length());
                 } else {
-                    // the key is set to beginning of the json object
+                    // the key is set to the length of the json object
                     key.set(jsonLength);
                     value.set(json);
                     return true;
@@ -262,17 +262,17 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 inString = !inString;
             } else if (c == START_BRACE && !inString) {
                 // the start brace will be accounted for later, so ignore it for now
-                pos = pos + readValues.toString().getBytes(StandardCharsets.UTF_8).length - 1;
+                pos += readValues.toString().getBytes(StandardCharsets.UTF_8).length - 1;
                 return true;
             }
         }
-        pos = pos + readValues.toString().getBytes(StandardCharsets.UTF_8).length;
+        pos += readValues.toString().getBytes(StandardCharsets.UTF_8).length;
         return false;
     }
 
     private void checkLength(StringBuilder sb, int maxLength) {
         if (sb.length() >= maxLength ){
-            pos = pos + sb.toString().getBytes(StandardCharsets.UTF_8).length;
+            pos += sb.toString().getBytes(StandardCharsets.UTF_8).length;
             sb.setLength(0);
         }
     }
