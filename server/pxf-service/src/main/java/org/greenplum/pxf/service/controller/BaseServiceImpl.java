@@ -1,10 +1,10 @@
 package org.greenplum.pxf.service.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.connector.ClientAbortException;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.MetricsReporter;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
@@ -77,7 +77,7 @@ public abstract class BaseServiceImpl<T> extends PxfErrorReporter<T> {
         OperationStats stats = result.getStats();
         Exception exception = result.getException();
         String status = (exception == null) ? "Completed" :
-                (exception instanceof ClientAbortException) ? "Aborted" : "Failed";
+                (Utilities.isClientDisconnectException(exception)) ? "Aborted" : "Failed";
 
         // log action status and stats
         long recordCount = stats.getRecordCount();

@@ -1,5 +1,6 @@
 package org.greenplum.pxf.service.spring;
 
+import lombok.extern.slf4j.Slf4j;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -15,6 +16,7 @@ import static org.greenplum.pxf.api.configuration.PxfServerProperties.PXF_BASE_P
  * how to overcome {@link TaskRejectedException} errors, by suggesting tuning
  * parameters for PXF.
  */
+@Slf4j
 public class PxfThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
     private static final String PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_MESSAGE = "PXF Server processing capacity exceeded.";
@@ -32,12 +34,8 @@ public class PxfThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
     public Future<?> submit(Runnable task) {
         try {
             return super.submit(task);
-        } catch (TaskRejectedException ex) {
-            PxfRuntimeException exception = new PxfRuntimeException(
-                    PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_MESSAGE,
-                    String.format(PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_HINT, System.getProperty(PXF_BASE_PROPERTY)),
-                    ex.getCause());
-            throw new TaskRejectedException(ex.getMessage(), exception);
+        } catch (TaskRejectedException e) {
+            throw updateException(e);
         }
     }
 
@@ -53,12 +51,23 @@ public class PxfThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
     public <T> Future<T> submit(Callable<T> task) {
         try {
             return super.submit(task);
-        } catch (TaskRejectedException ex) {
-            PxfRuntimeException exception = new PxfRuntimeException(
-                    PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_MESSAGE,
-                    String.format(PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_HINT, System.getProperty(PXF_BASE_PROPERTY)),
-                    ex.getCause());
-            throw new TaskRejectedException(ex.getMessage(), exception);
+        } catch (TaskRejectedException e) {
+            throw updateException(e);
         }
+    }
+
+    /**
+     * Logs the error when a client request is rejected and wraps it into PxfRuntimeException.
+     * @param e original exception
+     * @return PxfRuntimeException that wraps the original exception
+     */
+    private TaskRejectedException updateException(TaskRejectedException e) {
+        PxfRuntimeException exception = new PxfRuntimeException(
+                PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_MESSAGE,
+                String.format(PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_HINT, System.getProperty(PXF_BASE_PROPERTY)),
+                e.getCause());
+        log.error(String.format("Request rejected: activeTreads=%d maxPoolSize=%d queueSize=%d queueCapacity=%d",
+                getActiveCount(), getMaxPoolSize(), getQueueSize(), getQueueCapacity()), exception);
+        return new TaskRejectedException(e.getMessage(), exception);
     }
 }

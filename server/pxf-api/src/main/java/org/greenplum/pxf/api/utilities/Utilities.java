@@ -19,7 +19,9 @@ package org.greenplum.pxf.api.utilities;
  * under the License.
  */
 
+import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -384,5 +386,17 @@ public class Utilities {
                     "Property %s has invalid value '%s'; value should be either 'true' or 'false'", propertyName, propertyValue
             ));
         }
+    }
+
+    /**
+     * Inspects the throwable and its causes to determine if the throwable due to the client disconnecting
+     * from the socket. Spring MVC since 5.3.33 is wrapping Tomcat's ClientAbortException during async processing into
+     * AsyncRequestNotUsableException. To accommodate potential future changes in Spring MVC, the logic here
+     * will traverse the exception chain to determine whether a ClientAbortException is in the chain.
+     * @param e exception to analyze
+     * @return true if ClientAbortException is in the exception chain, false otherwise
+     */
+    public static boolean isClientDisconnectException(Exception e) {
+        return ExceptionUtils.getThrowableList(e).stream().anyMatch(t -> t instanceof ClientAbortException);
     }
 }
