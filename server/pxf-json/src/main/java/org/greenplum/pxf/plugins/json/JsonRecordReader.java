@@ -64,6 +64,10 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     // index where the JsonRecordReader has read to in the currentLineBuffer
     private int currentLineIndex = Integer.MAX_VALUE;
     private boolean inNextSplit = false;
+    // used to store characters that were read before we hit a json begin object marker
+    private StringBuilder readValues = new StringBuilder(MAX_CHARS);
+    // max number of characters to read before we update the position
+    private static final int MAX_CHARS = 1024;
 
     private static final char BACKSLASH = '\\';
     private static final char QUOTE = '\"';
@@ -245,19 +249,19 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         // seek until we hit the first begin-object
         boolean inString = false;
         int i;
-        StringBuilder readValues = new StringBuilder();
+
+        // reset the stringbuilder and start counting chars
+        readValues.setLength(0);
+
         // since we have not yet found a starting object, exit if either EOF (-1) or END_OF_SPLIT (-2)
         while ((i = readNextChar()) > EOF) {
             char c = (char) i;
 
             // while scanning to start of object, we need to make sure we aren't losing our position
-            readValues.append(c);
-            checkLength(readValues, 1024);
+            accountForCharacterRead(c);
             // if the current value is a backslash, then ignore the next value as it's an escaped char
             if (c == BACKSLASH) {
-                int temp = readNextChar();
-                readValues.append((char) temp);
-                checkLength(readValues, 1024);
+                accountForCharacterRead((char) readNextChar());
             } else if (c == QUOTE) {
                 inString = !inString;
             } else if (c == START_BRACE && !inString) {
@@ -270,10 +274,18 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         return false;
     }
 
-    private void checkLength(StringBuilder sb, int maxLength) {
-        if (sb.length() >= maxLength ){
-            pos += sb.toString().getBytes(StandardCharsets.UTF_8).length;
-            sb.setLength(0);
+    /**
+     * Append the given character to the string of characters read
+     *
+     * If the number of characters read equals MAX_CHARS, then
+     * set the global pos and reset the string of characters read to empty
+     * @param c the character that was read
+     */
+    private void accountForCharacterRead(char c) {
+        readValues.append(c);
+        if (readValues.length() == MAX_CHARS){
+            pos += readValues.toString().getBytes(StandardCharsets.UTF_8).length;
+            readValues.setLength(0);
         }
     }
 
