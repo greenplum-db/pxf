@@ -283,7 +283,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
      */
     private void accountForCharacterRead(char c) {
         readValues.append(c);
-        if (readValues.length() == MAX_CHARS){
+        if (readValues.length() >= MAX_CHARS){
             pos += readValues.toString().getBytes(StandardCharsets.UTF_8).length;
             readValues.setLength(0);
         }
