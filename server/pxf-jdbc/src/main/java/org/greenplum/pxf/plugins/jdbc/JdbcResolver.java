@@ -82,8 +82,8 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
      */
     private static final DateTimeFormatter LOCAL_DATE_TIME_FORMATTER = (new DateTimeFormatterBuilder())
             .appendValue(ChronoField.YEAR_OF_ERA, 4, 9, SignStyle.NORMAL).appendLiteral('-')
-            .appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, SignStyle.NORMAL).appendLiteral('-')
-            .appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NORMAL).appendLiteral(" ")
+            .appendValue(ChronoField.MONTH_OF_YEAR, 2, 2, SignStyle.NORMAL).appendLiteral('-')
+            .appendValue(ChronoField.DAY_OF_MONTH, 2, 2, SignStyle.NORMAL).appendLiteral(" ")
             .append(ISO_LOCAL_TIME)
             .optionalStart().appendPattern(DATE_TIME_FORMATTER_SPECIFIER).optionalEnd()
             .toFormatter();
@@ -96,8 +96,8 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
      */
     private static final DateTimeFormatter OFFSET_DATE_TIME_FORMATTER = (new DateTimeFormatterBuilder())
             .appendValue(ChronoField.YEAR_OF_ERA, 4, 9, SignStyle.NORMAL).appendLiteral('-')
-            .appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, SignStyle.NORMAL).appendLiteral('-')
-            .appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NORMAL).appendLiteral(" ")
+            .appendValue(ChronoField.MONTH_OF_YEAR, 2, 2, SignStyle.NORMAL).appendLiteral('-')
+            .appendValue(ChronoField.DAY_OF_MONTH, 2, 2, SignStyle.NORMAL).appendLiteral(" ")
             .append(ISO_LOCAL_TIME)
             .appendOffset("+HH:mm", "Z")
             .optionalStart().appendPattern(DATE_TIME_FORMATTER_SPECIFIER).optionalEnd()

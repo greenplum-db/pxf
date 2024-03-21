@@ -201,7 +201,7 @@ class JdbcResolverTest {
         OffsetDateTime offsetDateTime = OffsetDateTime.parse("1977-12-11T10:15:30.1234+05:00");
         OneField oneField = getOneField(offsetDateTime, DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "timestamptz");
         assertTrue(oneField.val instanceof String);
-        assertEquals("1977-12-11 10:15:30.1234+05:00 AD", oneField.val);
+        assertEquals("1977-12-11 10:15:30.1234+05 AD", oneField.val);
     }
 
     @Test
@@ -228,7 +228,7 @@ class JdbcResolverTest {
         OffsetDateTime offsetDateTime = OffsetDateTime.parse("0003-01-02T04:05:06.0000015+03:00");
         OneField oneField = getOneField(offsetDateTime, DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "timestamptz");
         assertTrue(oneField.val instanceof String);
-        assertEquals("0003-01-02 04:05:06.0000015+03:00 AD", oneField.val);
+        assertEquals("0003-01-02 04:05:06.0000015+03 AD", oneField.val);
     }
 
     @Test
@@ -238,7 +238,7 @@ class JdbcResolverTest {
         OffsetDateTime offsetDateTime = OffsetDateTime.parse("+9876543-12-11T11:15:30.1234-03:00");
         OneField oneField = getOneField(offsetDateTime, DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "timestamptz");
         assertTrue(oneField.val instanceof String);
-        assertEquals("9876543-12-11 11:15:30.1234-03:00 AD", oneField.val);
+        assertEquals("9876543-12-11 11:15:30.1234-03 AD", oneField.val);
     }
 
     @Test
@@ -249,7 +249,7 @@ class JdbcResolverTest {
         OneField oneField = getOneField(offsetDateTime, DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "timestamptz");
         assertTrue(oneField.val instanceof String);
         // The year -3456 is transferred to 3457 BC: https://en.wikipedia.org/wiki/Astronomical_year_numbering
-        assertEquals("3457-12-11 11:15:30+02:00 BC", oneField.val);
+        assertEquals("3457-12-11 11:15:30+02 BC", oneField.val);
     }
 
     @Test
