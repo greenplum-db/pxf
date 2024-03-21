@@ -62,7 +62,7 @@ SELECT * FROM pxf_jdbc_readable ORDER BY t1;
 (3 rows)
 
 \connect - :OLD_GP_USER
-You are now connected to database "pxfautomation" as user "tatb".
+You are now connected to database "pxfautomation" as user "gpadmin".
 SET timezone='America/Los_Angeles';
 SET
 SELECT * FROM pxf_jdbc_readable ORDER BY t1;
