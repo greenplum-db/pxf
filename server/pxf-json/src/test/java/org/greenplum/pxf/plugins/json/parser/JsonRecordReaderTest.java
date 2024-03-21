@@ -93,13 +93,15 @@ public class JsonRecordReaderTest {
      */
     public void testInBetweenSplits() throws IOException {
 
-        // Split starts at 32 (after the [ {"cüstömerstätüs":"välid" ) and split length is 100, it will read till 132 bytes ( 32 + 132)
-        // the first record will end at 107 bytes and this record will be ignored since the split started after {
+        // Split starts at 32 (after the [ {"cüstömerstätüs":"välid" ) and split length is 100,
         long start = 32;
         fileSplit = new FileSplit(path, start, 100, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
 
-        assertEquals(32, jsonRecordReader.getPos());
+        // Since, the split starts in the middle of the line, we assume the previous split has
+        // taken care of the current line
+        // the first record is  107 bytes + a comma and a new line = 109 bytes for the entire line
+        assertEquals(109, jsonRecordReader.getPos());
 
         key = createKey();
         data = createValue();
@@ -385,6 +387,14 @@ public class JsonRecordReaderTest {
         // 511 line 5 has remaining half, a full record, and another half -- 219 bytes
         // 566 line 6 has the last half record -- 55 bytes
         // 567 line 7 is closing array bracket -- 1 bytes
+
+        // +1 for open bracket + 1 for new line + 2 for spaces = 4
+        // record 1 is 109 bytes = 113
+        // +1 for comma, +1 for space + record 2 is 107 bytes +1 for comma, +1 for newline = 224
+        // +2 for spaces + record 3 is 108 bytes = 334
+        // +1 for comma, +1 for space + record 4 is 124 bytes = 460
+        // +1 for comma, +1 for space + record 5 is 103 bytes = 565
+        // +1 for newline +1 for end bracket = 567
         jobConf.set(RECORD_MEMBER_IDENTIFIER, "cüstömerstätüs");
         file = new File(this.getClass().getClassLoader().getResource("parser-tests/offset/straddle_split.json").toURI());
         path = new Path(file.getPath());
@@ -404,7 +414,7 @@ public class JsonRecordReaderTest {
         assertEquals("{\"cüstömerstätüs\":\"välid\",\"name\": \"äää\", \"year\": \"2022\",\n" +
                 "    \"address\": \"söme city\", \"zip\": \"95051\"}", data.toString());
         assertFalse(jsonRecordReader.next(key, data));
-        // reads the full second line... even if it doesn't use the full line
+        // pos should be end of first object
         assertEquals(113, jsonRecordReader.getPos());
 
         // split 2 (starts mid line 2 continues into line 3, skip incomplete object and read full object)
@@ -753,7 +763,10 @@ public class JsonRecordReaderTest {
         fileSplit = new FileSplit(path, 31, 1000, hosts);
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
 
-        assertEquals(31, jsonRecordReader.getPos());
+        // Since, the split starts in the middle of the line, we assume the previous split has
+        // taken care of the current line
+        // there are an additional 19 bytes (for ` "name": "as\\{d",\n`) in the line so our position is 50
+        assertEquals(50, jsonRecordReader.getPos());
 
         key = createKey();
         data = createValue();
@@ -808,7 +821,9 @@ public class JsonRecordReaderTest {
 
         jsonRecordReader = new JsonRecordReader(jobConf, fileSplit);
 
-        assertEquals(92, jsonRecordReader.getPos());
+        // byte 92 is the comma, but doesn't include the new line, after initialization,
+        // we should be at the end of the line/beginning of the next line
+        assertEquals(93, jsonRecordReader.getPos());
 
         key = createKey();
         data = createValue();

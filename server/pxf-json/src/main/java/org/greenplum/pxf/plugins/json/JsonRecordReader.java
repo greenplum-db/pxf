@@ -64,6 +64,10 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
     // index where the JsonRecordReader has read to in the currentLineBuffer
     private int currentLineIndex = Integer.MAX_VALUE;
     private boolean inNextSplit = false;
+    // used to store characters that were read before we hit a json begin object marker
+    private StringBuilder readValues = new StringBuilder(MAX_CHARS);
+    // max number of characters to read before we update the position
+    private static final int MAX_CHARS = 1024;
 
     private static final char BACKSLASH = '\\';
     private static final char QUOTE = '\"';
@@ -93,8 +97,11 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         this.conf = conf;
         parser = new PartitionedJsonParser(jsonMemberName);
         currentLine = new Text();
-        pos = start;
-        filePos = start;
+        // set pos and filePos to lineRecordReader's position. If the split started in the middle of a line,
+        // we assume that the previous split has taken care of it, so we just need to be at the same starting
+        // point as the lineRecordReader.
+        filePos = lineRecordReader.getPos();
+        pos = filePos;
         key = lineRecordReader.createKey();
     }
 
@@ -135,20 +142,29 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
                 isObjectComplete = parser.parse(c);
             }
 
-            // we've completed an object but there might still be things in the buffer. Calculate the proper
-            // position of the JsonRecordReader
-            updatePos();
+            // if we have gotten here there are 2 scenarios:
+            // - the object is not complete, in which case we hit end of file
+            // - the object is complete, in which case, determine if we found the identifier
+            if (!isObjectComplete) {
+                // if we have gotten here, filePos is at EOF
+                pos = filePos;
+                return false;
+            }
 
-            if (isObjectComplete && parser.foundObjectWithIdentifier()) {
-                String json = parser.getCompletedObject();
+            String json = parser.getCompletedObject();
+
+            // the object is complete so update the position
+            pos += json.getBytes(StandardCharsets.UTF_8).length;
+
+            // if we found the identifier
+            if (parser.foundObjectWithIdentifier()) {
                 // check the char length of the json against the MAXLENGTH parameter
                 long jsonLength = json.length();
-                long jsonStart = pos - json.getBytes(StandardCharsets.UTF_8).length;
                 if (jsonLength > maxObjectLength) {
-                    LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + jsonStart);
+                    LOG.warn("Skipped JSON object of size " + json.length());
                 } else {
-                    // the key is set to beginning of the json object
-                    key.set(jsonStart);
+                    // the key is set to the length of the json object
+                    key.set(jsonLength);
                     value.set(json);
                     return true;
                 }
@@ -201,14 +217,6 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         }
     }
 
-    private void updatePos() {
-        if (currentLineBuffer != null) {
-            long unreadBytesInBuffer = currentLineBuffer.substring(currentLineIndex).getBytes(StandardCharsets.UTF_8).length;
-            pos = filePos - unreadBytesInBuffer;
-        } else {
-            pos = filePos;
-        }
-    }
     /**
      * Reads the next character in the buffer. It will pull the next line as necessary
      *
@@ -241,19 +249,44 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
         // seek until we hit the first begin-object
         boolean inString = false;
         int i;
+
+        // reset the stringbuilder and start counting chars
+        readValues.setLength(0);
+
         // since we have not yet found a starting object, exit if either EOF (-1) or END_OF_SPLIT (-2)
         while ((i = readNextChar()) > EOF) {
             char c = (char) i;
+
+            // while scanning to start of object, we need to make sure we aren't losing our position
+            accountForCharacterRead(c);
             // if the current value is a backslash, then ignore the next value as it's an escaped char
             if (c == BACKSLASH) {
-                readNextChar();
+                accountForCharacterRead((char) readNextChar());
             } else if (c == QUOTE) {
                 inString = !inString;
             } else if (c == START_BRACE && !inString) {
+                // the start brace will be accounted for later, so ignore it for now
+                pos += readValues.toString().getBytes(StandardCharsets.UTF_8).length - 1;
                 return true;
             }
         }
+        pos += readValues.toString().getBytes(StandardCharsets.UTF_8).length;
         return false;
+    }
+
+    /**
+     * Append the given character to the string of characters read
+     *
+     * If the number of characters read equals MAX_CHARS, then
+     * set the global pos and reset the string of characters read to empty
+     * @param c the character that was read
+     */
+    private void accountForCharacterRead(char c) {
+        readValues.append(c);
+        if (readValues.length() >= MAX_CHARS){
+            pos += readValues.toString().getBytes(StandardCharsets.UTF_8).length;
+            readValues.setLength(0);
+        }
     }
 
     /**
