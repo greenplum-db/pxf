@@ -36,6 +36,7 @@ public class PxfExceptionHandlerTest {
         verify(mockResponse).sendError(500);
         verifyNoMoreInteractions(mockResponse);
     }
+
     @Test
     public void testHandlePxfRuntimeException_ResponseCommitted() {
         String originalMessage = "foo";

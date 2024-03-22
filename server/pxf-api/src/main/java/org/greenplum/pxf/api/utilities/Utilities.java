@@ -389,8 +389,8 @@ public class Utilities {
     }
 
     /**
-     * Inspects the throwable and its causes to determine if the throwable due to the client disconnecting
-     * from the socket. Spring MVC since 5.3.33 is wrapping Tomcat's ClientAbortException during async processing into
+     * Inspects the throwable and its causes to determine if the throwable is due to the client disconnecting
+     * from the socket. Spring MVC 5.3.33+ wraps Tomcat's ClientAbortException during async processing into
      * AsyncRequestNotUsableException. To accommodate potential future changes in Spring MVC, the logic here
      * will traverse the exception chain to determine whether a ClientAbortException is in the chain.
      * @param e exception to analyze

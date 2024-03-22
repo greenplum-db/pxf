@@ -23,8 +23,8 @@ public class PxfExceptionHandler {
 
     /**
      * Handles PxfRuntimeException that PXF controller methods can throw. If the response has already been committed,
-     * it re-throws the exception to signal Tomcat to abort the connection without properly terminating it
-     * with a 0-length chunk. If the response has not yet been committed, it sets the response status to 500 that will
+     * it re-throws the exception to signal to Tomcat that it needs to abort the connection without properly terminating it
+     * with a 0-length chunk. If the response has not yet been committed, it sets the response status to 500 which will
      * cause the exception to follow the error flow and be serialized as JSON by Spring Boot to the response message body.
      * @param e exception to process
      * @param response http response object
