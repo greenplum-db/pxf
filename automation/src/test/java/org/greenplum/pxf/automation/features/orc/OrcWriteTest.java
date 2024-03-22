@@ -289,9 +289,6 @@ public class OrcWriteTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void orcWritePrimitiveArraysMultidimensional() throws Exception {
-        if (ProtocolUtils.getProtocol() == ProtocolEnum.ADL) {
-            throw new SkipException("The test is extremely flaky with the ADL profile while we go through the Azure Gen1 Compatibility Layer");
-        }
 
         gpdbTableNamePrefix = "orc_primitive_arrays_multi";
         fullTestPath = hdfsPath + gpdbTableNamePrefix;

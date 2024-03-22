@@ -1,0 +1,20 @@
+{# Template for a specific PXF minor version build artifact resource definition.
+ #
+ # PXF 6.6 is the last version containing PXF extension version 2.0.
+ # We use this to test upgrading from extension version 2.0 to 2.1.
+ #
+ # PXF 6.9 is the last version containing PXF FDW extension version 1.0.
+ # We use this to test upgrading from extension version 1.0 to 2.0.
+ #
+ # Expects a 'minor' variable to be set, indicating the PXF minor version (6 or 9).
+ # Expects a 'gp_ver' variable to be set.
+ # Expects a 'platform_ver' variable to be set.
+ # Valid options for gp_ver and platform ver combinations are: (GP6 w/ CENTOS 7, or GP7 with RHEL 8)
+ #}
+
+- name: pxf6_[[minor_ver]]-gp[[gp_ver]]-el[[platform_ver]]-released
+  type: gcs
+  source:
+    bucket: ((ud/pxf/prod/releng-drop-bucket-name))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: ((ud/pxf/common/releng-drop-path))/gpdb[[gp_ver]]/pxf-gp[[gp_ver]]-(6.[[minor_ver]].*)-2.el[[platform_ver]].x86_64.rpm

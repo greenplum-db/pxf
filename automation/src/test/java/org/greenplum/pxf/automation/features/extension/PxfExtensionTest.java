@@ -38,6 +38,13 @@ public class PxfExtensionTest extends BaseFunctionality {
     }
 
     @Override
+    public void afterClass() throws Exception {
+        gpdb.connectToDataBase("pxfautomation");
+        gpdb.dropDataBase("pxfautomation_extension", true, true);
+        super.afterClass();
+    }
+
+    @Override
     public void beforeMethod() throws Exception {
         gpdb.setDb("pxfautomation_extension");
         gpdb.connectToDataBase("pxfautomation_extension");

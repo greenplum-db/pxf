@@ -6,7 +6,7 @@ import org.apache.commons.lang.StringUtils;
  * Enum to reflect the protocols supported
  */
 public enum ProtocolEnum {
-    ADL("adl"),
+    ABFSS("abfss"),
     GS("gs"),
     HDFS("hdfs"),
     FILE("file") {

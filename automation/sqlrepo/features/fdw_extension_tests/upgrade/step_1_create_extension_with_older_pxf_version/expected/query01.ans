@@ -1,0 +1,35 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for PXF FDW extension upgrade test
+-- start_matchsubs
+--
+-- m{.*/usr/local/pxf-(dev|gp\d).*}
+-- s{/usr/local/pxf-(dev|gp\d)}{\$PXF_HOME}
+--
+-- m{.*\$libdir/pxf.*}
+-- s{\$libdir}{\$PXF_HOME/gpextable}
+--
+-- end_matchsubs
+
+SELECT extversion FROM pg_extension WHERE extname = 'pxf_fdw';
+ extversion
+------------
+ 1.0
+(1 row)
+
+\dx+ pxf_fdw
+     Objects in extension "pxf_fdw"
+           Object Description
+----------------------------------------
+ foreign-data wrapper adl_pxf_fdw
+ foreign-data wrapper file_pxf_fdw
+ foreign-data wrapper gs_pxf_fdw
+ foreign-data wrapper hbase_pxf_fdw
+ foreign-data wrapper hdfs_pxf_fdw
+ foreign-data wrapper hive_pxf_fdw
+ foreign-data wrapper jdbc_pxf_fdw
+ foreign-data wrapper s3_pxf_fdw
+ foreign-data wrapper wasbs_pxf_fdw
+ function pxf_fdw_handler()
+ function pxf_fdw_validator(text[],oid)
+(11 rows)

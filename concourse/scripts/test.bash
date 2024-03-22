@@ -175,9 +175,9 @@ function _main() {
 			echo "${GOOGLE_CREDENTIALS}" > /tmp/gsc-ci-service-account.key.json
 			[[ ${PG_REGRESS} == true ]] && setup_gs_for_pg_regress
 			;;
-		adl)
-			echo 'Using ADL protocol'
-			[[ ${PG_REGRESS} == true ]] && setup_adl_for_pg_regress
+		abfss)
+			echo 'Using ABFSS protocol'
+			[[ ${PG_REGRESS} == true ]] && setup_abfss_for_pg_regress
 			;;
 		wasbs)
 			echo 'Using WASBS protocol'

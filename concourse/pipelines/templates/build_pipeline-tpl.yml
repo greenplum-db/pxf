@@ -23,7 +23,7 @@
 {% set job_names = namespace(all=[], tests={'basic':[], 'extended':[], 'backward_compatibility':[]}, images={}, tarballs={}, gpdb_packages={}) %}
 
 {# define supported test features (single-cluster test jobs) and whether their testing is requested by the Makefile via context variables #}
-{% set requested_features = {'s3': s3, 'gs': gs, 'adl': adl, 'wasbs': wasbs, 'minio': minio, 'hdp2': hdp2, 'hdp3': hdp3, 'cdh': cdh, 'jdk11': jdk11} %}
+{% set requested_features = {'s3': s3, 'gs': gs, 'abfss': abfss, 'wasbs': wasbs, 'minio': minio, 'hdp2': hdp2, 'hdp3': hdp3, 'cdh': cdh, 'jdk11': jdk11} %}
 {% set supported_features = requested_features.keys() | list %}
 
 {#
@@ -49,17 +49,17 @@
 
 {% set build_test_pxf_combinations = [
     {'gp_ver': '5', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': true},
-    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': true , 'test_cli': false, 'test_multi': true , 'test_features': supported_features, 'generate_release_tarball': true},
+    {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'centos', 'os_ver': '7',     'test_fdw': false, 'test_file': true , 'test_cli': false, 'test_multi': true , 'test_features': supported_features + ['upgrade-extension'], 'generate_release_tarball': true},
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false},
     {'gp_ver': '6', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': true , 'test_features': [], 'generate_release_tarball': false},
     {'gp_ver': '6', 'build_os': 'centos', 'test_os': 'oel'   , 'os_ver': '7',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false},
     {'gp_ver': '6', 'build_os': 'ubuntu', 'test_os': 'ubuntu', 'os_ver': '18.04', 'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false},
-    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': true , 'test_multi': true , 'test_features': [], 'generate_release_tarball': false},
+    {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '8',     'test_fdw': true , 'test_file': false, 'test_cli': true , 'test_multi': true , 'test_features': ['upgrade-extension'], 'generate_release_tarball': false},
     {'gp_ver': '7', 'build_os': 'rocky' , 'test_os': 'rocky' , 'os_ver': '9',     'test_fdw': false, 'test_file': false, 'test_cli': false, 'test_multi': false, 'test_features': [], 'generate_release_tarball': false}] %}
 
 
 {# define supported clouds that have their own 'protocols' #}
-{% set clouds = ['s3', 'gs', 'adl', 'wasbs', 'minio'] %}
+{% set clouds = ['s3', 'gs', 'abfss', 'wasbs', 'minio'] %}
 
 {# define distros we use for singlecluster setup #}
 {% set distros = ['hdp2', 'hdp3', 'cdh'] %}
@@ -186,9 +186,13 @@ resources:
 ## ---------- PXF 5 Artifact ---------------
     [[macros.resource_pxf5_gp6_el7_artifact()]]
 
-## ---------- PXF 6.6 Artifact ---------------
-# This is for extension upgrade testing. PXF 6.6.X contains extension version 2.0. PXF 6.7.+ contains version 2.1
-    [[macros.resource_pxf6_6_gp6_el7_artifact()]]
+## ---------- PXF 6.MINOR Artifact ---------------
+# This is for pxf extension upgrade testing. PXF 6.6.X contains pxf extension version 2.0. PXF 6.7.+ contains version 2.1
+# We test PXF 6.6 for gp6 on centos7
+    [[macros.resource_pxf6_minor_rpm_artifact('6', '6', '7')]]
+# This is for pxf_fdw extension upgrade testing. PXF 6.9.X contains pxf_fdw extension version 1.0. PXF 6.10.+ contains version 2.0
+# We test PXF 6.9 for gp7 on rocky8
+    [[macros.resource_pxf6_minor_rpm_artifact('9', '7', '8')]]
 
 ## ---------- Auxiliary Resources ----------
     [[macros.resource_terraform('gpdb')]]
@@ -260,7 +264,10 @@ jobs:
         {# define a feature name to go into the test job name, unless it is a test against a distro/cloud only #}
         {% set feature = test_feature if test_feature not in distros and test_feature not in clouds else '' %}
         {% do x.update({'feature': feature}) %}
-        [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'extended', gchat_notification)]]
+
+        {# for upgrade-extension only, use a different job definition #}
+        {% set job_infix = '-upgrade-extension' if test_feature == 'upgrade-extension' else '' %}
+        [[macros.add_test_job('jobs/test' ~ job_infix ~'-tpl.yml', x, job_names, 'extended', gchat_notification)]]
 
         {# for S3 only, also include an additional impersonation job #}
         {% if test_feature == 's3' %}
@@ -268,14 +275,6 @@ jobs:
             [[macros.add_test_job('jobs/test-tpl.yml', x, job_names, 'extended', gchat_notification)]]
         {% endif %}
     {% endfor %}
-{% endcall %}
-
-## ---------- Upgrade Extension Test ----------
-{% call(x) macros.for_each_config(build_test_pxf_combinations) %}
-    {% if x.test_platform == 'centos7' and x.gp_ver == '6' %}
-        {% do x.update({'passed': '[testing-gate-for-pxf-gp]'}) %}
-        [[macros.add_test_job('jobs/test-upgrade-extension-tpl.yml', x, job_names, 'extended', gchat_notification)]]
-    {% endif %}
 {% endcall %}
 
 ## ---------- FILE tests -----------------

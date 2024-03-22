@@ -2,13 +2,38 @@
  #
  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file and these additional fields:
  #
- # x.passed     - an array of upstream job names that the artifacts need to pass before this job
- #}
+ # x.target     - the target external system type
+ # x.distro     - the distro to use for a singlecluster image
+ # x.feature    - the name of the feature being tested, optional
+ # x.passed     - an array of upstream job names that the artifacts need to pass before this job (optional)
+#}
+
+{# Upgrade extension tests are only needed for
+  # Expects a dictionary with the name 'x' to be set as defined in macros.j2 file and these additional fields:
+  #
+  # x.target     - the target external system type
+  # x.distro     - the distro to use for a singlecluster image
+  # x.feature    - the name of the feature being tested, optional
+  # x.passed     - an array of upstream job names that the artifacts need to pass before this job (optional)
+  #}
+{% set extension        = 'fdw'           if x.use_fdw     == 'true'  else 'ext' %}
+{% set feature_infix    = '-' ~ x.feature if x.feature                else ''    %}
+
+{% if x.gp_ver == '6' %}
+    {% set group1 = 'pxfExtensionVersion2' %}
+    {% set group2 = 'pxfExtensionVersion2_1' %}
+    {% set minor_version = '6' %}
+{% else %}
+    {% set extension        = 'fdw' %}
+    {% set group1 = 'pxfFdwExtensionVersion1' %}
+    {% set group2 = 'pxfFdwExtensionVersion2' %}
+    {% set minor_version = '9' %}
+{% endif %}
 
 {# if x.passed was not provided, make it a build job on the same platform #}
 {% set passed = x.passed if x.passed else '[build-pxf-gp' ~ x.gp_ver ~ '-' ~ x.build_platform ~ ']' %}
 
-{% do x.update({'job_name': 'test-pxf-gp' ~ x.gp_ver ~ '-ext-hdp2-upgrade-extension-' ~ x.test_platform}) %}
+{% do x.update({'job_name': 'test-pxf-gp' ~ x.gp_ver ~ '-' ~ extension ~ '-' ~ x.target ~ feature_infix ~ '-' ~ x.test_platform}) %}
 - name: [[x.job_name]]
   plan:
   - in_parallel:
@@ -17,7 +42,7 @@
       passed: [[passed]]
       trigger: true
     - get: pxf_package
-      resource: pxf6_6-gp[[x.gp_ver]]-[[x.release_platform]]-released   # for upgrade test
+      resource: pxf6_[[minor_version]]-gp[[x.gp_ver]]-[[x.release_platform]]-released   # for upgrade test
     - get: pxf_tarball
       resource: [[x.pxf_tarball_resource_name]]
       passed: [[passed]]
@@ -28,15 +53,15 @@
       passed: [[passed]]
     - get: pxf-automation-dependencies
     - get: singlecluster
-      resource: singlecluster-hdp2
+      resource: singlecluster-[[x.distro]]
   - task: [[x.job_name]]
     file: pxf_src/concourse/tasks/upgrade_extension.yml
     image: [[x.test_image_resource_name]]
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[x.gp_ver]]
-      GROUP: pxfExtensionVersion2
-      SECOND_GROUP: pxfExtensionVersion2_1
+      GROUP: [[group1]]
+      SECOND_GROUP: [[group2]]
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
 {% if gchat_notification %}
   <<: *gchat_alert

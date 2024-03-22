@@ -19,7 +19,9 @@ import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_SERVER
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_SERVER_NAME_PROPERTY;
 
 public enum HcfsType {
-    ADL,
+    // We prefer ABFSS over ABFS for Azure Data Lake Gen 2,
+    // as it uses SSL for communication to Azure servers
+    ABFSS,
     CUSTOM {
         @Override
         public String getDataUri(RequestContext context) {

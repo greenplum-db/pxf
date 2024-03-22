@@ -51,10 +51,10 @@ _gen_uuid() {
 }
 
 case ${HCFS_PROTOCOL} in
-	adl|ADL)
-		HCFS_SCHEME=adl://
-		SERVER_CONFIG=${SERVER_CONFIG:-adl}
-		HCFS_PROTOCOL=adl
+	abfss|ABFSS)
+		HCFS_SCHEME=abfss://
+		SERVER_CONFIG=${SERVER_CONFIG:-abfss}
+		HCFS_PROTOCOL=abfss
 		;;
 	gs|gcs|GS|GCS)
 		HCFS_SCHEME=gs://

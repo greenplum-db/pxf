@@ -57,17 +57,25 @@ function upgrade_pxf() {
   # the new version of PXF brought in a new version of the extension. For databases that already had PXF installed,
   # we need to explicitly upgrade the PXF extension to the new version
 	echo "ALTER EXTENSION pxf UPDATE - for multibyte delimiter tests"
+	echo "ALTER EXTENSION pxf_fdw UPDATE - for fdw extension tests"
 
 	su gpadmin <<'EOSU'
   source ${GPHOME}/greenplum_path.sh &&
   psql --no-align --tuples-only --command "SELECT datname FROM pg_catalog.pg_database WHERE datname != 'template0';" | while read -r dbname; do
       echo -n "checking if database '${dbname}' has PXF extension installed... "
       if ! psql --dbname="${dbname}" --no-align --tuples-only --command "SELECT extname FROM pg_catalog.pg_extension WHERE extname = 'pxf'" | grep . &>/dev/null; then
-          echo "skipping database '${dbname}'"
+          echo "skipping updating PXF EXTTABLE extension in database '${dbname}'"
           continue
       fi
-      echo "updating PXF extension in database '${dbname}'"
+      echo "updating PXF EXTTABLE extension in database '${dbname}'"
       psql --dbname="${dbname}" --set ON_ERROR_STOP=on --command "ALTER EXTENSION pxf UPDATE;"
+
+      if ! psql --dbname="${dbname}" --no-align --tuples-only --command "SELECT extname FROM pg_catalog.pg_extension WHERE extname = 'pxf_fdw'" | grep . &>/dev/null; then
+          echo "skipping updating PXF FDW extension in database '${dbname}'"
+          continue
+      fi
+      echo "updating PXF FDW extension in database '${dbname}'"
+      psql --dbname="${dbname}" --set ON_ERROR_STOP=on --command "ALTER EXTENSION pxf_fdw UPDATE;"
     done
 EOSU
 

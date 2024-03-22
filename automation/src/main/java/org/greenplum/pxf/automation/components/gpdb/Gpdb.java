@@ -268,7 +268,7 @@ public class Gpdb extends DbSystemObject {
 		"default_file",
 		"default_s3",
 		"default_gs",
-		"default_adl",
+		"default_abfss",
 		"default_wasbs",
 		"s3_s3",
 		"s3-invalid_s3",

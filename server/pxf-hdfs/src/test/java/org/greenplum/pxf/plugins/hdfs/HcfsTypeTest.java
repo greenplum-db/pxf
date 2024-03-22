@@ -42,11 +42,11 @@ public class HcfsTypeTest {
 
     @Test
     public void testNonFileDefaultFsWhenProtocolIsNotSet() {
-        configuration.set("fs.defaultFS", "adl://foo.azuredatalakestore.net");
+        configuration.set("fs.defaultFS", "abfss://foo.azuredatalakestore.net");
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals(HcfsType.ADL, type);
-        assertEquals("adl://foo.azuredatalakestore.net/foo/bar.txt", type.getDataUri(context));
+        assertEquals(HcfsType.ABFSS, type);
+        assertEquals("abfss://foo.azuredatalakestore.net/foo/bar.txt", type.getDataUri(context));
     }
 
     @Test

@@ -29,7 +29,7 @@ the following Foreign Data Wrappers.
 2. **hbase_pxf_fdw**    Provides access to HBase
 2. **s3_pxf_fdw**       Provides access to S3
 2. **gs_pxf_fdw**       Provides access to Google Cloud Storage
-2. **adl_pxf_fdw**      Provides access to Azure Datalake
+2. **abfss_pxf_fdw**    Provides access to Azure Datalake Storage Gen 2
 2. **wasbs_pxf_fdw**    Provides access to Microsoft's Azure Blob Storage
 2. **file_pxf_fdw**     Provides access to local file storage
 
@@ -65,10 +65,10 @@ The PXF Foreign Data Wrapper will create:
         VALIDATOR pxf_fdw_validator
         OPTIONS ( protocol 'gs' );
 
-    CREATE FOREIGN DATA WRAPPER adl_pxf_fdw
+    CREATE FOREIGN DATA WRAPPER abfss_pxf_fdw
         HANDLER pxf_fdw_handler
         VALIDATOR pxf_fdw_validator
-        OPTIONS ( protocol 'adl' );
+        OPTIONS ( protocol 'abfss' );
 
     CREATE FOREIGN DATA WRAPPER wasbs_pxf_fdw
         HANDLER pxf_fdw_handler
@@ -137,7 +137,7 @@ The PXF JDBC connector provides access to external databases.
 
 ## Cloud Object Storage Access
 
-PXF provides out-of-the-box support for S3, Google Cloud Storage, Azure Data Lake,
+PXF provides out-of-the-box support for S3, Google Cloud Storage, Azure Blob File System,
 and Azure Blob Storage access. Users need to create a server for each cloud access.
 
 ### S3 Server Example
@@ -151,10 +151,10 @@ and Azure Blob Storage access. Users need to create a server for each cloud acce
      CREATE SERVER gs_server
           FOREIGN DATA WRAPPER gs_pxf_fdw;
 
-### Azure Data Lake Example
+### Azure Blob File System Example
 
-     CREATE SERVER adl_server
-          FOREIGN DATA WRAPPER adl_pxf_fdw;
+     CREATE SERVER abfss_server
+          FOREIGN DATA WRAPPER abfss_pxf_fdw;
 
 ### Azure Blob Storage Example
 
@@ -348,17 +348,17 @@ follows:
           SERVER s3_server
           OPTIONS ( resource '/bucket/multi/file', format 'text:multi' );
 
-#### adl:text
+#### abfss:text
 
-     CREATE FOREIGN TABLE adl_text
-          SERVER adl_server
-          OPTIONS ( resource '/YOUR_ADL_ACCOUNT.azuredatalakestore.net/file', format 'text' );
+     CREATE FOREIGN TABLE abfss_text
+          SERVER abfss_server
+          OPTIONS ( resource '/YOUR_ABFSS_ACCOUNT.dfs.core.windows.net/file', format 'text' );
 
-#### adl:text:multi
+#### abfss:text:multi
 
-     CREATE FOREIGN TABLE adl_text_multi
-          SERVER adl_server
-          OPTIONS ( resource '/YOUR_ADL_ACCOUNT.azuredatalakestore.net/file', format 'text:multi' );
+     CREATE FOREIGN TABLE abfss_text_multi
+          SERVER abfss_server
+          OPTIONS ( resource '/YOUR_ABFSS_ACCOUNT.dfs.core.windows.net/file', format 'text:multi' );
 
 #### gs:text
 
@@ -388,11 +388,11 @@ follows:
           SERVER s3_server
           OPTIONS ( resource '/bucket/parquet/file', format 'parquet' );
 
-#### adl:parquet
+#### abfss:parquet
 
-     CREATE FOREIGN TABLE adl_parquet
-          SERVER adl_server
-          OPTIONS ( resource '/YOUR_ADL_ACCOUNT.azuredatalakestore.net/parquet/file', format 'parquet' );
+     CREATE FOREIGN TABLE abfss_parquet
+          SERVER abfss_server
+          OPTIONS ( resource '/YOUR_ABFSS_ACCOUNT.dfs.core.windows.net/parquet/file', format 'parquet' );
 
 #### gs:parquet
 
@@ -412,11 +412,11 @@ follows:
           SERVER s3_server
           OPTIONS ( resource '/bucket/avro/file', format 'avro' );
 
-#### adl:avro
+#### abfss:avro
 
-     CREATE FOREIGN TABLE adl_avro
-          SERVER adl_server
-          OPTIONS ( resource '/YOUR_ADL_ACCOUNT.azuredatalakestore.net/avro/file', format 'avro' );
+     CREATE FOREIGN TABLE abfss_avro
+          SERVER abfss_server
+          OPTIONS ( resource '/YOUR_ABFSS_ACCOUNT.dfs.core.windows.net/avro/file', format 'avro' );
 
 #### gs:avro
 
@@ -436,11 +436,11 @@ follows:
           SERVER s3_server
           OPTIONS ( resource '/bucket/json/file', format 'json' );
 
-#### adl:json
+#### abfss:json
 
-     CREATE FOREIGN TABLE adl_json
-          SERVER adl_server
-          OPTIONS ( resource '/YOUR_ADL_ACCOUNT.azuredatalakestore.net/json/file', format 'json' );
+     CREATE FOREIGN TABLE abfss_json
+          SERVER abfss_server
+          OPTIONS ( resource '/YOUR_ABFSS_ACCOUNT.dfs.core.windows.net/json/file', format 'json' );
 
 #### gs:json
 
@@ -460,11 +460,11 @@ follows:
           SERVER s3_server
           OPTIONS ( resource '/bucket/AvroSequenceFile/file', format 'AvroSequenceFile' );
 
-#### adl:AvroSequenceFile
+#### abfss:AvroSequenceFile
 
-     CREATE FOREIGN TABLE adl_AvroSequenceFile
-          SERVER adl_server
-          OPTIONS ( resource '/YOUR_ADL_ACCOUNT.azuredatalakestore.net/AvroSequenceFile', format 'AvroSequenceFile' );
+     CREATE FOREIGN TABLE abfss_AvroSequenceFile
+          SERVER abfss_server
+          OPTIONS ( resource '/YOUR_ABFSS_ACCOUNT.dfs.core.windows.net/AvroSequenceFile', format 'AvroSequenceFile' );
 
 #### gs:AvroSequenceFile
 
@@ -484,11 +484,11 @@ follows:
           SERVER s3_server
           OPTIONS ( resource '/bucket/SequenceFile/file', format 'SequenceFile' );
 
-#### adl:SequenceFile
+#### abfss:SequenceFile
 
-     CREATE FOREIGN TABLE adl_SequenceFile
-          SERVER adl_server
-          OPTIONS ( resource '/YOUR_ADL_ACCOUNT.azuredatalakestore.net/SequenceFile', format 'SequenceFile' );
+     CREATE FOREIGN TABLE abfss_SequenceFile
+          SERVER abfss_server
+          OPTIONS ( resource '/YOUR_ABFSS_ACCOUNT.dfs.core.windows.net/SequenceFile', format 'SequenceFile' );
 
 #### gs:SequenceFile
 

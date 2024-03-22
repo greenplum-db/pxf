@@ -43,12 +43,12 @@
         <scheme>s3a</scheme>
     </s3>
 
-    <adl>
+    <abfss>
         <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
-        <workingDirectory>pxfdev.azuredatalakestore.net/tmp/pxf_automation_data/__UUID__</workingDirectory>
-        <hadoopRoot>${pxf.base}/servers/adl</hadoopRoot>
-        <scheme>adl</scheme>
-    </adl>
+        <workingDirectory>pxf-container@pxfdevgen2.dfs.core.windows.net/tmp/pxf_automation_data/__UUID__</workingDirectory>
+        <hadoopRoot>${pxf.base}/servers/abfss</hadoopRoot>
+        <scheme>abfss</scheme>
+    </abfss>
 
     <gs>
         <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>

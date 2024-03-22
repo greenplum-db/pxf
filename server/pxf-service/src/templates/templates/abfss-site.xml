@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- To configure Azure Data Lake Storage Gen 2 please refer to the following link
+         https://hadoop.apache.org/docs/stable/hadoop-azure/abfs.html
+         for additional information -->
+    <property>
+        <name>fs.azure.account.auth.type</name>
+        <value>OAuth</value>
+    </property>
+    <property>
+        <name>fs.azure.account.oauth.provider.type</name>
+        <value>org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider</value>
+    </property>
+    <property>
+        <name>fs.azure.account.oauth2.client.endpoint</name>
+        <value>YOUR_ABFSS_CLIENT_ENDPOINT</value>
+    </property>
+    <property>
+        <name>fs.azure.account.oauth2.client.id</name>
+        <value>YOUR_ABFSS_CLIENT_ID</value>
+    </property>
+    <property>
+        <name>fs.azure.account.oauth2.client.secret</name>
+        <value>YOUR_ABFSS_CLIENT_SECRET</value>
+    </property>
+</configuration>

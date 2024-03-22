@@ -663,7 +663,7 @@ function configure_hdfs_client_for_gs() {
 	sed -i -e "/<configuration>/r ${GS_CORE_SITE_XML}" "${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml"
 }
 
-function configure_hdfs_client_for_adl() {
+function configure_hdfs_client_for_abfss() {
 	cp "${PXF_HOME}/lib/shared/"azure-data-lake-store-sdk-*.jar \
 		"${PXF_HOME}/lib/shared/"hadoop-azure-*.jar \
 		"${PXF_HOME}/lib/shared/"hadoop-azure-datalake-*.jar \
@@ -671,26 +671,30 @@ function configure_hdfs_client_for_adl() {
 		"${PXF_HOME}/lib/shared/"htrace-core4-*-incubating.jar \
 		"${PXF_HOME}/lib/shared/"stax2-api-*.jar \
 		"${PXF_HOME}/lib/shared/"woodstox-core-*.jar "${GPHD_ROOT}/hadoop/share/hadoop/common/lib"
-	ADL_CORE_SITE_XML=$(mktemp)
-	cat <<-EOF > "${ADL_CORE_SITE_XML}"
+	ABFSS_CORE_SITE_XML=$(mktemp)
+	cat <<-EOF > "${ABFSS_CORE_SITE_XML}"
 		<property>
-		    <name>fs.adl.oauth2.access.token.provider.type</name>
-		    <value>ClientCredential</value>
+		   <name>fs.azure.account.auth.type</name>
+		   <value>OAuth</value>
 		</property>
 		<property>
-		    <name>fs.adl.oauth2.refresh.url</name>
-		    <value>${ADL_OAUTH2_REFRESH_URL}</value>
+		    <name>fs.azure.account.oauth.provider.type</name>
+		    <value>org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider</value>
 		</property>
 		<property>
-		    <name>fs.adl.oauth2.client.id</name>
-		    <value>${ADL_OAUTH2_CLIENT_ID}</value>
+		<name>fs.azure.account.oauth2.client.endpoint</name>
+		    <value>${ABFSS_OAUTH2_REFRESH_URL}</value>
 		</property>
 		<property>
-		    <name>fs.adl.oauth2.credential</name>
-		    <value>${ADL_OAUTH2_CREDENTIAL}</value>
+		    <name>fs.azure.account.oauth2.client.id</name>
+		    <value>${ABFSS_OAUTH2_CLIENT_ID}</value>
+		</property>
+		<property>
+		    <name>fs.azure.account.oauth2.client.secret</name>
+		    <value>${ABFSS_OAUTH2_CLIENT_SECRET}</value>
 		</property>
 	EOF
-	sed -i -e "/<configuration>/r ${ADL_CORE_SITE_XML}" "${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml"
+	sed -i -e "/<configuration>/r ${ABFSS_CORE_SITE_XML}" "${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml"
 }
 
 function configure_hdfs_client_for_wasbs() {
@@ -732,12 +736,12 @@ function configure_pxf_minio_server() {
 		${TEMPLATES_DIR}/templates/minio-site.xml >${BASE_DIR}/servers/minio/minio-site.xml
 }
 
-function configure_pxf_adl_server() {
-	mkdir -p "${BASE_DIR}/servers/adl"
-	sed -e "s|YOUR_ADL_REFRESH_URL|${ADL_OAUTH2_REFRESH_URL}|g" \
-		-e "s|YOUR_ADL_CLIENT_ID|${ADL_OAUTH2_CLIENT_ID}|g" \
-		-e "s|YOUR_ADL_CREDENTIAL|${ADL_OAUTH2_CREDENTIAL}|g" \
-		"${TEMPLATES_DIR}/templates/adl-site.xml" >"${BASE_DIR}/servers/adl/adl-site.xml"
+function configure_pxf_abfss_server() {
+	mkdir -p "${BASE_DIR}/servers/abfss"
+	sed -e "s|YOUR_ABFSS_CLIENT_ENDPOINT|${ABFSS_OAUTH2_REFRESH_URL}|g" \
+		-e "s|YOUR_ABFSS_CLIENT_ID|${ABFSS_OAUTH2_CLIENT_ID}|g" \
+		-e "s|YOUR_ABFSS_CLIENT_SECRET|${ABFSS_OAUTH2_CLIENT_SECRET}|g" \
+		"${TEMPLATES_DIR}/templates/abfss-site.xml" >"${BASE_DIR}/servers/abfss/abfss-site.xml"
 }
 
 function configure_pxf_wasbs_server() {
@@ -800,10 +804,10 @@ function setup_gs_for_pg_regress() {
 	HCFS_BUCKET=data-gpdb-ud-tpch
 }
 
-function setup_adl_for_pg_regress() {
-	configure_pxf_adl_server
-	configure_hdfs_client_for_adl
-	HCFS_BUCKET=${ADL_ACCOUNT}.azuredatalakestore.net
+function setup_abfss_for_pg_regress() {
+	configure_pxf_abfss_server
+	configure_hdfs_client_for_abfss
+	HCFS_BUCKET=pxf-container@${ABFSS_ACCOUNT}.dfs.core.windows.net
 }
 
 function setup_wasbs_for_pg_regress() {

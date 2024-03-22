@@ -167,8 +167,8 @@
     {% include 'resources/pxf5-gp6-el7-artifact-tpl.yml' %}
 {% endmacro %}
 
-{% macro resource_pxf6_6_gp6_el7_artifact() %}
-    {% include 'resources/pxf6_6-gp6-el7-artifact-tpl.yml' %}
+{% macro resource_pxf6_minor_rpm_artifact(minor_ver, gp_ver, platform_ver) %}
+    {% include 'resources/pxf6_minor-rpm-artifact-tpl.yml' %}
 {% endmacro %}
 
 {% macro resource_terraform(cluster_type) %}
