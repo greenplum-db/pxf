@@ -1,10 +1,12 @@
 package org.greenplum.pxf.service.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.utilities.ThrowingSupplier;
+
+import java.io.IOException;
 
 /**
  * Base class that allows executing an action that returns a result or throws an exception. The exception
@@ -24,17 +26,23 @@ public abstract class PxfErrorReporter<T> {
         try {
             // call the action and return the value if there are no errors
             return action.get();
-        } catch (ClientAbortException e) {
-            // the ClientAbortException occurs whenever a client (GPDB) decides to end the connection
-            // which is common for LIMIT queries (ex: SELECT * FROM table LIMIT 1)
-            // so we want to log just a warning message, not an error with the full stacktrace (unless in debug mode)
-            if (log.isDebugEnabled()) {
-                // Stacktrace in debug
-                log.warn("Remote connection closed by the client.", e);
+        } catch (IOException e) {
+            // if the exception is due to client disconnecting prematurely, log the appropriate message
+            if (Utilities.isClientDisconnectException(e)) {
+                // this occurs when a client (GPDB) ends the connection which is common for LIMIT queries
+                // (ex: SELECT * FROM table LIMIT 1) so we want to log just a warning message,
+                // not an error with the full stacktrace (unless in debug mode)
+                if (log.isDebugEnabled()) {
+                    // Stacktrace in debug
+                    log.warn("Remote connection closed by the client.", e);
+                } else {
+                    log.warn("Remote connection closed by the client (enable debug for the stacktrace).");
+                }
             } else {
-                log.warn("Remote connection closed by the client (enable debug for the stacktrace).");
+                // some other IO error, log it as usual
+                log.error(StringUtils.defaultIfBlank(e.getMessage(), e.getClass().getName()), e);
             }
-            // wrap into PxfRuntimeException so that it can be handled by the PxfExceptionHandler
+            // wrap into PxfRuntimeException and throw back so that it can be handled by the PxfExceptionHandler
             throw new PxfRuntimeException(e);
         } catch (PxfRuntimeException | Error e) {
             // let PxfRuntimeException and Error propagate themselves
@@ -42,9 +50,8 @@ public abstract class PxfErrorReporter<T> {
             throw e;
         } catch (Exception e) {
             log.error(StringUtils.defaultIfBlank(e.getMessage(), e.getClass().getName()), e);
-            // wrap into PxfRuntimeException so that it can be handled by the PxfExceptionHandler
+            // wrap into PxfRuntimeException and throw back so that it can be handled by the PxfExceptionHandler
             throw new PxfRuntimeException(e);
         }
     }
 }
-

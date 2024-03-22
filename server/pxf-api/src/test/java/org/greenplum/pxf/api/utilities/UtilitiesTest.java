@@ -19,6 +19,7 @@ package org.greenplum.pxf.api.utilities;
  * under the License.
  */
 
+import org.apache.catalina.connector.ClientAbortException;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
@@ -30,6 +31,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -423,5 +425,14 @@ public class UtilitiesTest {
         assertEquals("Property invalidProperty has invalid value 'foo'; value should be either 'true' or 'false'", e.getMessage());
 
         assertTrue(Utilities.parseBooleanProperty(configuration, "trueWithExtraWhitespace", false));
+    }
+
+    @Test
+    public void isClientDisconnectException() {
+        assertFalse(Utilities.isClientDisconnectException(new Exception()));
+        assertFalse(Utilities.isClientDisconnectException(new IOException("Broken pipe")));
+        assertTrue(Utilities.isClientDisconnectException(new ClientAbortException()));
+        assertTrue(Utilities.isClientDisconnectException(new Exception(new ClientAbortException())));
+        assertTrue(Utilities.isClientDisconnectException(new Exception(new Exception(new ClientAbortException()))));
     }
 }
