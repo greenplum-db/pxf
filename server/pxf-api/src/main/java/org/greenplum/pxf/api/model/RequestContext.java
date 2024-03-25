@@ -340,6 +340,18 @@ public class RequestContext {
     }
 
     /**
+     * Returns a long value of the given option or a default value if the option was not provided.
+     * Will throw an IllegalArgumentException if the option value can not be represented as a long
+     *
+     * @param option       name of the option
+     * @param defaultValue default value
+     * @return long value of the option or default value if the option was not provided
+     */
+    public long getOption(String option, long defaultValue) {
+        return getOption(option, defaultValue, false);
+    }
+
+    /**
      * Returns an integer value of the given option or a default value if the option was not provided.
      * Will throw an IllegalArgumentException if the option value can not be represented as an integer or
      * if the integer is negative but only natural integer was expected.
@@ -362,6 +374,34 @@ public class RequestContext {
             if (naturalOnly && result < 0) {
                 throw new IllegalArgumentException(String.format(
                         "Property %s has incorrect value %s : must be a non-negative integer", option, value));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns a long value of the given option or a default value if the option was not provided.
+     * Will throw an IllegalArgumentException if the option value can not be represented as a long or
+     * if the long is negative but only natural long was expected.
+     *
+     * @param option       name of the option
+     * @param defaultValue default value
+     * @param naturalOnly  true if the long is expected to be non-negative (natural), false otherwise
+     * @return long value of the option or default value if the option was not provided
+     */
+    public long getOption(String option, long defaultValue, boolean naturalOnly) {
+        long result = defaultValue;
+        String value = options.get(option);
+        if (value != null) {
+            try {
+                result = Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(String.format(
+                        "Property %s has incorrect value %s : must be a%s long", option, value, naturalOnly ? " non-negative" : "n"), e);
+            }
+            if (naturalOnly && result < 0) {
+                throw new IllegalArgumentException(String.format(
+                        "Property %s has incorrect value %s : must be a non-negative long", option, value));
             }
         }
         return result;

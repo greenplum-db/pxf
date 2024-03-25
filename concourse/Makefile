@@ -42,6 +42,7 @@ MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
 GP7_CLI                     ?= false
+LOAD                        ?= false
 # used to quickly modify the docker image tag being pulled ONLY in the dev_build_pipeline
 PXF_DEV_IMAGE_TAG           ?= latest
 
@@ -131,6 +132,7 @@ set-dev-build-pipeline:
 		minio=$(MINIO) \
 		oel7=$(OEL7) \
 		gp7_cli=$(GP7_CLI) \
+		load=$(LOAD) \
 		dev_pipeline=true \
 		user=$(USER) \
 		branch=$(BRANCH) \

@@ -1055,5 +1055,16 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
     </profile>
+    <profile>
+        <name>system:sample</name>
+        <description>
+            The system:sample produces a set of sample data for each segment with configurable number of rows.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.diagnostic.EachSegmentDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.diagnostic.SampleDataAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
 
 </profiles>

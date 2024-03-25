@@ -164,6 +164,36 @@ function run_regression_test() {
 	su gpadmin -c ~gpadmin/run_regression_test.sh
 }
 
+function run_load_test() {
+	local extension_name="pxf"
+	su gpadmin -c "
+		source '${GPHOME}/greenplum_path.sh' &&
+		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION IF NOT EXISTS ${extension_name}'
+	"
+
+	cat > ~gpadmin/run_load_test.sh <<-EOF
+		#!/usr/bin/env bash
+		set -exo pipefail
+
+		source ~gpadmin/.pxfrc
+		source ${GPHOME}/greenplum_path.sh
+		export PGPORT=${PGPORT}
+
+		cd pxf_src/load
+		time make
+
+		echo
+		echo '****************************************************************************************************'
+		echo 'Load test Successful'
+		echo '****************************************************************************************************'
+
+	EOF
+
+	chown gpadmin:gpadmin ~gpadmin/run_load_test.sh
+	chmod a+x ~gpadmin/run_load_test.sh
+	su gpadmin -c ~gpadmin/run_load_test.sh
+}
+
 function build_install_gpdb() {
 
 	bash -c "
