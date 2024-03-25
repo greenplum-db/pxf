@@ -4,7 +4,6 @@ import java.io.File;
 
 import annotations.FailsWithFDW;
 import annotations.WorksWithFDW;
-import org.apache.commons.lang3.ArrayUtils;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
