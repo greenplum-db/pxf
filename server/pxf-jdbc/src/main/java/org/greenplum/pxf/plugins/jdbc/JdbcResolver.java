@@ -191,27 +191,19 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                     value = result.getString(colName);
                     break;
                 case DATE:
-                    if (isDateWideRange) {
-                        LocalDate localDate = result.getObject(colName, LocalDate.class);
-                        value = localDate != null ? localDate.format(LOCAL_DATE_FORMATTER) : null;
-                    } else {
-                        Date date = result.getDate(colName);
-                        value = date != null ? date.toLocalDate().format(GreenplumDateTime.DATE_FORMATTER) : null;
-                    }
+                    LocalDate localDate = result.getObject(colName, LocalDate.class);
+                    DateTimeFormatter dtFormatter = isDateWideRange ? LOCAL_DATE_FORMATTER : GreenplumDateTime.DATE_FORMATTER;
+                    value = localDate != null ? localDate.format(dtFormatter) : null;
                     break;
                 case TIMESTAMP:
-                    if (isDateWideRange) {
-                        LocalDateTime localDateTime = result.getObject(colName, LocalDateTime.class);
-                        value = localDateTime != null ? localDateTime.format(LOCAL_DATE_TIME_FORMATTER) : null;
-                    } else {
-                        Timestamp timestamp = result.getTimestamp(colName);
-                        value = timestamp != null ? timestamp.toLocalDateTime().format(GreenplumDateTime.DATETIME_FORMATTER) : null;
-                    }
+                    LocalDateTime localDateTime = result.getObject(colName, LocalDateTime.class);
+                    DateTimeFormatter ldtFormatter = isDateWideRange ? LOCAL_DATE_TIME_FORMATTER : GreenplumDateTime.DATETIME_FORMATTER;
+                    value = localDateTime != null ? localDateTime.format(ldtFormatter) : null;
                     break;
                 case TIMESTAMP_WITH_TIME_ZONE:
                     OffsetDateTime offsetDateTime = result.getObject(colName, OffsetDateTime.class);
-                    DateTimeFormatter timestamptzFormatter = isDateWideRange ? OFFSET_DATE_TIME_FORMATTER : GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER;
-                    value = offsetDateTime != null ? offsetDateTime.format(timestamptzFormatter) : null;
+                    DateTimeFormatter odtFormatter = isDateWideRange ? OFFSET_DATE_TIME_FORMATTER : GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER;
+                    value = offsetDateTime != null ? offsetDateTime.format(odtFormatter) : null;
                     break;
                 case UUID:
                     value = result.getObject(colName, java.util.UUID.class);
