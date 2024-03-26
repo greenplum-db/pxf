@@ -66,22 +66,17 @@ longevity: set-longevity-pipeline
 # ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-release-pipeline
 set-release-pipeline:
-ifndef RELEASE
-	$(error RELEASE is not set, please set a release version)
-else
-ifeq ($(shell echo ${RELEASE} | egrep "${release_regex}"),)
-	$(error RELEASE value $(RELEASE) is not in <major.minor.maintenance> format, please provide a valid release version)
+ifndef RELEASE_BRANCH
+	$(error RELEASE_BRANCH is not set, please set a release branch)
 else
 # substitute any / for - in the pipeline
-set-release-pipeline: RELEASE_BRANCH=branch-$(word 1, $(subst ., , $(RELEASE))).$(word 2, $(subst ., , $(RELEASE))).x
-set-release-pipeline: SHIPIT_REGEX="$(RELEASE)/greenplum-pxf-(.*).txt"
+set-release-pipeline: SHIPIT_REGEX="$(RELEASE_BRANCH)/greenplum-pxf-(.*).txt"
 set-release-pipeline: NOTIFY=true
-set-release-pipeline: PIPELINE_NAME=$(BUILD_PIPELINE_NAME)-$(RELEASE)
+set-release-pipeline: PIPELINE_NAME=$(BUILD_PIPELINE_NAME)-$(RELEASE_BRANCH)
 set-release-pipeline: ENVIRONMENT=prod
 set-release-pipeline: BUCKET_PREFIX=prod
 set-release-pipeline: IMAGE_TAG=latest
 set-release-pipeline: set-build-pipeline-base
-endif
 endif
 
 .PHONY: set-main-pipeline
