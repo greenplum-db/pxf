@@ -111,7 +111,6 @@ set-build-pipeline-base:
 		environment=$(ENVIRONMENT) \
 		gchat_notification=$(NOTIFY) \
 		user=$(USER) \
-		git_branch=$(BRANCH) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
 		num_gpdb7_versions=$(NUM_GPDB7_VERSIONS) >"$${PIPELINE_FILE}" && \
