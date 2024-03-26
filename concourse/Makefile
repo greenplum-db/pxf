@@ -42,7 +42,6 @@ MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
 GP7_CLI                     ?= false
-RELEASE_BRANCH              ?= main
 # used to quickly modify the docker image tag being pulled ONLY in the dev_build_pipeline
 PXF_DEV_IMAGE_TAG           ?= latest
 
@@ -53,15 +52,17 @@ endif
 
 ifneq "$(RELEASE_BRANCH)" "main"
 # substitute any / for - in the pipeline
-	RELEASE_NAME:=-$(shell echo $(subst /,-,$(RELEASE_BRANCH)) | tr A-Z a-z)
+	RELEASE_NAME:=$(shell echo $(subst /,-,$(RELEASE_BRANCH)) | tr A-Z a-z)
 else
 # if we're on the main branch, there should be no release name
 	RELEASE_NAME:=""
 endif
-SHIPIT_REGEX="pxf-build$(RELEASE_NAME)/greenplum-pxf-(.*).txt"
+
+SHIPIT_REGEX="$(RELEASE_NAME)/greenplum-pxf-(.*).txt"
 
 .PHONY: build certification dev-release dev pr cloudbuild dev-cloudbuild longevity
-build: set-build-pipeline
+release: set-release-pipeline
+main: set-main-pipeline
 certification: set-certification-pipeline
 dev-release: set-dev-release-pipeline
 dev: set-dev-build-pipeline
@@ -71,36 +72,43 @@ dev-cloudbuild: set-dev-cloudbuild-pipeline
 longevity: set-longevity-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
-.PHONY: set-build-pipeline
-set-build-pipeline: NOTIFY=true
-set-build-pipeline:
-	@PIPELINE_FILE=$$(mktemp) && \
-	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
-		environment=prod \
-		gchat_notification=$(NOTIFY) \
-		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
-		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
-		num_gpdb7_versions=$(NUM_GPDB7_VERSIONS) >"$${PIPELINE_FILE}" && \
-	$(FLY_CMD) --target=$(CONCOURSE) \
-		$(SET_PIPELINE) \
-		--pipeline=$(BUILD_PIPELINE_NAME)$(RELEASE_NAME) \
-		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--var=pxf-git-branch=$(RELEASE_BRANCH) \
-		--var=pxf-build-bucket-prefix=prod \
-		--var=gpdb-pxf-dev-image-tag=latest \
-		--var=shipit-regex=$(SHIPIT_REGEX) \
-		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
+.PHONY: set-release-pipeline
+set-release-pipeline:
+ifndef RELEASE_BRANCH
+	$(error RELEASE_BRANCH is not set, please set a release branch)
+endif
+set-release-pipeline: NOTIFY=true
+set-release-pipeline: PIPELINE_NAME=$(BUILD_PIPELINE_NAME)-$(RELEASE_NAME)
+set-release-pipeline: ENVIRONMENT=prod
+set-release-pipeline: BUCKET_PREFIX=prod
+set-release-pipeline: IMAGE_TAG=latest
+set-release-pipeline: set-build-pipeline-base
 
-	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
+.PHONY: set-main-pipeline
+set-main-pipeline: NOTIFY=true
+set-main-pipeline: PIPELINE_NAME=$(BUILD_PIPELINE_NAME)
+set-main-pipeline: RELEASE_BRANCH=main
+set-main-pipeline: ENVIRONMENT=prod
+set-main-pipeline: BUCKET_PREFIX=prod
+set-main-pipeline: IMAGE_TAG=latest
+set-main-pipeline: set-build-pipeline-base
 
 .PHONY: set-dev-release-pipeline
 set-dev-release-pipeline: SHIPIT_REGEX="$(USER)-$(BRANCH)/greenplum-pxf-(.*).txt"
-set-dev-release-pipeline:
+set-dev-release-pipeline: PIPELINE_NAME=$(DEV_BUILD_PIPELINE_NAME)
+set-dev-release-pipeline: RELEASE_BRANCH=$(BRANCH)
+set-dev-release-pipeline: ENVIRONMENT=dev
+set-dev-release-pipeline: set-build-pipeline-base
+set-dev-release-pipeline: EXTRA_VARS=--var=ud/pxf/dev/git-remote-ssh-url=noop
+set-dev-release-pipeline: BUCKET_PREFIX=dev/$(USER)-$(BRANCH)
+set-dev-release-pipeline: IMAGE_TAG=$(PXF_DEV_IMAGE_TAG)
+set-dev-release-pipeline: set-build-pipeline-base
+
+.PHONY: set-build-pipeline-base
+set-build-pipeline-base:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
-		environment=dev \
+		environment=$(ENVIRONMENT) \
 		gchat_notification=$(NOTIFY) \
 		user=$(USER) \
 		git_branch=$(BRANCH) \
@@ -108,20 +116,19 @@ set-dev-release-pipeline:
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) \
 		num_gpdb7_versions=$(NUM_GPDB7_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
-		$(SET_PIPELINE) \ \
-		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
+		$(SET_PIPELINE) \
+		--pipeline=$(PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--var=ud/pxf/dev/git-remote-ssh-url=noop \
-		--var=pxf-git-branch=${BRANCH} \
-		--var=pxf-build-bucket-prefix=dev/$(USER)-$(BRANCH) \
-		--var=pxf-releases-bucket-prefix=dev/$(USER)-$(BRANCH) \
-		--var=gpdb-pxf-dev-image-tag=$(PXF_DEV_IMAGE_TAG) \
+		--var=pxf-git-branch=$(RELEASE_BRANCH) \
+		--var=pxf-build-bucket-prefix=$(BUCKET_PREFIX) \
+		--var=gpdb-pxf-dev-image-tag=$(IMAGE_TAG) \
 		--var=shipit-regex=$(SHIPIT_REGEX) \
+		$(EXTRA_VARS) \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${DEV_BUILD_PIPELINE_NAME}"
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
 
 .PHONY: set-dev-build-pipeline
 set-dev-build-pipeline:
