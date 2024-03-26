@@ -69,7 +69,6 @@ set-release-pipeline:
 ifndef RELEASE_BRANCH
 	$(error RELEASE_BRANCH is not set, please set a release branch)
 else
-# substitute any / for - in the pipeline
 set-release-pipeline: SHIPIT_REGEX="$(RELEASE_BRANCH)/greenplum-pxf-(.*).txt"
 set-release-pipeline: NOTIFY=true
 set-release-pipeline: PIPELINE_NAME=$(BUILD_PIPELINE_NAME)-$(RELEASE_BRANCH)
