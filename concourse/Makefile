@@ -50,8 +50,6 @@ ifeq ($(CHECK_CREDS), true)
 SET_PIPELINE += --check-creds
 endif
 
-release_regex := ^[0-9]+\.[0-9]+\.[0-9]+$
-
 .PHONY: build certification dev-release dev pr cloudbuild dev-cloudbuild longevity
 release: set-release-pipeline
 main: set-main-pipeline
