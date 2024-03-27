@@ -50,7 +50,7 @@ ifeq ($(CHECK_CREDS), true)
 SET_PIPELINE += --check-creds
 endif
 
-.PHONY: build certification dev-release dev pr cloudbuild dev-cloudbuild longevity
+.PHONY: release main certification dev-release dev pr cloudbuild dev-cloudbuild longevity
 release: set-release-pipeline
 main: set-main-pipeline
 certification: set-certification-pipeline
@@ -91,7 +91,6 @@ set-dev-release-pipeline: SHIPIT_REGEX="$(USER)-$(BRANCH)/greenplum-pxf-(.*).txt
 set-dev-release-pipeline: PIPELINE_NAME=$(DEV_BUILD_PIPELINE_NAME)
 set-dev-release-pipeline: RELEASE_BRANCH=$(BRANCH)
 set-dev-release-pipeline: ENVIRONMENT=dev
-set-dev-release-pipeline: set-build-pipeline-base
 set-dev-release-pipeline: EXTRA_VARS=--var=ud/pxf/dev/git-remote-ssh-url=noop
 set-dev-release-pipeline: BUCKET_PREFIX=dev/$(USER)-$(BRANCH)
 set-dev-release-pipeline: IMAGE_TAG=$(PXF_DEV_IMAGE_TAG)
