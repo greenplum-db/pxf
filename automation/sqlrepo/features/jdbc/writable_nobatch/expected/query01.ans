@@ -6,37 +6,38 @@ NOTICE:  ALTER TABLE / ADD UNIQUE will create implicit index "gpdb_types_nobatch
 ALTER TABLE
 
 INSERT INTO pxf_jdbc_writable_nobatch SELECT t1, t2, num1 FROM gpdb_types;
-INSERT 0 26
+INSERT 0 27
 SELECT * FROM gpdb_types_nobatch_target ORDER BY t1;
-          t1          |  t2  | num1
-----------------------+------+------
- row1                 | s_6  |    1
- row10                | s_15 |   10
- row11                | s_16 |   11
- row12_text_null      |      |   11
- row13_int_null       | s_16 |
- row14_double_null    | s_16 |   11
- row15_decimal_null   | s_17 |   12
- row16_timestamp_null | s_16 |   11
- row17_real_null      | s_16 |   11
- row18_bigint_null    | s_16 |   11
- row19_bool_null      | s_16 |   11
- row2                 | s_7  |    2
- row20_tinyint_null   | s_16 |   11
- row21_smallint_null  | s_16 |   11
- row22_date_null      | s_16 |   11
- row23_varchar_null   | s_16 |   11
- row24_char_null      | s_16 |   11
- row25_binary_null    | s_16 |   11
- row26_uuid_null      | s_16 |   11
- row3                 | s_8  |    3
- row4                 | s_9  |    4
- row5                 | s_10 |    5
- row6                 | s_11 |    6
- row7                 | s_12 |    7
- row8                 | s_13 |    8
- row9                 | s_14 |    9
-(26 rows)
+           t1           |  t2  | num1 
+------------------------+------+------
+ row1                   | s_6  |    1
+ row10                  | s_15 |   10
+ row11                  | s_16 |   11
+ row12_text_null        |      |   11
+ row13_int_null         | s_16 |     
+ row14_double_null      | s_16 |   11
+ row15_decimal_null     | s_17 |   12
+ row16_timestamp_null   | s_16 |   11
+ row17_real_null        | s_16 |   11
+ row18_bigint_null      | s_16 |   11
+ row19_bool_null        | s_16 |   11
+ row2                   | s_7  |    2
+ row20_tinyint_null     | s_16 |   11
+ row21_smallint_null    | s_16 |   11
+ row22_date_null        | s_16 |   11
+ row23_varchar_null     | s_16 |   11
+ row24_char_null        | s_16 |   11
+ row25_binary_null      | s_16 |   11
+ row26_uuid_null        | s_16 |   11
+ row27_timestamptz_null | s_16 |   11
+ row3                   | s_8  |    3
+ row4                   | s_9  |    4
+ row5                   | s_10 |    5
+ row6                   | s_11 |    6
+ row7                   | s_12 |    7
+ row8                   | s_13 |    8
+ row9                   | s_14 |    9
+(27 rows)
 
 -- start_matchsubs
 --

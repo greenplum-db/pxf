@@ -28,7 +28,8 @@ public class MultiUserTest extends BaseFeature {
             "vc1   varchar(5)",
             "c1    char(3)",
             "bin   bytea",
-            "u     uuid"
+            "u     uuid",
+            "tmz timestamp with time zone"
     };
     private static final String gpdbTypesDataFileName = "gpdb_types.txt";
     private static final String gpdbTypesExDataFileName = "gpdb_types_ex.txt";

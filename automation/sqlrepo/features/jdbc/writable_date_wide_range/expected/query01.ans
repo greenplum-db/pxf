@@ -1,38 +1,13 @@
 -- start_ignore
 -- end_ignore
--- @description query01 for JDBC query with date wide range on/off
---
--- start_matchsubs
---
--- # create a match/subs
---
--- m/(.*)ERROR:/
--- s/(.*)ERROR:/ERROR:/
---
--- m/ERROR:  invalid byte sequence for encoding.*/
--- s/ERROR:  invalid byte sequence for encoding.*/ERROR:  invalid input syntax./
---
--- m/ERROR:  time zone displacement out of range.*/
--- s/ERROR:  time zone displacement out of range.*/ERROR:  time zone displacement out of range/
---
--- m/PXF server error.*Field type 'TIMESTAMP_WITH_TIME_ZONE'.*is not supported/
--- s/PXF server error.*/PXF server error : Field type 'TIMESTAMP_WITH_TIME_ZONE' is not supported/
---
--- m/DETAIL/
--- s/DETAIL/CONTEXT/
---
--- m/CONTEXT:.*line.*/
--- s/line \d* of //g
---
--- m/CONTEXT:.*pxf_jdbc_readable_date_wide_range_off/
--- s/CONTEXT:.*pxf_jdbc_readable_date_wide_range_off.*/CONTEXT: External Table pxf_jdbc_readable_date_wide_range_off/
---
--- end_matchsubs
-
+-- @description query01 for JDBC writable query
 SET timezone='utc';
 SET
 
-SELECT * FROM pxf_jdbc_readable_date_wide_range_on ORDER BY t1;
+INSERT INTO pxf_jdbc_writable_date_wide_range_on SELECT * FROM gpdb_types_with_date_wide_range;
+INSERT 0 27
+
+SELECT * FROM gpdb_types_target_with_date_wide_range ORDER BY t1;
            t1           |  t2  | num1 | dub1 |      dec1      |           tm           |  r   |    bg    | b | tn | sml  |      dt       |  vc1  | c1  | bin |                  u                   |            tmz            
 ------------------------+------+------+------+----------------+------------------------+------+----------+---+----+------+---------------+-------+-----+-----+--------------------------------------+---------------------------
  row1                   | s_6  |    1 |    6 |        1.23456 | 2013-07-13 21:00:00    |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06    | abcd  | USD | 1   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a10 | 2013-07-13 17:00:00+00
@@ -64,49 +39,3 @@ SELECT * FROM pxf_jdbc_readable_date_wide_range_on ORDER BY t1;
  row9                   | s_14 |    9 |   14 |        23457.1 | 2013-07-21 21:00:00    |  7.7 | 23456789 | f |  9 |  900 | 2015-03-13    | abcde | UAH | 9   | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a29 | 2013-07-21 09:00:00+00
 (27 rows)
 
-SET timezone='America/Los_Angeles';
-SET
-
-SELECT tmz FROM pxf_jdbc_readable_date_wide_range_on ORDER BY t1;
-               tmz               
----------------------------------
- 2013-07-13 10:00:00-07
- 2013-07-22 01:00:00-07
- 2013-07-23 00:00:00-07
- 2013-07-23 04:07:02-07:52:58 BC
- 2013-07-23 05:00:00-07
- 4713-07-23 04:07:02-07:52:58 BC
- 294276-07-24 05:00:00-07
- 0001-07-18 13:07:02-07:52:58 BC
- 0001-07-23 04:07:02-07:52:58
- 2013-07-22 18:00:00-07
- 2013-07-22 19:00:00-07
- 2013-07-14 09:00:00-07
- 2013-07-22 20:00:00-07
- 2013-07-23 17:00:00-07
- 2013-07-23 16:00:00-07
- 2013-07-23 15:00:00-07
- 2013-07-23 05:00:00-07
- 2013-07-23 05:00:00-07
- 2013-07-23 05:00:00-07
- 
- 2013-07-15 08:00:00-07
- 2013-07-16 07:00:00-07
- 2013-07-17 06:00:00-07
- 2013-07-18 05:00:00-07
- 2013-07-19 04:00:00-07
- 2013-07-20 03:00:00-07
- 2013-07-21 02:00:00-07
-(27 rows)
-
-SELECT tm FROM pxf_jdbc_readable_date_wide_range_off ORDER BY t1;
-ERROR:  time zone displacement out of range
-CONTEXT:  External table pxf_jdbc_readable_date_wide_range_off
-
-SELECT dt FROM pxf_jdbc_readable_date_wide_range_off ORDER BY t1;
-ERROR:  time zone displacement out of range
-CONTEXT:  External table pxf_jdbc_readable_date_wide_range_off
-
-SELECT tmz FROM pxf_jdbc_readable_date_wide_range_off ORDER BY t1;
-ERROR:  time zone displacement out of range
-CONTEXT:  External table pxf_jdbc_readable_date_wide_range_off
