@@ -191,6 +191,8 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                     value = result.getString(colName);
                     break;
                 case DATE:
+                    // getObject() is used for date, timestamp, and timestamptz because the java.sql.* types do not support wide date ranges.
+                    // JDBC API 4.2 and later should have support for these types through getObject().
                     LocalDate localDate = result.getObject(colName, LocalDate.class);
                     DateTimeFormatter dtFormatter = isDateWideRange ? LOCAL_DATE_FORMATTER : GreenplumDateTime.DATE_FORMATTER;
                     value = localDate != null ? localDate.format(dtFormatter) : null;
@@ -201,6 +203,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                     value = localDateTime != null ? localDateTime.format(ldtFormatter) : null;
                     break;
                 case TIMESTAMP_WITH_TIME_ZONE:
+                    // OffsetDateTime is the only class that JDBC drivers will most likely to respect for returning timestamptz.
                     OffsetDateTime offsetDateTime = result.getObject(colName, OffsetDateTime.class);
                     DateTimeFormatter odtFormatter = isDateWideRange ? OFFSET_DATE_TIME_FORMATTER : GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER;
                     value = offsetDateTime != null ? offsetDateTime.format(odtFormatter) : null;
