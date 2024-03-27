@@ -43,8 +43,10 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.time.format.SignStyle;
 import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -194,19 +196,16 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                     // getObject() is used for date, timestamp, and timestamptz because the java.sql.* types do not support wide date ranges.
                     // JDBC API 4.2 and later should have support for these types through getObject().
                     LocalDate localDate = result.getObject(colName, LocalDate.class);
-                    DateTimeFormatter dtFormatter = isDateWideRange ? LOCAL_DATE_FORMATTER : GreenplumDateTime.DATE_FORMATTER;
-                    value = localDate != null ? localDate.format(dtFormatter) : null;
+                    value = localDate != null ? formatDateTimeValues(localDate, isDateWideRange, LOCAL_DATE_FORMATTER, GreenplumDateTime.DATE_FORMATTER) : null;
                     break;
                 case TIMESTAMP:
                     LocalDateTime localDateTime = result.getObject(colName, LocalDateTime.class);
-                    DateTimeFormatter ldtFormatter = isDateWideRange ? LOCAL_DATE_TIME_FORMATTER : GreenplumDateTime.DATETIME_FORMATTER;
-                    value = localDateTime != null ? localDateTime.format(ldtFormatter) : null;
+                    value = localDateTime != null ? formatDateTimeValues(localDateTime, isDateWideRange, LOCAL_DATE_TIME_FORMATTER, GreenplumDateTime.DATETIME_FORMATTER) : null;
                     break;
                 case TIMESTAMP_WITH_TIME_ZONE:
                     // OffsetDateTime is the only class that JDBC drivers will most likely to respect for returning timestamptz.
                     OffsetDateTime offsetDateTime = result.getObject(colName, OffsetDateTime.class);
-                    DateTimeFormatter odtFormatter = isDateWideRange ? OFFSET_DATE_TIME_FORMATTER : GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER;
-                    value = offsetDateTime != null ? offsetDateTime.format(odtFormatter) : null;
+                    value = offsetDateTime != null ? formatDateTimeValues(offsetDateTime, isDateWideRange, OFFSET_DATE_TIME_FORMATTER, GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER) : null;
                     break;
                 case UUID:
                     value = result.getObject(colName, java.util.UUID.class);
@@ -484,6 +483,35 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             }
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to convert timestamp with timezone '" + rawVal + "' to the OffsetDateTime class: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Formats a java.time.* datetime value using two formatters in a order depending on if DateWideRange is on.
+     * If DateWideRange is off but the value successfully parses with the DateWideRange formatter, log a warning
+     * to turn on the DateWideRange.
+     *
+     * @param datetime
+     * @param DWR
+     * @param DwrFormatter
+     * @param RegFormatter
+     * @return
+     */
+    private String formatDateTimeValues(TemporalAccessor datetime, Boolean DWR, DateTimeFormatter DwrFormatter, DateTimeFormatter RegFormatter) {
+        if (DWR) {
+            try {
+                return DwrFormatter.format(datetime);
+            } catch (DateTimeParseException e) {
+                return RegFormatter.format(datetime);
+            }
+        } else {
+            try {
+                return RegFormatter.format(datetime);
+            } catch (DateTimeParseException e) {
+                String value = DwrFormatter.format(datetime);
+                LOG.warn("Consider turning on DateWideRange");
+                return value;
+            }
         }
     }
 }
