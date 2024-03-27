@@ -9,12 +9,16 @@ type PxfServiceGroup struct {
 type PxfCluster struct {
 	Name       string
 	Collocated bool
-	Hostnames  []string
+	Hosts      []PxfHost
 	Endpoint   string
-	Groups     []PxfServiceGroup
+	Groups     map[string]PxfServiceGroup
+}
+
+type PxfHost struct {
+	Hostname string
 }
 
 type PxfDeployment struct {
 	Name     string
-	Clusters []PxfCluster
+	Clusters map[string]PxfCluster
 }
