@@ -77,13 +77,13 @@ set-release-pipeline: set-build-pipeline-base
 endif
 
 .PHONY: set-main-pipeline
+set-main-pipeline: SHIPIT_REGEX=noop
 set-main-pipeline: NOTIFY=true
 set-main-pipeline: PIPELINE_NAME=$(BUILD_PIPELINE_NAME)
 set-main-pipeline: RELEASE_BRANCH=main
 set-main-pipeline: ENVIRONMENT=prod
 set-main-pipeline: BUCKET_PREFIX=prod
 set-main-pipeline: IMAGE_TAG=latest
-set-main-pipeline: SHIPIT_REGEX=noop
 set-main-pipeline: set-build-pipeline-base
 
 .PHONY: set-dev-release-pipeline
