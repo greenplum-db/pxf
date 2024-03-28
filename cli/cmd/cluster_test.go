@@ -1,9 +1,13 @@
 package cmd_test
 
 import (
-	"pxf-cli/cmd"
-
+	"database/sql/driver"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/greenplum-db/gp-common-go-libs/cluster"
+	"github.com/greenplum-db/gp-common-go-libs/dbconn"
+	"github.com/greenplum-db/gp-common-go-libs/testhelper"
+	"os"
+	"pxf-cli/cmd"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -563,6 +567,81 @@ stderr line three`
 				Expect(testStdout).Should(gbytes.Say("PXF failed to migrate configuration on 1 out of 1 host"))
 				Expect(testStderr).Should(gbytes.Say("mdw ==> an error happened on mdw"))
 			})
+		})
+	})
+})
+
+var _ = Describe("GetClusterDataAssertOnCluster()", func() {
+	header := []string{"contentid", "hostname", "datadir"}
+	coordinatorDataDir := "./testDataDirCdw"
+	segOneDataDir := "./testDataDirSeg0"
+	segTwoDataDir := "./testDataDirSeg1"
+	coordinator := []driver.Value{"-1", "cdw", coordinatorDataDir}
+	localSegOne := []driver.Value{"0", "sdw1", segOneDataDir}
+	localSegTwo := []driver.Value{"1", "sdw2", segTwoDataDir}
+
+	var (
+		connection *dbconn.DBConn
+		mock       sqlmock.Sqlmock
+	)
+
+	BeforeEach(func() {
+		connection, mock = testhelper.CreateAndConnectMockDB(1)
+	})
+
+	Context("When command is running on the coordinator", func() {
+		BeforeEach(func() {
+			_ = os.MkdirAll(coordinatorDataDir, 0777)
+		})
+
+		AfterEach(func() {
+			_ = os.RemoveAll("./testDataDirCdw")
+		})
+
+		It("returns the cluster data with no error", func() {
+			// mock retrieving the segment configs
+			fakeSegConfigs := sqlmock.NewRows(header).AddRow(coordinator...).AddRow(localSegOne...).AddRow(localSegTwo...)
+			mock.ExpectQuery("SELECT (.*)").WillReturnRows(fakeSegConfigs)
+
+			clusterData, err := cmd.GetClusterDataAssertOnCluster(connection)
+
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(len(clusterData.Cluster.ContentIDs)).To(Equal(3))
+			Expect(clusterData.Cluster.GetHostForContent(-1)).To(Equal("cdw"))
+			Expect(clusterData.Cluster.GetHostForContent(0)).To(Equal("sdw1"))
+			Expect(clusterData.Cluster.GetHostForContent(1)).To(Equal("sdw2"))
+		})
+
+		It("returns an error when failed to retrieve segment configuration from GPDB", func() {
+			// mock retrieving the segment configs
+			clusterDataError := errors.New("failed to retrieve segment configuration from GPDB")
+			mock.ExpectQuery("SELECT (.*)").WillReturnError(clusterDataError)
+
+			clusterData, err := cmd.GetClusterDataAssertOnCluster(connection)
+
+			Expect(err.Error()).To(Equal(clusterDataError.Error()))
+			Expect(clusterData).To(BeNil())
+		})
+	})
+
+	Context("When command is running on the segments", func() {
+		BeforeEach(func() {
+			_ = os.MkdirAll(segOneDataDir, 0777)
+		})
+
+		AfterEach(func() {
+			_ = os.RemoveAll("./testDataDirSeg0")
+		})
+
+		It("returns an error indicating that the command is not running on the coordinator", func() {
+			// mock retrieving the segment configs
+			fakeSegConfigs := sqlmock.NewRows(header).AddRow(coordinator...).AddRow(localSegOne...).AddRow(localSegTwo...)
+			mock.ExpectQuery("SELECT (.*)").WillReturnRows(fakeSegConfigs)
+
+			clusterData, err := cmd.GetClusterDataAssertOnCluster(connection)
+
+			Expect(clusterData).To(BeNil())
+			Expect(err.Error()).To(Equal("stat ./testDataDirCdw: no such file or directory"))
 		})
 	})
 })

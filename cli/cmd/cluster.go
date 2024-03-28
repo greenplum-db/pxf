@@ -28,9 +28,12 @@ func createCobraCommand(use string, short string, cmd *command) *cobra.Command {
 		Use:   use,
 		Short: short,
 		Run: func(cobraCmd *cobra.Command, args []string) {
-			clusterData, err := doSetup()
+			connection, err := connectToGPDB()
 			if err == nil {
-				err = clusterRun(cmd, clusterData)
+				clusterData, err := GetClusterDataAssertOnCluster(connection)
+				if err == nil {
+					err = clusterRun(cmd, clusterData)
+				}
 			}
 			exitWithReturnCode(err)
 		},
@@ -133,14 +136,30 @@ func GenerateOutput(cmd *command, clusterData *ClusterData) error {
 	return errors.New(response)
 }
 
-func doSetup() (*ClusterData, error) {
-	connection := dbconn.NewDBConnFromEnvironment("postgres")
-	err := connection.Connect(1)
+func GetClusterDataAssertOnCluster(connection *dbconn.DBConn) (*ClusterData, error) {
+	clusterData, err := getClusterData(connection)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := assertRunningOnCoordinator(clusterData); err != nil {
+		return nil, err
+	}
+
+	return clusterData, nil
+}
+
+func connectToGPDB() (*dbconn.DBConn, error) {
+	connection := dbconn.NewDBConnFromEnvironment("postgres")
+	if err := connection.Connect(1); err != nil {
 		gplog.Error(fmt.Sprintf("ERROR: Could not connect to GPDB.\n%s\n"+
 			"Please make sure that your Greenplum database is running and you are on the coordinator node.", err.Error()))
 		return nil, err
 	}
+	return connection, nil
+}
+
+func getClusterData(connection *dbconn.DBConn) (*ClusterData, error) {
 	segConfigs, err := cluster.GetSegmentConfiguration(connection, true)
 	if err != nil {
 		gplog.Error(fmt.Sprintf("ERROR: Could not retrieve segment information from GPDB.\n%s\n" + err.Error()))
@@ -154,8 +173,7 @@ func doSetup() (*ClusterData, error) {
 func clusterRun(cmd *command, clusterData *ClusterData) error {
 	defer clusterData.connection.Close()
 
-	err := cmd.Warn(os.Stdin)
-	if err != nil {
+	if err := cmd.Warn(os.Stdin); err != nil {
 		gplog.Info(fmt.Sprintf("%s", err))
 		return err
 	}
@@ -171,6 +189,19 @@ func clusterRun(cmd *command, clusterData *ClusterData) error {
 	GenerateStatusReport(cmd, clusterData)
 	clusterData.Output = clusterData.Cluster.ExecuteClusterCommand(cmd.whereToRun, commandList)
 	return GenerateOutput(cmd, clusterData)
+}
+
+func assertRunningOnCoordinator(clusterData *ClusterData) error {
+	dataDir := clusterData.Cluster.GetDirForContent(-1)
+
+	// check if the current file system has the coordinator data dir
+	if _, err := os.Stat(dataDir); os.IsNotExist(err) {
+		gplog.Error(fmt.Sprintf("Error: PXF cluster command is not running on the coordinator node. \n%s\nPlease make sure you are on the coordinator node", err.Error()))
+		return err
+	}
+	gplog.Debug("PXF cluster command is running on the coordinator node.")
+
+	return nil
 }
 
 func isStandbyAloneOnHost(clusterData *ClusterData) bool {
